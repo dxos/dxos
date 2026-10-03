@@ -7,8 +7,7 @@ import React from 'react';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { Panel, Toolbar } from '@dxos/react-ui';
 
 export const InvocationsModule = () => {
   const space = Hooks.useActiveSpace();
@@ -17,14 +16,14 @@ export const InvocationsModule = () => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Invocations</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} detailAxis='block' />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

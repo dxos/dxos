@@ -7,8 +7,7 @@ import React, { type ChangeEventHandler, type KeyboardEventHandler, useState } f
 import { Filter, Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import * as Field from '@dxos/react-ui/Field';
-import * as IconButton from '@dxos/react-ui/IconButton';
+import { Button, Checkbox, Field, Input } from '@dxos/react-ui';
 
 import { TaskType } from '../types.ts';
 
@@ -34,7 +33,7 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
       <h2 className='mb-2 font-bold'>{`Peer ${id + 1}`}</h2>
       <Field.Root>
         <Field.Label srOnly>Create new item</Field.Label>
-        <Field.Input
+        <Input
           classNames='mb-2'
           placeholder='New item'
           value={value}
@@ -47,7 +46,7 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
           <li key={task.id} className='flex items-center gap-2 mb-2 pl-3'>
             <Field.Root>
               <Field.Label srOnly>Complete {task.title}</Field.Label>
-              <Field.Checkbox
+              <Checkbox
                 checked={!!task.completed}
                 onCheckedChange={() =>
                   Obj.update(task, (task) => {
@@ -57,12 +56,12 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
               />
             </Field.Root>
             <div className='grow'>{task.title}</div>
-            <IconButton.Root
+            <Button
               icon='ph--x--regular'
-              size={4}
+              iconSize='md'
               label={`Delete ${task.title}`}
               iconOnly
-              noTooltip
+              showTooltip={false}
               variant='ghost'
               onClick={() => space?.db?.remove(task)}
             />

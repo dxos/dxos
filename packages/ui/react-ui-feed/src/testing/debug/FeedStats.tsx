@@ -4,8 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as IconButton from '@dxos/react-ui/IconButton';
-import type * as Util from '@dxos/react-ui/Util';
+import { Button, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMessageList } from '../../components/index.ts';
@@ -87,7 +86,7 @@ const FRAME_STATS: Stat[] = [
   },
 ];
 
-export type FeedStatsProps = Util.ThemedClassName<{
+export type FeedStatsProps = ThemedClassName<{
   meter: FrameMeter;
   streaming?: boolean;
   selected?: number;
@@ -138,7 +137,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
       // Fixed width, not fitted: the widest line is the pass summary, whose length changes with the
       // elapsed time, so a panel sized to its content would resize once a second while being read.
       className={mx(
-        'z-10 absolute bottom-3 right-3 w-[12rem] grid p-2 rounded-sm border border-separator bg-base-surface text-xs text-description',
+        'z-10 absolute bottom-3 right-3 w-[12rem] grid p-2 rounded-sm border border-separator bg-base-surface text-xs text-fg-muted',
         classNames,
       )}
       data-testid='feed.stats'
@@ -147,21 +146,21 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
         <span className='grow truncate' data-testid='feed.stream.state'>
           {streaming ? 'streaming…' : 'idle'}
         </span>
-        <IconButton.Root
+        <Button
           icon={recording ? 'ph--stop--regular' : 'ph--record--regular'}
           iconOnly
           label={recording ? 'End the pass' : 'Start a pass'}
           variant='ghost'
-          size={3}
+          iconSize='xs'
           data-testid='feed.debug.record'
           onClick={onRecord}
         />
-        <IconButton.Root
+        <Button
           icon='ph--arrow-counter-clockwise--regular'
           iconOnly
           label='Reset counters'
           variant='ghost'
-          size={3}
+          iconSize='xs'
           data-testid='feed.debug.reset'
           onClick={resetShifts}
         />
@@ -174,7 +173,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
       <Stats
         stats={FRAME_STATS}
         values={values}
-        classNames='border-t border-subdued-separator pt-1'
+        classNames='border-t border-separator-subtle pt-1'
         title={label}
         data-testid='feed.frames'
       />

@@ -11,7 +11,7 @@ import { type ChromaticPalette, type MessageValence, type NeutralPalette } from 
 
 import { translationKey } from '#translations';
 
-import { composable, composableProps } from '../../../util/slots.ts';
+import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { Icon } from '../Icon/index.ts';
 
@@ -126,4 +126,4 @@ export const Tag = composable<HTMLElement, TagProps>(
   },
 );
 
-Tag.displayName = 'Next.Tag';
+Tag.displayName = 'Tag';

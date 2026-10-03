@@ -4,10 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import * as AlertDialog from '@dxos/react-ui/AlertDialog';
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import { AlertDialog, ToggleGroup, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useSettingsScope } from '../hooks/index.ts';
@@ -19,7 +16,7 @@ export type SettingsScopeProps = {
 
 /** Whether a settings panel follows the account or stays on this device. */
 export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
-  const { t } = Hooks.useTranslation(osTranslations);
+  const { t } = useTranslation(osTranslations);
   const { available, synced, takeLocal, rejoinAccount, getConflicts } = useSettingsScope(prefix);
   const [conflicts, setConflicts] = useState<readonly string[]>([]);
 
@@ -54,14 +51,14 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
   return (
     <>
       <ToggleGroup.Root type='single' value={synced ? 'synced' : 'local'} onValueChange={handleValueChange}>
-        <ToggleGroup.IconItem
+        <ToggleGroup.Item
           value='synced'
           data-testid='settingsScope.synced'
           icon='ph--cloud-check--regular'
           label={t('settings-scope.synced.label')}
           iconOnly
         />
-        <ToggleGroup.IconItem
+        <ToggleGroup.Item
           value='local'
           data-testid='settingsScope.local'
           icon='ph--monitor--regular'
@@ -69,37 +66,29 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
           iconOnly
         />
       </ToggleGroup.Root>
-      <AlertDialog.Root open={conflicts.length > 0} onOpenChange={(open) => !open && setConflicts([])}>
-        <AlertDialog.Overlay>
-          <AlertDialog.Content>
-            <AlertDialog.Body>
-              <AlertDialog.Title>{t('settings-scope.conflict-dialog.title')}</AlertDialog.Title>
-              <AlertDialog.Description>
-                {t('settings-scope.conflict-dialog.description', { count: conflicts.length })}
-              </AlertDialog.Description>
-            </AlertDialog.Body>
-            <AlertDialog.ActionBar>
-              <div className='grow' />
-              <AlertDialog.Cancel asChild>
-                <Button.Root>{t('settings-scope.conflict-dialog.cancel.label')}</Button.Root>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <Button.Root data-testid='settingsScope.keepLocal' onClick={() => handleResolve('local')}>
-                  {t('settings-scope.conflict-dialog.keep-local.label')}
-                </Button.Root>
-              </AlertDialog.Action>
-              <AlertDialog.Action asChild>
-                <Button.Root
-                  data-testid='settingsScope.keepShared'
-                  variant='primary'
-                  onClick={() => handleResolve('shared')}
-                >
-                  {t('settings-scope.conflict-dialog.keep-shared.label')}
-                </Button.Root>
-              </AlertDialog.Action>
-            </AlertDialog.ActionBar>
-          </AlertDialog.Content>
-        </AlertDialog.Overlay>
+      <AlertDialog.Root open={conflicts.length > 0} onOpenChange={({ open }) => !open && setConflicts([])}>
+        <AlertDialog.Content>
+          <AlertDialog.Body>
+            <AlertDialog.Title>{t('settings-scope.conflict-dialog.title')}</AlertDialog.Title>
+            <AlertDialog.Description>
+              {t('settings-scope.conflict-dialog.description', { count: conflicts.length })}
+            </AlertDialog.Description>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <div className='grow' />
+            <AlertDialog.Cancel>{t('settings-scope.conflict-dialog.cancel.label')}</AlertDialog.Cancel>
+            <AlertDialog.Action data-testid='settingsScope.keepLocal' onClick={() => handleResolve('local')}>
+              {t('settings-scope.conflict-dialog.keep-local.label')}
+            </AlertDialog.Action>
+            <AlertDialog.Action
+              data-testid='settingsScope.keepShared'
+              variant='primary'
+              onClick={() => handleResolve('shared')}
+            >
+              {t('settings-scope.conflict-dialog.keep-shared.label')}
+            </AlertDialog.Action>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
       </AlertDialog.Root>
     </>
   );

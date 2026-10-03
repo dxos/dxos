@@ -5,12 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
+import { Button, Grid, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
-import * as Grid from '@dxos/react-ui/Grid';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -19,7 +15,7 @@ import { type ExtendedChessModel } from './types.ts';
 
 const INFO_NAME = 'Chessboard.Info';
 
-export type InfoProps = Util.ThemedClassName<
+export type InfoProps = ThemedClassName<
   {
     orientation?: Player;
     onOrientationChange?: (orientation: Player) => void;
@@ -28,7 +24,7 @@ export type InfoProps = Util.ThemedClassName<
 >;
 
 export const Info = ({ classNames, orientation = 'white', onOrientationChange, onClose, ...props }: InfoProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { model } = useGameboardContext<ExtendedChessModel>(INFO_NAME);
 
   return (
@@ -43,12 +39,12 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         player={orientation === 'white' ? 'black' : 'white'}
         icon={
           onClose && (
-            <IconButton.Root
+            <Button
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
               label={t('close-info.button')}
-              size={4}
+              iconSize='md'
               onClick={onClose}
             />
           )
@@ -62,12 +58,12 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         player={orientation}
         icon={
           onOrientationChange && (
-            <IconButton.Root
+            <Button
               classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
               icon='ph--arrows-clockwise--regular'
               iconOnly
               label={t('flip-board.button')}
-              size={4}
+              iconSize='md'
               onClick={() => onOrientationChange(orientation === 'white' ? 'black' : 'white')}
             />
           )
@@ -83,7 +79,7 @@ Info.displayName = INFO_NAME;
 // History
 //
 
-type HistoryProps = Util.ThemedClassName<{
+type HistoryProps = ThemedClassName<{
   model: ExtendedChessModel;
   min?: number;
   max?: number;
@@ -91,7 +87,7 @@ type HistoryProps = Util.ThemedClassName<{
 }>;
 
 const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const moveIndex = useAtomValue(model.moveIndex);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
@@ -144,8 +140,8 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
       }}
     >
       {moves.map(([a, b], index) => (
-        <Grid.Root key={index} cols={['3rem', '1fr', '1fr', '1rem']} grow={false} gap='sm' classNames='ps-4'>
-          <div className='content-center text-xs text-subdued'>{index + 1}</div>
+        <Grid key={index} cols={['3rem', '1fr', '1fr', '1rem']} grow={false} gap='sm' classNames='ps-4'>
+          <div className='content-center text-xs text-fg-subtle'>{index + 1}</div>
           {a && (
             <div
               data-index={a.index}
@@ -164,7 +160,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
               {b.move}
             </div>
           )}
-        </Grid.Root>
+        </Grid>
       ))}
       {label && <div className='text-center'>{label}</div>}
     </div>
@@ -184,7 +180,7 @@ type PlayerIndicatorProps = PropsWithChildren<{
 const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps) => {
   const turn = player === (model.game.turn() === 'w' ? 'white' : 'black');
   return (
-    <Grid.Root
+    <Grid
       cols={['var(--dx-rail-item)', '1fr', 'var(--dx-rail-item)']}
       grow={false}
       gap='sm'
@@ -192,14 +188,14 @@ const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps
       classNames='h-(--dx-rail-size) px-1 overflow-hidden'
     >
       <div className='place-items-center'>
-        <Icon.Root
+        <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
-          size={6}
+          size='xl'
           classNames={mx(turn && (model.game.isCheckmate() ? 'text-error-text' : 'text-success-text'))}
         />
       </div>
       <div className='truncate overflow-hidden items-center'>{children}</div>
       {icon}
-    </Grid.Root>
+    </Grid>
   );
 };

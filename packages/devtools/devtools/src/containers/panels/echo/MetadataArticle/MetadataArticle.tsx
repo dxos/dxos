@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import * as Panel from '@dxos/react-ui/Panel';
+import { Panel } from '@dxos/react-ui';
 
 import { JsonView } from '../../../../components/index.ts';
 import { useMetadata } from '../../../../hooks/index.ts';
@@ -15,9 +15,9 @@ export const MetadataArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         <JsonView data={metadata} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

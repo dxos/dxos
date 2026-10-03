@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Placeholder } from '@dxos/devtools';
 import { useClient } from '@dxos/react-client';
+import { Panel } from '@dxos/react-ui';
 import { Terminal } from '@dxos/react-ui-terminal';
-import * as Panel from '@dxos/react-ui/Panel';
 
 import { useCliApp } from './useCliApp.ts';
 
@@ -31,13 +31,13 @@ export const CliArticle = ({ role }: { role?: string }) => {
   // No ScrollArea: xterm owns its own viewport and scrollback.
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         {cli ? (
           <Terminal command={cli.command} layer={cli.layer} name='dx' banner={BANNER} />
         ) : (
           <Placeholder label='No commands' />
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

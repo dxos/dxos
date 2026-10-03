@@ -5,17 +5,14 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { Banner, Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { buyPremium, createStripeCheckout } from '#services';
@@ -29,8 +26,8 @@ type Status = {
 export type PaymentsSettingsProps = AppSurface.SettingsData;
 
 export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const [identityService] = AppHooks.useCapabilities(ClientCapabilities.IdentityService);
+  const { t } = useTranslation(meta.profile.key);
+  const [identityService] = Hooks.useCapabilities(ClientCapabilities.IdentityService);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
   // Resolved per action rather than held in state: the presentation signer is only valid while the
@@ -40,7 +37,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
     return edgeIdentity && Option.getOrUndefined(edgeIdentity);
   }, [identityService]);
 
-  const { settings, updateSettings } = AppHooks.useSettingsState<Settings.Settings>(subject.atom);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const paymentsUrl = settings.paymentsUrl?.trim();
 
   const handleBuyPremium = useCallback(async () => {
@@ -104,25 +101,23 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
             actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Fields />
-            <Flex.Root column gap='sm' classNames='my-2'>
-              <Button.Root disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
+            <Flex column gap='sm' classNames='my-2'>
+              <Button disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
                 {pending ? t('pending.label') : t('buy-premium.label')}
-              </Button.Root>
-              <Button.Root disabled={pending || !paymentsUrl} onClick={handleBuyCredits}>
+              </Button>
+              <Button disabled={pending || !paymentsUrl} onClick={handleBuyCredits}>
                 {pending ? t('pending.label') : t('buy-credits.label')}
-              </Button.Root>
+              </Button>
               {status.kind === 'result' && (
                 <pre className='text-xs whitespace-pre-wrap overflow-auto'>{status.text}</pre>
               )}
               {status.kind === 'error' && (
                 <Banner.Root valence='error'>
-                  <Banner.Content>
-                    <Banner.Title>{t('error.label')}</Banner.Title>
-                    <Banner.Body>{status.text}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Title>{t('error.label')}</Banner.Title>
+                  <Banner.Body>{status.text}</Banner.Body>
                 </Banner.Root>
               )}
-            </Flex.Root>
+            </Flex>
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>

@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -12,10 +12,8 @@ import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';
@@ -24,8 +22,8 @@ import { FeedOperation, Subscription } from '#types';
 export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps;
 
 export const SubscriptionsArticle = ({ role, space, attendableId }: SubscriptionsArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const layout = ToolkitHooks.useLayout();
 
   const feeds = useQuery(space.db, Filter.type(Subscription.Subscription));
@@ -88,14 +86,14 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.IconButton label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
+          <Button label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <SubscriptionStack id={attendableId} feeds={feeds} currentId={currentId} onAction={handleAction} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

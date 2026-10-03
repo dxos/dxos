@@ -9,7 +9,7 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { AiSession } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
@@ -19,7 +19,7 @@ import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Assistant } from '#types';
 
@@ -52,7 +52,7 @@ export const useChatProcessor = ({
   const feed = Obj.getReactiveOrUndefined(feedSnapshot);
 
   const [session, setSession] = useState<AiSession.Session>();
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (!db || !chat || !feed) {
       return;
     }
@@ -75,7 +75,7 @@ export const useChatProcessor = ({
     };
   }, [db, chat, feed]);
 
-  const serviceResolver = AppHooks.useCapability(Capabilities.ServiceResolver);
+  const serviceResolver = Hooks.useCapability(Capabilities.ServiceResolver);
 
   const processor = useMemo(() => {
     if (!runtime || !session || !chat || !feed || !db) {

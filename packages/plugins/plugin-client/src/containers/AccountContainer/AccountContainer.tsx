@@ -5,18 +5,12 @@
 import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { type FormEvent, useCallback, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
+import { Banner, Button, Field, Flex, Icon, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
@@ -27,10 +21,10 @@ import { useAccountUrl, useHubHttpClient } from '../../hooks/index.ts';
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
 export const AccountContainer = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const identity = useIdentity();
-  const { invokePromise } = AppHooks.useOperationInvoker();
-  const accountCacheAtom = AppHooks.useCapability(ClientCapabilities.AccountCache);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const accountCacheAtom = Hooks.useCapability(ClientCapabilities.AccountCache);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
@@ -43,7 +37,7 @@ export const AccountContainer = () => {
   const hubHttp = useHubHttpClient();
   const { openAccountPage } = useAccountUrl();
 
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (!hubHttp) {
       return;
     }
@@ -127,18 +121,16 @@ export const AccountContainer = () => {
             {accountState === 'loading' ? null : accountState === 'missing' ? (
               <>
                 <Banner.Root valence='warning'>
-                  <Banner.Content>
-                    <Banner.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Banner.Title>
-                    <Banner.Body>{t('no-edge-access.description')}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Banner.Title>
+                  <Banner.Body>{t('no-edge-access.description')}</Banner.Body>
                 </Banner.Root>
                 <Form.Field standalone label={t('request-access.label')} description={t('request-access.description')}>
                   {requestSubmitted ? (
-                    <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
+                    <span className='text-sm text-fg-muted'>{t('access-request-submitted.message')}</span>
                   ) : (
                     <form onSubmit={handleRequestAccess} className='flex gap-2 items-center justify-end'>
                       <Field.Root>
-                        <Field.Input
+                        <Input
                           type='email'
                           required
                           placeholder={t('access-request-email.placeholder')}
@@ -147,45 +139,39 @@ export const AccountContainer = () => {
                           classNames='w-64 max-w-full min-w-0'
                         />
                       </Field.Root>
-                      <Button.Root type='submit' density='sm'>
+                      <Button type='submit' size='sm'>
                         {t('request-access.label')}
-                      </Button.Root>
+                      </Button>
                     </form>
                   )}
                 </Form.Field>
               </>
             ) : accountState === 'error' && !account ? (
               <Banner.Root valence='error'>
-                <Banner.Content>
-                  <Banner.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Banner.Title>
-                  <Banner.Body>{t('account-offline.description')}</Banner.Body>
-                </Banner.Content>
+                <Banner.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Banner.Title>
+                <Banner.Body>{t('account-offline.description')}</Banner.Body>
               </Banner.Root>
             ) : account ? (
               <>
                 <Form.Field standalone label={t('email.label')} description={account.email}>
                   {account.emailVerified ? (
-                    <Icon.Root
-                      icon='ph--check-circle--duotone'
-                      size={5}
-                      classNames='text-success-text justify-self-end'
-                    />
+                    <Icon icon='ph--check-circle--duotone' size='lg' classNames='justify-self-end' valence='success' />
                   ) : (
-                    <Flex.Root column gap='xs' align='end'>
-                      <IconButton.Root
+                    <Flex column gap='xs' align='end'>
+                      <Button
                         icon='ph--paper-plane-tilt--regular'
                         label={t('resend-verification.label')}
                         onClick={handleResend}
-                        density='sm'
+                        size='sm'
                       />
-                      {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
-                    </Flex.Root>
+                      {resendStatus ? <span className='text-xs text-fg-muted'>{resendStatus}</span> : null}
+                    </Flex>
                   )}
                 </Form.Field>
                 <Form.Field standalone label={t('delete-account.label')} description={t('delete-account.description')}>
-                  <Button.Root variant='destructive' onClick={handleDeleteAccount}>
+                  <Button variant='destructive' onClick={handleDeleteAccount}>
                     {t('delete-account.label')}
-                  </Button.Root>
+                  </Button>
                 </Form.Field>
               </>
             ) : null}
@@ -197,7 +183,7 @@ export const AccountContainer = () => {
                 label={t('open-account-page.label')}
                 description={t('open-account-page.description')}
               >
-                <IconButton.Root
+                <Button
                   icon='ph--arrow-square-out--regular'
                   label={t('open-account-page.label')}
                   variant='default'

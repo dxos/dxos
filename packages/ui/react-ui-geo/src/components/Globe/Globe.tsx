@@ -30,11 +30,17 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Util from '@dxos/react-ui/Util';
+import {
+  type ThemedClassName,
+  type ThemeMode,
+  composable,
+  composableProps,
+  useComposedRefs,
+  useControlledState,
+  useDynamicRef,
+  useThemeMode,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
-import { type ThemeMode } from '@dxos/ui-types';
 
 import {
   GlobeContext,
@@ -165,10 +171,10 @@ const GlobeRoot = forwardRef<GlobeController | null, GlobeRootProps>(
     forwardedRef,
   ) => {
     const [size, setSize] = useState<Size>({ width: 0, height: 0 });
-    const [center, setCenter] = Hooks.useControlledState(centerProp);
-    const [zoom, setZoom] = Hooks.useControlledState(zoomProp);
-    const [translation, setTranslation] = Hooks.useControlledState<Point>(translationProp);
-    const [rotation, setRotation] = Hooks.useControlledState<Vector>(rotationProp);
+    const [center, setCenter] = useControlledState(centerProp);
+    const [zoom, setZoom] = useControlledState(zoomProp);
+    const [translation, setTranslation] = useControlledState<Point>(translationProp);
+    const [rotation, setRotation] = useControlledState<Vector>(rotationProp);
 
     // The controller is built by Globe.Canvas and registered here; Globe.Root re-exposes it via its
     // ref. Held in state (not a ref) so that when Globe.Canvas registers a new controller, Root
@@ -209,16 +215,16 @@ GlobeRoot.displayName = 'Globe.Root';
 //
 
 /** Consumer-facing props for `Globe.Viewport` (classNames + children). */
-type GlobeViewportProps = Util.ThemedClassName<PropsWithChildren>;
+type GlobeViewportProps = ThemedClassName<PropsWithChildren>;
 
 /**
  * Measured container for the globe. Renders the `relative dx-expand` div, observes its size, and
  * publishes measurements to the context so `Globe.Canvas` can size the canvas.
  */
-const GlobeViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+const GlobeViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { setSize } = useGlobeContext();
   const localRef = useRef<HTMLDivElement>(null);
-  const composedRef = Hooks.useComposedRefs<HTMLDivElement>(localRef, forwardedRef);
+  const composedRef = useComposedRefs<HTMLDivElement>(localRef, forwardedRef);
   const { width, height } = useResizeDetector<HTMLDivElement>({ targetRef: localRef });
 
   useEffect(() => {
@@ -226,7 +232,7 @@ const GlobeViewport = Util.composable<HTMLDivElement>(({ children, ...props }, f
   }, [width, height, setSize]);
 
   return (
-    <div {...Util.composableProps(props, { classNames: 'relative dx-expand overflow-hidden' })} ref={composedRef}>
+    <div {...composableProps(props, { classNames: 'relative dx-expand overflow-hidden' })} ref={composedRef}>
       {children}
     </div>
   );
@@ -257,12 +263,12 @@ type GlobeCanvasProps = {
  * https://github.com/topojson/world-atlas
  */
 const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styles: stylesProp }: GlobeCanvasProps) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
   const { size, center, zoom, translation, rotation, setZoom, setTranslation, setRotation, registerController } =
     useGlobeContext();
 
-  const zoomRef = Hooks.useDynamicRef(zoom);
+  const zoomRef = useDynamicRef(zoom);
 
   // Canvas.
   const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
@@ -443,7 +449,7 @@ const GlobePanel = ({
   position,
   classNames,
   children,
-}: Util.ThemedClassName<PropsWithChildren & { position?: ControlPosition }>) => {
+}: ThemedClassName<PropsWithChildren & { position?: ControlPosition }>) => {
   return <div className={mx('z-10 absolute overflow-hidden', controlPositions[position], classNames)}>{children}</div>;
 };
 

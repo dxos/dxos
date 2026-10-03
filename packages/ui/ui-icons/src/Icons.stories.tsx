@@ -10,7 +10,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import * as Icon from '@dxos/react-ui/Icon';
+import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getSize } from '@dxos/ui-theme';
 
@@ -36,12 +36,12 @@ const reference = [
  */
 const Row = ({ symbol }: { symbol: string }) => (
   <div className='flex items-center gap-4'>
-    <div className='w-56 shrink-0 font-mono text-xs text-subdued'>{symbol}</div>
+    <div className='w-56 shrink-0 font-mono text-xs text-fg-subtle'>{symbol}</div>
     {sizes.map((size) => (
       // The slot keeps columns aligned across rows; the inner box takes its size from the icon.
       <div key={size} className='grid w-20 place-items-center'>
         <div className='inline-flex border border-dashed border-separator'>
-          <Icon.Root icon={symbol} classNames={getSize(size)} />
+          <Icon icon={symbol} classNames={getSize(size)} />
         </div>
       </div>
     ))}
@@ -50,7 +50,7 @@ const Row = ({ symbol }: { symbol: string }) => (
 
 const Group = ({ symbols, title }: { symbols: string[]; title: string }) => (
   <div className='flex flex-col gap-2'>
-    <h2 className='text-sm uppercase tracking-wide text-subdued'>{title}</h2>
+    <h2 className='text-sm uppercase tracking-wide text-fg-subtle'>{title}</h2>
     {symbols.map((symbol) => (
       <Row key={symbol} symbol={symbol} />
     ))}
@@ -85,7 +85,7 @@ export const Inline: Story = {
     <div className='flex flex-col gap-4 text-base'>
       {Object.values(PxIcons).map((symbol) => (
         <p key={symbol} className='flex items-center gap-2'>
-          <Icon.Root icon={symbol} />
+          <Icon icon={symbol} />
           <span>The quick brown fox — {symbol}</span>
         </p>
       ))}

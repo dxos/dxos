@@ -4,7 +4,7 @@
 
 import { type PropsWithChildren } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Graph, type GraphProps as SVGGraphProps } from '../Graph/index.ts';
 import { Mesh, type MeshProps as SVGMeshProps } from '../Mesh/index.ts';
@@ -14,7 +14,7 @@ import { Markers, type MarkersProps as SVGMarkersProps } from './Markers.tsx';
 import { Root, type RootProps as SVGRootProps } from './Root.tsx';
 import { type ZoomProps as SVGZoomProps, Zoom } from './Zoom.tsx';
 
-export type SVGProps = PropsWithChildren<Util.ThemedClassName>;
+export type SVGProps = PropsWithChildren<ThemedClassName>;
 
 type SVG = {
   Root: typeof Root;

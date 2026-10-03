@@ -6,11 +6,8 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { Format } from '@dxos/echo';
+import { Button, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import type * as Util from '@dxos/react-ui/Util';
 
 // Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
 export const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
@@ -23,7 +20,7 @@ const QueryOptions = Schema.Struct({
   ),
 });
 
-export type QueryPanelProps = Util.ThemedClassName<{
+export type QueryPanelProps = ThemedClassName<{
   /** Natural-language question; Generate translates it into the SPARQL field. */
   question: string;
   query: string;
@@ -54,18 +51,18 @@ export const QueryPanel = ({
   classNames,
 }: QueryPanelProps) => (
   <Panel.Root classNames={classNames}>
-    <Panel.Toolbar asChild>
+    <Panel.Header>
       <Toolbar.Root>
         <Toolbar.Separator />
-        <IconButton.Root
+        <Button
           icon='ph--sparkle--regular'
           iconOnly
           label='Generate SPARQL'
           disabled={!!busy || !question}
           onClick={onGenerate}
         />
-        <IconButton.Root icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
-        <IconButton.Root
+        <Button icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
+        <Button
           icon='ph--arrow-counter-clockwise--regular'
           iconOnly
           label='Reset query'
@@ -73,8 +70,8 @@ export const QueryPanel = ({
           onClick={onReset}
         />
       </Toolbar.Root>
-    </Panel.Toolbar>
-    <Panel.Content>
+    </Panel.Header>
+    <Panel.Body>
       <Form.Root
         schema={QueryOptions}
         values={{ question, query }}
@@ -89,6 +86,6 @@ export const QueryPanel = ({
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
-    </Panel.Content>
+    </Panel.Body>
   </Panel.Root>
 );

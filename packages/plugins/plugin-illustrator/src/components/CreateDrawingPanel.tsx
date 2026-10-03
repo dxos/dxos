@@ -5,12 +5,11 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import * as Column from '@dxos/react-ui/Column';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { IllustratorCapabilities } from '#types';
@@ -31,8 +30,8 @@ type VariantSelection = Schema.Schema.Type<typeof VariantSelection>;
  * variant.createCanvas, then wraps it in a Drawing.
  */
 export const CreateDrawingPanel = ({ onCreateObject, onCancel, variants: variantsProp }: CreateDrawingPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const capabilityVariants = AppHooks.useCapabilities(IllustratorCapabilities.VariantProvider);
+  const { t } = useTranslation(meta.profile.key);
+  const capabilityVariants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const variants = variantsProp ?? capabilityVariants;
   const sorted = useMemo(() => [...variants].sort((a, b) => a.label.localeCompare(b.label)), [variants]);
   const { results, handleSearch } = useSearchListResults({
@@ -53,31 +52,29 @@ export const CreateDrawingPanel = ({ onCreateObject, onCancel, variants: variant
 
   return (
     <Form.Root schema={VariantSelection} values={values} onSave={handleSave} onCancel={onCancel}>
-      <Column.Center>
-        <Form.Content>
-          <SearchList.Root onSearch={handleSearch}>
-            <SearchList.Input
-              classNames='mb-form-gap'
-              autoFocus
-              data-testid='create-drawing-panel.variant-input'
-              placeholder={t('create-panel.variant.placeholder')}
-            />
-            <SearchList.Viewport>
-              {results.map((variant) => (
-                <SearchList.Item
-                  key={variant.id}
-                  value={variant.id}
-                  label={variant.label}
-                  icon={variant.icon ?? 'ph--compass-tool--regular'}
-                  checked={variant.id === variantId}
-                  onSelect={() => setSelectedId(variant.id)}
-                />
-              ))}
-            </SearchList.Viewport>
-          </SearchList.Root>
-          <Form.Actions />
-        </Form.Content>
-      </Column.Center>
+      <Form.Content>
+        <SearchList.Root onSearch={handleSearch}>
+          <SearchList.Input
+            classNames='mb-form-gap'
+            autoFocus
+            data-testid='create-drawing-panel.variant-input'
+            placeholder={t('create-panel.variant.placeholder')}
+          />
+          <SearchList.Viewport>
+            {results.map((variant) => (
+              <SearchList.Item
+                key={variant.id}
+                value={variant.id}
+                label={variant.label}
+                icon={variant.icon ?? 'ph--compass-tool--regular'}
+                checked={variant.id === variantId}
+                onSelect={() => setSelectedId(variant.id)}
+              />
+            ))}
+          </SearchList.Viewport>
+        </SearchList.Root>
+        <Form.Actions />
+      </Form.Content>
     </Form.Root>
   );
 };

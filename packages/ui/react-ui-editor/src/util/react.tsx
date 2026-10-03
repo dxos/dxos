@@ -5,8 +5,8 @@
 import React, { type FC } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Tooltip from '@dxos/react-ui/Tooltip';
+import { ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui';
 import { type RenderCallback } from '@dxos/ui-editor/types';
 
 /**
@@ -21,10 +21,8 @@ export const createRenderer =
   <TProps extends object>(Component: FC<TProps>): RenderCallback<TProps> =>
   (el, props) => {
     createRoot(el).render(
-      <ThemeProvider.Root tx={ThemeProvider.defaultTx}>
-        <Tooltip.Provider>
-          <Component {...props} />
-        </Tooltip.Provider>
-      </ThemeProvider.Root>,
+      <ThemeProvider tx={defaultTx}>
+        <Component {...props} />
+      </ThemeProvider>,
     );
   };

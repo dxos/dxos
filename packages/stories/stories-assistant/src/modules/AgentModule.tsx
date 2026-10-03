@@ -5,10 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Client } from '@dxos/agent-claude/client';
-import * as Field from '@dxos/react-ui/Field';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Button, Field, Icon, Input, Panel } from '@dxos/react-ui';
 import { ContentBlock } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -57,10 +54,10 @@ const blockClass = (block: ContentBlock.Any): string => {
     case 'toolResult':
       return block.error ? 'text-error-text' : 'text-success-text';
     case 'toolCall':
-      return 'text-subdued';
+      return 'text-fg-subtle';
     case 'reasoning':
     case 'stats':
-      return 'text-description text-xs';
+      return 'text-fg-muted text-xs';
     default:
       return '';
   }
@@ -142,36 +139,33 @@ export const AgentModule = () => {
 
   return (
     <Panel.Root classNames='dx-fill flex flex-col gap-2 p-2 overflow-hidden'>
-      <Panel.Toolbar classNames='shrink-0 justify-end'>
-        <div className='flex items-center gap-1 text-xs text-description'>
-          <Icon.Root icon='ph--git-commit--regular' size={4} />
+      <Panel.Header classNames='shrink-0 justify-end'>
+        <div className='flex items-center gap-1 text-xs text-fg-muted'>
+          <Icon icon='ph--git-commit--regular' size='md' />
           {session ? `session ${session.slice(0, 8)}` : 'no session'}
         </div>
-      </Panel.Toolbar>
+      </Panel.Header>
 
       <div ref={scroller} className='dx-grow overflow-y-auto p-2'>
         <div className='flex flex-col gap-3'>
           {rows.map(({ role, block, superseded }, index) => (
             <div key={index} className='flex flex-col gap-1'>
-              {role && <div className='text-xs text-description uppercase'>{role}</div>}
+              {role && <div className='text-xs text-fg-muted uppercase'>{role}</div>}
               <div
-                className={mx(
-                  'whitespace-pre-wrap text-sm',
-                  superseded ? 'text-description text-xs' : blockClass(block),
-                )}
+                className={mx('whitespace-pre-wrap text-sm', superseded ? 'text-fg-muted text-xs' : blockClass(block))}
               >
                 {superseded ? `✗ ${block._tag === 'toolResult' ? block.name : ''} (retried)` : blockText(block)}
               </div>
             </div>
           ))}
-          {running && <div className='text-sm text-description'>running…</div>}
+          {running && <div className='text-sm text-fg-muted'>running…</div>}
           {error && <div className='text-sm text-error-text'>{error}</div>}
         </div>
       </div>
 
       <div className='flex gap-2 items-center shrink-0'>
         <Field.Root>
-          <Field.Input
+          <Input
             classNames='flex-1 min-w-0'
             placeholder='Ask the agent…'
             value={prompt}
@@ -185,14 +179,14 @@ export const AgentModule = () => {
             }}
           />
         </Field.Root>
-        <IconButton.Root
+        <Button
           classNames='shrink-0'
           icon='ph--paper-plane-right--regular'
           label='Send'
           disabled={running}
           onClick={() => void send()}
         />
-        <IconButton.Root
+        <Button
           classNames='shrink-0'
           icon='ph--git-branch--regular'
           label='Fork'

@@ -4,13 +4,12 @@
 
 import React, { useCallback, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
+import { Card, useTranslation } from '@dxos/react-ui';
 import { TaskQuestion } from '@dxos/react-ui-task';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -31,8 +30,8 @@ export type QuestionCardProps = {
  * The body ONLY — the host draws `Card.Root` and the header.
  */
 export const QuestionCard = ({ task, questionId }: QuestionCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Snapshot rather than the object: the card must repaint when the answer lands, including when
   // it lands from another surface showing the same question — the task's own row, say.
   const [snapshot] = useObject(task);

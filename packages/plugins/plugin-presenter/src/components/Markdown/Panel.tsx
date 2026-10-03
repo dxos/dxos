@@ -5,10 +5,10 @@
 import React, { type PropsWithChildren, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-export type PanelProps = Util.ThemedClassName<PropsWithChildren<{}>>;
+export type PanelProps = ThemedClassName<PropsWithChildren<{}>>;
 
 /**
  * Scaled markdown panel.

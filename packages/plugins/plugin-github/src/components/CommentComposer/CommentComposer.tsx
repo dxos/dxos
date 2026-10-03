@@ -4,11 +4,7 @@
 
 import React, { type KeyboardEvent, type RefObject, useCallback } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Popover from '@dxos/react-ui/Popover';
+import { Button, Field, Flex, Popover, Textarea, useTranslation, virtualAnchor } from '@dxos/react-ui';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -29,7 +25,7 @@ export type CommentComposerProps = {
  * about one line of a diff.
  */
 export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, onCancel }: CommentComposerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   // Cmd/Ctrl+Enter submits, matching GitHub's own comment form.
   const handleKeyDown = useCallback(
@@ -47,12 +43,12 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
   return (
     <>
       {target && (
-        <span className='text-sm text-description'>
+        <span className='text-sm text-fg-muted'>
           {t('comment-line.label', { file: target.file, line: target.line })}
         </span>
       )}
       <Field.Root>
-        <Field.Textarea
+        <Textarea
           autoFocus
           rows={4}
           placeholder={t('comment-placeholder.label')}
@@ -61,21 +57,21 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
           onKeyDown={handleKeyDown}
         />
       </Field.Root>
-      <Flex.Root justify='end' gap='sm'>
-        <Button.Root onClick={onCancel}>{t('comment-cancel.label')}</Button.Root>
-        <Button.Root variant='primary' disabled={busy || !value.trim()} onClick={onSubmit}>
+      <Flex justify='end' gap='sm'>
+        <Button onClick={onCancel}>{t('comment-cancel.label')}</Button>
+        <Button variant='primary' disabled={busy || !value.trim()} onClick={onSubmit}>
           {t('comment-submit.label')}
-        </Button.Root>
-      </Flex.Root>
+        </Button>
+      </Flex>
     </>
   );
 };
 
 /** The composer as a band under the toolbar, for a comment on the pull request as a whole. */
 export const CommentBand = (props: CommentComposerProps) => (
-  <Flex.Root column gap='sm' classNames='p-3 border-b border-separator'>
+  <Flex column gap='sm' classNames='p-3 border-b border-separator'>
     <CommentComposer {...props} />
-  </Flex.Root>
+  </Flex>
 );
 
 export type LineCommentPopoverProps = CommentComposerProps & {
@@ -91,19 +87,17 @@ export type LineCommentPopoverProps = CommentComposerProps & {
 export const LineCommentPopover = ({ open, anchorRef, ...props }: LineCommentPopoverProps) => (
   <Popover.Root
     open={open}
-    onOpenChange={(next) => {
+    onOpenChange={({ open: next }) => {
       if (!next) {
         props.onCancel();
       }
     }}
+    positioning={{ ...virtualAnchor(anchorRef), placement: 'bottom-start' }}
   >
-    <Popover.VirtualTrigger virtualRef={anchorRef} />
-    <Popover.Portal>
-      <Popover.Content side='bottom' align='start' classNames='w-[28rem] max-w-[90cqi]'>
-        <Popover.Viewport classNames='flex flex-col gap-2 p-2'>
-          <CommentComposer {...props} />
-        </Popover.Viewport>
-      </Popover.Content>
-    </Popover.Portal>
+    <Popover.Content classNames='w-[28rem] max-w-[90cqi]'>
+      <Popover.Body classNames='flex flex-col gap-2 p-2'>
+        <CommentComposer {...props} />
+      </Popover.Body>
+    </Popover.Content>
   </Popover.Root>
 );

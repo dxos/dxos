@@ -4,15 +4,11 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginRegistryButton from '@dxos/app-toolkit/PluginRegistryButton';
 import { Obj, Ref } from '@dxos/echo';
+import { Banner, Empty, Flex, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Select from '@dxos/react-ui/Select';
-import * as Separator from '@dxos/react-ui/Separator';
 import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
@@ -52,13 +48,13 @@ export type BookingSearchProps = {
 };
 
 const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const kind = Segment.getKind(segment);
 
   // Resolve contributed services for the provider picker + empty state. The actual search runs
   // through the SearchBookings operation so the assistant shares the same path.
-  const allServices = AppHooks.useCapabilities(TripCapabilities.BookingService);
+  const allServices = Hooks.useCapabilities(TripCapabilities.BookingService);
   const services = useMemo(() => allServices.filter((service) => service.kinds.includes(kind)), [allServices, kind]);
   const [serviceId, setServiceId] = useState<string | undefined>(undefined);
   const service = useMemo(
@@ -183,13 +179,11 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
   if (services.length === 0) {
     return (
       <Banner.Root valence='info'>
-        <Banner.Content classNames='m-form-padding'>
-          <Banner.Title>{t('booking.no-providers.message')}</Banner.Title>
-          <Banner.Body classNames='flex flex-col py-1 gap-2'>
-            <span>{t('booking.enable-providers.message')}</span>
-            <PluginRegistryButton.Root />
-          </Banner.Body>
-        </Banner.Content>
+        <Banner.Title>{t('booking.no-providers.message')}</Banner.Title>
+        <Banner.Body classNames='flex flex-col py-1 gap-2'>
+          <span>{t('booking.enable-providers.message')}</span>
+          <PluginRegistryButton.Root />
+        </Banner.Body>
       </Banner.Root>
     );
   }
@@ -197,7 +191,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
   const flightOffers = offers?.filter((offer): offer is BookingSearch.FlightOffer => offer._tag === 'flight');
 
   return (
-    <Flex.Root column classNames='dx-expand'>
+    <Flex column classNames='dx-expand'>
       {/* Query form: content-height (Viewport without `scroll`) — does not expand; offers fill the rest. */}
       <Form.Root
         schema={BookingSearch.FlightSearchFields}
@@ -209,19 +203,17 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
         <Form.Viewport>
           <Form.Content>
             {services.length > 1 && (
-              <Select.Root value={service?.id} onValueChange={setServiceId}>
-                <Select.TriggerButton placeholder={t('booking.provider.placeholder')} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {services.map((candidate) => (
-                        <Select.Option key={candidate.id} value={candidate.id}>
-                          {candidate.label}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
+              <Select.Root
+                value={service ? [service.id] : []}
+                onValueChange={({ value: [value] }) => value && setServiceId(value)}
+                items={services.map((candidate) => ({ value: candidate.id, label: candidate.label }))}
+              >
+                <Select.Trigger placeholder={t('booking.provider.placeholder')} />
+                <Select.Content>
+                  {services.map((candidate) => (
+                    <Select.Item key={candidate.id} item={{ value: candidate.id, label: candidate.label }} />
+                  ))}
+                </Select.Content>
               </Select.Root>
             )}
             <Form.Layout template={SEARCH_LAYOUT} />
@@ -238,15 +230,15 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
       {/* Offers list: reuses the mosaic stack (own ScrollArea) so offers share the segment list affordances. */}
       {flightOffers && (
         <>
-          <Separator.Root />
+          <Separator />
           {flightOffers.length === 0 ? (
-            <Banner.Empty label={t('booking.no-offers.message')} />
+            <Empty>{t('booking.no-offers.message')}</Empty>
           ) : (
             <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
           )}
         </>
       )}
-    </Flex.Root>
+    </Flex>
   );
 };
 

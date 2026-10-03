@@ -6,11 +6,12 @@ import React, { useCallback } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as CardIconSlot from '@dxos/app-toolkit/CardIconSlot';
-import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { Card, Field, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
@@ -21,13 +22,6 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import * as Card from '@dxos/react-ui/Card';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
 import { ObjectCard, RelatedTypeFilter } from '#components';
@@ -36,7 +30,7 @@ import { meta } from '#meta';
 import { SpaceSurface } from '#types';
 
 export const RecordArticle = ({ role, subject, attendableId }: AppSurface.ObjectArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { actions, onAction } = useMenuActions(attendableId);
   useObject(subject);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
@@ -51,10 +45,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
           .filter(Type.isType)
           .find((t) => Type.getTypename(t) === typename)
       : undefined);
-  const icon =
-    schema && Type.getDatabase(schema) != null
-      ? 'ph--cube--regular'
-      : (Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular');
+  const icon = schema && Type.getDatabase(schema) != null ? 'ph--cube--regular' : undefined;
 
   // Keyed by the record, not this article, so the Related companion shares the same filter.
   const relatedObjects = useRelatedObjects(db, subject, { references: true, relations: true });
@@ -63,34 +54,27 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <Card.Root fullWidth>
-              <Card.Header>
-                <Card.Block>
-                  <CardIconSlot.Root subject={subject}>
-                    <Icon.Root icon={icon} />
-                  </CardIconSlot.Root>
-                </Card.Block>
-                <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
-              </Card.Header>
+            <ObjectCardPrimitive.Root>
+              <ObjectCardPrimitive.Header subject={subject} icon={icon} />
               <Card.Body>
                 <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
               </Card.Body>
-            </Card.Root>
+            </ObjectCardPrimitive.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}
             {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}
-            <Flex.Root column gap='form'>
+            <Flex column gap='form'>
               <Field.Root>
                 <Field.Label>{t('related-actions.label')}</Field.Label>
               </Field.Root>
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
-            </Flex.Root>
+            </Flex>
 
             {/* Gated on the unfiltered set so hiding every type does not remove the filter itself. */}
             {relatedObjects.length > 0 && (
@@ -108,7 +92,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                     `Content`'s prop of the same name below (ScrollArea's scrollbar padding). Centred
                     columns drift right of the record card above them, which shares this column. */}
                 <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
-                  <Masonry.Content padding={false} centered={false}>
+                  <Masonry.Content padding={false}>
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>
                 </Masonry.Root>
@@ -116,7 +100,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -136,7 +120,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 const useMenuActions = (
   attendableId?: string,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = ToolkitHooks.useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
 
   const menuActions = useMenuBuilder(

@@ -5,7 +5,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 type Range = {
@@ -31,7 +31,7 @@ const sizes: Record<number, { range: Range; classNames: string; h: string }> = {
   6: { range, classNames: 'w-6 h-6 gap-[2px]', h: 'w-[2px] h-[22px]' },
 };
 
-export type WaveformProps = Util.ThemedClassName<{
+export type WaveformProps = ThemedClassName<{
   active?: boolean;
   size?: number;
 }>;

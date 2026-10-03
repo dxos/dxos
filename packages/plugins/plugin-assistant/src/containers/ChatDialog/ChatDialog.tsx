@@ -4,14 +4,14 @@
 
 import React, { useCallback, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as ChatTypes from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useRegistry } from '@dxos/react-client/echo';
+import { useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Chat, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets } from '#hooks';
@@ -23,10 +23,10 @@ export type ChatDialogProps = {
 };
 
 export const ChatDialog = ({ chat }: ChatDialogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   const db = chat && Obj.getDatabase(chat);
-  const settings = AppHooks.useAtomCapability(AssistantCapabilities.Settings);
+  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const runtime = useChatServices({ id: db?.spaceId });
   const { preset, ...chatProps } = usePresets(settings, chat);
   const registry = useRegistry();

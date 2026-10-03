@@ -4,9 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { Button, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createLineSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 import { TaskSetView } from '#types';
@@ -39,7 +38,7 @@ export type TaskSortMenuProps = {
  * order — the one a drag writes — so it is the only field without a direction to pick.
  */
 export const TaskSortMenu = ({ value, onChange }: TaskSortMenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const sorted = value.field !== 'manual';
 
   const group = useMemo(
@@ -80,7 +79,7 @@ export const TaskSortMenu = ({ value, onChange }: TaskSortMenuProps) => {
 
   return (
     <ActionMenu deferUntilOpen group={group} actions={actions}>
-      <IconButton.Root
+      <Button
         // The trigger names the order while it is not the set's own, so a reader can tell why the
         // rows are not where they dragged them.
         icon={
@@ -108,7 +107,7 @@ export type TaskGroupMenuProps = {
 
 /** What the list is grouped by, as a single-select menu beside the sort. */
 export const TaskGroupMenu = ({ value, onChange }: TaskGroupMenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const grouped = value !== 'none';
 
   const group = useMemo(
@@ -138,7 +137,7 @@ export const TaskGroupMenu = ({ value, onChange }: TaskGroupMenuProps) => {
 
   return (
     <ActionMenu deferUntilOpen group={group} actions={actions}>
-      <IconButton.Root
+      <Button
         icon={grouped ? GROUP_ICONS[value] : 'ph--rows--regular'}
         iconOnly={!grouped}
         label={grouped ? t(`group-${value}.label`) : t('group.label')}

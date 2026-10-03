@@ -5,9 +5,7 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import * as Card from '@dxos/react-ui/Card';
-import * as Focus from '@dxos/react-ui/Focus';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import { Block, Card, Focus, SystemButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';
@@ -45,36 +43,28 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
   return (
     <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
       <Card.Root
-        fullWidth
         classNames={mx('dx-hover dx-current cursor-pointer transition-opacity', read && !current && 'opacity-60')}
       >
         {imageUrl && (
-          <Card.Poster alt={snapshot.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
+          <Card.Poster alt={snapshot.title ?? 'Article'} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Card.Block>
-            <SystemIconButton.Star
-              variant='ghost'
-              iconOnly
-              square
-              size={4}
-              active={starred}
-              onClick={handleToggleStar}
-            />
-          </Card.Block>
-          {snapshot.title ? <Card.Title classNames='line-clamp-2'>{snapshot.title}</Card.Title> : <div />}
-          <Card.Block end />
+          <Block>
+            <SystemButton.Star variant='ghost' iconOnly iconSize='md' pressed={starred} onClick={handleToggleStar} />
+          </Block>
+          {snapshot.title ? <Card.Title lines={2}>{snapshot.title}</Card.Title> : <div />}
+          <Block rail='end' />
         </Card.Header>
         <Card.Body>
           {snippet && (
             <Card.Row>
-              <Card.Text variant='description' classNames='line-clamp-3'>
+              <Card.Text variant='muted' classNames='line-clamp-3'>
                 {snippet}
               </Card.Text>
             </Card.Row>
           )}
           <Card.Row>
-            <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-trim-sm py-trim-xs text-sm text-description overflow-hidden'>
+            <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-trim-sm py-trim-xs text-sm text-fg-muted overflow-hidden'>
               <span className='truncate'>{feedName ?? ''}</span>
               <span className='text-end shrink-0'>{formatPublished(snapshot) ?? ''}</span>
             </div>

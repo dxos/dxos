@@ -9,7 +9,7 @@ import React from 'react';
 
 import { Config } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import * as Dialog from '@dxos/react-ui/Dialog';
+import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations.ts';
@@ -37,9 +37,7 @@ const FIXED_TIMESTAMP = '2026-05-19T20:34:24.000Z';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>
-    <Dialog.Overlay>
-      <AboutDialog />
-    </Dialog.Overlay>
+    <AboutDialog />
   </Dialog.Root>
 );
 

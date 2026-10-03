@@ -7,9 +7,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { toPublicKey } from '@dxos/protocols/buf';
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
-import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { ErrorBoundary, Icon, ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useSections } from '../hooks/index.ts';
@@ -21,11 +19,11 @@ export const RootContainer = () => {
     <div className='dx-expand flex'>
       <Sidebar />
       <div className='flex flex-col grow overflow-hidden'>
-        <ErrorFallback.ErrorBoundary key={pathname} name='devtools.root'>
+        <ErrorBoundary key={pathname} name='devtools.root'>
           <Suspense>
             <Outlet />
           </Suspense>
-        </ErrorFallback.ErrorBoundary>
+        </ErrorBoundary>
       </div>
     </div>
   );
@@ -36,14 +34,14 @@ const Sidebar = () => {
   const sections = useSections();
   return (
     <ScrollArea.Root orientation='vertical' classNames='w-[180px] border-e border-separator'>
-      <ScrollArea.Viewport classNames='gap-4 divide-y divide-subdued-separator'>
+      <ScrollArea.Viewport classNames='gap-4 divide-y divide-separator-subtle'>
         {sections.map((section) => (
           <div key={section.id}>
             <div className='flex text-sm ps-4 py-1'>{section.title}</div>
             <div>
               {section.items?.map(({ id, title, icon }) => (
                 <div key={id} className={mx('flex items-center ps-4 gap-2', id === pathname && 'bg-current-surface')}>
-                  <Icon.Root icon={icon} />
+                  <Icon icon={icon} />
                   <Link to={id} className='grow'>
                     <span>{title}</span>
                   </Link>

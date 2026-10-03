@@ -5,10 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import * as IconButton from '@dxos/react-ui/IconButton';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Waveform, type WaveformProps } from './Waveform.tsx';
 
@@ -18,7 +16,7 @@ const DefaultStory = ({ active: _active }: WaveformProps) => {
   return (
     <div className='flex flex-col grow'>
       <Toolbar.Root>
-        <Button.Root onClick={() => setActive((active) => !active)}>Toggle</Button.Root>
+        <Button onClick={() => setActive((active) => !active)}>Toggle</Button>
       </Toolbar.Root>
       <div className='flex flex-col gap-4 grow items-center justify-center'>
         <div className='flex gap-4 items-center'>
@@ -28,33 +26,33 @@ const DefaultStory = ({ active: _active }: WaveformProps) => {
           <Waveform active={active} size={6} />
         </div>
         <div className='flex gap-4 items-center'>
-          <IconButton.Root
+          <Button
             classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
-            size={3}
+            iconSize='xs'
           />
-          <IconButton.Root
+          <Button
             classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
-            size={4}
+            iconSize='md'
           />
-          <IconButton.Root
+          <Button
             classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
-            size={5}
+            iconSize='lg'
           />
-          <IconButton.Root
+          <Button
             classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
-            size={6}
+            iconSize='xl'
           />
         </div>
       </div>

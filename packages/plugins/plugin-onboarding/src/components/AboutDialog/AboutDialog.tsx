@@ -6,11 +6,7 @@ import { formatDistance } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import * as Button from '@dxos/react-ui/Button';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Link from '@dxos/react-ui/Link';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { Button, Dialog, Link, SystemButton, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta.ts';
 
@@ -19,7 +15,6 @@ const ENV_LABELS: Record<string, string> = {
   'dev.dxos.network': 'Dev',
   'preview.dxos.network': 'Preview',
   'dxos.network': 'Production',
-
   'edge.dxos.workers.dev': 'Dev',
   'edge-preview.dxos.workers.dev': 'Preview',
   'edge-main.dxos.workers.dev': 'Main (retired)',
@@ -43,7 +38,7 @@ const parseUrl = (url: string): URL | undefined => {
 };
 
 export const AboutDialog = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
 
@@ -61,49 +56,47 @@ export const AboutDialog = () => {
 
   return (
     <Dialog.Content size='sm'>
-      <Dialog.Header>
+      <Dialog.Header classNames='pb-3'>
         <Dialog.Title asChild>
           <h1 className="font-['Poiret One'] text-5xl" style={{ fontFamily: 'Poiret One' }}>
             composer
           </h1>
         </Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
-        <div className='flex items-center text-description'>
-          {t('version.label', { version: version ?? 'unknown' })}
-        </div>
+        <div className='flex items-center text-fg-muted'>{t('version.label', { version: version ?? 'unknown' })}</div>
         <div className='flex flex-col gap-3'>
           {timestamp && (
             <div className='flex items-center gap-1'>
-              <Link.Root href={releaseUrl} variant='neutral'>
+              <Link href={releaseUrl} variant='neutral'>
                 {t('published.label', {
                   timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
                 })}
-              </Link.Root>
+              </Link>
             </div>
           )}
           {showEnv && <div className='flex items-center'>{t('environment.label', { environment: edgeEnv })}</div>}
           <p>
-            <ThemeProvider.Trans
+            <Trans
               {...{
                 t,
                 i18nKey: 'powered-by-dxos.message',
                 components: {
-                  dxos: <Link.Root href='https://dxos.org' variant='neutral' />,
+                  dxos: <Link href='https://dxos.org' variant='neutral' />,
                 },
               }}
             />
           </p>
         </div>
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
-          <Button.Root variant='primary'>{t('close.label')}</Button.Root>
-        </Dialog.Close>
-      </Dialog.ActionBar>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
+          <Button variant='primary'>{t('close.label')}</Button>
+        </Dialog.CloseTrigger>
+      </Dialog.Footer>
     </Dialog.Content>
   );
 };

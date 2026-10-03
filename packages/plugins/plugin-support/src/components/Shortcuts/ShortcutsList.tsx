@@ -5,24 +5,22 @@
 import React, { Fragment } from 'react';
 
 import { keySymbols, useActiveHotkeys } from '@dxos/react-focus';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
 export const ShortcutsList = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   // TODO(burdon): Get shortcuts from TextEditor.
   // A command registered without a label is shown by its shortcut rather than dropped.
-  const label = (binding: { label?: string; hotkey: string }) =>
-    ThemeProvider.toLocalizedString(binding.label ?? binding.hotkey, t);
+  const label = (binding: { label?: string; hotkey: string }) => toLocalizedString(binding.label ?? binding.hotkey, t);
   const bindings = [...useActiveHotkeys()].sort((a, b) =>
     label(a)?.toLowerCase().localeCompare(label(b)?.toLowerCase()),
   );
 
   return (
-    <dl className={mx('w-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 my-3 text-subdued select-none')}>
+    <dl className={mx('w-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 my-3 text-fg-subtle select-none')}>
       {bindings.map((binding) => (
         <Fragment key={binding.id}>
           <Key binding={binding.hotkey} />
@@ -40,10 +38,7 @@ export const Key = ({ binding }: { binding: string }) => {
   return (
     <kbd role='term' className='inline-flex gap-1' aria-label={binding} id={binding}>
       {keySymbols(binding).map((c, i) => (
-        <span
-          key={i}
-          className='flex w-[24px] h-[24px] justify-center items-center rounded-sm bg-input-surface text-base-fg'
-        >
+        <span key={i} className='flex size-6 justify-center items-center rounded-sm bg-input-surface text-fg'>
           {c}
         </span>
       ))}

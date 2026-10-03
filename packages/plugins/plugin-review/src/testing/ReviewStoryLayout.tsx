@@ -10,8 +10,8 @@ import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useSpaces } from '@dxos/react-client/echo';
+import { Grid } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import * as Grid from '@dxos/react-ui/Grid';
 import { Loading } from '@dxos/react-ui/testing';
 
 /** The companions a review story shows beside the editor, top to bottom. */
@@ -52,17 +52,17 @@ export const ReviewStoryLayout = ({ panels = ['comments', 'history'], attendable
   }
 
   return (
-    <Grid.Root cols={[3, 2]} {...attentionAttrs}>
+    <Grid cols={[3, 2]} {...attentionAttrs}>
       <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
-      <Grid.Root
+      <Grid
         rows={companionData.map(() => 'minmax(0, 1fr)')}
         grow={false}
-        classNames='min-h-0 divide-y divide-subdued-separator'
+        classNames='min-h-0 divide-y divide-separator-subtle'
       >
         {companionData.map((data) => (
           <Surface.Surface key={data.subject} type={AppSurface.Article} data={data} limit={1} />
         ))}
-      </Grid.Root>
-    </Grid.Root>
+      </Grid>
+    </Grid>
   );
 };

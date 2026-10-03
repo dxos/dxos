@@ -68,7 +68,6 @@
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@playwright/test": "catalog:",
     "@tanstack/react-virtual": "catalog:",

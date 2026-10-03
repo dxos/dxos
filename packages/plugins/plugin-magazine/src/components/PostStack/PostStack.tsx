@@ -5,13 +5,9 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
+import { Block, Card, Focus, Icon, ScrollArea, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Util from '@dxos/react-ui/Util';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { Subscription } from '#types';
 
@@ -26,7 +22,7 @@ export type PostStackProps = {
   onAction?: PostStackActionHandler;
 };
 
-export const PostStack = Util.composable<HTMLDivElement, PostStackProps>(
+export const PostStack = composable<HTMLDivElement, PostStackProps>(
   ({ posts = [], currentId, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(() => posts.map((post) => ({ post, onAction })), [posts, onAction]);
@@ -48,7 +44,7 @@ export const PostStack = Util.composable<HTMLDivElement, PostStackProps>(
     }, []);
 
     return (
-      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -56,7 +52,7 @@ export const PostStack = Util.composable<HTMLDivElement, PostStackProps>(
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
         >
-          <ScrollArea.Root orientation='vertical' padding centered>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={PostTile}
@@ -87,7 +83,7 @@ type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'data' | 'location' | '
 const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
   const post = data?.post;
   const { setCurrentId } = useMosaicContainer('PostTile');
-  const { t } = Hooks.useTranslation(Type.getTypename(Subscription.Post));
+  const { t } = useTranslation(Type.getTypename(Subscription.Post));
 
   const handleCurrentChange = useCallback(() => {
     if (post) {
@@ -104,43 +100,43 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef} fullWidth>
+        <Card.Root ref={forwardedRef}>
           <Card.Header>
-            <Card.Block>
-              <Icon.Root icon='ph--rss-simple--regular' />
-            </Card.Block>
-            <Card.Text classNames='truncate'>{post.title ?? t('post-title.placeholder')}</Card.Text>
+            <Block>
+              <Icon icon='ph--rss-simple--regular' />
+            </Block>
+            <Card.Text truncate>{post.title ?? t('post-title.placeholder')}</Card.Text>
             {post.link && (
-              <Card.Block end>
+              <Block rail='end'>
                 <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
-                  <Icon.Root icon='ph--arrow-square-out--regular' size={4} />
+                  <Icon icon='ph--arrow-square-out--regular' size='md' />
                 </a>
-              </Card.Block>
+              </Block>
             )}
           </Card.Header>
           <Card.Body>
             {post.author && (
               <Card.Row>
-                <Card.Block>
-                  <Icon.Root icon='ph--user--regular' />
-                </Card.Block>
-                <Card.Text variant='description'>{post.author}</Card.Text>
+                <Block>
+                  <Icon icon='ph--user--regular' />
+                </Block>
+                <Card.Text variant='muted'>{post.author}</Card.Text>
               </Card.Row>
             )}
             {(post.description || post.content) && (
               <Card.Row>
                 <MarkdownView
                   content={post.description ?? post.content}
-                  classNames='line-clamp-5 text-sm text-description'
+                  classNames='line-clamp-5 text-sm text-fg-muted'
                 />
               </Card.Row>
             )}
             {published && (
               <Card.Row>
-                <Card.Block>
-                  <Icon.Root icon='ph--calendar--regular' />
-                </Card.Block>
-                <Card.Text variant='description' classNames='text-info-text'>
+                <Block>
+                  <Icon icon='ph--calendar--regular' />
+                </Block>
+                <Card.Text variant='muted' classNames='text-info-text'>
                   {published}
                 </Card.Text>
               </Card.Row>

@@ -13,8 +13,8 @@ import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Panel } from '@dxos/react-ui';
 import { useManager } from '@dxos/react-ui-attention';
-import * as Panel from '@dxos/react-ui/Panel';
 import { DraftMessage, Message as MessageType } from '@dxos/types';
 
 import {
@@ -348,12 +348,12 @@ export const MessageArticle = ({
       onOpenAttachment={mailbox ? handleOpenAttachment : onOpenAttachment}
     >
       <Panel.Root role={role} data-testid={testId}>
-        <Panel.Toolbar>
+        <Panel.Header>
           <ConversationStack.Toolbar classNames='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <ConversationStack.Content />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </ConversationStack.Root>
   );

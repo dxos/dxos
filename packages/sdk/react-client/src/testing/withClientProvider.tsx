@@ -11,7 +11,7 @@ import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
+import { ErrorBoundary } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider, type ClientProviderProps } from '../client/index.ts';
@@ -85,13 +85,13 @@ export const withClientProvider = ({
     };
 
     return (
-      <ErrorFallback.ErrorBoundary name='client-provider'>
+      <ErrorBoundary name='client-provider'>
         <ClientProvider onInitialized={handleInitialized} {...props}>
           <ClientStory.Provider value={data}>
             <Story />
           </ClientStory.Provider>
         </ClientProvider>
-      </ErrorFallback.ErrorBoundary>
+      </ErrorBoundary>
     );
   };
 };
@@ -176,9 +176,9 @@ export const withMultiClientProvider = ({
             {...props}
           >
             <ClientStory.Provider value={{ index, spaceId }}>
-              <ErrorFallback.ErrorBoundary name='client-provider'>
+              <ErrorBoundary name='client-provider'>
                 <Story />
-              </ErrorFallback.ErrorBoundary>
+              </ErrorBoundary>
             </ClientStory.Provider>
           </ClientProvider>
         ))}

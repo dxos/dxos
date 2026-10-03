@@ -12,10 +12,8 @@ import { invariant } from '@dxos/invariant';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import { Flex, Panel, composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Util from '@dxos/react-ui/Util';
 import { isTauri } from '@dxos/util';
 
 import { CanvasComponent } from '#components';
@@ -74,20 +72,20 @@ export const TldrawArticle = ({
   return section ? <Container fill={extrinsic}>{content}</Container> : <Article>{content}</Article>;
 };
 
-const Article = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
-  <Panel.Root {...Util.composableProps(props, { classNames: 'aspect-square' })} ref={forwardedRef}>
-    <Panel.Content>{props.children}</Panel.Content>
+const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
+  <Panel.Root {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardedRef}>
+    <Panel.Body>{props.children}</Panel.Body>
   </Panel.Root>
 ));
 
-const Container = Util.composable<HTMLDivElement, PropsWithChildren<{ fill?: boolean }>>(
+const Container = composable<HTMLDivElement, PropsWithChildren<{ fill?: boolean }>>(
   ({ fill, ...props }, forwardedRef) => (
-    <Flex.Root
-      {...Util.composableProps(props, { classNames: [fill ? 'dx-fill' : 'aspect-square', 'overflow-hidden'] })}
+    <Flex
+      {...composableProps(props, { classNames: [fill ? 'dx-fill' : 'aspect-square', 'overflow-hidden'] })}
       ref={forwardedRef}
     >
       {props.children}
-    </Flex.Root>
+    </Flex>
   ),
 );
 

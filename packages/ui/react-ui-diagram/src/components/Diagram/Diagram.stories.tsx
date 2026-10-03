@@ -5,13 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { Button, Panel, Toolbar, composable, composableProps, useComposedRefs, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import * as Util from '@dxos/react-ui/Util';
 import { EditorView, createBasicExtensions, createMermaidExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { CLASS_DIAGRAM, FLOWCHART, NESTED_FLOWCHART, projectMermaid } from '../../testing/index.ts';
@@ -23,9 +19,9 @@ import { Diagram, type DiagramBackgroundProps } from './Diagram.tsx';
  * beside it is a projection that re-derives on every keystroke. Composable so it is a valid
  * `Panel.Content asChild` target — the editor's own ref is composed with the slot's.
  */
-const SourceEditor = Util.composable<HTMLDivElement, { value: string; onChange: (value: string) => void }>(
+const SourceEditor = composable<HTMLDivElement, { value: string; onChange: (value: string) => void }>(
   ({ value, onChange, ...props }, forwardedRef) => {
-    const { themeMode } = ThemeProvider.useThemeContext();
+    const themeMode = useThemeMode();
     const extensions = useMemo(
       () => [
         createBasicExtensions({ lineNumbers: true, lineWrapping: false }),
@@ -43,9 +39,9 @@ const SourceEditor = Util.composable<HTMLDivElement, { value: string; onChange: 
     );
 
     const { parentRef } = useTextEditor({ initialValue: value, extensions }, [extensions]);
-    const ref = Hooks.useComposedRefs(forwardedRef, parentRef);
+    const ref = useComposedRefs(forwardedRef, parentRef);
 
-    return <div {...Util.composableProps(props, { classNames: 'overflow-auto' })} ref={ref} />;
+    return <div {...composableProps(props, { classNames: 'overflow-auto' })} ref={ref} />;
   },
 );
 
@@ -97,43 +93,43 @@ const DefaultStory = ({ source, projection, background }: StoryArgs) => {
     <div className='dx-expand grid' style={{ gridTemplateColumns: text !== undefined ? '1fr 1fr' : '1fr' }}>
       {text !== undefined && (
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              <Toolbar.IconButton
+              <Button
                 icon='ph--arrow-counter-clockwise--regular'
                 label='Reset'
                 disabled={text === source}
                 onClick={handleReset}
               />
             </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <SourceEditor key={key} value={text} onChange={handleChange} />
-          </Panel.Content>
-          <Panel.Statusbar classNames='p-2'>
+          </Panel.Body>
+          <Panel.Footer classNames='p-2'>
             <span>mermaid ({count(text.split('\n').length, 'line')})</span>
-          </Panel.Statusbar>
+          </Panel.Footer>
         </Panel.Root>
       )}
 
       <Diagram.Root diagram={resolved} overlay={overlay} onNodeMove={handleNodeMove}>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              <Toolbar.IconButton
+              <Button
                 icon='ph--arrows-clockwise--regular'
                 label='Re-layout'
                 disabled={pinned === 0}
                 onClick={handleRelayout}
               />
             </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <Diagram.Canvas>
               <Diagram.Background variant={background} />
             </Diagram.Canvas>
-          </Panel.Content>
-          <Panel.Statusbar classNames='p-2'>
+          </Panel.Body>
+          <Panel.Footer classNames='p-2'>
             <span>
               {[
                 count(resolved.graph.nodes.length, 'node'),
@@ -141,7 +137,7 @@ const DefaultStory = ({ source, projection, background }: StoryArgs) => {
                 ...(pinned > 0 ? [`${pinned} pinned`] : []),
               ].join(', ')}
             </span>
-          </Panel.Statusbar>
+          </Panel.Footer>
         </Panel.Root>
       </Diagram.Root>
     </div>

@@ -4,13 +4,11 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
-import * as Button from '@dxos/react-ui/Button';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { Button, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { useCreateAndDeployScriptTemplates } from '#hooks';
 import { meta } from '#meta';
@@ -28,13 +26,13 @@ export type DeploymentDialogProps = {
 };
 
 export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDialogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const db = useMemo(() => Obj.getDatabase(accessToken), [accessToken]);
 
   // TODO(ZaymonFC): Thinking further. All of this should get moved to intents to run async in the background.
   //   Deployment shouldn't be tied to the lifecycle of the dialogue component.
   const { handleCreateAndDeployScripts, status } = useCreateAndDeployScriptTemplates(db, scriptTemplates);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   useEffect(() => {
     if (status === 'success') {
@@ -72,9 +70,9 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('deployment-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <p>
@@ -88,11 +86,11 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
           })}
         </ul>
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
-          <Button.Root disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Button.Root>
-        </Dialog.Close>
-        <Button.Root variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
+          <Button disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Button>
+        </Dialog.CloseTrigger>
+        <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
           {status === 'pending'
             ? t('deployment-dialog-deploy-functions-pending-button.label', {
                 count: scriptTemplates.length,
@@ -100,8 +98,8 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
             : t('deployment-dialog-deploy-functions-button.label', {
                 count: scriptTemplates.length,
               })}
-        </Button.Root>
-      </Dialog.ActionBar>
+        </Button>
+      </Dialog.Footer>
     </Dialog.Content>
   );
 };

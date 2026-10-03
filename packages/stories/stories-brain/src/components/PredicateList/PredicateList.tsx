@@ -4,16 +4,12 @@
 
 import React, { useRef } from 'react';
 
+import { Button, Empty, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import type * as Util from '@dxos/react-ui/Util';
 
 import { type PredicateItem } from '../types.ts';
 
-export type PredicateListProps = Util.ThemedClassName<{
+export type PredicateListProps = ThemedClassName<{
   predicates: PredicateItem[];
   /** Selected predicate (the filter); `undefined` means no filter (show all). */
   selected?: string;
@@ -32,12 +28,12 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
   const pointerSelectionRef = useRef<{ itemId: string; selected: string | undefined } | undefined>(undefined);
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text classNames='grow'>
             Predicates{predicates.length > 0 ? ` (${predicates.length})` : ''}
           </Toolbar.Text>
-          <IconButton.Root
+          <Button
             icon='ph--x--regular'
             iconOnly
             label='Clear'
@@ -45,12 +41,16 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
             onClick={() => onSelect(undefined)}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      </Panel.Header>
+      <Panel.Body classNames='overflow-auto'>
         {predicates.length === 0 ? (
-          <Banner.Empty label='No predicates.' />
+          <Empty>No predicates.</Empty>
         ) : (
-          <Listbox.Root value={selected} onValueChange={onSelect}>
+          <Listbox.Root
+            value={selected}
+            onValueChange={onSelect}
+            items={predicates.map((item) => ({ value: item.predicate, label: item.predicate }))}
+          >
             <Listbox.Content aria-label='Predicates'>
               {predicates.map((item) => (
                 <Listbox.Item
@@ -70,15 +70,15 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
                     }
                   }}
                 >
-                  <Listbox.ItemLabel>{item.predicate}</Listbox.ItemLabel>
-                  <span className='shrink-0 text-subdued tabular-nums'>{item.count}</span>
-                  <Listbox.Indicator />
+                  <Listbox.ItemText>{item.predicate}</Listbox.ItemText>
+                  <span className='shrink-0 text-fg-subtle tabular-nums'>{item.count}</span>
+                  <Listbox.ItemIndicator />
                 </Listbox.Item>
               ))}
             </Listbox.Content>
           </Listbox.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

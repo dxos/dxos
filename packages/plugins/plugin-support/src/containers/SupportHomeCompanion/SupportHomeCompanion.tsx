@@ -4,14 +4,9 @@
 
 import React, { memo, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
-import * as Carousel from '@dxos/react-ui/Carousel';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { Button, Carousel, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { HelpOperation } from '#types';
@@ -22,34 +17,34 @@ const WELCOME_SLIDE = {
 };
 
 export const SupportHomeCompanion = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.IconButton
+          <Button
             icon='ph--path--regular'
             label={t('start-tour.button')}
             onClick={() => invokePromise(HelpOperation.Start)}
             data-testid='supportPlugin.startTour'
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-3'>
             <WelcomePanel />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
 
 const WelcomePanel = memo(() => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const manager = PluginManagerProvider.usePluginManager();
 
   const slides = useMemo(() => {
@@ -73,25 +68,23 @@ const WelcomePanel = memo(() => {
   }, [manager]);
 
   return (
-    <Flex.Root column gap='lg' align='center'>
+    <Flex column gap='lg' align='center'>
       <h1 className='text-lg font-semibold'>{t('welcome.title')}</h1>
-      <p className='text-center text-balance text-description'>{t('welcome.description')}</p>
+      <p className='text-center text-balance text-fg-muted'>{t('welcome.description')}</p>
       {slides.length > 0 && (
         <Carousel.Root count={slides.length} continuous autoAdvance={10_000}>
-          <Carousel.Content classNames='w-full'>
-            <Carousel.Previous />
-            <Carousel.Viewport>
-              {slides.map((slide, index) => (
-                <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
-              ))}
-            </Carousel.Viewport>
-            <Carousel.Next />
-            <Carousel.Indicators />
-            <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>
-          </Carousel.Content>
+          <Carousel.PrevTrigger />
+          <Carousel.ItemGroup>
+            {slides.map((slide, index) => (
+              <Carousel.Item key={slide.key} index={index} src={slide.src} alt={slide.description} />
+            ))}
+          </Carousel.ItemGroup>
+          <Carousel.NextTrigger />
+          <Carousel.IndicatorGroup />
+          <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>
         </Carousel.Root>
       )}
-    </Flex.Root>
+    </Flex>
   );
 });
 

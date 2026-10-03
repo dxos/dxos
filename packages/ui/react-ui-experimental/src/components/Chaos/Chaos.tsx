@@ -12,14 +12,14 @@ import * as THREE from 'three';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type Specialize } from '@dxos/util';
 
 import { DofPointsMaterial, type ShaderOptions, SimulationMaterial } from '../../shaders/index.ts';
 import { defaultShaderOptions } from './shader-presets.ts';
 
-export type ChaosProps = Util.ThemedClassName<{
+export type ChaosProps = ThemedClassName<{
   active?: boolean;
   getValue?: () => number;
   options?: ShaderOptions;

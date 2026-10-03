@@ -4,13 +4,11 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Video } from '@dxos/types';
 
 import { Pending, Transcript } from '#components';
@@ -30,8 +28,8 @@ export type TranscriptSectionProps = {
  * the transcript is generated. The transcript is generated on demand when missing.
  */
 export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [video] = useObject(subject);
   const uri = Obj.getURI(subject);
 
@@ -83,19 +81,19 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
     }
     if (!transcribable) {
       return (
-        <Flex.Root column center classNames='w-full p-4 text-description'>
+        <Flex column center classNames='w-full p-4 text-fg-muted'>
           {t('unsupported-url.message')}
-        </Flex.Root>
+        </Flex>
       );
     }
     if (transcribeError !== undefined) {
       return (
-        <Flex.Root column center gap='sm' classNames='w-full p-4 text-description'>
+        <Flex column center gap='sm' classNames='w-full p-4 text-fg-muted'>
           <span>{transcribeError}</span>
-          <Button.Root variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
+          <Button variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
             {t('transcribe-retry.label')}
-          </Button.Root>
-        </Flex.Root>
+          </Button>
+        </Flex>
       );
     }
 

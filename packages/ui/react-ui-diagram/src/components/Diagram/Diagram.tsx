@@ -19,9 +19,7 @@ import {
 } from '@xyflow/react';
 import React, { type FC, type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Util from '@dxos/react-ui/Util';
+import { composable, composableProps, createContext, useThemeMode } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { GRID, layout } from '../../model/index.ts';
@@ -57,7 +55,7 @@ type DiagramContextValue = {
   shape: string;
 };
 
-const [DiagramProvider, useDiagramContext] = Hooks.createContext<DiagramContextValue>('Diagram.Root');
+const [DiagramProvider, useDiagramContext] = createContext<DiagramContextValue>('Diagram.Root');
 
 export type DiagramRootProps = PropsWithChildren<{
   diagram: Projection;
@@ -146,8 +144,8 @@ DiagramRoot.displayName = 'Diagram.Root';
 export type DiagramCanvasProps = ComposableProps<PropsWithChildren>;
 
 /** The pannable, zoomable surface. Controlled — every node and edge comes from the projection. */
-const DiagramCanvas = Util.composable<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+const DiagramCanvas = composable<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
+  const themeMode = useThemeMode();
   const { fitView } = useReactFlow();
   const { nodes, edges, grid, onNodesChange, onEdgesChange, onNodeMove, shape } = useDiagramContext('Diagram.Canvas');
 
@@ -165,7 +163,7 @@ const DiagramCanvas = Util.composable<HTMLDivElement, PropsWithChildren>(({ chil
 
   return (
     <ReactFlow
-      {...Util.composableProps(props, { classNames: 'dx-expand' })}
+      {...composableProps(props, { classNames: 'dx-expand' })}
       ref={forwardedRef}
       colorMode={themeMode}
       nodes={nodes}

@@ -6,17 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { useActiveFileSystemWorkspace } from '#hooks';
 import { meta } from '#meta';
@@ -31,11 +30,11 @@ const WorkspaceSettingsSchema = Schema.Struct({
 
 /** Renders nothing until a filesystem workspace is active; the workspace comes from context. */
 export const WorkspaceSettingsContainer = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const workspace = useActiveFileSystemWorkspace();
-  const [, updateState] = AppHooks.useAtomCapabilityState(FileSystemCapabilities.State);
+  const [, updateState] = Hooks.useAtomCapabilityState(FileSystemCapabilities.State);
 
   const values = useMemo(
     () => ({
@@ -147,9 +146,9 @@ export const WorkspaceSettingsContainer = () => {
           </Form.FieldSet>
           <Form.FieldSet label={t('remove-folder.label')}>
             <Form.Field standalone label={t('remove-folder.label')} description={t('remove-folder.description')}>
-              <Button.Root variant='destructive' onClick={handleRemove}>
+              <Button variant='destructive' onClick={handleRemove}>
                 {t('remove-folder.label')}
-              </Button.Root>
+              </Button>
             </Form.Field>
           </Form.FieldSet>
         </Form.Content>

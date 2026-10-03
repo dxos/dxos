@@ -6,8 +6,8 @@ import React from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Type } from '@dxos/echo';
+import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -15,7 +15,7 @@ import { meta } from '#meta';
 import { useQuerySpaceTypes } from './use-query-space-types.ts';
 
 export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const types = useQuerySpaceTypes(space);
 
   return (

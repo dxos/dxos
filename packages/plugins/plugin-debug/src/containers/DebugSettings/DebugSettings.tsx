@@ -11,12 +11,8 @@ import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
+import { Button, Select, Switch, Toast as UiToast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Select from '@dxos/react-ui/Select';
-import * as Toast from '@dxos/react-ui/Toast';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { gzip, setDeep } from '@dxos/util';
 
@@ -25,7 +21,7 @@ import { Settings } from '#types';
 
 import { DebugPortSettings } from '../DebugPortSettings/index.ts';
 
-type ToastMessage = {
+type Toast = {
   title: string;
   description?: string;
 };
@@ -44,9 +40,9 @@ export type DebugSettingsProps = AppSurface.SettingsProps<
 >;
 
 export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onUpload }: DebugSettingsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const [toast, setToast] = useState<ToastMessage>();
-  const download = Hooks.useFileDownload();
+  const { t } = useTranslation(meta.profile.key);
+  const [toast, setToast] = useState<Toast>();
+  const download = useFileDownload();
   const [storageConfig, setStorageConfig] = useState<ConfigInit>({});
   const client = useClient();
 
@@ -55,7 +51,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
   }, []);
 
   const handleToast = useCallback(
-    (toast: ToastMessage) => {
+    (toast: Toast) => {
       setToast(toast);
       const timer = setTimeout(() => setToast(undefined), 5_000);
       return () => clearTimeout(timer);
@@ -163,21 +159,25 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
         <Form.Content>
           <Form.FieldSet label={meta.profile.name ?? meta.profile.key} actions={scope}>
             <Form.Field label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
-              <Field.Switch
+              <Switch
                 disabled={!onSettingsChange}
                 checked={settings.wireframe}
-                onCheckedChange={handleWireframeChange}
+                onCheckedChange={({ checked }) => handleWireframeChange(checked)}
               />
             </Form.Field>
             <Form.Field label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
-              <Field.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
+              <Switch
+                disabled={!onSettingsChange}
+                checked={traceAll}
+                onCheckedChange={({ checked }) => handleTraceAllChange(checked)}
+              />
             </Form.Field>
             <Form.Field
               standalone
               label={t('settings.tracing-panel.label')}
               description={t('settings.tracing-panel.description')}
             >
-              <IconButton.Root
+              <Button
                 icon='ph--arrow-square-out--regular'
                 iconOnly
                 label={t('settings.tracing-panel.label')}
@@ -189,7 +189,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-diagnostics.label')}
               description={t('settings.download-diagnostics.description')}
             >
-              <IconButton.Root
+              <Button
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-diagnostics.label')}
@@ -201,7 +201,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-logs.label')}
               description={t('settings.download-logs.description')}
             >
-              <IconButton.Root
+              <Button
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-logs.label')}
@@ -209,7 +209,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               />
             </Form.Field>
             <Form.Field standalone label={t('settings.repair.label')} description={t('settings.repair.description')}>
-              <IconButton.Root
+              <Button
                 icon='ph--first-aid-kit--regular'
                 iconOnly
                 label={t('settings.repair.label')}
@@ -219,12 +219,10 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
 
             {/* TODO(burdon): Move to layout? */}
             {toast && (
-              <Toast.Root>
-                <Toast.Title icon='ph--gift--duotone'>
-                  <span>{toast.title}</span>
-                </Toast.Title>
-                {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-              </Toast.Root>
+              <UiToast.Root defaultOpen duration={5_000} onOpenChange={(open) => !open && setToast(undefined)}>
+                <UiToast.Header icon='ph--gift--duotone'>{toast.title}</UiToast.Header>
+                {toast.description && <UiToast.Description>{toast.description}</UiToast.Description>}
+              </UiToast.Root>
             )}
 
             <Form.Field
@@ -233,25 +231,22 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
             >
               <Select.Root
                 disabled={!onSettingsChange}
-                value={
-                  Object.entries(StorageAdapters).find(
-                    ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
-                  )?.[0]
-                }
-                onValueChange={handleStorageAdapterChange}
+                value={Object.entries(StorageAdapters)
+                  .filter(([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore)
+                  .map(([name]) => name)
+                  .slice(0, 1)}
+                onValueChange={({ value: [value] }) => value && handleStorageAdapterChange(value)}
+                items={Object.keys(StorageAdapters).map((key) => ({
+                  value: key,
+                  label: t(`settings.storage-adaptor.${key}.label`),
+                }))}
               >
-                <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings.data-store.label')} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {Object.keys(StorageAdapters).map((key) => (
-                        <Select.Option key={key} value={key}>
-                          {t(`settings.storage-adaptor.${key}.label`)}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
+                <Select.Trigger disabled={!onSettingsChange} placeholder={t('settings.data-store.label')} />
+                <Select.Content>
+                  {Object.keys(StorageAdapters).map((key) => (
+                    <Select.Item key={key} item={{ value: key, label: t(`settings.storage-adaptor.${key}.label`) }} />
+                  ))}
+                </Select.Content>
               </Select.Root>
             </Form.Field>
           </Form.FieldSet>

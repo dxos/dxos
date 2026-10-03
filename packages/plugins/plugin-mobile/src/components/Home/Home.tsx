@@ -4,20 +4,25 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import {
+  Avatar,
+  Block,
+  Card,
+  Icon,
+  ScrollArea,
+  toAvatarHue,
+  toLocalizedString,
+  useId,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
-import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -30,20 +35,20 @@ export type HomeProps = {};
  * Home screen.
  */
 export const Home = (_: HomeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   // Profile and settings moved to the navbar's main menu; Home lists spaces only.
   const items = useItemsByDisposition('workspace');
   useExpandPath(GraphNode.RootId);
 
   const { results, handleSearch } = useSearchListResults({
     items,
-    extract: (node) => ThemeProvider.toLocalizedString(node.properties.label, t),
+    extract: (node) => toLocalizedString(node.properties.label, t),
   });
 
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root centered padding thin>
+        <ScrollArea.Root>
           <ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='py-2 gap-1'
@@ -61,10 +66,11 @@ export const Home = (_: HomeProps) => {
 
 const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
-  const name = ThemeProvider.toLocalizedString(data.properties.label, t);
+  const name = toLocalizedString(data.properties.label, t);
+  const titleId = useId('mobile-tile');
   const pending = data.properties.pending === true;
   const isSelected = selectedValue === data.id;
   const cardRef = useRef<HTMLDivElement>(null);
@@ -95,7 +101,6 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   return (
     <Card.Root
       role='button'
-      fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
       aria-disabled={pending || undefined}
@@ -107,24 +112,22 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       ref={cardRef}
     >
       <Card.Header>
-        <Avatar.Root>
-          {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
-              `Card.Title` are what keep the icon, label, and caret on one row. */}
-          <Card.Block>
-            <Avatar.Content
-              icon={data.properties.icon}
-              hue={data.properties.hue}
-              hueVariant='transparent'
-              variant='square'
-              size={8}
-              fallback={name}
-            />
-          </Card.Block>
-          <Avatar.Label asChild>
-            <Card.Title classNames='cursor-pointer'>{name}</Card.Title>
-          </Avatar.Label>
-          <Card.Block end>{!pending && <Icon.Root icon='ph--caret-right--regular' />}</Card.Block>
-        </Avatar.Root>
+        {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
+            `Card.Title` are what keep the icon, label, and caret on one row. */}
+        <Block>
+          <Avatar.Root
+            icon={data.properties.icon}
+            hue={toAvatarHue(data.properties.hue)}
+            hueVariant='transparent'
+            variant='square'
+            fallback={name}
+            aria-labelledby={titleId}
+          />
+        </Block>
+        <Card.Title id={titleId} classNames='cursor-pointer'>
+          {name}
+        </Card.Title>
+        <Block rail='end'>{!pending && <Icon icon='ph--caret-right--regular' />}</Block>
       </Card.Header>
     </Card.Root>
   );

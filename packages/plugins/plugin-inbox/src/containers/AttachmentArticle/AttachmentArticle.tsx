@@ -6,8 +6,7 @@ import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { Panel, ScrollArea } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { AttachmentViewer } from '#components';
@@ -33,7 +32,7 @@ export const AttachmentArticle = ({ role, subject, attachmentIndex = 0 }: Attach
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='h-full'>
             <AttachmentViewer
@@ -48,7 +47,7 @@ export const AttachmentArticle = ({ role, subject, attachmentIndex = 0 }: Attach
             />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -7,8 +7,7 @@ import React, { useEffect, useMemo } from 'react';
 import { log } from '@dxos/log';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
+import { Icon, useId, useTranslation } from '@dxos/react-ui';
 
 import { CloseButton, Heading, Viewport } from '../../components/index.ts';
 import { InvitationManager } from '../../steps/index.ts';
@@ -21,7 +20,7 @@ import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelP
 type SpacePanelActiveView = SpacePanelImplProps['activeView'];
 
 const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const name = space.properties.name;
   return (
     <Heading
@@ -30,7 +29,7 @@ const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) =
       corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
     >
       <div className='flex gap-4 items-center justify-center my-4'>
-        <Icon.Root icon='ph--planet--light' size={8} />
+        <Icon icon='ph--planet--light' size='xl' />
         <div className='block text-start font-light text-xl'>{name ?? space.key.truncate()}</div>
       </div>
     </Heading>
@@ -89,7 +88,7 @@ export const SpacePanel = ({
   createInvitationUrl = (code) => code,
   ...props
 }: SpacePanelProps) => {
-  const titleId = Hooks.useId('spacePanel__heading', propsTitleId);
+  const titleId = useId('spacePanel__heading', propsTitleId);
 
   const [spaceState, spaceSend, spaceService] = useSpaceMachine({ context: { space: props.space } });
 

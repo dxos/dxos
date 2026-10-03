@@ -11,16 +11,17 @@ import {
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
+import {
+  Avatar,
+  type AvatarRootProps,
+  Button,
+  SystemButton,
+  type ThemedClassName,
+  Tooltip,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Tooltip from '@dxos/react-ui/Tooltip';
-import type * as Util from '@dxos/react-ui/Util';
-import { getSize, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -31,7 +32,7 @@ export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;
   onClickRemove?: (invitation: CancellableInvitationObservable) => void;
   reverseEffects?: boolean;
-} & Util.ThemedClassName<ComponentPropsWithoutRef<'li'>>;
+} & ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export type InvitationListItemImplProps = InvitationListItemProps & {
   invitationStatus: InvitationStatus;
@@ -43,46 +44,32 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
   return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
 };
 
-const avatarProps: Pick<Avatar.ContentProps, 'size' | 'variant'> = {
-  size: 10,
-  variant: 'circle',
-};
+const AVATAR_SIZE = 'lg';
 
+/** Two faded rings behind a multi-use invitation's avatar, so it reads as a stack. */
 const AvatarStackEffect = ({
   animation,
   status,
   reverseEffects,
-}: Pick<Avatar.ContentProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => {
-  const { tx } = ThemeProvider.useThemeContext();
-  return (
-    <>
-      <span
-        className={mx(
-          'absolute right-auto opacity-20',
-          reverseEffects ? 'left-3' : 'left-1',
-          getSize(avatarProps.size!),
-        )}
-      >
-        <span
-          className={tx('avatar.ring', { ...avatarProps, status, animation })}
-          style={{ animationDelay: '400ms' }}
-        />
-      </span>
-      <span
-        className={mx(
-          'absolute right-auto opacity-50',
-          reverseEffects ? 'left-2' : 'left-2',
-          getSize(avatarProps.size!),
-        )}
-      >
-        <span
-          className={tx('avatar.ring', { ...avatarProps, status, animation })}
-          style={{ animationDelay: '200ms' }}
-        />
-      </span>
-    </>
-  );
-};
+}: Pick<AvatarRootProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => (
+  <>
+    {[
+      { offset: reverseEffects ? 'left-3' : 'left-1', opacity: 'opacity-20', delay: '400ms' },
+      { offset: 'left-2', opacity: 'opacity-50', delay: '200ms' },
+    ].map(({ offset, opacity, delay }) => (
+      <Avatar.Root
+        key={delay}
+        aria-hidden
+        size={AVATAR_SIZE}
+        status={status}
+        animation={animation}
+        hueVariant='transparent'
+        classNames={mx('absolute right-auto', offset, opacity)}
+        style={{ animationDelay: delay }}
+      />
+    ))}
+  </>
+);
 
 export const InvitationListItemImpl = ({
   invitation,
@@ -93,7 +80,7 @@ export const InvitationListItemImpl = ({
   reverseEffects,
   ...props
 }: InvitationListItemImplProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const { cancel, status: invitationStatus, invitationCode, authCode, multiUse, shareable } = propsInvitationStatus;
 
   const isCancellable = !(
@@ -145,24 +132,23 @@ export const InvitationListItemImpl = ({
       {...props}
       classNames={['flex gap-2 ps-3 pe-1 items-center relative', props.classNames]}
     >
-      <Listbox.ItemLabel classNames='sr-only'>
+      <Listbox.ItemText classNames='sr-only'>
         {t(multiUse ? 'invite-many-list-item.label' : 'invite-one-list-item.label')}
-      </Listbox.ItemLabel>
+      </Listbox.ItemText>
       {multiUse && (
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
-      <Avatar.Root>
-        <Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
-          <Avatar.Content
-            {...avatarProps}
-            animation={avatarAnimation}
-            status={avatarStatus}
-            fallback={hexToEmoji(invitationId)}
-            tabIndex={0}
-            classNames={['dx-focus-ring', 'relative rounded-full place-self-center']}
-          />
-        </Tooltip.Trigger>
-      </Avatar.Root>
+      <Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
+        <Avatar.Root
+          size={AVATAR_SIZE}
+          animation={avatarAnimation}
+          status={avatarStatus}
+          fallback={hexToEmoji(invitationId)}
+          label={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
+          tabIndex={0}
+          classNames={['dx-focus-ring', 'relative rounded-full place-self-center']}
+        />
+      </Tooltip.Trigger>
       {showShare && invitationUrl ? (
         <>
           <Tooltip.Trigger
@@ -171,16 +157,16 @@ export const InvitationListItemImpl = ({
               invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
             }
           >
-            <Button.Root
+            <Button
               variant='ghost'
               classNames='grow justify-start font-medium'
               data-testid='show-qrcode'
               onClick={() => send({ type: 'selectInvitation', invitation })}
             >
               <span>{t('open-share-panel.label')}</span>
-            </Button.Root>
+            </Button>
           </Tooltip.Trigger>
-          <SystemIconButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
+          <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />
@@ -200,9 +186,9 @@ export const InvitationListItemImpl = ({
         <span className='grow'> </span>
       )}
       {isCancellable ? (
-        <IconButton.Root
+        <Button
           icon='ph--x--regular'
-          size={4}
+          iconSize='md'
           label={t('cancel-invitation.label')}
           iconOnly
           variant='ghost'
@@ -211,9 +197,9 @@ export const InvitationListItemImpl = ({
           data-testid='cancel-invitation'
         />
       ) : (
-        <IconButton.Root
+        <Button
           icon='ph--x--regular'
-          size={4}
+          iconSize='md'
           label={t('remove-invitation.label')}
           iconOnly
           variant='ghost'

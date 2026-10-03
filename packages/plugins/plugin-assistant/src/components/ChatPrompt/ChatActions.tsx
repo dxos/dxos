@@ -5,10 +5,8 @@
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren } from 'react';
 
+import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -22,7 +20,7 @@ import { type ChatEvent } from '../Chat/events.ts';
  */
 const TOUCH_TARGET = 'max-md:size-11 pointer-coarse:size-11';
 
-export type ChatActionsProps = Util.ThemedClassName<
+export type ChatActionsProps = ThemedClassName<
   PropsWithChildren<{
     /** The prompt's graph node, which is what contributed actions are filed under. */
     attendableId?: string;
@@ -56,7 +54,7 @@ export const ChatActions = ({
   onSend,
   onEvent,
 }: ChatActionsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   // While a turn runs the primary control interrupts it — unless there is text waiting, in which
   // case sending it (which queues it behind the running turn) is what the reader is asking for.
   const showStop = processing && !canSend;
@@ -65,7 +63,7 @@ export const ChatActions = ({
       {children}
       {customActions && <ContributedActions actions={customActions} attendableId={attendableId} />}
       {debug && (
-        <IconButton.Root
+        <Button
           variant='ghost'
           icon='ph--wrench--regular'
           iconOnly
@@ -75,7 +73,7 @@ export const ChatActions = ({
       )}
 
       {tasksVisible != null && (
-        <IconButton.Root
+        <Button
           variant='ghost'
           classNames={TOUCH_TARGET}
           icon='ph--list-checks--regular'
@@ -92,7 +90,7 @@ export const ChatActions = ({
           submit, and a touch keyboard offers no such affordance. */}
       {onSend && (
         // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
-        <IconButton.Root
+        <Button
           disabled={!showStop && !canSend}
           variant='ghost'
           classNames={mx(TOUCH_TARGET, 'transition duration-300 ease-in-out', canSend && 'text-accent-text rotate-90')}

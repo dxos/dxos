@@ -13,8 +13,7 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
-import * as Menu from '@dxos/react-ui/Menu';
-import type * as Util from '@dxos/react-ui/Util';
+import { Menu, type ThemedClassName, virtualAnchor } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
@@ -73,7 +72,7 @@ const FRAME_DASH = 4;
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
-export type SceneViewRootProps = Util.ThemedClassName<{
+export type SceneViewRootProps = ThemedClassName<{
   store: SceneStore;
   root: SceneId;
   nodes?: NodeRegistry;
@@ -776,53 +775,52 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         className='absolute size-0 pointer-events-none'
         style={{ left: menu?.at.x ?? 0, top: menu?.at.y ?? 0 }}
       />
-      <Menu.Root modal={false} open={menu !== undefined} onOpenChange={(open) => !open && closeMenu()}>
-        <Menu.VirtualTrigger virtualRef={menuAnchorRef} />
-        <Menu.Content side='right' sideOffset={4} collisionPadding={8}>
-          <Menu.Viewport>
-            {menu?.kind === 'point' && (
+      <Menu.Root
+        open={menu !== undefined}
+        onOpenChange={({ open }) => !open && closeMenu()}
+        positioning={{ ...virtualAnchor(menuAnchorRef), placement: 'right', gutter: 4, overflowPadding: 8 }}
+      >
+        <Menu.Content>
+          {menu?.kind === 'point' && (
+            <Menu.Item
+              data-testid='remove-point'
+              onSelect={() => {
+                const point = registry.get(atoms.point);
+                if (point) {
+                  removePoint(point);
+                }
+              }}
+              item={{ value: 'Remove control point', label: 'Remove control point' }}
+            />
+          )}
+          {menu?.kind === 'element' && (
+            <>
               <Menu.Item
-                data-testid='remove-point'
+                data-testid='menu-cut'
+                disabled={!capabilities.delete}
+                onSelect={cut}
+                item={{ value: 'Cut', label: 'Cut' }}
+              />
+              <Menu.Item data-testid='menu-copy' onSelect={copy} item={{ value: 'Copy', label: 'Copy' }} />
+              <Menu.Item
+                data-testid='menu-delete'
+                disabled={!capabilities.delete}
                 onSelect={() => {
-                  const point = registry.get(atoms.point);
-                  if (point) {
-                    removePoint(point);
-                  }
+                  projection.apply({ kind: 'delete', ids: [...registry.get(atoms.selection)] });
+                  select([]);
                 }}
-              >
-                Remove control point
-              </Menu.Item>
-            )}
-            {menu?.kind === 'element' && (
-              <>
-                <Menu.Item data-testid='menu-cut' disabled={!capabilities.delete} onSelect={cut}>
-                  Cut
-                </Menu.Item>
-                <Menu.Item data-testid='menu-copy' onSelect={copy}>
-                  Copy
-                </Menu.Item>
-                <Menu.Item
-                  data-testid='menu-delete'
-                  disabled={!capabilities.delete}
-                  onSelect={() => {
-                    projection.apply({ kind: 'delete', ids: [...registry.get(atoms.selection)] });
-                    select([]);
-                  }}
-                >
-                  Delete
-                </Menu.Item>
-              </>
-            )}
-            {menu?.kind === 'canvas' && (
-              <Menu.Item
-                data-testid='menu-paste'
-                disabled={!clipboard || !capabilities.create}
-                onSelect={() => paste(menu.scene)}
-              >
-                Paste
-              </Menu.Item>
-            )}
-          </Menu.Viewport>
+                item={{ value: 'Delete', label: 'Delete' }}
+              />
+            </>
+          )}
+          {menu?.kind === 'canvas' && (
+            <Menu.Item
+              data-testid='menu-paste'
+              disabled={!clipboard || !capabilities.create}
+              onSelect={() => paste(menu.scene)}
+              item={{ value: 'Paste', label: 'Paste' }}
+            />
+          )}
         </Menu.Content>
       </Menu.Root>
     </>
@@ -835,7 +833,7 @@ SceneViewCanvas.displayName = 'SceneView.Canvas';
 // Toolbars
 //
 
-export type SceneViewBarProps = Util.ThemedClassName<{}>;
+export type SceneViewBarProps = ThemedClassName<{}>;
 
 /** Where the view is in the scene tree. */
 const SceneViewNavigation = ({ classNames = 'absolute top-2 left-2' }: SceneViewBarProps) => {

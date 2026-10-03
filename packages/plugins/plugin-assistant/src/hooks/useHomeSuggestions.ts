@@ -4,16 +4,15 @@
 
 import { useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Space } from '@dxos/react-client/echo';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { AssistantOperation } from '#types';
 
 const FALLBACK_SUGGESTION_KEYS = [
   'space-home.suggestion-magazine.label',
-  'space-home.suggestion-spreadsheet.label',
   'space-home.suggestion-kanban.label',
 ] as const;
 
@@ -23,15 +22,12 @@ const FALLBACK_SUGGESTION_KEYS = [
  * error falls back to the hardcoded defaults.
  */
 export const useHomeSuggestions = (space?: Space): readonly string[] | undefined => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
-  const fallbacks = useMemo(
-    () => FALLBACK_SUGGESTION_KEYS.map((key) => t(key, { year: new Date().getFullYear() })),
-    [t],
-  );
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const fallbacks = useMemo(() => FALLBACK_SUGGESTION_KEYS.map((key) => t(key)), [t]);
   const [suggestions, setSuggestions] = useState<readonly string[] | undefined>(undefined);
 
-  Hooks.useAsyncEffect(
+  useAsyncEffect(
     async (controller) => {
       setSuggestions(undefined);
       if (!space) {

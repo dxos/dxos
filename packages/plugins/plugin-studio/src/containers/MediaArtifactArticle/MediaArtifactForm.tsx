@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -15,22 +15,17 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Field, Flex, Input, Panel, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Select from '@dxos/react-ui/Select';
-import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 import { type MediaArtifact, StudioCapabilities, StudioOperation, Variant } from '#types';
 
 import { providerFieldMap } from './ProviderOptionsField.tsx';
 
-export type MediaArtifactFormProps = Util.ThemedClassName<{
+export type MediaArtifactFormProps = ThemedClassName<{
   artifact: MediaArtifact.MediaArtifact;
   /** The plank the form is attended through; Generate is live only while it has attention. */
   attendableId?: string;
@@ -56,13 +51,13 @@ export const MediaArtifactForm = ({
   attendableId,
   nodeId = attendableId,
 }: MediaArtifactFormProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(artifact);
 
   // Providers for the artifact's kind; a Generator selector lets the user pick among them.
-  const services = AppHooks.useCapabilities(StudioCapabilities.GenerationService);
+  const services = Hooks.useCapabilities(StudioCapabilities.GenerationService);
   const providers = useMemo(
     () => services.filter((candidate) => candidate.kind === artifact.kind),
     [services, artifact.kind],
@@ -231,19 +226,17 @@ export const MediaArtifactForm = ({
             variant: 'custom',
             label: ['generator.placeholder', { ns: meta.profile.key }],
             render: () => (
-              <Select.Root value={provider?.id} onValueChange={handleGeneratorChange}>
-                <Select.TriggerButton placeholder={t('generator.placeholder')} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {providers.map((candidate) => (
-                        <Select.Option key={candidate.id} value={candidate.id}>
-                          {candidate.label}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
+              <Select.Root
+                value={[provider?.id]}
+                onValueChange={({ value: [value] }) => handleGeneratorChange(value)}
+                items={providers.map((candidate) => ({ value: candidate.id, label: candidate.label }))}
+              >
+                <Select.Trigger placeholder={t('generator.placeholder')} />
+                <Select.Content>
+                  {providers.map((candidate) => (
+                    <Select.Item key={candidate.id} item={{ value: candidate.id, label: candidate.label }} />
+                  ))}
+                </Select.Content>
               </Select.Root>
             ),
           },
@@ -303,20 +296,20 @@ export const MediaArtifactForm = ({
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar>
+      <Panel.Header>
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
         {/* MediaArtifact-level name (independent of any variant). */}
-        <Flex.Root column gap='xs' classNames='pt-3 px-2'>
+        <Flex column gap='xs' classNames='pt-3 px-2'>
           <Field.Root>
-            <Field.Input
+            <Input
               placeholder={t('name.placeholder')}
               value={artifactSnapshot?.name ?? ''}
               onChange={handleNameChange}
             />
           </Field.Root>
-        </Flex.Root>
+        </Flex>
         {/* Schema-driven request form (prompt + kind-specific knobs, from the generator's
             requestSchema); read-only while a generation is in flight. */}
         {provider && (
@@ -336,7 +329,7 @@ export const MediaArtifactForm = ({
             </Form.Viewport>
           </Form.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

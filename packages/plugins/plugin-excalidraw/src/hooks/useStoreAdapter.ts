@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Excalidraw } from '#types';
 
@@ -27,7 +27,7 @@ export const useStoreAdapter = (canvas?: Drawing.Canvas, options: ExcalidrawStor
   const [adapter] = useState(() => new ExcalidrawStoreAdapter(options));
   const [, forceUpdate] = useState({});
 
-  Hooks.useAsyncEffect(
+  useAsyncEffect(
     async (controller) => {
       if (!canvas) {
         return;

@@ -7,10 +7,9 @@ import React from 'react';
 
 import { type CallMetadata, log } from '@dxos/log';
 import { random } from '@dxos/random';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
-import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
@@ -40,32 +39,32 @@ const DefaultStory = () => (
   <ViewStateProvider>
     <Logger.Root initialFilter='info'>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             {FILES.map((file) => (
-              <Toolbar.Button key={file} onClick={() => emit(file, 'info')}>
+              <Button key={file} onClick={() => emit(file, 'info')}>
                 {file.split('/').pop()}
-              </Toolbar.Button>
+              </Button>
             ))}
-            <Toolbar.Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Toolbar.Button>
-            <Toolbar.Button onClick={() => emit(FILES[1], 'error')}>Error (beta)</Toolbar.Button>
+            <Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Button>
+            <Button onClick={() => emit(FILES[1], 'error')}>Error (beta)</Button>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Panel.Root>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <Logger.Toolbar />
-            </Panel.Toolbar>
-            <Panel.Content asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <Logger.Content>
                 <Logger.List />
               </Logger.Content>
-            </Panel.Content>
-            <Panel.Statusbar asChild>
+            </Panel.Body>
+            <Panel.Footer>
               <Logger.Filter />
-            </Panel.Statusbar>
+            </Panel.Footer>
           </Panel.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Logger.Root>
   </ViewStateProvider>

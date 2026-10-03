@@ -6,13 +6,11 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
+import { Block, Button, Card, DragHandle, Focus, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
+import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
 
@@ -28,15 +26,15 @@ const KANBAN_CARD_TILE_NAME = 'KanbanBoard.Card';
  */
 export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug, draggable }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = useTranslation(meta.profile.key);
     const { model } = useBoard(KANBAN_CARD_TILE_NAME);
     const { projection, columnFieldPath, onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
     const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
 
     // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
-    const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
-    const objectMenuItems = ToolkitHooks.useObjectMenuItems(data, pivotId);
+    const [cardRef, pivotId] = Hooks.useCardPivot();
+    const objectMenuItems = Hooks.useObjectMenuItems(data, pivotId);
 
     const menuItems = useMemo(
       () => [
@@ -64,21 +62,21 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         dragHandle={dragHandle}
       >
         <Focus.Item asChild>
-          <Card.Root ref={forwardedRef} data-testid='board-item'>
+          <Card.Root grid ref={forwardedRef} data-testid='board-item'>
             <Card.Header ref={cardRef}>
-              <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
+              <DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
               <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Card.Block end>
+              <Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <IconButton.Root
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             <Card.Body>
               {projection && (

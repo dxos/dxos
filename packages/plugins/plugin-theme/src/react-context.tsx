@@ -10,16 +10,13 @@ import React, { ReactNode } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Toast from '@dxos/react-ui/Toast';
-import * as Tooltip from '@dxos/react-ui/Tooltip';
+import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, defaultTx } from '@dxos/react-ui';
 import { ACCENT_HUES, type AccentHue, applyAccent } from '@dxos/ui-theme';
-import { type ThemeMode } from '@dxos/ui-types';
 
 import { meta } from '#meta';
 import { Settings, ThemeCapabilities } from '#types';
 
-export type ThemePluginOptions = Partial<Pick<ThemeProvider.RootProps, 'tx' | 'resourceExtensions'>> & {
+export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'resourceExtensions'>> & {
   appName?: string;
   platform?: 'mobile' | 'desktop';
 };
@@ -45,7 +42,7 @@ const parseSettings = (value: string | null): Settings.Settings => {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ tx: propsTx = ThemeProvider.defaultTx, platform }: ThemePluginOptions = {}) {
+  Effect.fnUntraced(function* ({ tx: propsTx = defaultTx, platform }: ThemePluginOptions = {}) {
     const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
     const settingsAtom = yield* ThemeCapabilities.Settings;
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
@@ -95,16 +92,14 @@ export default Capability.makeModule(
         // Translations are registered in the shared i18next instance by the Translator module; the
         // theme provider only exposes that instance to React.
         return (
-          <ThemeProvider.Root {...{ tx: propsTx, themeMode, platform }}>
+          <ThemeProvider {...{ tx: propsTx, themeMode, platform }}>
             <Toast.Provider>
-              <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
-                {children}
-                {/* Toasts render in the viewport, not where their roots sit, and their close button is a
+              {children}
+              {/* Toasts render in the viewport, not where their roots sit, and their close button is a
                     tooltip trigger, which throws without a provider above it. */}
-                <Toast.Viewport />
-              </Tooltip.Provider>
+              <Toast.Toaster />
             </Toast.Provider>
-          </ThemeProvider.Root>
+          </ThemeProvider>
         );
       },
     });

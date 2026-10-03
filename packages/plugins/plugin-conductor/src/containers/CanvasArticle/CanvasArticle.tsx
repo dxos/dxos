@@ -17,6 +17,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
   Bullets,
   ComputeContext,
@@ -35,7 +36,6 @@ import {
   useRegistry,
   useSceneProjection,
 } from '@dxos/react-ui-canvas/scene';
-import * as Flex from '@dxos/react-ui/Flex';
 
 export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
 
@@ -111,9 +111,7 @@ const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
   );
 };
 
-const Container = (props: Flex.RootProps) => (
-  <Flex.Root {...props} classNames='aspect-square w-full max-h-full min-h-0' />
-);
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />;
 
 const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const db = Obj.getDatabase(canvas);

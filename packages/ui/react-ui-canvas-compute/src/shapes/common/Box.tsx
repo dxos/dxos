@@ -6,9 +6,7 @@ import React, { type PropsWithChildren, type ReactNode, forwardRef } from 'react
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import type * as Util from '@dxos/react-ui/Util';
+import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useComputeContext } from '../../hooks/compute-context.ts';
@@ -17,7 +15,7 @@ import { type ComputeShape } from '../defs.ts';
 export type BoxActionHandler = (action: 'open' | 'close') => void;
 
 export type BoxProps = PropsWithChildren<
-  Util.ThemedClassName<{
+  ThemedClassName<{
     shape: ComputeShape;
     title?: string;
     status?: string | ReactNode;
@@ -43,10 +41,10 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
     return (
       <div ref={forwardedRef} className='flex flex-col dx-fill justify-between'>
         <div className='flex shrink-0 w-full justify-between items-center h-[32px] dx-input-surface'>
-          <Icon.Root icon={icon} classNames='mx-2' />
+          <Icon icon={icon} classNames='mx-2' />
           <div className='grow text-sm truncate'>{debug ? shape.type : (name ?? shape.text ?? title)}</div>
           {nodeId && (
-            <IconButton.Root
+            <Button
               classNames='p-1 text-green-500'
               variant='ghost'
               icon='ph--play--regular'
@@ -65,7 +63,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
         <div className='flex shrink-0 w-full justify-between items-center h-[32px] dx-input-surface'>
           <div className='grow px-2 text-sm truncate'>{debug ? shape.id : status}</div>
           {openable && (
-            <IconButton.Root
+            <Button
               classNames='p-1'
               variant='ghost'
               icon={open ? 'ph--caret-up--regular' : 'ph--caret-down--regular'}

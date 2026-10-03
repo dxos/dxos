@@ -15,7 +15,7 @@ import React, {
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import * as Util from '@dxos/react-ui/Util';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type SpaceGraphModel } from '@dxos/schema';
 
 import { GraphAdapter } from './graph-adapter.ts';
@@ -28,7 +28,7 @@ export type CanvasForceGraphProps = {
 /**
  * More performance optimized version of the ForceGraph.
  */
-export const CanvasForceGraph = Util.composable<HTMLDivElement, CanvasForceGraphProps>(
+export const CanvasForceGraph = composable<HTMLDivElement, CanvasForceGraphProps>(
   ({ model, match, onClick, ...props }, forwardedRef) => {
     const { ref: resizeRef, width, height } = useResizeDetector({ refreshRate: 200 });
     const setRef = useCallback(
@@ -108,7 +108,7 @@ export const CanvasForceGraph = Util.composable<HTMLDivElement, CanvasForceGraph
     );
 
     return (
-      <div {...Util.composableProps(props, { classNames: 'relative grow' })} onClick={handleClick} ref={setRef}>
+      <div {...composableProps(props, { classNames: 'relative grow' })} onClick={handleClick} ref={setRef}>
         <div ref={rootRef} className='dx-fullscreen' />
       </div>
     );

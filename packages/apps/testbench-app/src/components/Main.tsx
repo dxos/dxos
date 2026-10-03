@@ -22,7 +22,7 @@ import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useAsyncEffect, useFileDownload } from '@dxos/react-ui';
 
 import { Document, Item } from '../data.ts';
 import { defs } from '../defs.ts';
@@ -54,7 +54,7 @@ export const Main = () => {
   const [filter, setFilter] = useState<string>();
   const [flushing, setFlushing] = useState(false);
   const flushingPromise = useRef<Promise<void>>(null);
-  const download = Hooks.useFileDownload();
+  const download = useFileDownload();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
   // TODO(burdon): Remove restricted list of objects.
@@ -77,7 +77,7 @@ export const Main = () => {
   const identity = client.halo.identity.get();
 
   // Handle invitation.
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     const url = new URL(window.location.href);
     const invitationCode = url.searchParams.get('spaceInvitationCode');
     if (invitationCode && identity) {

@@ -9,7 +9,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type Collection, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Panel } from '@dxos/react-ui';
 
 import { PageNumber, Pager, PresentationShell, PresenterContext, Layout as PresenterLayout } from '#components';
 
@@ -27,7 +27,7 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
 
   return (
     <Panel.Root role={role} classNames='relative'>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
           <PresenterLayout
             bottomRight={<PageNumber index={slide} count={liveCollection.objects.length} />}
@@ -44,7 +44,7 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
             />
           </PresenterLayout>
         </PresentationShell>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

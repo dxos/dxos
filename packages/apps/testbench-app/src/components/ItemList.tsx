@@ -6,12 +6,8 @@ import React from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { Button, Checkbox, Field, ScrollArea, composable, composableProps, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import * as Field from '@dxos/react-ui/Field';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Util from '@dxos/react-ui/Util';
 import { mapSchemaToFields } from '@dxos/schema';
 import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
@@ -19,10 +15,10 @@ const MAX_RENDERED_COUNT = 80;
 
 export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
 
-export const ItemList = Util.composable<HTMLDivElement, ItemListProps<Obj.Any>>(
+export const ItemList = composable<HTMLDivElement, ItemListProps<Obj.Any>>(
   ({ objects, debug, onDelete, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root {...Util.composableProps(props)} padding ref={forwardedRef}>
+      <ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
         <ScrollArea.Viewport>
           {objects
             .slice(0, MAX_RENDERED_COUNT)
@@ -82,9 +78,9 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
             {type === 'boolean' && (
               <Field.Root>
                 <Field.Label classNames={labelProps}>{property}</Field.Label>
-                <Field.Checkbox
+                <Checkbox
                   checked={(object as any)[property]}
-                  onCheckedChange={(state) => setValue(object, property, !!state)}
+                  onCheckedChange={({ checked: state }) => setValue(object, property, !!state)}
                 />
               </Field.Root>
             )}
@@ -100,20 +96,14 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
       {/* TODO(burdon): Check if mutable. */}
       <div className='flex flex-col shrink-0'>
-        <IconButton.Root
-          icon='ph--x--regular'
-          iconOnly
-          label='Delete'
-          onClick={() => onDelete(object.id)}
-          variant='ghost'
-        />
+        <Button icon='ph--x--regular' iconOnly label='Delete' onClick={() => onDelete(object.id)} variant='ghost' />
       </div>
     </div>
   );
 };
 
 const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const { parentRef } = useTextEditor(() => {
     return {
       initialValue: object[prop],
@@ -136,13 +126,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object
   return (
     <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
-      <IconButton.Root
-        icon='ph--x--regular'
-        variant='ghost'
-        iconOnly
-        onClick={() => onDelete(object.id)}
-        label='Delete'
-      />
+      <Button icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
     </div>
   );
 };

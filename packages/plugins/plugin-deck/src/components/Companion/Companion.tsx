@@ -7,10 +7,8 @@ import React, { type ReactNode, useMemo } from 'react';
 import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { type ThemedClassName, toLocalizedString, useMainLandmark, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -26,7 +24,7 @@ import { Pane, type PaneTab } from '../Pane/index.ts';
 // primary plank via `attendableId`. Controls (e.g. close) are supplied by the container.
 //
 
-export type CompanionProps = Util.ThemedClassName<{
+export type CompanionProps = ThemedClassName<{
   /** The plank's companions, or undefined until they have been read — an empty array is a plank with none. */
   companions?: AppGraphNode.Node[];
   /** Selected companion id. */
@@ -52,8 +50,10 @@ export const Companion = ({
   controls,
   headless,
 }: CompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const companions = companionsProp ?? [];
+  // A focus area of the shell after the plank it accompanies.
+  const landmark = useMainLandmark(1.5);
 
   // Fall back to the first companion when uncontrolled so a panel is always visible.
   const selected = value ?? companions[0]?.id;
@@ -62,7 +62,7 @@ export const Companion = ({
       companions.map((node) => ({
         id: node.id,
         icon: node.properties?.icon ?? 'ph--circle-dashed--regular',
-        label: ThemeProvider.toLocalizedString(node.properties?.label ?? '', t),
+        label: toLocalizedString(node.properties?.label ?? '', t),
         testId: `deck.companion.tab.${Attention.getLinkedVariant(node.id)}`,
       })),
     [companions, t],
@@ -86,7 +86,7 @@ export const Companion = ({
   );
 
   return (
-    <Pane.Root classNames={classNames} data-testid='deck.companion'>
+    <Pane.Root {...landmark} classNames={classNames} data-testid='deck.companion'>
       {!headless && (
         <Pane.Toolbar>
           <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
@@ -95,7 +95,7 @@ export const Companion = ({
       )}
       {companionsProp?.length === 0 && (
         <Pane.Content classNames='grid place-items-center'>
-          <p className='text-sm text-description'>{t('no-companions.message')}</p>
+          <p className='text-sm text-fg-muted'>{t('no-companions.message')}</p>
         </Pane.Content>
       )}
       {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state.

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Resource } from '@dxos/react-ui';
 import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '#meta';
 
@@ -89,4 +89,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Resource[];

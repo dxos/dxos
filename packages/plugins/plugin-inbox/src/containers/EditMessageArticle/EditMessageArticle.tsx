@@ -8,8 +8,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Panel from '@dxos/react-ui/Panel';
 import { type Message } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
@@ -91,13 +91,13 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   );
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Toolbar asChild>
+    <Panel.Root role={role} width='document'>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <EditMessage key={generation} message={subject} extensions={extensions} onSend={onSend} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

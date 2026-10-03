@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -12,14 +12,7 @@ import { useQuery } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Listbox } from '@dxos/react-ui-list';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Button from '@dxos/react-ui/Button';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { Button, Dialog, Empty, Flex, Listbox, ScrollArea, SystemButton, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -40,8 +33,8 @@ export type SyncTargetsDialogProps = {
  * the {@link ConnectorCoordination.ConnectorCoordinator}.
  */
 export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const manager = PluginManagerProvider.usePluginManager();
 
   const db = Obj.getDatabase(connection);
@@ -60,17 +53,10 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>();
 
-  const handleToggle = useCallback((id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
+  const targetItems = useMemo(
+    () => availableTargets.map((target) => ({ value: target.id, label: target.name, description: target.description })),
+    [availableTargets],
+  );
 
   const handleSelectAll = useCallback(() => {
     setSelected(new Set(availableTargets.map((target) => target.id)));
@@ -113,58 +99,45 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('sync-targets-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
-          <Flex.Root gap='sm' classNames='py-form-gap'>
-            <Button.Root onClick={handleSelectAll} disabled={submitting}>
+          <Flex gap='sm' classNames='py-form-gap'>
+            <Button onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
-            </Button.Root>
-            <Button.Root onClick={handleSelectNone} disabled={submitting}>
+            </Button>
+            <Button onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
-            </Button.Root>
-          </Flex.Root>
+            </Button>
+          </Flex>
         )}
 
         {availableTargets.length === 0 ? (
-          <Banner.Empty label={t('no-available-targets.message')} />
+          <Empty>{t('no-available-targets.message')}</Empty>
         ) : (
-          <ScrollArea.Root padding>
+          <ScrollArea.Root>
             <ScrollArea.Viewport>
-              <Listbox.Root>
-                <Listbox.Content>
-                  {availableTargets.map((target) => {
-                    // Associate the visible label with the checkbox so clicking the name toggles it.
-                    const checkboxId = `sync-target-${target.id}`;
-                    return (
-                      <Listbox.Item key={target.id} id={target.id}>
-                        <Field.Root>
-                          <Listbox.ItemContent
-                            icon={
-                              <Field.Checkbox
-                                id={checkboxId}
-                                checked={selected.has(target.id)}
-                                onCheckedChange={() => handleToggle(target.id)}
-                                disabled={submitting}
-                                aria-label={target.name}
-                              />
-                            }
-                            title={
-                              <Field.Label htmlFor={checkboxId} classNames='text-base text-base-fg'>
-                                {target.name}
-                              </Field.Label>
-                            }
-                            description={target.description}
-                          />
-                        </Field.Root>
-                      </Listbox.Item>
-                    );
-                  })}
+              {/* A multiple-selection listbox: each row toggles its target and shows a check while selected. */}
+              <Listbox.Root
+                items={targetItems}
+                selectionMode='multiple'
+                value={[...selected]}
+                onValueChange={(value) => setSelected(new Set(value))}
+                disabled={submitting}
+              >
+                <Listbox.Content aria-label={t('sync-targets-dialog.title')}>
+                  {targetItems.map((item) => (
+                    <Listbox.Item key={item.value} item={item}>
+                      <Listbox.ItemIndicator />
+                      <Listbox.ItemText />
+                      {item.description && <Listbox.ItemDescription />}
+                    </Listbox.Item>
+                  ))}
                 </Listbox.Content>
               </Listbox.Root>
             </ScrollArea.Viewport>
@@ -173,14 +146,14 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
 
         {error && <p className='mt-form-gap text-error-text'>{error}</p>}
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
-          <Button.Root disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button.Root>
-        </Dialog.Close>
-        <Button.Root variant='primary' onClick={handleSubmit} disabled={submitting}>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
+          <Button disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button>
+        </Dialog.CloseTrigger>
+        <Button variant='primary' onClick={handleSubmit} disabled={submitting}>
           {submitting ? t('saving.label', { ns: osTranslations }) : t('save.label', { ns: osTranslations })}
-        </Button.Root>
-      </Dialog.ActionBar>
+        </Button>
+      </Dialog.Footer>
     </Dialog.Content>
   );
 };

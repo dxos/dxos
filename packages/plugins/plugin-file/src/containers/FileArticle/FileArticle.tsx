@@ -6,7 +6,7 @@ import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Panel } from '@dxos/react-ui';
 import { type File } from '@dxos/types';
 
 import { Preview } from '#components';
@@ -34,12 +34,12 @@ export const FileArticle = ({ role, subject: file, attendableId }: FileArticlePr
         size={rendered.size}
         attendableId={attendableId}
       >
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Preview.Toolbar />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Preview.Content />
-        </Panel.Content>
+        </Panel.Body>
       </Preview.Root>
     </Panel.Root>
   );

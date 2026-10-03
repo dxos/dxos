@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -15,13 +15,13 @@ export type DayAheadProps = {
 };
 
 export const DayAhead = ({ summary }: DayAheadProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Section title={t('day-ahead.title')}>
       {summary ? (
-        <p className='text-sm text-description whitespace-pre-wrap'>{summary}</p>
+        <p className='text-sm text-fg-muted whitespace-pre-wrap'>{summary}</p>
       ) : (
-        <p className='text-sm text-description italic'>{t('no-entry.label')}</p>
+        <p className='text-sm text-fg-muted italic'>{t('no-entry.label')}</p>
       )}
     </Section>
   );

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
-import * as Card from '@dxos/react-ui/Card';
+import { Card } from '@dxos/react-ui';
 
 import { Chessboard } from '#components';
 import { Chess } from '#types';
@@ -28,7 +28,7 @@ export const ChessCard = ({ variant }: ChessCardProps) => {
       <Card.Section classNames='aspect-square min-h-0 max-h-[calc(min(var(--available-height,800px),var(--spacing-card-max-height))-3rem)]'>
         {/* `self-stretch`: the section centers its rows, so the row would sit at its content height —
             zero here, since the board sizes itself from the container rather than from its content. */}
-        <Card.Row fullWidth classNames='self-stretch'>
+        <Card.Row classNames='self-stretch'>
           <Chessboard.Root state={variant}>
             <Chessboard.Content>
               <Chessboard.Board />

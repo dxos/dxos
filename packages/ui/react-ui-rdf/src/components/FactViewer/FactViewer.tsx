@@ -5,17 +5,20 @@
 import React, { type ReactNode, createContext, forwardRef, useContext, useMemo, useState } from 'react';
 
 import { type RDF, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
+import {
+  Button,
+  Empty,
+  Field,
+  Icon,
+  Input,
+  Panel,
+  ScrollArea,
+  Tag,
+  type ThemedClassName,
+  Toolbar,
+} from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-graph';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Field from '@dxos/react-ui/Field';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Tag from '@dxos/react-ui/Tag';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -63,7 +66,7 @@ const useFactViewerContext = (consumer: string): FactViewerContextValue => {
 // Root
 //
 
-type FactViewerRootProps = Util.ThemedClassName<{
+type FactViewerRootProps = ThemedClassName<{
   facts: RDF.Fact[];
   /** Context entity id; scopes the list and roots the graph. */
   context?: string;
@@ -129,30 +132,30 @@ FactViewerRoot.displayName = 'FactViewer.Root';
 // Toolbar
 //
 
-type FactViewerToolbarProps = Util.ThemedClassName<{}>;
+type FactViewerToolbarProps = ThemedClassName<{}>;
 
 const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
   const { filter, setFilter, view, setView } = useFactViewerContext('Toolbar');
   return (
-    <Panel.Toolbar asChild>
+    <Panel.Header>
       <Toolbar.Root classNames={classNames}>
         <Field.Root>
           <Field.Label srOnly>Filter facts</Field.Label>
-          <Field.Input
+          <Input
             placeholder='Filter by entity or predicate…'
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
           />
         </Field.Root>
         <div className={styles.toolbarSpacer()} />
-        <IconButton.Root
+        <Button
           icon='ph--list--regular'
           iconOnly
           label='List view'
           variant={view === 'list' ? 'primary' : 'default'}
           onClick={() => setView('list')}
         />
-        <IconButton.Root
+        <Button
           icon='ph--graph--regular'
           iconOnly
           label='Graph view'
@@ -160,7 +163,7 @@ const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
           onClick={() => setView('graph')}
         />
       </Toolbar.Root>
-    </Panel.Toolbar>
+    </Panel.Header>
   );
 };
 
@@ -170,21 +173,21 @@ FactViewerToolbar.displayName = 'FactViewer.Toolbar';
 // List
 //
 
-type FactViewerListProps = Util.ThemedClassName<{}>;
+type FactViewerListProps = ThemedClassName<{}>;
 
 const FactViewerList = ({ classNames }: FactViewerListProps) => {
   const { groups } = useFactViewerContext('List');
   return (
-    <Panel.Content asChild>
-      <ScrollArea.Root padding classNames={classNames}>
+    <Panel.Body asChild>
+      <ScrollArea.Root classNames={classNames}>
         <ScrollArea.Viewport classNames={styles.listViewport()}>
-          {groups.length === 0 && <Banner.Empty label='No facts.' />}
+          {groups.length === 0 && <Empty>No facts.</Empty>}
           {groups.map((group) => (
             <FactViewerGroup key={group.subject} group={group} />
           ))}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Panel.Content>
+    </Panel.Body>
   );
 };
 
@@ -194,18 +197,18 @@ FactViewerList.displayName = 'FactViewer.List';
 // Graph
 //
 
-type FactViewerGraphProps = Util.ThemedClassName<{}>;
+type FactViewerGraphProps = ThemedClassName<{}>;
 
 const FactViewerGraph = ({ classNames }: FactViewerGraphProps) => {
   const { graph } = useFactViewerContext('Graph');
   return (
-    <Panel.Content classNames={mx(styles.graphContent(), classNames)}>
+    <Panel.Body classNames={mx(styles.graphContent(), classNames)}>
       {graph ? (
         <Tree data={graph} variant='tidy' margin={80} classNames={styles.graphTree()} />
       ) : (
-        <Banner.Empty icon='ph--graph--regular' label='Select an entity to root the graph.' />
+        <Empty icon='ph--graph--regular'>Select an entity to root the graph.</Empty>
       )}
-    </Panel.Content>
+    </Panel.Body>
   );
 };
 
@@ -215,22 +218,22 @@ FactViewerGraph.displayName = 'FactViewer.Graph';
 // Group
 //
 
-type FactViewerGroupProps = Util.ThemedClassName<{ group: Group }>;
+type FactViewerGroupProps = ThemedClassName<{ group: Group }>;
 
 const FactViewerGroup = forwardRef<HTMLDivElement, FactViewerGroupProps>(({ classNames, group }, forwardedRef) => (
   <div className={styles.group({ class: mx(classNames) })} ref={forwardedRef}>
     <div className={styles.groupHeader()}>
       <h3>{group.subject}</h3>
       {group.conflicted && (
-        <Tag.Root hue='warning'>
+        <Tag hue='warning'>
           <span className={styles.groupConflict()}>
-            <Icon.Root icon='ph--warning--regular' size={3} />
+            <Icon icon='ph--warning--regular' size='xs' />
             conflict
           </span>
-        </Tag.Root>
+        </Tag>
       )}
     </div>
-    <Listbox.Root>
+    <Listbox.Root items={group.facts.map((fact) => ({ value: fact.id, label: fact.assertion.predicate }))}>
       <Listbox.Content aria-label={group.subject}>
         {group.facts.map((fact) => (
           <FactViewerRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
@@ -246,9 +249,9 @@ FactViewerGroup.displayName = 'FactViewer.Group';
 // Row
 //
 
-type FactViewerRowProps = Util.ThemedClassName<{ fact: RDF.Fact; conflicting?: boolean }>;
+type FactViewerRowProps = ThemedClassName<{ fact: RDF.Fact; conflicting?: boolean }>;
 
-const FactViewerRow = forwardRef<HTMLLIElement, FactViewerRowProps>(
+const FactViewerRow = forwardRef<HTMLDivElement, FactViewerRowProps>(
   ({ classNames, fact, conflicting }, forwardedRef) => {
     const { assertion, factuality, attribution } = fact;
     return (
@@ -259,7 +262,7 @@ const FactViewerRow = forwardRef<HTMLLIElement, FactViewerRowProps>(
           <div className={styles.rowTriple()}>
             <span className={styles.cell({ class: 'text-right' })}>{formatTerm(assertion.subject)}</span>
             <span className={styles.cellDivider()} />
-            <span className={styles.cell({ class: 'text-center text-description' })}>{assertion.predicate}</span>
+            <span className={styles.cell({ class: 'text-center text-fg-muted' })}>{assertion.predicate}</span>
             <span className={styles.cellDivider()} />
             <span className={styles.cell()}>{formatTerm(assertion.object)}</span>
           </div>
@@ -268,7 +271,7 @@ const FactViewerRow = forwardRef<HTMLLIElement, FactViewerRowProps>(
             {factuality.confidence != null && (
               <span className={styles.rowConfidence()}>{Math.round(factuality.confidence * 100)}%</span>
             )}
-            <Tag.Root hue={factualityColor(factuality.value)}>{factuality.value}</Tag.Root>
+            <Tag hue={factualityColor(factuality.value)}>{factuality.value}</Tag>
           </div>
         </div>
 

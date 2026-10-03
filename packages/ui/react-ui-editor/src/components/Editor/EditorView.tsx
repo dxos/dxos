@@ -6,14 +6,14 @@ import { Transaction } from '@codemirror/state';
 import { EditorView as NaturalEditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { computeDocChanges, initialSync } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { type UseTextEditorProps, useTextEditor } from '../../hooks/index.ts';
 import { type EditorController, createEditorController } from './controller.ts';
 
-export type EditorViewProps = Util.ThemedClassName<
+export type EditorViewProps = ThemedClassName<
   {
     focusable?: boolean;
     value?: string;
@@ -98,7 +98,7 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
       });
     }, [view, value, selectionEnd]);
 
-    // Focus chrome (border/ring) is the caller's responsibility (e.g. `dx-input`).
+    // Focus chrome (border/ring) is the caller's responsibility (e.g. `dx-input-box`).
     return (
       <div
         className={mx('w-full outline-hidden', classNames)}

@@ -4,18 +4,15 @@
 
 import React, { forwardRef, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { getHotkeyScope, keySymbols } from '@dxos/react-focus';
+import { Button, Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import * as Button from '@dxos/react-ui/Button';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -28,8 +25,8 @@ export type CommandsDialogContentProps = {
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
-    const { invokePromise } = AppHooks.useOperationInvoker();
+    const { t } = useTranslation(meta.profile.key);
+    const { invokePromise } = Hooks.useOperationInvoker();
     const runAction = GraphHooks.useActionRunner();
     const { graph } = ToolkitHooks.useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
@@ -55,9 +52,9 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       });
 
       actions.sort((a, b) => {
-        return ThemeProvider.toLocalizedString(a.properties.label, t)
+        return toLocalizedString(a.properties.label, t)
           ?.toLowerCase()
-          .localeCompare(ThemeProvider.toLocalizedString(b.properties.label, t)?.toLowerCase());
+          .localeCompare(toLocalizedString(b.properties.label, t)?.toLowerCase());
       });
 
       return actions;
@@ -69,7 +66,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
     const { results, handleSearch } = useSearchListResults({
       items: actions,
-      extract: (action) => ThemeProvider.toLocalizedString(action.properties.label, t),
+      extract: (action) => toLocalizedString(action.properties.label, t),
     });
 
     return (
@@ -84,7 +81,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
               autoFocus
               placeholder={t('command-list-input.placeholder')}
               escapeBehavior='dismiss'
-              {...{ [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+              {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
             />
             <SearchList.Viewport>
               {results.map((action) => {
@@ -94,7 +91,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                   <SearchList.Item
                     value={action.id}
                     key={action.id}
-                    label={ThemeProvider.toLocalizedString(action.properties.label, t)}
+                    label={toLocalizedString(action.properties.label, t)}
                     icon={action.properties.icon}
                     suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
                     onSelect={() => {
@@ -131,11 +128,11 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
             </SearchList.Viewport>
           </SearchList.Root>
         </Dialog.Body>
-        <Dialog.ActionBar>
-          <Dialog.Close asChild>
-            <Button.Root classNames='w-full'>{t('close.label', { ns: osTranslations })}</Button.Root>
-          </Dialog.Close>
-        </Dialog.ActionBar>
+        <Dialog.Footer>
+          <Dialog.CloseTrigger asChild>
+            <Button classNames='w-full'>{t('close.label', { ns: osTranslations })}</Button>
+          </Dialog.CloseTrigger>
+        </Dialog.Footer>
       </Dialog.Content>
     );
   },

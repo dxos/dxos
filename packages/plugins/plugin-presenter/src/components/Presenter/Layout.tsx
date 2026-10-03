@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import * as Util from '@dxos/react-ui/Util';
+import { composable, composableProps } from '@dxos/react-ui';
 
 export type LayoutProps = PropsWithChildren<{
   topLeft?: ReactNode;
@@ -13,11 +13,11 @@ export type LayoutProps = PropsWithChildren<{
   bottomRight?: ReactNode;
 }>;
 
-export const Layout = Util.composable<HTMLDivElement, LayoutProps>(
+export const Layout = composable<HTMLDivElement, LayoutProps>(
   ({ children, topLeft, topRight, bottomLeft, bottomRight, ...props }, forwardedRef) => {
     return (
       <div
-        {...Util.composableProps(props, { classNames: 'flex grow relative overflow-hidden dx-attention-surface' })}
+        {...composableProps(props, { classNames: 'flex grow relative overflow-hidden dx-attention-surface' })}
         ref={forwardedRef}
       >
         <div className='flex flex-col grow overflow-hidden'>{children}</div>

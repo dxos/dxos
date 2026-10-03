@@ -14,7 +14,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import * as Card from '@dxos/react-ui/Card';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 

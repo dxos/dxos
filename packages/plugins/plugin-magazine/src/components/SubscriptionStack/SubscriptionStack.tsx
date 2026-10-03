@@ -4,11 +4,19 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import * as Card from '@dxos/react-ui/Card';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Util from '@dxos/react-ui/Util';
+import {
+  Block,
+  Card,
+  Focus,
+  Icon,
+  Menu,
+  ScrollArea,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { Subscription } from '#types';
 
@@ -30,7 +38,7 @@ export type SubscriptionStackProps = {
   onAction?: SubscriptionStackActionHandler;
 };
 
-export const SubscriptionStack = Util.composable<HTMLDivElement, SubscriptionStackProps>(
+export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackProps>(
   ({ feeds = [], currentId, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
@@ -54,7 +62,7 @@ export const SubscriptionStack = Util.composable<HTMLDivElement, SubscriptionSta
     }, []);
 
     return (
-      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -62,7 +70,7 @@ export const SubscriptionStack = Util.composable<HTMLDivElement, SubscriptionSta
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
         >
-          <ScrollArea.Root orientation='vertical' padding centered>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SubscriptionTile}
@@ -112,6 +120,7 @@ type SubscriptionTileProps = Pick<MosaicTileProps<SubscriptionTileData>, 'data' 
 const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
   ({ data, location, current }, forwardedRef) => {
     const { feed, onAction } = data;
+    const { t } = useTranslation(osTranslations);
     const { setCurrentId } = useMosaicContainer('SubscriptionTile');
     const { icon, className: iconClassName } = icons[feed.type ?? 'rss'] || icons.rss;
 
@@ -132,23 +141,27 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Card.Root ref={forwardedRef}>
             <Card.Header>
-              <Card.Block>
-                <Icon.Root icon={icon} classNames={iconClassName} />
-              </Card.Block>
+              <Block>
+                <Icon icon={icon} classNames={iconClassName} />
+              </Block>
               <Card.Title>{feed.name ?? 'Untitled feed'}</Card.Title>
-              <Card.Menu items={menuItems} />
+              <Card.Menu label={t('toolbar-menu.label')}>
+                {menuItems.map((item) => (
+                  <Menu.Item key={item.label} item={{ value: item.label, label: item.label }} onClick={item.onClick} />
+                ))}
+              </Card.Menu>
             </Card.Header>
             <Card.Body>
               {/* {feed.url && (
                 <Card.Row>
-                  <Card.Text classNames='truncate' variant='description'>
+                  <Card.Text classNames='truncate' variant='muted'>
                     {feed.url}
                   </Card.Text>
                 </Card.Row>
               )} */}
               {feed.description && (
                 <Card.Row>
-                  <Card.Text variant='description'>{feed.description}</Card.Text>
+                  <Card.Text variant='muted'>{feed.description}</Card.Text>
                 </Card.Row>
               )}
             </Card.Body>

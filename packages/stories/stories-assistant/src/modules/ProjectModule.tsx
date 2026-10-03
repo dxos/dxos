@@ -43,7 +43,7 @@ const ProjectModuleContainer = ({ space }: { space: Space }) => {
 
   if (!project) {
     return settled ? (
-      <div className='grid place-items-center p-2 text-sm text-description'>
+      <div className='grid place-items-center p-2 text-sm text-fg-muted'>
         No project in {space.properties.name ?? space.id}.
       </div>
     ) : (

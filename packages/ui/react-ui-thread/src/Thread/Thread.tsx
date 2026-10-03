@@ -19,18 +19,22 @@ import React, {
 } from 'react';
 
 import { Obj } from '@dxos/echo';
+import {
+  Button,
+  type ComposableProps,
+  Icon,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useThemeMode,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Util from '@dxos/react-ui/Util';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
-import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -109,11 +113,11 @@ type ThreadContentExtra = {
 export type ThreadContentProps = ComposableProps<ThreadContentExtra>;
 
 /** Visible thread container (the attention surface that hosts header / messages / composer). */
-const ThreadContent = Util.composable<HTMLDivElement, ThreadContentExtra>(
+const ThreadContent = composable<HTMLDivElement, ThreadContentExtra>(
   ({ children, current, id, ...props }, forwardedRef) => {
     return (
       <div
-        {...Util.composableProps(props, {
+        {...composableProps(props, {
           role: 'group',
           classNames: [
             'flex flex-col bg-[var(--surface-bg)] current-related dx-attention-surface [--controls-opacity:0]',
@@ -157,9 +161,9 @@ export type ThreadHeaderProps = Omit<
  * `[rail · 1fr · controls]` grid so the trailing controls align with message-tile
  * controls (which use the same template) — no grid is leaked in from the caller.
  */
-const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
+const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
   ({ title, detached, current, controls, onSelect, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(translationKey);
+    const { t } = useTranslation(translationKey);
     const { focusComposer } = useThreadContext('Thread.Header');
     const handleSelect = useCallback(() => {
       onSelect?.();
@@ -168,7 +172,7 @@ const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
 
     return (
       <div
-        {...Util.composableProps(props, {
+        {...composableProps(props, {
           classNames: [
             'grid grid-cols-[var(--dx-rail-size)_1fr_min-content] items-center',
             hoverableControls,
@@ -178,13 +182,13 @@ const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
         ref={forwardedRef}
       >
         <div className='flex items-center justify-center'>
-          <IconButton.Root
+          <Button
             iconOnly
             variant='ghost'
-            density='sm'
+            size='sm'
             icon='ph--caret-double-right--regular'
             label={t('select-thread.label')}
-            classNames='text-description'
+            classNames='text-fg-muted'
             onClick={handleSelect}
           />
         </div>
@@ -194,7 +198,7 @@ const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
             data-testid='thread.heading'
             className={mx(
               'me-2 font-medium truncate italic',
-              current ? 'text-accent-text' : 'text-description',
+              current ? 'text-accent-text' : 'text-fg-muted',
               detached && 'line-through decoration-1',
             )}
           >
@@ -314,7 +318,7 @@ const groupMessages = (
 
 const ThreadDivider = ({ label }: { label?: string }) =>
   label ? (
-    <div className='flex items-center gap-2 px-2 py-2 text-xs text-description'>
+    <div className='flex items-center gap-2 px-2 py-2 text-xs text-fg-muted'>
       <div className='h-px grow bg-separator' />
       <span className='shrink-0'>{label}</span>
       <div className='h-px grow bg-separator' />
@@ -337,7 +341,7 @@ const ThreadItemAdapter = ({ id, data, location, draggable, current, selected }:
   </Mosaic.Tile>
 );
 
-export type ThreadMessagesProps = Util.ThemedClassName<{
+export type ThreadMessagesProps = ThemedClassName<{
   messages: readonly MessageType.Message[];
   /** Stable id of the owning thread; scopes the Mosaic container so multiple threads don't collide. */
   id?: string;
@@ -366,7 +370,7 @@ const ThreadMessages = ({
   gapDividerMs = DEFAULT_GAP_DIVIDER_MS,
   classNames,
 }: ThreadMessagesProps) => {
-  const { dtLocale } = Hooks.useTranslation(translationKey);
+  const { dtLocale } = useTranslation(translationKey);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const items = useMemo(
     () => groupMessages(messages.filter(Boolean), { groupWindowMs, dayDivider, gapDividerMs, dtLocale }),
@@ -423,8 +427,8 @@ export type ThreadTextboxProps = MessageMetadata & {
 
 /** Message composer pinned at the foot of a thread. */
 const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, ...metadata }: ThreadTextboxProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const { t } = useTranslation(translationKey);
+  const themeMode = useThemeMode();
   const { registerComposerFocus } = useThreadContext('Thread.Textbox');
   const composerRef = useRef<{ focus: () => void } | null>(null);
   const messageRef = useRef('');
@@ -477,23 +481,23 @@ ThreadTextbox.displayName = 'Thread.Textbox';
 // Status
 //
 
-export type ThreadStatusProps = Util.ThemedClassName<PropsWithChildren> & {
+export type ThreadStatusProps = ThemedClassName<PropsWithChildren> & {
   activity?: boolean;
 };
 
 const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
   ({ activity, classNames, children, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(translationKey);
+    const { t } = useTranslation(translationKey);
     return (
       <div
         {...props}
         className={mx(
-          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pe-2 text-xs text-description',
+          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pe-2 text-xs text-fg-muted',
           classNames,
         )}
         ref={forwardedRef}
       >
-        <Icon.Root
+        <Icon
           icon='ph--spinner--bold'
           classNames='w-6 h-4 invisible data-[visible=show]:visible animate-spin-slow'
           data-visible={activity ? 'show' : 'hide'}

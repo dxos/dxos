@@ -5,7 +5,7 @@
 import React from 'react';
 
 import type { GraphDiagnostic } from '@dxos/conductor';
-import * as Banner from '@dxos/react-ui/Banner';
+import { Banner } from '@dxos/react-ui';
 
 export type DiagnosticOverlayProps = {
   diagnostics: GraphDiagnostic[];
@@ -24,9 +24,7 @@ export const DiagnosticOverlay = ({ diagnostics }: DiagnosticOverlayProps) => {
     <div className='absolute inset-x-0 bottom-0 flex flex-col items-center gap-1 p-2 pointer-events-none'>
       {diagnostics.map((diagnostic, index) => (
         <Banner.Root key={index} valence={diagnostic.severity}>
-          <Banner.Content>
-            <Banner.Title>{diagnostic.message}</Banner.Title>
-          </Banner.Content>
+          <Banner.Title>{diagnostic.message}</Banner.Title>
         </Banner.Root>
       ))}
     </div>

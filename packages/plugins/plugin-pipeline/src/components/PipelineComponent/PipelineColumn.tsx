@@ -8,13 +8,9 @@ import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';
+import { Block, Button, Card, Focus, Icon, Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
-import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Board, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
@@ -33,7 +29,7 @@ export type PipelineColumnProps = Pick<MosaicTileProps<Pipeline.Column>, 'classN
 
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
 export const PipelineColumn = ({ data: column, location, classNames, debug }: PipelineColumnProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
   // Subscribe to the view target for reactivity.
   const [viewSnapshot] = useObject(column.view);
@@ -51,7 +47,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
     }
   }, [JSON.stringify(viewSnapshot?.query.ast)]);
 
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (!query || !db) {
       return;
     }
@@ -89,16 +85,16 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
         classNames={classNames}
         dragHandle={dragHandle}
       >
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Board.Column.Header
             classNames='_opacity-10'
             label={column.name || t('untitled-column.title')}
             dragHandleRef={setDragHandle}
           />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Board.Column.Body data={column} Tile={PipelineTile} />
-        </Panel.Content>
+        </Panel.Body>
       </Board.Column.Root>
     </Panel.Root>
   );
@@ -130,16 +126,16 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
         <Focus.Item asChild>
           <Card.Root classNames={classNames} ref={composedRef}>
             <Card.Header>
-              <Card.Block>
-                <Icon.Root icon={icon} />
-              </Card.Block>
+              <Block>
+                <Icon icon={icon} />
+              </Block>
               <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Card.Block end>
+              <Block rail='end'>
                 <ActionMenu>
-                  <IconButton.Root iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                  <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             <Card.Body>
               <Item {...itemProps} menu={menu} />

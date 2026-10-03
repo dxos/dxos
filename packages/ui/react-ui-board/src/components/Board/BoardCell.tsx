@@ -12,11 +12,8 @@ import { createPortal } from 'react-dom';
 
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { Block, Button, Card, DragHandle, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DndTileData, useDndRootContext } from '@dxos/react-ui-dnd';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -29,7 +26,7 @@ type DragState = 'idle' | 'dragging';
 
 const BOARD_CELL_NAME = 'Board.Cell';
 
-export type BoardCellProps<T extends Type.AnyObj = any> = Util.ThemedClassName<
+export type BoardCellProps<T extends Type.AnyObj = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
     /** This item's current position/size in grid cells (its entry in the board layout). */
@@ -57,7 +54,7 @@ export const BoardCell = ({
   draggable: isDraggable,
   constraints,
 }: BoardCellProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const {
     cellSize,
     gap,
@@ -278,11 +275,11 @@ export const BoardCell = ({
         onClick={selectable ? (event) => toggleSelection(item.id, event.shiftKey) : undefined}
       >
         <Card.Header>
-          <Card.DragHandle ref={dragHandleRef} />
+          <DragHandle ref={dragHandleRef} />
           {title}
           {onDelete && (
-            <Card.Block end>
-              <IconButton.Root
+            <Block rail='end'>
+              <Button
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly
@@ -292,7 +289,7 @@ export const BoardCell = ({
                   onDelete(item.id);
                 }}
               />
-            </Card.Block>
+            </Block>
           )}
         </Card.Header>
         {/* Body spans all of the card's column tracks (it has gutter columns) so content — e.g. a
@@ -337,7 +334,7 @@ export const BoardCell = ({
             style={{ width: preview.width, height: preview.height, ...sizeOverride }}
           >
             <Card.Header>
-              <Card.DragHandle />
+              <DragHandle />
               {title}
             </Card.Header>
             {children && <div className='relative col-[1/-1] overflow-hidden'>{children}</div>}

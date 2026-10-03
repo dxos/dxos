@@ -11,9 +11,9 @@ import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Diagnostics, Dsl, Mermaid as MermaidDialect, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
 import { diagram as diagramLanguage } from '@dxos/diagram/extension';
 import { BASIC } from '@dxos/diagram/testing';
+import { useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { createBasicExtensions, createThemeExtensions, listener, mermaidHighlightStyle } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -37,7 +37,7 @@ const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
 
 /** Theme-aware CodeMirror editor in the mermaid language mode. */
 const SourceEditor = ({ initialValue, onChange }: { initialValue: string; onChange: (text: string) => void }) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue,
@@ -64,7 +64,7 @@ const SourceEditor = ({ initialValue, onChange }: { initialValue: string; onChan
  * Remounted on `generation` so a fresh layout replaces the buffer rather than merging into edits.
  */
 const DslEditor = ({ initialValue, onChange }: { initialValue: string; onChange: (text: string) => void }) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue,
@@ -84,7 +84,7 @@ const DslEditor = ({ initialValue, onChange }: { initialValue: string; onChange:
 
 /** Reference rendering through mermaid.js; `%% ref` lines are comments to it and are ignored. */
 const MermaidDiagram = ({ source }: { source: string }) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const id = useId().replace(/:/g, '');
   const [svg, setSvg] = useState<string>();
   const [error, setError] = useState<string>();
@@ -129,7 +129,7 @@ const MermaidDiagram = ({ source }: { source: string }) => {
 };
 
 const Header = ({ children }: { children: string }) => (
-  <div className='px-3 py-1.5 text-xs uppercase tracking-wide text-description dx-base-surface'>{children}</div>
+  <div className='px-3 py-1.5 text-xs uppercase tracking-wide text-fg-muted dx-base-surface'>{children}</div>
 );
 
 type StoryArgs = {
@@ -226,7 +226,7 @@ const Bench = ({ source: initial, lattice, arrangement, layering, alignment }: S
               <span className={mx(errors.length ? 'text-rose-500' : 'text-emerald-600')}>{errors.length} errors</span>
               {` · ${report.metrics.nodes} nodes · ${report.metrics.connectors} connectors · ${report.metrics.crossings} crossings · ${report.metrics.bends} bends · gap spread ${report.metrics.frameGapSpread}`}
               {result && (
-                <div className='text-description'>
+                <div className='text-fg-muted'>
                   {`chosen: lattice ${result.chosen.candidate.lattice} · order ${result.chosen.candidate.order} · ${result.chosen.candidate.arrangement} · ${result.chosen.candidate.layering} · align ${result.chosen.candidate.alignment} · bus ${result.chosen.candidate.bus} · cost ${result.chosen.evaluation.cost.toFixed(2)} of ${result.ranked.length} candidates — `}
                   {result.chosen.evaluation.terms
                     .map(({ id, value, weighted }) => `${id} ${value}×→${weighted.toFixed(1)}`)

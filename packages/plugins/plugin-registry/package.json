@@ -97,11 +97,6 @@
       "types": "./dist/types/src/Operations.d.ts",
       "import": "./dist/lib/ns/Operations.mjs"
     },
-    "./RegistryOperation": {
-      "source": "./src/RegistryOperation.ts",
-      "types": "./dist/types/src/RegistryOperation.d.ts",
-      "import": "./dist/lib/ns/RegistryOperation.mjs"
-    },
     "./PluginLoader": {
       "source": "./src/PluginLoader.ts",
       "types": "./dist/types/src/PluginLoader.d.ts",
@@ -111,6 +106,11 @@
       "source": "./src/PluginStorage.ts",
       "types": "./dist/types/src/PluginStorage.d.ts",
       "import": "./dist/lib/ns/PluginStorage.mjs"
+    },
+    "./RegistryOperation": {
+      "source": "./src/RegistryOperation.ts",
+      "types": "./dist/types/src/RegistryOperation.d.ts",
+      "import": "./dist/lib/ns/RegistryOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -141,9 +141,7 @@
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "yaml": "catalog:"

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { addDays, addMinutes, format, startOfDay, startOfWeek } from 'date-fns';
 import React, { useMemo, useRef, useState } from 'react';
 
-import * as Panel from '@dxos/react-ui/Panel';
+import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -45,7 +45,7 @@ export const Range: Story = {
           <Calendar.Toolbar />
           <Calendar.Grid rows={6} onSelectRange={({ range }) => setRange(range)} />
         </Calendar.Root>
-        <div className='text-sm text-description text-center'>
+        <div className='text-sm text-fg-muted text-center'>
           {range ? `${format(range.from, 'PP')} → ${format(range.to, 'PP')}` : 'Drag across days to select a range.'}
         </div>
       </div>
@@ -58,12 +58,12 @@ export const Column: Story = {
   render: () => (
     <Calendar.Root>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Calendar.Toolbar />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Calendar.Grid />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Calendar.Root>
   ),
@@ -91,9 +91,9 @@ export const Week: StoryObj<typeof Calendar.Week> = {
     return (
       <Calendar.Root>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Calendar.Toolbar />
-          </Panel.Toolbar>
+          </Panel.Header>
           <Calendar.Week
             events={events}
             onEventCreate={({ start, end }) =>

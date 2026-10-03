@@ -4,17 +4,15 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { Empty, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 import { Result, Search } from '#types';
@@ -30,8 +28,8 @@ export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
  * companion (see {@link SearchProperties}).
  */
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Use the live `subject` for reads/writes (the tag helpers mutate it); subscribe via useObject so
   // the view re-renders when results/tags change.
   const search = subject;
@@ -143,11 +141,11 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={id} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content>
+      <Panel.Body>
         {(selectedResult && (
           <ResultDetail
             result={selectedResult}
@@ -157,18 +155,17 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           />
         )) ||
           (visibleResults.length === 0 ? (
-            <Banner.Empty
-              classNames='h-full'
-              label={view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
-            />
+            <Empty classNames='h-full'>
+              {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
+            </Empty>
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-              <Masonry.Content thin centered padding>
+              <Masonry.Content padding>
                 <Masonry.Viewport getId={(data) => Obj.getURI(data.result)} items={tileItems} />
               </Masonry.Content>
             </Masonry.Root>
           ))}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

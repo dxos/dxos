@@ -4,9 +4,8 @@
 
 import React from 'react';
 
+import { Button, Icon } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Button from '@dxos/react-ui/Button';
-import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
 
 import { Track } from '#types';
@@ -43,7 +42,7 @@ export const TrackList = ({
   classNames,
 }: TrackListProps) => {
   return (
-    <Listbox.Root>
+    <Listbox.Root items={tracks.map((track) => ({ value: track.id, label: track.name }))}>
       <div className={mx('flex flex-col gap-1 p-2 overflow-y-auto', classNames)}>
         <Listbox.Content aria-label='Tracks' classNames='gap-1'>
           {tracks.map((track) => {
@@ -52,8 +51,8 @@ export const TrackList = ({
               <Listbox.Item
                 key={track.id}
                 id={track.id}
-                aria-current={selected || undefined}
-                classNames='gap-2 px-2 py-1 rounded-sm text-sm dx-current'
+                current={selected}
+                classNames='gap-2 px-2 py-1 rounded-sm text-sm'
               >
                 <span
                   className='inline-block size-3 rounded-sm shrink-0 border border-black/20'
@@ -77,7 +76,7 @@ export const TrackList = ({
                   onClick={() => onMute?.(track.id, !track.muted)}
                   aria-label={track.muted ? 'Unmute' : 'Mute'}
                 >
-                  <Icon.Root icon={track.muted ? 'ph--speaker-x--regular' : 'ph--speaker-high--regular'} size={4} />
+                  <Icon icon={track.muted ? 'ph--speaker-x--regular' : 'ph--speaker-high--regular'} size='md' />
                 </button>
                 {onRemove && (
                   <button
@@ -86,7 +85,7 @@ export const TrackList = ({
                     onClick={() => onRemove(track.id)}
                     aria-label='Remove track'
                   >
-                    <Icon.Root icon='ph--trash--regular' size={4} />
+                    <Icon icon='ph--trash--regular' size='md' />
                   </button>
                 )}
               </Listbox.Item>
@@ -94,10 +93,10 @@ export const TrackList = ({
           })}
         </Listbox.Content>
         {onAdd && (
-          <Button.Root onClick={onAdd} classNames='mt-1 justify-start gap-2'>
-            <Icon.Root icon='ph--plus--regular' size={4} />
+          <Button onClick={onAdd} classNames='mt-1 justify-start gap-2'>
+            <Icon icon='ph--plus--regular' size='md' />
             Add track
-          </Button.Root>
+          </Button>
         )}
       </div>
     </Listbox.Root>

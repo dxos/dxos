@@ -5,13 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import * as Column from '@dxos/react-ui/Column';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Splitter from '@dxos/react-ui/Splitter';
+import { Button, Container, Field, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { WithKeyboard } from '../../testing/index.ts';
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout.tsx';
@@ -19,30 +14,26 @@ import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout.tsx';
 const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) => {
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {label}
           <Toolbar.Separator />
           {children}
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <Column.Root gutter='sm' classNames='py-form-chrome'>
-          <Column.Center>
-            <Flex.Root column>
-              <Field.Root>
-                <Field.Input placeholder={label} />
-              </Field.Root>
-            </Flex.Root>
-          </Column.Center>
-        </Column.Root>
-      </Panel.Content>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <Container gutter='sm' classNames='py-form-chrome'>
+          <Field.Root>
+            <Input placeholder={label} />
+          </Field.Root>
+        </Container>
+      </Panel.Body>
     </Panel.Root>
   );
 };
 
 const DefaultStory = () => {
-  const [splitterMode, setSplitterMode] = useState<Splitter.Mode>('start');
+  const [splitterMode, setSplitterMode] = useState<SplitterMode>('start');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {
@@ -57,18 +48,18 @@ const DefaultStory = () => {
             <Splitter.Panel position='start'>
               <StoryPanel label='Main'>
                 {splitterMode === 'start' && (
-                  <Toolbar.IconButton icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('split')} />
+                  <Button icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('split')} />
                 )}
               </StoryPanel>
             </Splitter.Panel>
             <Splitter.Panel position='end'>
               <StoryPanel label='Drawer'>
-                <Toolbar.IconButton
+                <Button
                   icon={splitterMode === 'end' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
                   label={splitterMode === 'end' ? 'Collapse' : 'Expand'}
                   onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'split' ? 'end' : 'split'))}
                 />
-                <Toolbar.IconButton icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('start')} />
+                <Button icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('start')} />
               </StoryPanel>
             </Splitter.Panel>
           </Splitter.Root>

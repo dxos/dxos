@@ -17,9 +17,8 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { ModuleContainer } from './ModuleContainer.tsx';
 
@@ -34,14 +33,14 @@ const ExamplePanel = ({ label }: { label: string }) => {
   const space = Hooks.useActiveSpace();
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>{label}</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='p-2'>
-        <p className='text-sm text-description'>space: {space?.id ?? '…'}</p>
-      </Panel.Content>
+      </Panel.Header>
+      <Panel.Body classNames='p-2'>
+        <p className='text-sm text-fg-muted'>space: {space?.id ?? '…'}</p>
+      </Panel.Body>
     </Panel.Root>
   );
 };

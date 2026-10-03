@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import * as MediaPlayer from '@dxos/react-ui/MediaPlayer';
+import { MediaPlayer } from '@dxos/react-ui';
 
 import { type VariantContent } from '#surfaces';
 
@@ -26,9 +26,7 @@ export const VideoVariant = ({ variant }: VideoVariantProps) => {
     return null;
   }
 
-  return (
-    <MediaPlayer.Root classNames='dx-expand' src={src} kind='video' fit='contain' alt={variant.generation?.prompt} />
-  );
+  return <MediaPlayer classNames='dx-expand' src={src} kind='video' fit='contain' alt={variant.generation?.prompt} />;
 };
 
 VideoVariant.displayName = 'VideoVariant';

@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -19,15 +19,21 @@ import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
+import {
+  Button,
+  Field,
+  Flex,
+  Input,
+  Panel,
+  ScrollArea,
+  ThemedClassName,
+  composable,
+  composableProps,
+  useAsyncEffect,
+  useTranslation,
+} from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Util from '@dxos/react-ui/Util';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { sortKeys } from '@dxos/util';
@@ -46,24 +52,24 @@ export type SpaceGeneratorProps = {
   onCreateObjects?: (objects: Obj.Unknown[]) => void;
 };
 
-export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProps>(
+export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
   ({ children, space, onCreateObjects, ...props }, forwardedRef) => {
-    const invoker = AppHooks.useOperationInvoker();
+    const invoker = Hooks.useOperationInvoker();
     const { invokePromise } = invoker;
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = useTranslation(meta.profile.key);
     const client = useClient();
     const [count, setCount] = useState(1);
     const [info, setInfo] = useState<any>({});
     const presets = useMemo(() => generator(), []);
     const manager = PluginManagerProvider.usePluginManager();
-    const allTemplates = AppHooks.useCapabilities(AppCapabilities.SpaceTemplate);
+    const allTemplates = Hooks.useCapabilities(AppCapabilities.SpaceTemplate);
 
     useEffect(() => {
       EffectEx.runDetached(manager.activate(ActivationEvents.SpaceTemplatesRequested));
     }, [manager]);
 
     // Register types.
-    Hooks.useAsyncEffect(async () => {
+    useAsyncEffect(async () => {
       await client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
     }, [client, presets]);
 
@@ -114,7 +120,7 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
       });
     }, [space]);
 
-    Hooks.useAsyncEffect(updateInfo, [updateInfo]);
+    useAsyncEffect(updateInfo, [updateInfo]);
 
     // TODO(wittjosiah): Custom toast required — `notify` labels are fixed at invocation, so a
     //  result-dependent count cannot be reported through it. Drop these once operation notify
@@ -180,12 +186,11 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
       // `alwaysActive`: the toolbar gates itself on the menu scope's attention, and this debug panel
       // is not an attendable surface, so without it every action renders disabled.
 
-      <Panel.Root {...Util.composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar>
+      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+        <Panel.Header>
           <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
             <Field.Root>
-              <Field.Input
-                type='number'
+              <Input
                 placeholder='Count'
                 classNames='w-[4rem] text-right'
                 min={1}
@@ -193,13 +198,14 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
                 size={8}
                 value={count}
                 onChange={(event) => setCount(parseInt(event.target.value))}
+                type='number'
               />
             </Field.Root>
           </ActionToolbar>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root thin orientation='vertical'>
-            <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-separator-subtle'>
               <SchemaTable
                 classNames='py-1'
                 types={staticTypes}
@@ -233,7 +239,7 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
               <ProgressGenerator classNames='py-1' />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },
@@ -282,13 +288,13 @@ const useSpaceGeneratorMenu = ({
 // Stable key for the test progress monitor within the shared registry.
 const TEST_PROGRESS_NAME = `${meta.profile.key}.test-progress`;
 
-type ProgressGeneratorProps = Util.ThemedClassName;
+type ProgressGeneratorProps = ThemedClassName;
 
 // Drives a synthetic progress monitor (10s over 10 steps) so the R0 rail meter can be exercised —
 // and renders the meter here too, since the rail's only lives inside a popover the user must open,
 // which made a working monitor look like a broken one.
 const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
-  const registry = AppHooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const registry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
   const monitor = ToolkitHooks.useProgressMonitor(TEST_PROGRESS_NAME);
   const running = monitor?.status === 'running';
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
@@ -340,23 +346,18 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
 
   return (
     <div className={mx('flex flex-col gap-1 py-1', classNames)}>
-      <Flex.Root gap='sm' align='center'>
+      <Flex gap='sm' align='center'>
         <span className='grow'>Progress Monitor</span>
         {running ? (
-          <IconButton.Root
+          <Button
             icon='ph--x--regular'
             label='Cancel test progress'
             onClick={() => registry?.cancel(TEST_PROGRESS_NAME)}
           />
         ) : (
-          <IconButton.Root
-            icon='ph--play--regular'
-            label='Start test progress'
-            disabled={!registry}
-            onClick={handleStart}
-          />
+          <Button icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
         )}
-      </Flex.Root>
+      </Flex>
       {monitor && (monitor.status === 'running' || monitor.status === 'error') && (
         <ProgressMeter state={monitor} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
       )}

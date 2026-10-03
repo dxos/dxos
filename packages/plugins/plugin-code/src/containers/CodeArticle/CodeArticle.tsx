@@ -6,7 +6,7 @@ import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
@@ -14,11 +14,8 @@ import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
+import { Grid, Panel, useThemeMode, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import * as Grid from '@dxos/react-ui/Grid';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -69,9 +66,9 @@ const languageForPath = (path: string) => {
 // introspect explorer so the visual rhythm matches across panels.
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
   ({ role, subject: project, attendableId }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
-    const invoker = AppHooks.useOperationInvoker();
-    const [buildRunState, updateBuildRun] = AppHooks.useAtomCapabilityState(CodeCapabilities.BuildRun);
+    const { t } = useTranslation(meta.profile.key);
+    const invoker = Hooks.useOperationInvoker();
+    const [buildRunState, updateBuildRun] = Hooks.useAtomCapabilityState(CodeCapabilities.BuildRun);
     const projectId = project.id;
     const projectState = buildRunState[projectId];
 
@@ -218,7 +215,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
 
     return (
       <Panel.Root classNames='dx-expand' role={role} ref={forwardedRef}>
-        <Panel.Toolbar>
+        <Panel.Header>
           <CodeToolbar
             attendableId={attendableId}
             role={role}
@@ -226,10 +223,10 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
             onBuild={handleBuild}
             onRun={handleRun}
           />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <Grid.Root cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
-            <Grid.Root rows={[1, 2]} classNames='divide-y divide-subdued-separator'>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <Grid cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
+            <Grid rows={[1, 2]} classNames='divide-y divide-separator-subtle'>
               <div role='region' aria-label={t('browse-pane.label')} className='dx-expand grid overflow-auto'>
                 <FileTree
                   files={fileEntries}
@@ -241,12 +238,12 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
               <div role='region' aria-label={t('inspect-pane.label')} className='dx-expand grid'>
                 <BuildOutput state={projectState} />
               </div>
-            </Grid.Root>
+            </Grid>
             <div role='region' aria-label={t('output-pane.label')} className='dx-expand grid'>
               {selected ? <FileEditor file={selected} role={role} /> : null}
             </div>
-          </Grid.Root>
-        </Panel.Content>
+          </Grid>
+        </Panel.Body>
       </Panel.Root>
     );
   },
@@ -258,7 +255,7 @@ type FileEditorProps = {
 };
 
 const FileEditor = ({ file, role }: FileEditorProps) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const identity = useIdentity();
   const space = getSpace(file);
 

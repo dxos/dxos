@@ -8,8 +8,8 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { Tabs } from '@dxos/react-ui';
 import { type MenuItem } from '@dxos/react-ui-menu';
-import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Position from '@dxos/util/Position';
 
 import { useLoadDescendents } from '#hooks';

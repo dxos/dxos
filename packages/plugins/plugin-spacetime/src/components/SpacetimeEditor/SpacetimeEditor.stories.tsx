@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -33,12 +33,12 @@ const DefaultStory = () => {
   return (
     <SpacetimeEditor.Root ref={controller} scene={scene}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <SpacetimeEditor.Toolbar alwaysActive />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SpacetimeEditor.Canvas />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </SpacetimeEditor.Root>
   );

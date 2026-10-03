@@ -4,9 +4,7 @@
 
 import React from 'react';
 
-import * as Grid from '@dxos/react-ui/Grid';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Grid, Panel, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -64,13 +62,13 @@ export const RepositoryViewer = ({
   onSelectCommit,
   onLoadMoreCommits,
 }: RepositoryViewerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const empty = !loading && !error && branches.length === 0;
   const isCommit = currentRef !== undefined && !branches.some((branch) => branch.name === currentRef);
 
   return (
     <Panel.Root role={role} classNames='dx-expand'>
-      <Panel.Toolbar>
+      <Panel.Header>
         <RepositoryToolbar
           branches={branches}
           currentRef={currentRef}
@@ -79,8 +77,8 @@ export const RepositoryViewer = ({
           onViewChange={onViewChange}
           onRefresh={onRefresh}
         />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         {error ? (
           <Message testId='repository.error'>{error}</Message>
         ) : empty ? (
@@ -94,7 +92,7 @@ export const RepositoryViewer = ({
             onLoadMore={onLoadMoreCommits}
           />
         ) : (
-          <Grid.Root cols={['18rem', '1fr']} classNames='divide-x divide-separator'>
+          <Grid cols={['18rem', '1fr']} classNames='divide-x divide-separator'>
             <div
               role='region'
               aria-label={t('files-pane.label')}
@@ -113,20 +111,20 @@ export const RepositoryViewer = ({
               aria-label={t('file-pane.label')}
               className='dx-expand grid grid-rows-[min-content_1fr] overflow-hidden'
             >
-              <div className='px-3 py-1 text-sm text-description border-b border-separator truncate'>
+              <div className='px-3 py-1 text-sm text-fg-muted border-b border-separator truncate'>
                 {selectedPath ?? t('no-file-selected.message')}
               </div>
               {file ? <RepositoryFileView file={file} /> : <div />}
             </div>
-          </Grid.Root>
+          </Grid>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
 
 const Message = ({ children, testId }: { children: string; testId: string }) => (
-  <div className='dx-expand grid place-items-center p-4 text-description text-center' data-testid={testId}>
+  <div className='dx-expand grid place-items-center p-4 text-fg-muted text-center' data-testid={testId}>
     {children}
   </div>
 );

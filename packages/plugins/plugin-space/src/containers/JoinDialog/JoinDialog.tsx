@@ -4,15 +4,14 @@
 
 import React, { useCallback } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Trigger } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -25,9 +24,9 @@ export type JoinDialogProps = JoinPanelProps & {
 };
 
 export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialogProps) => {
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {
@@ -79,8 +78,8 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
       <Dialog.Body>
         <JoinPanel
           {...props}
-          exitActionParent={<Dialog.Close asChild />}
-          doneActionParent={<Dialog.Close asChild />}
+          exitActionParent={<Dialog.CloseTrigger asChild />}
+          doneActionParent={<Dialog.CloseTrigger asChild />}
           onDone={handleDone}
         />
       </Dialog.Body>

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
-import * as Dialog from '@dxos/react-ui/Dialog';
+import { Dialog } from '@dxos/react-ui';
 
 import { ClientPlugin } from '#plugin';
 import { translations } from '#translations';
@@ -16,9 +16,7 @@ import { JoinDialog } from './JoinDialog.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>
-    <Dialog.Overlay>
-      <JoinDialog />
-    </Dialog.Overlay>
+    <JoinDialog />
   </Dialog.Root>
 );
 

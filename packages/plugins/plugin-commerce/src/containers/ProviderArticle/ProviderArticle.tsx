@@ -6,9 +6,10 @@ import React, { useCallback, useMemo } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -18,9 +19,6 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 import { Provider } from '#types';
@@ -33,7 +31,7 @@ export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provid
  * Provider node's graph actions (e.g. Regenerate, which runs the skill agent) in the toolbar.
  */
 export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const [provider] = useObject(subject);
   const { actions, onAction } = useMenuActions(attendableId);
 
@@ -69,24 +67,24 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col gap-2 p-3'>
-        <span className='text-sm text-description'>{t('search-fields.label')}</span>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col gap-2 p-3'>
+        <span className='text-sm text-fg-muted'>{t('search-fields.label')}</span>
         {searchFields.length > 0 ? (
           <dl className='flex flex-col gap-1'>
             {searchFields.map((field) => (
-              <Flex.Root key={field.key} gap='sm' align='baseline' justify='between'>
+              <Flex key={field.key} gap='sm' align='baseline' justify='between'>
                 <dt className='text-sm'>{field.title}</dt>
-                {field.type && <dd className='text-xs text-description'>{field.type}</dd>}
-              </Flex.Root>
+                {field.type && <dd className='text-xs text-fg-muted'>{field.type}</dd>}
+              </Flex>
             ))}
           </dl>
         ) : (
-          <span className='text-sm text-subdued'>{t('search-fields.message')}</span>
+          <span className='text-sm text-fg-subtle'>{t('search-fields.message')}</span>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -102,7 +100,7 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
 const useMenuActions = (
   attendableId: string | undefined,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = ToolkitHooks.useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
 
   const menuActions = useMenuBuilder(

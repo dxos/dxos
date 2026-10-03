@@ -7,7 +7,7 @@ import React, { memo, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useGameboardContext } from './GameboardContext.ts';
@@ -23,7 +23,7 @@ const SQUARE_NAME = 'Square';
  * hairline gaps where the rounding steps. Pieces are positioned from measurements; squares are the
  * measurement.
  */
-export type SquareProps = Util.ThemedClassName<{
+export type SquareProps = ThemedClassName<{
   location: Location;
   label?: string;
 }>;

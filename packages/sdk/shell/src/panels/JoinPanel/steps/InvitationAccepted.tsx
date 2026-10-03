@@ -4,7 +4,7 @@
 
 import React, { cloneElement } from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useTranslation } from '@dxos/react-ui';
 
 import { Action, ActionBar } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
@@ -19,7 +19,7 @@ export interface InvitationAcceptedProps extends JoinStepProps {
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
   const { active, Kind, doneActionParent, onDone } = props;
   const disabled = !active;
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
 
   const doneAction = (
     <Action

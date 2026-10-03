@@ -5,13 +5,12 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import { useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import * as Column from '@dxos/react-ui/Column';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { GameCapabilities } from '#types';
@@ -37,7 +36,7 @@ type VariantSelection = Schema.Schema.Type<typeof VariantSelection>;
  * it in a Game.
  */
 export const CreateGamePanel = ({ target, onCreateObject, onCancel, variants: variantsProp }: CreateGamePanelProps) => {
-  const capabilityVariants = AppHooks.useCapabilities(GameCapabilities.VariantProvider);
+  const capabilityVariants = Hooks.useCapabilities(GameCapabilities.VariantProvider);
   const variants = variantsProp ?? capabilityVariants;
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const selected = useMemo(() => variants.find((v) => v.id === selectedId), [variants, selectedId]);
@@ -88,14 +87,10 @@ export const CreateGamePanel = ({ target, onCreateObject, onCancel, variants: va
       onCancel={handleBack}
       testId='create-game-form'
     >
-      {/* Rendered inside the create dialog's Dialog.Body (which owns the gutter Column); use
-          Column.Center to align with the dialog title rather than nesting another Column.Root. */}
-      <Column.Center>
-        <Form.Content>
-          <Form.Fields />
-          <Form.Actions />
-        </Form.Content>
-      </Column.Center>
+      <Form.Content>
+        <Form.Fields />
+        <Form.Actions />
+      </Form.Content>
     </Form.Root>
   );
 };
@@ -107,7 +102,7 @@ type VariantPickerProps = {
 };
 
 const VariantPicker = ({ variants, onSave, onCancel }: VariantPickerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const sorted = useMemo(() => [...variants].sort((a, b) => a.label.localeCompare(b.label)), [variants]);
   const { results, handleSearch } = useSearchListResults({
     items: sorted,
@@ -122,34 +117,32 @@ const VariantPicker = ({ variants, onSave, onCancel }: VariantPickerProps) => {
 
   return (
     <Form.Root schema={VariantSelection} values={values} onSave={onSave} onCancel={onCancel}>
-      <Column.Center>
-        <Form.Content>
-          <SearchList.Root onSearch={handleSearch}>
-            <SearchList.Input
-              classNames='mb-form-gap'
-              autoFocus
-              data-testid='create-game-panel.variant-input'
-              placeholder={t('create-panel.variant.placeholder')}
-            />
-            <SearchList.Viewport>
-              {results.map((variant) => (
-                <SearchList.Item
-                  key={variant.id}
-                  value={variant.id}
-                  label={variant.label}
-                  icon={variant.icon ?? 'ph--sword--regular'}
-                  checked={variant.id === variantId}
-                  onSelect={() => setSelectedId(variant.id)}
-                />
-              ))}
-            </SearchList.Viewport>
-          </SearchList.Root>
-          <Form.Actions
-            submitLabel={hasInputs ? t('create-panel.continue.label') : undefined}
-            submitIcon={hasInputs ? 'ph--arrow-right--regular' : undefined}
+      <Form.Content>
+        <SearchList.Root onSearch={handleSearch}>
+          <SearchList.Input
+            classNames='mb-form-gap'
+            autoFocus
+            data-testid='create-game-panel.variant-input'
+            placeholder={t('create-panel.variant.placeholder')}
           />
-        </Form.Content>
-      </Column.Center>
+          <SearchList.Viewport>
+            {results.map((variant) => (
+              <SearchList.Item
+                key={variant.id}
+                value={variant.id}
+                label={variant.label}
+                icon={variant.icon ?? 'ph--sword--regular'}
+                checked={variant.id === variantId}
+                onSelect={() => setSelectedId(variant.id)}
+              />
+            ))}
+          </SearchList.Viewport>
+        </SearchList.Root>
+        <Form.Actions
+          submitLabel={hasInputs ? t('create-panel.continue.label') : undefined}
+          submitIcon={hasInputs ? 'ph--arrow-right--regular' : undefined}
+        />
+      </Form.Content>
     </Form.Root>
   );
 };

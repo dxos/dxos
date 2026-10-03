@@ -9,12 +9,8 @@ import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Contact } from '@dxos/react-client/halo';
+import { Avatar, Button, type ThemedClassName, toAvatarHue, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import type * as Util from '@dxos/react-ui/Util';
 import { keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -32,7 +28,7 @@ export type SpaceInvitationEntry = {
   sentAt: Date;
 };
 
-export type SpaceInvitationListProps = Util.ThemedClassName<{
+export type SpaceInvitationListProps = ThemedClassName<{
   invitations: SpaceInvitationEntry[];
   /** Ids of invitations with an action in flight; their buttons are disabled. */
   pending?: string[];
@@ -63,14 +59,16 @@ export const SpaceInvitationList = ({
   onJoin,
   onDismiss,
 }: SpaceInvitationListProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   if (invitations.length === 0) {
-    return <p className='text-description text-center my-2'>{t('empty-space-invitations.message')}</p>;
+    return <p className='text-fg-muted text-center my-2'>{t('empty-space-invitations.message')}</p>;
   }
 
   const sorted = [...invitations].sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime());
   return (
-    <Listbox.Root>
+    <Listbox.Root
+      items={sorted.map((invitation) => ({ value: invitation.id, label: contactDisplayName(invitation.sender) }))}
+    >
       <Listbox.Content
         classNames={[classNames, 'flex flex-col gap-2']}
         aria-label={t('space-invitations.label')}
@@ -96,61 +94,57 @@ type SpaceInvitationListItemProps = Pick<SpaceInvitationListProps, 'onJoin' | 'o
 };
 
 const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: SpaceInvitationListItemProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
-  const labelId = Hooks.useId('spaceInvitationListItem__label');
+  const { t } = useTranslation(translationKey);
+  const labelId = useId('spaceInvitationListItem__label');
   const fallback = keyToFallback(requirePublicKey(invitation.sender.identityKey));
   const space = invitation.spaceName ?? invitation.spaceKey.truncate();
 
   return (
     <Listbox.Item classNames='p-2 rounded-sm' id={invitation.id} data-testid='space-invitation-list.item'>
-      <Listbox.ItemContent
-        icon={
-          <Avatar.Root labelId={labelId}>
-            <Avatar.Content
-              size={8}
-              hue={profileString(invitation.sender, 'hue') ?? fallback.hue}
-              fallback={profileString(invitation.sender, 'emoji') ?? fallback.emoji}
-            />
-          </Avatar.Root>
-        }
-        title={
-          <div className='flex items-center justify-between gap-1'>
-            <span id={labelId} className='truncate'>
-              {contactDisplayName(invitation.sender)}
-            </span>
-            <div className='flex items-center gap-1'>
-              <Button.Root
-                density='sm'
-                variant='primary'
-                disabled={disabled}
-                onClick={() => onJoin?.(invitation)}
-                data-testid='space-invitation-list.join'
-              >
-                {t('join-space-invitation.label')}
-              </Button.Root>
-              <IconButton.Root
-                iconOnly
-                density='sm'
-                variant='ghost'
-                icon='ph--x--regular'
-                label={t('dismiss-space-invitation.label')}
-                disabled={disabled}
-                onClick={() => onDismiss?.(invitation)}
-                data-testid='space-invitation-list.dismiss'
-              />
-            </div>
-          </div>
-        }
-        description={
-          <span className='text-sm text-description'>
-            {t('space-invitation.description', {
-              space,
-              role: t(roleLabelKey(invitation.role)),
-              time: formatDistanceToNow(invitation.sentAt, { addSuffix: true }),
-            })}
+      <Listbox.ItemIcon>
+        <Avatar.Root
+          aria-labelledby={labelId}
+          size='md'
+          hue={toAvatarHue(profileString(invitation.sender, 'hue') ?? fallback.hue)}
+          fallback={profileString(invitation.sender, 'emoji') ?? fallback.emoji}
+        />
+      </Listbox.ItemIcon>
+      {/* The sender row with its actions, over the space and role. */}
+      <div className='flex flex-col gap-1 min-w-0 grow'>
+        <div className='flex items-center justify-between gap-1'>
+          <span id={labelId} className='truncate'>
+            {contactDisplayName(invitation.sender)}
           </span>
-        }
-      />
+          <div className='flex items-center gap-1'>
+            <Button
+              size='sm'
+              variant='primary'
+              disabled={disabled}
+              onClick={() => onJoin?.(invitation)}
+              data-testid='space-invitation-list.join'
+            >
+              {t('join-space-invitation.label')}
+            </Button>
+            <Button
+              iconOnly
+              size='sm'
+              variant='ghost'
+              icon='ph--x--regular'
+              label={t('dismiss-space-invitation.label')}
+              disabled={disabled}
+              onClick={() => onDismiss?.(invitation)}
+              data-testid='space-invitation-list.dismiss'
+            />
+          </div>
+        </div>
+        <span className='text-sm text-fg-muted'>
+          {t('space-invitation.description', {
+            space,
+            role: t(roleLabelKey(invitation.role)),
+            time: formatDistanceToNow(invitation.sentAt, { addSuffix: true }),
+          })}
+        </span>
+      </div>
     </Listbox.Item>
   );
 };

@@ -17,11 +17,15 @@ import React, {
 } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as HoverCard from '@dxos/react-ui/HoverCard';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Util from '@dxos/react-ui/Util';
+import {
+  Button,
+  HoverCard,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type Hue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -256,7 +260,7 @@ const [GanttProvider, useGanttContext] = createContext<GanttContextValue>('Gantt
 // Root
 //
 
-type GanttRootProps = Util.ThemedClassName<GanttData & { children?: ReactNode }>;
+type GanttRootProps = ThemedClassName<GanttData & { children?: ReactNode }>;
 
 /**
  * Gantt view of lanes on a shared axis. The root resolves the rows and the axis; the parts lay out
@@ -264,7 +268,7 @@ type GanttRootProps = Util.ThemedClassName<GanttData & { children?: ReactNode }>
  * them, `Meta` shows whatever the host attached. A host that already lists the lanes renders the
  * chart alone.
  */
-const GanttRoot = Util.composable<HTMLDivElement, GanttRootProps>(
+const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
   (
     {
       groups = [],
@@ -319,7 +323,7 @@ const GanttRoot = Util.composable<HTMLDivElement, GanttRootProps>(
         onAxisChange={onAxisChange}
       >
         <div
-          {...Util.composableProps(props, {
+          {...composableProps(props, {
             // `items-start`: the parts are drawn in pixel rows, so a stretching host must not spread them.
             classNames: 'flex w-full items-start text-xs font-mono overflow-hidden',
           })}
@@ -338,17 +342,17 @@ GanttRoot.displayName = 'Gantt.Root';
 // Legend
 //
 
-type GanttLegendProps = Util.ThemedClassName<PropsWithChildren>;
+type GanttLegendProps = ThemedClassName<PropsWithChildren>;
 
 /**
  * The lane names, one per row, indented by depth; each row is the lane's keyboard path. Children go
  * in the header row above the names, beside the chart's axis labels (e.g. `Gantt.AxisToggle`).
  */
-const GanttLegend = Util.composable<HTMLDivElement, GanttLegendProps>(({ children, ...props }, forwardedRef) => {
+const GanttLegend = composable<HTMLDivElement, GanttLegendProps>(({ children, ...props }, forwardedRef) => {
   const { rows, onLaneSelect } = useGanttContext('Gantt.Legend');
   return (
     <div
-      {...Util.composableProps(props, { classNames: 'shrink-0 w-[min(15rem,20%)] min-w-40 flex flex-col font-sans' })}
+      {...composableProps(props, { classNames: 'shrink-0 w-[min(15rem,20%)] min-w-40 flex flex-col font-sans' })}
       ref={forwardedRef}
     >
       <div className='flex items-center' style={{ height: HEADER_HEIGHT }}>
@@ -380,7 +384,7 @@ const GanttLegend = Util.composable<HTMLDivElement, GanttLegendProps>(({ childre
             className={mx('shrink-0 w-2 h-2 rounded-full bg-current', !lane.hue && STATUS_COLOR[lane.status].text)}
             style={lane.hue ? { color: hueColor(lane.hue) } : undefined}
           />
-          <span className='truncate text-base-fg'>{lane.label}</span>
+          <span className='truncate text-fg'>{lane.label}</span>
         </div>
       ))}
     </div>
@@ -400,7 +404,7 @@ type GanttAxisToggleProps = {};
  * event. Renders nothing unless the root was given `onAxisChange`, since the axis is the host's state.
  */
 const GanttAxisToggle = (_: GanttAxisToggleProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const { axis = 'unit', onAxisChange } = useGanttContext('Gantt.AxisToggle');
   if (!onAxisChange) {
     return null;
@@ -408,10 +412,10 @@ const GanttAxisToggle = (_: GanttAxisToggleProps) => {
 
   // The icon names the axis in use; the label names the one a click switches to.
   return (
-    <IconButton.Root
+    <Button
       variant='ghost'
-      density='sm'
-      size={3}
+      size='sm'
+      iconSize='xs'
       iconOnly
       icon={axis === 'time' ? 'ph--clock--regular' : 'ph--dots-three-outline--regular'}
       label={t(axis === 'time' ? 'gantt-axis-unit.label' : 'gantt-axis-time.label')}
@@ -427,18 +431,18 @@ GanttAxisToggle.displayName = 'Gantt.AxisToggle';
 // Meta
 //
 
-type GanttMetaProps = Util.ThemedClassName<{}>;
+type GanttMetaProps = ThemedClassName<{}>;
 
 /** Whatever the host attached to each lane, aligned to the rows. */
-const GanttMeta = Util.composable<HTMLDivElement, GanttMetaProps>((props, forwardedRef) => {
+const GanttMeta = composable<HTMLDivElement, GanttMetaProps>((props, forwardedRef) => {
   const { rows } = useGanttContext('Gantt.Meta');
   return (
-    <div {...Util.composableProps(props, { classNames: 'shrink-0 flex flex-col' })} ref={forwardedRef}>
+    <div {...composableProps(props, { classNames: 'shrink-0 flex flex-col' })} ref={forwardedRef}>
       <div style={{ height: HEADER_HEIGHT }} />
       {rows.map(({ lane }) => (
         <div
           key={lane.id}
-          className='flex items-center justify-end gap-2 px-2 text-description whitespace-nowrap'
+          className='flex items-center justify-end gap-2 px-2 text-fg-muted whitespace-nowrap'
           style={{ height: ROW_HEIGHT }}
         >
           {(lane.meta ?? []).map(({ label, title }, index) => (
@@ -458,7 +462,7 @@ GanttMeta.displayName = 'Gantt.Meta';
 // Chart
 //
 
-type GanttChartProps = Util.ThemedClassName<{}>;
+type GanttChartProps = ThemedClassName<{}>;
 
 /** One drawn stretch of a lane: where its bar runs, and the nodes threaded through it. */
 type Stretch = {
@@ -716,7 +720,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   }, [scale.width]);
 
   return (
-    <ScrollArea.Root thin orientation='horizontal' classNames={classNames} ref={forwardedRef}>
+    <ScrollArea.Root orientation='horizontal' classNames={classNames} ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef}>
         <svg
           // Pixel coordinates against the drawing's own width, with no viewBox: a viewBox would
@@ -732,7 +736,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                 y={HEADER_HEIGHT - 6}
                 // Anchored inward at the drawing's own edges, so no label is drawn outside it.
                 textAnchor={at <= PAD_X ? 'start' : at >= scale.width - PAD_X ? 'end' : 'middle'}
-                className='fill-current text-subdued'
+                className='fill-current text-fg-subtle'
               >
                 {label}
               </text>
@@ -986,7 +990,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       cy={rowY(row.index)}
                       r={NODE_RADIUS}
                       className={mx(
-                        'cursor-pointer hover:stroke-[3px] hover:stroke-base-fg',
+                        'cursor-pointer hover:stroke-[3px] hover:stroke-fg',
                         // A question or an error is ringed in red; an error pulses while its lane stays
                         // failed (an unanswered question pings instead — the ring drawn behind it).
                         isAlert(marker) ? 'stroke-red-500 stroke-2' : 'stroke-base-surface',
@@ -1013,26 +1017,23 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       onClick={() => onMarkerSelect?.(marker)}
                     />
                   </HoverCard.Trigger>
-                  <HoverCard.Portal>
-                    <HoverCard.Content classNames='p-2 max-w-72 text-xs'>
-                      <div className='font-medium truncate'>{marker.label}</div>
-                      <div className='text-description tabular-nums'>
-                        {marker.kind && `${marker.kind} · `}
-                        {format(marker.timestamp, 'HH:mm:ss')}
-                        {/* Elapsed on the axis's own terms, so it reads against the tick labels. */}
-                        {` · +${formatElapsed(marker.timestamp - range.start, { span: marker.timestamp - range.start, step: 1_000 })}`}
-                        {marker.level && marker.level !== 'info' && (
-                          <span
-                            className={mx('ms-2', marker.level === 'error' ? 'text-error-text' : 'text-warning-text')}
-                          >
-                            {marker.level}
-                          </span>
-                        )}
-                      </div>
-                      <div className='text-description truncate'>{row.lane.label}</div>
-                      <HoverCard.Arrow />
-                    </HoverCard.Content>
-                  </HoverCard.Portal>
+                  <HoverCard.Content classNames='p-2 max-w-72 text-xs'>
+                    <div className='font-medium truncate'>{marker.label}</div>
+                    <div className='text-fg-muted tabular-nums'>
+                      {marker.kind && `${marker.kind} · `}
+                      {format(marker.timestamp, 'HH:mm:ss')}
+                      {/* Elapsed on the axis's own terms, so it reads against the tick labels. */}
+                      {` · +${formatElapsed(marker.timestamp - range.start, { span: marker.timestamp - range.start, step: 1_000 })}`}
+                      {marker.level && marker.level !== 'info' && (
+                        <span
+                          className={mx('ms-2', marker.level === 'error' ? 'text-error-text' : 'text-warning-text')}
+                        >
+                          {marker.level}
+                        </span>
+                      )}
+                    </div>
+                    <div className='text-fg-muted truncate'>{row.lane.label}</div>
+                  </HoverCard.Content>
                 </HoverCard.Root>
               </Fragment>
             ) : null;

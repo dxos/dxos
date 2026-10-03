@@ -6,16 +6,8 @@ import React from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Listbox } from '@dxos/react-ui-list';
+import { Accordion, Empty, Icon, type IconProps, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Accordion from '@dxos/react-ui/Accordion';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -29,11 +21,11 @@ const STATUS_ICONS: Record<RunStatus, string> = {
   pending: 'ph--clock--regular',
 };
 
-const STATUS_CLASSES: Record<RunStatus, string> = {
-  success: 'text-success-text',
-  failure: 'text-error-text',
-  incomplete: 'text-warning-text',
-  pending: 'text-description',
+const STATUS_ICON_PROPS: Record<RunStatus, Pick<IconProps, 'valence' | 'tone'>> = {
+  success: { valence: 'success' },
+  failure: { valence: 'error' },
+  incomplete: { valence: 'warning' },
+  pending: { tone: 'muted' },
 };
 
 export type RoutineTraceCompanionProps = {
@@ -43,55 +35,43 @@ export type RoutineTraceCompanionProps = {
 
 /** Companion panel showing the execution trace (runs) of a Routine. */
 export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(subject);
   const runs = useRoutineRuns(db, subject);
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {runs.length === 0 ? (
-              <Banner.Empty label={t('history.empty.message')} />
+              <Empty>{t('history.empty.message')}</Empty>
             ) : (
-              <Accordion.Root<RoutineRun> items={runs} getId={getRunId}>
-                {({ items }) => (
-                  <Flex.Root column>
-                    {items.map((run) => (
-                      <Accordion.Item key={run.pid} item={run}>
-                        <Accordion.ItemHeader hover>
-                          <Listbox.ItemContent
-                            icon={
-                              <Icon.Root
-                                icon={STATUS_ICONS[run.status]}
-                                size={5}
-                                classNames={STATUS_CLASSES[run.status]}
-                              />
-                            }
-                            title={<span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>}
-                            description={`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}
-                          />
-                        </Accordion.ItemHeader>
-                        {/* Match `ItemContent`'s rail/content grid so the JSON aligns under the title column. */}
-                        <Accordion.ItemBody classNames='grid grid-cols-[var(--dx-rail-item)_1fr] gap-x-2'>
-                          <JsonHighlighter
-                            data={toJsonData(run)}
-                            classNames='col-start-2 [&_pre]:!text-xs [&_code]:!text-xs'
-                          />
-                        </Accordion.ItemBody>
-                      </Accordion.Item>
-                    ))}
-                  </Flex.Root>
-                )}
+              <Accordion.Root>
+                {runs.map((run) => (
+                  <Accordion.Item key={getRunId(run)} value={getRunId(run)}>
+                    <Accordion.ItemTrigger>
+                      <span className='flex items-center gap-2 min-w-0'>
+                        <Icon icon={STATUS_ICONS[run.status]} {...STATUS_ICON_PROPS[run.status]} />
+                        <span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>
+                        <span className='truncate text-fg-muted'>
+                          {`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}
+                        </span>
+                      </span>
+                    </Accordion.ItemTrigger>
+                    <Accordion.ItemContent>
+                      <JsonHighlighter data={toJsonData(run)} classNames='[&_pre]:!text-xs [&_code]:!text-xs' />
+                    </Accordion.ItemContent>
+                  </Accordion.Item>
+                ))}
               </Accordion.Root>
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

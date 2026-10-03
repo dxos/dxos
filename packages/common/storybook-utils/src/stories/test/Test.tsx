@@ -4,12 +4,19 @@
 
 import React from 'react';
 
-import * as IconButton from '@dxos/react-ui/IconButton';
+import { Button, type ButtonVariant } from '@dxos/react-ui';
 
 export const TEST_ID = 'test';
 
-export type TestProps = IconButton.RootProps;
+export type TestProps = {
+  'icon': string;
+  'label': string;
+  'variant'?: ButtonVariant;
+  'onClick'?: () => void;
+  'id'?: string;
+  'data-testid'?: string;
+};
 
 export const Test = (props: TestProps) => {
-  return <IconButton.Root {...props} />;
+  return <Button {...props} />;
 };

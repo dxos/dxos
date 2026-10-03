@@ -16,7 +16,7 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import * as Dialog from '@dxos/react-ui/Dialog';
+import { Dialog } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
@@ -37,9 +37,7 @@ const DefaultStory = () => {
   return (
     <SearchContextProvider>
       <Dialog.Root defaultOpen>
-        <Dialog.Overlay>
-          <SearchDialog role='article' space={space} attendableId={space.id} pivotId='storybook' />
-        </Dialog.Overlay>
+        <SearchDialog role='article' space={space} attendableId={space.id} pivotId='storybook' />
       </Dialog.Root>
     </SearchContextProvider>
   );

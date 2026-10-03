@@ -15,12 +15,18 @@ import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
+import {
+  Avatar,
+  Button,
+  Field,
+  Input,
+  SystemButton,
+  Toolbar,
+  toAvatarHue,
+  useId,
+  useTranslation,
+} from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
-import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import { CloseButton, Heading, Viewport } from '../../components/index.ts';
@@ -55,7 +61,8 @@ const IdentityHeading = ({
   onManageCredentials,
 }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(requirePublicKey(identity.identityKey));
-  const { t } = Hooks.useTranslation(translationKey);
+  const displayNameId = useId('identityHeading__displayName');
+  const { t } = useTranslation(translationKey);
   const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
   const [hue, setHueDirectly] = useState<string | undefined>(getHueValue(identity));
@@ -102,67 +109,67 @@ const IdentityHeading = ({
 
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root>
-        <div className='flex justify-center'>
-          <Avatar.Content
-            size={16}
-            variant='circle'
-            status={isConnected ? 'active' : 'error'}
-            hue={hue || fallbackValue.hue}
-            fallback={emoji || fallbackValue.emoji}
-            classNames='relative z-[2] chromatic-ignore'
+      <div className='flex justify-center'>
+        {/* Four rem across: larger than any block size, so the avatar fills a sized host. */}
+        <Avatar.Root
+          fill
+          variant='circle'
+          status={isConnected ? 'active' : 'error'}
+          hue={toAvatarHue(hue || fallbackValue.hue)}
+          fallback={emoji || fallbackValue.emoji}
+          aria-labelledby={displayNameId}
+          classNames='w-16 relative z-[2] chromatic-ignore'
+        />
+      </div>
+
+      <span id={displayNameId} className='sr-only' data-testid='identityHeading.displayName'>
+        {identity.profile?.displayName ?? generateName(requirePublicKey(identity.identityKey).toHex())}
+      </span>
+
+      <Field.Root>
+        <Field.Label srOnly>{t('display-name-input.label')}</Field.Label>
+        <Input
+          variant='subdued'
+          data-testid='display-name-input'
+          placeholder={t('display-name-input.placeholder')}
+          classNames='mt-2 text-center font-light text-xl'
+          value={displayName}
+          onChange={({ target: { value } }) => setDisplayName(value)}
+        />
+      </Field.Root>
+
+      <div className='flex justify-center pt-3'>
+        <Toolbar.Root classNames='w-fit'>
+          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} />
+          <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} rootVariant='toolbar-button' />
+          <SystemButton.Clipboard
+            iconSize='lg'
+            iconOnly
+            label={t('copy-self-did.label')}
+            data-testid='update-profile-form-copy-key'
+            value={identity.did}
           />
-        </div>
-
-        <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
-          {identity.profile?.displayName ?? generateName(requirePublicKey(identity.identityKey).toHex())}
-        </Avatar.Label>
-
-        <Field.Root>
-          <Field.Label srOnly>{t('display-name-input.label')}</Field.Label>
-          <Field.Input
-            variant='subdued'
-            data-testid='display-name-input'
-            placeholder={t('display-name-input.placeholder')}
-            classNames='mt-2 text-center font-light text-xl'
-            value={displayName}
-            onChange={({ target: { value } }) => setDisplayName(value)}
-          />
-        </Field.Root>
-
-        <div className='flex justify-center pt-3'>
-          <Toolbar.Root classNames='w-fit'>
-            <EmojiPickerToolbarButton size={5} emoji={emoji} onChangeEmoji={setEmoji} />
-            <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} rootVariant='toolbar-button' />
-            <SystemIconButton.Clipboard
-              size={5}
+          {onManageCredentials && (
+            <Button
+              iconSize='lg'
+              icon='ph--identification-card--regular'
               iconOnly
-              label={t('copy-self-did.label')}
-              data-testid='update-profile-form-copy-key'
-              value={identity.did}
-            />
-            {onManageCredentials && (
-              <Toolbar.IconButton
-                size={5}
-                icon='ph--identification-card--regular'
-                iconOnly
-                label={t('manage-credentials.label')}
-                tooltipSide='bottom'
-                onClick={onManageCredentials}
-              />
-            )}
-            <Toolbar.IconButton
-              size={5}
-              icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
-              iconOnly
-              label={t(isConnected ? 'disconnect.label' : 'connect.label')}
+              label={t('manage-credentials.label')}
               tooltipSide='bottom'
-              classNames={!isConnected && 'text-error-text'}
-              onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
+              onClick={onManageCredentials}
             />
-          </Toolbar.Root>
-        </div>
-      </Avatar.Root>
+          )}
+          <Button
+            iconSize='lg'
+            icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
+            iconOnly
+            label={t(isConnected ? 'disconnect.label' : 'connect.label')}
+            tooltipSide='bottom'
+            classNames={!isConnected && 'text-error-text'}
+            onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
+          />
+        </Toolbar.Root>
+      </div>
     </Heading>
   );
 };
@@ -184,7 +191,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     onManageCredentials,
     ...rest
   } = props;
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const title = useMemo(() => {
     switch (activeView) {
       case 'device-invitation-manager':
@@ -277,7 +284,7 @@ export const IdentityPanel = ({
   initialDisposition = 'default',
   ...props
 }: IdentityPanelProps) => {
-  const titleId = Hooks.useId('identityPanel__heading', propsTitleId);
+  const titleId = useId('identityPanel__heading', propsTitleId);
   const client = useClient();
   const devices = useDevices();
   const identity = useIdentity();

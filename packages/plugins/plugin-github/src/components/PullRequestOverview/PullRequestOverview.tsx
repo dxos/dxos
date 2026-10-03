@@ -4,14 +4,12 @@
 
 import React, { useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
+import { Empty, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { MarkdownLink, MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
@@ -35,7 +33,7 @@ export type PullRequestOverviewProps = {
  * beyond the diff, and every check on its head commit.
  */
 export const PullRequestOverview = ({ body, details, runs }: PullRequestOverviewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const parsed = useMemo(() => parsePullRequestBody(body), [body]);
   const components = useBodyComponents();
   const related = useRelatedItems(parsed);
@@ -45,12 +43,12 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
   // rather than each nesting a gutter of its own.
   return (
     <Form.Root schema={PullRequestDetailsSchema} values={details} layout='static' readonly>
-      <Form.Viewport scroll>
+      <Form.Viewport scroll width='document'>
         <Form.Content>
           {parsed.markdown ? (
             <MarkdownView content={parsed.markdown} components={components} data-testid='pull-request.body' />
           ) : (
-            <Banner.Empty label={t('no-description.message')} />
+            <Empty>{t('no-description.message')}</Empty>
           )}
           <Form.FieldSet label={t('details.label')} data-testid='pull-request.details'>
             <Form.Fields />
@@ -74,7 +72,7 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
  * resolver answers (another pull request, an issue) becomes the anchor chip the editor makes of it.
  */
 const useBodyComponents = (): MarkdownViewProps['components'] => {
-  const resolvers = AppHooks.useCapabilities(PreviewCapabilities.LinkResolver);
+  const resolvers = Hooks.useCapabilities(PreviewCapabilities.LinkResolver);
   return useMemo(
     () => ({
       a: ({ children, href, node: _node, ...props }) => {
@@ -92,13 +90,9 @@ const useBodyComponents = (): MarkdownViewProps['components'] => {
         }
         const icon = PreviewCapabilities.linkIcon(all, href);
         return (
-          <DxAnchor eid={href} className='dx-tag--anchor'>
+          <DxAnchor eid={href} className='dx-tag-anchor'>
             {icon && (
-              <Icon.Root
-                icon={icon.icon}
-                size={4}
-                classNames={['inline-block align-[-0.125em] me-1', icon.classNames]}
-              />
+              <Icon icon={icon.icon} size='md' classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
             )}
             {children === href ? (PreviewCapabilities.linkLabel(all, href) ?? children) : children}
           </DxAnchor>

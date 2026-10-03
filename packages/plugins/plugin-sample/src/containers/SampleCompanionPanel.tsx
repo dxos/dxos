@@ -17,8 +17,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { RelatedItemsList } from '#components';
 import { SampleItem, SampleItem as SampleItemSchema } from '#types';
@@ -49,12 +48,12 @@ export const SampleCompanionPanel = ({ companionTo }: SampleCompanionPanelProps)
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <RelatedItemsList items={relatedItems} onNavigate={handleNavigate} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

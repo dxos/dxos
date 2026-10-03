@@ -22,7 +22,10 @@ describe('applyActive', () => {
     let captured: () => Promise<void>;
     vi.stubGlobal('document', {
       visibilityState: 'visible',
-      startViewTransition: ({ update }: { update: () => Promise<void> }) => ((captured = update), {}),
+      startViewTransition: ({ update }: { update: () => Promise<void> }) => (
+        (captured = update),
+        { ready: Promise.resolve() }
+      ),
     });
     vi.stubGlobal('window', {
       matchMedia: () => ({ matches: false }),

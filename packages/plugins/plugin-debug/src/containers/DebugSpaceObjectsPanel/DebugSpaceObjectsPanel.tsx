@@ -9,12 +9,8 @@ import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
+import { Grid, Icon, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Field from '@dxos/react-ui/Field';
-import * as Grid from '@dxos/react-ui/Grid';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
   onOpen?: (object: Obj.Unknown) => void;
@@ -23,6 +19,7 @@ export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
 
 export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObjectsPanelProps) => {
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
+  const [filter, setFilter] = useState('');
   // TODO(burdon): Guard.
   const [selectedObject] = useQuery(
     space.db,
@@ -31,19 +28,25 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Field.Root>
-            <Field.Input disabled placeholder='Search...' />
-          </Field.Root>
+          <Input
+            placeholder='Search...'
+            aria-label='Search'
+            noAutoFill
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            end={<Icon icon='ph--magnifying-glass--regular' />}
+          />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <Grid.Root rows={2} classNames='divide-y divide-subdued-separator'>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <Grid rows={2} classNames='divide-y divide-separator-subtle'>
           <ScrollArea.Root>
             <ScrollArea.Viewport>
               <ObjectsTree
                 db={space.db}
+                filter={filter}
                 onSelect={(entity) => setSelectedId(entity.id)}
                 onOpen={onOpen}
                 canOpen={canOpen}
@@ -51,8 +54,8 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           {selectedObject && <JsonHighlighter classNames='p-1' data={selectedObject} />}
-        </Grid.Root>
-      </Panel.Content>
+        </Grid>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -6,7 +6,7 @@
 import { cluster as d3Cluster, tree as d3Tree, linkRadial, select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type TreeNode } from '../types.ts';
@@ -16,7 +16,7 @@ import { useContainerSize } from './useContainerSize.ts';
 
 const TRANSITION_MS = 350;
 
-export type RadialTreeProps = Util.ThemedClassName<{
+export type RadialTreeProps = ThemedClassName<{
   data: TreeNode;
   label?: (d: TreeNode) => string;
   slots?: TreeLayoutSlots;

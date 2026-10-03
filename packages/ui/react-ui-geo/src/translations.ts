@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { type Resource } from '@dxos/react-ui';
 
 export const translationKey = '@dxos/react-ui-geo';
 
@@ -19,4 +19,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Resource[];

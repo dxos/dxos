@@ -13,11 +13,8 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import * as RoutineHooks from '@dxos/plugin-routine/Hooks';
 import { type Space, useQuery } from '@dxos/react-client/echo';
+import { Button, Panel, Switch, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /**
  * Lists active triggers in the space and exposes manual cron invocation via {@link TriggerDispatcher}.
@@ -74,19 +71,19 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Triggers</Toolbar.Text>
           <Toolbar.Separator />
-          <Toolbar.Button onClick={start} disabled={state?.enabled}>
+          <Button onClick={start} disabled={state?.enabled}>
             Start dispatcher
-          </Toolbar.Button>
-          <Toolbar.Button onClick={stop} disabled={!state?.enabled}>
+          </Button>
+          <Button onClick={stop} disabled={!state?.enabled}>
             Stop dispatcher
-          </Toolbar.Button>
+          </Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
         <JsonHighlighter
           data={{
             dispatcher: state?.enabled ? 'running' : 'stopped',
@@ -95,7 +92,7 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
           }}
         />
         {activeTriggers.length === 0 ? (
-          <div className='text-description'>No active triggers in this space.</div>
+          <div className='text-fg-muted'>No active triggers in this space.</div>
         ) : (
           <ul className='flex flex-col gap-2'>
             {activeTriggers.map((trigger) => {
@@ -103,17 +100,16 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
               return (
                 <li key={trigger.id} className='flex flex-col gap-1 rounded border border-separator p-2'>
                   <div className='font-mono text-xs truncate'>{trigger.id}</div>
-                  <div className='text-description'>{formatTriggerSpec(trigger)}</div>
-                  <Field.Switch
+                  <div className='text-fg-muted'>{formatTriggerSpec(trigger)}</div>
+                  <Switch
                     checked={trigger.remote === true}
-                    onCheckedChange={(checked) => {
+                    onCheckedChange={({ checked }) => {
                       Obj.update(trigger, (trigger) => {
                         trigger.remote = checked;
                       });
                     }}
-                  >
-                    {trigger.remote ? 'Remote (edge)' : 'Local'}
-                  </Field.Switch>
+                    label={trigger.remote ? 'Remote (edge)' : 'Local'}
+                  />
                   {lastInvocation && (
                     <div className='text-xs'>
                       Last run: {formatInvocationResult(lastInvocation.result)}
@@ -121,19 +117,19 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
                     </div>
                   )}
                   {Trigger.isManuallyInvokable(trigger.spec) && (
-                    <Button.Root
+                    <Button
                       onClick={() => handleInvoke(trigger)}
                       disabled={!state?.enabled || invokingId === trigger.id}
                     >
                       {invokingId === trigger.id ? 'Invoking…' : 'Invoke now'}
-                    </Button.Root>
+                    </Button>
                   )}
                 </li>
               );
             })}
           </ul>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -5,8 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Contact } from '@dxos/react-client/halo';
-import { Combobox } from '@dxos/react-ui-list';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { Combobox, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../translations.ts';
 import { contactDisplayName, contactKeyHex, filterContacts } from '../ContactList/index.ts';
@@ -22,7 +21,7 @@ export type ContactPickerProps = {
 };
 
 export const ContactPicker = ({ contacts, excludeKeys = [], value, onChange, disabled }: ContactPickerProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const [query, setQuery] = useState('');
   const candidates = useMemo(
     () =>
@@ -32,32 +31,34 @@ export const ContactPicker = ({ contacts, excludeKeys = [], value, onChange, dis
       ),
     [contacts, excludeKeys, query],
   );
-  const selected = contacts.find((contact) => contactKeyHex(contact) === value);
+  const items = useMemo(
+    () => candidates.map((contact) => ({ value: contactKeyHex(contact), label: contactDisplayName(contact) })),
+    [candidates],
+  );
 
   return (
     <Combobox.Root
-      placeholder={t('contact-picker.placeholder')}
-      displayValue={selected && contactDisplayName(selected)}
-      value={value ?? ''}
-      onValueChange={(key) => onChange(key || undefined)}
+      items={items}
+      // Candidates are filtered by name and key here (`filterContacts`), not by label alone.
+      filter={null}
+      value={value ? [value] : []}
+      onValueChange={({ value: [key] }) => onChange(key || undefined)}
+      inputValue={query}
+      onInputValueChange={({ inputValue }) => setQuery(inputValue)}
     >
       {/* Fills the row so the picker takes the space its siblings (role, add) don't. */}
-      <Combobox.Trigger classNames='grow min-w-0' disabled={disabled} data-testid='contact-picker.trigger' />
+      <Combobox.Trigger
+        classNames='grow min-w-0'
+        placeholder={t('contact-picker.placeholder')}
+        disabled={disabled}
+        data-testid='contact-picker.trigger'
+      />
       <Combobox.Content>
-        <Combobox.Input placeholder={t('contact-picker-search.placeholder')} value={query} onValueChange={setQuery} />
+        <Combobox.Input placeholder={t('contact-picker-search.placeholder')} />
         <Combobox.List>
-          {candidates.map((contact) => {
-            const key = contactKeyHex(contact);
-            return (
-              <Combobox.Item
-                key={key}
-                value={key}
-                label={contactDisplayName(contact)}
-                checked={key === value}
-                data-testid='contact-picker.item'
-              />
-            );
-          })}
+          {items.map((item) => (
+            <Combobox.Item key={item.value} item={item} data-testid='contact-picker.item' />
+          ))}
         </Combobox.List>
         {candidates.length === 0 && <Combobox.Empty>{t('contact-picker-empty.message')}</Combobox.Empty>}
       </Combobox.Content>

@@ -5,10 +5,9 @@
 import React, { type PropsWithChildren, type Ref } from 'react';
 
 import { type Database, type Tag } from '@dxos/echo';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -43,7 +42,7 @@ export const TaskFilter = ({
   editorRef,
   children,
 }: TaskFilterProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <>
       <QueryEditor
@@ -57,7 +56,7 @@ export const TaskFilter = ({
       <TaskStatusFilter value={statuses} active={value.trim().length > 0} onChange={onStatusesChange} />
       {/* The rest of the toolbar's view controls (order, grouping), between the filter and its clear. */}
       {children}
-      <IconButton.Root
+      <Button
         icon='ph--x--regular'
         iconOnly
         // The status choice is written into the text, so an empty text is the unfiltered list.

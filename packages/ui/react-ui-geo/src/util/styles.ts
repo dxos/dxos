@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ThemeMode } from '@dxos/ui-types';
+import { type ThemeMode } from '@dxos/react-ui';
 
 import { type StyleSet } from './render.ts';
 

@@ -11,11 +11,9 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { ReactNode, useRef } from 'react';
 
+import { Empty, Flex, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { type SequencedLogEntry } from '../useSystem.ts';
@@ -40,8 +38,8 @@ export type WorkbenchProps = {
 
 /** The shared story frame: a stack of tool panes beside the rendered result. */
 export const Workbench = ({ panes, main }: WorkbenchProps) => (
-  <Flex.Root classNames='dx-expand grid grid-cols-2 divide-x divide-separator' align='stretch'>
-    <Flex.Root
+  <Flex classNames='dx-expand grid grid-cols-2 divide-x divide-separator' align='stretch'>
+    <Flex
       column
       grow
       classNames='dx-expand grid divide-y divide-separator'
@@ -52,9 +50,9 @@ export const Workbench = ({ panes, main }: WorkbenchProps) => (
           {pane.children}
         </Cell>
       ))}
-    </Flex.Root>
+    </Flex>
     <div className='dx-expand flex flex-col p-4'>{main.children}</div>
-  </Flex.Root>
+  </Flex>
 );
 
 //
@@ -68,12 +66,12 @@ export type CellProps = {
 
 /** One titled pane in a story grid. */
 export const Cell = ({ title, children }: CellProps) => (
-  <Flex.Root column classNames='dx-expand'>
-    <div className='px-2 py-1 text-xs uppercase tracking-wide text-description border-be border-separator'>{title}</div>
-    <Flex.Root column grow classNames='dx-expand'>
+  <Flex column classNames='dx-expand'>
+    <div className='px-2 py-1 text-xs uppercase tracking-wide text-fg-muted border-be border-separator'>{title}</div>
+    <Flex column grow classNames='dx-expand'>
       {children}
-    </Flex.Root>
-  </Flex.Root>
+    </Flex>
+  </Flex>
 );
 
 //
@@ -97,7 +95,7 @@ export type EditorProps = {
 
 /** One CodeMirror pane: monospace, theme-following, syntax highlighting on. */
 export const Editor = ({ value, extensions, onChange }: EditorProps) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   // The callback goes through a ref: an inline `onChange` closure changes identity every render,
   // and keying the editor on it would recreate CodeMirror — and drop focus — on each keystroke.
   const onChangeRef = useRef(onChange);
@@ -135,19 +133,17 @@ export type OperationLogProps = {
  * flat rows, keyboard traversal for free, `Empty` when nothing has been dispatched yet.
  */
 export const OperationLog = ({ entries }: OperationLogProps) => (
-  <Listbox.Root>
-    <Listbox.Viewport>
-      <Listbox.Content aria-label='Operation log'>
-        {entries.map((entry) => (
-          <Listbox.Item key={entry.seq} id={String(entry.seq)}>
-            <Listbox.ItemLabel classNames='font-mono text-xs'>
-              {entry.operation}
-              {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
-            </Listbox.ItemLabel>
-          </Listbox.Item>
-        ))}
-        {entries.length === 0 && <Banner.Empty label='No operations dispatched.' />}
-      </Listbox.Content>
-    </Listbox.Viewport>
+  <Listbox.Root items={entries.map((entry) => ({ value: String(entry.seq), label: String(entry.seq) }))}>
+    <Listbox.Content aria-label='Operation log'>
+      {entries.map((entry) => (
+        <Listbox.Item key={entry.seq} id={String(entry.seq)}>
+          <Listbox.ItemText classNames='font-mono text-xs'>
+            {entry.operation}
+            {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
+          </Listbox.ItemText>
+        </Listbox.Item>
+      ))}
+      {entries.length === 0 && <Empty>No operations dispatched.</Empty>}
+    </Listbox.Content>
   </Listbox.Root>
 );

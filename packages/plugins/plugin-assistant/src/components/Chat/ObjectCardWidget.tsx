@@ -6,12 +6,10 @@ import React, { useMemo } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as CardIconSlot from '@dxos/app-toolkit/CardIconSlot';
+import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import * as Card from '@dxos/react-ui/Card';
-import * as Icon from '@dxos/react-ui/Icon';
 import { type ObjectLinkProps, type WidgetDef } from '@dxos/ui-editor';
 
 export type ObjectCardProps = {
@@ -39,17 +37,12 @@ export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
 
   const title = Obj.getLabel(subject)?.trim() || label || '';
   return (
-    <Card.Root fullWidth>
-      <Card.Header>
-        <Card.Block>
-          <CardIconSlot.Root subject={subject}>
-            <Icon.Root icon={Obj.getIcon(subject)?.icon ?? 'ph--file--regular'} />
-          </CardIconSlot.Root>
-        </Card.Block>
-        <Card.Title classNames='line-clamp-1'>{title}</Card.Title>
-      </Card.Header>
+    <ObjectCardPrimitive.Root>
+      <ObjectCardPrimitive.Header subject={subject} lines={1}>
+        {title}
+      </ObjectCardPrimitive.Header>
       <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
-    </Card.Root>
+    </ObjectCardPrimitive.Root>
   );
 };
 

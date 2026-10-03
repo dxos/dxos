@@ -5,20 +5,14 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
+import { Banner, Button, Container, Flex, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Tag from '@dxos/react-ui/Tag';
 import { type PublishFieldNote } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
@@ -61,8 +55,8 @@ const INDENT_REM = 1;
  * unpublish toolbar against the space's atproto connection.
  */
 export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const makeRepoLayer = AppHooks.useCapability(AtprotoCapabilities.RepoLayer);
+  const { t } = useTranslation(meta.profile.key);
+  const makeRepoLayer = Hooks.useCapability(AtprotoCapabilities.RepoLayer);
   const db = Obj.getDatabase(subject);
   // Subscribe to the object so edits recompute status and field values (read from this snapshot).
   const [live] = useObject(subject);
@@ -208,76 +202,64 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <Flex.Root column gap='md' classNames='p-3'>
+            <Flex column gap='md' classNames='p-3'>
               {/* Publish status — the status icon overrides the Message's default valence icon. A
                   neutral "checking" state shows until the first async derivation resolves. */}
               <Banner.Root
                 valence={statusMeta?.valence ?? 'neutral'}
                 icon={statusMeta?.icon ?? 'ph--circle-notch--regular'}
               >
-                <Banner.Content>
-                  <Banner.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Banner.Title>
-                </Banner.Content>
+                <Banner.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Banner.Title>
               </Banner.Root>
 
               {/* Reasons publishing is unavailable. */}
               {!connection && (
                 <Banner.Root valence='info'>
-                  <Banner.Content>
-                    <Banner.Body>{t('no-connection.label')}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{t('no-connection.label')}</Banner.Body>
                 </Banner.Root>
               )}
               {ineligibleReason && (
                 <Banner.Root valence={reasonValence}>
-                  <Banner.Content>
-                    <Banner.Body>{ineligibleReason}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{ineligibleReason}</Banner.Body>
                 </Banner.Root>
               )}
               {error && (
                 <Banner.Root valence='error'>
-                  <Banner.Content>
-                    <Banner.Body>{error}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{error}</Banner.Body>
                 </Banner.Root>
               )}
 
               {/* First-publish confirmation. */}
               {confirming && (
                 <Banner.Root valence='warning'>
-                  <Banner.Content>
-                    <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
-                    <Banner.Body asChild>
-                      <Flex.Root gap='sm' classNames='pt-2'>
-                        <Button.Root variant='primary' disabled={busy} onClick={handlePublish}>
-                          {t('confirm-publish.label')}
-                        </Button.Root>
-                        <Button.Root disabled={busy} onClick={() => setConfirming(false)}>
-                          {t('cancel.label')}
-                        </Button.Root>
-                      </Flex.Root>
-                    </Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
+                  <Banner.Body asChild>
+                    <Flex gap='sm' classNames='pt-2'>
+                      <Button variant='primary' disabled={busy} onClick={handlePublish}>
+                        {t('confirm-publish.label')}
+                      </Button>
+                      <Button disabled={busy} onClick={() => setConfirming(false)}>
+                        {t('cancel.label')}
+                      </Button>
+                    </Flex>
+                  </Banner.Body>
                 </Banner.Root>
               )}
 
               {/* Public projection: what the network sees, as a treegrid. Each leaf is tagged Published (we
                   publish it), Mirrored (the network sees it via a linked upstream record), or Private;
                   fields whose local value diverges from the mirrored record are flagged Diverged (not pushed). */}
-              <Flex.Root column gap='xs'>
-                <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
+              <Container gap='sm' gutter='none'>
+                <h2 className='text-xs uppercase tracking-wide text-fg-muted'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Banner.Root valence='warning'>
-                    <Banner.Content>
-                      <Banner.Body>{t('mirror-unresolved.label')}</Banner.Body>
-                    </Banner.Content>
+                    <Banner.Body>{t('mirror-unresolved.label')}</Banner.Body>
                   </Banner.Root>
                 )}
                 {/* A read-only field listing: three columns, no disclosure and nothing focusable, so it
@@ -318,24 +300,24 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                           className='flex items-center'
                           style={field.depth > 0 ? { paddingInlineStart: `${field.depth * INDENT_REM}rem` } : undefined}
                         >
-                          <span className={`truncate text-sm ${field.group || visible ? '' : 'text-description'}`}>
+                          <span className={`truncate text-sm ${field.group || visible ? '' : 'text-fg-muted'}`}>
                             {field.name}
                           </span>
                         </div>
-                        <div role='cell' className='truncate text-sm text-description'>
+                        <div role='cell' className='truncate text-sm text-fg-muted'>
                           {value}
                         </div>
                         <div role='cell' className='flex shrink-0 items-center justify-end gap-1'>
                           {!field.group && (
                             <>
-                              {diverged && <Tag.Root hue='warning'>{t('diverged-field.label')}</Tag.Root>}
-                              <Tag.Root hue={published ? 'success' : mirrored ? 'info' : 'neutral'}>
+                              {diverged && <Tag hue='warning'>{t('diverged-field.label')}</Tag>}
+                              <Tag hue={published ? 'success' : mirrored ? 'info' : 'neutral'}>
                                 {published
                                   ? t('published-field.label')
                                   : mirrored
                                     ? t('mirrored-field.label')
                                     : t('private-field.label')}
-                              </Tag.Root>
+                              </Tag>
                             </>
                           )}
                         </div>
@@ -343,11 +325,11 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                     );
                   })}
                 </div>
-              </Flex.Root>
-            </Flex.Root>
+              </Container>
+            </Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

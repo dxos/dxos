@@ -5,9 +5,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
+import { Select, useTranslation } from '@dxos/react-ui';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Select from '@dxos/react-ui/Select';
 
 import { Ibkr } from '#types';
 
@@ -35,7 +34,7 @@ type Section = {
  * columns are formatted by the table's number format; dates and P&L are normalized into the row data.
  */
 export const ReportSections = ({ positions, trades, cash, openLots, closedLots }: ReportSectionsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   const sections = useMemo<Section[]>(() => {
     const all: (Section | false)[] = [
@@ -164,19 +163,17 @@ export const ReportSections = ({ positions, trades, cash, openLots, closedLots }
   return (
     <div className='grid grid-rows-[min-content_1fr] min-h-0 h-full'>
       <div className='p-2'>
-        <Select.Root value={active?.id} onValueChange={setSelected}>
-          <Select.TriggerButton />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {sections.map((section) => (
-                  <Select.Option key={section.id} value={section.id}>
-                    {section.label}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
+        <Select.Root
+          value={[active?.id]}
+          onValueChange={({ value: [value] }) => setSelected(value)}
+          items={sections.map((section) => ({ value: section.id, label: section.label }))}
+        >
+          <Select.Trigger />
+          <Select.Content>
+            {sections.map((section) => (
+              <Select.Item key={section.id} item={{ value: section.id, label: section.label }} />
+            ))}
+          </Select.Content>
         </Select.Root>
       </div>
       {active && (

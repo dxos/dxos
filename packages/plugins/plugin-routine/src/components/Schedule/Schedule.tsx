@@ -5,10 +5,17 @@
 import React, { type PropsWithChildren, createContext, forwardRef, useCallback, useContext, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
-import * as Util from '@dxos/react-ui/Util';
+import {
+  Checkbox,
+  DateInput,
+  Field,
+  Input,
+  ThemedClassName,
+  ToggleGroup,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -148,7 +155,7 @@ const useScheduleContext = (consumer: string): ScheduleContextValue => {
 // Root
 //
 
-export type ScheduleRootProps = Util.ThemedClassName<
+export type ScheduleRootProps = ThemedClassName<
   PropsWithChildren<{
     value?: ScheduleValue;
     /** Timezone abbreviation shown in the summary, e.g. `EDT`. */
@@ -170,7 +177,7 @@ export type ScheduleRootProps = Util.ThemedClassName<
  * and the schedule state context. Controllable via `value`/`onValueChange`, or self-managing via
  * `defaultValue`. Compose with `Schedule.Header`, `Schedule.Kind`, `Schedule.Body`, `Schedule.Description`.
  */
-const ScheduleRoot = Util.composable<HTMLDivElement, ScheduleRootProps>(
+const ScheduleRoot = composable<HTMLDivElement, ScheduleRootProps>(
   (
     {
       children,
@@ -213,7 +220,7 @@ const ScheduleRoot = Util.composable<HTMLDivElement, ScheduleRootProps>(
           timezone,
         }}
       >
-        <div {...Util.composableProps(props, { classNames: 'flex flex-col gap-y-3' })} ref={forwardedRef}>
+        <div {...composableProps(props, { classNames: 'flex flex-col gap-y-3' })} ref={forwardedRef}>
           {children}
         </div>
       </ScheduleContext.Provider>
@@ -235,9 +242,9 @@ export type ScheduleHeaderProps = { classNames?: string };
  * (column 3).
  */
 const ScheduleHeader = forwardRef<HTMLDivElement, ScheduleHeaderProps>(({ classNames }, forwardedRef) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { value, timezone } = useScheduleContext('Schedule.Header');
-  return <p className={mx('grow truncate text-description', classNames)}>{describeSchedule(value, timezone)}</p>;
+  return <p className={mx('grow truncate text-fg-muted', classNames)}>{describeSchedule(value, timezone)}</p>;
 });
 
 ScheduleHeader.displayName = 'Schedule.Header';
@@ -246,11 +253,11 @@ ScheduleHeader.displayName = 'Schedule.Header';
 // Kind
 //
 
-export type ScheduleKindProps = Util.ThemedClassName;
+export type ScheduleKindProps = ThemedClassName;
 
 /** Segmented frequency tabs (Once / Hourly / Daily / Weekly / Custom). */
 const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNames }, forwardedRef) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { value, onValueChange, kinds } = useScheduleContext('Schedule.Kind');
   const handleKindChange = useCallback(
     (kind: string) => {
@@ -283,7 +290,7 @@ ScheduleKindRow.displayName = 'Schedule.Kind';
 // Body
 //
 
-export type ScheduleBodyProps = Util.ThemedClassName;
+export type ScheduleBodyProps = ThemedClassName;
 
 /** Per-kind editor for the active frequency. Rendered as a 3-column row so editors can use the gutters. */
 const ScheduleBody = forwardRef<HTMLDivElement, ScheduleBodyProps>(({ classNames }, forwardedRef) => {
@@ -308,7 +315,7 @@ export const Schedule = {
 // Per-kind editors.
 //
 
-const LabelledRow = ({ label, children, classNames }: Util.ThemedClassName<PropsWithChildren<{ label: string }>>) => (
+const LabelledRow = ({ label, children, classNames }: ThemedClassName<PropsWithChildren<{ label: string }>>) => (
   <label className={mx('flex items-center gap-2 shrink-0', classNames)}>
     <span className='text-sm'>{label}</span>
     {children}
@@ -316,7 +323,7 @@ const LabelledRow = ({ label, children, classNames }: Util.ThemedClassName<Props
 );
 
 const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (value: ScheduleValue) => void }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   switch (value.kind) {
     // case 'once':
     // `Field.Root` renders no DOM, so the trigger (column 1) and the field (center) become direct children
@@ -341,8 +348,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.minute.label')}>
           <Field.Root>
-            <Field.Input
-              type='number'
+            <Input
               min={0}
               max={59}
               step={1}
@@ -352,6 +358,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 const minute = Math.min(59, Math.max(0, Math.round(Number(event.target.value) || 0)));
                 onChange({ kind: 'hourly', minute });
               }}
+              type='number'
             />
           </Field.Root>
         </LabelledRow>
@@ -361,7 +368,12 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.at.label')}>
           <Field.Root>
-            <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ kind: 'daily', time })} />
+            <DateInput
+              type='time'
+              hourCycle={12}
+              value={value.time}
+              onValueChange={(time: string) => onChange({ kind: 'daily', time })}
+            />
           </Field.Root>
         </LabelledRow>
       );
@@ -371,7 +383,12 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <div className='@container dx-container-type-inline-size flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
           <LabelledRow label={t('schedule.at.label')}>
             <Field.Root>
-              <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
+              <DateInput
+                type='time'
+                hourCycle={12}
+                value={value.time}
+                onValueChange={(time: string) => onChange({ ...value, time })}
+              />
             </Field.Root>
           </LabelledRow>
           <div className='flex shrink-0 items-center gap-2'>
@@ -382,9 +399,9 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 return (
                   <div key={day} className='flex shrink-0 items-center gap-1'>
                     <Field.Root>
-                      <Field.Checkbox
+                      <Checkbox
                         checked={checked}
-                        onCheckedChange={(next) => {
+                        onCheckedChange={({ checked: next }) => {
                           // Preserve the canonical `Days` order so the summary reads naturally.
                           const nextDays = next
                             ? Days.map((d) => d.value).filter((d) => d === day || value.days.includes(d))
@@ -410,8 +427,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <div className='flex items-center gap-3'>
           <LabelledRow label={t('schedule.day.label')}>
             <Field.Root>
-              <Field.Input
-                type='number'
+              <Input
                 min={1}
                 max={31}
                 step={1}
@@ -421,12 +437,18 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                   const day = Math.min(31, Math.max(1, Math.round(Number(event.target.value) || 1)));
                   onChange({ ...value, day });
                 }}
+                type='number'
               />
             </Field.Root>
           </LabelledRow>
           <LabelledRow label={t('schedule.at.label')}>
             <Field.Root>
-              <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
+              <DateInput
+                type='time'
+                hourCycle={12}
+                value={value.time}
+                onValueChange={(time: string) => onChange({ ...value, time })}
+              />
             </Field.Root>
           </LabelledRow>
         </div>
@@ -436,7 +458,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.cron.label')}>
           <Field.Root>
-            <Field.Input
+            <Input
               classNames='w-50 tabular-nums'
               placeholder='0 9 * * MON-FRI'
               value={value.cron}

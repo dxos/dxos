@@ -6,10 +6,10 @@ import { curveNatural, line, select } from 'd3';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-export type SineProps = Util.ThemedClassName;
+export type SineProps = ThemedClassName;
 
 const phaser = (min: number, max: number, period: number) => {
   if (min === max) {

@@ -4,18 +4,17 @@
 
 import React, { useEffect, useState } from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-export type TextBlockProps = Util.ThemedClassName<{
+export type TextBlockProps = ThemedClassName<{
   text: string;
   delay?: number;
 }>;
 
 export const TextBlock = ({ classNames, text, delay = 0 }: TextBlockProps) => {
   const [current, setCurrent] = useState('');
-  const currentRef = Hooks.useDynamicRef(current);
+  const currentRef = useDynamicRef(current);
 
   useEffect(() => {
     const idx = text.indexOf(currentRef.current);

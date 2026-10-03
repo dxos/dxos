@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { type Database, Filter, type Obj, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -13,9 +13,8 @@ import { Connection } from '@dxos/link';
 import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useGraphMenuActions, useMenuGraph } from '@dxos/react-ui-menu';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 
@@ -45,10 +44,10 @@ export type ConnectorAuthMenuProps = {
  * with an auth flow. Renders nothing when there is nothing to offer.
  */
 export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }: ConnectorAuthMenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
   const runAction = GraphHooks.useActionRunner();
-  const allConnectors = AppHooks.useCapabilities(ConnectorSpec.Connector).flat();
+  const allConnectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(db, Filter.type(Connection.Connection));
 
   const graph = useMenuGraph(() => {
@@ -88,7 +87,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
 
   return (
     <ActionMenu {...menuActions} onAction={handleAction}>
-      <IconButton.Root variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
+      <Button variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
     </ActionMenu>
   );
 };

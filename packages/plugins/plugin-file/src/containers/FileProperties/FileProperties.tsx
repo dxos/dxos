@@ -9,11 +9,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Blob, Database, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { Button, Field, Input, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 import { File } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -30,7 +27,7 @@ export type FilePropertiesProps = AppSurface.ObjectPropertiesProps<File.File>;
  * the regenerate control rather than a value presented as permanent.
  */
 export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const [reference, setReference] = useState<string | undefined>(undefined);
   const [url, setUrl] = useState<string | undefined>(undefined);
   const [pending, setPending] = useState(false);
@@ -77,8 +74,8 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
         <Field.Root>
           <Field.Label>{t('properties.reference.label')}</Field.Label>
           <div className='flex w-full gap-1'>
-            <Field.Input readOnly value={reference} classNames='grow' />
-            <SystemIconButton.Clipboard iconOnly value={reference} label={t('properties.reference.copy.label')} />
+            <Input readOnly value={reference} classNames='grow' />
+            <SystemButton.Clipboard iconOnly value={reference} label={t('properties.reference.copy.label')} />
           </div>
         </Field.Root>
       )}
@@ -86,9 +83,9 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
         <Field.Root>
           <Field.Label>{t('properties.url.label')}</Field.Label>
           <div className='flex w-full gap-1'>
-            <Field.Input readOnly value={url} classNames='grow' />
-            <SystemIconButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
-            <IconButton.Root
+            <Input readOnly value={url} classNames='grow' />
+            <SystemButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
+            <Button
               iconOnly
               icon='ph--arrows-clockwise--regular'
               label={t('properties.url.regenerate.label')}

@@ -7,11 +7,11 @@ import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { createObject } from '@dxos/echo-client';
+import { Panel } from '@dxos/react-ui';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor } from '@dxos/react-ui-editor';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
-import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -59,13 +59,13 @@ type StoryArgs = {
 const EditorArticle = (props: MarkdownEditorEditorRootProps) => (
   <Editor.Root {...props}>
     <Panel.Root role='article'>
-      <Panel.Toolbar>
+      <Panel.Header>
         <MarkdownEditor.Toolbar classNames='dx-document' />
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <MarkdownEditor.Content />
         <Editor.Blocks />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   </Editor.Root>
 );

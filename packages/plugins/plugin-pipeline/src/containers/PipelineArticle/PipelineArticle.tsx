@@ -10,10 +10,10 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { Panel } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenuContribution } from '@dxos/react-ui-menu';
-import * as Panel from '@dxos/react-ui/Panel';
 import { type Pipeline } from '@dxos/types';
 
 import { type ItemProps, PipelineComponent } from '#components';
@@ -38,14 +38,14 @@ export const PipelineArticle = ({ role, subject: pipeline, attendableId }: Pipel
   return (
     <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
-          <PipelineComponent.Toolbar disabled={!hasAttention} />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        <Panel.Header>
+          <PipelineComponent.Toolbar inactive={!hasAttention} />
+        </Panel.Header>
+        <Panel.Body asChild>
           <PipelineComponent.Content asChild model={model}>
             <PipelineComponent.Columns pipeline={pipeline} />
           </PipelineComponent.Content>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </PipelineComponent.Root>
   );

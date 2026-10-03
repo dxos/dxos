@@ -19,6 +19,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { Panel } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 import {
   Editor,
@@ -28,7 +29,6 @@ import {
   useEditorContext,
 } from '@dxos/react-ui-editor';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
-import * as Panel from '@dxos/react-ui/Panel';
 import { Text } from '@dxos/schema';
 import { Merge } from '@dxos/util';
 
@@ -354,21 +354,21 @@ const MarkdownArticleImpl = forwardRef<
             {binding.overlays}
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
-                <Panel.Toolbar>
+                <Panel.Header>
                   <MarkdownEditor.Toolbar
                     classNames='dx-document'
                     customActions={customActions}
                     viewModes={viewModes}
                   />
-                </Panel.Toolbar>
+                </Panel.Header>
               )}
-              <Panel.Content classNames='flex flex-col'>
+              <Panel.Body classNames='flex flex-col'>
                 {binding.banner}
                 <MarkdownEditor.Content initialValue={binding.initialValue} />
                 <Editor.Blocks />
                 {/* Developer diagnostics panel (live editor state), gated behind the debug setting. */}
                 {settings.debug && <Editor.Diagnostics />}
-              </Panel.Content>
+              </Panel.Body>
             </Panel.Root>
           </Editor.Root>
         )}

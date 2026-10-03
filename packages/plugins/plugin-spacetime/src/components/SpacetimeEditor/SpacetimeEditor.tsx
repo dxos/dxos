@@ -18,7 +18,7 @@ import React, {
 
 import { useObject } from '@dxos/echo-react';
 import { createContext } from '@dxos/react-hooks';
-import * as Util from '@dxos/react-ui/Util';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { Scene } from '#types';
 
@@ -169,13 +169,13 @@ const SPACETIME_EDITOR_TOOLBAR = 'SpacetimeEditor:Toolbar';
 
 type SpacetimeEditorToolbarProps = Pick<SpacetimeToolbarProps, 'attendableId' | 'alwaysActive'>;
 
-const SpacetimeEditorToolbar = Util.composable<HTMLDivElement, SpacetimeEditorToolbarProps>(
+const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbarProps>(
   ({ attendableId, alwaysActive, ...props }, forwardedRef) => {
     const { editorStateAtom, editorActions } = useSpacetimeEditorContext(SPACETIME_EDITOR_TOOLBAR);
 
     return (
       <SpacetimeToolbar
-        {...Util.composableProps(props)}
+        {...composableProps(props)}
         attendableId={attendableId}
         alwaysActive={alwaysActive}
         editorStateAtom={editorStateAtom}
@@ -199,7 +199,7 @@ type SpacetimeEditorCanvasProsp = Omit<
   'showAxes' | 'editorStateAtom' | 'scene' | 'objectCount' | 'parentSolidsRef' | 'importGLBRef' | 'handleActionRef'
 >;
 
-const SpacetimeEditorCanvas = Util.composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
+const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
   const {
     scene,
     editorStateAtom,
@@ -212,7 +212,7 @@ const SpacetimeEditorCanvas = Util.composable<HTMLDivElement, SpacetimeEditorCan
   const objectCount = liveScene?.objects?.length ?? 0;
   return (
     <SpacetimeCanvas
-      {...Util.composableProps(props)}
+      {...composableProps(props)}
       scene={scene}
       editorStateAtom={editorStateAtom}
       objectCount={objectCount}

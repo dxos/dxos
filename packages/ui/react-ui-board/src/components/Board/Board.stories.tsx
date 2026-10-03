@@ -5,11 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
+import { Button, Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
-import * as Card from '@dxos/react-ui/Card';
-import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { cardDefaultInlineSize } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
@@ -113,20 +111,20 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
       >
         {/* Scroll viewport: sized to the full grid bounds; auto-scrolls when dragging/resizing near an edge. */}
         <Panel.Root>
-          <Panel.Toolbar>
+          <Panel.Header>
             <Toolbar.Root>
-              <Toolbar.IconButton
+              <Button
                 icon='ph--crosshair--regular'
                 iconOnly
                 label='Center board'
                 onClick={() => controller.current?.center()}
               />
-              <Toolbar.Button onClick={() => setZoom(1)} disabled={zoom === 1}>
+              <Button onClick={() => setZoom(1)} disabled={zoom === 1}>
                 100%
-              </Toolbar.Button>
+              </Button>
             </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <Board.Container>
               <Board.Viewport>
                 <Board.Backdrop />
@@ -153,7 +151,7 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
                 <Board.Map classNames='w-40' />
               </div>
             </Board.Container>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </Board.Root>
     </Dnd.Root>

@@ -6,16 +6,17 @@ import '@dxos-theme';
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Tooltip from '@dxos/react-ui/Tooltip';
+// Next components style through `.dx-*` rules that ship separately from the theme.
+import '@dxos/react-ui/theme.css';
+import { ErrorBoundary, ErrorBoundaryProps, ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui';
 
 import { translations } from '../../translations.ts';
 
 /**
  * Wraps children with the app theme, tooltip provider, and a named error boundary.
  */
-export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorFallback.ErrorBoundaryProps, 'name'>>) => {
+export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorBoundaryProps, 'name'>>) => {
   // Monitor system theme.
   useEffect(() => {
     const setTheme = (darkMode: boolean) => {
@@ -29,10 +30,8 @@ export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorFallback.Er
   }, []);
 
   return (
-    <ThemeProvider.Root tx={ThemeProvider.defaultTx} resourceExtensions={translations} themeMode='dark'>
-      <Tooltip.Provider>
-        <ErrorFallback.ErrorBoundary name={name}>{children}</ErrorFallback.ErrorBoundary>
-      </Tooltip.Provider>
-    </ThemeProvider.Root>
+    <ThemeProvider tx={defaultTx} resourceExtensions={translations} themeMode='dark'>
+      <ErrorBoundary name={name}>{children}</ErrorBoundary>
+    </ThemeProvider>
   );
 };

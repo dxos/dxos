@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import * as Card from '@dxos/react-ui/Card';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

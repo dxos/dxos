@@ -122,7 +122,8 @@ export const Live: Story = {
   render: LiveStory,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button'));
+    // The plugin manager boots before the indicator renders, which outlasts the default 1s under load.
+    await userEvent.click(await canvas.findByRole('button', {}, { timeout: 10_000 }));
 
     // Read from the bar's value rather than the readout's text: the popover is portaled, and the
     // readout's format is the meter's to change.

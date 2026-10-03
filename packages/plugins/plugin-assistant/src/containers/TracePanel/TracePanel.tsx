@@ -18,6 +18,7 @@ import * as Process from '@dxos/compute/Process';
 import { Annotation, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import {
   TracePanel as NaturalTracePanel,
@@ -27,7 +28,6 @@ import {
   useExecutionGraph,
   useTraceMessages,
 } from '@dxos/react-ui-trace';
-import * as Util from '@dxos/react-ui/Util';
 
 import { AssistantCapabilities } from '#types';
 
@@ -37,7 +37,7 @@ export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<NaturalTracePane
  * The trace panel bound to the app: the process monitor, the space's trace feed, the assistant's
  * settings (environment filter, debug view), a view-state process selection, and navigation.
  */
-export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
+export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
   ({ space, attendableId, onProcessTerminate, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes(attendableId);
     const { invokePromise } = Hooks.useOperationInvoker();
@@ -115,7 +115,7 @@ export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
 
     return (
       <NaturalTracePanel
-        {...Util.composableProps(props, attentionAttrs)}
+        {...composableProps(props, attentionAttrs)}
         ref={forwardedRef}
         processes={processes}
         graph={graph}

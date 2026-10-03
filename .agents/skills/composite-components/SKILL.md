@@ -64,18 +64,19 @@ Do **not** annotate aliases as `FunctionComponent<...>` — it strips ref suppor
 
 ## Rules
 
-1. **Prefix internal names**: `FooRoot`, `FooTrigger`, `FooRootProps`. The unprefixed `Root` / `Trigger` / `RootProps` names appear only in the module's export list.
+1. **Prefix internal names**: `FooRoot`, `FooTrigger`, `FooRootProps`. The unprefixed `Root` / `Trigger` form appears only as keys in the final namespace object (`export const Foo = { Root: FooRoot, ... }`).
 2. **`displayName` is dotted and matches the consumer API**: `'Foo.Root'`, `'Foo.Overlay'` — not `'FooRoot'` or `'FooOverlay'`. Set it on every part, including `slottable()`/`composable()` ones (the helper does not set it automatically).
-3. **The module is the namespace.** `Foo.tsx` carries the `// @import-as-namespace` directive and exports each part under its short name; consumers write `import * as Foo from '@dxos/react-ui/Foo'` and `<Foo.Root>`. No `export const Foo = { ... }` object, no `Object.assign`:
+3. **Namespace assembly** is an object literal. No `Object.assign`, no `import * as Foo`:
    ```tsx
-   // @import-as-namespace
-
-   export { FooRoot as Root, FooTrigger as Trigger /* ... */ };
+   export const Foo = {
+     Root: FooRoot,
+     Trigger: FooTrigger,
+     // ...
+   };
    ```
-   A single component exports itself as `Root` (`<Icon.Root>`). Each family gets a PascalCase subpath in `package.json` and a vite entry, and its directory barrel re-exports it as `export * as Foo from './Foo.tsx';`. Hooks and theme tables for the family go in the same namespace (`Foo.useFooContext`, `Foo.fooTheme`); general-purpose hooks go in `Hooks`.
-4. **Export every part's Props type** under its short name:
+4. **Export every part's Props type**:
    ```tsx
-   export type { FooRootProps as RootProps, FooTriggerProps as TriggerProps /* ... */ };
+   export type { FooRootProps, FooTriggerProps /* ... */ };
    ```
 5. **Section comments** delimit each part:
    ```tsx

@@ -5,7 +5,7 @@
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Hypergraph } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { type Label } from '@dxos/react-ui';
 
 export type DiagnosticSeverity = 'info' | 'warning' | 'error';
 
@@ -40,8 +40,8 @@ export type DiagnosticContext = {
 export type DiagnosticProvider = {
   readonly id: string;
   /** i18n label, either a key in the doctor namespace or a `[key, { ns }]` tuple from another plugin. */
-  readonly label: ThemeProvider.Label;
-  readonly description?: ThemeProvider.Label;
+  readonly label: Label;
+  readonly description?: Label;
   readonly run: (ctx: DiagnosticContext) => Promise<DiagnosticIssue[]>;
 };
 
@@ -50,7 +50,7 @@ export type DiagnosticProvider = {
  */
 export type DiagnosticRunResult = {
   readonly providerId: string;
-  readonly label: ThemeProvider.Label;
+  readonly label: Label;
   readonly issues: DiagnosticIssue[];
   readonly durationMs: number;
   /** Set when the provider itself threw. */

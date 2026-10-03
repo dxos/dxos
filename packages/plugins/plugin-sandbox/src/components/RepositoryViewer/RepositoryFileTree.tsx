@@ -4,9 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
+import { useTranslation } from '@dxos/react-ui';
+import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
@@ -60,7 +59,7 @@ export const RepositoryFileTree = ({
   onExpandedChange,
   onSelect,
 }: RepositoryFileTreeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const root = useMemo(() => buildNode({ path: '', name: '', type: 'root' }, directories), [directories]);
 
   const model = useMemo(
@@ -86,7 +85,7 @@ export const RepositoryFileTree = ({
   );
 
   const handleSelect = useCallback(
-    ({ item }: { item: FileNode }) => {
+    ({ item }: TreeSelectEvent<FileNode>) => {
       if (item.type === 'directory') {
         onExpandedChange(item.path, !expanded.has(item.path));
       } else {
@@ -96,35 +95,34 @@ export const RepositoryFileTree = ({
     [expanded, onExpandedChange, onSelect],
   );
 
-  const renderIcon = useMemo<IconRenderer<FileNode>>(
-    () =>
-      ({ item }) => (
-        <Icon.Root
-          icon={
-            item.type === 'directory'
-              ? expanded.has(item.path)
-                ? 'ph--folder-open--regular'
-                : 'ph--folder--regular'
-              : item.type === 'submodule'
-                ? 'ph--git-fork--regular'
-                : 'ph--file--regular'
-          }
-          size={4}
-        />
-      ),
+  const renderRow = useCallback(
+    (node: TreeNode<FileNode>) => {
+      const item = node.item;
+      return (
+        <Tree.Item node={node}>
+          <Tree.ItemIndicator />
+          <Tree.ItemIcon
+            icon={
+              item?.type === 'directory'
+                ? expanded.has(item.path)
+                  ? 'ph--folder-open--regular'
+                  : 'ph--folder--regular'
+                : item?.type === 'submodule'
+                  ? 'ph--git-fork--regular'
+                  : 'ph--file--regular'
+            }
+          />
+          <Tree.ItemText />
+        </Tree.Item>
+      );
+    },
     [expanded],
   );
 
   return (
-    <Tree<FileNode>
-      id={root.id}
-      model={model}
-      ariaLabel={t('files-tree.label')}
-      classNames='text-sm'
-      density='sm'
-      renderIcon={renderIcon}
-      onOpenChange={handleOpenChange}
-      onSelect={handleSelect}
-    />
+    <Tree.Root id={root.id} model={model} size='sm' onOpenChange={handleOpenChange} onSelect={handleSelect}>
+      <Tree.Label srOnly>{t('files-tree.label')}</Tree.Label>
+      <Tree.Content>{renderRow}</Tree.Content>
+    </Tree.Root>
   );
 };

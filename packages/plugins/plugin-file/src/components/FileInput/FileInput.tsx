@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -15,7 +15,7 @@ export type FileInputProps = {
 };
 
 export const FileInput = ({ onChange }: FileInputProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   const onDropAccepted = useCallback((files: File[]) => onChange?.(files[0]), [onChange]);
 

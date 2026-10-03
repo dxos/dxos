@@ -11,10 +11,8 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { Button, Field, Textarea, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -22,7 +20,7 @@ import { meta } from '#meta';
 export type SkillEditorProps = { object: Script.Script };
 
 export const SkillEditor = ({ object }: SkillEditorProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(object);
   const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
   const skills = useQuery(db, Filter.type(Skill.Skill));
@@ -34,7 +32,7 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
   const existingSkill = skills.find((bp) => Obj.getMeta(bp).key === skillKey);
   const fnKey = fn ? Obj.getMeta(fn).key : undefined;
 
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (!existingSkill) {
       return;
     }
@@ -85,7 +83,7 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
     <Form.FieldSet label={t('skill-editor.label')} description={t('skill-editor.description')}>
       <Field.Root>
         <Field.Label>{t('skill-instructions.label')}</Field.Label>
-        <Field.Textarea
+        <Textarea
           placeholder={t('skill-instructions.placeholder')}
           rows={6}
           value={instructions}
@@ -95,9 +93,9 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
       </Field.Root>
 
       <div className='pt-2'>
-        <Button.Root disabled={(!existingSkill && !fnKey) || creating} onClick={handleSave}>
+        <Button disabled={(!existingSkill && !fnKey) || creating} onClick={handleSave}>
           {t(existingSkill ? 'update-skill.label' : 'create-skill.label')}
-        </Button.Root>
+        </Button>
       </div>
     </Form.FieldSet>
   );

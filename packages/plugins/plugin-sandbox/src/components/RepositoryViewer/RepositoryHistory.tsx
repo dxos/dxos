@@ -4,9 +4,7 @@
 
 import React from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -30,9 +28,9 @@ export const RepositoryHistory = ({
   onSelect,
   onLoadMore,
 }: RepositoryHistoryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   if (commits.length === 0) {
-    return <div className='p-4 text-description'>{t('history-empty.message')}</div>;
+    return <div className='p-4 text-fg-muted'>{t('history-empty.message')}</div>;
   }
 
   return (
@@ -53,8 +51,8 @@ export const RepositoryHistory = ({
                   data-testid='repository.history.commit'
                 >
                   <span className='truncate'>{subject}</span>
-                  <code className='text-xs text-description'>{commit.hash.slice(0, 7)}</code>
-                  <span className='text-xs text-description truncate'>
+                  <code className='text-xs text-fg-muted'>{commit.hash.slice(0, 7)}</code>
+                  <span className='text-xs text-fg-muted truncate'>
                     {commit.author.name} · {new Date(commit.author.timestamp).toLocaleString()}
                   </span>
                 </button>
@@ -64,9 +62,9 @@ export const RepositoryHistory = ({
         </ul>
         {hasMore && onLoadMore && (
           <div className='p-2 grid'>
-            <Button.Root variant='ghost' onClick={onLoadMore}>
+            <Button variant='ghost' onClick={onLoadMore}>
               {t('history-more.button')}
-            </Button.Root>
+            </Button>
           </div>
         )}
       </ScrollArea.Viewport>

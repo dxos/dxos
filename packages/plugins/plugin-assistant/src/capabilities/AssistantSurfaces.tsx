@@ -17,7 +17,7 @@ import { Feed, Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings, SpaceHomeSuggestions, TracePanel, TriggerStatus } from '#containers';
 import { Assistant } from '#types';
@@ -63,10 +63,10 @@ export const InvocationsSurface = ({ role, companionTo }: InvocationsSurfaceProp
   const target = Obj.instanceOf(Instructions.Instructions, companionTo) ? undefined : companionTo;
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Content asChild>
+    <Panel.Root role={role} width='document'>
+      <Panel.Body asChild>
         <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} target={target} detailAxis='block' />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

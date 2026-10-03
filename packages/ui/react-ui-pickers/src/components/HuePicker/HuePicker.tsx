@@ -4,10 +4,7 @@
 
 import React from 'react';
 
-import type * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import type * as Icon from '@dxos/react-ui/Icon';
-import type * as Util from '@dxos/react-ui/Util';
+import { type ButtonProps, type Size, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { getSize, osTranslations } from '@dxos/ui-theme';
 import { hues } from '@dxos/ui-types';
 
@@ -20,11 +17,11 @@ export type HuePickerProps = {
   defaultValue?: string;
   value?: string;
   onChange?: (nextHue: string) => void;
-  onReset?: Button.RootProps['onClick'];
+  onReset?: ButtonProps['onClick'];
 } & Pick<PickerButtonProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant'>;
 
-export const HuePicker = ({ label, ...props }: Util.ThemedClassName<HuePickerProps>) => {
-  const { t } = Hooks.useTranslation(osTranslations);
+export const HuePicker = ({ label, ...props }: ThemedClassName<HuePickerProps>) => {
+  const { t } = useTranslation(osTranslations);
 
   return (
     <PickerButton
@@ -37,7 +34,11 @@ export const HuePicker = ({ label, ...props }: Util.ThemedClassName<HuePickerPro
   );
 };
 
-const HuePreview = ({ value, size = 5 }: { value: string; size?: Icon.RootProps['size'] }) => {
+/** Next icon sizes as the Tailwind steps the preview's square is drawn at. */
+const PREVIEW_SIZES: Record<Size, 3 | 3.5 | 4 | 5 | 6> = { xs: 3, sm: 3.5, md: 4, lg: 5, xl: 6 };
+
+const HuePreview = ({ value, size: iconSize = 'md' }: { value: string; size?: Size }) => {
+  const size = PREVIEW_SIZES[iconSize];
   return (
     <div className='flex justify-center items-center'>
       <svg viewBox={`0 0 ${size} ${size}`} className={getSize(size)}>

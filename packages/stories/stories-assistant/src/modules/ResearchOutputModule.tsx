@@ -9,10 +9,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import * as Card from '@dxos/react-ui/Card';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
 import { ResearchInputQueue } from '../testing/schema.ts';
 
@@ -35,12 +32,12 @@ const ResearchOutputModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Research Output</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
             {objects.map((object) => (
@@ -50,7 +47,7 @@ const ResearchOutputModuleContainer = ({ space }: { space: Space }) => {
             ))}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

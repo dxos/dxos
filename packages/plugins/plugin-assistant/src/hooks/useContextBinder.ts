@@ -11,7 +11,7 @@ import { AiContext } from '@dxos/assistant';
 import { Database, Feed } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Space } from '@dxos/react-client/echo';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 export const useContextBinder = (
   space: Space | undefined,
@@ -20,7 +20,7 @@ export const useContextBinder = (
   const registry = useContext(RegistryContext) as Registry.AtomRegistry;
   const [binder, setBinder] = useState<AiContext.Binder>();
 
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     setBinder(undefined);
     if (!space || !feed) {
       return;

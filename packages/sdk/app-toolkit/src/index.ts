@@ -15,6 +15,7 @@ export * as CardIconSlot from './CardIconSlot.ts';
 export * as CardMenuSlot from './CardMenuSlot.ts';
 export * as Hooks from './Hooks.ts';
 export * as NotFoundArticle from './NotFoundArticle.ts';
+export * as ObjectCard from './ObjectCard.ts';
 export * as PluginRegistryButton from './PluginRegistryButton.ts';
 export * as SettingsScope from './SettingsScope.ts';
 export * as UpdateRow from './UpdateRow.ts';

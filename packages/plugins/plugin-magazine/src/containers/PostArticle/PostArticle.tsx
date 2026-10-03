@@ -11,8 +11,8 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
+import { Panel } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import * as Panel from '@dxos/react-ui/Panel';
 
 import { usePostContentAtom } from '#atoms';
 import { PostContent } from '#components';
@@ -133,9 +133,9 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
         onOpenOriginal={handleOpenOriginal}
         onRefresh={() => void handleRefresh()}
       />
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <PostContent post={subject} metadata={feedName ? [feedName] : undefined} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

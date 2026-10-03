@@ -12,8 +12,8 @@ import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
@@ -44,7 +44,7 @@ const useTestModel = <S extends Type.AnyObj>(schema: S, count: number) => {
     [],
   );
 
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (!space) {
       return;
     }

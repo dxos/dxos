@@ -3,8 +3,8 @@
 //
 
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 import { translations as geoTranslations } from '@dxos/react-ui-geo/translations';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '#meta';
 import { Map } from '#types';
@@ -31,4 +31,4 @@ export const translations = [
     },
   },
   ...geoTranslations,
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Resource[];

@@ -9,10 +9,7 @@ import React, { type RefObject, forwardRef, useCallback, useEffect, useRef, useS
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { useObject } from '@dxos/react-client/echo';
-import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
+import { Button, Flex, Icon, Link, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Book } from '#types';
@@ -35,9 +32,9 @@ const fileType = (file: File): string => {
 };
 
 const Spinner = () => (
-  <Flex.Root center classNames='h-full text-description'>
-    <Icon.Root icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
-  </Flex.Root>
+  <Flex center classNames='h-full text-fg-muted'>
+    <Icon icon='ph--spinner-gap--regular' size='xl' spin />
+  </Flex>
 );
 
 /**
@@ -47,7 +44,7 @@ const Spinner = () => (
  * Forwards a paging handle to the EPUB reader (null for PDF/no content) so the toolbar can page.
  */
 export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ book }, forwardedRef) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(book);
   // Subscribe so attaching (or replacing) the content blob re-renders and re-resolves.
   const [live] = useObject(book);
@@ -203,13 +200,11 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
       );
     }
     return (
-      <Flex.Root center classNames='h-full p-4'>
-        <Button.Root asChild>
-          <a href={resolved.url} download>
-            {t('download-file.label')}
-          </a>
-        </Button.Root>
-      </Flex.Root>
+      <Flex center classNames='h-full p-4'>
+        <Link href={resolved.url} target='_self' download>
+          {t('download-file.label')}
+        </Link>
+      </Flex>
     );
   }
   if (error) {
@@ -239,9 +234,9 @@ type UploadPromptProps = {
 };
 
 const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: UploadPromptProps) => (
-  <Flex.Root column gap='md' center classNames='h-full p-4 text-center'>
-    <Icon.Root icon='ph--book-open--regular' size={10} classNames='text-description' />
-    <p className='text-sm text-description'>{message}</p>
+  <Flex column gap='md' center classNames='h-full p-4 text-center'>
+    <Icon icon='ph--book-open--regular' size='xl' tone='muted' />
+    <p className='text-sm text-fg-muted'>{message}</p>
     <input
       ref={inputRef}
       type='file'
@@ -255,9 +250,9 @@ const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: Upload
         event.target.value = '';
       }}
     />
-    <Button.Root disabled={busy} onClick={() => inputRef.current?.click()}>
-      <Icon.Root icon='ph--upload-simple--regular' size={4} classNames='me-2' />
+    <Button disabled={busy} onClick={() => inputRef.current?.click()}>
+      <Icon icon='ph--upload-simple--regular' size='md' classNames='me-2' />
       {label}
-    </Button.Root>
-  </Flex.Root>
+    </Button>
+  </Flex>
 );

@@ -6,13 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { Fragment } from 'react';
 
+import { Button, Popover, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
-import * as DensityProvider from '@dxos/react-ui/DensityProvider';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Popover from '@dxos/react-ui/Popover';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import * as Util from '@dxos/react-ui/Util';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -46,9 +41,9 @@ export type MobileAppBarProps = {
 /**
  * AppBar component that renders a title, optional back button, and actions dropdown.
  */
-export const MobileAppBar = Util.composable<HTMLDivElement, MobileAppBarProps>(
+export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
   ({ classNames, title, actions, showBackButton, popoverAnchorId, onAction, onBack, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = useTranslation(meta.profile.key);
     const menuActions = useMenuActions(actions);
     const actionsValue = useAtomValue(actions);
     const hasActions = actionsValue.nodes.length > 0;
@@ -61,56 +56,49 @@ export const MobileAppBar = Util.composable<HTMLDivElement, MobileAppBarProps>(
     const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
 
     return (
-      <DensityProvider.Root density='md'>
-        <Toolbar.Root
-          {...Util.composableProps(props, {
-            role: 'banner',
-            // `min-h` rather than `h`: the Panel toolbar slot pins the row to `--dx-toolbar-size`,
-            // and a min-height is the one way to grow past it without depending on class order.
-            // 52px = the 44px touch target plus the toolbar's own `p-1` on both edges.
-            classNames:
-              'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-md min-h-13',
-          })}
-          ref={forwardedRef}
-        >
-          {keyboardOpen ? (
-            <IconButton.Root
-              variant='ghost'
-              icon='ph--x--regular'
-              iconOnly
-              label={t('done.label')}
-              classNames={TOUCH_TARGET}
-            />
-          ) : showBackButton ? (
-            <IconButton.Root
-              variant='ghost'
-              icon='ph--caret-left--regular'
-              iconOnly
-              label={t('back.label')}
-              classNames={TOUCH_TARGET}
-              onClick={onBack}
-            />
-          ) : (
-            <div />
-          )}
-          <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
-          {hasActions ? (
-            <AnchorRoot>
-              <ActionMenu {...menuActions} caller={meta.profile.key} onAction={onAction}>
-                <IconButton.Root
-                  variant='ghost'
-                  icon='ph--dots-three-vertical--regular'
-                  iconOnly
-                  label={t('actions-menu.label')}
-                  classNames={TOUCH_TARGET}
-                />
-              </ActionMenu>
-            </AnchorRoot>
-          ) : (
-            <span />
-          )}
-        </Toolbar.Root>
-      </DensityProvider.Root>
+      <Toolbar.Root
+        {...composableProps(props, {
+          role: 'banner',
+          // `min-h` rather than `h`: the Panel toolbar slot pins the row to `--dx-toolbar-size`,
+          // and a min-height is the one way to grow past it without depending on class order.
+          // 52px = the 44px touch target plus the toolbar's own `p-1` on both edges.
+          classNames:
+            'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-md min-h-13',
+        })}
+        size='md'
+        ref={forwardedRef}
+      >
+        {keyboardOpen ? (
+          <Button variant='ghost' icon='ph--x--regular' iconOnly label={t('done.label')} classNames={TOUCH_TARGET} />
+        ) : showBackButton ? (
+          <Button
+            variant='ghost'
+            icon='ph--caret-left--regular'
+            iconOnly
+            label={t('back.label')}
+            classNames={TOUCH_TARGET}
+            onClick={onBack}
+          />
+        ) : (
+          <div />
+        )}
+        <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
+        {hasActions ? (
+          <AnchorRoot>
+            <ActionMenu {...menuActions} caller={meta.profile.key} onAction={onAction}>
+              <Button
+                variant='ghost'
+                icon='ph--dots-three-vertical--regular'
+                iconOnly
+                label={t('actions-menu.label')}
+                classNames={TOUCH_TARGET}
+              />
+            </ActionMenu>
+          </AnchorRoot>
+        ) : (
+          <span />
+        )}
+      </Toolbar.Root>
     );
   },
 );

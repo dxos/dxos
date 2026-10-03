@@ -9,7 +9,7 @@ import { beforeEach, describe, test, vi } from 'vitest';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { createTestApp } from '@dxos/app-framework/testing';
 import { render } from '@dxos/app-framework/testing/react';
-import * as Toast from '@dxos/react-ui/Toast';
+import { Toast } from '@dxos/react-ui';
 
 import { ThemePlugin } from '#plugin';
 
@@ -37,7 +37,7 @@ describe('ThemePlugin ReactContext', () => {
     const result = render(
       harness,
       <Toast.Root open duration={Infinity}>
-        <Toast.Title onClose={() => {}}>Deleted</Toast.Title>
+        <Toast.Header>Deleted</Toast.Header>
       </Toast.Root>,
     );
     await act(async () => {});

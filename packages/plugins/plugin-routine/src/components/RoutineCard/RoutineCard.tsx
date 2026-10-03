@@ -8,9 +8,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Routine from '@dxos/compute/Routine';
 import type * as Trigger from '@dxos/compute/Trigger';
 import { useObject } from '@dxos/echo-react';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
+import { Block, Card, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -25,7 +23,7 @@ export type RoutineCardProps = AppSurface.ObjectCardProps<Routine.Routine>;
  * to the generic form preview, which renders its `spec`/`triggers` internals rather than a summary.
  */
 export const RoutineCard = ({ subject }: RoutineCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const [routine] = useObject(subject);
   // MVP enforces at most one trigger; the summary describes it.
   const [trigger] = useObject(routine.triggers.at(0));
@@ -37,8 +35,8 @@ export const RoutineCard = ({ subject }: RoutineCardProps) => {
     <Card.Body>
       <Card.Row>
         {/* The gutter is reserved either way so the summary stays aligned across cards. */}
-        <Card.Block>{active && <Icon.Root icon='ph--check-circle--regular' classNames='text-green-text' />}</Card.Block>
-        <Card.Text variant='description' classNames='line-clamp-2'>
+        <Block>{active && <Icon icon='ph--check-circle--regular' classNames='text-green-text' />}</Block>
+        <Card.Text variant='muted' classNames='line-clamp-2'>
           {describeTrigger(trigger?.spec, t)}
         </Card.Text>
       </Card.Row>

@@ -5,9 +5,7 @@
 import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { Banner, Dialog, useTranslation } from '@dxos/react-ui';
 
 import { Action, TextInput } from '../components/index.ts';
 import { translationKey } from '../translations.ts';
@@ -52,7 +50,7 @@ export const ConfirmReset = ({
   confirmationValue: confirmationValueProp,
   errorMessage,
 }: ConfirmResetProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const [validationMessage, setValidationMessage] = useState('');
   const [pending, setPending] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -81,10 +79,8 @@ export const ConfirmReset = ({
   return (
     <>
       <Banner.Root valence='error'>
-        <Banner.Content classNames='mb-trim-md'>
-          <Banner.Title>{resolvedTitle}</Banner.Title>
-          <Banner.Body>{resolvedMessage}</Banner.Body>
-        </Banner.Content>
+        <Banner.Title>{resolvedTitle}</Banner.Title>
+        <Banner.Body>{resolvedMessage}</Banner.Body>
       </Banner.Root>
       <TextInput
         {...{ validationMessage }}
@@ -93,7 +89,7 @@ export const ConfirmReset = ({
         placeholder={t('confirmation.placeholder', { confirmationValue })}
         onChange={({ target: { value } }) => setInputValue(value)}
       />
-      <Dialog.ActionBar classNames='grid grid-cols-2 gap-2'>
+      <Dialog.Footer classNames='grid grid-cols-2 gap-2'>
         {onCancel && (
           <Action disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
             {resolvedCancelLabel}
@@ -109,7 +105,7 @@ export const ConfirmReset = ({
             {pending ? resolvedPendingLabel : resolvedConfirmLabel}
           </Action>
         )}
-      </Dialog.ActionBar>
+      </Dialog.Footer>
     </>
   );
 };

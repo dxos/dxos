@@ -5,12 +5,7 @@
 import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Button from '@dxos/react-ui/Button';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import type * as Util from '@dxos/react-ui/Util';
+import { Button, Empty, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 
 import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList/index.ts';
 import { FactPanel } from '../FactPanel/index.ts';
@@ -21,7 +16,7 @@ export type StatItem = { label: string; value: string | number };
 /** A pipeline-specific output view (e.g. email messages, threads, transcript) shown as its own tab. */
 export type OutputDetail = { id: string; label: string; content: ReactNode };
 
-export type OutputPanelProps = Util.ThemedClassName<{
+export type OutputPanelProps = ThemedClassName<{
   facts: RDF.Fact[];
   objects: EchoObjectItem[];
   /** Common per-pipeline metrics (Stats tab). */
@@ -43,48 +38,45 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Button.Root variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
+          <Button variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
             Facts
-          </Button.Root>
-          <Button.Root variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
+          </Button>
+          <Button variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
             Objects
-          </Button.Root>
-          <Button.Root variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
+          </Button>
+          <Button variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
             Stats
-          </Button.Root>
+          </Button>
           {details.map((detail) => (
-            <Button.Root
+            <Button
               key={detail.id}
               variant={active === detail.id ? 'primary' : 'ghost'}
               onClick={() => setTab(detail.id)}
             >
               {detail.label}
-            </Button.Root>
+            </Button>
           ))}
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         {active === 'facts' && <FactPanel facts={facts} classNames='h-full' />}
         {active === 'objects' && <EchoObjectsList objects={objects} classNames='h-full' />}
         {active === 'stats' && <StatsView stats={stats} />}
         {details.map((detail) => (active === detail.id ? <Fragment key={detail.id}>{detail.content}</Fragment> : null))}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
 
 const StatsView = ({ stats }: { stats: StatItem[] }) => (
-  <ScrollArea.Root padding classNames='h-full'>
+  <ScrollArea.Root classNames='h-full'>
     <ScrollArea.Viewport classNames='flex flex-col gap-1 py-1'>
-      {stats.length === 0 && <Banner.Empty label='No stats.' />}
+      {stats.length === 0 && <Empty>No stats.</Empty>}
       {stats.map((stat) => (
-        <div
-          key={stat.label}
-          className='flex items-center justify-between gap-2 border-b border-subdued-separator py-1'
-        >
-          <span className='text-sm text-description truncate'>{stat.label}</span>
+        <div key={stat.label} className='flex items-center justify-between gap-2 border-b border-separator-subtle py-1'>
+          <span className='text-sm text-fg-muted truncate'>{stat.label}</span>
           <span className='font-medium tabular-nums'>{stat.value}</span>
         </div>
       ))}

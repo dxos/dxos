@@ -5,10 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Countdown, type CountdownProps } from './Countdown.tsx';
 
@@ -19,22 +17,22 @@ const DefaultStory = (props: CountdownProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Button.Root
+          <Button
             onClick={() => {
               setDone(false);
               setTake((take) => take + 1);
             }}
           >
             Replay
-          </Button.Root>
+          </Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex items-center justify-center'>
+      </Panel.Header>
+      <Panel.Body classNames='flex items-center justify-center'>
         {done ? 'Rolling.' : null}
         <Countdown key={take} {...props} onComplete={() => setDone(true)} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

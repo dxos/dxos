@@ -8,8 +8,7 @@ import { I18nProvider } from 'react-aria-components';
 
 import { type ThemeMode } from '@dxos/ui-types';
 
-import * as Tooltip from '../../components/Tooltip/Tooltip.tsx';
-import * as ThemeProvider from '../../providers/ThemeProvider/ThemeProvider.tsx';
+import { type ThemeContextValue, ThemeProvider } from '../../providers/index.ts';
 import { defaultTx } from '../../theme/index.ts';
 
 /**
@@ -20,7 +19,7 @@ import { defaultTx } from '../../theme/index.ts';
  * empty.
  */
 export const withTheme =
-  ({ tx = defaultTx, platform }: Partial<ThemeProvider.ThemeContextValue> = {}): Decorator =>
+  ({ tx = defaultTx, platform }: Partial<ThemeContextValue> = {}): Decorator =>
   (Story, context) => {
     const {
       globals: { theme },
@@ -29,16 +28,14 @@ export const withTheme =
 
     return (
       <I18nProvider locale='en-US'>
-        <ThemeProvider.Root
+        <ThemeProvider
           tx={tx}
           themeMode={(theme as ThemeMode) || 'dark'}
           resourceExtensions={translations}
           platform={platform}
         >
-          <Tooltip.Provider>
-            <Story />
-          </Tooltip.Provider>
-        </ThemeProvider.Root>
+          <Story />
+        </ThemeProvider>
       </I18nProvider>
     );
   };

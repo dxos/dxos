@@ -15,8 +15,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useMergeRefs } from '@dxos/react-hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Util from '@dxos/react-ui/Util';
+import { composable, composableProps, useThemeMode } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';
 import { Settings } from '#types';
@@ -58,7 +57,7 @@ const selectedObjectIds = (editor: Editor): string[] => [
 const sameSet = (left: readonly string[], right: readonly string[]) =>
   left.length === right.length && left.every((id) => right.includes(id));
 
-export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
+export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
   (
     {
       canvas,
@@ -81,7 +80,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
     // The app's colour mode, not `prefers-color-scheme`: the two differ whenever the theme is set
     // by hand (a dark storybook on a light OS), and tldraw would then draw light-theme black on a
     // dark canvas.
-    const { themeMode } = ThemeProvider.useThemeContext();
+    const themeMode = useThemeMode();
     const colorScheme = themeMode === 'dark' ? 'dark' : 'light';
 
     // Focus.
@@ -303,7 +302,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
 
     return (
       <div
-        {...Util.composableProps(props, { classNames: 'dx-expand' })}
+        {...composableProps(props, { classNames: 'dx-expand' })}
         style={{ visibility: ready ? 'visible' : 'hidden' }}
         ref={containerRef}
       >

@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -31,8 +31,8 @@ import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
 import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -78,7 +78,7 @@ type StoryArgs = {
 };
 
 const DefaultStory = () => {
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [space] = useSpaces();
   const docs = useQuery(space?.db, Query.type(Markdown.Document));
   const doc = docs.find((candidate) => candidate.name !== EMBEDDED_NOTES);
@@ -86,7 +86,7 @@ const DefaultStory = () => {
   const data = useMemo(() => ({ subject: doc, attendableId: id ?? 'story' }), [doc, id]);
   const attentionAttrs = useAttentionAttributes(id);
 
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (space) {
       await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
     }

@@ -11,9 +11,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
+import { Textarea, type ThemedClassName } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
-import * as Field from '@dxos/react-ui/Field';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type SceneViewAtoms } from '../../model/atoms.ts';
@@ -45,7 +44,7 @@ const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getVal
   const lines: string[] = getValue() ?? [];
   return (
     <Form.Field path={jsonPath} label={label} readonly={readonly}>
-      <Field.Textarea
+      <Textarea
         rows={4}
         classNames='font-mono'
         disabled={!!readonly}
@@ -66,7 +65,7 @@ const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getVal
 /** Renderers by field name for the built-in types' list fields; a host may pass its own. */
 export const DEFAULT_FIELDS: FormFieldMap = { attributes: LinesField, methods: LinesField };
 
-export type PropertiesProps = Util.ThemedClassName<{
+export type PropertiesProps = ThemedClassName<{
   projection: Projection;
   atoms: SceneViewAtoms;
   nodes?: NodeRegistry;
@@ -112,7 +111,7 @@ export const Properties = ({
   return (
     <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='properties'>
       {!element ? (
-        <div className='p-2 text-sm text-description'>
+        <div className='p-2 text-sm text-fg-muted'>
           {ids.length === 0 ? 'Select a node or link to edit its properties.' : `${ids.length} elements selected.`}
         </div>
       ) : isLink(element) ? (

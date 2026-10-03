@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -25,7 +25,7 @@ import { translations as markdownTranslations } from '@dxos/plugin-markdown/tran
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -57,12 +57,12 @@ const PromptExtensionPlugin = Plugin.define(
 );
 
 const DefaultStory = () => {
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const id = doc && Obj.getURI(doc);
 
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (space) {
       await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
     }

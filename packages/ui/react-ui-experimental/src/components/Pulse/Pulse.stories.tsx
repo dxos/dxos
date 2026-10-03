@@ -5,10 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Pulse, type PulseProps, type PulseSignal } from './Pulse.tsx';
 
@@ -19,14 +17,14 @@ const DefaultStory = (props: PulseProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Button.Root onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button.Root>
+          <Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex items-center justify-center'>
+      </Panel.Header>
+      <Panel.Body classNames='flex items-center justify-center'>
         <Pulse {...props} active={active} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -129,9 +127,9 @@ const PointerStory = (props: PulseProps) => {
 export const Pointer: Story = {
   render: (props) => (
     <Panel.Root>
-      <Panel.Content classNames='flex items-center justify-center'>
+      <Panel.Body classNames='flex items-center justify-center'>
         <PointerStory {...props} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   ),
   args: {
@@ -187,9 +185,9 @@ const RandomPing = (props: StoryArgs) => {
 export const Matrix: Story = {
   render: (props) => (
     <Panel.Root>
-      <Panel.Content classNames='flex items-center justify-center'>
+      <Panel.Body classNames='flex items-center justify-center'>
         <RandomPing {...props} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   ),
   args: {
@@ -206,9 +204,9 @@ export const Matrix: Story = {
 export const Icon: Story = {
   render: (props) => (
     <Panel.Root>
-      <Panel.Content classNames='flex items-center justify-center'>
+      <Panel.Body classNames='flex items-center justify-center'>
         <RandomPing {...props} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   ),
   args: {

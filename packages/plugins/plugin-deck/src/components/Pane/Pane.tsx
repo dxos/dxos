@@ -6,10 +6,8 @@ import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
+import { Button, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
-import * as DensityProvider from '@dxos/react-ui/DensityProvider';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Util from '@dxos/react-ui/Util';
 import { iconSize, mx } from '@dxos/ui-theme';
 import type { Merge } from '@dxos/util';
 
@@ -29,16 +27,17 @@ import type { Merge } from '@dxos/util';
 
 // Root accepts arbitrary div attributes (the container wires tabIndex, data-* and key handlers), so it
 // is a plain forwarding div rather than the narrowly-typed `slottable` used by the toolbar/content slots.
-type PaneRootProps = Util.ThemedClassName<ComponentPropsWithRef<'div'>>;
+type PaneRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
 const PaneRoot = forwardRef<HTMLDivElement, PaneRootProps>(({ children, ...props }, forwardedRef) => (
   <div
-    {...Util.composableProps(props, {
+    {...composableProps(props, {
       role: 'article',
       // No `dx-density-*` here: the class sets `--dx-control` for the whole subtree, so a pane-wide
       // `lg` reached the content body and rendered form labels and inputs at 40px. The toolbar gets
-      // `lg` from its own `DensityProvider` (see `Pane.Toolbar`); the body keeps the `md` default.
-      classNames: 'dx-expand flex flex-col dx-attention-surface relative dx-focus-ring-inset-over-all',
+      // `lg` from its own size scope (see `Pane.Toolbar`); the body keeps the `md` default. Its focus ring is the
+      // shell's landmark ring (the plank and companion are `useMainLandmark` areas).
+      classNames: 'dx-expand flex flex-col dx-attention-surface relative',
     })}
     ref={forwardedRef}
   >
@@ -52,18 +51,20 @@ PaneRoot.displayName = 'Pane.Root';
 // Toolbar
 //
 
-const PaneToolbar = Util.slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   return (
     <ark.div
       asChild={asChild}
       data-tauri-drag-region='deep'
-      {...Util.composableProps(props, {
+      {...composableProps(props, {
         style: iconSize(5),
-        classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
+        // `dx-scope` with `data-size`: the toolbar's controls take the large size, whatever the pane's.
+        classNames: 'dx-scope flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
       })}
+      data-size='lg'
       ref={forwardedRef}
     >
-      <DensityProvider.Root density='lg'>{children}</DensityProvider.Root>
+      {children}
     </ark.div>
   );
 });
@@ -74,9 +75,9 @@ PaneToolbar.displayName = 'Pane.Toolbar';
 // Content
 //
 
-const PaneContent = Util.slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+const PaneContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   return (
-    <ark.div asChild={asChild} {...Util.composableProps(props, { classNames: 'dx-grow' })} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...composableProps(props, { classNames: 'dx-grow' })} ref={forwardedRef}>
       {children}
     </ark.div>
   );
@@ -88,7 +89,7 @@ PaneContent.displayName = 'Pane.Content';
 // Title
 //
 
-type PaneTitleProps = Util.ThemedClassName<ComponentPropsWithRef<'h1'>> & Attention.AttendableId & Attention.Related;
+type PaneTitleProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & Attention.AttendableId & Attention.Related;
 
 /** Attention-aware plank title; colors to the accent when the plank (or a related companion) is attended. */
 const PaneTitle = forwardRef<HTMLHeadingElement, PaneTitleProps>(
@@ -99,7 +100,7 @@ const PaneTitle = forwardRef<HTMLHeadingElement, PaneTitleProps>(
         {...props}
         data-attention={((related && isRelated) || hasAttention || isAncestor).toString()}
         className={mx(
-          'px-1 min-w-0 w-0 grow truncate font-medium text-base-fg data-[attention=true]:text-accent-text self-center',
+          'px-1 min-w-0 w-0 grow truncate font-medium text-fg data-[attention=true]:text-accent-text self-center',
           classNames,
         )}
         ref={forwardedRef}
@@ -123,7 +124,7 @@ export type PaneTab = {
 };
 
 type PaneTabsProps = Merge<
-  Util.ThemedClassName<{
+  ThemedClassName<{
     tabs: ReadonlyArray<PaneTab>;
     value?: string;
     onValueChange?: (id: string) => void;
@@ -147,7 +148,7 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
         ref={forwardedRef}
       >
         {tabs.map(({ id, icon, label, testId }) => (
-          <IconButton.Root
+          <Button
             key={id}
             role='tab'
             aria-selected={value === id}

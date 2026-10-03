@@ -4,6 +4,6 @@
 
 import { useContext } from 'react';
 
-import * as ThemeProvider from '../providers/ThemeProvider/ThemeProvider.tsx';
+import { TranslationsContext } from '../providers/index.ts';
 
-export const useTranslationsContext = () => useContext(ThemeProvider.TranslationsContext);
+export const useTranslationsContext = () => useContext(TranslationsContext);

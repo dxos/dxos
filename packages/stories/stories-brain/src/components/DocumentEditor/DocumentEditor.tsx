@@ -5,13 +5,8 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
+import { Button, Field, Panel, Switch, type ThemedClassName, Toolbar, useThemeMode } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import * as Field from '@dxos/react-ui/Field';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import type * as Util from '@dxos/react-ui/Util';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -20,7 +15,7 @@ import {
   pos,
 } from '@dxos/ui-editor';
 
-export type DocumentEditorProps = Util.ThemedClassName<{
+export type DocumentEditorProps = ThemedClassName<{
   /** Initial markdown content; the component owns subsequent edits. */
   initialValue?: string;
   /** POS tagger wired into the `pos` decoration extension; omit to disable decorations. */
@@ -37,7 +32,7 @@ export type DocumentEditorProps = Util.ThemedClassName<{
  * always receive the latest edits; variants select the pipeline via the parent's `onRun`.
  */
 export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onRun }: DocumentEditorProps) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const [text, setText] = useState(initialValue);
   const [underline, setUnderline] = useState(false);
   const extensions = useMemo(
@@ -54,18 +49,18 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {parse && (
             <Field.Root>
               <div className='flex items-center gap-2'>
-                <Field.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
-                <Field.Label classNames='text-sm text-description'>POS</Field.Label>
+                <Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
+                <Field.Label classNames='text-sm text-fg-muted'>POS</Field.Label>
               </div>
             </Field.Root>
           )}
           <div className='grow' />
-          <IconButton.Root
+          <Button
             icon={busy ? 'ph--spinner-gap--regular' : 'ph--play--regular'}
             iconOnly
             label='Run pipeline'
@@ -73,12 +68,12 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
             onClick={() => onRun?.(text)}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <Editor.Root>
           <Editor.View value={text} onChange={setText} extensions={extensions} />
         </Editor.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

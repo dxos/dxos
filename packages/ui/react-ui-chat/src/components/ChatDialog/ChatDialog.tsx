@@ -4,12 +4,8 @@
 
 import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useState } from 'react';
 
+import { Button, Dialog, Icon, type ThemedClassName, createContext, useControlledState } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Factor out.
@@ -34,7 +30,7 @@ type ChatDialogContextValue = {
   setSize: Dispatch<SetStateAction<Size>>;
 };
 
-const [ChatDialogContextProvider, useChatDialogContext] = Hooks.createContext<ChatDialogContextValue>('ChatDialog');
+const [ChatDialogContextProvider, useChatDialogContext] = createContext<ChatDialogContextValue>('ChatDialog');
 
 //
 // Root
@@ -57,8 +53,8 @@ const ChatDialogRoot = ({
   onEscape,
 }: ChatDialogRootProps) => {
   const [size, setSize] = useState<Size>('min-content');
-  const [open, setOpen] = Hooks.useControlledState<boolean>(openProp, onOpenChange);
-  const [expanded, setExpanded] = Hooks.useControlledState<boolean>(expandedProp, onExpandedChange);
+  const [open, setOpen] = useControlledState<boolean>(openProp, onOpenChange);
+  const [expanded, setExpanded] = useControlledState<boolean>(expandedProp, onExpandedChange);
 
   // NOTE: We set the min size to 5rem (80px), and the header and prompt bar to 40px (i.e., the rail-size) each.
   // The dialog has no vertical padding and has box-content so that when closed it collapses to the size of the header and prompt bar.
@@ -71,20 +67,21 @@ const ChatDialogRoot = ({
       size={size}
       setSize={setSize}
     >
-      <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
-        <div className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
-          <Dialog.Content
-            size='md'
-            inOverlayLayout
-            classNames={[
-              'grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content pointer-events-auto',
-            ]}
-            onEscapeKeyDown={onEscape}
-            onInteractOutside={(event) => event.preventDefault()}
-          >
-            {children}
-          </Dialog.Content>
-        </div>
+      <Dialog.Root
+        modal={false}
+        open={open}
+        onOpenChange={({ open }) => setOpen(open)}
+        onEscapeKeyDown={onEscape}
+        onInteractOutside={(event) => event.preventDefault()}
+      >
+        <Dialog.Content
+          size='md'
+          placement='end'
+          scrim={false}
+          classNames='grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content'
+        >
+          {children}
+        </Dialog.Content>
       </Dialog.Root>
     </ChatDialogContextProvider>
   );
@@ -98,7 +95,7 @@ ChatDialogRoot.displayName = 'ChatDialog.Root';
 
 const CHAT_DIALOG_HEADER_NAME = 'ChatDialog.Header';
 
-type ChatDialogHeaderProps = Util.ThemedClassName<{
+type ChatDialogHeaderProps = ThemedClassName<{
   title?: string;
 }>;
 
@@ -110,18 +107,18 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
       className={mx('grid grid-cols-[var(--dx-rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}
     >
       <Endcap>
-        <Dialog.Close>
-          <Icon.Root icon='ph--x--regular' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger>
+          <Icon icon='ph--x--regular' />
+        </Dialog.CloseTrigger>
       </Endcap>
       <Dialog.Title
-        classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
+        classNames='flex w-full justify-center text-sm text-fg-subtle select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}
       </Dialog.Title>
       <Endcap>
-        <IconButton.Root
+        <Button
           variant='ghost'
           icon='ph--caret-up--regular'
           iconOnly
@@ -142,7 +139,7 @@ ChatDialogHeader.displayName = CHAT_DIALOG_HEADER_NAME;
 
 const CHAT_DIALOG_CONTENT_NAME = 'ChatDialog.Content';
 
-type ChatDialogContentProps = Util.ThemedClassName<PropsWithChildren>;
+type ChatDialogContentProps = ThemedClassName<PropsWithChildren>;
 
 const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => {
   const { expanded, size, setSize } = useChatDialogContext(CHAT_DIALOG_CONTENT_NAME);
@@ -153,7 +150,7 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   return (
     <div
       className={mx(
-        'border-t border-b border-subdued-separator',
+        'border-t border-b border-separator-subtle',
         'transition ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
         classNames,
       )}
@@ -184,7 +181,7 @@ ChatDialogContent.displayName = CHAT_DIALOG_CONTENT_NAME;
 
 const CHAT_DIALOG_FOOTER_NAME = 'ChatDialog.Footer';
 
-type ChatDialogFooterProps = Util.ThemedClassName<PropsWithChildren>;
+type ChatDialogFooterProps = ThemedClassName<PropsWithChildren>;
 
 const ChatDialogFooter = ({ children, classNames }: ChatDialogFooterProps) => {
   return <div className={mx(classNames)}>{children}</div>;

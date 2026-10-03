@@ -4,8 +4,7 @@
 
 import React, { useEffect } from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
+import { Button, useControlledState } from '@dxos/react-ui';
 
 export type PagerProps = {
   index?: number;
@@ -16,7 +15,7 @@ export type PagerProps = {
 };
 
 export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit }: PagerProps) => {
-  const [index, setIndex] = Hooks.useControlledState(indexProp);
+  const [index, setIndex] = useControlledState(indexProp);
   useEffect(() => {
     onChange?.(index);
   }, [index]);
@@ -77,42 +76,42 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
 
   return (
     <div className='flex items-center text-neutral-500'>
-      <IconButton.Root
+      <Button
         icon='ph--caret-double-left--regular'
-        size={6}
+        iconSize='xl'
         label='Jump to first'
         iconOnly
-        noTooltip
+        showTooltip={false}
         variant='ghost'
         classNames='p-0'
         onClick={() => onChange?.(0)}
       />
-      <IconButton.Root
+      <Button
         icon='ph--caret-left--regular'
-        size={6}
+        iconSize='xl'
         label='Previous'
         iconOnly
-        noTooltip
+        showTooltip={false}
         variant='ghost'
         classNames='p-0'
         onClick={() => handleChangeIndex(-1)}
       />
-      <IconButton.Root
+      <Button
         icon='ph--caret-right--regular'
-        size={6}
+        iconSize='xl'
         label='Next'
         iconOnly
-        noTooltip
+        showTooltip={false}
         variant='ghost'
         classNames='p-0'
         onClick={() => handleChangeIndex(1)}
       />
-      <IconButton.Root
+      <Button
         icon='ph--caret-double-right--regular'
-        size={6}
+        iconSize='xl'
         label='Jump to last'
         iconOnly
-        noTooltip
+        showTooltip={false}
         variant='ghost'
         classNames='p-0'
         onClick={() => onChange?.(count - 1)}
@@ -142,12 +141,12 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
 
 export const StartButton = ({ running, onClick }: { running?: boolean; onClick?: (start: boolean) => void }) => {
   return (
-    <IconButton.Root
+    <Button
       icon={running ? 'ph--x--regular' : 'ph--play--regular'}
-      size={6}
+      iconSize='xl'
       label={running ? 'Stop' : 'Play'}
       iconOnly
-      noTooltip
+      showTooltip={false}
       variant='ghost'
       classNames='p-0'
       onClick={() => onClick?.(!running)}

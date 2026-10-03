@@ -12,11 +12,9 @@ import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
+import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Card from '@dxos/react-ui/Card';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 export const ContextModule = () => {
   const space = Hooks.useActiveSpace();
@@ -60,19 +58,19 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>
             Context Objects ({objects.length}); Artifacts ({artifacts.length})
           </Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
+      </Panel.Header>
       <Masonry.Root Tile={Tile}>
-        <Panel.Content asChild>
-          <Masonry.Content centered padding thin classNames='p-1'>
+        <Panel.Body asChild>
+          <Masonry.Content padding classNames='p-1'>
             <Masonry.Viewport items={items} getId={(item) => item.id} />
           </Masonry.Content>
-        </Panel.Content>
+        </Panel.Body>
       </Masonry.Root>
     </Panel.Root>
   );
@@ -130,7 +128,7 @@ const DebugTile = ({ data }: { data: ContextItem }) => {
   return (
     <Card.Root>
       <Card.Body>
-        <Card.Row fullWidth classNames='max-h-50'>
+        <Card.Row classNames='max-h-50'>
           <JsonHighlighter data={data} classNames='text-xs' />
         </Card.Row>
       </Card.Body>

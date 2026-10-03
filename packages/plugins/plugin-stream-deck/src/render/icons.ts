@@ -4,7 +4,7 @@
 
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { getIconRegistry } from '@dxos/react-ui';
 
 import { type IconMarkup } from './key.ts';
 
@@ -24,7 +24,7 @@ const readSymbol = (name: string): IconMarkup | undefined => {
  * themselves take the markup as an argument and stay pure.
  */
 export const resolveIcon = (name: string): IconMarkup | undefined => {
-  const registry = ThemeProvider.getIconRegistry();
+  const registry = getIconRegistry();
   if (!registry.hasIcon(name)) {
     // Registers a runtime fetch; the caller re-renders when the registry notifies.
     registry.requestIcon(name);
@@ -39,7 +39,7 @@ export const resolveIcon = (name: string): IconMarkup | undefined => {
  * fetch. Returns a map keyed by icon name; a name is absent until its symbol is available.
  */
 export const useIcons = (names: readonly string[]): Record<string, IconMarkup> => {
-  const registry = ThemeProvider.getIconRegistry();
+  const registry = getIconRegistry();
   const revision = useSyncExternalStore(
     useCallback((listener: () => void) => registry.subscribe(listener), [registry]),
     () => names.filter((name) => registry.hasIcon(name)).join(','),

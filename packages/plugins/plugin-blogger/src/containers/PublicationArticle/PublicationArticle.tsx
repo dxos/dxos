@@ -4,7 +4,7 @@
 
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -16,13 +16,10 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { AlertDialog, Panel, useTranslation } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as AlertDialog from '@dxos/react-ui/AlertDialog';
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
 
 import { PostCard } from '#components';
 import { meta } from '#meta';
@@ -47,9 +44,9 @@ export type PublicationArticleProps = AppSurface.ObjectArticleProps<Blog.Publica
  * `plugin-markdown`'s `surface.document`).
  */
 export const PublicationArticle = ({ role, attendableId, subject }: PublicationArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const [publication] = useObject(subject);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
   const [mode, setMode] = useState<ViewMode>('gallery');
@@ -86,7 +83,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   // Publisher + connection resolution for the Sync action. A publisher is contributed by a provider
   // plugin (e.g. plugin-typefully); default to the first. The `Connection` it needs is looked up by
   // its access token's `source` (the provider-neutral credential handle).
-  const publishers = AppHooks.useCapabilities(BloggerCapabilities.PublisherService);
+  const publishers = Hooks.useCapabilities(BloggerCapabilities.PublisherService);
   const publisher = publishers[0];
   const db = Obj.getDatabase(subject);
   const connections = useQuery(db, Filter.type(Connection.Connection));
@@ -202,10 +199,10 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   return (
     <>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
           <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
             <ObjectForm object={subject} type={Blog.Publication} showTags={false} />
             <div className='dx-expand'>
@@ -220,28 +217,22 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
               )}
             </div>
           </div>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
 
-      <AlertDialog.Root open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <AlertDialog.Overlay>
-          <AlertDialog.Content>
-            <AlertDialog.Body>
-              <AlertDialog.Title>{t('delete-publication-dialog.title')}</AlertDialog.Title>
-              <AlertDialog.Description>{t('delete-publication-dialog.description')}</AlertDialog.Description>
-            </AlertDialog.Body>
-            <AlertDialog.ActionBar>
-              <AlertDialog.Cancel asChild>
-                <Button.Root>{t('cancel.label')}</Button.Root>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <Button.Root variant='destructive' onClick={handleDelete}>
-                  {t('delete-publication-dialog.confirm.label')}
-                </Button.Root>
-              </AlertDialog.Action>
-            </AlertDialog.ActionBar>
-          </AlertDialog.Content>
-        </AlertDialog.Overlay>
+      <AlertDialog.Root open={confirmDeleteOpen} onOpenChange={({ open }) => setConfirmDeleteOpen(open)}>
+        <AlertDialog.Content>
+          <AlertDialog.Body>
+            <AlertDialog.Title>{t('delete-publication-dialog.title')}</AlertDialog.Title>
+            <AlertDialog.Description>{t('delete-publication-dialog.description')}</AlertDialog.Description>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <AlertDialog.Cancel>{t('cancel.label')}</AlertDialog.Cancel>
+            <AlertDialog.Action variant='destructive' onClick={handleDelete}>
+              {t('delete-publication-dialog.confirm.label')}
+            </AlertDialog.Action>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
       </AlertDialog.Root>
     </>
   );

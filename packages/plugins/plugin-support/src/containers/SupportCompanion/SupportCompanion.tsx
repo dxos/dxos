@@ -13,19 +13,14 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import { Button, Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import * as Carousel from '@dxos/react-ui/Carousel';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { useTours } from '#hooks';
 import { meta } from '#meta';
@@ -44,9 +39,9 @@ export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj
  * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
 export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const manager = PluginManagerProvider.usePluginManager();
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const schemasByModule = useAtomValue(manager.capabilities.atomByModule(AppCapabilities.Schema));
   const createEntriesByModule = useAtomValue(manager.capabilities.atomByModule(SpaceCapabilities.CreateObjectEntry));
 
@@ -93,40 +88,38 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {tours.map((tour) => (
-            <Toolbar.IconButton
+            <Button
               key={tour.id}
               icon='ph--path--regular'
-              label={ThemeProvider.toLocalizedString(tour.label, t)}
+              label={toLocalizedString(tour.label, t)}
               onClick={() => invokePromise(HelpOperation.StartTour, { tourId: tour.id, subjectId: attendableId })}
               data-testid='supportPlugin.startCompanionTour'
             />
           ))}
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='flex flex-col items-center p-3 gap-3'>
             {screenshots.length > 0 && (
               <Carousel.Root count={screenshots.length}>
-                <Carousel.Content classNames='w-full'>
-                  <Carousel.Previous />
-                  <Carousel.Viewport>
-                    {screenshots.map((src, index) => (
-                      <Carousel.Slide key={src} index={index} src={src} />
-                    ))}
-                  </Carousel.Viewport>
-                  <Carousel.Next />
-                  <Carousel.Indicators />
-                </Carousel.Content>
+                <Carousel.PrevTrigger />
+                <Carousel.ItemGroup>
+                  {screenshots.map((src, index) => (
+                    <Carousel.Item key={src} index={index} src={src} />
+                  ))}
+                </Carousel.ItemGroup>
+                <Carousel.NextTrigger />
+                <Carousel.IndicatorGroup />
               </Carousel.Root>
             )}
             <MarkdownView classNames='w-full' content={content} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

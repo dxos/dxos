@@ -6,14 +6,8 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { ConnectionState } from '@dxos/react-client/mesh';
+import { Avatar, Button, Menu, Tag, type ThemedClassName, toAvatarHue, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Menu from '@dxos/react-ui/Menu';
-import * as Tag from '@dxos/react-ui/Tag';
-import type * as Util from '@dxos/react-ui/Util';
 import { hexToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -30,8 +24,8 @@ const KIND_ICONS: Record<NonNullable<ShellDevice['kind']>, string> = {
 };
 
 export const DeviceListItem = forwardRef<
-  HTMLLIElement,
-  Util.ThemedClassName<ComponentPropsWithoutRef<'li'>> &
+  HTMLDivElement,
+  ThemedClassName<ComponentPropsWithoutRef<'div'>> &
     DeviceListItemProps &
     Partial<Pick<AgentFormProps, 'onAgentDestroy'>>
 >(
@@ -50,9 +44,9 @@ export const DeviceListItem = forwardRef<
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(translationKey);
+    const { t } = useTranslation(translationKey);
     const fallbackValue = hexToFallback(device.key);
-    const labelId = Hooks.useId('identityListItem__label');
+    const labelId = useId('identityListItem__label');
     const displayName =
       device.label ??
       (device.os || device.platform
@@ -67,24 +61,26 @@ export const DeviceListItem = forwardRef<
         data-testid={`device-list-item${isCurrent ? '-current' : ''}`}
         ref={forwardedRef}
       >
-        <Avatar.Root labelId={labelId}>
-          <Avatar.Content
-            status={
-              isCurrent && connectionState === ConnectionState.OFFLINE
-                ? 'error'
-                : device.presence === 'online'
-                  ? 'active'
-                  : 'inactive'
-            }
-            hue={fallbackValue.hue}
-            variant='square'
-            classNames='place-self-center'
-            {...(device.kind ? { icon: KIND_ICONS[device.kind] } : { fallback: fallbackValue.emoji })}
-          />
-          <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
-          {isCurrent && <Tag.Root color='primary'>{t('current-device-tag.label')}</Tag.Root>}
-          {/* TODO(wittjosiah): EDGE agents cannot current be turned off. */}
-          {/* {device.profile?.type === DeviceType.AGENT_MANAGED && (
+        <Avatar.Root
+          aria-labelledby={labelId}
+          status={
+            isCurrent && connectionState === ConnectionState.OFFLINE
+              ? 'error'
+              : device.presence === 'online'
+                ? 'active'
+                : 'inactive'
+          }
+          hue={toAvatarHue(fallbackValue.hue)}
+          variant='square'
+          classNames='place-self-center'
+          {...(device.kind ? { icon: KIND_ICONS[device.kind] } : { fallback: fallbackValue.emoji })}
+        />
+        <span id={labelId} className='flex-1 text-sm truncate'>
+          {displayName}
+        </span>
+        {isCurrent && <Tag color='primary'>{t('current-device-tag.label')}</Tag>}
+        {/* TODO(wittjosiah): EDGE agents cannot current be turned off. */}
+        {/* {device.profile?.type === DeviceType.AGENT_MANAGED && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <Button
@@ -104,47 +100,58 @@ export const DeviceListItem = forwardRef<
               </Tooltip.Portal>
             </Tooltip.Root>
           )} */}
-          {isCurrent && (onClickJoinExisting || onClickRecover || onClickReset) && (
-            <Menu.Root>
-              <Menu.Trigger asChild>
-                <Button.Root
-                  variant='ghost'
-                  classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
-                  data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
-                >
-                  <span className='sr-only'>{t('more-options.label')}</span>
-                  <Icon.Root icon='ph--dots-three--regular' />
-                </Button.Root>
-              </Menu.Trigger>
-              <Menu.Content>
-                <Menu.Viewport>
-                  {/* <Menu.Item disabled onClick={onClickEdit}> */}
-                  {/*  <PencilSimpleLine className={getSize(5)} /> */}
-                  {/*  {t('edit-device.label')} */}
-                  {/* </Menu.Item> */}
-                  {onClickJoinExisting && (
-                    <Menu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
-                      <Icon.Root icon='ph--share-fat--regular' />
-                      {t('choose-join-new-identity.label')}
-                    </Menu.Item>
-                  )}
-                  {onClickRecover && (
-                    <Menu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
-                      <Icon.Root icon='ph--first-aid-kit--regular' />
-                      {t('choose-recover-identity.label')}
-                    </Menu.Item>
-                  )}
-                  {onClickReset && (
-                    <Menu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                      <Icon.Root icon='ph--power--regular' />
-                      {t('reset-device.label')}
-                    </Menu.Item>
-                  )}
-                </Menu.Viewport>
-              </Menu.Content>
-            </Menu.Root>
-          )}
-        </Avatar.Root>
+        {isCurrent && (onClickJoinExisting || onClickRecover || onClickReset) && (
+          <Menu.Root>
+            <Menu.Trigger asChild>
+              <Button
+                variant='ghost'
+                icon='ph--dots-three--regular'
+                iconOnly
+                label={t('more-options.label')}
+                data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
+              />
+            </Menu.Trigger>
+            <Menu.Content>
+              {/* <Menu.Item disabled onClick={onClickEdit}> */}
+              {/*  <PencilSimpleLine className={getSize(5)} /> */}
+              {/*  {t('edit-device.label')} */}
+              {/* </Menu.Item> */}
+              {onClickJoinExisting && (
+                <Menu.Item
+                  data-testid='device-list-item-current.join-existing'
+                  onClick={onClickJoinExisting}
+                  item={{
+                    value: t('choose-join-new-identity.label'),
+                    label: t('choose-join-new-identity.label'),
+                    icon: 'ph--share-fat--regular',
+                  }}
+                />
+              )}
+              {onClickRecover && (
+                <Menu.Item
+                  data-testid='device-list-item-current.recover'
+                  onClick={onClickRecover}
+                  item={{
+                    value: t('choose-recover-identity.label'),
+                    label: t('choose-recover-identity.label'),
+                    icon: 'ph--first-aid-kit--regular',
+                  }}
+                />
+              )}
+              {onClickReset && (
+                <Menu.Item
+                  data-testid='device-list-item-current.reset'
+                  onClick={onClickReset}
+                  item={{
+                    value: t('reset-device.label'),
+                    label: t('reset-device.label'),
+                    icon: 'ph--power--regular',
+                  }}
+                />
+              )}
+            </Menu.Content>
+          </Menu.Root>
+        )}
       </Listbox.Item>
     );
   },

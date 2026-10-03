@@ -19,7 +19,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import * as Dialog from '@dxos/react-ui/Dialog';
+import { Dialog } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 
@@ -78,16 +78,14 @@ const DefaultStory = ({ mode = 'live' }: { mode?: 'draft' | 'live' }) => {
       </div>
       {space ? (
         <Dialog.Root defaultOpen>
-          <Dialog.Overlay>
-            <ObjectFormDialog
-              target={space.db}
-              typename={typename}
-              mode={mode}
-              defaults={{ name: 'Seeded' }}
-              handle={handle}
-              shouldNavigate={() => false}
-            />
-          </Dialog.Overlay>
+          <ObjectFormDialog
+            target={space.db}
+            typename={typename}
+            mode={mode}
+            defaults={{ name: 'Seeded' }}
+            handle={handle}
+            shouldNavigate={() => false}
+          />
         </Dialog.Root>
       ) : (
         <Loading />

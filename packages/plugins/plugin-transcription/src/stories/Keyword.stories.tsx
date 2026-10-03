@@ -17,10 +17,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { useSpeechRecognition } from '@dxos/react-ui-transcription';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Mic } from '#components';
 import { createStoryDecorators } from '#testing';
@@ -53,25 +52,23 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Mic docId={DOC_ID} />
         </Toolbar.Root>
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content>
-        <Listbox.Root value={matched}>
-          <Listbox.Viewport thin padding>
-            <Listbox.Content aria-label='Keywords'>
-              {keywords.map((keyword) => (
-                <Listbox.Item key={keyword} id={keyword}>
-                  <Listbox.ItemLabel>{keyword}</Listbox.ItemLabel>
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
-          </Listbox.Viewport>
+      <Panel.Body>
+        <Listbox.Root value={matched} items={keywords.map((keyword) => ({ value: keyword, label: keyword }))}>
+          <Listbox.Content aria-label='Keywords'>
+            {keywords.map((keyword) => (
+              <Listbox.Item key={keyword} id={keyword}>
+                <Listbox.ItemText>{keyword}</Listbox.ItemText>
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
         </Listbox.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

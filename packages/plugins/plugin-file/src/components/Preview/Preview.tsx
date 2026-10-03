@@ -5,13 +5,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useHotkeys } from '@dxos/react-focus';
+import {
+  Button,
+  Field,
+  Icon,
+  Input,
+  MediaPlayer,
+  Toolbar,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as MediaPlayer from '@dxos/react-ui/MediaPlayer';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -70,8 +75,8 @@ PreviewRoot.displayName = 'Preview.Root';
  * `composable` rather than a plain component: this is placed in `Panel.Toolbar asChild`, which
  * forwards its own className and ref through Slot, and a plain component would silently drop both.
  */
-const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  const { t } = useTranslation(meta.profile.key);
   const { name, url, paged, attendableId } = usePreview('Preview.Toolbar');
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
@@ -106,17 +111,17 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
   );
 
   return (
-    <Toolbar.Root {...Util.composableProps(props, { classNames: '@container' })} ref={forwardedRef}>
+    <Toolbar.Root {...composableProps(props, { classNames: '@container' })} ref={forwardedRef}>
       {children}
       {paged && (
         <>
-          <Toolbar.IconButton
+          <Button
             iconOnly
             icon={paged.fit === 'width' ? 'ph--arrows-out-line-horizontal--regular' : 'ph--corners-out--regular'}
             label={paged.fit === 'width' ? t('fit-page.label') : t('fit-width.label')}
             onClick={() => paged.setFit(paged.fit === 'width' ? 'page' : 'width')}
           />
-          <Toolbar.IconButton
+          <Button
             compact
             iconOnly
             icon='ph--caret-line-left--regular'
@@ -125,7 +130,7 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
             disabled={paged.currentPage <= 1}
             onClick={() => paged.api?.goToPage(1, 'instant')}
           />
-          <Toolbar.IconButton
+          <Button
             iconOnly
             icon='ph--caret-left--regular'
             label={t('previous-page.label')}
@@ -144,14 +149,14 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
               {t('page-of.label', { page: paged.currentPage, count: paged.pageCount })}
             </span>
           </Toolbar.Text>
-          <Toolbar.IconButton
+          <Button
             iconOnly
             icon='ph--caret-right--regular'
             label={t('next-page.label')}
             disabled={paged.currentPage >= paged.pageCount}
             onClick={() => paged.api?.stepPage(1)}
           />
-          <Toolbar.IconButton
+          <Button
             compact
             iconOnly
             icon='ph--caret-line-right--regular'
@@ -162,7 +167,7 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
           />
           <Toolbar.Separator />
           <Field.Root>
-            <Field.Input
+            <Input
               ref={searchRef}
               placeholder={t('search.placeholder')}
               value={query}
@@ -170,7 +175,7 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
               spellCheck={false}
               autoCorrect='off'
               autoCapitalize='off'
-              end={<Icon.Root icon='ph--magnifying-glass--regular' size={4} />}
+              end={<Icon icon='ph--magnifying-glass--regular' size='md' />}
               onChange={(event) => handleSearch(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
@@ -186,14 +191,14 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
                   ? t('no-matches.label')
                   : t('match-of.label', { match: paged.activeMatch, count: paged.matches })}
               </Toolbar.Text>
-              <Toolbar.IconButton
+              <Button
                 iconOnly
                 icon='ph--caret-up--regular'
                 label={t('previous-match.label')}
                 disabled={paged.matches === 0}
                 onClick={() => paged.api?.goToMatch(paged.activeMatch - 1)}
               />
-              <Toolbar.IconButton
+              <Button
                 iconOnly
                 icon='ph--caret-down--regular'
                 label={t('next-match.label')}
@@ -208,7 +213,7 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
       {/* An anchor rather than a button: `download` is what makes the browser save instead of
           navigate, and it works for the `data:`/`blob:`/presigned URLs every backend produces. */}
       <Toolbar.Link href={url} download={name ?? true} aria-label={t('download.label')} title={t('download.label')}>
-        <Icon.Root icon='ph--download-simple--regular' size={5} />
+        <Icon icon='ph--download-simple--regular' size='lg' />
       </Toolbar.Link>
     </Toolbar.Root>
   );
@@ -227,13 +232,13 @@ PreviewToolbar.displayName = 'Preview.Toolbar';
  *
  * `composable` for the same reason as the toolbar — it is placed in `Panel.Content asChild`.
  */
-const PreviewContent = Util.composable<HTMLDivElement>((props, forwardedRef) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+const PreviewContent = composable<HTMLDivElement>((props, forwardedRef) => {
+  const { t } = useTranslation(meta.profile.key);
   const { type, url, name, size, setPaged } = usePreview('Preview.Content');
   const apiRef = useRef<PdfApi>(null);
   const [fit, setFit] = useState<PdfFit>('width');
   const [state, setState] = useState<PdfCanvasState>({ pageCount: 0, currentPage: 1, matches: 0, activeMatch: 0 });
-  const { className } = Util.composableProps(props);
+  const { className } = composableProps(props);
   const paged = type === 'application/pdf';
 
   // Publishes the paged controls up to the toolbar, and withdraws them when the content is no
@@ -262,8 +267,8 @@ const PreviewContent = Util.composable<HTMLDivElement>((props, forwardedRef) => 
 
   if (type.startsWith('image/') || type.startsWith('video/') || type.startsWith('audio/')) {
     return (
-      <div {...Util.composableProps(props, { classNames: 'grid dx-fill min-h-0' })} ref={forwardedRef}>
-        <MediaPlayer.Root
+      <div {...composableProps(props, { classNames: 'grid dx-fill min-h-0' })} ref={forwardedRef}>
+        <MediaPlayer
           classNames='dx-fill'
           src={url}
           // `kind` is set explicitly for audio and video because the URL is a `data:`/`blob:`/
@@ -277,14 +282,14 @@ const PreviewContent = Util.composable<HTMLDivElement>((props, forwardedRef) => 
   }
 
   return (
-    <div {...Util.composableProps(props, { classNames: 'grid place-items-center dx-fill p-8' })} ref={forwardedRef}>
+    <div {...composableProps(props, { classNames: 'grid place-items-center dx-fill p-8' })} ref={forwardedRef}>
       <div className='flex flex-col items-center gap-2 text-center'>
-        <Icon.Root icon='ph--file--regular' size={8} classNames='text-subdued' />
+        <Icon icon='ph--file--regular' size='xl' tone='subtle' />
         {name && <span className='text-sm'>{name}</span>}
-        <span className='text-xs text-subdued'>
+        <span className='text-xs text-fg-subtle'>
           {size === undefined ? type : t('file-details.label', { type, size: formatBytes(size) })}
         </span>
-        <span className='text-xs text-subdued'>{t('no-preview.message')}</span>
+        <span className='text-xs text-fg-subtle'>{t('no-preview.message')}</span>
       </div>
     </div>
   );

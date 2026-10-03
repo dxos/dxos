@@ -8,14 +8,10 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
+import { Button, Flex, Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, ObjectForm, omitId, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { getStyles } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
@@ -83,7 +79,7 @@ export const CreateObjectPanel = ({
   onCreateObject,
   onCancel,
 }: CreateObjectPanelProps) => {
-  const initialFormValues = Hooks.useDefaultValue(initialFormValuesProp, () => ({}));
+  const initialFormValues = useDefaultValue(initialFormValuesProp, () => ({}));
   const metadata = typename && resolve?.(typename);
 
   const sortedOptions = useMemo(() => [...options].sort((a, b) => a.label.localeCompare(b.label)), [options]);
@@ -188,7 +184,7 @@ type CreateObjectFormContentProps = Pick<CreateObjectPanelProps, 'onCancel'>;
 
 /** The draft form's body: its fields, then Cancel and Create; Enter in a single-line field creates. */
 const CreateObjectFormContent = ({ onCancel }: CreateObjectFormContentProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const {
     form: { canSave, onSave },
   } = useFormContext(CreateObjectFormContent.displayName);
@@ -203,16 +199,16 @@ const CreateObjectFormContent = ({ onCancel }: CreateObjectFormContentProps) => 
   return (
     <Form.Content ref={contentRef}>
       <Form.Fields />
-      <Flex.Root gap='sm' justify='end' classNames='pt-form-padding'>
+      <Flex gap='sm' justify='end' classNames='pt-form-padding'>
         {onCancel && (
-          <Button.Root onClick={onCancel} data-testid='cancel-button'>
+          <Button onClick={onCancel} data-testid='cancel-button'>
             {t('object-form-cancel.label')}
-          </Button.Root>
+          </Button>
         )}
-        <Button.Root variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
+        <Button variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
           {t('object-form-confirm.label')}
-        </Button.Root>
-      </Flex.Root>
+        </Button>
+      </Flex>
     </Form.Content>
   );
 };
@@ -224,7 +220,7 @@ type SelectTypeProps = Pick<CreateObjectPanelProps, 'options'> & {
 };
 
 const SelectType = ({ options, onChange }: SelectTypeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   const { results, handleSearch } = useSearchListResults({
     items: options,
@@ -234,7 +230,8 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
@@ -251,15 +248,15 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             // Keyed by typename, since the label is localized and, for database types, user-authored.
             data-testid={`create-object-form.type.${option.id}`}
           >
-            <Icon.Root
+            <Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}
-              size={8}
+              size='xl'
               classNames={getIconHueStyles(option.iconHue)}
             />
             <div className='flex flex-col min-w-0 grow gap-0.5'>
               <span className='truncate'>{option.label}</span>
               {(option.plugin || option.description) && (
-                <span className='truncate text-description text-xs'>
+                <span className='truncate text-fg-muted text-xs'>
                   {option.plugin ? t('plugin-subtitle.label', { plugin: option.plugin }) : option.description}
                 </span>
               )}
@@ -276,13 +273,13 @@ type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces'> & {
 };
 
 const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   const sortedSpaces = useMemo(
     () =>
       [...spaces].sort((a, b) => {
-        const labelA = ThemeProvider.toLocalizedString(getSpaceDisplayName(a), t);
-        const labelB = ThemeProvider.toLocalizedString(getSpaceDisplayName(b), t);
+        const labelA = toLocalizedString(getSpaceDisplayName(a), t);
+        const labelB = toLocalizedString(getSpaceDisplayName(b), t);
         return labelA.localeCompare(labelB);
       }),
     [spaces, t],
@@ -290,12 +287,13 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items: sortedSpaces,
-    extract: (space) => ThemeProvider.toLocalizedString(getSpaceDisplayName(space), t),
+    extract: (space) => toLocalizedString(getSpaceDisplayName(space), t),
   });
 
   // TODO(burdon): Change to Masonry.
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
@@ -307,7 +305,7 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
           <SearchList.Item
             key={space.id}
             value={space.id}
-            label={ThemeProvider.toLocalizedString(getSpaceDisplayName(space), t)}
+            label={toLocalizedString(getSpaceDisplayName(space), t)}
             onSelect={() => onChange?.(space.db)}
           />
         ))}

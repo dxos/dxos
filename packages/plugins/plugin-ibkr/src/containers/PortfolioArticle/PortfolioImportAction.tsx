@@ -4,12 +4,11 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
+import { Button, useTranslation } from '@dxos/react-ui';
 
 import { Ibkr, IbkrOperation } from '#types';
 
@@ -28,8 +27,8 @@ export type PortfolioImportActionProps = {
  * {@link IconButton}.
  */
 export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const inputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
@@ -60,7 +59,7 @@ export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) =
 
   return (
     <>
-      <IconButton.Root
+      <Button
         disabled={importing}
         variant='ghost'
         iconClassNames={importing ? 'animate-spin' : undefined}

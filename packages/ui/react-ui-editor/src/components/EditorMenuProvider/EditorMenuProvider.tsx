@@ -16,13 +16,20 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useControllableState } from '@dxos/react-hooks';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Popover from '@dxos/react-ui/Popover';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/ui-types';
+import {
+  DX_ANCHOR_ACTIVATE,
+  type DxAnchorActivate,
+  Field,
+  Icon,
+  Input,
+  Popover,
+  Separator,
+  Typography,
+  toLocalizedString,
+  useDynamicRef,
+  useTranslation,
+  virtualAnchor,
+} from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -72,11 +79,11 @@ export const EditorMenuProvider = ({
   onQueryChange,
   onNavigate,
 }: EditorMenuProviderProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Hold the latest `getView` so callbacks/effects always read the current view without re-subscribing.
-  const getViewRef = Hooks.useDynamicRef(getView);
+  const getViewRef = useDynamicRef(getView);
   const [open, setOpen] = useControllableState({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -177,55 +184,48 @@ export const EditorMenuProvider = ({
   );
 
   return (
-    <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
-      <Popover.VirtualTrigger virtualRef={triggerRef} />
-
+    <Popover.Root
+      open={open}
+      onOpenChange={({ open }) => setOpen(open)}
+      positioning={{ ...virtualAnchor(triggerRef), placement: 'bottom-start' }}
+      // In search mode the query is typed into the popover's own input, so it must take focus.
+      autoFocus={!!search}
+      // Focus stays in the editor; the menu machine still routes Escape here.
+      onEscapeKeyDown={() => {
+        const currentView = getViewRef.current?.();
+        if (currentView) {
+          onCancel?.({ view: currentView });
+        }
+      }}
+    >
       {/* Menu. */}
-      <Popover.Portal>
-        <Popover.Content
-          align='start'
-          classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']}
-          style={{
-            // The search input shares the box, so `numItems` keeps meaning "items visible".
-            maxBlockSize: 36 * numItems + 10 + (search ? 36 : 0),
-          }}
-          // Focus stays in the editor; the menu machine still routes Escape here.
-          onEscapeKeyDown={() => {
-            const currentView = getViewRef.current?.();
-            if (currentView) {
-              onCancel?.({ view: currentView });
-            }
-          }}
-          // In search mode the query is typed into the popover's own input, so it must take focus.
-          onOpenAutoFocus={search ? undefined : (event) => event.preventDefault()}
-        >
-          {search && (
-            <Field.Root>
-              <Field.Input
-                ref={searchInputRef}
-                density='sm'
-                variant='subdued'
-                classNames='shrink-0 mb-1'
-                value={query}
-                placeholder={searchPlaceholder}
-                // Placeholder text is not a persistent accessible name, and it is optional — fall
-                // back to the generic label so the input is never anonymous.
-                aria-label={searchPlaceholder ?? t('search.label')}
-                onChange={(event) => onQueryChange?.(event.target.value)}
-                onKeyDown={handleSearchKeyDown}
-              />
-            </Field.Root>
-          )}
-          <Popover.Viewport asChild classNames='dx-expand'>
-            <ScrollArea.Root thin>
-              <ScrollArea.Viewport>
-                <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content
+        classNames={!search && !menuGroups.length ? 'hidden' : undefined}
+        style={{
+          // The search input shares the box, so `numItems` keeps meaning "items visible".
+          maxBlockSize: 36 * numItems + 10 + (search ? 36 : 0),
+        }}
+      >
+        {search && (
+          <Field.Root>
+            <Input
+              ref={searchInputRef}
+              variant='subdued'
+              classNames='shrink-0 mb-1'
+              value={query}
+              placeholder={searchPlaceholder}
+              // Placeholder text is not a persistent accessible name, and it is optional — fall
+              // back to the generic label so the input is never anonymous.
+              aria-label={searchPlaceholder ?? t('search.label')}
+              onChange={(event) => onQueryChange?.(event.target.value)}
+              onKeyDown={handleSearchKeyDown}
+            />
+          </Field.Root>
+        )}
+        <Popover.Body>
+          <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
+        </Popover.Body>
+      </Popover.Content>
 
       {/* Content */}
       <div className='contents' ref={setRoot}>
@@ -244,13 +244,12 @@ type MenuProps = {
 } & Pick<MenuGroupProps, 'currentItem' | 'onSelect'>;
 
 const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
-  const { tx } = ThemeProvider.useThemeContext();
   return (
     <ul>
       {groups.map((group, index) => (
         <Fragment key={group.id}>
           <MenuGroup group={group} currentItem={currentItem} onSelect={onSelect} />
-          {index < groups.length - 1 && <div className={tx('menu.separator', {})} />}
+          {index < groups.length - 1 && <Separator />}
         </Fragment>
       ))}
     </ul>
@@ -267,15 +266,14 @@ type MenuGroupProps = {
 } & Pick<MenuItemProps, 'onSelect'>;
 
 const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
-  const { tx } = ThemeProvider.useThemeContext();
-  const { t } = Hooks.useTranslation();
+  const { t } = useTranslation();
 
   return (
     <>
       {group.label && (
-        <div className={tx('menu.groupLabel', {})}>
-          <span>{ThemeProvider.toLocalizedString(group.label, t)}</span>
-        </div>
+        <Typography tone='muted' classNames='px-2'>
+          {toLocalizedString(group.label, t)}
+        </Typography>
       )}
 
       {group.items.map((item) => (
@@ -296,8 +294,7 @@ type MenuItemProps = {
 };
 
 const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
-  const { tx } = ThemeProvider.useThemeContext();
-  const { t } = Hooks.useTranslation();
+  const { t } = useTranslation();
 
   const listRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
@@ -311,9 +308,10 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   const handleSelect = useCallback(() => onSelect?.(item), [item, onSelect]);
 
   return (
-    <li ref={listRef} className={tx('menu.item', {}, [current && 'bg-hover-surface'])} onClick={handleSelect}>
-      {item.icon && <Icon.Root icon={item.icon} />}
-      <span className='grow truncate'>{ThemeProvider.toLocalizedString(item.label, t)}</span>
+    // Menu row metrics without a Menu machine: the popover keeps focus in the editor, so `current` is the highlight.
+    <li ref={listRef} className='dx-menu-item' data-highlighted={current ? '' : undefined} onClick={handleSelect}>
+      {item.icon && <Icon icon={item.icon} />}
+      <span className='dx-menu-item-text'>{toLocalizedString(item.label, t)}</span>
     </li>
   );
 };

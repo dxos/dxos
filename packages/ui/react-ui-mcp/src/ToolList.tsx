@@ -11,10 +11,18 @@
 // consumers can layer Tailwind classes on top of the theme defaults without forking the
 // component.
 
-import React, { type ComponentProps, Fragment, type PropsWithChildren, type ReactNode } from 'react';
+import React, {
+  type ComponentProps,
+  Fragment,
+  type PropsWithChildren,
+  type ReactNode,
+  createContext,
+  useContext,
+  useMemo,
+} from 'react';
 
+import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -39,26 +47,34 @@ export type Tool = {
 //
 
 export type ToolListRootProps = PropsWithChildren<{
+  /** The tools to list; order is preserved as-is. */
+  tools: readonly Tool[];
   /** Selected tool id; null when no row is highlighted. */
   selectedId?: string | null;
   /** Called when the user picks a tool. */
   onSelect?: (id: string) => void;
 }>;
 
-const ToolListRoot = ({ selectedId, onSelect, children }: ToolListRootProps): ReactNode => (
-  <Listbox.Root value={selectedId ?? undefined} onValueChange={onSelect}>
-    {children}
-  </Listbox.Root>
-);
+// The listbox takes its options at the Root; Content renders rows from the same tools.
+const ToolsContext = createContext<readonly Tool[]>([]);
+
+const ToolListRoot = ({ tools, selectedId, onSelect, children }: ToolListRootProps): ReactNode => {
+  const items = useMemo(() => tools.map((tool) => ({ value: tool.id, label: tool.title })), [tools]);
+  return (
+    <ToolsContext.Provider value={tools}>
+      <Listbox.Root items={items} value={selectedId ?? undefined} onValueChange={onSelect}>
+        {children}
+      </Listbox.Root>
+    </ToolsContext.Provider>
+  );
+};
 ToolListRoot.displayName = 'ToolList.Root';
 
 //
 // Content — the `role=listbox` container that renders rows from `tools`.
 //
 
-export type ToolListContentProps = Util.ThemedClassName<{
-  /** The tools to render. Order is preserved as-is. */
-  tools: readonly Tool[];
+export type ToolListContentProps = ThemedClassName<{
   /**
    * Optional render override for each row. Default renders title +
    * description via `<ToolList.Item>`. Override when you want extra row
@@ -69,11 +85,12 @@ export type ToolListContentProps = Util.ThemedClassName<{
 }>;
 
 // `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref
-// land on the listbox's `<ul>` (which `Listbox.Content` renders via `@dxos/react-list`).
-const ToolListContent = Util.composable<HTMLUListElement, ToolListContentProps>(
-  ({ tools, renderItem, ...props }, forwardedRef) => (
+// land on the listbox's content element.
+const ToolListContent = composable<HTMLDivElement, ToolListContentProps>(({ renderItem, ...props }, forwardedRef) => {
+  const tools = useContext(ToolsContext);
+  return (
     <Listbox.Content
-      {...Util.composableProps<HTMLUListElement>(props, { classNames: 'flex flex-col gap-px' })}
+      {...composableProps<HTMLDivElement>(props, { classNames: 'flex flex-col gap-px' })}
       aria-label='Tools'
       ref={forwardedRef}
     >
@@ -81,15 +98,15 @@ const ToolListContent = Util.composable<HTMLUListElement, ToolListContentProps>(
         renderItem ? <Fragment key={tool.id}>{renderItem(tool)}</Fragment> : <ToolListItem key={tool.id} tool={tool} />,
       )}
     </Listbox.Content>
-  ),
-);
+  );
+});
 ToolListContent.displayName = 'ToolList.Content';
 
 //
 // Item
 //
 
-export type ToolListItemProps = Util.ThemedClassName<
+export type ToolListItemProps = ThemedClassName<
   PropsWithChildren<{
     tool: Tool;
   }>
@@ -122,7 +139,7 @@ ToolListItem.displayName = 'ToolList.Item';
 // ItemTitle
 //
 
-export type ToolListItemTitleProps = Util.ThemedClassName<ComponentProps<'span'>>;
+export type ToolListItemTitleProps = ThemedClassName<ComponentProps<'span'>>;
 
 const ToolListItemTitle = ({ classNames, ...props }: ToolListItemTitleProps): ReactNode => (
   <span className={mx('truncate text-sm font-medium', classNames)} {...props} />
@@ -133,14 +150,14 @@ ToolListItemTitle.displayName = 'ToolList.ItemTitle';
 // ItemDescription
 //
 
-export type ToolListItemDescriptionProps = Util.ThemedClassName<ComponentProps<'span'>>;
+export type ToolListItemDescriptionProps = ThemedClassName<ComponentProps<'span'>>;
 
 const ToolListItemDescription = ({ classNames, ...props }: ToolListItemDescriptionProps): ReactNode => (
   <span
     className={mx(
       // Subtler text + clamp to two lines so a long description doesn't
       // dominate the row.
-      'line-clamp-2 text-xs text-subdued',
+      'line-clamp-2 text-xs text-fg-subtle',
       classNames,
     )}
     {...props}

@@ -223,7 +223,6 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@lezer/common": "catalog:",

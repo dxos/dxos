@@ -4,14 +4,14 @@
 
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { useEdgeServiceEndpoint } from '@dxos/react-client';
+import { useTranslation } from '@dxos/react-ui';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
 import { isNativeAudioInput, useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
@@ -26,10 +26,10 @@ const RECORDER_INTERVAL_MS = 200;
  * matches the given docId and the session is recording.
  */
 export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditorController | null>): void => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   // Voice input is optional: tolerate the transcription plugin being absent (no session ⇒ inactive).
-  const [session, setSession] = AppHooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
-  const [settings] = AppHooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
+  const [session, setSession] = Hooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  const [settings] = Hooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
   const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
 
   const active = !!session?.recording && session.id === docId;

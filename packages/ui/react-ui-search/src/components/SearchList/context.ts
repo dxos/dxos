@@ -1,4 +1,4 @@
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { createContext } from '@dxos/react-ui';
 //
 // Copyright 2025 DXOS.org
 //
@@ -37,6 +37,6 @@ export type SearchListInputContextValue = {
 };
 
 export const [SearchListItemContextProvider, useSearchListItemContext] =
-  Hooks.createContext<SearchListItemContextValue>('SearchListItem');
+  createContext<SearchListItemContextValue>('SearchListItem');
 export const [SearchListInputContextProvider, useSearchListInputContext] =
-  Hooks.createContext<SearchListInputContextValue>('SearchListInput');
+  createContext<SearchListInputContextValue>('SearchListInput');

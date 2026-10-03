@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Util from '@dxos/react-ui/Util';
+import { useTranslation } from '@dxos/react-ui';
+import { composable } from '@dxos/react-ui';
 
 import { Initialize } from '#components';
 import { meta } from '#meta';
@@ -15,9 +15,9 @@ export type InitializeMailboxProps = {
   mailbox: Mailbox.Mailbox;
 };
 
-export const InitializeMailbox = Util.composable<HTMLDivElement, InitializeMailboxProps>(
+export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxProps>(
   ({ mailbox, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = useTranslation(meta.profile.key);
     return (
       <Initialize
         {...props}

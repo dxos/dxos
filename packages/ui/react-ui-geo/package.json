@@ -52,7 +52,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@types/topojson-specification": "catalog:",
     "d3": "catalog:",
     "geojson": "catalog:",

@@ -4,16 +4,13 @@
 
 import React from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import type * as Util from '@dxos/react-ui/Util';
+import { Button, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type Word } from '#types';
 
-export type FlashcardProps = Util.ThemedClassName<{
+export type FlashcardProps = ThemedClassName<{
   word: Word.Word;
   /** The answer side is showing. */
   revealed: boolean;
@@ -26,38 +23,38 @@ export type FlashcardProps = Util.ThemedClassName<{
  * Self-grading rather than typed input — recall, not spelling, is what the schedule measures.
  */
 export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: FlashcardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <div className={mx('flex flex-col items-center justify-center gap-6 p-8', classNames)}>
       <div className='flex flex-col items-center gap-2 text-center'>
         <span className='text-3xl'>{word.term}</span>
-        {word.reading && <span className='text-description'>{word.reading}</span>}
+        {word.reading && <span className='text-fg-muted'>{word.reading}</span>}
       </div>
 
       {revealed ? (
         <div className='flex flex-col items-center gap-2 text-center'>
           <span className='text-2xl text-accent-text'>{word.translation}</span>
-          {word.partOfSpeech && <span className='text-sm text-description'>{word.partOfSpeech}</span>}
-          {word.examples?.[0] && <span className='text-sm text-description italic'>{word.examples[0]}</span>}
+          {word.partOfSpeech && <span className='text-sm text-fg-muted'>{word.partOfSpeech}</span>}
+          {word.examples?.[0] && <span className='text-sm text-fg-muted italic'>{word.examples[0]}</span>}
         </div>
       ) : (
-        <Button.Root onClick={onReveal} data-testid='lingo.flashcard.reveal'>
-          <Icon.Root icon='ph--eye--regular' size={4} />
+        <Button onClick={onReveal} data-testid='lingo.flashcard.reveal'>
+          <Icon icon='ph--eye--regular' size='md' />
           <span className='pl-2'>{t('reveal.button')}</span>
-        </Button.Root>
+        </Button>
       )}
 
       {revealed && (
         <div className='flex gap-2'>
-          <Button.Root onClick={() => onAnswer(false)} data-testid='lingo.flashcard.incorrect'>
-            <Icon.Root icon='ph--x--regular' size={4} />
+          <Button onClick={() => onAnswer(false)} data-testid='lingo.flashcard.incorrect'>
+            <Icon icon='ph--x--regular' size='md' />
             <span className='pl-2'>{t('incorrect.button')}</span>
-          </Button.Root>
-          <Button.Root variant='primary' onClick={() => onAnswer(true)} data-testid='lingo.flashcard.correct'>
-            <Icon.Root icon='ph--check--regular' size={4} />
+          </Button>
+          <Button variant='primary' onClick={() => onAnswer(true)} data-testid='lingo.flashcard.correct'>
+            <Icon icon='ph--check--regular' size='md' />
             <span className='pl-2'>{t('correct.button')}</span>
-          </Button.Root>
+          </Button>
         </div>
       )}
     </div>

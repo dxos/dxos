@@ -10,10 +10,9 @@ import {
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef } from 'react';
 
+import { type Axis, type ThemedClassName } from '@dxos/react-ui';
 import { type DndLocation, type DndPlaceholderData, getSourceData } from '@dxos/react-ui-dnd';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
-import { type Axis } from '@dxos/ui-types';
 
 import { useMosaicContainerContext } from './MosaicContainerContext.ts';
 import { useMosaicTileContext } from './MosaicTileContext.ts';
@@ -35,7 +34,7 @@ const MOSAIC_PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 // a specific gap unambiguously without relying on layout-dependent indices.
 const MOSAIC_PLACEHOLDER_LOCATION_ATTR = 'mosaic-placeholder-location';
 
-type MosaicPlaceholderProps<Location = DndLocation> = Util.ThemedClassName<
+type MosaicPlaceholderProps<Location = DndLocation> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
     orientation?: Axis;

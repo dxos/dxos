@@ -7,10 +7,7 @@ import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 're
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Util from '@dxos/react-ui/Util';
+import { ScrollArea, SystemButton, composable, composableProps, useThemeMode } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis } from '@dxos/ui-types';
 
@@ -62,7 +59,7 @@ export type SyntaxHighlighterProps = Pick<
  * https://github.com/react-syntax-highlighter/react-syntax-highlighter
  * https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/prism.html
  */
-export const SyntaxHighlighter = Util.composable<HTMLDivElement, SyntaxHighlighterProps>(
+export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterProps>(
   ({ scroll = 'all', copyButton, classNames, className, role, style, ...props }, forwardedRef) => {
     if (scroll === false) {
       return (
@@ -83,7 +80,6 @@ export const SyntaxHighlighter = Util.composable<HTMLDivElement, SyntaxHighlight
         style={style}
         classNames={[className, classNames, copyButton && 'relative group']}
         orientation={scroll}
-        thin
         ref={forwardedRef}
       >
         <ScrollArea.Viewport>
@@ -102,18 +98,18 @@ const sourceOf = (children: ReactNode, fallback = zeroWidthSpace): string =>
 
 const CopyOverlay = ({ source }: { source: string }) => (
   <div className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'>
-    <SystemIconButton.Clipboard
+    <SystemButton.Clipboard
       iconOnly
       value={source}
       variant='ghost'
-      size={4}
+      iconSize='md'
       classNames='pointer-events-auto aspect-square rounded-sm'
     />
   </div>
 );
 
 /** The non-scrolling leaf: all scrolling is deferred to an enclosing viewport. */
-const SyntaxHighlighterLeaf = Util.composable<HTMLDivElement, Omit<SyntaxHighlighterProps, 'scroll'>>(
+const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterProps, 'scroll'>>(
   (
     {
       classNames,
@@ -129,7 +125,7 @@ const SyntaxHighlighterLeaf = Util.composable<HTMLDivElement, Omit<SyntaxHighlig
     },
     forwardedRef,
   ) => {
-    const { themeMode } = ThemeProvider.useThemeContext();
+    const themeMode = useThemeMode();
     const source = sourceOf(children, fallback);
     const language = source.length > MAX_HIGHLIGHTED_LENGTH ? 'text' : languageProp;
 
@@ -138,7 +134,7 @@ const SyntaxHighlighterLeaf = Util.composable<HTMLDivElement, Omit<SyntaxHighlig
 
     return (
       <div
-        {...Util.composableProps(
+        {...composableProps(
           { classNames, className, role, style },
           {
             role: 'none',

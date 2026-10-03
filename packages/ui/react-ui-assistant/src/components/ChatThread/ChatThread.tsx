@@ -12,6 +12,7 @@ import React, {
   useState,
 } from 'react';
 
+import { Button, createContext, useTranslation } from '@dxos/react-ui';
 import {
   type FeedModel,
   MessageList,
@@ -19,8 +20,6 @@ import {
   type MessageRange,
   useMessageList,
 } from '@dxos/react-ui-feed';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry.tsx';
@@ -40,7 +39,7 @@ type ChatThreadContextValue = {
   onEvent?: (event: ChatThreadEvent) => void;
 };
 
-const [ChatThreadProvider, useChatThreadContext] = Hooks.createContext<ChatThreadContextValue>(CHAT_THREAD_NAME);
+const [ChatThreadProvider, useChatThreadContext] = createContext<ChatThreadContextValue>(CHAT_THREAD_NAME);
 
 //
 // Controller
@@ -210,18 +209,18 @@ const CHAT_THREAD_SCROLL_TO_BOTTOM_NAME = 'ChatThread.ScrollToBottom';
  * invisible button out of the focus order and off the accessibility tree.
  */
 const ScrollToBottom = () => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const { atEnd, following, scrollToBottom } = useMessageList(CHAT_THREAD_SCROLL_TO_BOTTOM_NAME);
   // Hidden while the list follows the tail itself: a streaming turn outruns the glide a frame at a
   // time, and `atEnd` alone would blink the button through every response.
   const hidden = atEnd || following;
 
   return (
-    <IconButton.Root
+    <Button
       variant='primary'
       icon='ph--arrow-line-down--regular'
       iconOnly
-      density='sm'
+      size='sm'
       label={t('scroll-to-bottom.label')}
       disabled={hidden}
       aria-hidden={hidden}

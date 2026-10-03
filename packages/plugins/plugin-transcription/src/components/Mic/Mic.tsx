@@ -4,7 +4,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import { Group, SystemButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 import {
   type AudioInputDevice,
@@ -13,8 +14,6 @@ import {
   listAudioInputs,
   setPreferredAudioInput,
 } from '@dxos/react-ui-transcription';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 
 import { meta } from '#meta';
 import { Settings, TranscriptionCapabilities } from '#types';
@@ -25,15 +24,15 @@ export type MicProps = {
 };
 
 /**
- * Connects the {@link SystemIconButton.Mic} and {@link MicSettings} to the recording session and settings
+ * Connects the {@link SystemButton.Mic} and {@link MicSettings} to the recording session and settings
  * capabilities, and enumerates available audio inputs. Mounted from the toolbar's custom action, so
  * capability hooks resolve — every surface that offers dictation (a document, a chat prompt) gets
  * this same control that way, rather than a copy of it.
  */
 export const Mic = ({ docId }: MicProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const [session, setSession] = AppHooks.useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
-  const [settings, setSettings] = AppHooks.useAtomCapabilityState(TranscriptionCapabilities.Settings);
+  const { t } = useTranslation(meta.profile.key);
+  const [session, setSession] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  const [settings, setSettings] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.Settings);
 
   const recording = !!session?.recording && session.id === docId;
 
@@ -158,8 +157,8 @@ export const Mic = ({ docId }: MicProps) => {
         : t('start-recording.label');
 
   return (
-    <div className='flex items-center'>
-      <SystemIconButton.Mic
+    <Group compact>
+      <SystemButton.Mic
         iconOnly
         variant='ghost'
         disabled={microphoneDenied}
@@ -180,6 +179,6 @@ export const Mic = ({ docId }: MicProps) => {
         onEntityExtractionChange={handleEntityExtractionChange}
         onSelectDevice={handleSelectDevice}
       />
-    </div>
+    </Group>
   );
 };

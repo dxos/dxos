@@ -4,13 +4,11 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import * as Card from '@dxos/react-ui/Card';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Tooltip from '@dxos/react-ui/Tooltip';
-import type * as Util from '@dxos/react-ui/Util';
+import { Block, Button, Card, Flex, Icon, Menu, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { type Hue, getStyles, mx } from '@dxos/ui-theme';
+
+/** An entry of a card's header menu. */
+export type StatCardMenuItem = { label: string; icon?: string; onClick: () => void };
 
 /** One hue per category of card, so a stack reads by colour before it reads by title. */
 export const STAT_CARD_HUES = {
@@ -28,11 +26,11 @@ export const STAT_CARD_HUES = {
 // Root
 //
 
-type StatCardRootProps = PropsWithChildren<Util.ThemedClassName<{ id?: string; density?: Card.RootProps['density'] }>>;
+type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string }>>;
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
-const StatCardRoot = ({ id, density = 'sm', classNames, children }: StatCardRootProps) => (
-  <Card.Root id={id} density={density} fullWidth classNames={classNames}>
+const StatCardRoot = ({ id, classNames, children }: StatCardRootProps) => (
+  <Card.Root id={id} size='sm' grid classNames={classNames}>
     {children}
   </Card.Root>
 );
@@ -52,20 +50,30 @@ type StatCardHeaderProps = {
   info?: ReactNode;
   /** One control in the trailing gutter; several go in `menu` instead. */
   action?: ReactNode;
-  menu?: Card.MenuProps['items'];
+  menu?: StatCardMenuItem[];
 };
 
 const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
   <Card.Header>
-    <Card.Block>
-      <Icon.Root icon={icon} classNames={hue && getStyles(hue).text} />
-    </Card.Block>
-    <Flex.Root align='center' gap='sm' classNames='min-w-0'>
+    <Block>
+      <Icon icon={icon} classNames={hue && getStyles(hue).text} />
+    </Block>
+    <Flex align='center' gap='sm' classNames='min-w-0'>
       <Card.Title>{title}</Card.Title>
-      {info !== undefined && <span className='shrink-0 font-mono text-xs text-description'>{info}</span>}
-    </Flex.Root>
-    {action && <Card.Block end>{action}</Card.Block>}
-    {menu && <Card.Menu items={menu} />}
+      {info !== undefined && <span className='shrink-0 font-mono text-xs text-fg-muted'>{info}</span>}
+    </Flex>
+    {action && <Block rail='end'>{action}</Block>}
+    {menu && (
+      <Card.Menu label={title}>
+        {menu.map((item) => (
+          <Menu.Item
+            key={item.label}
+            item={{ value: item.label, label: item.label, icon: item.icon }}
+            onClick={item.onClick}
+          />
+        ))}
+      </Card.Menu>
+    )}
   </Card.Header>
 );
 
@@ -76,7 +84,7 @@ StatCardHeader.displayName = 'StatCard.Header';
 //
 
 type StatCardRowProps = PropsWithChildren<
-  Util.ThemedClassName<{
+  ThemedClassName<{
     /** Leading gutter icon; the gutter is kept even when empty so labels align across rows. */
     icon?: string;
     iconClassNames?: string;
@@ -127,34 +135,41 @@ const StatCardRow = ({
   current,
   children,
 }: StatCardRowProps) => {
-  const trailing = action ?? (unit && <span className='text-xs text-description'>{unit}</span>);
+  // Units sit in a fixed-width cell (empty when there is none), so values end on one edge across rows.
+  const trailing =
+    action ??
+    (span && !unit ? undefined : (
+      <span className='inline-block w-8 ps-1 whitespace-nowrap text-xs text-fg-muted'>{unit}</span>
+    ));
+  // The leading rail is kept even when empty, so labels align across rows.
+  const leading =
+    control ??
+    (onToggle ? (
+      <Button
+        variant='ghost'
+        icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+        iconOnly
+        size='sm'
+        label={open ? 'Collapse' : 'Expand'}
+        onClick={() => onToggle(!open)}
+      />
+    ) : (
+      (icon && <Icon icon={icon} classNames={iconClassNames} />) || <span />
+    ));
   return (
     <Card.Row
-      classNames={[classNames, onClick && 'cursor-pointer hover:bg-hover-surface', current && 'bg-hover-surface']}
+      classNames={[
+        classNames,
+        onClick && 'cursor-pointer hover:bg-hover-surface',
+        current && 'bg-hover-surface',
+        span && !trailing && SPAN_TRAILING,
+      ]}
       onClick={onClick}
       current={current}
+      leading={leading}
+      trailing={trailing}
     >
-      <Card.Block compact>
-        {control ??
-          (onToggle ? (
-            <IconButton.Root
-              variant='ghost'
-              icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-              iconOnly
-              density='sm'
-              label={open ? 'Collapse' : 'Expand'}
-              onClick={() => onToggle(!open)}
-            />
-          ) : (
-            icon && <Icon.Root icon={icon} classNames={iconClassNames} />
-          ))}
-      </Card.Block>
-      <Flex.Root
-        align='center'
-        justify='between'
-        gap='sm'
-        classNames={['min-w-0 text-xs', span && !trailing && '[grid-column-end:span_2]']}
-      >
+      <Flex align='center' justify='between' gap='sm' classNames='min-w-0 text-xs'>
         {children ?? (
           <>
             {tooltip ? (
@@ -169,16 +184,16 @@ const StatCardRow = ({
             )}
           </>
         )}
-      </Flex.Root>
-      {trailing && (
-        // A unit reads on from its value, so it sits at the gutter's start; a control stays centred.
-        <Card.Block end compact classNames={!action && 'justify-items-start'}>
-          {trailing}
-        </Card.Block>
-      )}
+      </Flex>
     </Card.Row>
   );
 };
+
+/** Runs a row's content through the end rail when it has no trailing cell of its own. */
+const SPAN_TRAILING = '[&>[data-part=row-main]]:[grid-column:content-start/full-end]';
+
+/** Runs a row's content through both rails. */
+const SPAN_FULL = '[&>[data-part=row-main]]:[grid-column:full-start/full-end]';
 
 StatCardRow.displayName = 'StatCard.Row';
 
@@ -199,14 +214,19 @@ StatCardSection.displayName = 'StatCard.Section';
 // Content
 //
 
-type StatCardContentProps = PropsWithChildren<Util.ThemedClassName>;
+type StatCardContentProps = PropsWithChildren<
+  ThemedClassName<{
+    /** Run across all three tracks (both rails), for content with no label to align with, such as a chart. */
+    full?: boolean;
+  }>
+>;
 
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
-const StatCardContent = ({ classNames, children }: StatCardContentProps) => (
-  <Card.Row>
-    <Flex.Root column grow={false} classNames={['min-w-0 text-xs [grid-column-end:span_2]', classNames]}>
+const StatCardContent = ({ classNames, full, children }: StatCardContentProps) => (
+  <Card.Row leading={full ? undefined : <span />} classNames={full ? SPAN_FULL : SPAN_TRAILING}>
+    <Flex column grow={false} classNames={['min-w-0 text-xs', classNames]}>
       {children}
-    </Flex.Root>
+    </Flex>
   </Card.Row>
 );
 

@@ -7,9 +7,8 @@ import React, { useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Call, Lobby } from '#components';
 import { CallsCapabilities } from '#types';
@@ -48,10 +47,10 @@ export const CallArticle = ({ roomId }: CallArticleProps) => {
   return (
     <Call.Root>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Call.Viewport>
             {inThisRoom ? (
               <>
@@ -65,7 +64,7 @@ export const CallArticle = ({ roomId }: CallArticleProps) => {
               </>
             )}
           </Call.Viewport>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Call.Root>
   );

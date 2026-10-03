@@ -4,15 +4,13 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Database, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
+import { Flex, Icon, useTranslation } from '@dxos/react-ui';
 
 import { ConnectorAuthMenu } from '#components';
 import { meta } from '#meta';
@@ -37,9 +35,9 @@ export type IntegrationPromptProps = {
  * silently.
  */
 export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPromptProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const space = ToolkitHooks.useActiveSpace();
-  const connectors = AppHooks.useCapabilities(ConnectorSpec.Connector).flat();
+  const connectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const matched = useMemo(() => (service ? matchConnectors(connectors, service) : []), [connectors, service]);
   const connectorIds = useMemo(() => matched.map((connector) => connector.id), [matched]);
   const label = matched[0]?.label ?? service;
@@ -50,24 +48,24 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
   }
 
   return (
-    <Flex.Root role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>
-      <Flex.Root gap='sm' align='center'>
-        <Icon.Root icon='ph--plugs--regular' size={5} classNames='shrink-0 text-subdued' />
-        <Flex.Root column classNames='min-w-0'>
+    <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
+      <Flex gap='sm' align='center'>
+        <Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
+        <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('integration-prompt.title', { service: label })}</p>
-          <p className='text-sm text-subdued'>
+          <p className='text-sm text-fg-subtle'>
             {/* With no connector matched, nothing can satisfy the request, so the unavailable
                 message outranks the agent's reason. */}
             {connectorIds.length > 0
               ? (reason ?? t('integration-prompt.description', { service: label }))
               : t('integration-prompt.unavailable', { service: label })}
           </p>
-        </Flex.Root>
-      </Flex.Root>
+        </Flex>
+      </Flex>
       {scopes && scopes.length > 0 && (
         <div>
-          <p className='text-sm text-subdued'>{t('integration-prompt.scopes')}</p>
-          <ul className='text-sm text-subdued list-disc list-inside'>
+          <p className='text-sm text-fg-subtle'>{t('integration-prompt.scopes')}</p>
+          <ul className='text-sm text-fg-subtle list-disc list-inside'>
             {scopes.map((scope) => (
               <li key={scope}>{scope}</li>
             ))}
@@ -75,11 +73,11 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
         </div>
       )}
       {connectorIds.length > 0 && (
-        <Flex.Root justify='end'>
+        <Flex justify='end'>
           <ConnectorAuthMenu connectorIds={connectorIds} db={space?.db} onSelect={armReport} />
-        </Flex.Root>
+        </Flex>
       )}
-    </Flex.Root>
+    </Flex>
   );
 };
 

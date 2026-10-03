@@ -16,12 +16,12 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
+import { DxAnchorActivate } from '@dxos/react-ui';
 import { type GraphProps } from '@dxos/react-ui-graph';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SpaceGraphEdge, type SpaceGraphNode, ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory, createRelationFactory } from '@dxos/schema/testing';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
-import { DxAnchorActivate } from '@dxos/ui-types';
 
 import { useGraphModel } from '#hooks';
 import { Graph } from '#types';

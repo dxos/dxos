@@ -9,10 +9,8 @@ import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Json, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { EntityId } from '@dxos/keys';
+import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 export type DebugObjectPanelProps = Pick<
@@ -40,11 +38,11 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <div className={mx('grid divide-y divide-subdued-separator', db && 'grid-rows-[1fr_2fr]')}>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <div className={mx('grid divide-y divide-separator-subtle', db && 'grid-rows-[1fr_2fr]')}>
           {db && (
             <ScrollArea.Root>
               <ScrollArea.Viewport>
@@ -63,21 +61,21 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
             getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
           >
             <Panel.Root>
-              <Panel.Toolbar asChild>
-                <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+              <Panel.Header>
+                <Toolbar.Root classNames='grid grid-cols-[1fr_6rem]'>
                   <Syntax.Filter />
                   <Syntax.Depth />
                 </Toolbar.Root>
-              </Panel.Toolbar>
-              <Panel.Content asChild>
+              </Panel.Header>
+              <Panel.Body asChild>
                 <Syntax.Viewport>
                   <Syntax.Code />
                 </Syntax.Viewport>
-              </Panel.Content>
+              </Panel.Body>
             </Panel.Root>
           </Syntax.Root>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

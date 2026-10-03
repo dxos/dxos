@@ -13,9 +13,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import type * as Util from '@dxos/react-ui/Util';
 
 import { translationKey } from '#translations';
 
@@ -27,7 +26,7 @@ import type { ToolEntry } from '../types.ts';
 // be misleading. Consumers needing slot semantics should reach for
 // `Listbox` directly. `classNames` flows through to the visible
 // scroll surface (`Listbox.Viewport`).
-export type ToolListProps = Util.ThemedClassName<{
+export type ToolListProps = ThemedClassName<{
   /**
    * Tool definitions keyed by their MCP tool name (`list_packages`,
    * `get_plugin`, etc.). Pass `Object.entries(createToolDefinitions(...))`
@@ -41,7 +40,7 @@ export type ToolListProps = Util.ThemedClassName<{
 }>;
 
 export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const entries = useMemo(() => Object.entries(tools).sort(([a], [b]) => a.localeCompare(b)), [tools]);
 
   const handleCurrentChange = useCallback(
@@ -55,22 +54,24 @@ export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProp
   );
 
   return (
-    <Listbox.Root value={selected ?? undefined} onValueChange={handleCurrentChange}>
-      <Listbox.Viewport classNames={classNames} thin>
-        <Listbox.Content aria-label={t('tools.label')}>
-          {entries.map(([name, tool]) => (
-            <Listbox.Item key={name} id={name}>
-              <div className='flex flex-col grow overflow-hidden'>
-                <div className='font-mono text-xs text-info-text'>{name}</div>
-                <div className='font-medium'>{tool.title}</div>
-                {tool.description && (
-                  <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
-                )}
-              </div>
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
-      </Listbox.Viewport>
+    <Listbox.Root
+      value={selected ?? undefined}
+      onValueChange={handleCurrentChange}
+      items={entries.map(([name, tool]) => ({ value: name, label: name }))}
+    >
+      <Listbox.Content aria-label={t('tools.label')}>
+        {entries.map(([name, tool]) => (
+          <Listbox.Item key={name} id={name}>
+            <div className='flex flex-col grow overflow-hidden'>
+              <div className='font-mono text-xs text-info-text'>{name}</div>
+              <div className='font-medium'>{tool.title}</div>
+              {tool.description && (
+                <div className='text-sm text-fg-muted line-clamp-2 mt-1'>{tool.description.trim()}</div>
+              )}
+            </div>
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   );
 };

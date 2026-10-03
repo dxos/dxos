@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -18,7 +18,7 @@ export type RepositoryFileViewProps = {
 
 /** One file at a commit: highlighted text, an image, or a note that the file is binary. */
 export const RepositoryFileView = ({ file }: RepositoryFileViewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   if (file.encoding === 'utf-8') {
     return (
       <SyntaxHighlighter
@@ -38,7 +38,7 @@ export const RepositoryFileView = ({ file }: RepositoryFileViewProps) => {
       <img src={`data:${imageType};base64,${file.content}`} alt={file.path} className='max-w-full' />
     </div>
   ) : (
-    <div className='dx-expand grid place-items-center p-4 text-description'>
+    <div className='dx-expand grid place-items-center p-4 text-fg-muted'>
       {t('binary-file.message', { size: file.size })}
     </div>
   );

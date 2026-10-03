@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { Doc } from '@dxos/echo-doc';
+import { useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { Text } from '@dxos/schema';
 import {
   createBasicExtensions,
@@ -26,7 +26,7 @@ import {
 //
 
 export const MarkdownEditor = ({ text }: { text: Text.Text }) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const { parentRef } = useTextEditor(
     () => ({
       initialValue: text.content ?? '',

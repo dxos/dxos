@@ -6,13 +6,14 @@ import { addHours, isSameDay, startOfHour } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
@@ -24,8 +25,6 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
@@ -43,8 +42,8 @@ const byDate =
 export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
 
 export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [calendar] = useObject(subject);
   const db = Obj.getDatabase(calendar);
   // The calendar's graph node id: events open as its children and it is their pivot.
@@ -199,20 +198,20 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
       <div className='grid grid-cols-1 @2xl:grid-cols-[min-content_1fr] h-full'>
         <Panel.Root classNames='hidden @2xl:block'>
           <NaturalCalendar.Root ref={calendarRef}>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <NaturalCalendar.Toolbar />
-            </Panel.Toolbar>
-            <Panel.Content asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <NaturalCalendar.Grid dates={dates} onSelect={handleDateSelect} onSelectRange={handleRangeSelect} />
-            </Panel.Content>
+            </Panel.Body>
           </NaturalCalendar.Root>
         </Panel.Root>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-          </Panel.Toolbar>
+          </Panel.Header>
 
-          <Panel.Content asChild>
+          <Panel.Body asChild>
             {events.length === 0 ? (
               <InitializeCalendar calendar={subject} />
             ) : (
@@ -225,7 +224,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
                 onAction={handleAction}
               />
             )}
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </div>
     </div>

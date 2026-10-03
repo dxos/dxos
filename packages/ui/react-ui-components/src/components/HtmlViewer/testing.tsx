@@ -4,8 +4,7 @@
 
 import React, { type ReactNode } from 'react';
 
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { Panel, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { trim } from '@dxos/util';
 
 import { type ColorScheme } from './color-scheme.ts';
@@ -216,19 +215,19 @@ export const SANDBOX_SAMPLES: Record<string, Sample> = {
  * DOM — they have to agree.
  */
 export const ThemePane = ({ mode, children }: { mode: ColorScheme; children: ReactNode }) => {
-  const { tx } = ThemeProvider.useThemeContext();
+  const { tx } = useThemeContext();
   return (
     // `colorScheme` is what actually switches the palette: the theme's tokens are `light-dark(…)`, which
     // resolves against the computed `color-scheme`, and only `.dark` sets it (there is no `.light` rule)
     // — so a `light` pane inside a dark storybook would otherwise inherit dark and both panes would match.
     // The class stays for rules scoped to `.dark`.
     <div className={mode} style={{ colorScheme: mode }}>
-      <ThemeProvider.Root tx={tx} themeMode={mode}>
-        <div className='dx-base-surface text-base-fg p-2 overflow-auto border border-separator rounded'>
-          <div className='pb-1 text-xs uppercase tracking-wide text-description'>{mode}</div>
+      <ThemeProvider tx={tx} themeMode={mode}>
+        <div className='dx-base-surface text-fg p-2 overflow-auto border border-separator rounded'>
+          <div className='pb-1 text-xs uppercase tracking-wide text-fg-muted'>{mode}</div>
           {children}
         </div>
-      </ThemeProvider.Root>
+      </ThemeProvider>
     </div>
   );
 };
@@ -247,8 +246,8 @@ export const Compare = ({ render }: { render: () => ReactNode }) => (
 /** Frame shared by both story suites: the sample's note above the rendered body (or comparison). */
 export const SampleFrame = ({ note, children }: { note: string; children: ReactNode }) => (
   <Panel.Root>
-    <Panel.Toolbar classNames='flex items-center p-1 text-description'>{note}</Panel.Toolbar>
-    <Panel.Content classNames='overflow-auto'>{children}</Panel.Content>
+    <Panel.Header classNames='flex items-center p-1 text-fg-muted'>{note}</Panel.Header>
+    <Panel.Body classNames='overflow-auto'>{children}</Panel.Body>
   </Panel.Root>
 );
 

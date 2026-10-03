@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
@@ -15,8 +15,8 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Util from '@dxos/react-ui/Util';
+import { useTranslation } from '@dxos/react-ui';
+import { composable } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -55,11 +55,11 @@ export type PublicRegistryArticleProps = {
   id: string;
 };
 
-export const PublicRegistryArticle = Util.composable<HTMLDivElement, PublicRegistryArticleProps>(
+export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryArticleProps>(
   ({ id, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = useTranslation(meta.profile.key);
     const manager = PluginManagerProvider.usePluginManager();
-    const { invoke } = AppHooks.useOperationInvoker();
+    const { invoke } = Hooks.useOperationInvoker();
     const { entries, loading, error } = useRegistryPlugins();
     // Reloaded on every visit, so a plugin published since boot (a private one in particular) shows up.
     useEffect(() => manager.pluginRegistry.refresh(), [manager]);
@@ -177,11 +177,11 @@ export const PublicRegistryArticle = Util.composable<HTMLDivElement, PublicRegis
     );
 
     const empty = error ? (
-      <div className='p-4 text-description'>{t('registry.error.label', { message: error.message })}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.error.label', { message: error.message })}</div>
     ) : loading ? (
-      <div className='p-4 text-description'>{t('registry.loading.label')}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.loading.label')}</div>
     ) : (
-      <div className='p-4 text-description'>{t('registry.empty.label')}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.empty.label')}</div>
     );
 
     return (

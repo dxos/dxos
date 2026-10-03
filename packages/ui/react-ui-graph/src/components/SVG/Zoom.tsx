@@ -4,12 +4,12 @@
 
 import React, { type ReactNode, memo, useMemo } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type ZoomExtent, useZoom } from '../../hooks/index.ts';
 
-export type ZoomProps = Util.ThemedClassName<{
+export type ZoomProps = ThemedClassName<{
   extent?: ZoomExtent;
   children?: ReactNode;
 }>;

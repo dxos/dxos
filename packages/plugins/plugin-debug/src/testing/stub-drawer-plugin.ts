@@ -12,23 +12,23 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN } from '@dxos/echo';
-import type * as Main from '@dxos/react-ui/Main';
+import { type MainDrawerState } from '@dxos/react-ui';
 
 //
 // Drawer state, as the deck would own it: the stub handler below writes it and a story's frame reads it.
 //
 
-let drawerState: Main.DrawerState = 'open';
+let drawerState: MainDrawerState = 'open';
 const listeners = new Set<() => void>();
 
-export const getDrawerState = () => drawerState;
+export const getDrawerState = (): MainDrawerState => drawerState;
 
-export const setDrawerState = (next: Main.DrawerState) => {
+export const setDrawerState = (next: MainDrawerState) => {
   drawerState = next;
   listeners.forEach((listener) => listener());
 };
 
-export const useDrawerState = () =>
+export const useDrawerState = (): MainDrawerState =>
   useSyncExternalStore(
     (listener) => {
       listeners.add(listener);

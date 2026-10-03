@@ -4,15 +4,15 @@
 
 import { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
+import { useTranslation } from '@dxos/react-ui';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { PullRequest } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -35,8 +35,8 @@ export type PullRequestCardMenuProps = AppSurface.CardMenuData<PullRequest.PullR
  * otherwise the space the user is working in.
  */
 export const PullRequestCardMenu = ({ subject, menu }: PullRequestCardMenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const openObject = useOpenObject();
   const activeSpace = ToolkitHooks.useActiveSpace();
   const db = Obj.getDatabase(subject) ?? activeSpace?.db;

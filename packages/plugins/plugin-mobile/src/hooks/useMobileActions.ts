@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -18,6 +18,7 @@ import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import * as DeckHooks from '@dxos/plugin-deck/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import {
   type ActionExecutor,
@@ -27,7 +28,6 @@ import {
   createMenuItemGroup,
   graphActions,
 } from '@dxos/react-ui-menu';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Position from '@dxos/util/Position';
 
 import { useMobileLayout } from '#components';
@@ -162,11 +162,11 @@ const createMobileAccountMenuSection = (
  * Builds the mobile navbar actions including companion tabs, separator, and main menu dropdown.
  */
 export const useMobileNavbarActions = (): MobileNavbarActions => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
-  const stateAtom = AppHooks.useCapability(DeckCapabilities.State);
-  const ephemeralAtom = AppHooks.useCapability(DeckCapabilities.EphemeralState);
+  const stateAtom = Hooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
   const { updateState } = DeckHooks.useDeckState();
 
   const actionsAtom = useMemo(
@@ -216,9 +216,9 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
  * Builds the mobile drawer actions including companion tabs and toolbar buttons.
  */
 export const useMobileDrawerActions = (consumerName: string): MobileDrawerActions => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const stateAtom = AppHooks.useCapability(DeckCapabilities.State);
-  const ephemeralAtom = AppHooks.useCapability(DeckCapabilities.EphemeralState);
+  const { t } = useTranslation(meta.profile.key);
+  const stateAtom = Hooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
   const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
   const { updateState } = DeckHooks.useDeckState();

@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import { ToggleGroup, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type RelatedType } from '#hooks';
@@ -24,7 +23,7 @@ export type RelatedTypeFilterProps = {
  * no toolbar to supply the roving-focus context `Toolbar.ToggleGroup` requires.
  */
 export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFilterProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   // Filtering by the only type present cannot narrow anything.
   if (types.length < 2) {
     return null;
@@ -40,14 +39,14 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
       value={types.filter(({ visible }) => visible).map(({ typename }) => typename)}
     >
       {types.map(({ typename, label, icon, count }) => (
-        <ToggleGroup.IconItem
+        <ToggleGroup.Item
           key={typename}
           iconOnly
           value={typename}
           icon={icon}
           // Selection reads off the icon alone: the pressed fill is pinned to the resting one so
-          // the chip itself never changes, leaving `text-subdued` to mark a type as hidden.
-          classNames='aria-pressed:bg-input-bg aria-[pressed=false]:text-subdued'
+          // the chip itself never changes, leaving `text-fg-subtle` to mark a type as hidden.
+          classNames='aria-pressed:bg-input-bg aria-[pressed=false]:text-fg-subtle'
           // Carries the count to the tooltip; the type's label is already localized.
           label={`${label} (${count})`}
           onClick={() => onToggle(typename)}

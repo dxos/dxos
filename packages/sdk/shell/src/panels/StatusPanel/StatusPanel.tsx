@@ -4,19 +4,18 @@
 
 import React from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Progress from '@dxos/react-ui/Progress';
+import { Progress, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../translations.ts';
 
 export const StatusPanel = ({ titleId }: { titleId?: string }) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   return (
     <div className='grid place-items-center p-2 gap-2'>
       <p id={titleId} className='font-medium text-center'>
         {t('resetting.message')}
       </p>
-      <Progress.Root indeterminate>{t('resetting.message')}</Progress.Root>
+      <Progress indeterminate label={t('resetting.message')} />
     </div>
   );
 };

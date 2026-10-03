@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -20,17 +20,9 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
+import { Banner, Card, Icon, Panel, ScrollArea, Tabs, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Tabs from '@dxos/react-ui/Tabs';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
 import { hexToHue } from '@dxos/util';
@@ -82,7 +74,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
     () => stringField(subject, 'name') ?? stringField(subject, 'title') ?? stringField(subject, 'type') ?? 'Object',
     [subject],
   );
-  const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{title}</span>, [title]);
+  const Fallback = useCallback(() => <span className='p-1 text-sm text-fg-muted'>{title}</span>, [title]);
 
   return (
     <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
@@ -106,9 +98,9 @@ const threadComponents = { Object: ObjectTile };
 export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
 
 export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
-  const registry = AppHooks.useCapability(Capabilities.AtomRegistry);
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const identity = useIdentity();
   const subjectId = Obj.getURI(subject);
 
@@ -155,7 +147,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [members],
   );
 
-  const stateAtom = AppHooks.useCapability(CommentCapabilities.State);
+  const stateAtom = Hooks.useCapability(CommentCapabilities.State);
   const state = useAtomValue(stateAtom);
   const drafts = state.drafts[subjectId];
 
@@ -163,8 +155,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { showResolvedThreads } = useViewState(commentsViewAspect, subjectId);
   const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
-  const commentConfigs = AppHooks.useCapabilities(AppCapabilities.CommentConfig);
-  const anchorSorts = AppHooks.useCapabilities(AppCapabilities.AnchorSort);
+  const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
+  const anchorSorts = Hooks.useCapabilities(AppCapabilities.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
     [anchorSorts, subject],
@@ -501,22 +493,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       </div>
     ) : hasSuggestions ? null : (
       <Banner.Root>
-        <Banner.Content classNames='m-trim-md'>
-          <Banner.Body>
-            <span>
-              <ThemeProvider.Trans
-                {...{
-                  t,
-                  i18nKey: 'no-comments.message',
-                  components: {
-                    commentIcon: <Icon.Root icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
-                    versionsIcon: <Icon.Root icon='ph--git-branch--regular' size={4} classNames='dx-icon-inline' />,
-                  },
-                }}
-              />
-            </span>
-          </Banner.Body>
-        </Banner.Content>
+        <Banner.Body>
+          <span>
+            <Trans
+              {...{
+                t,
+                i18nKey: 'no-comments.message',
+                components: {
+                  commentIcon: (
+                    <Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                  ),
+                  versionsIcon: (
+                    <Icon icon='ph--git-branch--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                  ),
+                },
+              }}
+            />
+          </span>
+        </Banner.Body>
       </Banner.Root>
     );
 
@@ -527,20 +521,20 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         value={showResolvedThreads ? 'all' : 'unresolved'}
         onValueChange={handleChangeViewState}
       >
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Tabs.Tablist>
-              <Tabs.Button classNames='text-sm' value='unresolved'>
+            <Tabs.List>
+              <Tabs.Trigger classNames='text-sm' value='unresolved'>
                 {t('show-unresolved.label')}
-              </Tabs.Button>
-              <Tabs.Button classNames='text-sm' value='all'>
+              </Tabs.Trigger>
+              <Tabs.Trigger classNames='text-sm' value='all'>
                 {t('show-all.label')}
-              </Tabs.Button>
-            </Tabs.Tablist>
+              </Tabs.Trigger>
+            </Tabs.List>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root thin>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
             <ScrollArea.Viewport>
               <Suggestions
                 document={markdownDoc}
@@ -554,11 +548,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 hiddenAuthors={hiddenAuthors}
                 onToggleAuthor={handleToggleAuthor}
               />
-              <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
-              <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
+              <Tabs.Content value='all'>{showResolvedThreads && comments}</Tabs.Content>
+              <Tabs.Content value='unresolved'>{!showResolvedThreads && comments}</Tabs.Content>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Tabs.Root>
     </Panel.Root>
   );

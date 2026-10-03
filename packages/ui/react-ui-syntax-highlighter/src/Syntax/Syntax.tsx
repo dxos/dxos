@@ -5,9 +5,7 @@
 import { JSONPath } from 'jsonpath-plus';
 import React, { type PropsWithChildren, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import * as Field from '@dxos/react-ui/Field';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Util from '@dxos/react-ui/Util';
+import { Field, Input, NumberInput, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter/index.ts';
@@ -132,12 +130,9 @@ const SYNTAX_CONTENT_NAME = 'Syntax.Content';
 type SyntaxContentProps = ComposableProps;
 
 /** Flex-column layout container for composite parts. */
-const SyntaxContent = Util.composable<HTMLDivElement, SyntaxContentProps>(({ children, ...props }, forwardedRef) => {
+const SyntaxContent = composable<HTMLDivElement, SyntaxContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div
-      {...Util.composableProps(props, { classNames: 'flex flex-col p-1 dx-expand overflow-hidden' })}
-      ref={forwardedRef}
-    >
+    <div {...composableProps(props, { classNames: 'flex flex-col p-1 dx-expand overflow-hidden' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -165,7 +160,7 @@ const SyntaxFilter = forwardRef<HTMLInputElement, SyntaxFilterProps>(
 
     return (
       <Field.Root validationValence={filterError ? 'error' : 'success'}>
-        <Field.Input
+        <Input
           classNames={['p-1 px-2 font-mono', filterError && 'border-rose-500', classNames]}
           variant='subdued'
           value={filterText}
@@ -196,15 +191,13 @@ const SyntaxDepth = forwardRef<HTMLInputElement, SyntaxDepthProps>(({ classNames
   const { depth, setDepth } = useSyntaxContext(SYNTAX_DEPTH_NAME);
   return (
     <Field.Root>
-      <Field.Input
-        classNames={['p-1 px-2 font-mono', classNames]}
-        variant='subdued'
-        type='number'
+      <NumberInput
+        classNames={['font-mono', classNames]}
         min={0}
         step={1}
         aria-label='Depth'
-        value={depth}
-        onChange={(event) => setDepth(Math.max(0, Number(event.target.value) || 0))}
+        value={String(depth)}
+        onValueChange={(_, valueAsNumber) => setDepth(Math.max(0, valueAsNumber || 0))}
         ref={forwardedRef}
       />
     </Field.Root>
@@ -222,9 +215,9 @@ const SYNTAX_VIEWPORT_NAME = 'Syntax.Viewport';
 type SyntaxViewportProps = ComposableProps;
 
 /** Optional scroll wrapper. Compose around `Syntax.Code` to make it scrollable. */
-const SyntaxViewport = Util.composable<HTMLDivElement, SyntaxViewportProps>(({ children, ...props }, forwardedRef) => {
+const SyntaxViewport = composable<HTMLDivElement, SyntaxViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...Util.composableProps(props)} orientation='all' thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} orientation='all' ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -243,8 +236,8 @@ type SyntaxCodeProps = ComposableProps<{
 }>;
 
 /** Highlighted code leaf, unscrolled: `Syntax.Viewport` owns the scrolling. Reads source/data from `Syntax.Root`. */
-const SyntaxCode = Util.composable<HTMLDivElement, SyntaxCodeProps>(({ testId, ...props }, forwardedRef) => {
-  const merged = Util.composableProps(props, { classNames: 'text-sm' });
+const SyntaxCode = composable<HTMLDivElement, SyntaxCodeProps>(({ testId, ...props }, forwardedRef) => {
+  const merged = composableProps(props, { classNames: 'text-sm' });
 
   const context = useSyntaxContext(SYNTAX_CODE_NAME);
   if (context.mode === 'json') {

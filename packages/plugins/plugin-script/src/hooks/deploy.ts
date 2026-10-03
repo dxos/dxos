@@ -11,8 +11,8 @@ import { type Database, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
+import { type TFunction } from '@dxos/react-ui';
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { messageValence } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -37,7 +37,7 @@ export type CreateDeployOptions = {
   db?: Database.Database;
   existingFunctionId?: string;
   client: Client;
-  t: ThemeProvider.TFunction;
+  t: TFunction;
 };
 
 export const createDeploy = ({

@@ -4,16 +4,15 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { useSpaces } from '@dxos/react-client/echo';
+import { PasswordInput, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -27,8 +26,8 @@ export type CodeSettingsProps = AppSurface.SettingsData;
  * an ECHO `AccessToken`) and the schema-driven build-service `endpoint`.
  */
 export const CodeSettings = ({ subject }: CodeSettingsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { settings, updateSettings } = AppHooks.useSettingsState<Settings.Settings>(subject.atom);
+  const { t } = useTranslation(meta.profile.key);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const spaces = useSpaces();
   const space = spaces[0];
   const tokens = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: SERVICE }));
@@ -74,13 +73,12 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
             actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Field label={t('api-key.label')}>
-              <Field.Input
-                type='password'
+              <PasswordInput
                 placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
                 value={draft}
-                onChange={(event) => {
+                onValueChange={(value) => {
                   touchedRef.current = true;
-                  setDraft(event.target.value);
+                  setDraft(value);
                 }}
                 onBlur={handleCommit}
               />

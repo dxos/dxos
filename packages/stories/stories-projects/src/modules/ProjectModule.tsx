@@ -13,10 +13,8 @@ import { useQuery } from '@dxos/echo-react';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import { useSpaces } from '@dxos/react-client/echo';
-import * as Button from '@dxos/react-ui/Button';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { Loading } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 export type ProjectModuleProps = {
   /** Project template to scaffold from; the story's subject mailbox is passed to `appliesTo`/`scaffold`. */
@@ -57,9 +55,9 @@ export const ProjectModule = ({ data }: { data: ProjectModuleProps }) => {
   if (error) {
     return (
       <Panel.Root>
-        <Panel.Content>
+        <Panel.Body>
           <div role='alert'>{error}</div>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   }
@@ -67,13 +65,13 @@ export const ProjectModule = ({ data }: { data: ProjectModuleProps }) => {
   if (!project) {
     return (
       <Panel.Root>
-        <Panel.Toolbar>
+        <Panel.Header>
           <Toolbar.Root>
-            <Button.Root data-testid='projects.story.setup' onClick={() => handleCreate(mailbox)}>
+            <Button data-testid='projects.story.setup' onClick={() => handleCreate(mailbox)}>
               Set up project
-            </Button.Root>
+            </Button>
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       </Panel.Root>
     );
   }

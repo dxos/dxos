@@ -6,15 +6,14 @@ import React, { useMemo } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as Main from '@dxos/react-ui/Main';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { type Label, Main } from '@dxos/react-ui';
 
 import { useBreakpoints, useDeckState } from '#hooks';
 import { meta } from '#meta';
 
 import { layoutAppliesTopbar } from '../../util/index.ts';
 
-const label = ['sidebar.title', { ns: meta.profile.key }] satisfies ThemeProvider.Label;
+const label = ['sidebar.title', { ns: meta.profile.key }] satisfies Label;
 
 export const Sidebar = () => {
   const { state } = useDeckState();
@@ -29,6 +28,8 @@ export const Sidebar = () => {
 
   return (
     <Main.NavigationSidebar
+      // The navigation surface declares its rail and panel as focus areas of their own.
+      landmark={false}
       data-testid='deck.sidebar'
       label={label}
       classNames={['grid', topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}

@@ -5,15 +5,13 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Agent from '@dxos/assistant/Agent';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -25,14 +23,14 @@ export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
  * Project; automation (subscriptions/schedule) is edited in the properties panel.
  */
 export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(agent);
   // Resolve reactively: a sync `.target` read never resolves on a cold/deep-link load.
   const [instructionsSnapshot] = useObject(agent.instructions);
   const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
 
   const spaceId = db?.spaceId;
-  const resetHistory = AppHooks.useSpaceCallback(
+  const resetHistory = Hooks.useSpaceCallback(
     spaceId,
     [Database.Service],
     Effect.fnUntraced(function* () {
@@ -51,19 +49,15 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
+      <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
           <Toolbar.Separator />
-          <Toolbar.IconButton
-            icon='ph--trash--regular'
-            label={t('reset-history.button')}
-            onClick={handleResetHistory}
-          />
+          <Button icon='ph--trash--regular' label={t('reset-history.button')} onClick={handleResetHistory} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='dx-document'>
+      </Panel.Header>
+      <Panel.Body classNames='dx-document'>
         {instructions && <InstructionsEditor.Root db={db} instructions={instructions} />}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

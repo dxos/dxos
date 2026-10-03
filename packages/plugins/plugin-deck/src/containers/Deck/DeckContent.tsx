@@ -7,8 +7,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useState } from 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Main from '@dxos/react-ui/Main';
+import { Main, useTranslation } from '@dxos/react-ui';
 
 import { useBreakpoints } from '#hooks';
 import { meta } from '#meta';
@@ -37,7 +36,7 @@ export const DeckContent = ({ children }: DeckContentProps) => {
     updateState,
     pluginManager,
   } = useDeckContext(DECK_CONTENT_NAME);
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   // Controlled height would drop every mid-drag move, so the drag is mirrored locally until it ends.
   const [liveHeight, setLiveHeight] = useState<number>();
   const breakpoint = useBreakpoints();

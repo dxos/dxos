@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useAsyncState } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -41,7 +41,7 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
 };
 
 const DefaultStory = () => {
-  const [buffer] = Hooks.useAsyncState<ArrayBuffer>(async () => {
+  const [buffer] = useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
     // TODO(wittjosiah): Fetch to external url fails in headless storybook test.
     const response = await fetch('https://media.dxos.network/dxos.riv', { mode: 'cors' }).catch((error) => {

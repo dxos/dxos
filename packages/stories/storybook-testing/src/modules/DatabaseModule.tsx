@@ -12,17 +12,22 @@ import { type EntityId } from '@dxos/keys';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import * as ExplorerHooks from '@dxos/plugin-explorer/Hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
+import {
+  Block,
+  Button,
+  Card,
+  Icon,
+  Panel,
+  ScrollArea,
+  ToggleGroup,
+  Toolbar,
+  composable,
+  composableProps,
+} from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Card from '@dxos/react-ui/Card';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 type DatabaseView = 'graph' | 'object-tree' | 'cards';
@@ -88,10 +93,10 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root classNames='relative h-full'>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <DatabaseSearchBar space={space} view={view} onSubmit={handleSubmit} onViewChange={handleViewChange} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='relative min-h-0'>
+      </Panel.Header>
+      <Panel.Body classNames='relative min-h-0'>
         {view === 'graph' && <ForceGraph.Root classNames='min-h-[50vh]' model={model} />}
 
         {view === 'object-tree' && (
@@ -115,7 +120,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
           <div
             className={mx(
               'flex absolute left-2 right-2 bottom-2 h-[8rem]',
-              'overflow-hidden dx-base-surface border border-subdued-separator opacity-80',
+              'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
             )}
           >
             <JsonHighlighter classNames='text-sm' data={filter} />
@@ -126,7 +131,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
             <div
               className={mx(
                 'flex absolute left-2 right-2 bottom-2 h-[8rem]',
-                'overflow-hidden dx-base-surface border border-subdued-separator opacity-80',
+                'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
               )}
             >
               <JsonHighlighter classNames='text-sm' data={selectedObject} />
@@ -135,7 +140,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
         )}
 
         <div className='absolute bottom-4 right-4 z-10'>
-          <IconButton.Root
+          <Button
             variant='ghost'
             icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
             iconOnly
@@ -143,7 +148,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
             onClick={() => setOpen((open) => !open)}
           />
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -154,19 +159,17 @@ type DatabaseSearchBarProps = { space: Space } & {
   onViewChange: (value: string) => void;
 };
 
-const DatabaseSearchBar = Util.composable<HTMLDivElement, DatabaseSearchBarProps>(
+const DatabaseSearchBar = composable<HTMLDivElement, DatabaseSearchBarProps>(
   ({ space, view, onSubmit, onViewChange, ...props }, forwardedRef) => {
     const { state: flushState, handleFlush } = useFlush(space);
     const editorRef = useRef<EditorController>(null);
 
     return (
-      <Toolbar.Root {...Util.composableProps(props)} ref={forwardedRef}>
+      <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
         <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
         <Toolbar.ToggleGroup type='single' value={view} onValueChange={onViewChange}>
           {VIEW_OPTIONS.map(({ value, icon, label }) => (
-            <Toolbar.ToggleGroupItem key={value} value={value} aria-label={label} title={label}>
-              <Icon.Root icon={icon} size={4} />
-            </Toolbar.ToggleGroupItem>
+            <ToggleGroup.Item key={value} value={value} icon={icon} label={label} iconOnly />
           ))}
         </Toolbar.ToggleGroup>
         {/* <Toolbar.IconButton
@@ -215,7 +218,7 @@ const DatabaseCardsView = ({ space, filter, selectedId, onSelect }: DatabaseCard
   );
 
   if (objects.length === 0) {
-    return <div className='p-4 text-sm text-description text-center'>No objects match the query.</div>;
+    return <div className='p-4 text-sm text-fg-muted text-center'>No objects match the query.</div>;
   }
 
   return (
@@ -243,16 +246,12 @@ const DatabaseCardTile = ({ data }: { data: DatabaseCardTileData | undefined; in
   const iconAnnotation = Obj.getIcon(object);
 
   return (
-    <Card.Root
-      fullWidth
-      classNames={['cursor-pointer', current && 'ring-2 ring-focus']}
-      onClick={() => onSelect(object.id)}
-    >
+    <Card.Root classNames={['cursor-pointer', current && 'ring-2 ring-focus']} onClick={() => onSelect(object.id)}>
       <Card.Header>
-        <Card.Block>
-          <Icon.Root icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} classNames='text-subdued' />
-        </Card.Block>
-        <Card.Title classNames='truncate'>{label}</Card.Title>
+        <Block>
+          <Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} tone='subtle' />
+        </Block>
+        <Card.Title truncate>{label}</Card.Title>
       </Card.Header>
     </Card.Root>
   );

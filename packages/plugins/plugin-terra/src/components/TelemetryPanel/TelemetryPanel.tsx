@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent } from 'react';
 
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { ScrollArea } from '@dxos/react-ui';
 
 import { TerraObject } from '#types';
 
@@ -52,7 +52,7 @@ export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelPro
       <ScrollArea.Viewport>
         <table className='w-full text-xs tabular-nums'>
           <thead>
-            <tr className='text-left text-description'>
+            <tr className='text-left text-fg-muted'>
               <th className='px-3 pb-1 font-normal'>Object</th>
               <th className='px-3 pb-1 font-normal'>Type</th>
               <th className='px-2 pb-1 font-normal text-right'>Lat</th>

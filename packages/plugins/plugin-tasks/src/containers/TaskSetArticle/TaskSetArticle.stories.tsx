@@ -23,7 +23,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import * as Button from '@dxos/react-ui/Button';
+import { Button } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { File, Milestone, Person, Task, TaskSet } from '@dxos/types';
@@ -141,9 +141,9 @@ const RemountStory = () => {
   const [mount, setMount] = useState(0);
   return (
     <div className='flex flex-col dx-expand'>
-      <Button.Root data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
+      <Button data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
         Remount
-      </Button.Root>
+      </Button>
       <DefaultStory key={mount} />
     </div>
   );
@@ -412,7 +412,7 @@ export const SortAndGroup: Story = {
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.group"]')).find((row) =>
         row.textContent?.includes('Done'),
       ) ?? null;
-    await clickElement(doneGroup()?.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]') ?? null);
+    await clickElement(doneGroup()?.querySelector<HTMLElement>('[data-part="branch-trigger"]') ?? null);
     await waitFor(() => expect(titles()).not.toContain('Source green coffee'), { timeout: 10_000 });
     await expect(headers()).toContain('Done1');
 
@@ -608,7 +608,7 @@ export const AddSubTask: Story = {
     );
 
     // Collapse the parent, then add another: the branch opens so both children are in view.
-    await userEvent.click(parentRow().querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!);
+    await userEvent.click(parentRow().querySelector<HTMLElement>('[data-part="branch-trigger"]')!);
     await waitFor(() => expect(visible(first.id)).toBe(false), { timeout: 10_000 });
     await addSubTask();
     await waitFor(() => expect(children()).toHaveLength(2), { timeout: 10_000 });
@@ -766,7 +766,7 @@ export const CollapsePersists: Story = {
       canvas
         .getByText(title)
         .closest<HTMLElement>('[data-testid="taskList.item"]')!
-        .querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+        .querySelector<HTMLElement>('[data-part="branch-trigger"]')!;
     await waitFor(() => expect(visible('Pick the typeface')).toBe(true), { timeout: 10_000 });
     await waitFor(() => expect(visible('Order the samples')).toBe(true), { timeout: 10_000 });
 

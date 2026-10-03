@@ -9,8 +9,8 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { Panel } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
-import * as Panel from '@dxos/react-ui/Panel';
 
 import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';
@@ -56,20 +56,20 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
+      <Panel.Header>
         <FeedToolbar attendableId={attendableId} onSync={handleSync} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <PostStack
           id={subscription?.id ?? subject.id}
           posts={posts}
           currentId={currentPostId}
           onAction={handleAction}
         />
-      </Panel.Content>
-      <Panel.Statusbar classNames='border-t border-subdued-separator' asChild>
+      </Panel.Body>
+      <Panel.Footer classNames='border-t border-separator-subtle'>
         <ProgressMeter state={syncProgress} />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

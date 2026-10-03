@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import type * as Util from '@dxos/react-ui/Util';
+import type { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { Ruler, TrackHeader } from './headers/index.ts';
@@ -15,7 +15,7 @@ import { type OverlayStyle, type RenderCell, type StaticLayerStyle, drawCells, d
 import type { CellGridAtoms } from './state/atoms.ts';
 import type { Cell, Headers, Row } from './state/types.ts';
 
-export type CellGridProps<T = unknown> = Util.ThemedClassName<
+export type CellGridProps<T = unknown> = ThemedClassName<
   PointerHandlers & {
     atoms: CellGridAtoms<T>;
     rows: ReadonlyArray<Row>;

@@ -8,10 +8,10 @@ import React, { type PropsWithChildren, useRef, useState } from 'react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Form, TupleField } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -38,7 +38,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [graph, setGraph] = useState<CanvasGraphModel | undefined>();
 
   // Layout.
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (!space || !init) {
       return;
     }
@@ -75,15 +75,8 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
             isPolygon(selected) && (
               // `Polygon`, not `RectangleShape`: the selection is only ever narrowed that far, and the
               // rectangle's `type: 'rectangle'` literal is not assignable from a `Shape`'s `string`.
-              <Form.Root
-                schema={Polygon}
-                values={selected}
-                fieldMap={{
-                  // TODO(burdon): Replace by type.
-                  center: (props) => <TupleField {...props} binding={['x', 'y']} />,
-                  size: (props) => <TupleField {...props} binding={['width', 'height']} />,
-                }}
-              >
+              // `center` and `size` render as nested field sets of their coordinates.
+              <Form.Root schema={Polygon} values={selected}>
                 <Form.Viewport>
                   <Form.Content>
                     <Form.Fields />

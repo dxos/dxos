@@ -21,6 +21,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
+import { Button, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type Commit, Timeline, buildExecutionGraph } from '@dxos/react-ui-trace';
@@ -31,11 +32,7 @@ import {
   subAgentDelegationFixture,
   useLocalStorageNumber,
 } from '@dxos/react-ui-trace/testing';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { AssistantPlugin } from '#plugin';
@@ -51,14 +48,14 @@ type BaseStoryArgs = PropsWithChildren<{
 
 const BaseStory = ({ children, toolbar }: BaseStoryArgs) => (
   <Panel.Root classNames='h-full min-h-0'>
-    <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
-    <Panel.Content>{children}</Panel.Content>
+    <Panel.Header>{toolbar}</Panel.Header>
+    <Panel.Body>{children}</Panel.Body>
   </Panel.Root>
 );
 
 const JsonInspectorPanel = ({ data }: { data: unknown }) => (
   <ScrollContainer.Root pin>
-    <ScrollContainer.Content thin>
+    <ScrollContainer.Content width='thin'>
       <ScrollContainer.Viewport>
         <JsonHighlighter data={data} classNames='text-xs' />
       </ScrollContainer.Viewport>
@@ -127,7 +124,7 @@ const DefaultStory = () => {
     <BaseStory
       toolbar={
         <Toolbar.Root>
-          <IconButton.Root icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
+          <Button icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
         </Toolbar.Root>
       }
     >
@@ -284,21 +281,16 @@ const TimelinePlayback = ({
     <BaseStory
       toolbar={
         <Toolbar.Root>
-          <IconButton.Root icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
-          <IconButton.Root icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
-          <IconButton.Root
+          <Button icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
+          <Button icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
+          <Button
             icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
             iconOnly
             label={playing ? 'Pause (Space)' : 'Play (Space)'}
             onClick={handleTogglePlay}
           />
-          <IconButton.Root icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
-          <IconButton.Root
-            icon='ph--skip-forward--regular'
-            iconOnly
-            label='Show all (E / End)'
-            onClick={handleShowAll}
-          />
+          <Button icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
+          <Button icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
           <Toolbar.Text classNames='text-right text-sm tabular-nums opacity-70'>
             {step} / {total}
           </Toolbar.Text>
@@ -310,7 +302,7 @@ const TimelinePlayback = ({
 
         <div className='min-h-0'>
           <ScrollContainer.Root pin>
-            <ScrollContainer.Content thin>
+            <ScrollContainer.Content width='thin'>
               <ScrollContainer.Viewport ref={setTimelineViewport}>
                 <Timeline
                   branches={branches}

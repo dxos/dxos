@@ -2,26 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { ark } from '@ark-ui/react/factory';
 import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { composableProps, slottable } from '../../util/slots.ts';
+import { composableProps, slottable } from '../../util/index.ts';
 import { type Align, type Gap, alignClasses, gapClasses } from '../layout.ts';
 
 /** A single track: a CSS track size, or a number read as `<n>fr`. */
-type GridTrack = string | number;
+export type GridTrack = string | number;
 
 /**
  * Track definition: a count (equal `1fr` tracks), an explicit list, or `subgrid` to adopt the
  * parent grid's tracks.
  */
-type GridTracks = number | 'subgrid' | readonly GridTrack[];
+export type GridTracks = number | 'subgrid' | readonly GridTrack[];
 
-type GridProps = {
+export type GridProps = {
   cols?: GridTracks;
   rows?: GridTracks;
   gap?: Gap;
@@ -66,7 +64,7 @@ const trackList = (tracks: GridTracks): string =>
  * <Grid cols='subgrid' gap='sm' align='center'>…</Grid>
  * ```
  */
-const Grid = slottable<HTMLDivElement, GridProps>(
+export const Grid = slottable<HTMLDivElement, GridProps>(
   (
     { children, asChild, style, role, cols, rows, gap, align, center, grow = true, contents, ...props },
     forwardedRef,
@@ -110,6 +108,3 @@ const Grid = slottable<HTMLDivElement, GridProps>(
     );
   },
 );
-
-export { Grid as Root };
-export type { GridProps as RootProps, GridTrack as Track, GridTracks as Tracks };

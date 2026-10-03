@@ -6,11 +6,10 @@ import React, { useCallback, useState } from 'react';
 
 import { Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Util from '@dxos/react-ui/Util';
+import { Button, ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-export type SchemaTableProps = Util.ThemedClassName<{
+export type SchemaTableProps = ThemedClassName<{
   types: any[];
   objects?: Record<string, number | undefined>;
   label: string;
@@ -55,12 +54,12 @@ export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }:
         const typename = typeof type.typename === 'string' ? type.typename : Type.getTypename(type);
         return (
           <div key={typename} className='grid grid-cols-subgrid col-span-3 items-center'>
-            <div className='px-2 text-sm font-mono text-subdued'>{rowName(type, typename)}</div>
+            <div className='px-2 text-sm font-mono text-fg-subtle'>{rowName(type, typename)}</div>
             {/* A labelled row is a preset rather than a type, so it has no object count to show. */}
             <div className='px-2 text-right font-mono'>
               {typeof type.presetLabel === 'string' ? '—' : typename ? (objects[typename] ?? 0) : 0}
             </div>
-            <IconButton.Root
+            <Button
               variant='ghost'
               icon={pending === typename ? 'ph--spinner--regular' : 'ph--plus--regular'}
               iconOnly

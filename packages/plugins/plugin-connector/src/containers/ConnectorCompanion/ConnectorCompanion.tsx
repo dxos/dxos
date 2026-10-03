@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -14,11 +14,8 @@ import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection, Cursor } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Button, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
@@ -38,8 +35,8 @@ export type ConnectorCompanionProps = AppSurface.ArticleProps<Cursor.Cursor>;
  * picks the first.
  */
 export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   // Subscribe so mutable fields (sync status, options) re-render; field reads use the live object.
   useAtomValue(useMemo(() => Obj.atom(subject), [subject]));
@@ -109,49 +106,45 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            <Form.Root variant='settings' schema={EMPTY_SCHEMA} values={EMPTY_VALUES}>
-              <Form.Viewport>
-                <Form.Content>
-                  <Form.FieldSet label={title} description={source}>
-                    <Form.Field
-                      standalone
-                      label={t('sync-target.label')}
-                      description={status}
-                      error={!targetMissing && !sourceMissing && subject.lastError ? subject.lastError : undefined}
+      <Panel.Body>
+        <Form.Root variant='settings' schema={EMPTY_SCHEMA} values={EMPTY_VALUES}>
+          <Form.Viewport scroll>
+            <Form.Content>
+              <Form.FieldSet label={title} description={source}>
+                <Form.Field
+                  standalone
+                  label={t('sync-target.label')}
+                  description={status}
+                  error={!targetMissing && !sourceMissing && subject.lastError ? subject.lastError : undefined}
+                >
+                  {targetMissing || sourceMissing ? (
+                    <Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button>
+                  ) : undefined}
+
+                  {connector?.sync?.optionsSchema && !targetMissing && !sourceMissing && (
+                    <Form.Root
+                      schema={connector.sync.optionsSchema}
+                      defaultValues={optionsDefaultValues}
+                      onValuesChanged={handleOptionsChanged}
                     >
-                      {targetMissing || sourceMissing ? (
-                        <Button.Root onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button.Root>
-                      ) : undefined}
+                      <Form.Content>
+                        <Form.Fields />
+                      </Form.Content>
+                    </Form.Root>
+                  )}
+                </Form.Field>
 
-                      {connector?.sync?.optionsSchema && !targetMissing && !sourceMissing && (
-                        <Form.Root
-                          schema={connector.sync.optionsSchema}
-                          defaultValues={optionsDefaultValues}
-                          onValuesChanged={handleOptionsChanged}
-                        >
-                          <Form.Content>
-                            <Form.Fields />
-                          </Form.Content>
-                        </Form.Root>
-                      )}
-                    </Form.Field>
-
-                    {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
-                    {!sourceMissing && (
-                      <Form.Field standalone label={t('open-connection.label')}>
-                        <Button.Root onClick={handleOpenConnection}>{t('open-connection.label')}</Button.Root>
-                      </Form.Field>
-                    )}
-                  </Form.FieldSet>
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
+                {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
+                {!sourceMissing && (
+                  <Form.Field standalone label={t('open-connection.label')}>
+                    <Button onClick={handleOpenConnection}>{t('open-connection.label')}</Button>
+                  </Form.Field>
+                )}
+              </Form.FieldSet>
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </Panel.Body>
     </Panel.Root>
   );
 };

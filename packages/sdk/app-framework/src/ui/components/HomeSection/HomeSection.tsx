@@ -4,16 +4,14 @@
 
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import * as Field from '@dxos/react-ui/Field';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
-import type * as Util from '@dxos/react-ui/Util';
+import { Block, SystemButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 //
 // Root
 //
 
-type HomeSectionRootProps = Util.ThemedClassName<PropsWithChildren>;
+type HomeSectionRootProps = ThemedClassName<PropsWithChildren>;
 
 /**
  * Shared container for a Home content section: a centered, max-width column. Home surface
@@ -32,7 +30,7 @@ HomeSectionRoot.displayName = 'HomeSection.Root';
 // Header
 //
 
-type HomeSectionHeaderProps = Util.ThemedClassName<
+type HomeSectionHeaderProps = ThemedClassName<
   PropsWithChildren<{
     /** Section heading. */
     title?: string;
@@ -50,13 +48,13 @@ type HomeSectionHeaderProps = Util.ThemedClassName<
 const HomeSectionHeader = forwardRef<HTMLDivElement, HomeSectionHeaderProps>(
   ({ title, onClose, classNames, children }, forwardedRef) => (
     <div ref={forwardedRef} className={mx('flex items-center gap-2', classNames)}>
-      {title && <h2 className='grow truncate text-sm font-medium text-description'>{title}</h2>}
+      {title && <h2 className='grow truncate text-sm font-medium text-fg-muted'>{title}</h2>}
       {!title && <span className='grow' />}
       {children}
       {onClose && (
-        <Field.Block>
-          <SystemIconButton.Close variant='ghost' density='sm' iconOnly onClick={onClose} />
-        </Field.Block>
+        <Block>
+          <SystemButton.Close variant='ghost' size='sm' iconOnly onClick={onClose} />
+        </Block>
       )}
     </div>
   ),

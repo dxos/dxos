@@ -7,8 +7,7 @@ import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/el
 import React, { useEffect, useRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import * as Icon from '@dxos/react-ui/Icon';
-import type * as Util from '@dxos/react-ui/Util';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks/index.ts';
@@ -16,7 +15,7 @@ import { getCenter } from '../../layout/index.ts';
 import { createId } from '../../testing/index.ts';
 import { type ShapeRegistry } from '../Canvas/index.ts';
 
-export type ToolsProps = Util.ThemedClassName<{
+export type ToolsProps = ThemedClassName<{
   registry: ShapeRegistry;
 }>;
 
@@ -74,7 +73,7 @@ const Tool = ({ type, icon }: ToolProps) => {
   // TODO(burdon): Tooltip.
   return (
     <div ref={ref} className='flex' title={type}>
-      <Icon.Root icon={icon} size={6} />
+      <Icon icon={icon} size='xl' />
     </div>
   );
 };

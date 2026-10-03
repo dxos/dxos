@@ -5,14 +5,12 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
+import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Column from '@dxos/react-ui/Column';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
@@ -74,8 +72,8 @@ const importFailureKey = (error: unknown): string => {
  * user already is, and a picker would ask a question they have already answered.
  */
 export const ImportPullRequestDialog = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const openObject = useOpenObject();
   const space = ToolkitHooks.useActiveSpace();
 
@@ -132,9 +130,9 @@ export const ImportPullRequestDialog = () => {
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('import-pull-request-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <Form.Root
@@ -144,12 +142,10 @@ export const ImportPullRequestDialog = () => {
           onSave={handleSave}
           onCancel={handleCancel}
         >
-          <Column.Center>
-            <Form.Content>
-              <Form.Fields />
-              <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
-            </Form.Content>
-          </Column.Center>
+          <Form.Content>
+            <Form.Fields />
+            <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
+          </Form.Content>
         </Form.Root>
       </Dialog.Body>
     </Dialog.Content>

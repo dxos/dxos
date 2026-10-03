@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -13,11 +13,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
+import { Button, Field, Flex, Switch, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
@@ -25,8 +22,8 @@ import { FeedOperation, Subscription } from '#types';
 export type FeedPropertiesProps = AppSurface.ObjectPropertiesProps<Subscription.Subscription>;
 
 export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const [pending, setPending] = useState(false);
 
@@ -83,8 +80,8 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
     <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('feed-sync.label')}</Field.Label>
-        <Flex.Root align='center'>
-          <Field.Switch
+        <Flex align='center'>
+          <Switch
             checked={syncEnabled ?? false}
             disabled={pending}
             onCheckedChange={() => {
@@ -92,14 +89,9 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
             }}
           />
           {syncTrigger && (
-            <IconButton.Root
-              iconOnly
-              icon='ph--gear--regular'
-              label={t('view-trigger.label')}
-              onClick={handleViewTrigger}
-            />
+            <Button iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
           )}
-        </Flex.Root>
+        </Flex>
       </Field.Root>
     </Form.FieldSet>
   );

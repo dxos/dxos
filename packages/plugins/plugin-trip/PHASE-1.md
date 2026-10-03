@@ -402,7 +402,7 @@ export const meta: Plugin.Meta = {
 // Copyright 2026 DXOS.org
 //
 
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -422,7 +422,7 @@ export const translations = [
       },
     },
   },
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Resource[];
 ```
 
 - [ ] **Step 5: Create `src/index.ts`**
@@ -868,7 +868,7 @@ git commit -m "feat(plugin-trip): define Booking and Trip ECHO types"
 import { format } from 'date-fns';
 import React, { forwardRef, useCallback } from 'react';
 
-import * as Card from '@dxos/react-ui/Card';
+import { Card } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { type Segment } from '#types';
@@ -906,7 +906,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   return (
     <Mosaic.Tile
       asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      classNames='dx-hover dx-current dx-selected border-b border-separator-subtle'
       id={segment.id}
       data={data}
       location={location}
@@ -917,17 +917,17 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
             <Card.Row icon={icon}>
               <Card.Text classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Text>
               {isTentative && (
-                <span className='ml-2 text-xs text-description px-1 rounded bg-attentionSurface'>tentative</span>
+                <span className='ml-2 text-xs text-fg-muted px-1 rounded bg-attentionSurface'>tentative</span>
               )}
             </Card.Row>
             {route && (
               <Card.Row icon='ph--arrow-right--regular'>
-                <span className='text-description text-sm'>{route}</span>
+                <span className='text-fg-muted text-sm'>{route}</span>
               </Card.Row>
             )}
             {date && (
               <Card.Row icon='ph--calendar--regular'>
-                <span className='text-description text-sm'>{format(date, 'PPp')}</span>
+                <span className='text-fg-muted text-sm'>{format(date, 'PPp')}</span>
               </Card.Row>
             )}
           </Card.Content>
@@ -976,7 +976,7 @@ git commit -m "feat(plugin-trip): add SegmentCard tile component"
 
 import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { ScrollArea } from '@dxos/react-ui';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -1223,11 +1223,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useShowItem } from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-
+import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 
@@ -1244,7 +1240,7 @@ const byPrimaryDate = (a: Segment.Any, b: Segment.Any): number => {
 };
 
 export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.id);
+  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
   const [trip] = useObject(subject);
@@ -1311,7 +1307,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
-              <IconButton.Root icon='ph--plus--regular' label={t('segment.add.label')} onClick={handleAddSegment} />
+              <IconButton icon='ph--plus--regular' label={t('segment.add.label')} onClick={handleAddSegment} />
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>

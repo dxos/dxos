@@ -5,11 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { Button, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { ScrollFollower } from './follow.ts';
@@ -118,26 +115,20 @@ const DefaultStory = ({
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <IconButton.Root
+          <Button
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
             iconOnly
             label={running ? 'Stop' : 'Start'}
             data-testid='follow.toggle'
             onClick={handleToggle}
           />
-          <IconButton.Root
-            icon='ph--arrow-line-up--regular'
-            iconOnly
-            label='Top'
-            data-testid='follow.top'
-            onClick={handleTop}
-          />
+          <Button icon='ph--arrow-line-up--regular' iconOnly label='Top' data-testid='follow.top' onClick={handleTop} />
         </Toolbar.Root>
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport data-testid='follow.viewport' ref={setViewport}>
             {items.map(({ index }) => (
@@ -146,15 +137,15 @@ const DefaultStory = ({
                 style={{ height: ROW_HEIGHT }}
                 className={mx('flex items-center px-3', index % 2 === 0 && 'bg-input-surface')}
               >
-                <span className='text-sm text-description'>{index}</span>
+                <span className='text-sm text-fg-muted'>{index}</span>
               </div>
             ))}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
 
-      <Panel.Statusbar>
-        <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description tabular-nums'>
+      <Panel.Footer>
+        <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-fg-muted tabular-nums'>
           <span data-testid='follow.items'>{items.length} items</span>
           <span data-testid='follow.position'>
             {readout.top} / {readout.target}
@@ -167,7 +158,7 @@ const DefaultStory = ({
           </span>
           <span className='text-right'>{running ? 'following' : 'idle'}</span>
         </div>
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

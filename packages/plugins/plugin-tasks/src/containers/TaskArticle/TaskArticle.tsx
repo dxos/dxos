@@ -4,19 +4,14 @@
 
 import React, { useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
+import { Button, Container, Panel, ScrollArea, Toolbar, Typography, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
-import * as Column from '@dxos/react-ui/Column';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -44,11 +39,11 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * a plugin that can store files is present.
  */
 export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attendableId }: TaskArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
-  const handleUpdate = AppHooks.useOperation(
+  const handleUpdate = Hooks.useOperation(
     TaskOperation.UpdateTask,
     (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
@@ -56,7 +51,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
   const { onFiles: handleAttach, pending: pendingAttachments } = useAttachFiles(task);
 
   // Record-only: an agent that asked over the MCP reads the answer back off the task.
-  const handleQuestionAnswer = AppHooks.useOperation(
+  const handleQuestionAnswer = Hooks.useOperation(
     TaskOperation.AnswerQuestion,
     (task: Task.Task, question: string, answer: string) => ({ task: Ref.make(task), question, answer }),
     { spaceId },
@@ -77,41 +72,39 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
+      <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
           {/* Actions only: what the task IS — its status, estimate and priority — reads with the
               text below, while the toolbar carries what can be done to it. */}
           <Toolbar.Separator variant='gap' />
           <TaskActions task={task} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root thin>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
           <ScrollArea.Viewport classNames='dx-document'>
             <TaskAttachmentDropZone onFiles={handleAttach}>
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the
                 section headings and the cards all start at the content track, and only a glyph
                 hangs outside it. */}
-              <Column.Root gutter='md' gap='lg' classNames='py-2'>
-                <Column.Center>
-                  {/* The task's own fields, not the list's strip: the pane has a subject, so it
-                    needs neither the create case nor the selection the strip reads. */}
-                  <TaskEditor
-                    task={task}
-                    onUpdate={handleUpdate}
-                    showDescription
-                    descriptionExtensions={descriptionExtensions}
-                    classNames='dx-document'
-                  />
-                </Column.Center>
+              <Container gutter='md' gap='lg' classNames='py-2'>
+                {/* The task's own fields, not the list's strip: the pane has a subject, so it
+                  needs neither the create case nor the selection the strip reads. */}
+                <TaskEditor
+                  task={task}
+                  onUpdate={handleUpdate}
+                  showDescription
+                  descriptionExtensions={descriptionExtensions}
+                  classNames='dx-document'
+                />
 
                 {/* What the task carries, in a flow rather than the row's one scrolling line: the
                   pane has the width to wrap them, and a chip that wraps is a chip the reader can
                   see without dragging the row sideways. */}
-                <Column.Center classNames='flex flex-wrap items-center gap-1' data-testid='tasksPlugin.tags'>
+                <div className='flex flex-wrap items-center gap-1' data-testid='tasksPlugin.tags'>
                   <TaskMnemonic task={task} />
                   <TaskTags task={task} />
-                </Column.Center>
+                </div>
 
                 {/* The task's own fields, under what it says: they are properties of the task, so
                   they read after the description rather than as chrome above it — and with the
@@ -122,15 +115,20 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                   standing "Questions" label over nothing says the pane expects them, when what a
                   task with none has is nothing to answer. */}
                 {openQuestions.length > 0 && (
-                  <Column.Section label={t('task-questions.label')} data-testid='tasksPlugin.questions'>
-                    {openQuestions.map((thread) => (
-                      <TaskQuestion
-                        key={thread.question.id}
-                        thread={thread}
-                        onAnswer={(answer) => handleQuestionAnswer(task, thread.question.id, answer)}
-                      />
-                    ))}
-                  </Column.Section>
+                  <Container asChild gutter='inherit' gap='md'>
+                    <section data-testid='tasksPlugin.questions'>
+                      <Typography asChild tone='subtle'>
+                        <h2>{t('task-questions.label')}</h2>
+                      </Typography>
+                      {openQuestions.map((thread) => (
+                        <TaskQuestion
+                          key={thread.question.id}
+                          thread={thread}
+                          onAnswer={(answer) => handleQuestionAnswer(task, thread.question.id, answer)}
+                        />
+                      ))}
+                    </section>
+                  </Container>
                 )}
 
                 <TaskAttachments
@@ -141,11 +139,11 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 />
                 {history && history.length > 0 && <TaskHistory entries={history} />}
                 <TaskArtifacts task={task} />
-              </Column.Root>
+              </Container>
             </TaskAttachmentDropZone>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -157,7 +155,7 @@ TaskArticle.displayName = 'TaskArticle';
  * row's trailing gutter, where the pane's whole subject is the task and they are its actions.
  */
 const TaskActions = ({ task }: { task: Task.Task }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const contributed = useTaskActions();
   const actions = useMemo(() => contributed(task), [contributed, task]);
 
@@ -167,7 +165,7 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
 
   return (
     <ActionMenu deferUntilOpen actions={actions}>
-      <IconButton.Root
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--dots-three-vertical--regular'

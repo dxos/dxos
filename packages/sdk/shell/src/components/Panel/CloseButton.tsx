@@ -4,21 +4,19 @@
 
 import React from 'react';
 
-import type * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
+import { Button, type ButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../translations.ts';
 
 /**
  * @deprecated use IconButton directly
  */
-export const CloseButton = ({ onDone, ...props }: Omit<Button.RootProps, 'onClick'> & { onDone?: () => void }) => {
-  const { t } = Hooks.useTranslation(translationKey);
+export const CloseButton = ({ onDone, ...props }: Omit<ButtonProps, 'onClick'> & { onDone?: () => void }) => {
+  const { t } = useTranslation(translationKey);
   return (
-    <IconButton.Root
+    <Button
       icon='ph--x--bold'
-      size={4}
+      iconSize='md'
       label={t('exit.label')}
       iconOnly
       variant='ghost'

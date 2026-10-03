@@ -5,10 +5,7 @@
 import React, { useState } from 'react';
 
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as ToastModule from '@dxos/react-ui/Toast';
+import { type ToastRootProps, Toast as UiToast, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -22,8 +19,8 @@ export const Toast = ({
   actionAlt,
   onAction,
   onOpenChange,
-}: LayoutOperation.Toast & Pick<ToastModule.RootProps, 'onOpenChange'>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+}: LayoutOperation.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
+  const { t } = useTranslation(meta.profile.key);
 
   // Control the open state so closing flips Radix's `open` (playing the exit animation) rather than
   // unmounting abruptly. Both the close button and Radix's own timeout/swipe route through here.
@@ -34,23 +31,17 @@ export const Toast = ({
   };
 
   return (
-    <ToastModule.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
-      <ToastModule.Title icon={icon} onClose={() => handleOpenChange(false)}>
-        {title && <span>{ThemeProvider.toLocalizedString(title, t)}</span>}
-      </ToastModule.Title>
-      {description && (
-        <ToastModule.Description>{ThemeProvider.toLocalizedString(description, t)}</ToastModule.Description>
-      )}
+    <UiToast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
+      <UiToast.Header icon={icon}>{title && toLocalizedString(title, t)}</UiToast.Header>
+      {description && <UiToast.Description>{toLocalizedString(description, t)}</UiToast.Description>}
       {onAction && actionAlt && actionLabel && (
-        <ToastModule.Actions>
-          <ToastModule.Action altText={ThemeProvider.toLocalizedString(actionAlt, t)} asChild>
-            <Button.Root data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
-              {ThemeProvider.toLocalizedString(actionLabel, t)}
-            </Button.Root>
-          </ToastModule.Action>
-        </ToastModule.Actions>
+        <UiToast.Footer>
+          <UiToast.ActionTrigger data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
+            {toLocalizedString(actionLabel, t)}
+          </UiToast.ActionTrigger>
+        </UiToast.Footer>
       )}
-    </ToastModule.Root>
+    </UiToast.Root>
   );
 };
 

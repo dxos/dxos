@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import * as Card from '@dxos/react-ui/Card';
+import { Card } from '@dxos/react-ui';
 
 import { CanvasComponent } from '#components';
 
@@ -19,7 +19,7 @@ export const TldrawCard = ({ canvas, editable = false }: TldrawCardProps) => {
   return (
     <Card.Body>
       <Card.Section classNames='aspect-square'>
-        <Card.Row fullWidth>
+        <Card.Row>
           <CanvasComponent canvas={canvas} autoCenter readonly={!editable} hideUi={!editable} />
         </Card.Row>
       </Card.Section>

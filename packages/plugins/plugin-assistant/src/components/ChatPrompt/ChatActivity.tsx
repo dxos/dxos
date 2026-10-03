@@ -5,9 +5,8 @@
 import React, { useEffect, useState } from 'react';
 
 import type * as Trace from '@dxos/compute/Trace';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatStatus as NaturalChatStatus } from '@dxos/react-ui-chat';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -25,7 +24,7 @@ const activityLabelKey = (phase: Trace.RequestPhaseName): string => `activity.${
  */
 const INLINE_DETAIL_PHASES: ReadonlySet<Trace.RequestPhaseName> = new Set<Trace.RequestPhaseName>(['calling-tool']);
 
-export type ChatActivityProps = Util.ThemedClassName<{
+export type ChatActivityProps = ThemedClassName<{
   activity?: Trace.PayloadType<typeof Trace.RequestPhase>;
   /**
    * Epoch milliseconds the agent is scheduled to wake at, when an alarm is pending. Rendered as a
@@ -47,7 +46,7 @@ export type ChatActivityProps = Util.ThemedClassName<{
  * state can be mounted in a story without a live agent process; `Chat.Activity` is the bound form.
  */
 export const ChatActivity = ({ classNames, activity, wakeAt }: ChatActivityProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   // `sleeping` is the agent saying the turn is over and only the alarm is left, so the countdown
   // replaces it rather than competing with it.
   const waking = !activity || activity.phase === 'sleeping';

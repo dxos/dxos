@@ -61,9 +61,6 @@
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-markdown": "workspace:*",
-    "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
@@ -73,8 +70,6 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
-    "@codemirror/lang-xml": "catalog:",
-    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

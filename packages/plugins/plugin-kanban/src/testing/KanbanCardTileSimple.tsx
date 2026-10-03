@@ -5,11 +5,9 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { Block, Button, Card, DragHandle, Focus, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
+import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { type KanbanCardProps, useKanbanBoard } from '#components';
 import { meta } from '#meta';
@@ -21,7 +19,7 @@ const KANBAN_CARD_TILE_SIMPLE_NAME = 'KanbanCardTileSimple';
  */
 export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug, draggable }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = useTranslation(meta.profile.key);
     const { model } = useBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const { onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
@@ -53,23 +51,23 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         <Focus.Item asChild>
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Header>
-              <Card.DragHandle ref={dragHandleRef} />
+              <DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Card.Block end>
+              <Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <IconButton.Root
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             <Card.Body>
-              <Card.Row fullWidth>
-                <pre className='p-2 text-xs text-description whitespace-pre-wrap'>{JSON.stringify(data, null, 2)}</pre>
+              <Card.Row>
+                <pre className='p-2 text-xs text-fg-muted whitespace-pre-wrap'>{JSON.stringify(data, null, 2)}</pre>
               </Card.Row>
             </Card.Body>
           </Card.Root>

@@ -5,10 +5,10 @@
 
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useRef } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-export type AuthCodeProps = Util.ThemedClassName<ComponentPropsWithoutRef<'span'>> & {
+export type AuthCodeProps = ThemedClassName<ComponentPropsWithoutRef<'span'>> & {
   code?: string;
   large?: boolean;
 };

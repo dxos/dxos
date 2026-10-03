@@ -4,22 +4,17 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
+import { Block, Button, Card, Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { ActionMenu } from '@dxos/react-ui-menu';
-import * as Card from '@dxos/react-ui/Card';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { ActionMenu, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { ChessComAccount, ChessComOperation } from '#types';
@@ -27,8 +22,8 @@ import { ChessComAccount, ChessComOperation } from '#types';
 export type ChessGameArticleProps = AppSurface.ObjectArticleProps<ChessComAccount.Account>;
 
 export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [account] = useObject(subject);
   const [gamesFeed] = useObject(account?.games);
   const db = Obj.getDatabase(subject);
@@ -56,69 +51,77 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
     );
   }, [subject, db?.spaceId, invokePromise]);
 
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action(
+          'sync',
+          {
+            label: ['sync-games.button', { ns: meta.profile.key }],
+            icon: 'ph--arrows-clockwise--regular',
+            iconOnly: false,
+          },
+          handleSync,
+        )
+        .build(),
+    [handleSync],
+  );
+
   const empty = sortedGames.length === 0;
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.IconButton
-            icon='ph--arrows-clockwise--regular'
-            label={t('sync-games.button')}
-            onClick={handleSync}
-          />
+      <Panel.Header>
+        <ActionToolbar {...menuActions} attendableId={attendableId}>
           {account?.username && (
-            <span className='text-subdued text-sm px-2'>
+            <span className='text-fg-subtle text-sm px-2'>
               {account.username}
               {account.league ? ` · ${account.league}` : ''}
             </span>
           )}
           <div className='grow' />
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+        </ActionToolbar>
+      </Panel.Header>
+      <Panel.Body>
         {empty ? (
-          <Flex.Root center classNames='h-full text-subdued text-sm'>
+          <Flex center classNames='h-full text-fg-subtle text-sm'>
             {t('empty-games.message')}
-          </Flex.Root>
+          </Flex>
         ) : (
           // TODO(burdon): This seems wrong?
           <Masonry.Root Tile={GameTile} minColumnWidth={18} maxColumnWidth={24}>
-            <Masonry.Content thin centered padding>
+            <Masonry.Content padding>
               <Masonry.Viewport classNames='py-2' items={sortedGames} getId={(game) => game.id} />
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
 
 const GameTile = ({ data: game }: { data: Game.Game }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
   const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
   const objectMenuItems = ToolkitHooks.useObjectMenuItems(game, pivotId);
-  const icon = Obj.getIcon(game)?.icon ?? 'ph--sword--regular';
-
   return (
-    <Card.Root ref={cardRef} fullWidth>
-      <Card.Header>
-        <Card.Block>
-          <Icon.Root icon={icon} />
-        </Card.Block>
-        <Card.Title>{Obj.getLabel(game, { fallback: 'typename' })}</Card.Title>
-        <Card.Block end>
-          <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
-            <IconButton.Root
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label={t('game-actions.label')}
-            />
-          </ActionMenu>
-        </Card.Block>
-      </Card.Header>
+    <ObjectCard.Root ref={cardRef}>
+      <ObjectCard.Header
+        subject={game}
+        menu={
+          <Block rail='end'>
+            <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
+              <Button
+                iconOnly
+                variant='ghost'
+                icon='ph--dots-three-vertical--regular'
+                label={t('game-actions.label')}
+              />
+            </ActionMenu>
+          </Block>
+        }
+      />
       <Card.Body>
         <Surface.Surface
           type={AppSurface.CardContent}
@@ -126,7 +129,7 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
           data={{ subject: game } satisfies AppSurface.ObjectCardData}
         />
       </Card.Body>
-    </Card.Root>
+    </ObjectCard.Root>
   );
 };
 

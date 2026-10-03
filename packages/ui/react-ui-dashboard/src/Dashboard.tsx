@@ -3,16 +3,24 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import React, { type PropsWithChildren, forwardRef, useCallback, useMemo } from 'react';
+import React, { type ComponentProps, type PropsWithChildren, forwardRef, useCallback, useMemo } from 'react';
 
 import { createContext, useControllableState } from '@dxos/react-hooks';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
-import * as Util from '@dxos/react-ui/Util';
+import {
+  type ComposableProps,
+  type SlottableProps,
+  type ThemedClassName,
+  ToggleGroup,
+  composable,
+  composableProps,
+  slottable,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
-import { type ComposableProps, type SlottableProps } from '@dxos/ui-types';
 import { type UnitFormat } from '@dxos/util';
 
 import { type ActivityDatum, buildCalendar } from './util.ts';
+
+type ToggleGroupItemProps = ComponentProps<typeof ToggleGroup.Item>;
 
 const DASHBOARD_NAME = 'Dashboard';
 
@@ -67,11 +75,11 @@ type DashboardContentProps = SlottableProps;
 /**
  * Grid layout container for dashboard sections.
  */
-const DashboardContent = Util.slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+const DashboardContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   return (
     <ark.div
       asChild={asChild}
-      {...Util.composableProps(props, { classNames: 'grid content-start gap-2 p-2' })}
+      {...composableProps(props, { classNames: 'grid content-start gap-2 p-2' })}
       ref={forwardedRef}
     >
       {children}
@@ -90,11 +98,11 @@ type DashboardStatsProps = SlottableProps;
 /**
  * Auto-fit grid of stat cards.
  */
-const DashboardStats = Util.slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+const DashboardStats = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   return (
     <ark.div
       asChild={asChild}
-      {...Util.composableProps(props, { classNames: 'grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-2' })}
+      {...composableProps(props, { classNames: 'grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-2' })}
       ref={forwardedRef}
     >
       {children}
@@ -113,11 +121,11 @@ type DashboardStatProps = SlottableProps;
 /**
  * Single stat card; composes StatLabel and StatValue.
  */
-const DashboardStat = Util.slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+const DashboardStat = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   return (
     <ark.div
       asChild={asChild}
-      {...Util.composableProps(props, { classNames: 'flex min-w-0 flex-col gap-1 rounded-sm dx-group-surface p-2' })}
+      {...composableProps(props, { classNames: 'flex min-w-0 flex-col gap-1 rounded-sm dx-group-surface p-2' })}
       ref={forwardedRef}
     >
       {children}
@@ -136,8 +144,8 @@ type DashboardStatLabelProps = ComposableProps;
 /**
  * Muted caption of a stat card.
  */
-const DashboardStatLabel = Util.composable<HTMLSpanElement>(({ children, ...props }, forwardedRef) => (
-  <span {...Util.composableProps(props, { classNames: 'truncate text-sm text-description' })} ref={forwardedRef}>
+const DashboardStatLabel = composable<HTMLSpanElement>(({ children, ...props }, forwardedRef) => (
+  <span {...composableProps(props, { classNames: 'truncate text-sm text-fg-muted' })} ref={forwardedRef}>
     {children}
   </span>
 ));
@@ -159,14 +167,11 @@ type DashboardStatValueProps = ComposableProps<DashboardStatValueCustomProps>;
 /**
  * Stat card value; formats numbers via the optional unit, falling back to locale formatting.
  */
-const DashboardStatValue = Util.composable<HTMLSpanElement, DashboardStatValueCustomProps>(
+const DashboardStatValue = composable<HTMLSpanElement, DashboardStatValueCustomProps>(
   ({ children, value, unit, ...props }, forwardedRef) => {
     const content = typeof value === 'number' ? (unit ? unit(value).toString() : value.toLocaleString()) : value;
     return (
-      <span
-        {...Util.composableProps(props, { classNames: 'truncate text-xl font-medium text-base-fg' })}
-        ref={forwardedRef}
-      >
+      <span {...composableProps(props, { classNames: 'truncate text-xl font-medium text-fg' })} ref={forwardedRef}>
         {content ?? children}
       </span>
     );
@@ -179,7 +184,7 @@ DashboardStatValue.displayName = 'Dashboard.StatValue';
 // Ranges
 //
 
-type DashboardRangesProps = Util.ThemedClassName<PropsWithChildren<{}>>;
+type DashboardRangesProps = ThemedClassName<PropsWithChildren<{}>>;
 
 /**
  * Single-select range tabs bound to the Root range state.
@@ -217,14 +222,14 @@ DashboardRanges.displayName = 'Dashboard.Ranges';
 // Range
 //
 
-type DashboardRangeProps = ToggleGroup.ItemProps;
+type DashboardRangeProps = ToggleGroupItemProps;
 
 /**
  * Individual range tab.
  */
 const DashboardRange = forwardRef<HTMLButtonElement, DashboardRangeProps>(
-  ({ variant = 'ghost', density = 'sm', ...props }, forwardedRef) => (
-    <ToggleGroup.Item {...props} variant={variant} density={density} ref={forwardedRef} />
+  ({ variant = 'ghost', size = 'sm', ...props }, forwardedRef) => (
+    <ToggleGroup.Item {...props} variant={variant} size={size} ref={forwardedRef} />
   ),
 );
 
@@ -267,7 +272,7 @@ const activityRows = 'max-content repeat(7, var(--dx-dashboard-cell, 0.75rem))';
  * Never scrolls horizontally: when the weeks overflow, the oldest are clipped on the left
  * so the most recent weeks stay pinned to the right; day labels remain visible.
  */
-const DashboardActivity = Util.composable<HTMLDivElement, DashboardActivityCustomProps>(
+const DashboardActivity = composable<HTMLDivElement, DashboardActivityCustomProps>(
   ({ data, weeks = 52, endDate, locale, children: _children, ...props }, forwardedRef) => {
     const calendar = useMemo(() => buildCalendar({ data, weeks, endDate }), [data, weeks, endDate]);
     const monthFormat = useMemo(() => new Intl.DateTimeFormat(locale, { month: 'short' }), [locale]);
@@ -275,7 +280,7 @@ const DashboardActivity = Util.composable<HTMLDivElement, DashboardActivityCusto
 
     return (
       // min-w-0 lets the matrix shrink inside grid/flex parents instead of widening them.
-      <div {...Util.composableProps(props, { classNames: 'flex min-w-0 gap-[3px]' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'flex min-w-0 gap-[3px]' })} ref={forwardedRef}>
         <div className='grid gap-[3px]' style={{ gridTemplateRows: activityRows }}>
           {/* Zero-width spacer reserves the month-row height so day rows align with cell rows. */}
           <span aria-hidden className='text-xs'>
@@ -285,7 +290,7 @@ const DashboardActivity = Util.composable<HTMLDivElement, DashboardActivityCusto
             <span
               key={day}
               style={{ gridRow: day + 2 }}
-              className='self-center pe-1 text-[10px] leading-none text-description uppercase font-mono'
+              className='self-center pe-1 text-[10px] leading-none text-fg-muted uppercase font-mono'
             >
               {dayFormat.format(new Date(referenceMonday.getFullYear(), 0, referenceMonday.getDate() + day))}
             </span>
@@ -307,7 +312,7 @@ const DashboardActivity = Util.composable<HTMLDivElement, DashboardActivityCusto
                 style={{ gridColumn: weekIndex + 1, gridRow: 1 }}
                 // justify-self-end sets the label's right edge on its week column so overflow
                 // extends left, keeping the last month label unclipped at the pinned right edge.
-                className='justify-self-end whitespace-nowrap text-xs text-description'
+                className='justify-self-end whitespace-nowrap text-xs text-fg-muted'
               >
                 {monthFormat.format(new Date(year, month, 1))}
               </span>

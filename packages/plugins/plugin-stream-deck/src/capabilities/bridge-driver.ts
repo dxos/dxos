@@ -11,7 +11,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 import * as Dashboard from '@dxos/plugin-space/Dashboard';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { getIconRegistry } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
 import { StreamDeckBridge } from '#bridge';
@@ -121,7 +121,7 @@ export default Capability.makeModule(
       },
     });
 
-    const unsubscribeIcons = ThemeProvider.getIconRegistry().subscribe(publish);
+    const unsubscribeIcons = getIconRegistry().subscribe(publish);
 
     bridge.open();
 

@@ -144,7 +144,7 @@ const readThemeParams = (container: Element): ThemeColorParams | undefined => {
     probe.style.color = `var(${variable})`;
     return cssColorToOklch(getComputedStyle(probe).color);
   };
-  const ink = resolve('--color-base-fg');
+  const ink = resolve('--color-fg');
   const panel = resolve('--color-base-surface');
   container.removeChild(probe);
 

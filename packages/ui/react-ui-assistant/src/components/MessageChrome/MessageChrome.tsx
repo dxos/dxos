@@ -4,13 +4,9 @@
 
 import React, { type PropsWithChildren } from 'react';
 
+import { Button, Icon, SystemButton, type ThemedClassName, createContext, useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
-import type * as Util from '@dxos/react-ui/Util';
 import { type ContentBlock, Message } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -37,7 +33,7 @@ type MessageChromeContextValue = {
 };
 
 // Every field is optional configuration, so a missing provider defaults instead of throwing.
-const [MessageChromeProvider, useMessageChromeContext] = Hooks.createContext<MessageChromeContextValue>(
+const [MessageChromeProvider, useMessageChromeContext] = createContext<MessageChromeContextValue>(
   MESSAGE_CHROME_NAME,
   {},
 );
@@ -50,13 +46,13 @@ export { MessageChromeProvider };
 
 /** Copies the message's extracted text — the model's truth, not the DOM's partial render. */
 const CopyButton = ({ message }: { message: Message.Message }) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   return (
-    <SystemIconButton.Clipboard
+    <SystemButton.Clipboard
       iconOnly
       label={t('copy.label')}
       variant='ghost'
-      density='sm'
+      size='sm'
       onCopy={() => Message.extractText(message)}
     />
   );
@@ -69,14 +65,14 @@ const MessageId = ({ message }: { message: Message.Message }) => {
   }
 
   return (
-    <span className='font-mono text-subdued' title={message.id}>
+    <span className='font-mono text-fg-subtle' title={message.id}>
       {message.id.slice(-8)}
     </span>
   );
 };
 
 const Time = ({ message }: { message: Message.Message }) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   return (
     <time dateTime={message.created} title={new Date(message.created).toLocaleString()}>
       {formatTime(message.created, { justNow: t('just-now.label') })}
@@ -84,7 +80,7 @@ const Time = ({ message }: { message: Message.Message }) => {
   );
 };
 
-export type MessageToolbarProps = Util.ThemedClassName<{
+export type MessageToolbarProps = ThemedClassName<{
   message: Message.Message;
 }>;
 
@@ -95,19 +91,19 @@ export type MessageToolbarProps = Util.ThemedClassName<{
  * move every row below it.
  */
 export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const { onRewind } = useMessageChromeContext('PromptToolbar');
 
   return (
-    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-description', classNames)}>
+    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
       {onRewind && (
-        <IconButton.Root
+        <Button
           icon='ph--clock-counter-clockwise--regular'
           iconOnly
           label={t('rewind.label')}
           variant='ghost'
-          density='sm'
+          size='sm'
           data-testid='chat.rewind'
           onClick={() => onRewind(message.id)}
         />
@@ -123,7 +119,7 @@ PromptToolbar.displayName = 'PromptToolbar';
 /** The controls under an answer: copy, and when the answer finished. */
 export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) => {
   return (
-    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-description', classNames)}>
+    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
       <Time message={message} />
       <MessageId message={message} />
@@ -142,7 +138,7 @@ const formatTokens = (tokens: number): string => (tokens >= 1_000 ? `${(tokens /
  * What the turn cost, beside what it produced — the toolbar is where a reader looks for a message's
  * metadata, and a widget of its own would take a row of the thread to say one line.
  */
-const Stats = ({ classNames, message }: Util.ThemedClassName<{ message: Message.Message }>) => {
+const Stats = ({ classNames, message }: ThemedClassName<{ message: Message.Message }>) => {
   const stats = message.blocks.find((block) => block._tag === 'stats') as ContentBlock.Stats | undefined;
   const tokens = stats?.usage?.totalTokens;
   const duration = stats?.duration;
@@ -171,7 +167,7 @@ Stats.displayName = 'Stats';
  * reader's words.
  */
 const SyntheticContext = ({ message }: { message: Message.Message }) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const { showContext = true } = useMessageChromeContext('SyntheticContext');
   const context = message.blocks
     .filter((block) => block._tag === 'text' && block.disposition === 'synthetic')
@@ -184,13 +180,13 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
   return (
     <div className='pb-1 opacity-60' data-testid='chat.context'>
       <TogglePanel.Root>
-        <TogglePanel.Content classNames='border border-subdued-separator rounded-sm'>
+        <TogglePanel.Content classNames='border border-separator-subtle rounded-sm'>
           <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
-            <span className='grow text-description truncate'>{t('context.label')}</span>
-            <Icon.Root icon='ph--brain--regular' size={4} classNames='text-description' />
+            <span className='grow text-fg-muted truncate'>{t('context.label')}</span>
+            <Icon icon='ph--brain--regular' size='md' tone='muted' />
           </TogglePanel.Header>
           <TogglePanel.Body>
-            <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-description whitespace-pre-wrap'>
+            <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-fg-muted whitespace-pre-wrap'>
               {context}
             </TogglePanel.Viewport>
           </TogglePanel.Body>

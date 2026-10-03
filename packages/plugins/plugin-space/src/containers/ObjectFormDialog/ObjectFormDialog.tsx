@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -22,11 +22,8 @@ import { useQuery } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
+import { Button, Dialog, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useSubmitOnEnter } from '@dxos/react-ui-form';
-import * as Button from '@dxos/react-ui/Button';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
@@ -56,7 +53,21 @@ export type ObjectFormDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typ
  * unmount rather than off the cancel button because escape, the overlay, and the close affordance
  * never reach a handler and each of them is a cancel.
  */
-export const ObjectFormDialog = ({
+/**
+ * The dialog's Content; its body (and the draft it creates) lives inside it, so closing the dialog unmounts the body and
+ * a dismissal settles the handle.
+ */
+export const ObjectFormDialog = (props: ObjectFormDialogProps) => (
+  // A click outside must not dismiss: this dialog holds unsaved form input, and a stray click on
+  // the overlay would discard it with no undo. Escape and the close button remain.
+  <Dialog.Content closeOnInteractOutside={false}>
+    <ObjectFormDialogBody {...props} />
+  </Dialog.Content>
+);
+
+ObjectFormDialog.displayName = 'ObjectFormDialog';
+
+const ObjectFormDialogBody = ({
   target: initialTarget,
   typename: initialTypename,
   mode = 'draft',
@@ -67,12 +78,12 @@ export const ObjectFormDialog = ({
   shouldNavigate: _shouldNavigate,
   targetNodeId,
 }: ObjectFormDialogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const manager = PluginManagerProvider.usePluginManager();
   // Demand signal: load policy-parked CreateObjectEntry providers; the picker below reads them
   // reactively, so entries pop in as their chunks arrive.
-  AppHooks.useActivationSignal(SpaceEvents.CreateObjectRequested);
-  const operationInvoker = AppHooks.useOperationInvoker();
+  Hooks.useActivationSignal(SpaceEvents.CreateObjectRequested);
+  const operationInvoker = Hooks.useOperationInvoker();
   const { invoke } = operationInvoker;
   const [target, setTarget] = useState<Database.Database | Obj.Unknown | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
@@ -83,7 +94,7 @@ export const ObjectFormDialog = ({
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   const allTypes = useQuery(db, TypeOptions.allTypesQuery);
   const space = useMemo(() => spaces.find((s) => s.db === db), [spaces, db]);
-  const spaceLabel = useMemo(() => space && ThemeProvider.toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
+  const spaceLabel = useMemo(() => space && toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
 
   // Index all types by typename for label/icon lookups.
   const typeByTypename = useMemo(() => {
@@ -341,18 +352,16 @@ export const ObjectFormDialog = ({
   );
 
   return (
-    // A click outside must not dismiss: this dialog holds unsaved form input, and a stray click on
-    // the overlay would discard it with no undo. Escape and the close button remain.
-    <Dialog.Content onInteractOutside={(event) => event.preventDefault()}>
+    <>
       <Dialog.Header>
         <Dialog.Title>
           {t('create-object-dialog.title', {
             object: t('typename.label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
         </Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' ref={closeRef} />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close ref={closeRef} />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body ref={bodyRef}>
         <CreateObjectPanel
@@ -373,26 +382,24 @@ export const ObjectFormDialog = ({
         />
       </Dialog.Body>
       {object ? (
-        <Dialog.ActionBar>
-          <Dialog.Close asChild>
-            <Button.Root data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button.Root>
-          </Dialog.Close>
-          <Button.Root variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
+        <Dialog.Footer>
+          <Dialog.CloseTrigger asChild>
+            <Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button>
+          </Dialog.CloseTrigger>
+          <Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
             {t('object-form-confirm.label')}
-          </Button.Root>
-        </Dialog.ActionBar>
+          </Button>
+        </Dialog.Footer>
       ) : (
         showTypeSelector &&
         registryAvailable && (
-          <Dialog.ActionBar>
-            <Dialog.Close asChild>
+          <Dialog.Footer>
+            <Dialog.CloseTrigger asChild>
               <PluginRegistryButton.Root />
-            </Dialog.Close>
-          </Dialog.ActionBar>
+            </Dialog.CloseTrigger>
+          </Dialog.Footer>
         )
       )}
-    </Dialog.Content>
+    </>
   );
 };
-
-ObjectFormDialog.displayName = 'ObjectFormDialog';

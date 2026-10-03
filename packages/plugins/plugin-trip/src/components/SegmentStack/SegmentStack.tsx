@@ -4,15 +4,14 @@
 
 import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Util from '@dxos/react-ui/Util';
+import { Focus, ScrollArea, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { Segment } from '#types';
 
 import { type SegmentCardActionHandler, SegmentTile } from '../SegmentCard/index.ts';
 
-export type SegmentStackProps = Util.ThemedClassName<{
+export type SegmentStackProps = ThemedClassName<{
   id: string;
   segments?: Segment.Segment[];
   currentId?: string;
@@ -22,7 +21,7 @@ export type SegmentStackProps = Util.ThemedClassName<{
 
 const ROW_ESTIMATE = 120;
 
-export const SegmentStack = Util.composable<HTMLDivElement, SegmentStackProps>(
+export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
   ({ segments = [], currentId, selectedIds, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     // Render in the caller-supplied order (the canonical `Trip.getSegments` sort) so the displayed
@@ -54,7 +53,7 @@ export const SegmentStack = Util.composable<HTMLDivElement, SegmentStackProps>(
     }, []);
 
     return (
-      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -63,7 +62,7 @@ export const SegmentStack = Util.composable<HTMLDivElement, SegmentStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root orientation='vertical' padding centered thin>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SegmentTile}

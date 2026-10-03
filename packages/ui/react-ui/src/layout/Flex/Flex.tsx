@@ -2,17 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { ark } from '@ark-ui/react/factory';
 import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { composableProps, slottable } from '../../util/slots.ts';
+import { composableProps, slottable } from '../../util/index.ts';
 import { type Align, type Gap, type Justify, alignClasses, gapClasses, justifyClasses } from '../layout.ts';
 
-type FlexProps = {
+export type FlexProps = {
   /** Stack on the block axis instead of the inline axis. */
   column?: boolean;
   gap?: Gap;
@@ -42,10 +40,10 @@ type FlexProps = {
  * ```tsx
  * <Flex column gap='sm'>…</Flex>
  * <Flex gap='sm' justify='end'>…</Flex>
- * <Flex center classNames='h-full text-subdued' role='status'>{t('empty.message')}</Flex>
+ * <Flex center classNames='h-full text-fg-subtle' role='status'>{t('empty.message')}</Flex>
  * ```
  */
-const Flex = slottable<HTMLDivElement, FlexProps>(
+export const Flex = slottable<HTMLDivElement, FlexProps>(
   ({ children, asChild, column, gap, align, justify, wrap, grow, center, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     return (
@@ -72,7 +70,3 @@ const Flex = slottable<HTMLDivElement, FlexProps>(
 );
 
 Flex.displayName = 'Flex';
-
-export { Flex as Root };
-export type { FlexProps as RootProps };
-export * from '../layout.ts';

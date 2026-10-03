@@ -9,7 +9,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { GitHubPlugin } from '#plugin';
@@ -24,9 +24,9 @@ const meta = {
   decorators: [
     (Story) => (
       <Panel.Root>
-        <Panel.Content>
+        <Panel.Body>
           <Story />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     ),
     withTheme(),

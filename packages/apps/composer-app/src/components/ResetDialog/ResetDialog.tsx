@@ -2,24 +2,30 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { type ComponentProps, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import * as FeedbackForm from '@dxos/plugin-support/FeedbackForm';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
+import {
+  AlertDialog,
+  Banner,
+  Button,
+  Menu,
+  Popover,
+  SystemButton,
+  useFileDownload,
+  useMediaQuery,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as AlertDialog from '@dxos/react-ui/AlertDialog';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Menu from '@dxos/react-ui/Menu';
-import * as Popover from '@dxos/react-ui/Popover';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 
 import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util/index.ts';
 
 // TODO(burdon): Factor out.
+type AlertDialogRootProps = ComponentProps<typeof AlertDialog.Root>;
+
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
   const context = 'context' in error && error.context && typeof error.context === 'object' ? error.context : {};
 
@@ -41,7 +47,7 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
   return { title, message, stack, context };
 };
 
-export type ResetDialogProps = Pick<AlertDialog.RootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
+export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
   logStore: IdbLogStore;
   /** Files the report. Absent when nothing can file one, which hides the feedback affordance. */
@@ -62,13 +68,13 @@ export const ResetDialog = ({
   onRefresh,
   onReset,
 }: ResetDialogProps) => {
-  const { t } = Hooks.useTranslation('composer');
-  const [isNotMobile] = Hooks.useMediaQuery('md');
+  const { t } = useTranslation('composer');
+  const [isNotMobile] = useMediaQuery('md');
   const error = errorProp && parseError(t, errorProp);
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const download = Hooks.useFileDownload();
+  const download = useFileDownload();
 
   useEffect(() => {
     if (!feedbackSent) {
@@ -138,126 +144,116 @@ export const ResetDialog = ({
         ? { defaultOpen: true }
         : { defaultOpen, open, onOpenChange })}
     >
-      <AlertDialog.Overlay>
-        <AlertDialog.Content size='md' data-testid='resetDialog'>
-          <AlertDialog.Header>
-            <AlertDialog.Title>{t(error ? error.title : 'reset-dialog.label')}</AlertDialog.Title>
-          </AlertDialog.Header>
-          <AlertDialog.Body>
-            <AlertDialog.Description>{t(error ? error.message : 'reset-dialog.message')}</AlertDialog.Description>
-            {error && (
-              <>
-                <div>
-                  <div className='flex items-center justify-between py-3'>
-                    <IconButton.Root
-                      icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-                      variant='ghost'
-                      classNames='flex items-center'
-                      label={t('show-stack.label')}
-                      onClick={() => setShowStack((showStack) => !showStack)}
-                      data-testid='resetDialog.showStackTrace'
+      <AlertDialog.Content size='md' data-testid='resetDialog'>
+        <AlertDialog.Header>
+          <AlertDialog.Title>{t(error ? error.title : 'reset-dialog.label')}</AlertDialog.Title>
+        </AlertDialog.Header>
+        <AlertDialog.Body>
+          <AlertDialog.Description>{t(error ? error.message : 'reset-dialog.message')}</AlertDialog.Description>
+          {error && (
+            <>
+              <div>
+                <div className='flex items-center justify-between py-3'>
+                  <Button
+                    icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+                    variant='ghost'
+                    classNames='flex items-center'
+                    label={t('show-stack.label')}
+                    onClick={() => setShowStack((showStack) => !showStack)}
+                    data-testid='resetDialog.showStackTrace'
+                  />
+                  <div className='flex items-center gap-1'>
+                    <SystemButton.Clipboard iconOnly label={t('copy-error.label')} onCopy={handleCopyError} />
+                    <Button
+                      icon='ph--download-simple--regular'
+                      iconOnly
+                      label={t('download-logs.label')}
+                      onClick={handleDownloadLogs}
                     />
-                    <div className='flex items-center gap-1'>
-                      <SystemIconButton.Clipboard iconOnly label={t('copy-error.label')} onCopy={handleCopyError} />
-                      <IconButton.Root
-                        icon='ph--download-simple--regular'
-                        iconOnly
-                        label={t('download-logs.label')}
-                        onClick={handleDownloadLogs}
-                      />
-                    </div>
                   </div>
                 </div>
-                {showStack && (
-                  <Banner.Root key={error.message}>
-                    <Banner.Content classNames='overflow-auto'>
-                      <Banner.Body asChild>
-                        <pre className='text-xs max-h-[136px]' data-testid='resetDialog.stackTrace'>
-                          {error.stack}
-                        </pre>
-                      </Banner.Body>
-                    </Banner.Content>
-                  </Banner.Root>
-                )}
-              </>
-            )}
-          </AlertDialog.Body>
+              </div>
+              {showStack && (
+                <Banner.Root key={error.message}>
+                  <Banner.Body asChild>
+                    <pre className='text-xs max-h-[136px]' data-testid='resetDialog.stackTrace'>
+                      {error.stack}
+                    </pre>
+                  </Banner.Body>
+                </Banner.Root>
+              )}
+            </>
+          )}
+        </AlertDialog.Body>
 
-          <AlertDialog.ActionBar>
-            <IconButton.Root
-              variant='primary'
-              icon='ph--barricade--regular'
-              iconOnly={!isNotMobile}
-              label={t('safe-mode.label')}
-              onClick={handleSafeMode}
-            />
-            <IconButton.Root
-              icon='ph--stethoscope--regular'
-              iconOnly={!isNotMobile}
-              label={t('recovery.label')}
-              onClick={handleRecovery}
-              data-testid='resetDialog.recovery'
-            />
-            {onReset && (
-              <Menu.Root>
-                <Menu.Trigger asChild>
-                  <IconButton.Root
-                    icon='ph--trash--regular'
-                    iconOnly
-                    label={t('reset-app.label')}
-                    data-testid='resetDialog.reset'
-                    variant='destructive'
-                  />
-                </Menu.Trigger>
-                <Menu.Portal>
-                  <Menu.Content side='top'>
-                    <Menu.Viewport>
-                      <Menu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
-                        {t('reset-app-confirm.label')}
-                      </Menu.Item>
-                    </Menu.Viewport>
-                    <Menu.Arrow />
-                  </Menu.Content>
-                </Menu.Portal>
-              </Menu.Root>
-            )}
+        <AlertDialog.Footer>
+          <Button
+            variant='primary'
+            icon='ph--barricade--regular'
+            iconOnly={!isNotMobile}
+            label={t('safe-mode.label')}
+            onClick={handleSafeMode}
+          />
+          <Button
+            icon='ph--stethoscope--regular'
+            iconOnly={!isNotMobile}
+            label={t('recovery.label')}
+            onClick={handleRecovery}
+            data-testid='resetDialog.recovery'
+          />
+          {onReset && (
+            <Menu.Root positioning={{ placement: 'top' }}>
+              <Menu.Trigger asChild>
+                <Button
+                  icon='ph--trash--regular'
+                  iconOnly
+                  label={t('reset-app.label')}
+                  data-testid='resetDialog.reset'
+                  variant='destructive'
+                />
+              </Menu.Trigger>
+              <Menu.Content>
+                <Menu.Item
+                  data-testid='resetDialog.confirmReset'
+                  onClick={onReset}
+                  item={{ value: t('reset-app-confirm.label'), label: t('reset-app-confirm.label') }}
+                />
+              </Menu.Content>
+            </Menu.Root>
+          )}
 
-            <div className='flex-grow' />
-            {onSubmitReport &&
-              isNotMobile &&
-              (feedbackSent ? (
-                <IconButton.Root icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
-              ) : (
-                <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-                  <Popover.Trigger asChild>
-                    <IconButton.Root icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
-                  </Popover.Trigger>
-                  <Popover.Portal>
-                    <Popover.Content>
-                      <Popover.Viewport>
-                        <FeedbackForm.Root onSubmit={handleSaveFeedback}>
-                          <Form.Viewport>
-                            <Form.Content>
-                              <Form.Fields />
-                              <FeedbackForm.Submit />
-                            </Form.Content>
-                          </Form.Viewport>
-                        </FeedbackForm.Root>
-                      </Popover.Viewport>
-                      <Popover.Arrow />
-                    </Popover.Content>
-                  </Popover.Portal>
-                </Popover.Root>
-              ))}
-            <IconButton.Root
-              icon='ph--arrow-clockwise--regular'
-              iconOnly={!!isNotMobile}
-              label={t(needRefresh ? 'update-and-reload-page.label' : 'reload-page.label')}
-              onClick={handleRefresh}
-            />
-          </AlertDialog.ActionBar>
-        </AlertDialog.Content>
-      </AlertDialog.Overlay>
+          <div className='flex-grow' />
+          {onSubmitReport &&
+            isNotMobile &&
+            (feedbackSent ? (
+              <Button icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
+            ) : (
+              <Popover.Root open={feedbackOpen} onOpenChange={({ open }) => setFeedbackOpen(open)}>
+                <Popover.Trigger asChild>
+                  <Button icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
+                </Popover.Trigger>
+                <Popover.Content>
+                  <Popover.Body>
+                    <FeedbackForm.Root onSubmit={handleSaveFeedback}>
+                      <Form.Viewport>
+                        <Form.Content>
+                          <Form.Fields />
+                          <FeedbackForm.Submit />
+                        </Form.Content>
+                      </Form.Viewport>
+                    </FeedbackForm.Root>
+                  </Popover.Body>
+                </Popover.Content>
+              </Popover.Root>
+            ))}
+          <Button
+            icon='ph--arrow-clockwise--regular'
+            iconOnly={!!isNotMobile}
+            label={t(needRefresh ? 'update-and-reload-page.label' : 'reload-page.label')}
+            onClick={handleRefresh}
+          />
+        </AlertDialog.Footer>
+      </AlertDialog.Content>
     </AlertDialog.Root>
   );
 };

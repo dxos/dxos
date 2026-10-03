@@ -11,8 +11,7 @@ import React, {
   useRef,
 } from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName, useMediaQuery } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -61,7 +60,7 @@ const poseFor = (offset: number, drag: number): Pose => {
 
 const transformFor = (pose: Pose) => `translate3d(${pose.x}%, 0, 0)`;
 
-export type NavigationStackProps = Util.ThemedClassName<{
+export type NavigationStackProps = ThemedClassName<{
   /** Panel ids, root first; the panel the user has navigated to is `index`. */
   items: string[];
   /** Index of the panel currently on top of the stack. */
@@ -79,7 +78,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dimRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [reducedMotion] = Hooks.useMediaQuery('(prefers-reduced-motion: reduce)', { fallback: false });
+  const [reducedMotion] = useMediaQuery('(prefers-reduced-motion: reduce)', { fallback: false });
 
   const gestureRef = useRef<{
     pointerId: number;

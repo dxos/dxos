@@ -8,9 +8,9 @@ import React, { useMemo } from 'react';
 import { createObject } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { random } from '@dxos/random';
+import { useThemeMode } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { Text } from '@dxos/schema';
 import {
   automerge,
@@ -30,7 +30,7 @@ const initialValue = ['# Blue Monday', '', 'How does it **feel**?', ''].join('\n
 const items = random.helpers.multiple(random.commerce.productName, { count: 10 }).sort();
 
 const withExtensions: Decorator<EditorViewProps> = (Story, { args }) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),

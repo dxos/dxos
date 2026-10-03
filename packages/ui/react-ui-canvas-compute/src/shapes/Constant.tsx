@@ -5,13 +5,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
+import { Field, Switch } from '@dxos/react-ui';
 import {
   type ShapeComponentProps,
   TextBox,
   type TextBoxControl,
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
-import * as Field from '@dxos/react-ui/Field';
 import { safeParseJson } from '@dxos/util';
 
 import { useComputeNodeState } from '../hooks/index.ts';
@@ -25,7 +25,7 @@ import { type ConstantShape } from './constant-def.tsx';
 export type ConstantComponentProps = ShapeComponentProps<ConstantShape> &
   TextBoxProps & { title?: string; chat?: boolean };
 
-const inferType = (value: any): string | undefined => {
+const inferType = (value: any): ComputeValueType | undefined => {
   if (typeof value === 'string') {
     return 'string';
   } else if (typeof value === 'number') {
@@ -75,9 +75,9 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
       {type === 'boolean' && (
         <div className='flex grow justify-center items-center'>
           <Field.Root>
-            <Field.Switch
+            <Switch
               checked={node.value}
-              onCheckedChange={(value) => {
+              onCheckedChange={({ checked: value }) => {
                 node.value = value;
               }}
             />

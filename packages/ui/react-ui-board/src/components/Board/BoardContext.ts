@@ -4,7 +4,7 @@
 
 import { type MutableRefObject } from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { createContext } from '@dxos/react-ui';
 
 import { type GridConstraints, type GridMode, type GridPosition, type Layout } from './engine.ts';
 import { type GridCellSize } from './geometry.ts';
@@ -71,4 +71,4 @@ export type BoardContextValue = {
   onResizePreview: (id: string, size: { w: number; h: number } | null) => void;
 };
 
-export const [BoardContextProvider, useBoardContext] = Hooks.createContext<BoardContextValue>('BoardContext');
+export const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>('BoardContext');

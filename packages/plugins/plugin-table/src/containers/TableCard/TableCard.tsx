@@ -9,6 +9,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import * as Hooks from '@dxos/plugin-search/Hooks';
+import { Card } from '@dxos/react-ui';
 import {
   Table as TableComponent,
   type TableController,
@@ -18,7 +19,6 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
-import * as Card from '@dxos/react-ui/Card';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 export type TableCardProps = AppSurface.ObjectCardProps<Table.Table>;
@@ -57,7 +57,7 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
 
   return (
     <Card.Body>
-      <Card.Row fullWidth>
+      <Card.Row>
         <TableComponent.Root ref={tableRef}>
           <TableComponent.Content
             key={Obj.getURI(object)}

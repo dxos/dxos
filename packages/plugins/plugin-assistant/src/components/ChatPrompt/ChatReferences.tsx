@@ -6,23 +6,19 @@ import React from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Database, Obj } from '@dxos/echo';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import type * as Util from '@dxos/react-ui/Util';
+import { Button, Icon, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useContextObjects } from '#hooks';
 import { meta } from '#meta';
 
-export type ChatReferencesProps = Util.ThemedClassName<{
+export type ChatReferencesProps = ThemedClassName<{
   context: AiContext.Binder;
   db: Database.Database;
 }>;
 
 export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { objects, onUpdateObject } = useContextObjects({ db, context });
 
   return (
@@ -30,21 +26,20 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
       {objects.map((obj) => {
         const uri = Obj.getURI(obj);
         const typename = Obj.getTypename(obj);
-        const label: ThemeProvider.Label =
-          Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
+        const label: Label = Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
         const { icon, hue } = Obj.getIcon(obj) ?? { icon: DEFAULT_OBJECT_ICON, hue: undefined };
         const styles = hue ? getStyles(hue) : undefined;
         return (
-          <li key={uri.toString()} className='dx-tag py-0 flex items-center gap-1' data-hue='neutral'>
-            <Icon.Root icon={icon} size={4} />
-            {ThemeProvider.toLocalizedString(label, t)}
-            <IconButton.Root
+          <li key={uri.toString()} className='dx-tag dx-tag-inline py-0 flex items-center gap-1' data-hue='neutral'>
+            <Icon icon={icon} size='md' />
+            {toLocalizedString(label, t)}
+            <Button
               icon='ph--x--bold'
               iconOnly
               variant='ghost'
               label={t('remove-object.label')}
               classNames='p-0 hover:bg-transparent'
-              size={3}
+              iconSize='xs'
               onClick={() => onUpdateObject?.(uri, false)}
             />
           </li>

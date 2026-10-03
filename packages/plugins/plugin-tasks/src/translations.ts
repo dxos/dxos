@@ -3,8 +3,8 @@
 //
 
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { Outline, RemoteSession } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -113,4 +113,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Resource[];

@@ -6,8 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { random } from '@dxos/random';
-import * as Image from '@dxos/react-ui/Image';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { Image, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 const DefaultStory = () => {
@@ -21,10 +20,10 @@ const DefaultStory = () => {
   );
 
   return (
-    <ScrollArea.Root centered padding>
+    <ScrollArea.Root>
       <ScrollArea.Viewport classNames='flex flex-col gap-2 py-3'>
         <h1 className='text-2xl'>{title}</h1>
-        <Image.Root src={image} alt={title} fit='cover' />
+        <Image src={image} alt={title} fit='cover' />
         {paragraphs.map((paragraph, index) => (
           <p key={index}>{paragraph}</p>
         ))}

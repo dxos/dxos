@@ -5,8 +5,7 @@
 import DOMPurify from 'dompurify';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type ColorScheme, detectColorScheme } from './color-scheme.ts';
@@ -59,7 +58,7 @@ export type HtmlDialect = {
   forbidTags?: readonly string[];
 };
 
-export type HtmlProps = Util.ThemedClassName<{
+export type HtmlProps = ThemedClassName<{
   html: string;
   /** When false (default), remote image `src`s are stripped so tracking pixels don't load. */
   loadRemoteImages?: boolean;
@@ -147,7 +146,7 @@ const isMarkup = (text: string): boolean =>
  * resolves non-http `src` references. This component owns only the sandbox.
  */
 export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: HtmlProps) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const hostRef = useRef<HTMLDivElement>(null);
   // Resolved src cache, persisted across content rebuilds; blob: urls are revoked on unmount.
   const srcCacheRef = useRef<Map<string, string>>(new Map());

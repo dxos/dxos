@@ -14,10 +14,11 @@ import React, {
   useState,
 } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
+import { Menu, composable, composableProps, useTranslation, virtualAnchor } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -32,10 +33,6 @@ import {
   editorKeys,
   parseCellIndex,
 } from '@dxos/react-ui-grid';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Menu from '@dxos/react-ui/Menu';
-import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
@@ -75,8 +72,8 @@ const sheetRowDefault = {
 
 export type SheetContentProps = {};
 
-export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
+  const { t } = useTranslation(meta.profile.key);
   const {
     id,
     attendableId,
@@ -95,7 +92,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const rangeController = useRef<RangeController>(null);
   const { hasAttention } = useAttention(id);
 
@@ -331,7 +328,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     [model],
   );
 
-  const [gridInstances] = AppHooks.useCapabilities(SheetCapabilities.GridInstances);
+  const [gridInstances] = Hooks.useCapabilities(SheetCapabilities.GridInstances);
   useEffect(() => {
     if (dxGrid && gridInstances) {
       gridInstances.register(attendableId, dxGrid, setActiveRefs);
@@ -342,7 +339,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   useSelectThreadOnCellFocus();
 
   return (
-    <div ref={forwardedRef} {...Util.composableProps(props, { classNames: 'relative min-h-0' })}>
+    <div ref={forwardedRef} {...composableProps(props, { classNames: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
@@ -366,37 +363,39 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
         ref={setDxGrid}
       />
       <Menu.Root
-        modal={false}
         open={!!contextMenuOpen}
-        onOpenChange={(nextOpen) => setContextMenuOpen(nextOpen ? inertPosition : null)}
+        onOpenChange={({ open: nextOpen }) => setContextMenuOpen(nextOpen ? inertPosition : null)}
+        positioning={{
+          ...virtualAnchor(contextMenuAnchorRef),
+          placement: contextMenuAxis === 'col' ? 'bottom' : 'right',
+          gutter: 4,
+          overflowPadding: 8,
+        }}
       >
-        <Menu.VirtualTrigger virtualRef={contextMenuAnchorRef} />
-        <Menu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>
-          <Menu.Viewport>
-            <Menu.Item
-              onClick={() => handleAxisMenuAction('insert-before')}
-              data-testid={`grid.${contextMenuAxis}.insert-before`}
-            >
-              <Icon.Root
-                icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
-              />
-              <span>{t(`add-${contextMenuAxis}-before.label`)}</span>
-            </Menu.Item>
-            <Menu.Item
-              onClick={() => handleAxisMenuAction('insert-after')}
-              data-testid={`grid.${contextMenuAxis}.insert-after`}
-            >
-              <Icon.Root
-                icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
-              />
-              <span>{t(`add-${contextMenuAxis}-after.label`)}</span>
-            </Menu.Item>
-            <Menu.Item onClick={() => handleAxisMenuAction('drop')} data-testid={`grid.${contextMenuAxis}.drop`}>
-              <Icon.Root icon='ph--backspace--regular' />
-              <span>{t(`delete-${contextMenuAxis}.label`)}</span>
-            </Menu.Item>
-          </Menu.Viewport>
-          <Menu.Arrow />
+        <Menu.Content>
+          <Menu.Item
+            item={{
+              value: 'insert-before',
+              label: t(`add-${contextMenuAxis}-before.label`),
+              icon: contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular',
+            }}
+            onClick={() => handleAxisMenuAction('insert-before')}
+            data-testid={`grid.${contextMenuAxis}.insert-before`}
+          />
+          <Menu.Item
+            item={{
+              value: 'insert-after',
+              label: t(`add-${contextMenuAxis}-after.label`),
+              icon: contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular',
+            }}
+            onClick={() => handleAxisMenuAction('insert-after')}
+            data-testid={`grid.${contextMenuAxis}.insert-after`}
+          />
+          <Menu.Item
+            item={{ value: 'drop', label: t(`delete-${contextMenuAxis}.label`), icon: 'ph--backspace--regular' }}
+            onClick={() => handleAxisMenuAction('drop')}
+            data-testid={`grid.${contextMenuAxis}.drop`}
+          />
         </Menu.Content>
       </Menu.Root>
     </div>

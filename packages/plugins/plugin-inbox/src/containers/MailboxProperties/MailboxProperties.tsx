@@ -4,18 +4,15 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
+import { Button, Field, Flex, Switch, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
@@ -24,10 +21,10 @@ import { Mailbox } from '#types';
 export type MailboxPropertiesProps = AppSurface.ObjectPropertiesProps<Mailbox.Mailbox>;
 
 export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
-  const connectors = AppHooks.useCapabilities(ConnectorSpec.Connector);
+  const connectors = Hooks.useCapabilities(ConnectorSpec.Connector);
 
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({ db, subject, connectors });
 
@@ -46,9 +43,9 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
     <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('mailbox-sync.label')}</Field.Label>
-        <Flex.Root align='center'>
+        <Flex align='center'>
           {/* TODO(burdon): Pad Switch like button/icon (square with padding). */}
-          <Field.Switch
+          <Switch
             checked={syncEnabled ?? false}
             disabled={pending}
             onCheckedChange={() => {
@@ -56,14 +53,9 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
             }}
           />
           {syncTrigger && (
-            <IconButton.Root
-              iconOnly
-              icon='ph--gear--regular'
-              label={t('view-trigger.label')}
-              onClick={handleViewTrigger}
-            />
+            <Button iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
           )}
-        </Flex.Root>
+        </Flex>
       </Field.Root>
     </Form.FieldSet>
   );

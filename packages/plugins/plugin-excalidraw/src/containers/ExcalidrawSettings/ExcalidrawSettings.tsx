@@ -7,6 +7,7 @@ import React from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
+import '@dxos/react-ui/theme.css';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';

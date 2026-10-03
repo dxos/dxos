@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import * as IconButton from '@dxos/react-ui/IconButton';
+import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { styles } from './styles.ts';
@@ -37,7 +37,7 @@ export const ErrorIndicator = () => {
   }, []);
 
   return (
-    <IconButton.Root
+    <Button
       classNames={mx(errorRef.current ? styles.error : styles.default)}
       variant='ghost'
       icon='ph--circle--fill'

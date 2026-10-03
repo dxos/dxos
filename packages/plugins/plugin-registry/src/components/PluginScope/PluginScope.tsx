@@ -4,8 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import { ToggleGroup, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -20,7 +19,7 @@ export type PluginScopeProps = {
 
 /** Whether one plugin's enabled state follows the account or is pinned to this device. */
 export const PluginScope = ({ synced, onPin, onUnpin }: PluginScopeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const handleValueChange = useCallback(
     (value: string) => {
       if (value === 'shared' && !synced) {
@@ -34,14 +33,14 @@ export const PluginScope = ({ synced, onPin, onUnpin }: PluginScopeProps) => {
 
   return (
     <ToggleGroup.Root type='single' value={synced ? 'shared' : 'local'} onValueChange={handleValueChange}>
-      <ToggleGroup.IconItem
+      <ToggleGroup.Item
         value='shared'
         data-testid='pluginDetail.scope.shared'
         icon='ph--cloud-check--regular'
         label={t('plugin-scope.shared.label')}
         iconOnly
       />
-      <ToggleGroup.IconItem
+      <ToggleGroup.Item
         value='local'
         data-testid='pluginDetail.scope.local'
         icon='ph--monitor--regular'

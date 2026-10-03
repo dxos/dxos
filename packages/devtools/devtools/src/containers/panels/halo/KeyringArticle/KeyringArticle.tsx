@@ -8,8 +8,8 @@ import { Format } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { Panel } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
-import * as Panel from '@dxos/react-ui/Panel';
 
 import { MasterDetailTable } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -39,14 +39,14 @@ export const KeyringArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         <MasterDetailTable
           properties={properties}
           data={data}
           detailsTransform={(d) => d._original}
           detailsPosition='bottom'
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -20,12 +20,8 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Graph from '@dxos/plugin-explorer/Graph';
+import { Button, Menu, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Menu from '@dxos/react-ui/Menu';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -42,7 +38,7 @@ const INCLUDE_SKILLS = ['org.dxos.skill.assistant', 'org.dxos.skill.database', '
 export type NotebookArticleProps = AppSurface.ObjectArticleProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
 
 export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: NotebookArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
   const db = notebook ? Obj.getDatabase(notebook) : undefined;
   const { hasAttention } = useAttention(attendableId);
@@ -94,7 +90,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
   }, [db, notebook, graph]);
 
   const [promptResults, setPromptResults] = useState<Record<string, string>>({});
-  const handleExecPrompts = AppHooks.useSpaceCallback(
+  const handleExecPrompts = Hooks.useSpaceCallback(
     db?.spaceId,
     [] as const,
     Effect.fnUntraced(function* () {
@@ -178,16 +174,16 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
   );
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root disabled={!hasAttention}>
+    <Panel.Root role={role} width='document'>
+      <Panel.Header>
+        <Toolbar.Root inactive={!hasAttention}>
           <Menu.Root>
             <Menu.Trigger asChild>
-              <IconButton.Root icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
+              <Button icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
             </Menu.Trigger>
             <NotebookMenu onCellInsert={handleCellInsert} />
           </Menu.Root>
-          <Toolbar.IconButton
+          <Button
             icon='ph--play--fill'
             iconOnly
             label={t('compute.label')}
@@ -195,8 +191,8 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
             onClick={handleCompute}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <NotebookStack
           db={db}
           notebook={notebook}
@@ -206,7 +202,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           onCellInsert={handleCellInsert}
           onCellDelete={handleCellDelete}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -7,13 +7,11 @@ import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { truncateKey } from '@dxos/debug';
 import { JsonView, STAT_CARD_HUES, StatCard } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import type * as Util from '@dxos/react-ui/Util';
+import { Switch, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
@@ -23,16 +21,16 @@ import { type EncodedTrackName, type GlobalState } from '../../calls/index.ts';
 // Stand-in so `useAtomValue` is always called with a real atom when no manager is contributed.
 const noCallState = Atom.make<GlobalState | undefined>(undefined).pipe(Atom.keepAlive);
 
-export type CallDebugPanelProps = Util.ThemedClassName<{
+export type CallDebugPanelProps = ThemedClassName<{
   /** Overrides the live manager state; used by stories to render fixtures. */
   state?: GlobalState;
 }>;
 
 /** The call's status as a card in the devtools stats stack. */
 export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   // `useCapabilities` tolerates the manager being absent, which is the case in stories.
-  const [manager] = AppHooks.useCapabilities(CallsCapabilities.Manager);
+  const [manager] = Hooks.useCapabilities(CallsCapabilities.Manager);
   const liveState = useAtomValue(manager?.stateAtom ?? noCallState);
   const state = stateOverride ?? liveState;
 
@@ -85,11 +83,18 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
       ))}
       <StatCard.Row
         label={t('show-webrtc-stats.title')}
-        action={<Field.Switch checked={showDetailedWebRTCStats} onCheckedChange={setShowDetailedWebRTCStats} />}
+        action={
+          <Switch
+            checked={showDetailedWebRTCStats}
+            onCheckedChange={({ checked }) => setShowDetailedWebRTCStats(checked)}
+          />
+        }
       />
       <StatCard.Row
         label={t('show-calls-history.title')}
-        action={<Field.Switch checked={showServiceHistory} onCheckedChange={setShowServiceHistory} />}
+        action={
+          <Switch checked={showServiceHistory} onCheckedChange={({ checked }) => setShowServiceHistory(checked)} />
+        }
       />
       {showDetailedWebRTCStats && (
         <StatCard.Content>

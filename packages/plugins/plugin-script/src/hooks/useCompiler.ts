@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { ScriptCapabilities, ScriptEvents } from '#types';
 
@@ -17,9 +17,9 @@ import type { Compiler } from '../compiler/index.ts';
  */
 export const useCompiler = (): Compiler | undefined => {
   const manager = PluginManagerProvider.usePluginManager();
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     await manager.activate(ScriptEvents.SetupCompiler).pipe(EffectEx.runAndForwardErrors);
   }, [manager]);
-  const [compiler] = AppHooks.useCapabilities(ScriptCapabilities.Compiler);
+  const [compiler] = Hooks.useCapabilities(ScriptCapabilities.Compiler);
   return compiler;
 };

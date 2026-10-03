@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-// @import-as-namespace
-
 import { type Locale } from 'date-fns';
 import React, { type ReactNode, Suspense, useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
@@ -12,7 +10,7 @@ import { type Resource, addResources, i18n } from '@dxos/i18n';
 
 import { TranslationsContext, initialDtLocale, initialNs } from './TranslationsContext.ts';
 
-interface TranslationsProviderProps {
+export interface TranslationsProviderProps {
   children?: ReactNode;
   // TODO(wittjosiah): Rename to `placeholder` to match ClientProvider?
   //   Placeholder => loading, fallback => error.
@@ -22,7 +20,7 @@ interface TranslationsProviderProps {
   dtLocale?: Locale;
 }
 
-const TranslationsProvider = ({
+export const TranslationsProvider = ({
   fallback,
   resourceExtensions,
   children,
@@ -50,6 +48,3 @@ const TranslationsProvider = ({
     </I18nextProvider>
   );
 };
-
-export { TranslationsProvider as Root };
-export type { TranslationsProviderProps as RootProps };

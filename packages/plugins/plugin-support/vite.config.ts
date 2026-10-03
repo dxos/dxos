@@ -7,6 +7,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'ns/FeedbackForm': 'src/FeedbackForm.ts',
+    'ns/SupportSurface': 'src/SupportSurface.ts',
     'FeedbackForm': 'src/components/FeedbackForm/index.ts',
     'index': 'src/index.ts',
     'SupportPlugin': 'src/SupportPlugin.ts',

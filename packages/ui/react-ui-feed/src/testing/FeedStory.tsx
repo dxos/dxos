@@ -5,11 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import * as Field from '@dxos/react-ui/Field';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import * as Util from '@dxos/react-ui/Util';
+import { Button, Checkbox, Field, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -67,7 +63,7 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
     >
       <div className='flex flex-col items-center gap-1'>
         <Field.Root>
-          <Field.Checkbox
+          <Checkbox
             checked={selected}
             onCheckedChange={() => onSelect(message.id, true)}
             data-testid='feed.message.select'
@@ -81,16 +77,16 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
         a pointer moving down the list during a scroll then shifts every row below it.
       */}
       <div className='absolute right-1 top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
-        <IconButton.Root icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
-        <IconButton.Root icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' size={3} />
-        <IconButton.Root icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size={3} />
+        <Button icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' iconSize='xs' />
+        <Button icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' iconSize='xs' />
+        <Button icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' iconSize='xs' />
       </div>
 
       <div className='min-w-0'>
-        <div className='flex items-center gap-2 text-xs text-description'>
+        <div className='flex items-center gap-2 text-xs text-fg-muted'>
           <span className='font-medium'>{message.sender.name ?? role}</span>
           <span>{time}</span>
-          <span className='text-subdued'>#{index}</span>
+          <span className='text-fg-subtle'>#{index}</span>
         </div>
         {children}
       </div>
@@ -270,24 +266,24 @@ export const FeedStory = ({
           tailLines={tailLines}
         >
           <Panel.Root>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <Toolbar.Root>
-                <IconButton.Root
+                <Button
                   icon={streaming ? 'ph--stop--regular' : 'ph--play--regular'}
                   iconOnly
                   label={streaming ? 'Stop' : 'Start'}
                   data-testid='feed.stream.toggle'
                   onClick={() => setStreaming((value) => !value)}
                 />
-                <IconButton.Root
+                <Button
                   icon='ph--plus--regular'
                   iconOnly
                   label='Add message'
                   data-testid='feed.stream.append'
                   onClick={handleAppend}
                 />
-                <IconButton.Root icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
-                <IconButton.Root
+                <Button icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+                <Button
                   icon={debug ? 'ph--bounding-box--fill' : 'ph--bounding-box--regular'}
                   iconOnly
                   label={debug ? 'Hide block outlines' : 'Show block outlines'}
@@ -296,7 +292,7 @@ export const FeedStory = ({
                 />
                 <Toolbar.Separator />
                 <Field.Root>
-                  <Field.Input
+                  <Input
                     placeholder='Search…'
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
@@ -304,8 +300,8 @@ export const FeedStory = ({
                   />
                 </Field.Root>
                 <FindButton hits={hits} />
-                <IconButton.Root icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
-                <IconButton.Root
+                <Button icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
+                <Button
                   icon={sweeping ? 'ph--stop--regular' : 'ph--arrows-down-up--regular'}
                   iconOnly
                   label={sweeping ? 'Stop sweep' : 'Sweep (measure a pass)'}
@@ -315,14 +311,14 @@ export const FeedStory = ({
                 <div className='grow' />
                 <MessageList.Nav classNames='contents' />
               </Toolbar.Root>
-            </Panel.Toolbar>
+            </Panel.Header>
 
-            <Panel.Content classNames='relative'>
+            <Panel.Body classNames='relative'>
               <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
                 <FeedOutline classNames='row-start-2' messages={messages} />
               </div>
-              <MessageList.Viewport classNames='dx-fullscreen' padding ref={viewportRef} />
-            </Panel.Content>
+              <MessageList.Viewport classNames='dx-fullscreen' ref={viewportRef} />
+            </Panel.Body>
           </Panel.Root>
           <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />
         </MessageList.Root>
@@ -339,7 +335,7 @@ export const FeedStory = ({
  * pixel offsets are involved, which is what makes this survive rows whose heights are still
  * estimates.
  */
-const FeedOutline = ({ classNames, messages }: Util.ThemedClassName<{ messages: readonly Message.Message[] }>) => {
+const FeedOutline = ({ classNames, messages }: ThemedClassName<{ messages: readonly Message.Message[] }>) => {
   const { currentIndex, scrollToIndex } = useMessageList('FeedOutline');
 
   const markers = useMemo<OutlineMarker[]>(() => {
@@ -400,5 +396,5 @@ const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
     }
   }, [hits, scrollToIndex]);
 
-  return <IconButton.Root icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
+  return <Button icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
 };

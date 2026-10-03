@@ -11,6 +11,7 @@ export default defineConfig({
     'ns/SettingsScope': 'src/SettingsScope.ts',
     'ns/PluginRegistryButton': 'src/PluginRegistryButton.ts',
     'ns/NotFoundArticle': 'src/NotFoundArticle.ts',
+    'ns/ObjectCard': 'src/ObjectCard.ts',
     'ns/Hooks': 'src/Hooks.ts',
     'ns/CardMenuSlot': 'src/CardMenuSlot.ts',
     'ns/CardIconSlot': 'src/CardIconSlot.ts',
@@ -64,5 +65,5 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
   },
   jsx: 'react',
-  test: { node: true },
+  test: { node: true, storybook: true },
 });

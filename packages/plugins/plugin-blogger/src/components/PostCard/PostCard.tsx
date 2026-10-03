@@ -6,9 +6,7 @@ import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
+import { Block, Card, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Blog } from '#types';
@@ -24,7 +22,7 @@ export type PostCardProps = {
  * update the tile without navigating away and back.
  */
 export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const [post] = useObject(postProp);
   const title = post.name?.trim() || t('post-card.untitled.label');
   const status = post.status ?? 'draft';
@@ -49,7 +47,6 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
 
   return (
     <Card.Root
-      fullWidth
       classNames={onClick && 'dx-hover'}
       onClick={onClick}
       onKeyDown={onClick ? handleKeyDown : undefined}
@@ -57,24 +54,24 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
       tabIndex={onClick ? 0 : undefined}
     >
       <Card.Header>
-        <Card.Block>
-          <Icon.Root icon={icon} />
-        </Card.Block>
-        <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
+        <Block>
+          <Icon icon={icon} />
+        </Block>
+        <Card.Title lines={2}>{title}</Card.Title>
       </Card.Header>
       <Card.Body>
         {post.description && (
           <Card.Row>
-            <Card.Text variant='description' classNames='line-clamp-3'>
+            <Card.Text variant='muted' classNames='line-clamp-3'>
               {post.description}
             </Card.Text>
           </Card.Row>
         )}
         <Card.Row>
-          <Card.Block>
-            <Icon.Root icon={status === 'published' ? 'ph--cloud-check--regular' : 'ph--pencil-simple--regular'} />
-          </Card.Block>
-          <Card.Text variant='description'>{t(`post-card.status.${status}.label`)}</Card.Text>
+          <Block>
+            <Icon icon={status === 'published' ? 'ph--cloud-check--regular' : 'ph--pencil-simple--regular'} />
+          </Block>
+          <Card.Text variant='muted'>{t(`post-card.status.${status}.label`)}</Card.Text>
         </Card.Row>
       </Card.Body>
     </Card.Root>

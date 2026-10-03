@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -23,12 +23,8 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
+import { Button, Icon, QrCode, SystemButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as QrCode from '@dxos/react-ui/QrCode';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 import {
   type ActionMenuItem,
   AuthCode,
@@ -63,9 +59,9 @@ export type MembersContainerProps = AppSurface.SpaceArticleProps<{
 }>;
 
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
   const visibleInvitations = invitations?.filter(
     (invitation) => ![Invitation_State.CANCELLED].includes(invitation.get().state),
@@ -178,16 +174,15 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
-            <Form.FieldSet appearance='section' label={t('members.label')}>
+            <Form.FieldSet label={t('members.label')}>
               <SpaceMemberList spaceKey={space.key} includeSelf />
             </Form.FieldSet>
             {showContactPicker && (
-              <Form.FieldSet appearance='section' label={t('add-known-people.label')}>
+              <Form.FieldSet label={t('add-known-people.label')}>
                 <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
               </Form.FieldSet>
             )}
             <Form.FieldSet
-              appearance='section'
               label={t('invitations.label')}
               description={selectedInvitation ? undefined : t('space-invitation.description')}
             >
@@ -262,15 +257,15 @@ const InvitationSection = ({
 };
 
 const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel?: () => void }) => {
-  const { t } = Hooks.useTranslation(shellTranslationKey);
-  const qrLabel = Hooks.useId('members-container__qr-code');
+  const { t } = useTranslation(shellTranslationKey);
+  const qrLabel = useId('members-container__qr-code');
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
+      <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
-        <div className='w-full aspect-square relative text-description'>
-          <QrCode.Root aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
+        <div className='w-full aspect-square relative text-fg-muted'>
+          <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
           <Centered>
             <Emoji text={emoji} />
           </Centered>
@@ -278,37 +273,37 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <span id={qrLabel} className='sr-only'>
           {t('qr.label')}
         </span>
-        <SystemIconButton.Clipboard value={url ?? 'never'} />
+        <SystemButton.Clipboard value={url ?? 'never'} />
       </div>
-      <Button.Root variant='ghost' onClick={onCancel}>
+      <Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button.Root>
+      </Button>
     </>
   );
 };
 
 const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; onCancel?: () => void }) => {
-  const { t } = Hooks.useTranslation(shellTranslationKey);
+  const { t } = useTranslation(shellTranslationKey);
   const emoji = hexToEmoji(id);
 
   return (
     <>
-      <p className='text-description'>{t('auth-other-device-emoji.message')}</p>
+      <p className='text-fg-muted'>{t('auth-other-device-emoji.message')}</p>
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
-      <p className='text-description'>{t('auth-code.message')}</p>
+      <p className='text-fg-muted'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
-      <Button.Root variant='ghost' onClick={onCancel}>
+      <Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button.Root>
+      </Button>
     </>
   );
 };
 
 const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
   return statusValue > 0 ? (
-    <Icon.Root icon='ph--check--regular' size={6} classNames='m-trim-xs' />
+    <Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
   ) : (
-    <Icon.Root icon='ph--x--regular' size={6} classNames='m-trim-xs' />
+    <Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
   );
 };
 

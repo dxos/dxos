@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
-import * as Card from '@dxos/react-ui/Card';
+import { Card } from '@dxos/react-ui';
 
 import { TradingViewChart } from '#components';
 import { Ibkr } from '#types';
@@ -26,7 +26,7 @@ export const InstrumentCard = ({ subject }: InstrumentCardProps) => {
         <Card.Title>{instrument.symbol}</Card.Title>
       </Card.Row>
       <Card.Row>
-        <Card.Text variant='description' classNames='line-clamp-1'>
+        <Card.Text variant='muted' classNames='line-clamp-1'>
           {[instrument.name, instrument.exchange, instrument.assetClass].filter(Boolean).join(' · ')}
         </Card.Text>
       </Card.Row>

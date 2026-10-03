@@ -4,15 +4,12 @@
 
 import React, { useState } from 'react';
 
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Select from '@dxos/react-ui/Select';
-import * as ToolbarModule from '@dxos/react-ui/Toolbar';
-import type * as Util from '@dxos/react-ui/Util';
+import { Button, Select, type ThemedClassName, Toolbar as UiToolbar } from '@dxos/react-ui';
 
 import { type ActionHandler } from '../../actions/index.ts';
 import { type LayoutKind, LAYOUTS } from '../../layout/index.ts';
 
-export type ToolbarProps = Util.ThemedClassName<{
+export type ToolbarProps = ThemedClassName<{
   onAction?: ActionHandler;
 }>;
 
@@ -24,59 +21,80 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
 
   // TODO(burdon): Translations.
   return (
-    <ToolbarModule.Root classNames={['p-1', classNames]}>
-      <ToolbarModule.Button onClick={() => handleAction({ type: 'debug' })} title='Toggle debug.'>
-        <Icon.Root icon='ph--bug--regular' />
-      </ToolbarModule.Button>
-      <ToolbarModule.Button onClick={() => handleAction({ type: 'grid' })} title='Toggle snap.'>
-        <Icon.Root icon='ph--dots-nine--regular' />
-      </ToolbarModule.Button>
-      <ToolbarModule.Button onClick={() => handleAction({ type: 'grid-snap' })} title='Toggle snap.'>
-        <Icon.Root icon='ph--arrows-in-line-horizontal--regular' />
-      </ToolbarModule.Button>
-      <ToolbarModule.Button onClick={() => handleAction({ type: 'center' })} title='Center canvas.'>
-        <Icon.Root icon='ph--crosshair-simple--regular' />
-      </ToolbarModule.Button>
-      <ToolbarModule.Button onClick={() => handleAction({ type: 'zoom-in' })} title='Center canvas.'>
-        <Icon.Root icon='ph--magnifying-glass-plus--regular' />
-      </ToolbarModule.Button>
-      <ToolbarModule.Button onClick={() => handleAction({ type: 'zoom-out' })} title='Center canvas.'>
-        <Icon.Root icon='ph--magnifying-glass-minus--regular' />
-      </ToolbarModule.Button>
-      <Select.Root value={layout} onValueChange={(value) => setLayout(value as LayoutKind)}>
-        <ToolbarModule.Button asChild>
-          <Select.TriggerButton variant='ghost' classNames='w-[100px]' />
-        </ToolbarModule.Button>
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {LAYOUTS.map((layout) => (
-                <Select.Option key={layout} value={layout}>
-                  {layout}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
-      <ToolbarModule.Button onClick={() => handleAction({ type: 'layout', layout })} title='Do layout.'>
-        <Icon.Root icon='ph--graph--regular' />
-      </ToolbarModule.Button>
-      <ToolbarModule.Button onClick={() => handleAction({ type: 'zoom-to-fit' })} title='Expand selected.'>
-        <Icon.Root icon='ph--arrows-out--regular' />
-      </ToolbarModule.Button>
-      <ToolbarModule.Button
-        onClick={(ev) => handleAction({ type: 'delete', all: ev.shiftKey })}
-        title='Delete objects.'
+    <UiToolbar.Root classNames={['p-1', classNames]}>
+      <Button onClick={() => handleAction({ type: 'debug' })} label='Toggle debug.' icon='ph--bug--regular' iconOnly />
+      <Button
+        onClick={() => handleAction({ type: 'grid' })}
+        label='Toggle snap.'
+        icon='ph--dots-nine--regular'
+        iconOnly
+      />
+      <Button
+        onClick={() => handleAction({ type: 'grid-snap' })}
+        label='Toggle snap.'
+        icon='ph--arrows-in-line-horizontal--regular'
+        iconOnly
+      />
+      <Button
+        onClick={() => handleAction({ type: 'center' })}
+        label='Center canvas.'
+        icon='ph--crosshair-simple--regular'
+        iconOnly
+      />
+      <Button
+        onClick={() => handleAction({ type: 'zoom-in' })}
+        label='Center canvas.'
+        icon='ph--magnifying-glass-plus--regular'
+        iconOnly
+      />
+      <Button
+        onClick={() => handleAction({ type: 'zoom-out' })}
+        label='Center canvas.'
+        icon='ph--magnifying-glass-minus--regular'
+        iconOnly
+      />
+      <Select.Root
+        value={[layout]}
+        onValueChange={({ value: [value] }) => setLayout(value as LayoutKind)}
+        items={LAYOUTS.map((layout) => ({ value: layout, label: layout }))}
       >
-        <Icon.Root icon='ph--trash--regular' />
-      </ToolbarModule.Button>
-      <ToolbarModule.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>
-        <Icon.Root icon='ph--plus--regular' />
-      </ToolbarModule.Button>
-      <ToolbarModule.Button onClick={() => handleAction({ type: 'trigger' })} title='Trigger event.'>
-        <Icon.Root icon='ph--play--regular' />
-      </ToolbarModule.Button>
-    </ToolbarModule.Root>
+        <Select.Trigger classNames='w-[100px]' />
+        <Select.Content>
+          {LAYOUTS.map((layout) => (
+            <Select.Item key={layout} item={{ value: layout, label: layout }} />
+          ))}
+        </Select.Content>
+      </Select.Root>
+      <Button
+        onClick={() => handleAction({ type: 'layout', layout })}
+        label='Do layout.'
+        icon='ph--graph--regular'
+        iconOnly
+      />
+      <Button
+        onClick={() => handleAction({ type: 'zoom-to-fit' })}
+        label='Expand selected.'
+        icon='ph--arrows-out--regular'
+        iconOnly
+      />
+      <Button
+        onClick={(ev) => handleAction({ type: 'delete', all: ev.shiftKey })}
+        label='Delete objects.'
+        icon='ph--trash--regular'
+        iconOnly
+      />
+      <Button
+        onClick={() => handleAction({ type: 'create' })}
+        label='Create objects.'
+        icon='ph--plus--regular'
+        iconOnly
+      />
+      <Button
+        onClick={() => handleAction({ type: 'trigger' })}
+        label='Trigger event.'
+        icon='ph--play--regular'
+        iconOnly
+      />
+    </UiToolbar.Root>
   );
 };

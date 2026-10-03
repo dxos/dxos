@@ -11,8 +11,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { useThemeMode } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   type AssistantOptions,
   assistant,
@@ -64,7 +64,7 @@ const useTestGenerate = () => {
 type StoryArgs = Pick<EditorViewProps, 'value'>;
 
 const DefaultStory = (props: StoryArgs) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const generate = useTestGenerate();
   const extensions = useMemo(
     () =>
@@ -84,7 +84,7 @@ const DefaultStory = (props: StoryArgs) => {
 
   return (
     <Editor.Root>
-      <Editor.View {...props} classNames='dx-expand border border-subdued-separator' extensions={extensions} />
+      <Editor.View {...props} classNames='dx-expand border border-separator-subtle' extensions={extensions} />
     </Editor.Root>
   );
 };

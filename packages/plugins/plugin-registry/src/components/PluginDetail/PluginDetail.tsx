@@ -2,24 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import {
+  Button,
+  Carousel,
+  Field,
+  Grid,
+  Icon,
+  Link,
+  ScrollArea,
+  Select,
+  Switch,
+  Tag,
+  ThemedClassName,
+  composable,
+  composableProps,
+  useThemeMode,
+  useTranslation,
+} from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import * as Button from '@dxos/react-ui/Button';
-import * as Carousel from '@dxos/react-ui/Carousel';
-import * as Field from '@dxos/react-ui/Field';
-import * as Grid from '@dxos/react-ui/Grid';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Link from '@dxos/react-ui/Link';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Select from '@dxos/react-ui/Select';
-import * as Tag from '@dxos/react-ui/Tag';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Util from '@dxos/react-ui/Util';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -105,7 +110,7 @@ export type PluginDetailProps = {
   onVersionChange?: (tag: string) => void;
 };
 
-export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
+export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   (
     {
       plugin,
@@ -133,9 +138,9 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
-    const { themeMode } = ThemeProvider.useThemeContext();
-    const layout = ToolkitHooks.useLayout();
+    const { t } = useTranslation(meta.profile.key);
+    const themeMode = useThemeMode();
+    const layout = Hooks.useLayout();
     // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
     // 4rem floor on both left it with less width for the center content than the gutters themselves.
     const isMobile = layout.mode === 'mobile';
@@ -144,12 +149,21 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
     const iconHue = rawIcon?.hue ?? 'neutral';
     const styles = getStyles(iconHue);
 
+    const versionItems = useMemo(
+      () =>
+        (versions ?? []).map(({ version }) => ({
+          value: version,
+          label: installedVersionTag === version ? `${version} (${t('installed.label')})` : version,
+        })),
+      [versions, installedVersionTag, t],
+    );
+
     const resolvedScreenshots = (screenshots ?? [])
       .map((entry) => (themeMode === 'dark' ? (entry.dark ?? entry.light) : (entry.light ?? entry.dark)))
       .filter((url): url is string => typeof url === 'string' && url.length > 0);
 
     return (
-      <ScrollArea.Root {...Util.composableProps(props)} orientation='vertical' ref={forwardedRef}>
+      <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
           {/*
            * 3-column grid: [icon/prev | content/viewport | next].
@@ -160,41 +174,48 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
            * with the rest of the content in col 2, and `Carousel.Next` sits
            * in col 3.
            */}
-          <Grid.Root
+          <Grid
             cols={isMobile ? ['2.5rem', 'minmax(0, 1fr)', '2.5rem'] : ['4rem', 'minmax(0, 1fr)', '4rem']}
             grow={false}
             align='start'
             classNames='dx-document gap-x-4 p-4'
           >
-            <Icon.Root
-              classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)}
+            <Icon
+              classNames={mx('row-start-1 p-1 rounded-md', isMobile ? 'size-8' : 'size-14', styles.bg, styles.fg)}
               icon={iconKey}
-              size={isMobile ? 8 : 14}
             />
 
-            <Grid.Root
+            <Grid
               cols={['1fr', 'min-content']}
               grow={false}
               classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'
             >
               <div className='flex items-center gap-2'>
                 <h2 className='text-xl'>{name}</h2>
-                {failure && <PluginFailureBadge failure={failure} size={5} />}
+                {failure && <PluginFailureBadge failure={failure} size='lg' />}
               </div>
               {onInstall ? (
-                <Button.Root density='md' variant='primary' disabled={installing} onClick={onInstall}>
+                <Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
                   {installing ? t('installing.label') : t('install.label')}
-                </Button.Root>
+                </Button>
               ) : (
                 <Field.Root>
-                  <Field.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
+                  <Switch
+                    classNames='self-center'
+                    checked={enabled}
+                    onCheckedChange={({ checked }) => onEnabledChange?.(checked)}
+                  />
                 </Field.Root>
               )}
-              <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
+              <div className='flex items-center gap-1 pt-0.5 text-sm text-fg-muted'>
                 {slug}
-                {author && <span className='dx-tag dx-tag--info'>{author}</span>}
+                {author && (
+                  <span className='dx-tag dx-tag-inline' data-hue='info'>
+                    {author}
+                  </span>
+                )}
               </div>
-            </Grid.Root>
+            </Grid>
 
             {scope && (
               <Section.Root>
@@ -207,7 +228,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('description.label')} />
                 <Section.Body>
-                  <MarkdownView classNames='text-description' content={description} />
+                  <MarkdownView classNames='text-fg-muted' content={description} />
                 </Section.Body>
               </Section.Root>
             )}
@@ -217,14 +238,12 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Heading title={t('preview.label')} />
                 <Section.Body>
                   <Carousel.Root count={resolvedScreenshots.length}>
-                    <Carousel.Content classNames='contents'>
-                      <Carousel.Viewport>
-                        {resolvedScreenshots.map((src, index) => (
-                          <Carousel.Slide key={src} index={index} src={src} alt={name} />
-                        ))}
-                      </Carousel.Viewport>
-                      <Carousel.Indicators />
-                    </Carousel.Content>
+                    <Carousel.ItemGroup>
+                      {resolvedScreenshots.map((src, index) => (
+                        <Carousel.Item key={src} index={index} src={src} alt={name} />
+                      ))}
+                    </Carousel.ItemGroup>
+                    <Carousel.IndicatorGroup />
                   </Carousel.Root>
                 </Section.Body>
               </Section.Root>
@@ -235,17 +254,25 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
               <Section.Body>
                 <div className='flex gap-3 items-center'>
                   {homePage && (
-                    <Link.Root href={homePage} classNames='text-sm text-description'>
+                    <Link href={homePage} classNames='text-sm text-fg-muted'>
                       {t('home-page.label')}
-                      <Icon.Root icon='ph--arrow-square-out--regular' size={3} classNames='ml-1 dx-icon-inline' />
-                    </Link.Root>
+                      <Icon
+                        icon='ph--arrow-square-out--regular'
+                        size='xs'
+                        classNames='ml-1 inline-block align-[-0.125em]'
+                      />
+                    </Link>
                   )}
 
                   {source && (
-                    <Link.Root href={source} classNames='text-sm text-description'>
+                    <Link href={source} classNames='text-sm text-fg-muted'>
                       {t('source.label')}
-                      <Icon.Root icon='ph--arrow-square-out--regular' size={3} classNames='ml-1 dx-icon-inline' />
-                    </Link.Root>
+                      <Icon
+                        icon='ph--arrow-square-out--regular'
+                        size='xs'
+                        classNames='ml-1 inline-block align-[-0.125em]'
+                      />
+                    </Link>
                   )}
 
                   {onOpenSpec && <Chip id={slug} name={t('open-spec.label')} onClick={onOpenSpec} />}
@@ -294,30 +321,27 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Heading title={t('versions.label')} />
                 <Section.Body>
                   <div className='flex gap-2 items-center'>
-                    <Select.Root value={selectedVersionTag} onValueChange={onVersionChange}>
-                      <Select.TriggerButton classNames='min-w-32' />
-                      <Select.Portal>
-                        <Select.Content>
-                          <Select.Viewport>
-                            {versions.map((versionEntry) => (
-                              <Select.Option key={versionEntry.version} value={versionEntry.version}>
-                                {versionEntry.version}
-                                {installedVersionTag === versionEntry.version ? ` (${t('installed.label')})` : ''}
-                              </Select.Option>
-                            ))}
-                          </Select.Viewport>
-                        </Select.Content>
-                      </Select.Portal>
+                    <Select.Root
+                      items={versionItems}
+                      value={selectedVersionTag ? [selectedVersionTag] : []}
+                      onValueChange={({ value: [value] }) => value && onVersionChange?.(value)}
+                    >
+                      <Select.Trigger classNames='min-w-32' />
+                      <Select.Content>
+                        {versionItems.map((item) => (
+                          <Select.Item key={item.value} item={item} />
+                        ))}
+                      </Select.Content>
                     </Select.Root>
                     {onInstallVersion && (
-                      <Button.Root
-                        density='md'
+                      <Button
+                        size='md'
                         variant='primary'
                         disabled={installing || selectedVersionTag === installedVersionTag}
                         onClick={onInstallVersion}
                       >
                         {installing ? t('installing.label') : t('install-version.label')}
-                      </Button.Root>
+                      </Button>
                     )}
                   </div>
                 </Section.Body>
@@ -327,18 +351,18 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
             {(onUninstall || (hasUpdate && onUpdate) || updating) && (
               <div className='col-start-2 col-span-2 flex gap-2'>
                 {updating ? (
-                  <Button.Root variant='primary' disabled>
+                  <Button variant='primary' disabled>
                     {t('updating.label')}
-                  </Button.Root>
+                  </Button>
                 ) : hasUpdate && onUpdate ? (
-                  <Button.Root variant='primary' onClick={onUpdate}>
+                  <Button variant='primary' onClick={onUpdate}>
                     {t('update.label')}
-                  </Button.Root>
+                  </Button>
                 ) : null}
-                {onUninstall && <Button.Root onClick={onUninstall}>{t('uninstall.label')}</Button.Root>}
+                {onUninstall && <Button onClick={onUninstall}>{t('uninstall.label')}</Button>}
               </div>
             )}
-          </Grid.Root>
+          </Grid>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );
@@ -350,10 +374,10 @@ PluginDetail.displayName = 'PluginDetail';
 const SectionRoot = ({ children }: PropsWithChildren<{}>) => <>{children}</>;
 
 const SectionHeading = ({ title }: { title: string }) => (
-  <h2 className='col-start-2 col-span-2 pt-6 pb-2 uppercase text-sm font-medium text-subdued'>{title}</h2>
+  <h2 className='col-start-2 col-span-2 pt-6 pb-2 uppercase text-sm font-medium text-fg-subtle'>{title}</h2>
 );
 
-const SectionBody = ({ classNames, children }: Util.ThemedClassName<PropsWithChildren>) => (
+const SectionBody = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
   <div className={mx('col-start-2 flex flex-col gap-2', classNames)}>{children}</div>
 );
 
@@ -364,7 +388,7 @@ const Section = {
 };
 
 const Chip = ({ id, name, onClick }: { id: string; name: string; onClick?: (pluginId: string) => void }) => (
-  <Tag.Root title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
+  <Tag title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
     {name}
-  </Tag.Root>
+  </Tag>
 );

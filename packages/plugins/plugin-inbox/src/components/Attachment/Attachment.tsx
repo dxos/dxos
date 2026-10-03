@@ -4,13 +4,12 @@
 
 import React from 'react';
 
-import * as Icon from '@dxos/react-ui/Icon';
-import type * as Util from '@dxos/react-ui/Util';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type AttachmentKind } from '#hooks';
 
-export type AttachmentViewerProps = Util.ThemedClassName<{
+export type AttachmentViewerProps = ThemedClassName<{
   /** Object url for the attachment's bytes; absent while resolving or after a failure. */
   url?: string;
   /** How to render the bytes, derived from the MIME type by `getAttachmentKind`. */
@@ -31,16 +30,16 @@ export type AttachmentViewerProps = Util.ThemedClassName<{
 export const AttachmentViewer = ({ url, kind, type, name, pending, classNames }: AttachmentViewerProps) => {
   if (pending) {
     return (
-      <div className={mx('grid place-items-center p-8 text-description', classNames)} role='status'>
-        <Icon.Root icon='ph--spinner-gap--regular' size={6} classNames='[animation:spin_1s_linear_infinite]' />
+      <div className={mx('grid place-items-center p-8 text-fg-muted', classNames)} role='status'>
+        <Icon icon='ph--spinner-gap--regular' size='xl' classNames='[animation:spin_1s_linear_infinite]' />
       </div>
     );
   }
 
   if (!url) {
     return (
-      <div className={mx('grid place-items-center gap-2 p-8 text-description', classNames)}>
-        <Icon.Root icon='ph--warning--regular' size={6} />
+      <div className={mx('grid place-items-center gap-2 p-8 text-fg-muted', classNames)}>
+        <Icon icon='ph--warning--regular' size='xl' />
         <span data-testid='attachment.unavailable'>Attachment could not be loaded.</span>
       </div>
     );
@@ -89,8 +88,8 @@ export const AttachmentViewer = ({ url, kind, type, name, pending, classNames }:
       // Deliberately a download rather than a render: putting unknown bytes in an iframe is how a mail
       // client turns an attachment into an execution surface.
       return (
-        <div className={mx('grid place-items-center gap-2 p-8 text-description', classNames)}>
-          <Icon.Root icon='ph--file--regular' size={6} />
+        <div className={mx('grid place-items-center gap-2 p-8 text-fg-muted', classNames)}>
+          <Icon icon='ph--file--regular' size='xl' />
           <span data-testid='attachment.unsupported'>{type ? `No preview for ${type}` : 'No preview available'}</span>
           <a href={url} download={name} className='dx-link-hover underline' data-testid='attachment.download'>
             Download{name ? ` ${name}` : ''}

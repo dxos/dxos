@@ -3,7 +3,7 @@
 //
 
 import { Collection, Type } from '@dxos/echo';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { type Resource } from '@dxos/react-ui';
 import { Event, Message, Organization, Person, Pipeline, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -296,7 +296,6 @@ export const translations = [
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
         'space-id.title': 'Space ID',
         'space-id.description': 'The unique identifier for this space. Use this to connect external services.',
-        'copy-space-id.label': 'Copy space ID',
 
         'space-controls.title': 'Space Controls',
         'space-controls.description': 'Advanced controls for this space.',
@@ -394,4 +393,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Resource[];

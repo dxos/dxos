@@ -6,7 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
+// Loaded only through the lazy registry containers, so Next's CSS stays out of the boot graph.
+import '@dxos/react-ui/theme.css';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -14,12 +16,16 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import * as Util from '@dxos/react-ui/Util';
+import {
+  Container,
+  Input,
+  Panel,
+  ScrollArea,
+  Toolbar,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
@@ -57,7 +63,7 @@ export type BaseRegistryArticleProps = {
   | 'onUpdate'
 >;
 
-export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryArticleProps>(
+export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticleProps>(
   (
     {
       id,
@@ -77,12 +83,12 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = useTranslation(meta.profile.key);
     const manager = PluginManagerProvider.usePluginManager();
-    const { invoke, invokePromise } = AppHooks.useOperationInvoker();
-    const allSettings = AppHooks.useCapabilities(AppCapabilities.Settings);
+    const { invoke, invokePromise } = Hooks.useOperationInvoker();
+    const allSettings = Hooks.useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
-    const settingsSync = AppHooks.useOptionalCapability(AppCapabilities.SettingsSync);
+    const settingsSync = Hooks.useOptionalCapability(AppCapabilities.SettingsSync);
     const [filter, setFilter] = useState('');
 
     const filtered = useMemo(() => {
@@ -142,47 +148,47 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
     );
 
     return (
-      <Panel.Root {...Util.composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
+      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+        <Panel.Header>
           <Toolbar.Root>
-            <Field.Root>
-              <Field.Label srOnly>{t('filter.label')}</Field.Label>
-              <Field.Input
-                placeholder={t('filter.placeholder')}
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              />
-            </Field.Root>
+            <Input
+              aria-label={t('filter.label')}
+              placeholder={t('filter.placeholder')}
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            />
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
-              {filtered.length > 0 ? (
-                <PluginList
-                  plugins={filtered}
-                  enabled={enabled}
-                  installed={installed}
-                  installing={installing}
-                  updating={updating}
-                  updateAvailableIds={updateAvailableIds}
-                  extraTagsById={extraTagsById}
-                  failuresById={failuresById}
-                  deviceOnlyIds={deviceOnlyIds}
-                  onClick={handleClick}
-                  readOnly={settingsSync === undefined}
-                  onChange={handleChange}
-                  onInstall={onInstall}
-                  onUpdate={onUpdate}
-                  hasSettings={hasSettings}
-                  onSettings={handleSettings}
-                />
-              ) : (
-                empty
-              )}
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport asChild>
+              <Container gutter='md' padBlock>
+                {filtered.length > 0 ? (
+                  <PluginList
+                    plugins={filtered}
+                    enabled={enabled}
+                    installed={installed}
+                    installing={installing}
+                    updating={updating}
+                    updateAvailableIds={updateAvailableIds}
+                    extraTagsById={extraTagsById}
+                    failuresById={failuresById}
+                    deviceOnlyIds={deviceOnlyIds}
+                    onClick={handleClick}
+                    readOnly={settingsSync === undefined}
+                    onChange={handleChange}
+                    onInstall={onInstall}
+                    onUpdate={onUpdate}
+                    hasSettings={hasSettings}
+                    onSettings={handleSettings}
+                  />
+                ) : (
+                  empty
+                )}
+              </Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },

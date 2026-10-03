@@ -9,10 +9,9 @@ import { Config } from '@dxos/client';
 import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { DataTypes } from '@dxos/schema';
 import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
@@ -82,12 +81,12 @@ const DefaultStory = () => {
   return (
     <div className='flex flex-col w-full'>
       <Toolbar.Root>
-        <Button.Root onClick={handleReset}>Reset</Button.Root>
-        <Button.Root onClick={handleReload}>Reload</Button.Root>
-        <Button.Root onClick={handleCreate}>Create</Button.Root>
-        <Button.Root onClick={handleCreateFactory}>Create 1000</Button.Root>
-        <Button.Root onClick={handleFlush}>Flush</Button.Root>
-        <Button.Root onClick={handleQuery}>Query</Button.Root>
+        <Button onClick={handleReset}>Reset</Button>
+        <Button onClick={handleReload}>Reload</Button>
+        <Button onClick={handleCreate}>Create</Button>
+        <Button onClick={handleCreateFactory}>Create 1000</Button>
+        <Button onClick={handleFlush}>Flush</Button>
+        <Button onClick={handleQuery}>Query</Button>
       </Toolbar.Root>
       <Syntax.Root data={data}>
         <Syntax.Content>

@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -18,6 +18,7 @@ import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
+import { Match, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
@@ -36,10 +37,6 @@ import {
   type TaskPlacement,
   type TaskSelectModifiers,
 } from '@dxos/react-ui-task';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Switch from '@dxos/react-ui/Switch';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -69,7 +66,7 @@ export const TaskSetArticle = ({
   subject: taskSet,
   showDescription = true,
 }: TaskSetArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
@@ -123,7 +120,7 @@ export const TaskSetArticle = ({
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Files dropped on the create pane attach once the task exists: the create answers with the new
   // task's id, and the live object is in the working set by then, since this client wrote it.
   const attachFile = useAttachFile();
@@ -157,19 +154,15 @@ export const TaskSetArticle = ({
     [invokePromise, taskSet, spaceId, attachFile, db],
   );
 
-  const handleUpdate = AppHooks.useOperation(
+  const handleUpdate = Hooks.useOperation(
     TaskOperation.UpdateTask,
     (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
   );
 
-  const handleDelete = AppHooks.useOperation(
-    TaskOperation.DeleteTask,
-    (task: Task.Task) => ({ task: Ref.make(task) }),
-    {
-      spaceId,
-    },
-  );
+  const handleDelete = Hooks.useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
+    spaceId,
+  });
 
   const currentId = useSelection(attendableId, 'single');
   const openDetail = ToolkitHooks.useDetailNavigation({
@@ -231,7 +224,7 @@ export const TaskSetArticle = ({
   // unloaded, so with the rows already in hand the write commits in the same tick the gesture ends.
   // Going through the invoker instead re-rendered from the model before the write landed and again
   // after it, which is the jump.
-  const move = AppHooks.useOperationHandler(
+  const move = Hooks.useOperationHandler(
     TaskOperation.MoveTask,
     (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
       task: Ref.make(task),
@@ -317,27 +310,27 @@ export const TaskSetArticle = ({
   );
 
   return (
-    <Switch.Root
+    <Match.Root
       on={role}
       fallback={
         <Panel.Root role={role}>
-          <Panel.Toolbar asChild>
-            <Toolbar.Root disabled={!hasAttention}>{filterRow}</Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content>{content}</Panel.Content>
+          <Panel.Header>
+            <Toolbar.Root inactive={!hasAttention}>{filterRow}</Toolbar.Root>
+          </Panel.Header>
+          <Panel.Body>{content}</Panel.Body>
         </Panel.Root>
       }
     >
       {/* Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
           chrome, so render the bare list under its own filter row — a nested Panel/scroll root would
           collapse width, but the filter has to come along or the host's copy of the list has none. */}
-      <Switch.Match when={AppSurface.Section.role}>
+      <Match.Case when={AppSurface.Section.role}>
         <div className='flex flex-col dx-grow'>
           <Toolbar.Root>{filterRow}</Toolbar.Root>
           {content}
         </div>
-      </Switch.Match>
-    </Switch.Root>
+      </Match.Case>
+    </Match.Root>
   );
 };
 
@@ -440,7 +433,7 @@ const useFilterQuery = (
  * which rows an action will act on, so with nothing to act on it is an affordance that does nothing.
  */
 const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
-  const actions = AppHooks.useCapabilities(TasksCapabilities.TaskAction);
+  const actions = Hooks.useCapabilities(TasksCapabilities.TaskAction);
   const ids = useSelection(taskSet.id, 'multi');
   const { toggle } = useSelectionActions(taskSet.id);
   const checked = useMemo(() => new Set(ids), [ids]);

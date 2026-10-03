@@ -5,22 +5,18 @@
 import React, { useCallback, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
-import * as Button from '@dxos/react-ui/Button';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
+import { Button, Dialog, Flex, Icon, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
 export const ImportSpaceDialog = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const [importing, setImporting] = useState<string>();
 
@@ -64,14 +60,14 @@ export const ImportSpaceDialog = () => {
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('import-space-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <p className='my-4'>{t('import-space-dialog.description')}</p>
         {importing ? (
-          <Flex.Root
+          <Flex
             align='center'
             justify='center'
             gap='sm'
@@ -80,10 +76,10 @@ export const ImportSpaceDialog = () => {
             classNames='my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm'
           >
             <div>
-              <Icon.Root icon='ph--spinner-gap--regular' size={8} classNames='animate-spin' />
+              <Icon icon='ph--spinner-gap--regular' size='xl' spin />
               <span>{t('import-space-dialog.importing.label', { filename: importing })}</span>
             </div>
-          </Flex.Root>
+          </Flex>
         ) : (
           <FileUploader
             types={['json', 'tar']}
@@ -93,16 +89,16 @@ export const ImportSpaceDialog = () => {
               void handleFile(file);
             }}
           >
-            <Icon.Root icon='ph--file-plus--duotone' size={8} />
+            <Icon icon='ph--file-plus--duotone' size='xl' />
             <span>{t('import-space-dialog.upload.label')}</span>
           </FileUploader>
         )}
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
-          <Button.Root variant='primary'>{t('cancel.label')}</Button.Root>
-        </Dialog.Close>
-      </Dialog.ActionBar>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
+          <Button variant='primary'>{t('cancel.label')}</Button>
+        </Dialog.CloseTrigger>
+      </Dialog.Footer>
     </Dialog.Content>
   );
 };

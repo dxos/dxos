@@ -10,8 +10,8 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { findFirstFocusable } from '@dxos/react-focus';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
-import type * as Util from '@dxos/react-ui/Util';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
@@ -24,7 +24,7 @@ import { PlankControls } from './PlankControls.tsx';
 import { PlankErrorFallback } from './PlankFallback.tsx';
 import { useDeckPlank } from './useDeckPlank.ts';
 
-export type DeckPlankProps = Util.ThemedClassName<{
+export type DeckPlankProps = ThemedClassName<{
   id: string;
   part: DeckSchema.ResolvedPart;
   /** Whether this plank is displayed fullscreen (headless, no chrome). */

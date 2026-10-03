@@ -5,10 +5,8 @@
 import React, { Fragment, useState } from 'react';
 
 import { type QueryMetrics } from '@dxos/echo-client';
+import { Button, Grid, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Grid from '@dxos/react-ui/Grid';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -39,7 +37,7 @@ export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardPro
         info={`${active.toLocaleString()} active · ${queries.length.toLocaleString()}`}
         action={
           onOpen && (
-            <IconButton.Root
+            <Button
               iconOnly
               variant='ghost'
               icon='ph--arrow-square-out--regular'
@@ -52,13 +50,13 @@ export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardPro
       {slowest.length === 0 && <StatCard.Row span label='No queries.' />}
       {slowest.length > 0 && (
         <StatCard.Row unit='ms'>
-          <Grid.Root cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>
+          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>query</span>
             <span>fired</span>
             <span>live</span>
             <span>items</span>
             <span>max</span>
-          </Grid.Root>
+          </Grid>
         </StatCard.Row>
       )}
       {slowest.map((query) => {
@@ -66,15 +64,15 @@ export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardPro
         return (
           <Fragment key={query.query}>
             <StatCard.Row open={open} onToggle={(open) => setExpanded(open ? query.query : undefined)} unit='ms'>
-              <Grid.Root cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end tabular-nums'>
+              <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end tabular-nums'>
                 <Tooltip.Trigger asChild content={query.query}>
                   <span className='truncate text-start'>{shortQueryText(query.query)}</span>
                 </Tooltip.Trigger>
-                <span className='text-description'>{queryFiredCount(query).toLocaleString()}</span>
-                <span className={mx(query.active > 0 ? 'text-success-text' : 'text-description')}>{query.active}</span>
+                <span className='text-fg-muted'>{queryFiredCount(query).toLocaleString()}</span>
+                <span className={mx(query.active > 0 ? 'text-success-text' : 'text-fg-muted')}>{query.active}</span>
                 <span>{query.lastCount.toLocaleString()}</span>
                 <span className={queryTimeClassName(query.maxTime)}>{Unit.ms(query.maxTime)}</span>
-              </Grid.Root>
+              </Grid>
             </StatCard.Row>
             {open && (
               <StatCard.Content>

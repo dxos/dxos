@@ -14,11 +14,8 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import * as Button from '@dxos/react-ui/Button';
-import * as Card from '@dxos/react-ui/Card';
-import * as Icon from '@dxos/react-ui/Icon';
+import { Block, Button, Card, Icon, Toolbar } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Organization, Person } from '@dxos/types';
 
 import { CrmPlugin } from '#plugin';
@@ -62,27 +59,25 @@ const DefaultStory = () => {
   return (
     <div className='flex flex-col gap-2 p-2'>
       <Toolbar.Root>
-        <Button.Root onClick={handleEnrich} data-testid='crm.story.enrich'>
+        <Button onClick={handleEnrich} data-testid='crm.story.enrich'>
           Enrich images
-        </Button.Root>
-        <span className='text-sm text-description' data-testid='crm.story.status'>
+        </Button>
+        <span className='text-sm text-fg-muted' data-testid='crm.story.status'>
           {status}
         </span>
       </Toolbar.Root>
 
       {[...people, ...organizations].map((subject) => (
-        <Card.Root key={subject.id} fullWidth>
+        <Card.Root key={subject.id}>
           <Card.Header>
-            <Card.Block>
-              <Icon.Root
-                icon={Obj.instanceOf(Person.Person, subject) ? 'ph--user--regular' : 'ph--buildings--regular'}
-              />
-            </Card.Block>
+            <Block>
+              <Icon icon={Obj.instanceOf(Person.Person, subject) ? 'ph--user--regular' : 'ph--buildings--regular'} />
+            </Block>
             <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           </Card.Header>
           <Card.Body>
             <Card.Row>
-              <Card.Text classNames='text-sm text-description' data-testid={`crm.story.image.${subject.id}`}>
+              <Card.Text classNames='text-sm' data-testid={`crm.story.image.${subject.id}`} variant='muted'>
                 {(subject as { image?: string }).image ?? 'image: none'}
               </Card.Text>
             </Card.Row>

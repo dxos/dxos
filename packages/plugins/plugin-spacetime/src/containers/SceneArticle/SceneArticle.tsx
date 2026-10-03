@@ -6,9 +6,8 @@ import React from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
+import { Flex, Panel } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Panel from '@dxos/react-ui/Panel';
 
 import { SpacetimeEditor } from '#components';
 import { Scene, SceneView } from '#types';
@@ -27,9 +26,9 @@ export const SceneArticle = ({ subject, attendableId, role }: SceneArticleProps)
   if (role === AppSurface.Section.role) {
     return (
       <SpacetimeEditor.Root scene={subject}>
-        <Flex.Root classNames='aspect-square w-full max-h-full min-h-0'>
+        <Flex classNames='aspect-square w-full max-h-full min-h-0'>
           <SpacetimeEditor.Canvas classNames='grow' camera={camera} onCameraChange={setCamera} />
-        </Flex.Root>
+        </Flex>
       </SpacetimeEditor.Root>
     );
   }
@@ -37,12 +36,12 @@ export const SceneArticle = ({ subject, attendableId, role }: SceneArticleProps)
   return (
     <SpacetimeEditor.Root scene={subject}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <SpacetimeEditor.Toolbar attendableId={attendableId} alwaysActive />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SpacetimeEditor.Canvas camera={camera} onCameraChange={setCamera} />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </SpacetimeEditor.Root>
   );

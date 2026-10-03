@@ -5,10 +5,8 @@
 import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
+import { type ThemedClassName, type UseEditableOptions, useEditable, useThemeMode } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
-import * as Editable from '@dxos/react-ui/Editable';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import type * as Util from '@dxos/react-ui/Util';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -31,8 +29,8 @@ import { MarkdownView, type MarkdownViewProps } from '../MarkdownView/index.ts';
  *
  * The value is markdown SOURCE either way: what the reader edits is what the preview renders.
  */
-export type MarkdownEditableProps = Util.ThemedClassName<
-  Editable.UseEditableOptions & {
+export type MarkdownEditableProps = ThemedClassName<
+  UseEditableOptions & {
     /** Shown, dimmed, when the value is empty. */
     placeholder?: string;
     /** Renderers for the preview, as `MarkdownView` takes them. */
@@ -87,7 +85,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
     }: MarkdownEditableProps,
     forwardedRef,
   ) => {
-    const { value, draft, editing, setDraft, commit, revert, previewProps } = Editable.useEditable({
+    const { value, draft, editing, setDraft, commit, revert, previewProps } = useEditable({
       ...options,
       disabled: options.disabled || readonly,
     });
@@ -116,7 +114,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
       revertAll,
     ]);
 
-    const { themeMode } = ThemeProvider.useThemeContext();
+    const themeMode = useThemeMode();
     const commitOnBlur = options.blurBehavior !== 'revert';
     const extensions = useMemo(
       () => [

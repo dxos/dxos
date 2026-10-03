@@ -15,17 +15,15 @@ import React, {
 } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import * as CardMasonry from '@dxos/plugin-space/CardMasonry';
+import { Container, Icon, Typography, useTranslation } from '@dxos/react-ui';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
-import * as Column from '@dxos/react-ui/Column';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -38,7 +36,7 @@ import { TaskOperation } from '#types';
  * plugin-file, and a drop it cannot store must not be offered at all.
  */
 const useCanCreateFiles = (): boolean => {
-  const handlerSets = AppHooks.useCapabilities(Capabilities.OperationHandler);
+  const handlerSets = Hooks.useCapabilities(Capabilities.OperationHandler);
   return useMemo(
     () =>
       handlerSets.some((set) =>
@@ -67,7 +65,7 @@ export type AttachFile = (task: Task.Task, file: globalThis.File) => Promise<boo
  * when no plugin can store a file.
  */
 export const useAttachFile = (): AttachFile | undefined => {
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const canCreateFiles = useCanCreateFiles();
 
   const attachOne = useCallback<AttachFile>(
@@ -241,11 +239,11 @@ export type TaskAttachmentsProps = {
  * and nothing could be.
  */
 export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: TaskAttachmentsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const [refs] = useObject(task, 'attachments');
   const dragging = useContext(FileDragContext);
 
-  const removeAttachment = AppHooks.useOperation(
+  const removeAttachment = Hooks.useOperation(
     TaskOperation.RemoveAttachment,
     (file: Ref.Ref<File.File>) => ({ task: Ref.make(task), file }),
     { spaceId: Obj.getDatabase(task)?.spaceId },
@@ -273,37 +271,42 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
 
   return (
     // A section of the pane's column, headed like the questions and artifacts around it.
-    <Column.Section label={t('task-attachments.label')} data-testid='tasksPlugin.attachments'>
-      <div
-        className={mx(
-          'rounded-md border border-dashed',
-          dragging ? 'border-accent-bg' : hasCards ? 'border-transparent' : 'border-separator',
-          hasCards
-            ? // Outset by the border and padding so the cards sit on the column's content track.
-              '-m-1.5 p-1'
-            : 'flex items-center justify-center gap-2 p-trim-sm text-description',
-        )}
-        {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
-      >
-        {hasCards ? (
-          <RemoveAttachmentContext.Provider value={handleRemove}>
-            <CardMasonry.Root
-              objects={refs ?? []}
-              size='compact'
-              inline
-              CardMenu={AttachmentCardMenu}
-              detailOf={detailOf}
-              pending={placeholders}
-            />
-          </RemoveAttachmentContext.Provider>
-        ) : (
-          <>
-            <Icon.Root icon='ph--paperclip--regular' />
-            {t('task-attachments.drop-area.label')}
-          </>
-        )}
-      </div>
-    </Column.Section>
+    <Container asChild gutter='inherit' gap='md'>
+      <section data-testid='tasksPlugin.attachments'>
+        <Typography asChild tone='subtle'>
+          <h2>{t('task-attachments.label')}</h2>
+        </Typography>
+        <div
+          className={mx(
+            'rounded-md border border-dashed',
+            dragging ? 'border-accent-bg' : hasCards ? 'border-transparent' : 'border-separator',
+            hasCards
+              ? // Outset by the border and padding so the cards sit on the column's content track.
+                '-m-1.5 p-1'
+              : 'flex items-center justify-center gap-2 p-trim-sm text-fg-muted',
+          )}
+          {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
+        >
+          {hasCards ? (
+            <RemoveAttachmentContext.Provider value={handleRemove}>
+              <CardMasonry.Root
+                objects={refs ?? []}
+                size='compact'
+                inline
+                CardMenu={AttachmentCardMenu}
+                detailOf={detailOf}
+                pending={placeholders}
+              />
+            </RemoveAttachmentContext.Provider>
+          ) : (
+            <>
+              <Icon icon='ph--paperclip--regular' />
+              {t('task-attachments.drop-area.label')}
+            </>
+          )}
+        </div>
+      </section>
+    </Container>
   );
 };
 
@@ -312,7 +315,7 @@ const RemoveAttachmentContext = createContext<((object: Obj.Unknown) => void) | 
 
 /** Adds "Remove attachment" to each attachment card's menu, beside the file's own actions. */
 const AttachmentCardMenu = ({ subject, menu }: AppSurface.CardMenuData<Obj.Unknown>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const onRemove = useContext(RemoveAttachmentContext);
   const items = useMemo(
     () =>

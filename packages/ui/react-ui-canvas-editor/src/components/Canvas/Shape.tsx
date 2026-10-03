@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 
 import { useEditorContext } from '../../hooks/index.ts';
 import { PathComponent } from '../../shapes/index.ts';
@@ -17,7 +17,7 @@ import { Frame } from './Frame.tsx';
  * Runtime representations of shape.
  */
 export type ShapeComponentProps<S extends CanvasBoard.Shape = CanvasBoard.Shape> = PropsWithChildren<
-  Util.ThemedClassName<{
+  ThemedClassName<{
     shape: S;
     debug?: boolean;
     selected?: boolean;

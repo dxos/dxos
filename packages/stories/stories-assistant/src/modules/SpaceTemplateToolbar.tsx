@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Model } from '@dxos/ai';
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -16,10 +16,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Select from '@dxos/react-ui/Select';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { Button, Checkbox, Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 
 import { isPersistent, setPersistent } from '../testing/persistence.ts';
 import { VOYAGE_SPACE_ID } from '../testing/voyage-space.ts';
@@ -51,8 +48,8 @@ export const SpaceTemplateToolbar = () => (
 
 const TemplateSelect = () => {
   const client = useClient();
-  const templates = AppHooks.useCapabilities(AppCapabilities.SpaceTemplate);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const templates = Hooks.useCapabilities(AppCapabilities.SpaceTemplate);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [templateId, setTemplateId] = useState(VOYAGE_SPACE_ID);
   // Guards the seed effect against the re-renders between an open starting and its space landing.
   const busy = useRef(false);
@@ -138,7 +135,7 @@ const TemplateSelect = () => {
   // template rather than on any: each contributing module activates on its own, so the samples can
   // register a beat before the story's own, and a one-shot on the first arrival would open nothing.
   const [opened, setOpened] = useState(false);
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (!opened && !busy.current && templates.some(({ id }) => id === templateId)) {
       setOpened(true);
       await handleSelect(templateId);
@@ -147,19 +144,17 @@ const TemplateSelect = () => {
 
   return (
     <>
-      <Select.Root value={templateId} onValueChange={(id) => void handleSelect(id)}>
-        <Select.TriggerButton placeholder='Template' />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {sorted.map(({ id, label }) => (
-                <Select.Option key={id} value={id}>
-                  {label}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
+      <Select.Root
+        value={[templateId]}
+        onValueChange={({ value: [id] }) => void handleSelect(id)}
+        items={sorted.map(({ id, label }) => ({ value: id, label: label }))}
+      >
+        <Select.Trigger placeholder='Template' />
+        <Select.Content>
+          {sorted.map(({ id, label }) => (
+            <Select.Item key={id} item={{ value: id, label: label }} />
+          ))}
+        </Select.Content>
       </Select.Root>
     </>
   );
@@ -212,24 +207,26 @@ const ProfileControls = () => {
 
   return (
     <>
-      <Toolbar.IconButton
+      <Button
         icon='ph--download-simple--regular'
         iconOnly
         label='Export profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleExport()}
       />
-      <Toolbar.IconButton
+      <Button
         icon='ph--upload-simple--regular'
         iconOnly
         label='Import profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleImport()}
       />
-      <Field.Checkbox checked={persistent} onCheckedChange={handlePersistentChange}>
-        Persistent
-      </Field.Checkbox>
-      <Toolbar.IconButton icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
+      <Checkbox
+        checked={persistent}
+        onCheckedChange={({ checked }) => handlePersistentChange(checked === true)}
+        label='Persistent'
+      />
+      <Button icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </>
   );
 };

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useTranslation } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import {
@@ -24,7 +24,7 @@ import { ReaderPane } from './ReaderPane.tsx';
 
 /** The split view in miniature: two panes over one analysis, sharing a selection. */
 const ReaderPaneStory = ({ paired = false }: { paired?: boolean }) => {
-  const { t } = Hooks.useTranslation(pluginMeta.profile.key);
+  const { t } = useTranslation(pluginMeta.profile.key);
   const [selected, setSelected] = useState<string>();
 
   const lookup = useMemo<VocabularyLookup>(() => {

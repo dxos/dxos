@@ -8,8 +8,7 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/Format';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { MasterDetailTable, Searchbar } from '../../../../components/index.ts';
 import { DataSpaceSelector } from '../../../../containers/index.ts';
@@ -99,15 +98,15 @@ export const AutomergeArticle = ({ role, ...props }: ArticleProps & { space?: Sp
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar onChange={setFilter} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <MasterDetailTable properties={properties} data={data} detailsTransform={({ accessor }) => accessor()} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

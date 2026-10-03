@@ -9,9 +9,9 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { type Filter, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';

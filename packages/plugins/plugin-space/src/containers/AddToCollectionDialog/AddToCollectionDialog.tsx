@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -14,10 +14,8 @@ import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useSpace } from '@dxos/react-client/echo';
+import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
@@ -40,8 +38,8 @@ type CollectionItem = {
 
 /** Picks a collection in the object's space to list the object in. */
 export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(object);
   const space = useSpace(db?.spaceId);
   const collections = useQuery(db, Filter.type(Collection.Collection));
@@ -55,9 +53,9 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
     const excluded = Collection.isCollection(object) ? getSubtree(object, collections) : new Set<string>();
     const getLabel = (collection: Collection.Collection) =>
       collection.id === rootId
-        ? ThemeProvider.toLocalizedString(['collections-section.label', { ns: meta.profile.key }], t)
+        ? toLocalizedString(['collections-section.label', { ns: meta.profile.key }], t)
         : (Obj.getLabel(collection) ??
-          ThemeProvider.toLocalizedString(
+          toLocalizedString(
             ['object-name.placeholder', { ns: Type.getTypename(Collection.Collection), defaultValue: collection.id }],
             t,
           ));
@@ -106,9 +104,9 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('add-to-collection-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
@@ -117,7 +115,7 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
             autoFocus
             escapeBehavior='dismiss'
             placeholder={t('add-to-collection-dialog.placeholder')}
-            {...{ [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+            {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
           />
           <SearchList.Viewport classNames='max-h-[24rem]'>
             {results.length === 0 && <SearchList.Empty />}

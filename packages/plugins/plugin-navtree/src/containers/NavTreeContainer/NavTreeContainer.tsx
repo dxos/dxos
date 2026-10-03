@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -21,9 +21,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { useMainSidebars, useMediaQuery } from '@dxos/react-ui';
 import { type DropKind, type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Main from '@dxos/react-ui/Main';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
@@ -96,8 +95,8 @@ export type NavTreeContainerProps = {
 
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId }, forwardedRef) => {
-    const [isLg] = Hooks.useMediaQuery('lg');
-    const { invokePromise } = AppHooks.useOperationInvoker();
+    const [isLg] = useMediaQuery('lg');
+    const { invokePromise } = Hooks.useOperationInvoker();
     const runAction = GraphHooks.useActionRunner();
     const builder = ToolkitHooks.useAppGraph();
     // The sentinel deck names no workspace, so there is nothing to claim is missing. A workspace
@@ -111,7 +110,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { getItem, setItem } = useNavTreeState();
     const layout = ToolkitHooks.useLayout();
     const model = useNavTreeModel(GraphNode.RootId);
-    const { navigationSidebarState } = Main.useSidebars(meta.profile.key);
+    const { navigationSidebarState } = useMainSidebars(meta.profile.key);
     const latestRef = useRef({
       tab,
       activeItems: layout.active,

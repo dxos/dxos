@@ -5,12 +5,10 @@
 import { type Decorator } from '@storybook/react-vite';
 import React, { type FC, type PropsWithChildren, memo } from 'react';
 
+import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
-import { type ClassNameValue } from '@dxos/ui-types';
 
-import type * as Util from '../../util/Util.ts';
-
-export type ContainerProps = Util.ThemedClassName<PropsWithChildren>;
+export type ContainerProps = ThemedClassName<PropsWithChildren>;
 
 export type ContainerType = 'default' | 'fullscreen' | 'centered' | 'column';
 

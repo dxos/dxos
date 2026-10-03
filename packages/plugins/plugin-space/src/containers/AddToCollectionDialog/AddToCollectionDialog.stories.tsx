@@ -19,7 +19,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import * as Dialog from '@dxos/react-ui/Dialog';
+import { Dialog } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -56,9 +56,7 @@ const DefaultStory = () => {
     <>
       <Listing note={note} />
       <Dialog.Root defaultOpen>
-        <Dialog.Overlay>
-          <AddToCollectionDialog object={note} />
-        </Dialog.Overlay>
+        <AddToCollectionDialog object={note} />
       </Dialog.Root>
     </>
   ) : (

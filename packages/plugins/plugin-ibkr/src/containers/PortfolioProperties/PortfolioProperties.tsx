@@ -9,9 +9,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { Field, Switch, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Ibkr } from '#types';
 
@@ -26,7 +25,7 @@ export type PortfolioPropertiesProps = AppSurface.ObjectPropertiesProps<Ibkr.Por
  * enables/disables it thereafter. The user keeps a single trigger per space.
  */
 export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const [pending, setPending] = useState(false);
 
@@ -56,7 +55,7 @@ export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
     <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('daily-sync.label')}</Field.Label>
-        <Field.Switch checked={syncEnabled ?? false} disabled={pending} onCheckedChange={handleToggleSync} />
+        <Switch checked={syncEnabled ?? false} disabled={pending} onCheckedChange={() => handleToggleSync()} />
       </Field.Root>
     </Form.FieldSet>
   );

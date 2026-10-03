@@ -4,16 +4,16 @@
 
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { SettingsOperation } from '../../operations/index.ts';
 import { usePluginRegistryAvailable } from '../hooks/index.ts';
 
-export type PluginRegistryButtonProps = Partial<
-  Omit<ComponentPropsWithoutRef<typeof IconButton.Root>, 'icon' | 'label'>
+export type PluginRegistryButtonProps = Pick<
+  ComponentPropsWithoutRef<typeof Button>,
+  'onClick' | 'variant' | 'size' | 'disabled' | 'classNames'
 >;
 
 /**
@@ -25,15 +25,15 @@ export type PluginRegistryButtonProps = Partial<
  */
 export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistryButtonProps>(
   ({ onClick, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(osTranslations);
-    const { invokePromise } = AppHooks.useOperationInvoker();
+    const { t } = useTranslation(osTranslations);
+    const { invokePromise } = Hooks.useOperationInvoker();
     const available = usePluginRegistryAvailable();
     if (!available) {
       return null;
     }
 
     return (
-      <IconButton.Root
+      <Button
         {...props}
         ref={forwardedRef}
         icon='ph--squares-four--regular'

@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { LogLevel } from '@dxos/log';
+import { createContext } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { type LogRow } from './log-buffer.ts';
 import { type LevelName, LEVELS } from './recorder.ts';
@@ -63,4 +63,4 @@ export type LoggerContextValue = {
   copyAll: () => void;
 };
 
-export const [LoggerProvider, useLoggerContext] = Hooks.createContext<LoggerContextValue>('Logger');
+export const [LoggerProvider, useLoggerContext] = createContext<LoggerContextValue>('Logger');

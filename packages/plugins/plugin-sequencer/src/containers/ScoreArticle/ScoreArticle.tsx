@@ -7,14 +7,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { Button, Field, Flex, Icon, Input, Panel } from '@dxos/react-ui';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { ActionToolbar, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Panel from '@dxos/react-ui/Panel';
 import { mx } from '@dxos/ui-theme';
 import { downloadBlob } from '@dxos/util';
 
@@ -442,23 +438,23 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
           <Field.Root>
             <Field.Label classNames='text-xs mr-1'>BPM</Field.Label>
-            <Field.Input
-              type='number'
+            <Input
               min={1}
               value={score.tempo}
               onChange={(event) => handleTempoChange(Number(event.target.value))}
               classNames='w-16'
+              type='number'
             />
           </Field.Root>
         </ActionToolbar>
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content>
-        <Flex.Root classNames='h-full min-h-0'>
+      <Panel.Body>
+        <Flex classNames='h-full min-h-0'>
           <div className='h-full grid grid-rows-[1fr_auto] w-48 shrink-0 border-r border-separator'>
             <TrackList
               tracks={score.tracks}
@@ -510,16 +506,16 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
               />
             ) : (
               <div className={mx('dx-fullscreen flex items-center justify-center text-neutral-500 text-sm')}>
-                <Flex.Root column gap='sm' align='center'>
-                  <Icon.Root icon='ph--music-notes--regular' size={6} />
+                <Flex column gap='sm' align='center'>
+                  <Icon icon='ph--music-notes--regular' size='xl' />
                   <span>Add a track to begin.</span>
-                  <Button.Root onClick={handleAddTrack}>Add track</Button.Root>
-                </Flex.Root>
+                  <Button onClick={handleAddTrack}>Add track</Button>
+                </Flex>
               </div>
             )}
           </div>
-        </Flex.Root>
-      </Panel.Content>
+        </Flex>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -6,7 +6,7 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { GameboardContextProvider, type GameboardContextValue } from './GameboardContext.ts';
@@ -87,7 +87,7 @@ GameboardRoot.displayName = 'Gameboard.Root';
 // Content
 //
 
-type GameboardContentProps = Util.ThemedClassName<PropsWithChildren<{ grow?: boolean; contain?: boolean }>>;
+type GameboardContentProps = ThemedClassName<PropsWithChildren<{ grow?: boolean; contain?: boolean }>>;
 
 const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
   ({ children, classNames, grow, contain }, forwardedRef) => {

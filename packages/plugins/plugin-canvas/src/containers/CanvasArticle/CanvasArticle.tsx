@@ -10,8 +10,8 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import { Panel } from '@dxos/react-ui';
 import { SceneView, useRegistry } from '@dxos/react-ui-canvas/scene';
-import * as Panel from '@dxos/react-ui/Panel';
 
 import { type BoundCanvasStore, bindCanvasStore } from '#model';
 import { CanvasCapabilities } from '#types';
@@ -33,7 +33,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         {bound && (
           // An unset preference leaves the engine's own default in place.
           <SceneView.Root key={bound.root} store={bound.store} root={bound.root}>
@@ -49,7 +49,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
             {(settings.showPalette ?? true) && <SceneView.Palette />}
           </SceneView.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

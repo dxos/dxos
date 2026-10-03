@@ -4,12 +4,8 @@
 
 import React, { useMemo } from 'react';
 
+import { Button, Empty, Flex, useThemeMode, useTranslation } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '#meta';
 
@@ -26,7 +22,7 @@ export type WalkthroughViewProps = Omit<DiffDocumentOptions, 'themeMode'> & {
  * single fence. Either way the chunks are the walkthrough's own, so a file reads the same in both.
  */
 export const WalkthroughView = ({ value, sidebar, layout, onLineComment }: WalkthroughViewProps) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () => diffDocumentExtensions({ themeMode, sidebar, layout, onLineComment }),
     [themeMode, sidebar, layout, onLineComment],
@@ -49,15 +45,15 @@ export type WalkthroughPlaceholderProps = {
 
 /** What the walkthrough tab shows before there is a walkthrough: the offer to write one, or its progress. */
 export const WalkthroughPlaceholder = ({ generating, onGenerate }: WalkthroughPlaceholderProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   return (
-    <Flex.Root column center gap='md' classNames='dx-expand'>
-      <Banner.Empty label={t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')} />
+    <Flex column center gap='md' classNames='dx-expand'>
+      <Empty>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</Empty>
       {!generating && (
-        <Button.Root variant='primary' onClick={onGenerate}>
+        <Button variant='primary' onClick={onGenerate}>
           {t('generate-walkthrough.label')}
-        </Button.Root>
+        </Button>
       )}
-    </Flex.Root>
+    </Flex>
   );
 };

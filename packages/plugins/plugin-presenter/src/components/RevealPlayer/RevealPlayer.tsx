@@ -15,8 +15,8 @@ import Reveal from 'reveal.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown, { type MarkdownPlugin } from 'reveal.js/plugin/markdown/plugin.js';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Util from '@dxos/react-ui/Util';
+import { useAsyncEffect } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 const styles = `
@@ -178,7 +178,7 @@ const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: 
   return { deck, markdown, highlight, slides, renderedContent: content };
 };
 
-export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
+export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
   ({ content, slide, fullscreen = true, onExit, children, ...props }, forwardedRef) => {
     const deckDivRef = useRef<HTMLDivElement>(null);
     const slidesRef = useRef<HTMLDivElement>(null);
@@ -190,7 +190,7 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
       }
     }, [player, content]);
 
-    Hooks.useAsyncEffect(async (controller) => {
+    useAsyncEffect(async (controller) => {
       const element = deckDivRef.current;
       const slides = slidesRef.current;
       if (!element || !slides) {
@@ -231,7 +231,7 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
     // TODO(burdon): Trap cursor keys (otherwise the enclosing focus group grabs focus.)
     return (
       <div
-        {...Util.composableProps(props, {
+        {...composableProps(props, {
           classNames: [
             'dx-expand overflow-hidden grid place-items-center bg-scrim-surface [container-type:size]',
             fullscreen && 'dx-fullscreen',

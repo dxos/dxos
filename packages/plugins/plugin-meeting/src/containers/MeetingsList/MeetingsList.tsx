@@ -4,16 +4,14 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -27,8 +25,8 @@ type MeetingItemProps = {
 };
 
 const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleSelectMeeting = useCallback(
     () => invokePromise(MeetingOperation.SetActive, { object: meeting }),
@@ -40,9 +38,9 @@ const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
       <span className='truncate'>{getLabel(meeting)}</span>
       {/* Visual affordance only — listbox options can't legally contain focusable
           descendants, so the row itself drives selection via onClick above. */}
-      <Button.Root tabIndex={-1} aria-hidden onClick={handleSelectMeeting}>
+      <Button tabIndex={-1} aria-hidden onClick={handleSelectMeeting}>
         {t('select-meeting.label')}
-      </Button.Root>
+      </Button>
     </Listbox.Item>
   );
 };
@@ -50,8 +48,8 @@ const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
 export type MeetingsListProps = AppSurface.ArticleProps<undefined, {}, Obj.Unknown>;
 
 export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(channel);
   const meetings = useQuery(db, Query.type(Meeting.Meeting));
   // TODO(wittjosiah): This should be done in the query.
@@ -80,17 +78,15 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
 
   return (
     <div>
-      <Flex.Root align='center' justify='end' classNames='px-2 min-h-[3rem]'>
-        <Button.Root onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button.Root>
-      </Flex.Root>
-      <Listbox.Root>
-        <Listbox.Viewport>
-          <Listbox.Content aria-label={t('meeting-list.label')}>
-            {sortedMeetings.map((meeting) => (
-              <MeetingItem key={meeting.id} meeting={meeting} getLabel={getLabel} />
-            ))}
-          </Listbox.Content>
-        </Listbox.Viewport>
+      <Flex align='center' justify='end' classNames='px-2 min-h-[3rem]'>
+        <Button onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button>
+      </Flex>
+      <Listbox.Root items={sortedMeetings.map((meeting) => ({ value: meeting.id, label: getLabel(meeting) }))}>
+        <Listbox.Content aria-label={t('meeting-list.label')}>
+          {sortedMeetings.map((meeting) => (
+            <MeetingItem key={meeting.id} meeting={meeting} getLabel={getLabel} />
+          ))}
+        </Listbox.Content>
       </Listbox.Root>
     </div>
   );

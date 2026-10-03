@@ -6,20 +6,15 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Collection, Obj } from '@dxos/echo';
+import { Block, Card, Icon, Menu, ScrollArea, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Tag from '@dxos/react-ui/Tag';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import { getStyles } from '@dxos/ui-theme';
+import { getStyles, osTranslations } from '@dxos/ui-theme';
 
 import { useArchiveMenuItem } from '#hooks';
 import { meta } from '#meta';
@@ -28,13 +23,13 @@ import { meta } from '#meta';
  * Article view for collections.
  */
 export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectArticleProps<Collection.Collection>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { items, handleSearch } = useCollectionItems(subject, attendableId);
 
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root centered padding thin>
+        <ScrollArea.Root>
           <ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='gap-1'
@@ -59,13 +54,13 @@ type ObjectItem = {
 };
 
 const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const typename = Obj.getTypename(item.object) ?? '';
   const label =
     Obj.getLabel(item.object) ??
-    ThemeProvider.toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
+    toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
   const handleClick = useCallback(
@@ -75,17 +70,24 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const { archived, item: archiveItem } = useArchiveMenuItem(item.object);
 
   return (
-    <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Card.Block>
-          <Icon.Root icon={item.icon} classNames={styles?.fg} />
-        </Card.Block>
+        <Block>
+          <Icon icon={item.icon} classNames={styles?.fg} />
+        </Block>
         <Card.Title>{label}</Card.Title>
-        <Card.Menu items={archiveItem ? [archiveItem] : undefined} />
+        {archiveItem && (
+          <Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
+            <Menu.Item
+              item={{ value: archiveItem.label, label: archiveItem.label, icon: archiveItem.icon }}
+              onClick={archiveItem.onClick}
+            />
+          </Card.Menu>
+        )}
       </Card.Header>
       {archived && (
         <Card.Row>
-          <Tag.Root classNames='justify-self-start'>{t('archived.label')}</Tag.Root>
+          <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
         </Card.Row>
       )}
     </Card.Root>

@@ -5,6 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import { useCallback, useMemo, useRef } from 'react';
 
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   type EditorMenuProviderProps,
@@ -13,8 +14,6 @@ import {
   formattingCommands,
   linkSlashCommands,
 } from '@dxos/react-ui-editor';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { Domino } from '@dxos/ui';
 
 import { meta } from '#meta';
@@ -32,7 +31,7 @@ export const useEditorMenuOptions = ({
   slashCommandGroups,
   onLinkQuery,
 }: UseEditorMenuOptionsProps): UseEditorMenuOptions => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     ({ text, trigger }) => {
@@ -44,7 +43,7 @@ export const useEditorMenuOptions = ({
         case '/':
         default: {
           return filterMenuGroups([linkSlashCommands, formattingCommands, ...(slashCommandGroups ?? [])], (item) =>
-            text ? ThemeProvider.toLocalizedString(item.label, t).toLowerCase().includes(text.toLowerCase()) : true,
+            text ? toLocalizedString(item.label, t).toLowerCase().includes(text.toLowerCase()) : true,
           );
         }
       }

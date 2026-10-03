@@ -4,8 +4,7 @@
 
 import React, { forwardRef, useId, useMemo } from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type Point } from '../../model/types.ts';
@@ -27,7 +26,7 @@ const createId = (parent: string, grid: number) => `dx-canvas-grid-${parent}-${g
  */
 const levelOpacity = (size: number, min: number) => Math.min(0.12, 0.04 + (0.02 * Math.log(size / min)) / Math.log(4));
 
-export type GridProps = Util.ThemedClassName<{
+export type GridProps = ThemedClassName<{
   size?: number;
   scale?: number;
   offset?: Point;
@@ -52,7 +51,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
     },
     forwardedRef,
   ) => {
-    const svgRef = Hooks.useForwardedRef(forwardedRef);
+    const svgRef = useForwardedRef(forwardedRef);
     const { width = 0, height = 0 } = svgRef.current?.getBoundingClientRect() ?? {};
 
     const instanceId = useId();

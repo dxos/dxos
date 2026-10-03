@@ -4,15 +4,13 @@
 
 import React, { useCallback } from 'react';
 
+import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import type * as Util from '@dxos/react-ui/Util';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-export type ChatQueueProps = Util.ThemedClassName<{
+export type ChatQueueProps = ThemedClassName<{
   /** Queued input awaiting processing, in append order. */
   messages: readonly Message.Message[];
   onCancel?: (message: Message.Message) => void;
@@ -30,7 +28,7 @@ export const ChatQueue = ({ classNames, messages, onCancel }: ChatQueueProps) =>
   }
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={messages.map((message) => ({ value: message.id, label: Message.extractText(message) }))}>
       <Listbox.Content classNames={['w-full gap-1 items-end', classNames]}>
         {messages.map((message) => (
           <QueuedItem key={message.id} message={message} onCancel={onCancel} />
@@ -46,7 +44,7 @@ type QueuedItemProps = {
 };
 
 const QueuedItem = ({ message, onCancel }: QueuedItemProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleCancel = useCallback(() => {
     onCancel?.(message);
@@ -56,17 +54,17 @@ const QueuedItem = ({ message, onCancel }: QueuedItemProps) => {
     <Listbox.Item
       id={message.id}
       data-testid='assistant.queued-message'
-      classNames='w-fit max-w-[85%] ps-2 pe-1 gap-2 rounded-sm bg-group-surface text-description text-sm'
+      classNames='w-fit max-w-[85%] ps-2 pe-1 gap-2 rounded-sm bg-group-surface text-fg-muted text-sm'
     >
       {/* `min-w-0` is what lets the span shrink so `truncate` clips its tail; without it the row
           overflows its max-width and the start of the prompt is what gets cut. */}
       <span className='min-w-0 truncate'>{Message.extractText(message)}</span>
       {onCancel && (
-        <IconButton.Root
+        <Button
           iconOnly
           icon='ph--x--regular'
           variant='ghost'
-          density='sm'
+          size='sm'
           data-testid='assistant.queued-message.cancel'
           label={t('cancel-queued.button')}
           onClick={handleCancel}

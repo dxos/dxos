@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -43,8 +43,8 @@ export const CreateConnectionPanel = ({
   onCancel,
   connectors: connectorsProp,
 }: CreateConnectionPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const capabilityConnectors = AppHooks.useCapabilities(Connector).flat();
+  const { t } = useTranslation(meta.profile.key);
+  const capabilityConnectors = Hooks.useCapabilities(Connector).flat();
   const connectors = connectorsProp ?? capabilityConnectors;
   const [connectorId, setConnectorId] = useState<string>();
   const [error, setError] = useState<string>();

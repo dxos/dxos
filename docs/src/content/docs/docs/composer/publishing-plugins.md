@@ -575,9 +575,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, DXN, Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-
+import { IconButton, ScrollArea } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { timezones } from '@dxos/react-ui-geo/data';
@@ -688,7 +686,7 @@ const ClockCard = ({
     <div style={{ opacity: 0.7 }}>{timeZone}</div>
     {/* Last, so it paints above the text it overlaps. */}
     <div style={{ position: 'absolute', top: 4, right: 4 }}>
-      <IconButton.Root
+      <IconButton
         data-testid='worldClock.delete'
         variant='ghost'
         icon='ph--x--regular'
@@ -736,7 +734,7 @@ const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
           </Form.Content>
         </Form.Root>
       ) : (
-        <IconButton.Root
+        <IconButton
           data-testid='worldClock.add'
           variant='ghost'
           icon='ph--plus--regular'

@@ -4,14 +4,14 @@
 
 import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type DebugProbe } from './debug-model.ts';
 import { type Stat, Stats } from './Stats.tsx';
 import { useDebugModel } from './useDebug.tsx';
 
-export type DebugProps = Util.ThemedClassName<{
+export type DebugProps = ThemedClassName<{
   /** Readouts side by side. @default 1 */
   columns?: number;
   title?: string;

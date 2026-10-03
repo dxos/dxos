@@ -7,8 +7,7 @@ import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import * as AlertDialog from '@dxos/react-ui/AlertDialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { AlertDialog, useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -18,16 +17,14 @@ import { RecoveryCodeDialog } from './RecoveryCodeDialog.tsx';
 const DefaultStory = () => {
   const client = useClient();
   const [recoveryCode, setRecoveryCode] = useState<string>();
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     const { recoveryCode } = (await client.services.services.IdentityService?.createRecoveryCredential({})) ?? {};
     setRecoveryCode(recoveryCode);
   }, [client]);
 
   return (
     <AlertDialog.Root open={!!recoveryCode}>
-      <AlertDialog.Overlay>
-        <RecoveryCodeDialog code={recoveryCode ?? ''} />
-      </AlertDialog.Overlay>
+      <RecoveryCodeDialog code={recoveryCode ?? ''} />
     </AlertDialog.Root>
   );
 };

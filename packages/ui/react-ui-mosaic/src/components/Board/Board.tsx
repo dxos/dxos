@@ -12,14 +12,12 @@ import React, {
   useState,
 } from 'react';
 
+import { Focus, ScrollArea, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { type DndContainerHandler, useDndRootContext } from '@dxos/react-ui-dnd';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useContainerDebug } from '../../hooks/index.ts';
-import { Focus } from '../Focus/index.ts';
 import { Mosaic, type MosaicPlaceholderProps, type MosaicStackProps, mosaicStyles } from '../Mosaic/index.ts';
 import { BoardContextProvider, type BoardContextValue, useBoardContext } from './BoardContext.ts';
 import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column.tsx';
@@ -47,13 +45,13 @@ const BoardRoot = BoardRootInner as <TColumn = any, TItem = any>(props: BoardRoo
 
 const BOARD_CONTENT_NAME = 'Board.Content';
 
-type BoardContentProps<TColumn = any> = Util.ThemedClassName<{
+type BoardContentProps<TColumn = any> = ThemedClassName<{
   debug?: boolean;
   eventHandler?: DndContainerHandler<TColumn>;
   Tile?: MosaicStackProps<TColumn>['Tile'];
 }>;
 
-const BoardContentInner = Util.composable<HTMLDivElement, BoardContentProps>(
+const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
   ({ debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {
     const { model } = useBoardContext(BOARD_CONTENT_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
@@ -62,7 +60,7 @@ const BoardContentInner = Util.composable<HTMLDivElement, BoardContentProps>(
     const items = useAtomValue(model.columns);
 
     return (
-      <div {...Util.composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
         <Focus.Group asChild orientation='horizontal'>
           <Mosaic.Container
             asChild
@@ -73,7 +71,7 @@ const BoardContentInner = Util.composable<HTMLDivElement, BoardContentProps>(
             debug={debugHandler}
             placeholderDebug={debug}
           >
-            <ScrollArea.Root orientation='horizontal' centered padding>
+            <ScrollArea.Root orientation='horizontal'>
               <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
                 <Mosaic.Stack items={items} getId={model.getColumnId} Tile={Tile} debug={debug} />
               </ScrollArea.Viewport>
@@ -116,7 +114,7 @@ BoardPlaceholder.displayName = BOARD_PLACEHOLDER_NAME;
 
 const BOARD_DEBUG_NAME = 'Board.Debug';
 
-export const BoardDebug = forwardRef<HTMLDivElement, Util.ThemedClassName>(({ classNames }, forwardedRef) => {
+export const BoardDebug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
   const { containers, dragging } = useDndRootContext(BOARD_DEBUG_NAME);
   const counter = useRef(0);
   return (

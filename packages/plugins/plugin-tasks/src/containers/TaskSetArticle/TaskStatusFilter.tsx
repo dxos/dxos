@@ -4,10 +4,9 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { Button, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createLineSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 import { statusIcon, statusTextStyle } from '@dxos/react-ui-task';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -34,7 +33,7 @@ export type TaskStatusFilterProps = {
  * text cannot disagree about what the list is showing.
  */
 export const TaskStatusFilter = ({ value, onChange, active }: TaskStatusFilterProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const selected = useMemo(() => new Set(value), [value]);
   const filtered = selected.size < ALL_STATUSES.length;
   const narrowed = active || filtered;
@@ -91,7 +90,7 @@ export const TaskStatusFilter = ({ value, onChange, active }: TaskStatusFilterPr
 
   return (
     <ActionMenu deferUntilOpen group={group} actions={actions}>
-      <IconButton.Root
+      <Button
         // Filled and accented while anything narrows the list, so the trigger says rows are missing
         // without the reader opening it; the accent survives the toolbar dimming icons at rest.
         icon={narrowed ? 'ph--funnel--fill' : 'ph--funnel--regular'}

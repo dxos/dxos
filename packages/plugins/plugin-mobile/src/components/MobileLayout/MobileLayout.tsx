@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, forwardRef, useEffect, useLayoutEffect, 
 
 import { addEventListener, combine } from '@dxos/async';
 import { log } from '@dxos/log';
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useDebugLog } from '../DebugOverlay/index.ts';
@@ -20,7 +20,7 @@ const MOBILE_LAYOUT_PANEL_NAME = 'MobileLayout.Panel';
 // Root
 //
 
-type MobileLayoutRootProps = Util.ThemedClassName<
+type MobileLayoutRootProps = ThemedClassName<
   PropsWithChildren<{
     transition?: number;
     onKeyboardOpenChange?: (nextState: boolean) => void;
@@ -67,7 +67,7 @@ MobileLayoutRoot.displayName = MOBILE_LAYOUT_ROOT_NAME;
 // Panel
 //
 
-type MobileLayoutPanelProps = Util.ThemedClassName<
+type MobileLayoutPanelProps = ThemedClassName<
   PropsWithChildren<{
     safe?: {
       top: boolean;

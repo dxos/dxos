@@ -4,6 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { composable } from '@dxos/react-ui';
 import {
   type ControlProps,
   Map,
@@ -12,7 +13,6 @@ import {
   type MapViewportProps,
   useMapZoomHandler,
 } from '@dxos/react-ui-geo';
-import * as Util from '@dxos/react-ui/Util';
 
 import { type GeoControlProps } from '../types.ts';
 
@@ -21,7 +21,7 @@ export const MAP_MIN_ZOOM = 3;
 
 export type MapControlProps = GeoControlProps & MapViewportProps & MapRootProps;
 
-export const MapControl = Util.composable<HTMLDivElement, MapControlProps>(
+export const MapControl = composable<HTMLDivElement, MapControlProps>(
   // Map.Root is headless and exposes the controller via ref, so MapControl has no DOM ref to forward.
   ({ center, zoom, markers, selected, onSelect, onToggle, onChange, tileUrl, lines, ...props }, _forwardedRef) => {
     const [controller, setController] = useState<MapController | null>(null);

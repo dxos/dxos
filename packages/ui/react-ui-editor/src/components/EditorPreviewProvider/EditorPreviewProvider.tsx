@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import * as Popover from '@dxos/react-ui/Popover';
-import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/ui-types';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover, virtualAnchor } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext.ts';
@@ -88,8 +87,13 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   return (
     <EditorPreviewContextProvider pending={value.pending} link={value.link} target={value.target}>
-      <Popover.Root open={open} onOpenChange={handleOpenChange}>
-        <Popover.VirtualTrigger virtualRef={triggerRef as unknown as RefObject<HTMLButtonElement>} />
+      <Popover.Root
+        open={open}
+        onOpenChange={({ open }) => handleOpenChange(open)}
+        positioning={virtualAnchor(triggerRef)}
+        // A preview card shows beside the link; focus stays in the editor.
+        autoFocus={false}
+      >
         <div className='contents' ref={setRoot}>
           {children}
         </div>

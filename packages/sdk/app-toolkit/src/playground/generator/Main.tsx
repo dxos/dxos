@@ -11,8 +11,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { Button } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { PlaygroundRoles } from '../roles.ts';
 
@@ -29,8 +29,8 @@ const Item = ({
 
   return (
     <Listbox.Item id={id}>
-      <Listbox.ItemLabel>{id}</Listbox.ItemLabel>
-      <IconButton.Root
+      <Listbox.ItemText>{id}</Listbox.ItemText>
+      <Button
         iconOnly
         variant='ghost'
         icon='ph--x--regular'
@@ -55,7 +55,7 @@ export const Main = () => {
   );
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={plugins.map((plugin) => ({ value: plugin.meta.profile.key, label: plugin.meta.profile.key }))}>
       <Listbox.Content aria-label='Plugins'>
         {plugins.map((plugin) => (
           <Item

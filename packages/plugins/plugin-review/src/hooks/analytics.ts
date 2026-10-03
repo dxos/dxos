@@ -4,10 +4,10 @@
 
 import { useCallback } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useOnTransition } from '@dxos/react-ui';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 export const useOnEditAnalytics = (
@@ -15,7 +15,7 @@ export const useOnEditAnalytics = (
   textBlock: ContentBlock.Text | undefined,
   editing: boolean,
 ) => {
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const onEdit = useCallback(() => {
     if (!message || !textBlock) {
@@ -37,5 +37,5 @@ export const useOnEditAnalytics = (
     });
   }, [invokePromise, message, textBlock]);
 
-  Hooks.useOnTransition(editing, true, false, onEdit);
+  useOnTransition(editing, true, false, onEdit);
 };

@@ -10,9 +10,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -44,7 +44,7 @@ const SHEET_NAME = 'Test Sheet';
 
 const DefaultStory = ({ text }: EditorProps) => {
   const id = useMemo(() => PublicKey.random(), []);
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const [space] = useSpaces();
   const computeGraph = useComputeGraph(space);
   const { parentRef, focusAttributes } = useTextEditor(

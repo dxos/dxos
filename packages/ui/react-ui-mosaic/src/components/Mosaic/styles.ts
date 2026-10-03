@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ClassNameValue } from '@dxos/ui-types';
+import { type ClassNameValue } from '@dxos/react-ui';
 
 export const styles = {
   placeholder: {

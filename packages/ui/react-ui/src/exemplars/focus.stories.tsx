@@ -6,19 +6,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 
 import { findFirstFocusable, useFocusGroup } from '@dxos/react-focus';
-import { useMergeRefs } from '@dxos/react-hooks';
+import { useMergeRefs } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import * as Field from '../components/Field/Field.tsx';
-import * as ScrollArea from '../components/ScrollArea/ScrollArea.tsx';
+import { Checkbox, Field, Input, ScrollArea } from '../next/components/index.ts';
 
 // TODO(burdon): Implement horizontal movement between columns when column is selected.
 // TODO(burdon): Prevent tab out of app.
 
 // `dx-focus-ring` is the app's focus affordance; without it a focusable div falls back to the
 // browser's own outline, which is what these blocks were drawing.
-const border = 'dx-focus-ring rounded-xs border border-subdued-separator';
+const border = 'dx-focus-ring rounded-xs border border-separator-subtle';
 
 /** Horizontal group over the columns; each column is one stop. */
 const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, ref) => {
@@ -53,7 +52,7 @@ const Column = ({ items }: { items: string[] }) => {
   });
 
   return (
-    <ScrollArea.Root orientation='vertical' classNames={mx('w-[25rem]', 'rounded-xs border border-subdued-separator')}>
+    <ScrollArea.Root orientation='vertical' classNames={mx('w-[25rem]', 'rounded-xs border border-separator-subtle')}>
       <ScrollArea.Viewport classNames='p-4'>
         <div
           {...focusGroupProps}
@@ -82,10 +81,10 @@ const Item = ({ value }: { value: string }) => {
       className={mx('flex shrink-0 w-full gap-4 p-4 items-center', border)}
     >
       <Field.Root>
-        <Field.Checkbox />
+        <Checkbox />
       </Field.Root>
       <Field.Root>
-        <Field.Input defaultValue={value} />
+        <Input defaultValue={value} />
       </Field.Root>
     </div>
   );

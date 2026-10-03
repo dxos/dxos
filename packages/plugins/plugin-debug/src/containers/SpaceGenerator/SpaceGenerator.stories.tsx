@@ -16,8 +16,8 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
+import { ScrollArea } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -29,15 +29,15 @@ const ObjectList = ({ space }: { space: Parameters<typeof SpaceGenerator>[0]['sp
   const objects = useQuery(space.db, Query.select(Filter.everything()));
 
   return (
-    <ScrollArea.Root thin orientation='vertical'>
+    <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
-        <Listbox.Root>
+        <Listbox.Root items={objects.map((object) => ({ value: object.id, label: object.id }))}>
           <Listbox.Content>
             {objects.map((object) => (
               <Listbox.Item key={object.id} id={object.id} classNames='px-2 gap-2'>
                 <div className='flex flex-col grow truncate'>
                   <span className='truncate'>{Obj.getLabel(object) ?? object.id}</span>
-                  <span className='text-description text-sm truncate'>{Obj.getTypename(object)}</span>
+                  <span className='text-fg-muted text-sm truncate'>{Obj.getTypename(object)}</span>
                 </div>
               </Listbox.Item>
             ))}

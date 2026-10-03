@@ -6,8 +6,8 @@ import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useState } from 'react';
 
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Editor, type EditorToolbarProps } from '@dxos/react-ui-editor';
-import * as Util from '@dxos/react-ui/Util';
 
 import { FileUpload, type FileUploadAction } from './FileUpload.tsx';
 
@@ -20,12 +20,12 @@ export type MarkdownEditorToolbarProps = {
   onFileUpload?: (file: File) => Promise<AppCapabilities.FileInfo | undefined>;
 } & Pick<EditorToolbarProps, 'role' | 'customActions' | 'onAction' | 'onViewModeChange' | 'viewModes'>;
 
-export const MarkdownEditorToolbar = Util.composable<HTMLDivElement, MarkdownEditorToolbarProps>(
+export const MarkdownEditorToolbar = composable<HTMLDivElement, MarkdownEditorToolbarProps>(
   (
     { id, role, getView, customActions, onAction, onFileUpload, onViewModeChange, viewModes, ...props },
     forwardedRef,
   ) => {
-    const { className, ...rest } = Util.composableProps(props);
+    const { className, ...rest } = composableProps(props);
     const [upload, setUpload] = useState<FileUploadAction | null>(null);
     const uploadRef = useCallback((next: FileUploadAction) => setUpload(() => next), []);
 

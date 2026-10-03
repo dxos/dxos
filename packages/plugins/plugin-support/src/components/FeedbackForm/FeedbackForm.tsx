@@ -6,9 +6,8 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';
@@ -123,7 +122,7 @@ export type FeedbackFormDownloadLogsProps = {
 };
 
 const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const handleClick = useCallback(async () => {
     try {
       await onDownloadLogs?.();
@@ -138,7 +137,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
   return (
     <div className='flex w-full pt-form-padding'>
-      <IconButton.Root
+      <Button
         classNames='w-full'
         type='button'
         icon='ph--download-simple--regular'
@@ -152,22 +151,22 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
 FeedbackFormDownloadLogs.displayName = `${FEEDBACK_FORM}.DownloadLogs`;
 
-const noteClassNames = 'text-xs text-description text-center px-2 py-1';
+const noteClassNames = 'text-xs text-fg-muted text-center px-2 py-1';
 
 export type FeedbackFormSubmitProps = {
   disabled?: boolean;
 };
 
 const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { pending } = useFeedbackFormContext(`${FEEDBACK_FORM}.Submit`);
 
   return (
     <>
       <p className={noteClassNames}>{t('public-report.description')}</p>
       <Form.Submit
-        classNames={pending ? '[&_svg]:animate-spin' : undefined}
         icon={pending ? 'ph--spinner-gap--regular' : 'ph--paper-plane-tilt--regular'}
+        busy={pending}
         label={pending ? t('sending-feedback.label') : t('send-feedback.label')}
         disabled={disabled || pending || undefined}
       />
@@ -186,7 +185,7 @@ export type FeedbackFormDiscordPresenceProps = {
 };
 
 const FeedbackFormDiscordPresence = ({ discordPresence }: FeedbackFormDiscordPresenceProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   if (!discordPresence) {
     return null;

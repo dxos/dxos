@@ -6,12 +6,9 @@ import React, { useMemo } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type InvocationsState } from '@dxos/compute-runtime';
-import * as RoutineHooks from '@dxos/plugin-routine/Hooks';
+import * as Hooks from '@dxos/plugin-routine/Hooks';
 import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Popover from '@dxos/react-ui/Popover';
+import { Button, Container, Flex, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -44,8 +41,8 @@ const getIconClassNames = (state: TriggerStatusState): string | undefined => {
 export type SpaceStatusProps = AppSurface.SpaceArticleProps;
 
 export const SpaceStatus = ({ space }: SpaceStatusProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { state } = RoutineHooks.useTriggerRuntimeControls(space.db);
+  const { t } = useTranslation(meta.profile.key);
+  const { state } = Hooks.useTriggerRuntimeControls(space.db);
   // The dispatcher is stopped for the space when `triggersDisabled` is set, so `enabled` already
   // reflects the space-wide kill-switch; per-trigger edge routing does not affect this indicator.
   const isEnabled = state?.enabled ?? false;
@@ -72,10 +69,10 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
   }, [isEnabled, state?.invocations]);
 
   return (
-    <Popover.Root>
+    <Popover.Root positioning={{ placement: 'left' }}>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton.Root
+          <Button
             variant='ghost'
             icon={getIcon(triggerState)}
             iconOnly
@@ -84,18 +81,15 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
           />
         </StatusBar.Item>
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content side='left'>
-          <TriggerStatusPopover
-            state={triggerState}
-            currentFunctionName={
-              state?.invocations.at(-1)?.function?.meta.name ?? state?.invocations.at(-1)?.function?.meta.key
-            }
-            lastInvocation={state?.invocations.at(-1)}
-          />
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content>
+        <TriggerStatusPopover
+          state={triggerState}
+          currentFunctionName={
+            state?.invocations.at(-1)?.function?.meta.name ?? state?.invocations.at(-1)?.function?.meta.key
+          }
+          lastInvocation={state?.invocations.at(-1)}
+        />
+      </Popover.Content>
     </Popover.Root>
   );
 };
@@ -111,17 +105,17 @@ const TriggerStatusPopover = ({
   currentFunctionName,
   lastInvocation, // TODO(burdon): Show.
 }: TriggerStatusPopoverProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Flex.Root column gap='sm' classNames='p-2 w-[240px]'>
-      <Flex.Root column gap='xs'>
+    <Flex column gap='sm' classNames='p-2 w-popover-min-width'>
+      <Container gap='sm' gutter='none'>
         <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (
-          <div className='text-xs text-description'>{currentFunctionName}</div>
+          <div className='text-xs text-fg-muted'>{currentFunctionName}</div>
         )}
-      </Flex.Root>
-    </Flex.Root>
+      </Container>
+    </Flex>
   );
 };
 

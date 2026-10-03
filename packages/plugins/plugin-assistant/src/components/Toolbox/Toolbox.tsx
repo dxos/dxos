@@ -9,8 +9,7 @@ import type * as Skill from '@dxos/compute/Skill';
 import { type Database, Filter, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Util from '@dxos/react-ui/Util';
+import { ScrollArea, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { AssistantService } from '#types';
@@ -25,10 +24,10 @@ export type ToolboxProps = {
   activeSkills?: readonly Ref.Ref<Skill.Skill>[];
 };
 
-export const Toolbox = Util.composable<HTMLDivElement, ToolboxProps>(
+export const Toolbox = composable<HTMLDivElement, ToolboxProps>(
   ({ functions, services, skills, activeSkills, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root {...Util.composableProps(props)} thin orientation='vertical' ref={forwardedRef}>
+      <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
           {skills && skills.length > 0 && (
             <Section
@@ -93,14 +92,14 @@ const Section = ({ title, items, striped }: SectionProps) => {
           <Fragment key={i}>
             {name && (
               <div className={subGridClassNames}>
-                <div className='truncate text-primary-500'>{name}</div>
+                <div className='truncate text-accent-text'>{name}</div>
                 <div className='line-clamp-2'>{description}</div>
               </div>
             )}
             {subitems?.map(({ name, description }, i) => (
               <div key={i} className={mx(subGridClassNames, striped && stripeClassNames)}>
                 <div className='truncate'>{name}</div>
-                <div className='line-clamp-3 text-subdued'>{description}</div>
+                <div className='line-clamp-3 text-fg-subtle'>{description}</div>
               </div>
             ))}
           </Fragment>
@@ -110,7 +109,7 @@ const Section = ({ title, items, striped }: SectionProps) => {
   );
 };
 
-export type ToolboxPanelProps = Util.ThemedClassName<{
+export type ToolboxPanelProps = ThemedClassName<{
   db?: Database.Database;
   processor?: AiChatProcessor;
 }>;

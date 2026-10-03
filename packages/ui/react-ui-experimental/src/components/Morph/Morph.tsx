@@ -6,7 +6,7 @@ import { interpolate } from 'flubber';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
 import React, { useEffect, useMemo } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -52,7 +52,7 @@ const STAR2_PATH = buildStarPath(50, 50, 40, 18, 8);
 
 const CIRCLE_PATH = buildCirclePath(50, 50, 10);
 
-export type MorphProps = Util.ThemedClassName<{
+export type MorphProps = ThemedClassName<{
   /** Pixel size of the rendered SVG (square). */
   size?: number;
   /** Duration of one segment (star↔circle) in seconds. Full cycle = 4× this value. */

@@ -10,9 +10,8 @@ import { Text as EchoText, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
 
@@ -105,18 +104,18 @@ const DefaultStory = ({ onResolved, swap }: StoryArgs) => {
   return (
     <Panel.Root>
       {swap && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Toolbar.Button
+            <Button
               data-testid='swap-document'
               onClick={() => setActive((current) => (current + 1) % documents.length)}
             >
               Swap
-            </Toolbar.Button>
+            </Button>
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
-      <Panel.Content>
+      <Panel.Body>
         <SuggestionSources document={documents[active]} onResolved={onResolved}>
           {(resolved) => (
             <div data-testid='resolved-content'>
@@ -126,7 +125,7 @@ const DefaultStory = ({ onResolved, swap }: StoryArgs) => {
             </div>
           )}
         </SuggestionSources>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

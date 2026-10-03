@@ -5,11 +5,10 @@
 import { AnimatePresence, motion } from 'motion/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
-import { ClassNameValue } from '@dxos/ui-types';
 
-export type MatrixProps = Util.ThemedClassName<{
+export type MatrixProps = ThemedClassName<{
   dotClassNames?: ClassNameValue;
   dim?: number;
   count?: number;
@@ -91,7 +90,7 @@ export const Matrix = ({
   );
 };
 
-type DotProps = Util.ThemedClassName<{
+type DotProps = ThemedClassName<{
   variants: Record<string, any>;
   variant: string;
   size?: number;

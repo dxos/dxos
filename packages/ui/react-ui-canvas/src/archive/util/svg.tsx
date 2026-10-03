@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, type SVGProps } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type Dimension, type Point } from '../types.ts';
@@ -18,7 +18,7 @@ import { createPath } from './svg-path.ts';
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths
  * NOTE: Leave space around shape for line width.
  */
-export const Markers = ({ id = 'dx-marker', classNames }: Util.ThemedClassName<{ id?: string }>) => {
+export const Markers = ({ id = 'dx-marker', classNames }: ThemedClassName<{ id?: string }>) => {
   return (
     <>
       <Arrow id={`${id}-arrow-start`} dir='start' classNames={classNames} />
@@ -34,7 +34,7 @@ export const Markers = ({ id = 'dx-marker', classNames }: Util.ThemedClassName<{
 
 export type MarkerProps = SVGProps<SVGMarkerElement> &
   PropsWithChildren<
-    Util.ThemedClassName<{
+    ThemedClassName<{
       id: string;
       pos: Point;
       size: Dimension;
@@ -77,7 +77,7 @@ export const Arrow = ({
   size = 16,
   dir = 'end',
   closed = false,
-}: Util.ThemedClassName<{ id: string; size?: number; dir?: 'start' | 'end'; closed?: boolean }>) => (
+}: ThemedClassName<{ id: string; size?: number; dir?: 'start' | 'end'; closed?: boolean }>) => (
   <Marker
     id={id}
     size={{ width: size, height: size }}
@@ -110,7 +110,7 @@ export const GridPattern = ({
   id,
   size,
   offset,
-}: Util.ThemedClassName<{ id: string; size: number; offset: Point }>) => (
+}: ThemedClassName<{ id: string; size: number; offset: Point }>) => (
   <pattern
     id={id}
     x={(size / 2 + offset.x) % size}

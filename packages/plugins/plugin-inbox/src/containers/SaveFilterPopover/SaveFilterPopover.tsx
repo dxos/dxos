@@ -4,23 +4,19 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Popover from '@dxos/react-ui/Popover';
+import { Button, Field, Flex, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Mailbox } from '#types';
 
 export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbox; filter: string }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState('');
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleDone = useCallback(() => {
     Obj.update(mailbox, (mailbox) => {
@@ -30,11 +26,11 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   }, [mailbox, name, filter, invokePromise]);
 
   return (
-    <Flex.Root gap='sm' classNames='p-2'>
+    <Flex gap='sm' classNames='p-2'>
       <div className='flex-1'>
         <Field.Root>
           <Field.Label srOnly>{t('saved-filter-name.label')}</Field.Label>
-          <Field.Input
+          <Input
             defaultValue={name}
             placeholder={t('save-filter.placeholder')}
             onChange={({ target: { value } }) => setName(value)}
@@ -44,12 +40,12 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
           />
         </Field.Root>
       </div>
-      <Popover.Close asChild>
-        <Button.Root ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
+      <Popover.CloseTrigger asChild>
+        <Button ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
           {t('save-filter.button')}
-        </Button.Root>
-      </Popover.Close>
-    </Flex.Root>
+        </Button>
+      </Popover.CloseTrigger>
+    </Flex>
   );
 };
 

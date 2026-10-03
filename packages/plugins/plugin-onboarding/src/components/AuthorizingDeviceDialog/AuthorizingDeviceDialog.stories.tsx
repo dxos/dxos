@@ -7,21 +7,15 @@ import '@fontsource/poiret-one';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import hero from '../../../assets/hero.webp?url';
 import { translations } from '../../translations.ts';
 import { AuthorizingDeviceDialog } from './AuthorizingDeviceDialog.tsx';
 
 const DefaultStory = () => (
   <AlertDialog.Root defaultOpen>
-    <AlertDialog.Overlay
-      classNames='dark bg-neutral-950! bg-no-repeat bg-center'
-      style={{ backgroundImage: `url(${hero})` }}
-    >
-      <AuthorizingDeviceDialog />
-    </AlertDialog.Overlay>
+    <AuthorizingDeviceDialog />
   </AlertDialog.Root>
 );
 

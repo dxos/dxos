@@ -2,21 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Listbox } from '@dxos/react-ui-list';
-import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Link from '@dxos/react-ui/Link';
-import * as Tag from '@dxos/react-ui/Tag';
-import { mx } from '@dxos/ui-theme';
-import { getStyles } from '@dxos/ui-theme';
-import { type ChromaticPalette, type NeutralPalette } from '@dxos/ui-types';
+import { Button, Card, Group, Icon, Link, Switch, Tag, type TagHue, Typography, useTranslation } from '@dxos/react-ui';
+import { ACCENT_HUES } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
@@ -81,10 +72,11 @@ export const PluginItem = ({
   failure,
   readOnly,
 }: PluginItemProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
   const icon = rawIcon?.key ?? 'ph--circle--regular';
-  const iconHue = rawIcon?.hue ?? 'neutral';
+  // The manifest's hue is a free string; only a palette hue reaches the icon.
+  const hue = ACCENT_HUES.find((candidate) => candidate === rawIcon?.hue);
   const displayTags = useMemo(() => {
     if (!extraTags || extraTags.length === 0) {
       return tags ?? [];
@@ -101,139 +93,80 @@ export const PluginItem = ({
   const isUpdating = updating?.includes(id) ?? false;
   const showInstallButton = !!onInstall && !isInstalled;
   const showUpdateButton = !!onUpdate && isInstalled && !!hasUpdate;
-  const inputId = `${id}-input`;
-  const descriptionId = `${id}-description`;
-  const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
-
-  const handleChange = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onChange?.(id, !isEnabled);
-    },
-    [id, isEnabled, onChange],
-  );
-
-  const handleInstall = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onInstall?.(id);
-    },
-    [id, onInstall],
-  );
-
-  const handleUpdate = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onUpdate?.(id);
-    },
-    [id, onUpdate],
-  );
-
   const hasSettings = hasSettingsProp?.(id) ?? false;
+  const titleId = `${id}-title`;
+  const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
-  const styles = getStyles(iconHue);
-  const gridCols = 'grid grid-cols-[5rem_1fr]';
-  const gridRows = 'grid grid-cols-1 grid-rows-[40px_1fr_min-content_40px]';
+  const handleInstall = useCallback(() => onInstall?.(id), [id, onInstall]);
+  const handleUpdate = useCallback(() => onUpdate?.(id), [id, onUpdate]);
 
   return (
-    <Listbox.Item
-      id={id}
-      data-testid={`pluginList.${id}`}
-      aria-describedby={descriptionId}
-      classNames={mx(
-        gridCols,
-        // Override `Listbox.Item`'s default row chrome (flex/items-center/padding/cursor) so the
-        // bespoke card grid stretches both columns to full height and controls its own padding.
-        // `dx-card-surface` (raised) reads as a card against the panel's base surface; `dx-modal-surface`
-        // (overlay, one step higher, meant for dialogs/sheets) was too close in tone to show contrast.
-        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 dx-card-surface rounded-md shadow-md overflow-hidden',
-      )}
-    >
-      <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
-        <div className='flex justify-center row-start-2 cursor-pointer' onClick={handleClick}>
-          <Icon.Root classNames={styles.fg} icon={icon} size={14} />
-        </div>
-      </div>
-
-      <div className={mx(gridRows, 'min-w-0')}>
-        <div className='flex items-center gap-2 overflow-hidden cursor-pointer' onClick={handleClick}>
-          <span className='text-lg truncate'>{name ?? id}</span>
+    <Card.Root role='listitem' aria-labelledby={titleId} data-testid={`pluginList.${id}`}>
+      <Card.Tile icon={icon} hue={hue} aria-label={t('details.label')} onClick={handleClick} />
+      <Card.Body>
+        <Card.Header>
+          <Card.Title id={titleId} truncate>
+            {name ?? id}
+          </Card.Title>
           {failure && <PluginFailureBadge failure={failure} />}
-          {deviceOnly && (
-            <Icon.Root
-              data-testid={`pluginList.${id}.deviceOnly`}
-              icon='ph--monitor--regular'
-              size={4}
-              classNames='shrink-0 text-description'
+          {deviceOnly && <Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' tone='muted' />}
+        </Card.Header>
+        {description && (
+          <Typography tone='muted' lines={4}>
+            {description}
+          </Typography>
+        )}
+        {displayTags.length > 0 && (
+          <Group>
+            {displayTags.map((tag) => (
+              <Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
+                {tag.toUpperCase()}
+              </Tag>
+            ))}
+          </Group>
+        )}
+        <Card.Footer justify='between'>
+          <Group>
+            <Button
+              variant='ghost'
+              iconOnly
+              icon='ph--gear--regular'
+              label={t('plugin-settings.label')}
+              disabled={!hasSettings}
+              onClick={handleSettings}
+            />
+            <Link asChild variant='neutral'>
+              <button type='button' onClick={handleClick}>
+                {t('details.label')}
+              </button>
+            </Link>
+          </Group>
+          {isUpdating ? (
+            <Button variant='primary' disabled label={t('updating.label')} />
+          ) : showUpdateButton ? (
+            <Button variant='primary' label={t('update.label')} onClick={handleUpdate} />
+          ) : showInstallButton ? (
+            <Button
+              variant='primary'
+              disabled={isInstalling}
+              label={isInstalling ? t('installing.label') : t('install.label')}
+              onClick={handleInstall}
+            />
+          ) : (
+            <Switch
+              aria-label={name ?? id}
+              checked={isEnabled}
+              disabled={readOnly}
+              onCheckedChange={({ checked }) => onChange?.(id, checked)}
             />
           )}
-        </div>
-
-        <div>
-          <p className='text-description line-clamp-4 min-w-0'>{description}</p>
-        </div>
-
-        <div className='flex gap-1 overflow-x-auto scrollbar-none'>
-          {displayTags.map((tag: string) => (
-            <Tag.Root key={tag} hue={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
-              {tag}
-            </Tag.Root>
-          ))}
-        </div>
-
-        <div className='flex gap-2 items-center text-sm'>
-          <IconButton.Root
-            aria-describedby={descriptionId}
-            classNames='cursor-pointer'
-            icon='ph--gear--regular'
-            label={t('plugin-settings.label')}
-            iconOnly
-            size={4}
-            onClick={handleSettings}
-            disabled={!hasSettings}
-          />
-
-          <Link.Root
-            aria-describedby={descriptionId}
-            classNames='text-description cursor-pointer'
-            onClick={handleClick}
-          >
-            {t('details.label')}
-          </Link.Root>
-
-          <div className='grow' />
-          <div className='pe-1'>
-            {isUpdating ? (
-              <Button.Root aria-describedby={descriptionId} density='md' variant='primary' disabled>
-                {t('updating.label')}
-              </Button.Root>
-            ) : showUpdateButton ? (
-              <Button.Root aria-describedby={descriptionId} density='md' variant='primary' onClick={handleUpdate}>
-                {t('update.label')}
-              </Button.Root>
-            ) : showInstallButton ? (
-              <Button.Root
-                aria-describedby={descriptionId}
-                density='md'
-                variant='primary'
-                disabled={isInstalling}
-                onClick={handleInstall}
-              >
-                {isInstalling ? t('installing.label') : t('install.label')}
-              </Button.Root>
-            ) : (
-              <Field.Root id={inputId}>
-                <Field.Switch classNames='self-center' checked={isEnabled} disabled={readOnly} onClick={handleChange} />
-              </Field.Root>
-            )}
-          </div>
-        </div>
-      </div>
-    </Listbox.Item>
+        </Card.Footer>
+      </Card.Body>
+    </Card.Root>
   );
 };
 
-const tagColors: Record<RegistryTagType, ChromaticPalette | NeutralPalette> = {
+const tagColors: Record<RegistryTagType, TagHue> = {
   new: 'rose',
   // Tier hues ramp green -> blue -> purple so the ordering reads without knowing the labels.
   beta: 'green',

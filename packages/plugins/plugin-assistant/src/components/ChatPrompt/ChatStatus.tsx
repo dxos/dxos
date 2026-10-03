@@ -4,10 +4,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { ChatStatus as NaturalChatStatus, formatElapsed } from '@dxos/react-ui-chat';
 import { Matrix } from '@dxos/react-ui-components';
-import * as Icon from '@dxos/react-ui/Icon';
-import type * as Util from '@dxos/react-ui/Util';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
 
@@ -16,7 +15,7 @@ import { type ChatRequestTiming, useChatContext } from '../Chat/context.ts';
 const CHAT_STREAM_STATUS_NAME = 'Chat.StreamStatus';
 const TICK_MS = 1_000;
 
-export type ChatStreamStatusProps = Util.ThemedClassName<{
+export type ChatStreamStatusProps = ThemedClassName<{
   icon?: boolean;
 }>;
 
@@ -147,7 +146,7 @@ export const ChatStatusView = ({
                   className='flex items-center gap-1'
                   title={alarm.message}
                 >
-                  <Icon.Root icon='ph--alarm--regular' size={4} />
+                  <Icon icon='ph--alarm--regular' size='md' />
                   {formatWakeAt(alarm.wakeAt)}
                 </span>
               </NaturalChatStatus.Text>

@@ -6,7 +6,7 @@ import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Match from 'effect/Match';
 import React, { type ReactNode, useState } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
+import { Button } from '@dxos/react-ui';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as AppUpdate from '../../app/AppUpdate.ts';
@@ -86,12 +86,9 @@ export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent =
   const isInstalling = pending === 'install' || status.kind === 'downloading';
 
   const checkButton = (disabled = false) => (
-    <Button.Root
-      disabled={disabled || isChecking || isInstalling || pending === 'apply'}
-      onClick={() => void onCheck()}
-    >
+    <Button disabled={disabled || isChecking || isInstalling || pending === 'apply'} onClick={() => void onCheck()}>
       {isChecking ? t('settings.updates.checking.label') : t('settings.updates.check.label')}
-    </Button.Root>
+    </Button>
   );
 
   return Match.value(status).pipe(
@@ -123,9 +120,9 @@ export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent =
     Match.when({ kind: 'available' }, (s) => ({
       description: t('settings.updates.available.message', { version: s.version }),
       button: (
-        <Button.Root variant='primary' disabled={isInstalling} onClick={() => void onInstall()}>
+        <Button variant='primary' disabled={isInstalling} onClick={() => void onInstall()}>
           {isInstalling ? t('settings.updates.downloading.label') : t('settings.updates.update-now.label')}
-        </Button.Root>
+        </Button>
       ),
     })),
     Match.when({ kind: 'downloading' }, (s) => ({
@@ -134,14 +131,14 @@ export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent =
       description: t('settings.updates.downloading.message', {
         percent: s.progress && s.progress.total > 0 ? Math.round((s.progress.completed / s.progress.total) * 100) : 0,
       }),
-      button: <Button.Root disabled>{t('settings.updates.downloading.label')}</Button.Root>,
+      button: <Button disabled>{t('settings.updates.downloading.label')}</Button>,
     })),
     Match.when({ kind: 'ready' }, () => ({
       description: t('settings.updates.ready.message'),
       button: (
-        <Button.Root variant='primary' disabled={pending === 'apply'} onClick={() => void onApply()}>
+        <Button variant='primary' disabled={pending === 'apply'} onClick={() => void onApply()}>
           {t('settings.updates.relaunch.label')}
-        </Button.Root>
+        </Button>
       ),
     })),
     Match.when({ kind: 'failed' }, (s) => ({

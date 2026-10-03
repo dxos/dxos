@@ -9,10 +9,8 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
@@ -22,7 +20,7 @@ import { Chess } from '#types';
 export type ChessArticleProps = GameCapabilities.GameVariantSurfaceProps;
 
 export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const [orientation, setOrientation] = useState<Player>('white');
   const [showInfo, setShowInfo] = useState(true);
   const controller = useRef<ChessboardController>(null);
@@ -71,11 +69,11 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
     <Chessboard.Root state={state} ref={controller}>
       <Panel.Root role={role} classNames='@container'>
         {role === AppSurface.Article.role && (
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              {isGameOver && <Toolbar.Button onClick={handleNewGame}>{t('new-game.button')}</Toolbar.Button>}
+              {isGameOver && <Button onClick={handleNewGame}>{t('new-game.button')}</Button>}
               <div className='grow' />
-              <Toolbar.IconButton
+              <Button
                 icon='ph--info--regular'
                 iconOnly
                 label={t('toggle-info.button')}
@@ -83,9 +81,9 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
                 onClick={() => setShowInfo((open) => !open)}
               />
             </Toolbar.Root>
-          </Panel.Toolbar>
+          </Panel.Header>
         )}
-        <Panel.Content>
+        <Panel.Body>
           <div
             className={mx(
               'grid dx-fill',
@@ -112,7 +110,7 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
               </div>
             )}
           </div>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Chessboard.Root>
   );

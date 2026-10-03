@@ -7,10 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Util from '@dxos/react-ui/Util';
+import { Button, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -30,68 +27,62 @@ export type JournalProps = Pick<JournalEntryProps, 'onSelect'> & {
 };
 
 // TODO(burdon): Virtualize.
-export const Journal = Util.composable<HTMLDivElement, JournalProps>(
-  ({ journal, onSelect, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
-    const date = new Date();
+export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSelect, ...props }, forwardedRef) => {
+  const { t } = useTranslation(meta.profile.key);
+  const date = new Date();
 
-    // Subscribe to the journal object reactively so we pick up new entries.
-    const [journalSnapshot] = useObject(journal);
-    // TODO(burdon): CRDT issue (merge entries with same date?)
-    const entryRefs = useMemo(
-      () =>
-        Object.entries(journalSnapshot?.entries ?? {})
-          .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-          .map(([dateKey, ref]) => ({ dateKey, ref })),
-      [journalSnapshot],
-    );
+  // Subscribe to the journal object reactively so we pick up new entries.
+  const [journalSnapshot] = useObject(journal);
+  // TODO(burdon): CRDT issue (merge entries with same date?)
+  const entryRefs = useMemo(
+    () =>
+      Object.entries(journalSnapshot?.entries ?? {})
+        .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([dateKey, ref]) => ({ dateKey, ref })),
+    [journalSnapshot],
+  );
 
-    const hasTodayEntry = useMemo(
-      () => entryRefs.some(({ dateKey }) => dateKey === TasksUtil.getDateString()),
-      [entryRefs],
-    );
+  const hasTodayEntry = useMemo(
+    () => entryRefs.some(({ dateKey }) => dateKey === TasksUtil.getDateString()),
+    [entryRefs],
+  );
 
-    const handleCreateEntry = useCallback(() => {
-      if (!journal) {
-        return;
-      }
+  const handleCreateEntry = useCallback(() => {
+    if (!journal) {
+      return;
+    }
 
-      const entry = makeEntry();
-      Obj.update(journal, (journal) => {
-        journal.entries[TasksUtil.getDateString(date)] = Ref.make(entry);
-      });
-    }, [journal, date]);
+    const entry = makeEntry();
+    Obj.update(journal, (journal) => {
+      journal.entries[TasksUtil.getDateString(date)] = Ref.make(entry);
+    });
+  }, [journal, date]);
 
-    return (
-      <ScrollArea.Root {...Util.composableProps(props)} orientation='vertical' ref={forwardedRef}>
-        <ScrollArea.Viewport>
-          {entryRefs.map(({ dateKey, ref }, i) => (
-            <JournalEntry
-              key={dateKey}
-              entryRef={ref}
-              classNames='p-2'
-              onSelect={onSelect}
-              autoFocus={i === entryRefs.length - 1}
-            />
-          ))}
-          {!hasTodayEntry && (
-            <div className='p-2'>
-              <IconButton.Root
-                label={t('start-today.label')}
-                icon='ph--calendar-plus--regular'
-                onClick={handleCreateEntry}
-              />
-            </div>
-          )}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    );
-  },
-);
+  return (
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+      <ScrollArea.Viewport>
+        {entryRefs.map(({ dateKey, ref }, i) => (
+          <JournalEntry
+            key={dateKey}
+            entryRef={ref}
+            classNames='p-2'
+            onSelect={onSelect}
+            autoFocus={i === entryRefs.length - 1}
+          />
+        ))}
+        {!hasTodayEntry && (
+          <div className='p-2'>
+            <Button label={t('start-today.label')} icon='ph--calendar-plus--regular' onClick={handleCreateEntry} />
+          </div>
+        )}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+});
 
 Journal.displayName = 'Journal';
 
-type JournalEntryProps = Util.ThemedClassName<
+type JournalEntryProps = ThemedClassName<
   {
     entryRef: Ref.Ref<JournalEntryObject>;
     onSelect?: (event: { date: Date }) => void;
@@ -99,7 +90,7 @@ type JournalEntryProps = Util.ThemedClassName<
 >;
 
 const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const [entry] = useObject(entryRef);
   // Subscribe to the content ref to trigger a re-render when the Text object loads.
   useObject(entry?.content);
@@ -130,12 +121,12 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
       {...{ 'data-has-focus': focused ? true : undefined }}
     >
       <div className='flex items-center gap-2 bg-transparent'>
-        <IconButton.Root
+        <Button
           label={date ? format(date, 'MMM d, yyyy') : ''}
           icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
           onClick={handleFocus}
         />
-        {isRecent && date && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
+        {isRecent && date && <div className='text-sm text-fg-subtle'>{format(date, 'EEEE')}</div>}
         {isToday && <div className='text-xs'>{t('today.label')}</div>}
       </div>
       <Outline.Root

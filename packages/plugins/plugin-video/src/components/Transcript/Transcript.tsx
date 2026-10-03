@@ -8,10 +8,8 @@ import React, { useEffect } from 'react';
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
+import { composable, composableProps, composeRefs, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Util from '@dxos/react-ui/Util';
 import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,
@@ -42,9 +40,9 @@ export type TranscriptProps = {
  * Read-only markdown view of a transcript text object, live-bound to its ECHO content.
  * Composable: forwards its ref and merges slot props onto the root element.
  */
-export const Transcript = Util.composable<HTMLDivElement, TranscriptProps>(
+export const Transcript = composable<HTMLDivElement, TranscriptProps>(
   ({ classNames, id, source, onSeek, currentSeconds, ...props }, forwardedRef) => {
-    const { themeMode } = ThemeProvider.useThemeContext();
+    const themeMode = useThemeMode();
     // Subscribe to the ref's target so the editor (re-)initializes once it resolves; a `Ref`'s
     // `.target` loads asynchronously and isn't reactive on its own, so without this the editor
     // mounts empty (e.g. the Summary tab is blank until toggled away and back).
@@ -90,8 +88,8 @@ export const Transcript = Util.composable<HTMLDivElement, TranscriptProps>(
 
     return (
       <div
-        {...Util.composableProps(props, { classNames: ['dx-expand', classNames] })}
-        ref={Hooks.composeRefs(parentRef, forwardedRef)}
+        {...composableProps(props, { classNames: ['dx-expand', classNames] })}
+        ref={composeRefs(parentRef, forwardedRef)}
       />
     );
   },

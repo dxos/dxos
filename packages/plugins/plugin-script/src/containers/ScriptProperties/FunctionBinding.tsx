@@ -11,17 +11,15 @@ import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
+import { Field, Input, SystemButton, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 
 import { meta } from '#meta';
 
 export type FunctionBindingProps = { object: Script.Script };
 
 export const FunctionBinding = ({ object }: FunctionBindingProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const db = Obj.getDatabase(object);
 
@@ -33,7 +31,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
       spaceId: db?.spaceId,
     });
 
-  const [binding, setBinding] = Hooks.useControlledState(fn?.binding ?? '');
+  const [binding, setBinding] = useControlledState(fn?.binding ?? '');
   const handleBindingChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setBinding(event.target.value),
     [setBinding],
@@ -56,7 +54,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
       {functionUrl && (
         <Field.Root>
           <Field.Label>{t('function-url.label')}</Field.Label>
-          <Field.Input
+          <Input
             disabled
             value={functionUrl}
             onChange={(event) => {
@@ -65,13 +63,13 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
               });
             }}
           />
-          <SystemIconButton.Clipboard iconOnly value={functionUrl} />
+          <SystemButton.Clipboard iconOnly value={functionUrl} />
         </Field.Root>
       )}
 
       <Field.Root>
         <Field.Label>{t('function-binding.label')}</Field.Label>
-        <Field.Input
+        <Input
           placeholder={t('function-binding.placeholder')}
           value={binding}
           onChange={handleBindingChange}

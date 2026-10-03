@@ -9,7 +9,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
-import * as Dialog from '@dxos/react-ui/Dialog';
+import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -43,9 +43,7 @@ const DefaultStory = ({ availableTargets }: StoryArgs) => {
 
   return (
     <Dialog.Root open>
-      <Dialog.Overlay>
-        <SyncTargetsDialog {...props} />
-      </Dialog.Overlay>
+      <SyncTargetsDialog {...props} />
     </Dialog.Root>
   );
 };

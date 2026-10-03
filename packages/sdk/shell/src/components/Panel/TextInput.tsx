@@ -4,9 +4,9 @@
 
 import React, { type ChangeEventHandler, type ReactNode } from 'react';
 
-import * as Field from '@dxos/react-ui/Field';
+import { Field, Input, type InputProps as UiInputProps } from '@dxos/react-ui';
 
-export type InputProps = Field.InputProps & {
+export type InputProps = UiInputProps & {
   validationMessage?: string;
   label?: ReactNode;
   disabled?: boolean;
@@ -21,7 +21,7 @@ export const TextInput = ({ validationMessage, label, ...props }: InputProps) =>
   return (
     <Field.Root>
       <Field.Label>{label}</Field.Label>
-      <Field.Input {...props} classNames='py-2 mt-2 text-center' />
+      <Input {...props} classNames='py-2 mt-2 text-center' />
       {validationMessage && <Field.ErrorText>{validationMessage}</Field.ErrorText>}
     </Field.Root>
   );

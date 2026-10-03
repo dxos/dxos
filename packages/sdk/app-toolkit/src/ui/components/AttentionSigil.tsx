@@ -2,17 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  Fragment,
+  type MouseEvent,
+  type PropsWithChildren,
+  forwardRef,
+  useState,
+} from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { keySymbols } from '@dxos/react-focus';
+import { Button, Icon, Menu, type MenuOption, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
-import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Menu from '@dxos/react-ui/Menu';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import { mx, osTranslations } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
 export type KeyBinding = {
@@ -32,7 +35,7 @@ const sigilSizeClassNames: Record<AttentionSigilButtonSize, string> = {
   lg: 'w-(--dx-rail-action) h-(--dx-rail-action)',
 };
 
-export type AttentionSigilButtonProps = Omit<Button.RootProps, 'variant'> &
+export type AttentionSigilButtonProps = Omit<ComponentPropsWithoutRef<typeof Button>, 'variant' | 'size'> &
   Attention.AttendableId &
   Attention.Related & {
     isMenu?: boolean;
@@ -64,7 +67,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
     const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
     // TODO(wittjosiah): Disable hover styles when isMenu is false.
     return (
-      <Button.Root
+      <Button
         {...props}
         variant={variant}
         classNames={['shrink-0 px-0 min-h-0 relative dx-app-no-drag', sigilSizeClassNames[size], classNames]}
@@ -72,7 +75,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
       >
         {isMenu && <MenuSignifierHorizontal />}
         {children}
-      </Button.Root>
+      </Button>
     );
   },
 );
@@ -95,7 +98,7 @@ export type AttentionSigilProps = PropsWithChildren<
  */
 export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>(
   ({ actions: actionGroups, onAction, triggerLabel, attendableId, icon, related, size, children }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(osTranslations);
+    const { t } = useTranslation(osTranslations);
 
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
@@ -114,7 +117,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
         classNames={!hasActions && 'cursor-default'}
       >
         <span className='sr-only'>{triggerLabel}</span>
-        <Icon.Root icon={icon} />
+        <Icon icon={icon} />
       </AttentionSigilButton>
     );
 
@@ -123,64 +126,53 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
     }
 
     return (
-      <Menu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
+      <Menu.Root open={optionsMenuOpen} onOpenChange={({ open }) => setOptionsMenuOpen(open)}>
         <Menu.Trigger asChild ref={forwardedRef}>
           {button}
         </Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Content classNames='z-[31]'>
-            <Menu.Viewport>
-              {actionGroups?.map((actions, index) => {
-                const separator = index > 0 ? <Menu.Separator /> : null;
-                return (
-                  <Fragment key={index}>
-                    {separator}
-                    {actions.map((action) => {
-                      const shortcut = resolveKeyBinding(action.properties.keyBinding);
+        <Menu.Content classNames='z-[31]'>
+          {actionGroups?.map((actions, index) => {
+            const separator = index > 0 ? <Menu.Separator /> : null;
+            return (
+              <Fragment key={index}>
+                {separator}
+                {actions.map((action) => {
+                  const shortcut = resolveKeyBinding(action.properties.keyBinding);
+                  const item: MenuOption = {
+                    value: action.id,
+                    label: toLocalizedString(action.properties.label ?? '', t),
+                    icon: action.properties.icon ?? 'ph--circle-dashed--regular',
+                    shortcut: shortcut ? keySymbols(shortcut).join('') : undefined,
+                    disabled: action.properties.disabled,
+                  };
+                  const handleClick = (event: MouseEvent) => {
+                    if (action.properties.disabled) {
+                      return;
+                    }
+                    event.stopPropagation();
+                    // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                    setOptionsMenuOpen(false);
+                    onAction?.(action);
+                  };
+                  const testId = action.properties?.testId && { 'data-testid': action.properties.testId };
 
-                      const menuItemType = action.properties.menuItemType;
-                      const Root = menuItemType === 'toggle' ? Menu.CheckboxItem : Menu.Item;
-
-                      return (
-                        <Root
-                          key={action.id}
-                          onClick={(event) => {
-                            if (action.properties.disabled) {
-                              return;
-                            }
-                            event.stopPropagation();
-                            // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                            setOptionsMenuOpen(false);
-                            onAction?.(action);
-                          }}
-                          classNames='gap-2'
-                          disabled={action.properties.disabled}
-                          checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
-                          {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                        >
-                          <Icon.Root icon={action.properties.icon ?? 'ph--circle-dashed--regular'} size={4} />
-                          <span className='grow truncate'>
-                            {ThemeProvider.toLocalizedString(action.properties.label ?? '', t)}
-                          </span>
-                          {menuItemType === 'toggle' && (
-                            <Menu.ItemIndicator asChild>
-                              <Icon.Root icon='ph--check--regular' size={4} />
-                            </Menu.ItemIndicator>
-                          )}
-                          {shortcut && (
-                            <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>
-                          )}
-                        </Root>
-                      );
-                    })}
-                  </Fragment>
-                );
-              })}
-              {children}
-            </Menu.Viewport>
-            <Menu.Arrow />
-          </Menu.Content>
-        </Menu.Portal>
+                  return action.properties.menuItemType === 'toggle' ? (
+                    <Menu.CheckboxItem
+                      key={action.id}
+                      item={item}
+                      checked={!!action.properties.isChecked}
+                      onClick={handleClick}
+                      {...testId}
+                    />
+                  ) : (
+                    <Menu.Item key={action.id} item={item} onClick={handleClick} {...testId} />
+                  );
+                })}
+              </Fragment>
+            );
+          })}
+          {children}
+        </Menu.Content>
       </Menu.Root>
     );
   },

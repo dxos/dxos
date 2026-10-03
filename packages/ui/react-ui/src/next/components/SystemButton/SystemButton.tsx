@@ -8,7 +8,9 @@ import React, {
   type KeyboardEvent,
   type PointerEvent,
   useCallback,
+  useContext,
   useEffect,
+  useId,
   useRef,
   useState,
 } from 'react';
@@ -20,8 +22,9 @@ import { downloadBlob } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { composable } from '../../../util/slots.ts';
+import { composable } from '../../../util/index.ts';
 import { Button, type ButtonContentProps, type ButtonVariantProps } from '../Button/index.ts';
+import { RowContext } from '../Listbox/grid.ts';
 import { Toggle } from '../Toggle/index.ts';
 import { type TooltipSide } from '../Tooltip/index.ts';
 
@@ -136,7 +139,7 @@ const createStaticPreset = (
 // Toggles
 //
 
-const Star = createTogglePreset('Next.SystemButton.Star', {
+const Star = createTogglePreset('SystemButton.Star', {
   icon: 'ph--star--regular',
   activeIcon: 'ph--star--fill',
   labelKey: 'system-button.star.label',
@@ -144,7 +147,7 @@ const Star = createTogglePreset('Next.SystemButton.Star', {
   iconValence: 'warning',
 });
 
-const Bookmark = createTogglePreset('Next.SystemButton.Bookmark', {
+const Bookmark = createTogglePreset('SystemButton.Bookmark', {
   icon: 'ph--bookmark-simple--regular',
   activeIcon: 'ph--bookmark-simple--fill',
   labelKey: 'system-button.bookmark.label',
@@ -206,33 +209,62 @@ const Disclosure = composable<HTMLButtonElement, SystemDisclosureProps>(
   },
 );
 
-Disclosure.displayName = 'Next.SystemButton.Disclosure';
+Disclosure.displayName = 'SystemButton.Disclosure';
 
 //
 // Static
 //
 
-const Add = createStaticPreset('Next.SystemButton.Add', 'ph--plus--regular', 'system-button.add.label');
+const Add = createStaticPreset('SystemButton.Add', 'ph--plus--regular', 'system-button.add.label');
 
 /** The button form of {@link AI_ACTION_ICON}, which metadata call sites take as a string instead. */
-const Ai = createStaticPreset('Next.SystemButton.Ai', AI_ACTION_ICON, 'system-button.ai.label');
+const Ai = createStaticPreset('SystemButton.Ai', AI_ACTION_ICON, 'system-button.ai.label');
 
-const Close = createStaticPreset('Next.SystemButton.Close', 'ph--x--regular', 'system-button.close.label');
+const Close = createStaticPreset('SystemButton.Close', 'ph--x--regular', 'system-button.close.label');
 
 /** Commits a form or dialog; `primary` by default, and usually labelled (`iconOnly={false}`) in a footer. */
-const Save = createStaticPreset('Next.SystemButton.Save', 'ph--check--regular', 'system-button.save.label', {
+const Save = createStaticPreset('SystemButton.Save', 'ph--check--regular', 'system-button.save.label', {
   variant: 'primary',
 });
 
 /** Abandons a form or dialog; the glyph is Close's, the label and intent differ. */
-const Cancel = createStaticPreset('Next.SystemButton.Cancel', 'ph--x--regular', 'system-button.cancel.label');
+const Cancel = createStaticPreset('SystemButton.Cancel', 'ph--x--regular', 'system-button.cancel.label');
 
-const Delete = createStaticPreset('Next.SystemButton.Delete', 'ph--trash--regular', 'system-button.delete.label');
+const Delete = createStaticPreset('SystemButton.Delete', 'ph--trash--regular', 'system-button.delete.label');
 
-/** Takes a row out of a list without destroying what it names; the glyph is Close's, the intent Delete's. */
-const Remove = createStaticPreset('Next.SystemButton.Remove', 'ph--x--regular', 'system-button.remove.label');
+/**
+ * Takes a row out of a list without destroying what it names; the glyph is Close's, the intent Delete's. In a list row
+ * it is named by its label followed by the row's `ItemText` ("Delete Q3 budget"); a `label` replaces both.
+ */
+const Remove = composable<HTMLButtonElement, SystemButtonProps>(
+  ({ label, iconOnly, showTooltip, tooltipSide, id, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const row = useContext(RowContext);
+    const generatedId = useId();
+    const ownId = id ?? generatedId;
+    const labelledBy =
+      label === undefined && row && props['aria-labelledby'] === undefined ? `${ownId} ${row.textId}` : undefined;
+    return (
+      <Button
+        aria-labelledby={labelledBy}
+        {...props}
+        id={ownId}
+        {...presetContent({
+          icon: 'ph--x--regular',
+          label: label ?? t('system-button.remove.label'),
+          iconOnly,
+          showTooltip,
+          tooltipSide,
+        })}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
-const Edit = createStaticPreset('Next.SystemButton.Edit', 'ph--pen--regular', 'system-button.edit.label');
+Remove.displayName = 'SystemButton.Remove';
+
+const Edit = createStaticPreset('SystemButton.Edit', 'ph--pen--regular', 'system-button.edit.label');
 
 //
 // Clipboard
@@ -292,7 +324,7 @@ const Clipboard = composable<HTMLButtonElement, SystemClipboardProps>(
   },
 );
 
-Clipboard.displayName = 'Next.SystemButton.Clipboard';
+Clipboard.displayName = 'SystemButton.Clipboard';
 
 //
 // Upload
@@ -327,7 +359,7 @@ const Upload = composable<HTMLButtonElement, SystemUploadProps>(
   },
 );
 
-Upload.displayName = 'Next.SystemButton.Upload';
+Upload.displayName = 'SystemButton.Upload';
 
 //
 // Download
@@ -371,7 +403,7 @@ const Download = composable<HTMLButtonElement, SystemDownloadProps>(
   },
 );
 
-Download.displayName = 'Next.SystemButton.Download';
+Download.displayName = 'SystemButton.Download';
 
 //
 // Mic
@@ -495,7 +527,7 @@ const Mic = composable<HTMLButtonElement, SystemMicProps>(
   },
 );
 
-Mic.displayName = 'Next.SystemButton.Mic';
+Mic.displayName = 'SystemButton.Mic';
 
 //
 // Namespace

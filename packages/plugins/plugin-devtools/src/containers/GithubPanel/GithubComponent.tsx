@@ -4,10 +4,7 @@
 
 import React, { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { Button, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -93,10 +90,10 @@ const Root = ({ repo = DEFAULT_REPO, limit = DEFAULT_LIMIT, children }: GithubCo
 };
 
 const Header = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { repo, pulls, unavailable } = useComponentContext();
   return (
-    <header className='flex items-center justify-between gap-1 px-4 py-3 dx-modal-surface border-b border-subdued-separator'>
+    <header className='flex items-center justify-between gap-1 px-4 py-3 dx-modal-surface border-b border-separator-subtle'>
       <a
         href={`https://github.com/${repo}`}
         target='_blank'
@@ -105,7 +102,7 @@ const Header = () => {
       >
         @{repo}
       </a>
-      <div className='text-xs text-description'>
+      <div className='text-xs text-fg-muted'>
         {unavailable
           ? t('github-unavailable.message')
           : pulls.length > 0
@@ -139,18 +136,18 @@ const formatRelative = (iso: string): string => {
 
 const PullRow = ({ pull }: { pull: GithubPullRequest }) => (
   <li>
-    <Flex.Root asChild align='start' gap='sm' classNames='px-trim-sm py-trim-xs rounded-sm hover:bg-hover-surface'>
+    <Flex asChild align='start' gap='sm' classNames='px-trim-sm py-trim-xs rounded-sm hover:bg-hover-surface'>
       <a href={pull.html_url} target='_blank' rel='noopener noreferrer'>
         <img src={pull.user.avatar_url} alt='' className='size-6 rounded-full shrink-0' />
-        <Flex.Root column classNames='min-w-0 flex-1'>
+        <Flex column classNames='min-w-0 flex-1'>
           {/* `leading-6` gives the title the avatar's line box, so the two align on their own. */}
           <span className='text-sm leading-6 truncate'>{pull.title}</span>
-          <span className='text-xs text-description truncate'>
+          <span className='text-xs text-fg-muted truncate'>
             #{pull.number} · {pull.user.login} · {pull.merged_at ? formatRelative(pull.merged_at) : ''}
           </span>
-        </Flex.Root>
+        </Flex>
       </a>
-    </Flex.Root>
+    </Flex>
   </li>
 );
 
@@ -170,10 +167,10 @@ const Content = () => {
 };
 
 const StatusBar = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { repo } = useComponentContext();
   return (
-    <IconButton.Root
+    <Button
       icon='ph--github-logo--regular'
       label={t('view-on-github.button')}
       variant='primary'

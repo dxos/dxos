@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import * as Focus from '@dxos/react-ui/Focus';
+import { Focus } from '@dxos/react-ui';
 
 import { Result } from '#types';
 

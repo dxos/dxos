@@ -13,11 +13,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import { Panel, SystemButton, Toolbar, useThemeMode } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import {
   PROMPT_ELEMENT,
   createBasicExtensions,
@@ -74,17 +71,17 @@ const sampleText = buildSampleText();
 type StoryArgs = { text: string };
 
 const DefaultStory = ({ text }: StoryArgs) => {
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const [collapsed, setCollapsed] = useState(false);
   const extensions = useMemo(() => chatExtensions(themeMode), [themeMode]);
   const { parentRef, view } = useTextEditor({ initialValue: text, extensions });
 
   return (
     <Panel.Root>
-      <Panel.Toolbar>
+      <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
-          <SystemIconButton.Disclosure
-            active={!collapsed}
+          <SystemButton.Disclosure
+            expanded={!collapsed}
             label={collapsed ? 'Expand all' : 'Collapse all'}
             onClick={() => {
               if (!view) {
@@ -100,10 +97,10 @@ const DefaultStory = ({ text }: StoryArgs) => {
             }}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid overflow-hidden'>
+      </Panel.Header>
+      <Panel.Body classNames='grid overflow-hidden'>
         <div ref={parentRef} className='dx-expand' />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -17,7 +17,7 @@ import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -60,8 +60,8 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { type StoryDecoratorsProps, createStoryDecorators } from '@dxos/storybook-testing';
 import { Outline, Task, TaskSet } from '@dxos/types';
@@ -145,15 +145,15 @@ type DecoratorsProps = Merge<
  * hooks always resolve.
  */
 const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: ReactNode }) => {
-  const atomRegistry = AppHooks.useCapability(Capabilities.AtomRegistry);
-  const skillDefinitions = AppHooks.useCapabilities(AppCapabilities.SkillDefinition);
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const skillDefinitions = Hooks.useCapabilities(AppCapabilities.SkillDefinition);
   const [space] = useSpaces();
   // Reactive: the chat is created asynchronously (module.setup on SpacesAvailable), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
   const chats = useQuery(space?.db, Filter.type(Chat.Chat));
 
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (!space) {
       return;
     }

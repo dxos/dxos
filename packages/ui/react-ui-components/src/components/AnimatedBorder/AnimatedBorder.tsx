@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 const trail = [
@@ -13,7 +13,7 @@ const trail = [
   '[offset-anchor:100%_50%] [offset-path:border-box]',
 ];
 
-export type AnimatedBorderProps = Util.ThemedClassName<PropsWithChildren<{ animate?: boolean }>>;
+export type AnimatedBorderProps = ThemedClassName<PropsWithChildren<{ animate?: boolean }>>;
 
 /**
  * AnimatedBorder using CSS Motion Path.
@@ -22,7 +22,7 @@ export type AnimatedBorderProps = Util.ThemedClassName<PropsWithChildren<{ anima
 export const AnimatedBorder = ({ children, classNames, animate = false }: AnimatedBorderProps) => {
   return (
     <div className='relative overflow-hidden p-px rounded-sm'>
-      <div className={mx('relative z-10 dx-base-surface rounded-sm border border-subdued-separator', classNames)}>
+      <div className={mx('relative z-10 dx-base-surface rounded-sm border border-separator-subtle', classNames)}>
         {children}
       </div>
       {animate && (

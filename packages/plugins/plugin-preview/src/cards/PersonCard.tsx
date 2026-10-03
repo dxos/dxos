@@ -11,10 +11,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { Avatar, Block, Card, Icon } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention/types';
-import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Card from '@dxos/react-ui/Card';
-import * as Icon from '@dxos/react-ui/Icon';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
@@ -46,16 +44,14 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
     <Card.Body ref={cardRef}>
       {image && (
         <Card.Row>
-          <Avatar.Root>
-            <Avatar.Content
-              imgSrc={image}
-              icon='ph--user--regular'
-              size={20}
-              classNames={[!image && 'opacity-50']}
-              hue='neutral'
-              variant='square'
-            />
-          </Avatar.Root>
+          <Avatar.Root
+            src={image}
+            icon='ph--user--regular'
+            size='xl'
+            classNames={[!image && 'opacity-50']}
+            hue='neutral'
+            variant='square'
+          />
         </Card.Row>
       )}
       {organization?.name && (
@@ -63,9 +59,9 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
       )}
       {emails.length > 0 && (
         <Card.Row>
-          <Card.Block>
-            <Icon.Root icon='ph--at--regular' />
-          </Card.Block>
+          <Block>
+            <Icon icon='ph--at--regular' />
+          </Block>
           <Card.Text truncate classNames='text-sky-text text-sm'>
             {emails.map(({ value }) => (
               <div key={value}>{value}</div>

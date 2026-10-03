@@ -4,11 +4,7 @@
 
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import type * as Util from '@dxos/react-ui/Util';
+import { Button, Field, Icon, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -22,7 +18,7 @@ import { TASK_GRID, TASK_GRID_CONTENT, TASK_GRID_ICON } from '../task-grid.ts';
  */
 const stop = (event: SyntheticEvent) => event.stopPropagation();
 
-export type TaskQuestionProps = Util.ThemedClassName<{
+export type TaskQuestionProps = ThemedClassName<{
   thread: Task.QuestionThread;
   /** An answer is in flight; the controls are disabled until it settles. */
   busy?: boolean;
@@ -56,7 +52,7 @@ export const TaskQuestion = ({
   compact,
   onAnswer,
 }: TaskQuestionProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const [text, setText] = useState('');
 
   const handleSubmit = useCallback<NonNullable<TaskQuestionProps['onAnswer']>>(
@@ -90,14 +86,14 @@ export const TaskQuestion = ({
         data-testid='task-question'
       >
         <div className='flex items-center gap-2 min-w-0'>
-          <Icon.Root icon='ph--question--regular' classNames='text-warning-text' />
+          <Icon icon='ph--question--regular' valence='warning' />
           <span className='font-medium truncate' title={question.text}>
             {question.text}
           </span>
         </div>
         {answer && (
           <div className='flex items-center gap-2 min-w-0' data-testid='task-question.answer'>
-            <Icon.Root icon='ph--check-circle--regular' classNames='text-success-text' />
+            <Icon icon='ph--check-circle--regular' valence='success' />
             <span className='truncate' title={answer.answer}>
               {answer.answer}
             </span>
@@ -128,12 +124,12 @@ export const TaskQuestion = ({
           below — the context, the options, the answer field — is that same second column, so the
           question reads as one block hanging off one glyph rather than as four indented things. */}
       <div className={TASK_GRID_ICON}>
-        <Icon.Root icon='ph--question--regular' classNames='text-warning-text' />
+        <Icon icon='ph--question--regular' valence='warning' />
       </div>
       <span className='font-medium wrap-break-word min-w-0'>{question.text}</span>
 
       {question.context && !answer && (
-        <p className={mx(TASK_GRID_CONTENT, 'text-description wrap-break-word line-clamp-3 min-w-0')}>
+        <p className={mx(TASK_GRID_CONTENT, 'text-fg-muted wrap-break-word line-clamp-3 min-w-0')}>
           {question.context}
         </p>
       )}
@@ -141,7 +137,7 @@ export const TaskQuestion = ({
       {answer ? (
         <>
           <div className={TASK_GRID_ICON}>
-            <Icon.Root icon='ph--check-circle--regular' classNames='text-success-text' />
+            <Icon icon='ph--check-circle--regular' valence='success' />
           </div>
           <span className='wrap-break-word min-w-0' data-testid='task-question.answer'>
             {answer.answer}
@@ -156,7 +152,7 @@ export const TaskQuestion = ({
               <div role='list' aria-label={question.text} className='flex flex-col gap-1 min-w-0'>
                 {question.options.map((option, index) => (
                   <div key={option.title} role='listitem' className='min-w-0'>
-                    <Button.Root
+                    <Button
                       variant='default'
                       disabled={busy}
                       // `h-auto` and wrapping: an option is a sentence, not a label, so the button
@@ -168,17 +164,15 @@ export const TaskQuestion = ({
                       {/* Numbered, so the options can be referred to — an agent asking again, a
                           person saying "the second one" — rather than quoted back in full. On the
                           first line and top-aligned, since an option's text wraps. */}
-                      <div className='shrink-0 tabular-nums text-description self-start'>{index + 1}.</div>
+                      <div className='shrink-0 tabular-nums text-fg-muted self-start'>{index + 1}.</div>
                       {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
                       <div className='grow min-w-0 flex flex-col gap-0.5 text-start'>
                         <div className='font-medium wrap-break-word'>{option.title}</div>
                         {option.description && (
-                          <div className='text-xs text-description wrap-break-word leading-snug'>
-                            {option.description}
-                          </div>
+                          <div className='text-xs text-fg-muted wrap-break-word leading-snug'>{option.description}</div>
                         )}
                       </div>
-                    </Button.Root>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -189,7 +183,7 @@ export const TaskQuestion = ({
               <div className='flex-[1_1_10rem] min-w-0'>
                 <Field.Root>
                   <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
-                  <Field.Input
+                  <Input
                     value={text}
                     disabled={busy}
                     placeholder={t('question-answer.placeholder')}
@@ -199,21 +193,21 @@ export const TaskQuestion = ({
                   />
                 </Field.Root>
               </div>
-              <Button.Root
+              <Button
                 variant='primary'
                 disabled={busy || text.trim() === ''}
                 data-testid='task-question.submit'
                 onClick={() => handleSubmit(text)}
               >
                 {t('question-submit.label')}
-              </Button.Root>
+              </Button>
             </div>
           </div>
         )
       )}
 
       {message && (
-        <p className={mx(TASK_GRID_CONTENT, 'text-description min-w-0')} data-testid='task-question.message'>
+        <p className={mx(TASK_GRID_CONTENT, 'text-fg-muted min-w-0')} data-testid='task-question.message'>
           {message}
         </p>
       )}

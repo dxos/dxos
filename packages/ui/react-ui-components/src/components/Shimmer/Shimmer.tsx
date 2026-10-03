@@ -4,10 +4,10 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-export type ShimmerProps = Util.ThemedClassName<
+export type ShimmerProps = ThemedClassName<
   PropsWithChildren<{
     /** Animation duration in ms. */
     duration?: number;

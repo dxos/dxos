@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { type Resource } from '@dxos/react-ui';
 
 export const translationKey = '@dxos/react-ui-form';
 
@@ -32,6 +32,7 @@ export const translations = [
         'delete-field.label': 'Delete field',
         'create-option.label': 'Create',
         'add-tag.label': 'Add tag',
+        'add-tag-query.label': 'Add tag “{{text}}”',
 
         'ref-field-combobox-input.placeholder': 'Search…',
         'ref-field.placeholder': 'Select…',
@@ -39,6 +40,7 @@ export const translations = [
         'ref-field.placeholder_other': 'Select items…',
 
         'example.placeholder': 'Example',
+        'select.placeholder': 'Select…',
         'latitude.placeholder': 'Latitude (e.g., 40.7128)',
         'longitude.placeholder': 'Longitude (e.g., -74.0060)',
 
@@ -84,6 +86,7 @@ export const translations = [
         // SelectOptionsField.
         'select-option.label': 'Label',
         'select-option-label.placeholder': 'Option label',
+        'select-option-color.label': 'Color',
         'select-option-delete.button': 'Delete',
         'select-option-add.button': 'Add option',
 
@@ -94,4 +97,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Resource[];

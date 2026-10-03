@@ -34,7 +34,7 @@
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-/** Entry + modulepreload links. 21 today; sized to survive a partition reshuffle, not to track it. */
+/** Entry + modulepreload links. 20 today; sized to survive a partition reshuffle, not to track it. */
 const MAX_PRELOAD_ENTRIES = 25;
 
 /**

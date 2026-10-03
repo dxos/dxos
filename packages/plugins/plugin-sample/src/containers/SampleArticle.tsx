@@ -16,6 +16,7 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { Panel } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -25,7 +26,6 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import * as Panel from '@dxos/react-ui/Panel';
 
 import { SampleItemView } from '#components';
 import { meta } from '#meta';
@@ -64,17 +64,17 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <SampleItemView
           name={snapshot.name}
           description={snapshot.description}
           status={snapshot.status}
           onValuesChanged={handleValuesChanged}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

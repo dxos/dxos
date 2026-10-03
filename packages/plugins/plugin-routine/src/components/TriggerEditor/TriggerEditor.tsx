@@ -10,10 +10,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
+import { Button, Field, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as IconButton from '@dxos/react-ui/IconButton';
 import { ParentLabelAnnotation } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
@@ -307,7 +305,7 @@ export type TriggerSectionProps = {
  * includes {@link triggerFieldMap}.
  */
 export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const values = useFormValues<TriggerFormInput>('TriggerEditor.TriggerSection', TRIGGER_PATH);
   const kind = values?.kind;
 
@@ -321,11 +319,10 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
               <Field.Label classNames='grow truncate'>{t(`trigger-kind.${kind}.label`)}</Field.Label>
             </Field.Root>
             {!readonly && (
-              <IconButton.Root
+              <Button
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly
-                square
                 label={t('trigger-kind.clear.label')}
                 onClick={onClear}
               />
@@ -338,7 +335,7 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
       )}
 
       {/* Currently, email triggers have no configuration; surface an explanatory note instead of an empty body. */}
-      {kind === 'email' && <p className='text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
+      {kind === 'email' && <p className='text-sm text-fg-muted'>{t('trigger-kind.email-note.message')}</p>}
     </div>
   );
 };

@@ -4,9 +4,7 @@
 
 import React from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import * as Icon from '@dxos/react-ui/Icon';
-import type * as Util from '@dxos/react-ui/Util';
+import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -15,7 +13,7 @@ import { mx } from '@dxos/ui-theme';
  */
 export const SPINE_PX = 44;
 
-export type FoldSpineProps = Util.ThemedClassName<{
+export type FoldSpineProps = ThemedClassName<{
   /** Mirrors the plank heading's sigil, so the icon does not move as the plank folds. */
   icon: string;
   label: string;
@@ -31,7 +29,7 @@ export type FoldSpineProps = Util.ThemedClassName<{
  * (see `Deck.stories.tsx`); keep it on the root.
  */
 export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) => (
-  <Button.Root
+  <Button
     variant='ghost'
     onClick={onClick}
     aria-label={label}
@@ -51,11 +49,11 @@ export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) 
   >
     {/* Icon box matches the plank toolbar height so the sigil stays put as the plank folds. */}
     <div className='flex h-(--dx-rail-content) shrink-0 items-center justify-center'>
-      <Icon.Root icon={icon} size={5} classNames='shrink-0 text-subdued' />
+      <Icon icon={icon} size='lg' tone='subtle' />
     </div>
     {/* TODO(wittjosiah): Plain span — no react-ui primitive renders a vertical (writing-mode) label. */}
-    <span className='truncate text-sm font-normal text-description [writing-mode:vertical-rl] rotate-180'>{label}</span>
-  </Button.Root>
+    <span className='truncate text-sm font-normal text-fg-muted [writing-mode:vertical-rl] rotate-180'>{label}</span>
+  </Button>
 );
 
 FoldSpine.displayName = 'FoldSpine';

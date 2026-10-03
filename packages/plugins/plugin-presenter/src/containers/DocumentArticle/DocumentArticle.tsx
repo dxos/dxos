@@ -8,7 +8,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as Panel from '@dxos/react-ui/Panel';
+import { Panel } from '@dxos/react-ui';
 
 import { PresentationShell, RevealPlayer } from '#components';
 
@@ -24,13 +24,13 @@ export const DocumentArticle = ({ role, subject: document }: DocumentArticleProp
 
   return (
     <Panel.Root role={role} classNames='relative'>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
           {content !== undefined && (
             <RevealPlayer data-testid='presenter.deck' fullscreen={fullscreen} content={content} />
           )}
         </PresentationShell>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

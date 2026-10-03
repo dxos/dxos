@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import * as Icon from '@dxos/react-ui/Icon';
+import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { styles } from './styles.ts';
@@ -25,13 +25,13 @@ export const NetworkIndicator = () => {
   if (state === 0) {
     return (
       <span title='Connected to swarm.'>
-        <Icon.Root icon='ph--lightning--regular' />
+        <Icon icon='ph--lightning--regular' />
       </span>
     );
   } else {
     return (
       <span title='Disconnected from swarm.'>
-        <Icon.Root icon='ph--lightning-slash--regular' classNames={mx(styles.warning)} />
+        <Icon icon='ph--lightning-slash--regular' classNames={mx(styles.warning)} />
       </span>
     );
   }

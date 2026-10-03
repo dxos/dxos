@@ -9,14 +9,14 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Option from 'effect/Option';
 import { useCallback, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { Connection } from '@dxos/link';
 import { useClient } from '@dxos/react-client';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useConnector } from '#hooks';
 
@@ -73,7 +73,7 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
 
   // Resolved through the process manager so the connector reads its credential from the same
   // space-scoped `CredentialsService` operations use.
-  const runTest = AppHooks.useSpaceCallback(
+  const runTest = Hooks.useSpaceCallback(
     db?.spaceId,
     [Credential.CredentialsService],
     () => {
@@ -86,7 +86,7 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
     [testConnection, connection, accessToken, client],
   );
 
-  Hooks.useAsyncEffect(
+  useAsyncEffect(
     async (controller) => {
       // Every early exit clears `testing`, including these: a probe may already have been in flight
       // when its subject went away, and the superseding run returns here without ever reaching the

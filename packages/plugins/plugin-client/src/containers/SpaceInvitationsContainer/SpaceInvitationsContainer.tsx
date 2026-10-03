@@ -4,13 +4,13 @@
 
 import React, { useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useContacts, useInboxNotices } from '@dxos/react-client/halo';
+import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { type SpaceInvitationEntry, SpaceInvitationList } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -18,9 +18,9 @@ import { meta } from '#meta';
 import { filterSpaceInvitations, joinSpaceInvitation } from '../../inbox/index.ts';
 
 export const SpaceInvitationsContainer = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const client = useClient();
-  const invoker = AppHooks.useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
   const notices = useInboxNotices();
   const contacts = useContacts();
   const spaces = useSpaces();

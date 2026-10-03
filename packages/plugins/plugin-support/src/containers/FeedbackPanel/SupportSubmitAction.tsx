@@ -4,12 +4,12 @@
 
 import React, { useCallback } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 import { openExternalUrl } from '@dxos/util';
 
@@ -35,7 +35,7 @@ type Toast = {
  * app never opens it: the toast's action button does, inside a fresh user gesture.
  */
 export const useSupportSubmit = (): FeedbackSubmitHandler => {
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
   const attachScreenshot = useScreenshotAttachment();
 
@@ -105,7 +105,7 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
 };
 
 export const SupportSubmitAction = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
   const endpoint = SupportService.supportEndpoint(config);
   const discordPresence = useDiscordPresence(endpoint);

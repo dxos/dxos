@@ -6,13 +6,12 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Empty, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Frame, MediaArtifact, type Storyboard } from '#types';
@@ -35,8 +34,8 @@ export type FrameCompanionProps = {
  * picked — so the companion follows the stack without either holding state of its own.
  */
 export const FrameCompanion = ({ companionTo: storyboard, attendableId }: FrameCompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const selectedId = useSelection(attendableId, 'single');
   const [refs] = useObject(storyboard, 'frames');
   const frameAtom = useMemo(
@@ -77,7 +76,7 @@ export const FrameCompanion = ({ companionTo: storyboard, attendableId }: FrameC
   );
 
   if (!frame) {
-    return <Banner.Empty classNames='h-full' label={t('storyboard-empty.message')} />;
+    return <Empty classNames='h-full'>{t('storyboard-empty.message')}</Empty>;
   }
 
   return <FrameDetail key={frame.id} frame={frame} attendableId={attendableId} onAddArtifact={handleAddArtifact} />;

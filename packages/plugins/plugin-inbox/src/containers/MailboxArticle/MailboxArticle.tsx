@@ -20,6 +20,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
+import { Deferred, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -31,9 +32,6 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import * as Deferred from '@dxos/react-ui/Deferred';
-import * as ElevationProvider from '@dxos/react-ui/ElevationProvider';
-import * as Panel from '@dxos/react-ui/Panel';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 
@@ -430,13 +428,11 @@ export const MailboxArticle = ({
 
   return (
     <Panel.Root data-testid='inbox.mailbox'>
-      <ElevationProvider.Root elevation='positioned'>
-        <Panel.Toolbar asChild>
-          <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-        </Panel.Toolbar>
-      </ElevationProvider.Root>
-      <Panel.Content>
-        <Deferred.Root pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
+      <Panel.Header>
+        <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+      </Panel.Header>
+      <Panel.Body>
+        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -452,15 +448,15 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        </Deferred.Root>
-      </Panel.Content>
-      <Panel.Statusbar asChild>
+        </Deferred>
+      </Panel.Body>
+      <Panel.Footer>
         <ProgressMeter
-          classNames='border-t border-subdued-separator'
+          classNames='border-t border-separator-subtle'
           state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
           onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
         />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

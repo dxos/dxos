@@ -5,16 +5,15 @@
 import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import * as DeckHooks from '@dxos/plugin-deck/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/react-ui-menu';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '#meta';
 
@@ -43,16 +42,16 @@ const ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-ite
  * at a time and the app bar is chrome for that one.
  */
 export const useMobileAppBar = (): MobileAppBar => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const { state } = DeckHooks.useDeckState();
-  const stateAtom = AppHooks.useCapability(DeckCapabilities.State);
-  const ephemeralAtom = AppHooks.useCapability(DeckCapabilities.EphemeralState);
+  const stateAtom = Hooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
   const { graph } = ToolkitHooks.useAppGraph();
   const { stack, topId, rootId, pop } = useMobileStack();
   const runAction = GraphHooks.useActionRunner();
 
   const node = GraphHooks.useNode(graph, topId);
-  const title = node ? ThemeProvider.toLocalizedString(node.properties.label, t) : undefined;
+  const title = node ? toLocalizedString(node.properties.label, t) : undefined;
 
   // Derives activeId from the state atom (rather than `useMobileStack`) so this atom does not need
   // to be recreated on every stack change; an atom body cannot call a hook, so the root fallback is

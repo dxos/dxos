@@ -14,10 +14,9 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import { useRegistry } from '@dxos/react-client/echo';
+import { Flex, Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Panel from '@dxos/react-ui/Panel';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
@@ -113,10 +112,10 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         onSubmit={onSubmit}
       >
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Toolbar>
+          <Panel.Header>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <ChatComponent.Content>
               <div className='dx-expand relative'>
                 {/* Thread outline (Table of Contents). */}
@@ -135,12 +134,12 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                       <ChatComponent.Queue classNames='flex justify-end' />
                     </div>
                     {/* `min-w-0` so the activity line truncates in its column instead of widening it. */}
-                    <Flex.Root align='center' classNames='min-w-0'>
+                    <Flex align='center' classNames='min-w-0'>
                       <ChatComponent.Activity />
-                    </Flex.Root>
-                    <Flex.Root justify='end'>
+                    </Flex>
+                    <Flex justify='end'>
                       <ChatComponent.Status classNames='bg-input-surface rounded-sm' />
-                    </Flex.Root>
+                    </Flex>
                   </div>
                 )}
               </div>
@@ -161,7 +160,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 />
               </div>
             </ChatComponent.Content>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </ChatComponent.Root>
     );

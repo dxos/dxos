@@ -12,9 +12,9 @@ import type * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Database, Obj } from '@dxos/echo';
+import { Field } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import * as Field from '@dxos/react-ui/Field';
 
 import { type TypeInputOptions, getTypeInputOptions } from '../types/SpaceForm.ts';
 

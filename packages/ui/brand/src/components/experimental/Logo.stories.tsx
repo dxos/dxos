@@ -6,9 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { arc } from 'd3';
 import React, { useRef, useState } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
+import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -59,7 +57,7 @@ export const Default: Story = {
     return (
       <div className='dx-fullscreen flex items-center justify-center'>
         <div className='absolute left-4 top-4'>
-          <Button.Root onClick={handleSpin}>Spin</Button.Root>
+          <Button onClick={handleSpin}>Spin</Button>
         </div>
 
         <div>
@@ -119,9 +117,9 @@ export const Pacman: Story = {
         <div className='flex flex-col'>
           <div className='flex items-center p-4'>
             <div className='flex ml-8 mr-[100px]'>
-              <Icon.Root icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
-              <Icon.Root icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
-              <Icon.Root icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
+              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
+              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
+              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
             </div>
 
             <div className='w-[180px]'>
@@ -131,7 +129,7 @@ export const Pacman: Story = {
             <div className='flex -ml-10'>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className='p-4'>
-                  <Icon.Root icon='ph--circle--duotone' classNames='w-6 h-6 text-yellow-200' />
+                  <Icon icon='ph--circle--duotone' classNames='w-6 h-6 text-yellow-200' />
                 </div>
               ))}
             </div>
@@ -151,8 +149,8 @@ const SpinnerContainer = () => {
   return (
     <div className='flex flex-col gap-20'>
       <div className='absolute left-4 top-4'>
-        {(spinning && <Button.Root onClick={() => setSpinning(false)}>Stop</Button.Root>) || (
-          <Button.Root onClick={() => setSpinning(true)}>Start</Button.Root>
+        {(spinning && <Button onClick={() => setSpinning(false)}>Stop</Button>) || (
+          <Button onClick={() => setSpinning(true)}>Start</Button>
         )}
       </div>
       <div className='grid grid-cols-3 gap-20'>
@@ -255,7 +253,7 @@ export const Oblique: Story = {
     return (
       <div className='dx-fullscreen grid place-items-center'>
         <div className='absolute top-4 left-4'>
-          <IconButton.Root icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
+          <Button icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
         </div>
         <div className='absolute grid place-items-center'>
           <AltComposerLogo

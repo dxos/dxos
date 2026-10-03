@@ -17,10 +17,7 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
-import * as Util from '@dxos/react-ui/Util';
+import { Flex, Panel, composable, composableProps, useThemeMode } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';
 
@@ -57,7 +54,7 @@ export const ExcalidrawArticle = ({
 }: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const themeMode = useThemeMode();
   const [down, setDown] = useState<boolean>(false);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>(null);
   // Last selection reported to the host, so its echo back through `selection` is a no-op.
@@ -212,18 +209,12 @@ export const ExcalidrawArticle = ({
   );
 };
 
-const Article = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
-  <Panel.Root
-    {...Util.composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })}
-    ref={forwardedRef}
-  >
-    <Panel.Content>{props.children}</Panel.Content>
+const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
+  <Panel.Root {...composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })} ref={forwardedRef}>
+    <Panel.Body>{props.children}</Panel.Body>
   </Panel.Root>
 ));
 
-const Container = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
-  <Flex.Root
-    {...Util.composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })}
-    ref={forwardedRef}
-  />
+const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
+  <Flex {...composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })} ref={forwardedRef} />
 ));

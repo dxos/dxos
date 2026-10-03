@@ -9,6 +9,7 @@ import React, { useContext, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type CompleteCellRange } from '@dxos/compute-hyperformula';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   ActionToolbar,
@@ -17,7 +18,6 @@ import {
   isToolbarAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
-import * as Util from '@dxos/react-ui/Util';
 
 import { type SheetModel } from '../../model/index.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
@@ -64,7 +64,7 @@ const createToolbarActions = ({
 
 export type SheetToolbarProps = {};
 
-export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
+export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
   const { attendableId, model, cursorFallbackRange } = useSheetContext();
   const stateAtom = useToolbarState({});
   const registry = useContext(RegistryContext);
@@ -82,9 +82,7 @@ export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((
   );
   const menuActions = useMenuActions(actionsCreator);
 
-  return (
-    <ActionToolbar {...menuActions} attendableId={attendableId} {...Util.composableProps(props)} ref={forwardedRef} />
-  );
+  return <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />;
 });
 
 SheetToolbar.displayName = 'SheetToolbar';

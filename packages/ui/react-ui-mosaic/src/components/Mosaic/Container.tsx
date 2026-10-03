@@ -21,6 +21,7 @@ import React, {
 } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
+import { composable, composableProps, useFocus } from '@dxos/react-ui';
 import {
   type DndContainerData,
   type DndLocation,
@@ -28,10 +29,8 @@ import {
   getSourceData,
   useDndRootContext,
 } from '@dxos/react-ui-dnd';
-import * as Util from '@dxos/react-ui/Util';
 import { isTruthy } from '@dxos/util';
 
-import { Focus } from '../Focus/index.ts';
 import {
   MOSAIC_CONTAINER_NAME,
   MosaicContainerContextProvider,
@@ -86,7 +85,7 @@ type MosaicContainerProps = PropsWithChildren<
  * Container for a Mosaic layout.
  */
 // TODO(burdon): Make generic.
-const MosaicContainer = Util.composable<HTMLDivElement, MosaicContainerProps>(
+const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
   (
     {
       children,
@@ -146,7 +145,7 @@ const MosaicContainer = Util.composable<HTMLDivElement, MosaicContainerProps>(
     }, [currentId]);
 
     // Focus container.
-    const { setFocus } = Focus.useFocus();
+    const { setFocus } = useFocus();
     useEffect(() => {
       if (withFocus) {
         setFocus?.(state.type === 'active' ? 'active' : undefined);
@@ -292,7 +291,7 @@ const MosaicContainer = Util.composable<HTMLDivElement, MosaicContainerProps>(
       >
         <ark.div
           asChild={asChild}
-          {...Util.composableProps(props, {
+          {...composableProps(props, {
             classNames: 'h-full group',
             style: {
               [MOSAIC_CONTAINER_PLACEHOLDER_WIDTH]:

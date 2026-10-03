@@ -5,15 +5,8 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { Block, Button, Checkbox, Field, Icon, SystemButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconBlock from '@dxos/react-ui/IconBlock';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
-import * as Tag from '@dxos/react-ui/Tag';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
 
@@ -53,7 +46,7 @@ export type TaskStatusControlProps = {
 
 /** The status glyph, which is also the control that completes the task. */
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const status = task.status ?? 'todo';
   // Derived from the task rather than wired down from the list: a task an agent has taken and
   // started is being worked right now whoever renders it, and the row is the only place that says
@@ -84,10 +77,10 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
     // `IconButton iconOnly` occupies, or the readonly list's status column collapses to the glyph's
     // own width and stops lining up with the editable list's.
     return (
-      <IconBlock.Root square aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
-        <Icon.Root icon={icon} classNames={iconClassNames} />
+      <Block aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
+        <Icon icon={icon} classNames={iconClassNames} />
         <span className='sr-only'>{t(`status-${status}.label`)}</span>
-      </IconBlock.Root>
+      </Block>
     );
   }
 
@@ -95,7 +88,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   // too, and a trigger above it would never receive it. The block still gives every control in the
   // row one rail-item square.
   const trigger = (
-    <IconButton.Root
+    <Button
       data-testid='taskList.item.status'
       // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
       // which the `Icon` root reads, so a colour set on the button is overridden at rest and
@@ -111,12 +104,12 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   );
 
   return (
-    <IconBlock.Root square classNames={classNames}>
+    <Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu deferUntilOpen actions={actions}>
         {trigger}
       </ActionMenu>
-    </IconBlock.Root>
+    </Block>
   );
 };
 
@@ -130,10 +123,9 @@ TaskStatusControl.displayName = 'TaskList.StatusControl';
  * an MCP call, another space.
  */
 export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => (
-  <SystemIconButton.Clipboard
+  <SystemButton.Clipboard
     classNames='font-mono'
-    density='sm'
-    variant='tag'
+    size='sm'
     // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
     hue={getHashHue(Obj.getMnemonic(task))}
     label={Obj.getMnemonic(task)}
@@ -158,11 +150,11 @@ export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => 
   return (
     // The same square every other cell in the row occupies, so the badge centres under the pane's
     // column rather than hugging the track's start.
-    <IconBlock.Root square aria-hidden={false} data-testid='taskList.item.ordinal' classNames={classNames}>
-      <Tag.Root hue={hue} classNames='tabular-nums'>
+    <Block aria-hidden={false} data-testid='taskList.item.ordinal' classNames={classNames}>
+      <Tag hue={hue} classNames='tabular-nums'>
         {ordinal}
-      </Tag.Root>
-    </IconBlock.Root>
+      </Tag>
+    </Block>
   );
 };
 
@@ -181,13 +173,13 @@ export type TaskCheckboxProps = {
  * list that offers it keeps one row geometry and the trailing controls do not shift.
  */
 export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: TaskCheckboxProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   return (
     // `IconBlock square` so the box is centred in the same square an `IconButton iconOnly` occupies;
     // bare, the 1rem box hugged the start of a 2rem track beside 2rem controls.
-    <IconBlock.Root square aria-hidden={false} classNames={classNames}>
+    <Block aria-hidden={false} classNames={classNames}>
       <Field.Root>
-        <Field.Checkbox
+        <Checkbox
           checked={checked}
           data-testid='taskList.item.checkbox'
           aria-label={t('task-check.label')}
@@ -196,7 +188,7 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
           onClick={(event) => event.stopPropagation()}
         />
       </Field.Root>
-    </IconBlock.Root>
+    </Block>
   );
 };
 
@@ -212,15 +204,15 @@ TaskCheckbox.displayName = 'TaskList.Checkbox';
 export const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
   const estimate = task.estimate;
-  const label = estimate?.toUpperCase() ?? <Icon.Root icon={UNSET_ICON} classNames='text-neutral-500' />;
+  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onTaskUpdate) {
-    return <IconBlock.Root classNames={estimateTextStyle(estimate)}>{label}</IconBlock.Root>;
+    return <Block classNames={estimateTextStyle(estimate)}>{label}</Block>;
   }
 
   return (
     <>
-      <IconBlock.Root>
+      <Block>
         {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
         <ActionMenu
           deferUntilOpen
@@ -233,16 +225,16 @@ export const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
             )
           }
         >
-          <Button.Root
+          <Button
             variant='ghost'
             data-testid='taskList.item.estimate'
             classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
             onClick={(event: MouseEvent) => event.stopPropagation()}
           >
             {label}
-          </Button.Root>
+          </Button>
         </ActionMenu>
-      </IconBlock.Root>
+      </Block>
     </>
   );
 };
@@ -259,7 +251,7 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
  * discovering a hover affordance.
  */
 export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
-  const { t } = Hooks.useTranslation(translationKey);
+  const { t } = useTranslation(translationKey);
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
   const priority = task.priority ?? undefined;
   const icon = priorityIcon(priority);
@@ -269,14 +261,14 @@ export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
-      <IconBlock.Root square>
-        <Icon.Root icon={icon} classNames={mx('shrink-0', styles)} />
-      </IconBlock.Root>
+      <Block>
+        <Icon icon={icon} classNames={mx(styles)} />
+      </Block>
     );
   }
 
   return (
-    <IconBlock.Root>
+    <Block>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu
         deferUntilOpen
@@ -291,7 +283,7 @@ export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           )
         }
       >
-        <IconButton.Root
+        <Button
           variant='ghost'
           icon={icon}
           iconOnly
@@ -301,6 +293,6 @@ export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           onClick={(event) => event.stopPropagation()}
         />
       </ActionMenu>
-    </IconBlock.Root>
+    </Block>
   );
 };

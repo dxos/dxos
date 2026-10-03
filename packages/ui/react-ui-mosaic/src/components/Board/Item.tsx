@@ -6,17 +6,12 @@ import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, us
 
 import { Obj } from '@dxos/echo';
 import { useComposedRefs } from '@dxos/react-hooks';
+import { Block, Button, Card, DragHandle, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import * as Card from '@dxos/react-ui/Card';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as IconButton from '@dxos/react-ui/IconButton';
-import * as Tag from '@dxos/react-ui/Tag';
 import { getHashStyles } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { Focus } from '../Focus/index.ts';
 import { Mosaic, type MosaicTileProps } from '../Mosaic/index.ts';
 import { useBoardColumn } from './BoardColumnContext.ts';
 import { useBoard } from './BoardContext.ts';
@@ -30,7 +25,7 @@ type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
 
 const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
   ({ classNames, data, location, debug, draggable }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(translationKey);
+    const { t } = useTranslation(translationKey);
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     // Use state (callback ref) so the dragHandle prop updates when the button mounts.
@@ -78,34 +73,34 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
             onClick={(event) => event.currentTarget.focus()}
           >
             <Card.Header>
-              <Card.DragHandle ref={setDragHandle} testId='mosaicBoard.cardDragHandle' />
+              <DragHandle ref={setDragHandle} data-testid='mosaicBoard.cardDragHandle' />
               <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Card.Block end>
+              <Block rail='end'>
                 <ActionMenu disabled={!items?.length} actions={items}>
-                  <IconButton.Root
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             {/* TODO(burdon): Replace with surface. */}
-            <Card.Row classNames='text-description'>
-              <Card.Block>
-                <Icon.Root icon='ph--note--regular' />
-              </Card.Block>
+            <Card.Row classNames='text-fg-muted'>
+              <Block>
+                <Icon icon='ph--note--regular' />
+              </Block>
               <Card.Text>{description}</Card.Text>
             </Card.Row>
             <Card.Row>
-              <Card.Block>
-                <Icon.Root icon='ph--tag--regular' />
-              </Card.Block>
+              <Block>
+                <Icon icon='ph--tag--regular' />
+              </Block>
               {label && (
                 <div className='shrink-0 flex gap-1 items-center text-xs'>
-                  <Tag.Root hue={getHashStyles(label).hue}>{label}</Tag.Root>
+                  <Tag hue={getHashStyles(label).hue}>{label}</Tag>
                 </div>
               )}
             </Card.Row>

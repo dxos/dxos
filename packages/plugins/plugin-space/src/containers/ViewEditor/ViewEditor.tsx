@@ -4,15 +4,15 @@
 
 import React, { useCallback, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { EID, Filter, Obj, Query, type QueryAST, Ref, Scope, Tag, Type, type View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
 import { useClient } from '@dxos/react-client';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { ViewModel } from '@dxos/schema';
 
 import { SpaceOperation } from '#types';
@@ -20,7 +20,7 @@ import { SpaceOperation } from '#types';
 export type ViewEditorProps = { view: View.View };
 
 export const ViewEditor = ({ view }: ViewEditorProps) => {
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const db = Obj.getDatabase(view);
   const [type, setType] = useState<Type.AnyEntity>();
@@ -33,7 +33,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
     },
   });
 
-  Hooks.useAsyncEffect(async () => {
+  useAsyncEffect(async () => {
     if (!view?.query || !db) {
       return;
     }

@@ -5,9 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Spinner, type SpinnerProps } from './Spinner.tsx';
 
@@ -17,10 +16,10 @@ const DefaultStory = ({ state: _state }: SpinnerProps) => {
   return (
     <div className='flex flex-col grow'>
       <Toolbar.Root>
-        <Button.Root onClick={() => setState('pulse')}>Pulse</Button.Root>
-        <Button.Root onClick={() => setState('spin')}>Spin</Button.Root>
-        <Button.Root onClick={() => setState('flash')}>Flash</Button.Root>
-        <Button.Root onClick={() => setState('error')}>Error</Button.Root>
+        <Button onClick={() => setState('pulse')}>Pulse</Button>
+        <Button onClick={() => setState('spin')}>Spin</Button>
+        <Button onClick={() => setState('flash')}>Flash</Button>
+        <Button onClick={() => setState('error')}>Error</Button>
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
         <Spinner state={state} size={6} />

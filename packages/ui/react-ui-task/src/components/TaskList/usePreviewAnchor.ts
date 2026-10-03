@@ -4,7 +4,7 @@
 
 import { type KeyboardEvent, type MouseEvent, type PointerEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { DxAnchorActivate } from '@dxos/ui-types';
+import { DxAnchorActivate } from '@dxos/react-ui';
 
 import { AnchorHover } from './anchor-hover.ts';
 

@@ -11,10 +11,9 @@ import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as TemplateEditor from '@dxos/plugin-routine/TemplateEditor';
+import { useThemeMode, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,
@@ -46,7 +45,7 @@ export type NotebookCellProps = {
 
 // TODO(burdon): Show evaluation errors.
 export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
 
   const source = useResolveRef(cell.source);
   const prompt = useResolveRef(cell.prompt);
@@ -87,7 +86,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
       }
 
       return (
-        <div className='flex flex-col divide-y divide-subdued-separator'>
+        <div className='flex flex-col divide-y divide-separator-subtle'>
           <TypescriptEditor
             id={cell.id}
             role='section'
@@ -156,11 +155,11 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full bg-group-surface text-description font-mono', valueStyles)}>
+    <div className={mx('flex w-full bg-group-surface text-fg-muted font-mono', valueStyles)}>
       {name && (
         <>
           <span className='text-success-text'>{name}</span>
-          <span className='text-description'>&nbsp;=&nbsp;</span>
+          <span className='text-fg-muted'>&nbsp;=&nbsp;</span>
         </>
       )}
       <span>{value}</span>
@@ -179,7 +178,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full dx-group-surface text-description border-y border-subdued-separator', valueStyles)}>
+    <div className={mx('flex w-full dx-group-surface text-fg-muted border-y border-separator-subtle', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );
@@ -191,8 +190,8 @@ const NotebookTextEditor = ({
   readOnly,
   ...props
 }: EditorViewProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { themeMode } = ThemeProvider.useThemeContext();
+  const { t } = useTranslation(meta.profile.key);
+  const themeMode = useThemeMode();
   const extensions = useMemo(() => {
     return [
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),

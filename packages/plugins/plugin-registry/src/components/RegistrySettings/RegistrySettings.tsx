@@ -6,12 +6,8 @@ import React, { useCallback, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { log } from '@dxos/log';
+import { AlertDialog, Banner, Button, Field, Input, Switch, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as AlertDialog from '@dxos/react-ui/AlertDialog';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { RegistrySettingsSchema, type RegistrySettings as RegistrySettingsType } from '#types';
@@ -50,7 +46,7 @@ export const RegistrySettings = ({
   onPluginScopeLocalChange,
   scope,
 }: RegistrySettingsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = useTranslation(meta.profile.key);
   const [rejoining, setRejoining] = useState(false);
   const [busy, setBusy] = useState(false);
   const enabled = !!settings.devPluginEnabled;
@@ -108,13 +104,15 @@ export const RegistrySettings = ({
             <Form.FieldSet label={t('plugin-registry.label')} actions={scope}>
               <Form.Field label={t('plugin-scope.label')} description={t('plugin-scope.description')}>
                 <Field.Root>
-                  <Field.Switch
+                  <Switch
                     data-testid='registrySettings.pluginScope'
                     // The scope is still worth showing without a handler; flipping it is not.
                     disabled={!onPluginScopeLocalChange}
                     checked={pluginScopeLocal}
                     // Only rejoining asks: it replaces this device's choices with the account's.
-                    onCheckedChange={(local) => (local ? onPluginScopeLocalChange?.(true) : setRejoining(true))}
+                    onCheckedChange={({ checked: local }) =>
+                      local ? onPluginScopeLocalChange?.(true) : setRejoining(true)
+                    }
                   />
                 </Field.Root>
               </Form.Field>
@@ -122,12 +120,10 @@ export const RegistrySettings = ({
           )}
           <Form.FieldSet label={t('dev-plugin.section.title')}>
             <Banner.Root valence='neutral'>
-              <Banner.Content>
-                <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
-              </Banner.Content>
+              <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
             </Banner.Root>
             <Form.Field label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
-              <Field.Input
+              <Input
                 data-testid='registrySettings.devPluginUrl'
                 disabled={!onSettingsChange || enabled || busy}
                 value={url}
@@ -141,52 +137,44 @@ export const RegistrySettings = ({
               label={t('dev-plugin.toggle.label')}
               description={t('dev-plugin.toggle.description')}
             >
-              <Button.Root
+              <Button
                 data-testid='registrySettings.devPluginToggle'
                 variant={enabled ? undefined : 'primary'}
                 disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
                 onClick={() => void handleToggle()}
               >
                 {buttonLabel}
-              </Button.Root>
+              </Button>
             </Form.Field>
             {enabled && !loadedDevId && !busy && (
               <Banner.Root valence='warning'>
-                <Banner.Content>
-                  <Banner.Body>{t('dev-plugin.not-loaded.message')}</Banner.Body>
-                </Banner.Content>
+                <Banner.Body>{t('dev-plugin.not-loaded.message')}</Banner.Body>
               </Banner.Root>
             )}
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
-      <AlertDialog.Root open={rejoining} onOpenChange={setRejoining}>
-        <AlertDialog.Overlay>
-          <AlertDialog.Content>
-            <AlertDialog.Body>
-              <AlertDialog.Title>{t('plugin-scope.rejoin-dialog.title')}</AlertDialog.Title>
-              <AlertDialog.Description>{t('plugin-scope.rejoin-dialog.description')}</AlertDialog.Description>
-            </AlertDialog.Body>
-            <AlertDialog.ActionBar>
-              <div className='grow' />
-              <AlertDialog.Cancel asChild>
-                <Button.Root>{t('plugin-scope.rejoin-dialog.cancel.label')}</Button.Root>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <Button.Root
-                  data-testid='registrySettings.pluginScope.confirm'
-                  variant='primary'
-                  onClick={() => {
-                    onPluginScopeLocalChange?.(false);
-                    setRejoining(false);
-                  }}
-                >
-                  {t('plugin-scope.rejoin-dialog.confirm.label')}
-                </Button.Root>
-              </AlertDialog.Action>
-            </AlertDialog.ActionBar>
-          </AlertDialog.Content>
-        </AlertDialog.Overlay>
+      <AlertDialog.Root open={rejoining} onOpenChange={({ open }) => setRejoining(open)}>
+        <AlertDialog.Content>
+          <AlertDialog.Body>
+            <AlertDialog.Title>{t('plugin-scope.rejoin-dialog.title')}</AlertDialog.Title>
+            <AlertDialog.Description>{t('plugin-scope.rejoin-dialog.description')}</AlertDialog.Description>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <div className='grow' />
+            <AlertDialog.Cancel>{t('plugin-scope.rejoin-dialog.cancel.label')}</AlertDialog.Cancel>
+            <AlertDialog.Action
+              data-testid='registrySettings.pluginScope.confirm'
+              variant='primary'
+              onClick={() => {
+                onPluginScopeLocalChange?.(false);
+                setRejoining(false);
+              }}
+            >
+              {t('plugin-scope.rejoin-dialog.confirm.label')}
+            </AlertDialog.Action>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
       </AlertDialog.Root>
     </Form.Root>
   );

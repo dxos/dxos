@@ -9,16 +9,16 @@ import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { translations as traceTranslations } from '@dxos/react-ui-trace/translations';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '#meta';
 
-export const translations: ThemeProvider.Resource[] = [
+export const translations: Resource[] = [
   ...assistantTranslations,
   ...componentsTranslations,
   ...formTranslations,
@@ -278,8 +278,6 @@ export const translations: ThemeProvider.Resource[] = [
         // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
         'space-home.suggestions.heading': 'Get started',
         'space-home.suggestion-magazine.label': 'Create feeds for tracking the latest AI news and build a magazine',
-        'space-home.suggestion-spreadsheet.label':
-          "Look up and create a spreadsheet of MLB's top starters by month for {{year}}",
         'space-home.suggestion-kanban.label': 'Create a kanban view for tracking tasks',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
 

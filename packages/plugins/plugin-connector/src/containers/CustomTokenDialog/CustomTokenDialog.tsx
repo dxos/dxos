@@ -5,15 +5,13 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, type Key, type Obj, type Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
+import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Column from '@dxos/react-ui/Column';
-import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
@@ -45,10 +43,10 @@ export const CustomTokenDialog = ({
   connectorLabel,
   existingTarget,
 }: CustomTokenDialogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invoke } = AppHooks.useOperationInvoker();
-  const coordinator = AppHooks.useCapability(ConnectorCoordination.ConnectorCoordinator);
-  const connectors = AppHooks.useCapabilities(ConnectorSpec.Connector).flat();
+  const { t } = useTranslation(meta.profile.key);
+  const { invoke } = Hooks.useOperationInvoker();
+  const coordinator = Hooks.useCapability(ConnectorCoordination.ConnectorCoordinator);
+  const connectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const connector = useMemo(() => connectors.find((entry) => entry.id === connectorId), [connectors, connectorId]);
   const credentialForm = connector?.credentialForm;
   const [error, setError] = useState<string>();
@@ -95,9 +93,9 @@ export const CustomTokenDialog = ({
       <Dialog.Content>
         <Dialog.Header>
           <Dialog.Title>{connectorLabel ?? connectorId}</Dialog.Title>
-          <Dialog.Close asChild>
-            <Dialog.ActionIconButton action='close' />
-          </Dialog.Close>
+          <Dialog.CloseTrigger asChild>
+            <SystemButton.Close />
+          </Dialog.CloseTrigger>
         </Dialog.Header>
         <Dialog.Body>
           <p className='text-error-text'>{t('provider-form-dialog.no-form.message')}</p>
@@ -114,9 +112,9 @@ export const CustomTokenDialog = ({
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{title}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <Form.Root
@@ -125,12 +123,10 @@ export const CustomTokenDialog = ({
           defaultValues={credentialForm.defaultValues ?? {}}
           onSave={handleSave}
         >
-          <Column.Center>
-            <Form.Content>
-              <Form.Fields />
-              <Form.Submit disabled={isPending ? true : undefined} />
-            </Form.Content>
-          </Column.Center>
+          <Form.Content>
+            <Form.Fields />
+            <Form.Submit disabled={isPending ? true : undefined} />
+          </Form.Content>
         </Form.Root>
         {error && <p className='text-error-text'>{error}</p>}
       </Dialog.Body>

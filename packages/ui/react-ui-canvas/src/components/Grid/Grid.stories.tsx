@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
+import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { useViewport, useWheel } from '../../hooks/index.ts';
 import { type Camera, type Point } from '../../model/types.ts';
@@ -89,32 +89,31 @@ const DefaultStory = ({ size, showAxes }: GridProps) => {
         scale={camera.zoom}
         offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
       />
-      <Toolbar.Root
-        density='sm'
-        classNames='absolute top-2 left-2 w-fit gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'
-        onPointerDown={(event) => event.stopPropagation()}
-      >
-        <Toolbar.IconButton
-          variant='ghost'
-          iconOnly
-          icon='ph--magnifying-glass-plus--regular'
-          label='Zoom in'
-          onClick={() => zoomBy(ZOOM_STEP)}
-        />
-        <Toolbar.IconButton
-          variant='ghost'
-          iconOnly
-          icon='ph--magnifying-glass-minus--regular'
-          label='Zoom out'
-          onClick={() => zoomBy(1 / ZOOM_STEP)}
-        />
-        <Toolbar.IconButton variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
-        <Toolbar.Separator variant='line' />
-        <Toolbar.Text classNames='text-description font-mono text-sm whitespace-nowrap'>
-          {Math.round(camera.zoom * 100)}% · [{format(topLeft.x)}, {format(topLeft.y)}] – [{format(bottomRight.x)},{' '}
-          {format(bottomRight.y)}]
-        </Toolbar.Text>
-      </Toolbar.Root>
+      {/* Pointer presses on the toolbar must not pan the grid underneath. */}
+      <div className='absolute top-2 left-2 w-fit' onPointerDown={(event) => event.stopPropagation()}>
+        <Toolbar.Root size='sm' classNames='gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'>
+          <Button
+            variant='ghost'
+            iconOnly
+            icon='ph--magnifying-glass-plus--regular'
+            label='Zoom in'
+            onClick={() => zoomBy(ZOOM_STEP)}
+          />
+          <Button
+            variant='ghost'
+            iconOnly
+            icon='ph--magnifying-glass-minus--regular'
+            label='Zoom out'
+            onClick={() => zoomBy(1 / ZOOM_STEP)}
+          />
+          <Button variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
+          <Toolbar.Separator variant='line' />
+          <Toolbar.Text classNames='text-fg-muted font-mono text-sm whitespace-nowrap'>
+            {Math.round(camera.zoom * 100)}% · [{format(topLeft.x)}, {format(topLeft.y)}] – [{format(bottomRight.x)},{' '}
+            {format(bottomRight.y)}]
+          </Toolbar.Text>
+        </Toolbar.Root>
+      </div>
     </div>
   );
 };

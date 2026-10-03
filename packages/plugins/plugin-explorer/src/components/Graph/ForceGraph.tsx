@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Obj } from '@dxos/echo';
 import * as SelectionModel from '@dxos/graph/SelectionModel';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type GraphController,
   GraphForceProjector,
@@ -16,7 +17,6 @@ import {
   SVG,
   type SVGContext,
 } from '@dxos/react-ui-graph';
-import * as Util from '@dxos/react-ui/Util';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import { getHashStyles } from '@dxos/ui-theme';
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -30,7 +30,7 @@ export type ForceGraphProps = {
   onInspect?: GraphProps<SpaceGraphNode, SpaceGraphEdge>['onInspect'];
 } & Pick<GraphProps, 'drag'>;
 
-export const ForceGraph = Util.composable<HTMLDivElement, ForceGraphProps>(
+export const ForceGraph = composable<HTMLDivElement, ForceGraphProps>(
   ({ model, selection: selectionProp, grid, drag, onInspect, ...props }, forwardedRef) => {
     // TODO(wittjosiah): This should go into Graph.tsx but for some reason doesn't work.
     useAtomValue(model?.graphAtom ?? EMPTY_ATOM);
@@ -76,7 +76,7 @@ export const ForceGraph = Util.composable<HTMLDivElement, ForceGraphProps>(
     );
 
     return (
-      <div {...Util.composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
         <SVG.Root ref={svgRef}>
           <SVG.Markers />
           {grid && <SVG.Grid axis />}

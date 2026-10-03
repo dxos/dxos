@@ -12,8 +12,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { KanbanBoard } from '#components';
@@ -90,9 +89,9 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root />
-      </Panel.Toolbar>
+      </Panel.Header>
       <KanbanBoard.Root
         kanban={object}
         projection={projection}
@@ -101,9 +100,9 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
         onCardAdd={handleCardAdd}
         onCardRemove={handleCardRemove}
       >
-        <Panel.Content asChild>
+        <Panel.Body asChild>
           <KanbanBoard.Content />
-        </Panel.Content>
+        </Panel.Body>
       </KanbanBoard.Root>
     </Panel.Root>
   );
@@ -162,9 +161,9 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
   //   "+" button is hidden because `onCardAdd` is undefined).
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root />
-      </Panel.Toolbar>
+      </Panel.Header>
       <KanbanBoard.Root
         kanban={object}
         projection={projection}
@@ -172,9 +171,9 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
         change={change}
         onCardRemove={handleCardRemove}
       >
-        <Panel.Content asChild>
+        <Panel.Body asChild>
           <KanbanBoard.Content />
-        </Panel.Content>
+        </Panel.Body>
       </KanbanBoard.Root>
     </Panel.Root>
   );

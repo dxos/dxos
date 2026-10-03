@@ -8,7 +8,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Type } from '@dxos/echo';
 import { getPropertyMetaAnnotation } from '@dxos/echo/internal';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import * as Card from '@dxos/react-ui/Card';
+import { Card } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 
 export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => {
@@ -20,7 +20,7 @@ export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => 
       <Card.Row>
         {statusOption && (
           <div>
-            <span className='dx-tag' data-hue={statusOption.color}>
+            <span className='dx-tag dx-tag-inline' data-hue={statusOption.color}>
               {statusOption.title}
             </span>
           </div>

@@ -6,19 +6,15 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Empty, Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Splitter from '@dxos/react-ui/Splitter';
 
 import { FrameStack, StoryboardPlayer } from '#components';
 import { meta } from '#meta';
@@ -45,8 +41,8 @@ export type StoryboardArticleProps = AppSurface.ObjectArticleProps<Storyboard.St
  * the storyboard. The same shape a slide deck takes; see the plugin design doc.
  */
 export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: StoryboardArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = AppHooks.useOperationInvoker();
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Live frame objects (not snapshots): the rows mutate them and the drag controller keys on them.
   const [refs] = useObject(storyboard, 'frames');
   const framesAtom = useMemo(
@@ -161,14 +157,14 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
     <Splitter.Root role={role} orientation='horizontal' anchor='start' resizable defaultSize={STACK_SIZE} minSize={8}>
       <Splitter.Panel position='start'>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <ActionToolbar {...menuActions} attendableId={attendableId} />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <ScrollArea.Root>
               <ScrollArea.Viewport>
                 {frames.length === 0 ? (
-                  <Banner.Empty classNames='h-full' label={t('storyboard-empty.message')} />
+                  <Empty classNames='h-full'>{t('storyboard-empty.message')}</Empty>
                 ) : (
                   <FrameStack<Frame.Frame>
                     items={frames}
@@ -181,10 +177,10 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
                 )}
               </ScrollArea.Viewport>
             </ScrollArea.Root>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </Splitter.Panel>
-      <Splitter.Handle />
+      <Splitter.ResizeTrigger />
       <Splitter.Panel position='end'>
         {playing ? (
           <StoryboardPlayer clips={clips} attendableId={attendableId} onClose={handleStop} />

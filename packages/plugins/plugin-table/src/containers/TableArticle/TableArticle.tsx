@@ -17,6 +17,7 @@ import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SearchHooks from '@dxos/plugin-search/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Panel } from '@dxos/react-ui';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {
   Table as TableComponent,
@@ -32,7 +33,6 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
-import * as Panel from '@dxos/react-ui/Panel';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { downloadBlob } from '@dxos/util';
 
@@ -199,7 +199,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     return (
       <TableComponent.Root ref={tableRef}>
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <TableComponent.Toolbar
               attendableId={attendableId}
               customActions={customActions}
@@ -208,10 +208,10 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onExport={handleExport}
               onSave={handleSave}
             />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <TableComponent.Content
-              classNames='border-t border-subdued-separator'
+              classNames='border-t border-separator-subtle'
               key={attendableId}
               attendableId={attendableId}
               model={model}
@@ -220,7 +220,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onCreate={handleCreate}
               onRowClick={handleRowClick}
             />
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </TableComponent.Root>
     );

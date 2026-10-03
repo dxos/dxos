@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 import { JsonSchema, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
 import { Kanban } from '#types';
@@ -28,7 +28,7 @@ export const useProjectionModel = <S extends Type.AnyEntity>(
 ) => {
   const [projection, setProjection] = useState<ProjectionModel | undefined>();
 
-  Hooks.useAsyncEffect(
+  useAsyncEffect(
     async (controller) => {
       if (!schema || !kanban || kanban.spec.kind !== 'view') {
         return;
