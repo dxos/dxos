@@ -265,8 +265,8 @@ jobs:
           exit 1
 
   # The chat flow (`packages/core/compute/assistant-e2e/src/playwright/perf-chat.spec.ts`) against the
-  # Storybook chat story, in a blank space and a busy one, each scored against its own budgets under
-  # `src/playwright/perf/`. Its own runner of the same fixed size, for the reason `echo-bench` has one.
+  # Storybook chat story, in a blank space and a busy one, scored together into the `chat` suite against
+  # `src/playwright/perf/budgets.json`. Its own runner of the same fixed size, for the reason `echo-bench` has one.
   chat-bench:
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -321,23 +321,12 @@ jobs:
         env:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
-          # Each fixture has its own budgets and suite; one missing never stops the other being scored.
-          for scale in blank busy; do
-            if ! ls test-results/perf/assistant-chat-measure-$scale-*.events.ndjson >/dev/null 2>&1; then
-              echo "::warning::No $scale measure batches were written; nothing to score."
-              continue
-            fi
-            case "$scale" in
-              busy) budgets=budgets-busy.json ;;
-              *) budgets=budgets.json ;;
-            esac
-            # A fixture's budgets come from this job's own published rows, so it runs unscored until they exist.
-            if [ ! -f "packages/core/compute/assistant-e2e/src/playwright/perf/$budgets" ]; then
-              echo "::warning::No $scale chat budgets yet; stage rows were published, nothing scored."
-              continue
-            fi
-            node packages/core/compute/assistant-e2e/scripts/score-perf.ts score --scale "$scale" --publish --summary "$GITHUB_STEP_SUMMARY"
-          done
+          if ! ls test-results/perf/assistant-chat-measure-blank-*.events.ndjson >/dev/null 2>&1; then
+            echo "::warning::No measure batches were written; nothing to score."
+            exit 0
+          fi
+          # Scores blank and busy into one `chat` suite; a busy run that wrote nothing scores at the floor.
+          node packages/core/compute/assistant-e2e/scripts/score-perf.ts score --publish --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Upload artifacts
         if: always()

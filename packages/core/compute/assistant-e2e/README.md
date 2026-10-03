@@ -82,14 +82,14 @@ The busy space (`PerfScriptedBusy`) is seeded in the browser by `stories-assista
 feed appends run at tens of entries a second on OPFS, so the full volume cannot be seeded once per
 iteration. The `seed` stage logs each seeding phase's wall time.
 
-The `chat-bench` job in `.depot/workflows/perf-nightly.yml` runs both spaces nightly, publishing
-their stage rows. Each space is scored on the median of its iterations against its own budgets, as
-`ci.perf-score` with its own `ciSuite`: blank as `chat` against `src/playwright/perf/budgets.json`,
-busy as `chat-busy` against `src/playwright/perf/budgets-busy.json`. A space with no budgets file
-is not scored — busy runs unscored until its budgets are calibrated from its own rows.
+The `chat-bench` job in `.depot/workflows/perf-nightly.yml` runs both spaces nightly and scores them
+together as `ci.perf-score` with `ciSuite = 'chat'`, against `src/playwright/perf/budgets.json`.
+Each metric is the median of the night's iterations. The busy space's metrics carry a `busy > `
+prefix and roll up into one `busy space` group, so a busy regression moves the Chat score; a busy
+run that wrote no rows scores that group at the floor:
 
 ```bash
-node scripts/score-perf.ts score [--scale blank|busy] [--dir test-results/perf] [--publish]
+node scripts/score-perf.ts score [--dir test-results/perf] [--publish]
 ```
 
 The budgets are provisional: each target is the median of three local runs in a cloud sandbox

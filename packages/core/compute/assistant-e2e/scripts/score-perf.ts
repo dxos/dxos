@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-// Scores the chat perf flow's `measure` rows of one fixture against that fixture's budgets.
+// Scores the chat perf flow's `measure` rows — the blank space and the busy one together — against
+// `src/playwright/perf/budgets.json`.
 //
-//   node scripts/score-perf.ts score [--scale blank|busy] [--dir test-results/perf] [--publish] [--summary <file>]
+//   node scripts/score-perf.ts score [--dir test-results/perf] [--publish] [--summary <file>]
 //
 // Run once after every iteration has written its batch: a night's score is the median across them.
 // A low score never fails the job; only broken inputs do.
@@ -15,28 +16,15 @@ import { parseArgs } from 'node:util';
 
 import { parseBudgets, scoreStageRun } from '@dxos/perf-harness/score';
 
+import { BUSY_SCALE } from '../src/playwright/perf/suite.ts';
+
 const PACKAGE_ROOT = path.resolve(import.meta.dirname, '..');
 const WORKSPACE_ROOT = path.resolve(PACKAGE_ROOT, '../../../..');
-
-/**
- * Each fixture is scored on its own suite and budgets: the busy space's stages are slower by design,
- * so one set of budgets would either flag every busy night or never flag a blank one.
- */
-const SUITES = {
-  blank: { suite: 'chat', title: 'Chat performance', budgetsFile: 'src/playwright/perf/budgets.json' },
-  busy: {
-    suite: 'chat-busy',
-    title: 'Chat performance (busy space)',
-    budgetsFile: 'src/playwright/perf/budgets-busy.json',
-  },
-} as const;
-
-const isScale = (value: string): value is keyof typeof SUITES => Object.hasOwn(SUITES, value);
+const BUDGETS_FILE = path.join(PACKAGE_ROOT, 'src/playwright/perf/budgets.json');
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
   options: {
-    scale: { type: 'string', default: 'blank' },
     dir: { type: 'string', default: path.join(WORKSPACE_ROOT, 'test-results', 'perf') },
     publish: { type: 'boolean', default: false },
     summary: { type: 'string' },
@@ -46,20 +34,16 @@ const { positionals, values } = parseArgs({
 const [command] = positionals;
 
 if (command === 'score') {
-  const { scale } = values;
-  if (!isScale(scale)) {
-    throw new Error(`unknown scale "${scale}"; expected ${Object.keys(SUITES).join(' or ')}`);
-  }
-  const { suite, title, budgetsFile } = SUITES[scale];
   scoreStageRun({
     workspaceRoot: WORKSPACE_ROOT,
     dir: path.resolve(values.dir),
     flow: 'assistant-chat',
-    scale,
-    suite,
-    title,
-    budgets: parseBudgets(JSON.parse(readFileSync(path.join(PACKAGE_ROOT, budgetsFile), 'utf8'))),
-    budgetsFile,
+    scale: 'blank',
+    extraScales: [BUSY_SCALE],
+    suite: 'chat',
+    title: 'Chat performance',
+    budgets: parseBudgets(JSON.parse(readFileSync(BUDGETS_FILE, 'utf8'))),
+    budgetsFile: 'src/playwright/perf/budgets.json',
     publish: values.publish,
     summary: values.summary,
   });
