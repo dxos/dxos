@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import { DataFactory } from 'n3';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -173,5 +174,47 @@ describe('type rules', () => {
       'storeLayer layerRequires Clock',
       'storeLayer providesService Store',
     ]);
+  });
+});
+
+describe('ordered reasoners', () => {
+  let dir: string;
+
+  beforeAll(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'code-index-strata-'));
+  });
+
+  afterAll(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  // The earlier file negates a predicate the later file concludes. Run twice: on the second pass the
+  // later file's graph from the first pass exists, and must stay invisible to the earlier file.
+  const earlier: Reasoner.Reasoner = {
+    name: '10-earlier',
+    rules: `@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+{ ?s <urn:p> ?o. (?x { ?s <urn:q> ?x } ?l) log:collectAllIn ?scope. ?l list:length 0 } => { ?s <urn:r> ?o }.`,
+  };
+  const later: Reasoner.Reasoner = { name: '20-later', rules: '{ ?s <urn:p> ?o } => { ?s <urn:q> ?o }.' };
+
+  test('a reasoner never sees the conclusions of reasoners ordered after it', async () => {
+    const concluded = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        yield* store.putQuads([
+          DataFactory.quad(
+            DataFactory.namedNode('urn:s'),
+            DataFactory.namedNode('urn:p'),
+            DataFactory.namedNode('urn:o'),
+            DataFactory.namedNode('urn:graph'),
+          ),
+        ]);
+        yield* Reasoner.run([earlier, later]);
+        yield* Reasoner.run([earlier, later]);
+        return (yield* store.derived(earlier.name)).map((quad) => quad.predicate.value);
+      }).pipe(Effect.provide(Store.layer(join(dir, 'store'))), Effect.scoped),
+    );
+    expect(concluded).toEqual(['urn:r']);
   });
 });

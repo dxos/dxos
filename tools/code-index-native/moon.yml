@@ -1,0 +1,33 @@
+# A Rust crate with no package.json: CI's setup action installs no Rust toolchain, so these tasks
+# are run locally and kept out of CI (see `tools/code-index/design/NATIVE-BACKEND.md` § CI).
+layer: tool
+language: rust
+
+tasks:
+  cargo-build:
+    command: bash scripts/build.sh
+    inputs:
+      - src/**/*.rs
+      - build.rs
+      - Cargo.toml
+      - Cargo.lock
+    outputs:
+      - code-index-native.node
+    options:
+      runInCI: false
+  cargo-test:
+    command: cargo test
+    inputs:
+      - src/**/*.rs
+      - tests/**/*.rs
+      - Cargo.toml
+      - Cargo.lock
+      - /tools/code-index/rules/*.n3
+    options:
+      runInCI: false
+  # The synthetic engine benchmark; CODE_INDEX_BENCH_FILES scales it.
+  cargo-bench:
+    command: cargo bench
+    options:
+      cache: false
+      runInCI: false

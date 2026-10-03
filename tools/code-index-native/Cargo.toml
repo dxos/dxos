@@ -1,0 +1,38 @@
+[package]
+name = "code-index-native"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "FSL-1.1-Apache-2.0"
+description = "Native RDF store and incremental N3 rule engine for code-index."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+# The Node-API binding; off for `cargo test` so the engine and store are tested without a JS runtime.
+napi = ["dep:napi", "dep:napi-derive"]
+
+[dependencies]
+oxigraph = "0.5.11"
+oxttl = "0.2.4"
+regex = "1.13"
+rustc-hash = "2"
+serde_json = "1"
+napi = { version = "3", default-features = false, features = ["napi8"], optional = true }
+napi-derive = { version = "3", optional = true }
+
+[build-dependencies]
+napi-build = "2"
+
+[dev-dependencies]
+tempfile = "3"
+
+[[bench]]
+name = "engine"
+harness = false
+
+[profile.release]
+lto = "thin"
+codegen-units = 4
