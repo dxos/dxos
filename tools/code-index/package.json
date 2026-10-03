@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@dxos/ai": "workspace:*",
+    "@dxos/diagram": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/node-std": "workspace:*",
@@ -45,6 +46,7 @@
     "@typescript/typescript6": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "classic-level": "catalog:",
+    "d3-force": "catalog:",
     "effect": "catalog:",
     "eyereasoner": "catalog:",
     "jsonld-streaming-parser": "catalog:",
@@ -66,6 +68,7 @@
   },
   "devDependencies": {
     "@rdfjs/types": "catalog:",
+    "@types/d3-force": "catalog:",
     "@types/n3": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",

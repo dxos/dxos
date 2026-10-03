@@ -1,0 +1,176 @@
+//
+// Copyright 2026 DXOS.org
+//
+// @import-as-namespace
+//
+
+import * as DecisionModel from 'effect/ai/DecisionModel';
+import * as Data from 'effect/Data';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import type * as Store from '../Store.ts';
+import * as Cache from './Cache.ts';
+import * as Compact from './Compact.ts';
+import * as Explore from './Explore.ts';
+import * as Graph from './Graph.ts';
+import * as SystemOne from './SystemOne.ts';
+import * as Zoom from './Zoom.ts';
+
+/**
+ * The design pipeline up to, but not including, layout: explore → zoom → compact variants. Layout
+ * and judging need ELK and therefore Node (`Draw.ts`), so this half stays runnable under Bun and
+ * hands its variants over as files.
+ */
+
+export class DesignError extends Data.TaggedError('code-index/design/DesignError')<{
+  readonly message: string;
+  readonly cause?: unknown;
+}> {}
+
+export type Options = {
+  readonly prompt: string;
+  readonly scorer: Zoom.Scorer;
+  readonly model: string;
+  readonly cache: Cache.Api;
+  /** Nodes the pruned graph keeps (the force view shows these; the diagram cuts them to ≲ 14). */
+  readonly budget: number;
+  readonly threshold: number;
+};
+
+export type Timings = { exploreMs: number; zoomMs: number; totalMs: number };
+
+export type Result = {
+  readonly candidates: Graph.Candidates;
+  readonly scored: Graph.Scored;
+  readonly diagrams: readonly Compact.Diagram[];
+  readonly usage: Zoom.Usage;
+  readonly timings: Timings;
+};
+
+/** Runs every stage before layout, given an explorer already bound to its store. */
+export const run = <E, R>(
+  explore: Effect.Effect<Graph.Candidates, E, R>,
+  options: Options,
+): Effect.Effect<Result, E, R | DecisionModel.DecisionModel> =>
+  Effect.gen(function* () {
+    const started = Date.now();
+    const candidates = yield* explore;
+    const explored = Date.now();
+    const { scored, usage } = yield* Zoom.zoom({ ...options, candidates });
+    const zoomed = Date.now();
+    const diagrams = Compact.variants(scored.grouping).map((variant) => Compact.build(scored, variant));
+    return {
+      candidates,
+      scored,
+      diagrams,
+      usage,
+      timings: { exploreMs: explored - started, zoomMs: zoomed - explored, totalMs: zoomed - started },
+    };
+  });
+
+/** The pruned graph alone: what the force view and the MCP tool present. */
+export const pruned = (scored: Graph.Scored) => ({
+  prompt: scored.prompt,
+  grouping: scored.grouping,
+  nodes: scored.nodes.filter((node) => node.kept),
+  edges: Zoom.keptEdges(scored),
+});
+
+/** Writes each stage's JSON for inspection; `draw-main.ts` reads `diagrams.json` from the same directory. */
+export const write = (dir: string, result: Result): Effect.Effect<string[], DesignError> =>
+  Effect.try({
+    try: () => {
+      mkdirSync(dir, { recursive: true });
+      const files: Record<string, unknown> = {
+        'candidates.json': result.candidates,
+        'scores.json': {
+          scorer: result.scored.scorer,
+          grouping: result.scored.grouping,
+          relations: result.scored.relations,
+          nodes: result.scored.nodes.map(({ iri, label, path, score, kept }) => ({ iri, label, path, score, kept })),
+        },
+        'pruned.json': pruned(result.scored),
+        'diagrams.json': result.diagrams,
+        'run.json': { prompt: result.scored.prompt, usage: result.usage, timings: result.timings },
+      };
+      return Object.entries(files).map(([name, value]) => {
+        const path = join(dir, name);
+        writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
+        return path;
+      });
+    },
+    catch: (cause) => new DesignError({ message: `Cannot write ${dir}`, cause }),
+  });
+
+/** A node or edge as the sandbox's `display.graph` takes it. */
+export type GraphData = {
+  readonly nodes: readonly {
+    id: string;
+    label: string;
+    group?: string;
+    score: number;
+    kept: boolean;
+    card: Record<string, unknown>;
+  }[];
+  readonly edges: readonly { from: string; to: string; kind: string }[];
+};
+
+/**
+ * The scored graph as a force-view presentation: every candidate, so the below-threshold ones are a
+ * click away, and every edge of a relevant kind between them plus the relays pruning added.
+ */
+export const toGraphData = (scored: Graph.Scored): GraphData & { grouping: string; scorer: string } => ({
+  grouping: scored.grouping,
+  scorer: scored.scorer,
+  nodes: scored.nodes.map((node) => ({
+    id: node.iri,
+    label: node.label,
+    ...(node.package ? { group: node.package } : {}),
+    score: Number(node.score.toFixed(3)),
+    kept: node.kept,
+    card: {
+      path: node.path,
+      kind: node.kind,
+      package: node.package,
+      score: Number(node.score.toFixed(3)),
+      declarations: node.symbols.join(', '),
+      doc: node.doc,
+      snippet: node.snippet,
+      why: node.why,
+    },
+  })),
+  edges: Graph.dedupe(
+    scored.edges.filter((edge) => edge.kind === Graph.RELAY || (scored.relations[edge.kind] ?? 0) >= 0.5),
+  ).map(({ from, to, kind }) => ({ from, to, kind })),
+});
+
+/**
+ * The deterministic explorer plus zoom, as the sandbox's `design.subgraph` runs it: System One when a
+ * decision model is in context, the baseline otherwise — the chat must work with no key at all.
+ */
+export const subgraph = (
+  store: Store.Api,
+  cache: Cache.Api,
+  model: Option.Option<DecisionModel.DecisionModel>,
+  { prompt, budget = 30, threshold = 0.5 }: { prompt: string; budget?: number; threshold?: number },
+): Effect.Effect<GraphData & { grouping: string; scorer: string }, Store.StoreError> =>
+  Effect.gen(function* () {
+    const candidates = yield* Explore.bfs({ prompt })(store);
+    const zoomed = Zoom.zoom({
+      prompt,
+      candidates,
+      scorer: Option.isSome(model) ? 'system-one' : 'baseline',
+      model: SystemOne.MODEL.id.toString(),
+      cache,
+      threshold,
+      budget,
+    });
+    const { scored } = yield* Option.match(model, {
+      onNone: () => zoomed.pipe(Effect.provide(SystemOne.refusing)),
+      onSome: (service) => zoomed.pipe(Effect.provideService(DecisionModel.DecisionModel, service)),
+    });
+    return toGraphData(scored);
+  });

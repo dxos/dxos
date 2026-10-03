@@ -13,6 +13,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/common/diagram"
+    },
+    {
       "path": "../../packages/common/effect"
     },
     {

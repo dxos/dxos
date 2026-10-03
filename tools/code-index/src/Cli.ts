@@ -14,6 +14,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, relative, resolve } from 'node:path';
 
 import * as Crawler from './Crawler.ts';
+import * as DesignCli from './design/DesignCli.ts';
 import * as Indexer from './Indexer.ts';
 import * as Ontology from './Ontology.ts';
 import * as Reasoner from './Reasoner.ts';
@@ -421,7 +422,20 @@ const serve = Command.make('serve', serveFlags, serveHandler).pipe(
  */
 export const command = Command.make('code-index', serveFlags, serveHandler).pipe(
   Command.withDescription('Index a codebase into SQLite + RDF (DEUS ontology), and reason about it in a browser.'),
-  Command.withSubcommands([serve, chat, index, files, query, ask, dump, stats, clear, ontology, types]),
+  Command.withSubcommands([
+    serve,
+    chat,
+    index,
+    files,
+    query,
+    ask,
+    dump,
+    stats,
+    clear,
+    ontology,
+    types,
+    DesignCli.command,
+  ]),
 );
 
 /** Runs one command; `Layer.launch` is not involved — every command opens and closes its own store. */
