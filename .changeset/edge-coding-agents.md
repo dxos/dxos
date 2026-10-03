@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: the other entries are main's, carried into this stacked PR by merging main into a base that predates them
 '@dxos/plugin-code': minor
 '@dxos/plugin-claude': minor
 ---
