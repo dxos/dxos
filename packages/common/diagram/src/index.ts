@@ -13,6 +13,7 @@ export * as DxSvg from './dx-svg.ts';
 export * as Layout from './layout.ts';
 export * as Mermaid from './mermaid.ts';
 export * as MermaidEngine from './mermaid-engine.ts';
+export * as Nudge from './nudge.ts';
 export * as Objective from './objective.ts';
 export * as Rules from './rules.ts';
 export * as Scene from './scene.ts';
