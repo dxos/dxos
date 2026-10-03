@@ -74,8 +74,8 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
     const status: ImageStatus = result?.source === source ? result.status : 'loading';
     const color = result?.source === source ? result.color : undefined;
     const aspectStyle: CSSProperties & CSSVariables = {
-      '--nx-image-aspect': aspectRatio,
-      ...(color ? { '--nx-image-backdrop': color } : {}),
+      '--dx-image-aspect': aspectRatio,
+      ...(color ? { '--dx-image-backdrop': color } : {}),
     };
     return (
       <div

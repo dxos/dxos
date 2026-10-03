@@ -1,81 +1,81 @@
 /*
  * Tree (`@dxos/react-ui-list`): rows are flat, one block tall and indented half a block per level; the disclosure cell
  * is half a block wide at every size, so each level's caret sits under its parent's icon. Row states (hover,
- * selected, focus, disabled, drag, the drop line) are the shared `nx-row` rules (row.css); this file keeps the tree's
+ * selected, focus, disabled, drag, the drop line) are the shared `dx-row` rules (row.css); this file keeps the tree's
  * layout, the `inside` ring and the line's indent.
  */
 
 @layer dx-components {
-  .nx-tree {
+  .dx-tree {
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
     max-height: 100%;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     /* Read by Tree.Root to time the commit of a close, so the CSS and the timer share one value. */
-    --nx-tree-disclosure-duration: var(--nx-disclosure-duration);
+    --dx-tree-disclosure-duration: var(--dx-disclosure-duration);
   }
 
-  .nx-tree > .nx-scroll-root {
+  .dx-tree > .dx-scroll-root {
     flex: 1 1 auto;
   }
 
-  .nx-tree-content:focus {
+  .dx-tree-content:focus {
     outline: none;
   }
 
   /* One block tall at every size: the row's auto rows are `minmax(block, auto)` and nothing in it exceeds a block. */
-  .nx-tree-item {
+  .dx-tree-item {
     position: relative;
-    grid-auto-rows: var(--nx-block-size);
-    padding-inline-start: calc(var(--nx-tree-depth) * var(--nx-half-block-size));
+    grid-auto-rows: var(--dx-block-size);
+    padding-inline-start: calc(var(--dx-tree-depth) * var(--dx-half-block-size));
     outline: none;
     user-select: none;
   }
   /* `multiline`: the first line holds the row's cells at one block; later lines (a description) size to their content. */
-  .nx-tree[data-multiline] .nx-tree-item {
-    grid-template-rows: var(--nx-block-size);
+  .dx-tree[data-multiline] .dx-tree-item {
+    grid-template-rows: var(--dx-block-size);
     grid-auto-rows: auto;
   }
   /*
    * A tree lives in narrow sidebars, where Container's `width < 24rem` query would stack a row's cells; the row keeps
-   * its fixed tracks at every width (the specificity beats the query's `.nx-grid[data-layout='row'] > *` rule).
+   * its fixed tracks at every width (the specificity beats the query's `.dx-container[data-layout='row'] > *` rule).
    */
-  .nx-tree-item.nx-grid[data-layout='row'] > :not([data-rail]) {
+  .dx-tree-item.dx-container[data-layout='row'] > :not([data-rail]) {
     grid-column: auto;
   }
 
   /* Drop targets: `top`/`bottom` draw the shared row line at the landing level; `inside` rings the branch. */
-  .nx-tree-item[data-drop-target='inside'] {
-    outline: var(--nx-drop-indicator-width) solid var(--nx-drop-indicator-color);
-    outline-offset: calc(-1 * var(--nx-drop-indicator-width));
+  .dx-tree-item[data-drop-target='inside'] {
+    outline: var(--dx-drop-indicator-width) solid var(--dx-drop-indicator-color);
+    outline-offset: calc(-1 * var(--dx-drop-indicator-width));
   }
-  .nx-tree-item[data-drop-target='inside'][data-drop-kind='link'] {
+  .dx-tree-item[data-drop-target='inside'][data-drop-kind='link'] {
     outline-style: dashed;
   }
-  .nx-tree-item[data-drop-target]::after {
-    inset-inline-start: calc(var(--nx-tree-drop-level, 0) * var(--nx-half-block-size));
+  .dx-tree-item[data-drop-target]::after {
+    inset-inline-start: calc(var(--dx-tree-drop-level, 0) * var(--dx-half-block-size));
   }
   /* A link adds a reference and leaves the item where it is, so its line is dashed. */
-  .nx-tree-item[data-drop-kind='link']::after {
+  .dx-tree-item[data-drop-kind='link']::after {
     height: 0;
     background: none;
-    border-block-start: var(--nx-drop-indicator-width) dashed var(--nx-drop-indicator-color);
+    border-block-start: var(--dx-drop-indicator-width) dashed var(--dx-drop-indicator-color);
   }
 
-  .nx-tree-item[data-virtual='variable'] {
+  .dx-tree-item[data-virtual='variable'] {
     content-visibility: auto;
-    contain-intrinsic-block-size: auto var(--nx-block-size);
+    contain-intrinsic-block-size: auto var(--dx-block-size);
   }
 
-  /* Half a block wide and a full block tall; the doubled class outranks `.nx-block`'s square. */
-  .nx-block.nx-tree-item-indicator {
-    width: var(--nx-half-block-size);
+  /* Half a block wide and a full block tall; the doubled class outranks `.dx-block`'s square. */
+  .dx-block.dx-tree-item-indicator {
+    width: var(--dx-half-block-size);
   }
 
-  .nx-tree-branch-trigger {
+  .dx-tree-branch-trigger {
     display: grid;
     cursor: pointer;
     place-items: center;
@@ -83,19 +83,19 @@
     height: 100%;
   }
   /* An open branch with nothing under it: the caret stays (it still closes the branch) but reads as empty. */
-  .nx-tree-branch-trigger[data-empty] {
+  .dx-tree-branch-trigger[data-empty] {
     opacity: 0.4;
   }
-  .nx-tree-branch-indicator {
+  .dx-tree-branch-indicator {
     display: grid;
     place-items: center;
-    transition: transform var(--nx-tree-disclosure-duration) var(--nx-disclosure-ease-open);
+    transition: transform var(--dx-tree-disclosure-duration) var(--dx-disclosure-ease-open);
   }
-  .nx-tree-branch-indicator[data-state='open'] {
+  .dx-tree-branch-indicator[data-state='open'] {
     transform: rotate(90deg);
   }
   /* The machine still reports a concealing branch as open (the close has not committed); the caret turns with its rows. */
-  .nx-tree-item[data-concealing] .nx-tree-branch-indicator {
+  .dx-tree-item[data-concealing] .dx-tree-branch-indicator {
     transform: none;
   }
 
@@ -105,28 +105,28 @@
    * and `forwards` holds it collapsed until the commit removes it. The clip exists only while the height moves, so a
    * row at rest still paints its focus ring and drop line.
    */
-  :is(.nx-tree-item, .nx-tree-group)[data-disclosure='enter'] {
-    animation: nx-tree-row-enter var(--nx-tree-disclosure-duration) var(--nx-disclosure-ease-open);
+  :is(.dx-tree-item, .dx-tree-group)[data-disclosure='enter'] {
+    animation: dx-tree-row-enter var(--dx-tree-disclosure-duration) var(--dx-disclosure-ease-open);
   }
-  :is(.nx-tree-item, .nx-tree-group)[data-disclosure='conceal'] {
-    animation: nx-tree-row-conceal var(--nx-tree-disclosure-duration) var(--nx-disclosure-ease-close) forwards;
+  :is(.dx-tree-item, .dx-tree-group)[data-disclosure='conceal'] {
+    animation: dx-tree-row-conceal var(--dx-tree-disclosure-duration) var(--dx-disclosure-ease-close) forwards;
   }
 
   /* A multiline row has no single height to grow to, so its disclosure only fades. */
-  .nx-tree[data-multiline] .nx-tree-item[data-disclosure='enter'] {
-    animation-name: nx-tree-row-fade-in;
+  .dx-tree[data-multiline] .dx-tree-item[data-disclosure='enter'] {
+    animation-name: dx-tree-row-fade-in;
   }
-  .nx-tree[data-multiline] .nx-tree-item[data-disclosure='conceal'] {
-    animation-name: nx-tree-row-fade-out;
+  .dx-tree[data-multiline] .dx-tree-item[data-disclosure='conceal'] {
+    animation-name: dx-tree-row-fade-out;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nx-tree {
-      --nx-tree-disclosure-duration: 0ms;
+    .dx-tree {
+      --dx-tree-disclosure-duration: 0ms;
     }
   }
 
-  @keyframes nx-tree-row-enter {
+  @keyframes dx-tree-row-enter {
     from {
       opacity: 0;
       block-size: 0;
@@ -134,24 +134,24 @@
     }
     to {
       opacity: 1;
-      block-size: var(--nx-block-size);
+      block-size: var(--dx-block-size);
       overflow-y: clip;
     }
   }
-  @keyframes nx-tree-row-fade-in {
+  @keyframes dx-tree-row-fade-in {
     from {
       opacity: 0;
     }
   }
-  @keyframes nx-tree-row-fade-out {
+  @keyframes dx-tree-row-fade-out {
     to {
       opacity: 0;
     }
   }
-  @keyframes nx-tree-row-conceal {
+  @keyframes dx-tree-row-conceal {
     from {
       opacity: 1;
-      block-size: var(--nx-block-size);
+      block-size: var(--dx-block-size);
       overflow-y: clip;
     }
     to {
@@ -161,10 +161,10 @@
     }
   }
 
-  .nx-tree-item[data-hide-drag-source] {
+  .dx-tree-item[data-hide-drag-source] {
     display: none;
   }
-  .nx-tree-item-count {
+  .dx-tree-item-count {
     justify-self: end;
     min-inline-size: 1.5rem;
     justify-content: center;
@@ -173,42 +173,42 @@
 
   /* Row controls take the row's tracks; where the pointer can hover they show only on the row in play (hovered,
      focused within, selected, or holding an open menu), so a list of rows does not read as a wall of buttons. */
-  .nx-tree-item-actions {
+  .dx-tree-item-actions {
     display: contents;
   }
   @media (hover: hover) {
-    .nx-tree-item:not(:hover, :focus-within, [data-selected], :has([aria-expanded='true'])) .nx-tree-item-actions > * {
+    .dx-tree-item:not(:hover, :focus-within, [data-selected], :has([aria-expanded='true'])) .dx-tree-item-actions > * {
       opacity: 0;
     }
   }
 
   /* A section header: one block like every row (so a fixed window holds), its label cleared past the disclosure cell. */
-  .nx-tree-group {
+  .dx-tree-group {
     display: flex;
     align-items: flex-end;
-    block-size: var(--nx-block-size);
-    padding-inline-start: calc(var(--nx-tree-depth) * var(--nx-half-block-size) + var(--nx-half-block-size));
+    block-size: var(--dx-block-size);
+    padding-inline-start: calc(var(--dx-tree-depth) * var(--dx-half-block-size) + var(--dx-half-block-size));
     padding-block-end: 0.125rem;
     user-select: none;
   }
   /* A section heading reads like a field label (`Field.Label`): the size's label step, in the subdued colour. */
-  .nx-tree-group-label {
-    font-size: var(--nx-label-font-size);
-    line-height: var(--nx-label-line-height);
+  .dx-tree-group-label {
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
     color: var(--color-subdued);
   }
 
   /* The end strip (`dropAtEnd`): one block below the last row that takes "append at the end". */
-  .nx-tree-end {
+  .dx-tree-end {
     position: relative;
-    min-block-size: var(--nx-block-size);
+    min-block-size: var(--dx-block-size);
   }
 
   /* One segment per ancestor, centred under that ancestor's disclosure cell; segments join across rows. */
-  .nx-tree-indent-guide {
+  .dx-tree-indent-guide {
     position: absolute;
     inset-block: 0;
-    inset-inline-start: calc((var(--nx-tree-guide-level) + 0.5) * var(--nx-half-block-size));
+    inset-inline-start: calc((var(--dx-tree-guide-level) + 0.5) * var(--dx-half-block-size));
     width: 0;
     border-inline-start: 1px solid var(--color-subdued-separator);
     pointer-events: none;

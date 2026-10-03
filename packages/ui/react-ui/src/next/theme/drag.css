@@ -5,46 +5,46 @@
 
 @layer dx-components {
   :root {
-    --nx-drop-indicator-color: var(--nx-focus-ring-color);
-    --nx-drop-indicator-width: 2px;
+    --dx-drop-indicator-color: var(--dx-focus-ring-color);
+    --dx-drop-indicator-width: 2px;
   }
 
-  .nx-drop-indicator {
+  .dx-drop-indicator {
     position: absolute;
     inset-inline: 0;
-    height: var(--nx-drop-indicator-width);
-    background: var(--nx-drop-indicator-color);
+    height: var(--dx-drop-indicator-width);
+    background: var(--dx-drop-indicator-color);
     pointer-events: none;
   }
-  .nx-drop-indicator[data-edge='top'] {
-    top: calc(var(--nx-drop-indicator-width) / -2);
+  .dx-drop-indicator[data-edge='top'] {
+    top: calc(var(--dx-drop-indicator-width) / -2);
   }
-  .nx-drop-indicator[data-edge='bottom'] {
-    bottom: calc(var(--nx-drop-indicator-width) / -2);
+  .dx-drop-indicator[data-edge='bottom'] {
+    bottom: calc(var(--dx-drop-indicator-width) / -2);
   }
 
   /*
    * Fallback for custom hosts that render a DropIndicator: the row must contain it; position moves nothing. Next list
    * rows draw their indicator from `data-drop-target` instead (row.css).
    */
-  :is(.nx-grid, .nx-collapsible):has(> .nx-drop-indicator) {
+  :is(.dx-container, .dx-collapsible):has(> .dx-drop-indicator) {
     position: relative;
   }
 
-  .nx-drag-preview {
+  .dx-drag-preview {
     display: flex;
     align-items: center;
-    gap: var(--nx-gap-size);
-    height: var(--nx-block-size);
-    padding-inline: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
+    height: var(--dx-block-size);
+    padding-inline: var(--dx-gap-size);
     border-radius: var(--radius-sm, 0.25rem);
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     white-space: nowrap;
   }
 
   /* A grabbed handle stays lit while the arrow keys move its item. */
-  .nx-button[data-drag-handle][data-grabbed] {
+  .dx-button[data-drag-handle][data-grabbed] {
     background: var(--color-hover-surface);
   }
 }

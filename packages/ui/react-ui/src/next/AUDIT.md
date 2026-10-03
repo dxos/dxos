@@ -54,7 +54,7 @@ replaces ToggleIconButton), the current primitives in `react-ui/src/components/`
 
 ## Blocking gaps
 
-1. **No sized, queryable host outside stories.** Every Next story wraps itself in `.nx-scope @container`. Plugin
+1. **No sized, queryable host outside stories.** Every Next story wraps itself in `.dx-scope @container`. Plugin
    surfaces render inside the current `Panel`, which sets neither, so a Next form in a plank reads the `:root`
    defaults (md) and its rails never collapse (decision 5, Responsive).
 2. **Popups do not inherit size.** Select, Combobox, Menu, Popover, Tooltip and Dialog take an explicit `size`
@@ -126,12 +126,12 @@ are listed under "Deliberate" and do not count toward the verdict.
 | `Panel` (plank host: sized scope, query container, toolbar/content/footer) | every plugin container                           | Next.Panel as a template root                                               |
 | `Listbox`                                                                  | Listbox (112 roots), MasterDetail, Combobox list | Ark `listbox` (zag listbox machine)                                         |
 | List row layout (icon, title, description, trailing actions)               | `Listbox.ItemContent`, `useListGrid`, Tree rows  | `Container layout='row'` with `columns`                                     |
-| `DragHandle`, `DropIndicator`                                              | OrderedList, Tree, ArrayField                    | Button `iconOnly` ghost; CSS on `--nx-*`                                    |
+| `DragHandle`, `DropIndicator`                                              | OrderedList, Tree, ArrayField                    | Button `iconOnly` ghost; CSS on `--dx-*`                                    |
 | `Tree` / `TreeView`                                                        | plugin-navtree, react-ui-form ObjectTree         | Ark `tree-view`, or the current model on Next rows                          |
 | `Banner`                                                                   | ViewEditor                                       | valence surface (follow-up 34 already adopts it)                            |
 | `TagsInput`                                                                | string arrays                                    | Ark `tags-input` (`PasswordInput`, `NumberInput` done, 54)                  |
 | `HuePicker`, `IconPicker` on Next Popover                                  | HueField, SelectOptionField, ObjectForm          | `react-ui-pickers` restyle                                                  |
-| A control frame for third-party editors                                    | MarkdownField, RefEditor                         | `.nx-input-row` (Input, DateInput, NumberInput, PasswordInput share it, 54) |
+| A control frame for third-party editors                                    | MarkdownField, RefEditor                         | `.dx-input-row` (Input, DateInput, NumberInput, PasswordInput share it, 54) |
 
 ## 2. Shortcomings of the Next model
 
@@ -140,12 +140,12 @@ Each entry states what gets harder than in current react-ui, the impact on the t
 ### 2.1 The sized scope must be created by someone
 
 Sizes, levels and the responsive collapse are all CSS inherited from an ancestor. Current primitives fall back
-to a React context default, so a control anywhere is sized. A Next part outside any `.nx-scope` or Container
+to a React context default, so a control anywhere is sized. A Next part outside any `.dx-scope` or Container
 takes `:root` (md), and a Container that is not inside a query container never collapses its rails.
 
 - **Impact.** High. Every plugin container is a `Panel`; none is a Next scope.
 - **Mitigation.** Add a Next pane host (Next.Panel, or `Panel.Root` setting `container-type: inline-size` and
-  `data-size`) before the first pilot. A dev warning when a Next Container finds no `.nx-scope` ancestor.
+  `data-size`) before the first pilot. A dev warning when a Next Container finds no `.dx-scope` ancestor.
 
 ### 2.2 Portal size propagation
 
@@ -185,11 +185,11 @@ A template root cannot query its own width, and an inheriting Container must nev
 ### 2.5 Virtualization
 
 The Tree windows its rows by translating a window element and measuring each mounted row (`row-window.ts`,
-nominal 40px). Next knows the row height only as `--nx-block-size` in CSS.
+nominal 40px). Next knows the row height only as `--dx-block-size` in CSS.
 
 - **Impact.** High for Tree, low for forms. Subgrid alignment across windowed rows needs the sizer and the
   window to be subgrids too, and a row's nominal extent must match the block size of its scope.
-- **Mitigation.** Read `--nx-block-size` once per scope with `getComputedStyle` (a one-off read, like the
+- **Mitigation.** Read `--dx-block-size` once per scope with `getComputedStyle` (a one-off read, like the
   overlay thumbs' exception to decision 11) to seed the nominal extent. Virtualized rows use their own fixed
   template rather than subgrid (fixed tracks align across subtrees, decision 5).
 
@@ -202,7 +202,7 @@ OrderedList and Tree use pragmatic-drag-and-drop: absolute drop indicators and a
   join a Toolbar's roving focus by accident. Synthetic drags cannot be automated (repo memory), so play tests
   cannot cover a drop.
 - **Mitigation.** The preview copies `data-size` and `data-surface` from the source row's closest ancestors
-  (an attribute read, not layout). Drop indicators are CSS on `--nx-*` variables. Tests assert
+  (an attribute read, not layout). Drop indicators are CSS on `--dx-*` variables. Tests assert
   `[draggable]` and the reorder callback, and a manual story covers the drop.
 
 ### 2.7 Deep subgrids and `:has`
@@ -232,7 +232,7 @@ CodeMirror (MarkdownField, RefEditor), `HuePicker`, `DxAnchor` (Lit) and `QueryF
 
 - **Impact.** Medium. These controls stay at the current control height inside a Next row, so they misalign
   by the control inset.
-- **Mitigation.** Inside `.nx-scope`, define the `--dx-control*` variables from `--nx-control-size` and
+- **Mitigation.** Inside `.dx-scope`, define the `--dx-control*` variables from `--dx-control-size` and
   friends, and give editors a Next control frame (the DateInput row, generalised).
 
 ### 2.10 No i18n in Next
@@ -250,7 +250,7 @@ control inside a Next row renders, but at the wrong height and with the wrong fo
 
 - **Impact.** High during migration; the failure is visual and silent.
 - **Mitigation.** An oxlint `no-restricted-imports` rule for files that import `@dxos/react-ui-form/next`,
-  and a dev-only warning when a `.dx-*` control renders inside `.nx-field`. A plugin migrates one container
+  and a dev-only warning when a `.dx-*` control renders inside `.dx-field`. A plugin migrates one container
   at a time, with all of that container's renderers.
 
 ### 2.12 Ark and zag behaviour
@@ -425,7 +425,7 @@ In order of what they unblock:
 | `Picker`                             | 3 roots                                     | `Root`, `Input`, `Item`                                                                                                                                                                                         | own keyboard model                                               | retired into `Next.Combobox` (milestone 5); map below the table                                                             |                                                                |
 | `MasterDetail`                       | 3                                           | `items`, `getLabel`/`getIcon`/`getAdornment`/`getMenu` atoms, `orientation`, `detail`                                                                                                                           | OrderedList + `IconBlock` + `Tooltip` + `ActionMenu`             | Listbox next + `Menu`                                                                                                       | react-ui-menu on Next Menu                                     |
 | `Tree`                               | 32 (plugin-navtree, sdk/shell)              | `model: TreeModel` (atoms), `renderColumns`/`renderIcon`/`renderHeading`, `gridTemplateColumns`, `density`, `toggle`, `draggable`, `canDrop`, `getDropKind`, `selectionMode`, `virtualize`, `indentGuides`      | pragmatic-dnd hitbox, `react-ui-virtual`, `TextTooltip`          | spike: Ark `tree-view` against the current model on Next rows                                                               | Next tree row, indent token, TextTooltip, virtual sizing (2.5) |
-| `DropIndicator`, `TreeDropIndicator` | 2                                           | line/box indicators                                                                                                                                                                                             | `--dx-*` variables                                               | CSS on `--nx-*`                                                                                                             |                                                                |
+| `DropIndicator`, `TreeDropIndicator` | 2                                           | line/box indicators                                                                                                                                                                                             | `--dx-*` variables                                               | CSS on `--dx-*`                                                                                                             |                                                                |
 | Hooks                                | `useListSelection` 4, `useListDisclosure` 2 | selection, navigation, disclosure, grid template, reorder                                                                                                                                                       | framework-neutral logic + `react-focus`                          | keep selection, disclosure and reorder; navigation moves to zag; `useListGrid` becomes `columns`                            |                                                                |
 
 **Combobox and Picker in `/next`.** Neither is ported: `/next` consumers use `Next.Combobox` in trigger mode (no
@@ -579,13 +579,13 @@ reach parity. Numbered once across the section so a reply can cite a number.
     inherit.
 16. **DetailItem layout.** A row Container centres every cell, so the detail row is a Collapsible root holding its
     own row. Options: (1) keep that, (2) a top-aligned Container row option. Recommendation: 1.
-17. **Drop-target styling.** Rows showing a drop indicator are positioned by a generic `:has(> .nx-drop-indicator)`
+17. **Drop-target styling.** Rows showing a drop indicator are positioned by a generic `:has(> .dx-drop-indicator)`
     rule. Options: (1) keep it, (2) an explicit `data-drop-target` attribute. Recommendation: 1.
 18. **Title in a disclosure row.** `Collapsible.Trigger` draws its label in the description colour. Options: (1) a
     title variant on the trigger, (2) accept it. Recommendation: 1.
 19. **OrderedList keyboard grammar.** Options: (1) roving focus between rows, as the current `navigationMode`,
     (2) a tab stop per control, as now. Recommendation: 1, which needs a roving-focus part outside Toolbar.
-20. **Shared row states.** Hover and selected styles apply only to `.nx-listbox-item`. Recommendation: one row-state
+20. **Shared row states.** Hover and selected styles apply only to `.dx-listbox-item`. Recommendation: one row-state
     rule that OrderedList rows share.
 21. **List chrome labels.** "Drag to rearrange" and "Delete" come from app-level `osTranslations`. Recommendation:
     move them to react-ui translations (2.10).
@@ -730,7 +730,7 @@ Reviewed one question at a time; decisions supersede the recommendations above.
   as the fallback for custom hosts.
 - **Point 18, disclosure title:** the trigger draws only the caret, a square button in the trailing action column
   labelled by the row's `ItemText`; the labelled trigger stays for standalone toggles.
-- **Point 20, row states:** one shared `nx-row` class carries hover, selected, disabled and drop states keyed on
+- **Point 20, row states:** one shared `dx-row` class carries hover, selected, disabled and drop states keyed on
   Ark's attributes; each row type keeps its own class for layout.
 - **Point 24, drag preview:** a default `DragPreview` chip labelled by `getLabel`, falling back to `ItemText`;
   `dragPreview` overrides it.
@@ -745,7 +745,7 @@ Reviewed one question at a time; decisions supersede the recommendations above.
 (`selectionMode='none'` included) and renders its Content and Items from zag's props, so the grid keyboard
 (`components/Listbox/grid.ts`) runs before zag and row controls never select their row; `useVirtualRows` and
 `VirtualSpacer` (`components/Listbox/virtual.tsx`, exported as `Next.useVirtualRows`) are the shared windowing for
-Tree to adopt; `theme/row.css` holds `nx-row` and the `data-drop-target` line; Root `columns` makes rows subgrids;
+Tree to adopt; `theme/row.css` holds `dx-row` and the `data-drop-target` line; Root `columns` makes rows subgrids;
 `Next.Empty` and the `Empty` parts; `Collapsible.Trigger` without children is the caret-only square named by the row's
 `ItemText`; `SystemButton.Remove` is named "Delete <text>" (its translated label, then the row's text); `DragHandle`'s label
 defaults to the react-ui `drag-handle.label`. In react-ui-list/next: OrderedList on Next.Listbox with `Label`, `Empty`,
@@ -788,8 +788,8 @@ No open questions remain.
   `resizable={false}` by default with a static divider. `exemplars/MasterDetail.stories.tsx` is the approved pattern.
   At the cut-over, react-ui-list `MasterDetail` and the current Tabs' `activePart`/`Viewport`/`BackButton` are
   removed; their callers (ChatOptions, Welcome, VideoArticle) compose Tabs + Splitter.
-- **Disclosure timing:** one duration, `--nx-disclosure-duration` (ui-theme's `--duration-tree-disclosure`, 0 under
-  reduced motion), with `--nx-disclosure-ease-open` (ease-out) and `--nx-disclosure-ease-close` (ease-in). Tree,
+- **Disclosure timing:** one duration, `--dx-disclosure-duration` (ui-theme's `--duration-tree-disclosure`, 0 under
+  reduced motion), with `--dx-disclosure-ease-open` (ease-out) and `--dx-disclosure-ease-close` (ease-in). Tree,
   Collapsible, Accordion, Main and Splitter use it; Main keeps its own ease-in-out curve.
 - **Ref arrays in forms:** an `ArrayPresentation({ ordered?: boolean; display?: 'tag' | 'title' })` annotation
   (`'card'` may come later). Tag refs default to `'tag'`, other refs to `'title'`; `ordered` implies drag reorder.
@@ -813,7 +813,7 @@ No open questions remain.
   stories dropped their `gutter='rail'`; `rail` stays only where rows put icons in the gutter (Card, Banner, the
   Panel/Listbox/MasterDetail rail stories). Follow-up: audit the remaining react-ui stories that name `rail` around
   plain content.
-- **Theme context split.** `useThemeContext`'s `tx` is not carried into Next (Next styles through `.nx-*` CSS). The
+- **Theme context split.** `useThemeContext`'s `tx` is not carried into Next (Next styles through `.dx-*` CSS). The
   values Next components still read come from `Next.useThemeMode()` (`themeMode`), `Next.usePlatform()` (`platform`)
   and `Next.useIosKeyboard()` (`hasIosKeyboard`), which read the existing ThemeProvider (no new provider).
 
@@ -863,7 +863,7 @@ variant='gap'`, Switch in the toolbar's roving focus, `Menu.TriggerItem disabled
 4. Ports with no counterpart: Avatar (17 files), Tabs (14), Main (9), Progress, Splitter, Toast, ErrorFallback,
    Focus, MediaPlayer, ScrollContainer, Carousel, Accordion, QrCode and 13 single-file components. **Done** (2026-10-01)
    except master-detail Tabs (`Viewport`, `BackButton`, `activePart`; 3 callers), which needs a decision. All 27 have
-   a Next component, `.nx-*` rules and a `Test` story. The renames and drops below are the Phase B codemod input:
+   a Next component, `.dx-*` rules and a `Test` story. The renames and drops below are the Phase B codemod input:
    - **Avatar:** `Root` (ids only) + `Content` → one `Avatar.Root` element (`imgSrc` → `src`); numeric `size` → `size`
      xs–xl (a block across) or `fill` (host width); `Label`/`Description` → `label` or `aria-labelledby`; `Image` and
      `Fallback` parts; no lit-ui.

@@ -48,7 +48,7 @@ export const withSizes =
     const selected = SIZES.find((size) => size === context.args.size) ?? 'md';
     const shown = context.args.allSizes === true ? sizes : [selected];
     return (
-      <div className='nx-scope @container flex flex-col w-full' data-size='md'>
+      <div className='dx-scope @container flex flex-col w-full' data-size='md'>
         {shown.map((size) => (
           <Container
             key={size}

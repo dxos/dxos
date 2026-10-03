@@ -30,7 +30,7 @@ export type Span = number | 'full';
  * property because CSS cannot yet read a numeric attribute in every engine.
  */
 export const spanAttributes = (span: Span | undefined) => {
-  const style: CSSProperties & CSSVariables = typeof span === 'number' ? { '--nx-span': String(span) } : {};
+  const style: CSSProperties & CSSVariables = typeof span === 'number' ? { '--dx-span': String(span) } : {};
   return { 'data-span': span === undefined ? undefined : String(span), style };
 };
 
@@ -95,7 +95,7 @@ export type ContainerProps = {
 };
 
 /**
- * The attributes that make any element a Container (`.nx-grid` plus its `data-*` and `--nx-columns`), for a part that
+ * The attributes that make any element a Container (`.dx-container` plus its `data-*` and `--dx-columns`), for a part that
  * must keep its own element and scope (a listbox row is Ark's item) rather than render a Container under `asChild`,
  * where the Container's `data-scope`/`data-part` would win (finding 10).
  */
@@ -113,7 +113,7 @@ export const containerAttributes = ({
   padBlock,
 }: ContainerProps) => {
   const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
-  const style: CSSProperties & CSSVariables = columns ? { ...spanStyle, '--nx-columns': columns } : spanStyle;
+  const style: CSSProperties & CSSVariables = columns ? { ...spanStyle, '--dx-columns': columns } : spanStyle;
   return {
     ...spanAttrs,
     'data-size': size,
@@ -163,7 +163,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
         return;
       }
       const parent = localRef.current?.parentElement;
-      if (parent && !parent.matches('.nx-grid, .nx-scroll-root')) {
+      if (parent && !parent.matches('.dx-container, .dx-scroll-root')) {
         log.warn('inheriting Container is not a direct child of a Container', { parent: parent.className });
       }
     }, [gutter, columns]);

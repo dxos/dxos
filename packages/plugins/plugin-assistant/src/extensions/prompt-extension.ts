@@ -120,7 +120,7 @@ class PromptRunWidget extends WidgetType {
   override toDOM() {
     return Domino.of('button')
       .classNames(
-        'nx-control nx-button h-6 w-6 min-w-0 p-1 absolute top-0 right-0 bg-green-bg hover:bg-green-surface text-green-fg',
+        'dx-control dx-button h-6 w-6 min-w-0 p-1 absolute top-0 right-0 bg-green-bg hover:bg-green-surface text-green-fg',
       )
       .on('mousedown', (event) => {
         event.preventDefault();

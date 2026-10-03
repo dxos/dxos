@@ -267,7 +267,7 @@ export const Test: Story = {
     await expect(
       canvas
         .getByRole('textbox', { name: 'Id' })
-        .closest('.nx-field')
+        .closest('.dx-field')
         ?.querySelector('[data-part="required-indicator"]'),
     ).toBeNull();
     const placed = byTestId(canvasElement, 'placed-label-md').querySelectorAll('[data-part="required-indicator"]');
@@ -277,14 +277,14 @@ export const Test: Story = {
     await expect(canvas.getByRole('textbox', { name: 'Id' })).toHaveAttribute('readonly');
     const asChild = byTestId(canvasElement, 'every-as-child-md');
     await expect(asChild.tagName).toBe('SECTION');
-    await expect(asChild).toHaveClass('nx-field');
+    await expect(asChild).toHaveClass('dx-field');
     await expect(within(asChild).getByRole('textbox', { name: 'Nickname' })).toBeInTheDocument();
 
     // Row fields share the Container's tracks: the header spans the row; the helper (before the `control` line) and the
     // control (after it) share the next line, top-aligned to the control's cell.
     const rows = ['theme', 'language'].map((name) => {
       const row = byTestId(canvasElement, `row-${name}-md`);
-      const inputElement = row.querySelector<HTMLElement>('.nx-input');
+      const inputElement = row.querySelector<HTMLElement>('.dx-input');
       const headerElement = row.querySelector('[data-part="header"]');
       const helperElement = row.querySelector('[data-part="helper-text"]');
       invariant(inputElement && headerElement && helperElement);

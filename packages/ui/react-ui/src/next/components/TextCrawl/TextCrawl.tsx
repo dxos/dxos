@@ -39,8 +39,8 @@ export type TextCrawlProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 
 
 /**
  * Text lines in a one-line window that scroll up from one to the next. The line height is the inherited size's
- * `--nx-line-height`, so the crawl sizes with its row rather than having a scale of its own; the scroll is a CSS
- * transform driven by `--nx-text-crawl-index`, and only lines other than the shown one are hidden from assistive tech.
+ * `--dx-line-height`, so the crawl sizes with its row rather than having a scale of its own; the scroll is a CSS
+ * transform driven by `--dx-text-crawl-index`, and only lines other than the shown one are hidden from assistive tech.
  */
 export const TextCrawl = forwardRef<HTMLDivElement, TextCrawlProps>(
   (
@@ -66,7 +66,7 @@ export const TextCrawl = forwardRef<HTMLDivElement, TextCrawlProps>(
     const setPosition = useCallback((position: number, animate = false) => {
       const ribbon = ribbonRef.current;
       if (ribbon) {
-        ribbon.style.setProperty('--nx-text-crawl-index', String(position));
+        ribbon.style.setProperty('--dx-text-crawl-index', String(position));
         ribbon.toggleAttribute('data-animate', animate);
       }
     }, []);
@@ -165,7 +165,7 @@ export const TextCrawl = forwardRef<HTMLDivElement, TextCrawlProps>(
       return () => clearInterval(interval);
     }, [lines, wasReset, indexProp, autoAdvance, greedy, minDuration, cyclic, transition]);
 
-    const rootStyle: CSSProperties & CSSVariables = { ...style, '--nx-text-crawl-duration': `${transition}ms` };
+    const rootStyle: CSSProperties & CSSVariables = { ...style, '--dx-text-crawl-duration': `${transition}ms` };
     const shown = (line: number) => index === line || (line === 0 && index === lines.length);
 
     return (

@@ -60,7 +60,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
             {harness ?? 'Session'}
           </span>
           {option && (
-            <span className='nx-tag nx-tag-inline' data-hue={option.color}>
+            <span className='dx-tag dx-tag-inline' data-hue={option.color}>
               {option.title}
             </span>
           )}
@@ -76,7 +76,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
           <div className='flex items-center gap-2 text-sm text-description min-w-0'>
             {repo && <span className='truncate'>{repo}</span>}
             {branch && (
-              <span className='nx-tag nx-tag-inline' data-hue='neutral'>
+              <span className='dx-tag dx-tag-inline' data-hue='neutral'>
                 {branch}
               </span>
             )}

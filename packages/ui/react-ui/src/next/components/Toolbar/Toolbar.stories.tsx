@@ -175,10 +175,10 @@ export const Test: Story = {
     // Overflowing items scroll sideways in a thin horizontal ScrollArea whose viewport is the toolbar itself.
     const scroller = byTestId(canvasElement, 'toolbar-md');
     const frame = scroller.parentElement;
-    await expect(frame).toHaveClass('nx-scroll-root');
+    await expect(frame).toHaveClass('dx-scroll-root');
     await expect(frame).toHaveAttribute('data-orientation', 'horizontal');
     await expect(frame).toHaveAttribute('data-width', 'thin');
-    await expect(scroller).toHaveClass('nx-scroll-viewport');
+    await expect(scroller).toHaveClass('dx-scroll-viewport');
     await expect(getComputedStyle(scroller).overflowX).toBe('auto');
     await expect(getComputedStyle(scroller).overflowY).toBe('hidden');
     await expect(getComputedStyle(scroller).scrollbarWidth).toBe('none');

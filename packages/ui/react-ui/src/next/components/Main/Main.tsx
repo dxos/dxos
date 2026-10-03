@@ -398,7 +398,7 @@ type MainContentProps = ThemedClassName<
   }
 >;
 
-type MainContentStyle = CSSProperties & Record<'--nx-main-drawer-height', string>;
+type MainContentStyle = CSSProperties & Record<'--dx-main-drawer-height', string>;
 
 const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
   ({ asChild, classNames, size, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
@@ -408,7 +408,7 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
     // The padding lives in CSS so it transitions with the sidebars'; only the height is a variable.
     const style: MainContentStyle = {
       ...props.style,
-      '--nx-main-drawer-height': drawerState === 'open' ? `${drawerHeight}rem` : '0rem',
+      '--dx-main-drawer-height': drawerState === 'open' ? `${drawerHeight}rem` : '0rem',
     };
 
     return (

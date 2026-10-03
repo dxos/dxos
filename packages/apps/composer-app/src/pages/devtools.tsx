@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Next components style through `.nx-*` rules that ship separately from the theme.
+// Next components style through `.dx-*` rules that ship separately from the theme.
 import '@dxos/react-ui/theme.css';
 import { DevtoolsApp } from '@dxos/devtools';
 import { meta as devtoolsMeta } from '@dxos/plugin-devtools';

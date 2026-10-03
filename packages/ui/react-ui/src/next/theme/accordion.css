@@ -6,101 +6,101 @@
  */
 
 @layer dx-components {
-  .nx-accordion {
+  .dx-accordion {
     display: flex;
     flex-direction: column;
     min-width: 0;
   }
-  .nx-accordion[data-border] {
+  .dx-accordion[data-border] {
     border: 1px solid var(--color-separator);
     border-radius: var(--radius-md, 0.375rem);
   }
-  .nx-accordion[data-border] > .nx-accordion-item:first-child {
+  .dx-accordion[data-border] > .dx-accordion-item:first-child {
     border-start-start-radius: inherit;
     border-start-end-radius: inherit;
   }
-  .nx-accordion[data-border] > .nx-accordion-item:last-child {
+  .dx-accordion[data-border] > .dx-accordion-item:last-child {
     border-end-start-radius: inherit;
     border-end-end-radius: inherit;
   }
 
-  .nx-accordion-item {
+  .dx-accordion-item {
     display: flex;
     flex-direction: column;
     min-width: 0;
   }
-  .nx-accordion-item + .nx-accordion-item {
+  .dx-accordion-item + .dx-accordion-item {
     border-top: 1px solid var(--color-subdued-separator, var(--color-separator));
   }
 
-  .nx-accordion-item-trigger {
+  .dx-accordion-item-trigger {
     display: flex;
     align-items: center;
-    gap: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
     width: 100%;
-    min-height: var(--nx-block-size);
-    padding: 0 var(--nx-gap-size);
+    min-height: var(--dx-block-size);
+    padding: 0 var(--dx-gap-size);
     border: none;
     border-radius: inherit;
     background: none;
     color: inherit;
     font: inherit;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     text-align: start;
     cursor: pointer;
   }
   /* An open item's trigger keeps its top corners only; its content continues below it. */
-  .nx-accordion-item-trigger[data-state='open'] {
+  .dx-accordion-item-trigger[data-state='open'] {
     border-end-start-radius: 0;
     border-end-end-radius: 0;
   }
-  .nx-accordion-item-trigger:not([data-disabled]):hover {
+  .dx-accordion-item-trigger:not([data-disabled]):hover {
     background: var(--color-hover-surface);
   }
-  .nx-accordion-item-trigger[data-disabled] {
+  .dx-accordion-item-trigger[data-disabled] {
     cursor: default;
   }
 
-  .nx-accordion-item-icon,
-  .nx-accordion-item-indicator {
+  .dx-accordion-item-icon,
+  .dx-accordion-item-indicator {
     display: grid;
     flex-shrink: 0;
     place-items: center;
   }
 
-  .nx-accordion-item-text {
+  .dx-accordion-item-text {
     flex: 1;
     min-width: 0;
   }
 
-  .nx-accordion-item-indicator {
-    transition: transform var(--nx-disclosure-duration) var(--nx-disclosure-ease-open);
+  .dx-accordion-item-indicator {
+    transition: transform var(--dx-disclosure-duration) var(--dx-disclosure-ease-open);
   }
-  .nx-accordion-item-indicator[data-state='open'] {
+  .dx-accordion-item-indicator[data-state='open'] {
     transform: rotate(90deg);
   }
 
-  .nx-accordion-item-content {
+  .dx-accordion-item-content {
     overflow: hidden;
   }
-  .nx-accordion-item-content[data-state='open'] {
-    animation: nx-accordion-open var(--nx-disclosure-duration) var(--nx-disclosure-ease-open);
+  .dx-accordion-item-content[data-state='open'] {
+    animation: dx-accordion-open var(--dx-disclosure-duration) var(--dx-disclosure-ease-open);
   }
-  .nx-accordion-item-content[data-state='closed'] {
-    animation: nx-accordion-close var(--nx-disclosure-duration) var(--nx-disclosure-ease-close);
+  .dx-accordion-item-content[data-state='closed'] {
+    animation: dx-accordion-close var(--dx-disclosure-duration) var(--dx-disclosure-ease-close);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nx-accordion-item-indicator {
+    .dx-accordion-item-indicator {
       transition: none;
     }
-    .nx-accordion-item-content[data-state] {
+    .dx-accordion-item-content[data-state] {
       animation: none;
     }
   }
 
-  @keyframes nx-accordion-open {
+  @keyframes dx-accordion-open {
     from {
       height: 0;
     }
@@ -108,7 +108,7 @@
       height: var(--height);
     }
   }
-  @keyframes nx-accordion-close {
+  @keyframes dx-accordion-close {
     from {
       height: var(--height);
     }

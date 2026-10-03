@@ -49,7 +49,7 @@ export const Test: Story = {
       const control = scope.querySelector<HTMLElement>('[data-scope="switch"][data-part="control"]');
       await expect(control?.getBoundingClientRect().height, size).toBeCloseTo(ICON[size], 0);
       await expect(control?.getBoundingClientRect().width, size).toBeCloseTo(ICON[size] * 1.75, 0);
-      const block = parseFloat(getComputedStyle(scope).getPropertyValue('--nx-block-size')) * 16;
+      const block = parseFloat(getComputedStyle(scope).getPropertyValue('--dx-block-size')) * 16;
       const root = scope.querySelector<HTMLElement>('[data-scope="switch"][data-part="root"]');
       await expect(root?.getBoundingClientRect().height, size).toBeCloseTo(block, 0);
     }

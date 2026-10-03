@@ -5,20 +5,20 @@
  */
 
 @layer dx-components {
-  .nx-breadcrumb {
+  .dx-breadcrumb {
     display: flex;
     align-items: center;
     min-width: 0;
     overflow: hidden;
   }
 
-  .nx-breadcrumb-list {
+  .dx-breadcrumb-list {
     display: flex;
     flex-grow: 1;
     align-items: center;
-    gap: calc(var(--nx-gap-size) / 2);
+    gap: calc(var(--dx-gap-size) / 2);
     min-width: 0;
-    min-height: var(--nx-block-size);
+    min-height: var(--dx-block-size);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -26,32 +26,32 @@
     scrollbar-width: none;
   }
 
-  .nx-breadcrumb-item {
+  .dx-breadcrumb-item {
     display: flex;
     flex-shrink: 0;
     align-items: center;
   }
 
   /* Link and current share the inset, so a crumb's text stays put when it becomes (or stops being) the current page. */
-  .nx-breadcrumb-link,
-  .nx-breadcrumb-current {
-    padding-inline: var(--nx-control-inset);
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+  .dx-breadcrumb-link,
+  .dx-breadcrumb-current {
+    padding-inline: var(--dx-control-inset);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     white-space: nowrap;
   }
 
-  .nx-breadcrumb-link {
+  .dx-breadcrumb-link {
     border-radius: var(--radius-sm, 0.25rem);
     color: var(--color-description);
     text-decoration: none;
     cursor: pointer;
   }
-  .nx-breadcrumb-link:hover {
+  .dx-breadcrumb-link:hover {
     color: var(--color-base-fg);
   }
 
-  .nx-breadcrumb-separator {
+  .dx-breadcrumb-separator {
     display: flex;
     flex-shrink: 0;
     align-items: center;

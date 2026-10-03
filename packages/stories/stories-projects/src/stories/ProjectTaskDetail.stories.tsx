@@ -181,7 +181,7 @@ export const Default: Story = {
     await waitFor(
       async () =>
         await expect(
-          [...(editor()?.querySelectorAll('.nx-tag-anchor') ?? [])].map((chip) => chip.textContent),
+          [...(editor()?.querySelectorAll('.dx-tag-anchor') ?? [])].map((chip) => chip.textContent),
         ).toContain('#12752'),
       { timeout: 10_000 },
     );

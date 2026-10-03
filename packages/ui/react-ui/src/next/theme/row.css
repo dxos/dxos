@@ -1,45 +1,45 @@
 /*
- * Row states shared by every Next list row (AUDIT §6 point 20): `.nx-row` carries hover, highlight, selection,
+ * Row states shared by every Next list row (AUDIT §6 point 20): `.dx-row` carries hover, highlight, selection,
  * current, disabled, drag and drop states, keyed on the attributes Ark's listbox and the reorder hook set; each row type
  * keeps its own class for layout. States take ui-theme's tokens as the current react-ui-list rows do.
  */
 
 @layer dx-components {
-  .nx-row {
+  .dx-row {
     position: relative;
     border-radius: var(--radius-sm, 0.25rem);
     cursor: default;
   }
-  .nx-row[data-selectable] {
+  .dx-row[data-selectable] {
     cursor: pointer;
   }
-  .nx-row[data-selectable]:hover,
-  .nx-row[data-highlighted] {
+  .dx-row[data-selectable]:hover,
+  .dx-row[data-highlighted] {
     background: var(--color-hover-surface);
   }
   /* `data-selected` too: a tree branch's `aria-selected` lands on its `display: contents` wrapper, not the row. */
-  .nx-row:is([aria-selected='true'], [data-selected]) {
+  .dx-row:is([aria-selected='true'], [data-selected]) {
     background: var(--color-selected-surface);
   }
-  .nx-row:is([aria-selected='true'], [data-selected]):hover {
+  .dx-row:is([aria-selected='true'], [data-selected]):hover {
     background: var(--color-selected-surface-hover);
   }
-  .nx-row[aria-current='true'] {
+  .dx-row[aria-current='true'] {
     background: var(--color-current-surface);
   }
-  .nx-row[data-disabled] {
+  .dx-row[data-disabled] {
     opacity: 0.5;
     cursor: default;
   }
 
   /* The keyboard's row: ringed while it has visible focus itself (Tree), or while its list does (Listbox). */
-  .nx-row:focus-visible {
+  .dx-row:focus-visible {
     outline: none;
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
   }
-  [role='listbox']:focus-visible > .nx-row[data-highlighted],
-  [role='listbox']:focus-visible > * > .nx-row[data-highlighted] {
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  [role='listbox']:focus-visible > .dx-row[data-highlighted],
+  [role='listbox']:focus-visible > * > .dx-row[data-highlighted] {
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
   }
 
   /* The source row stays in place, dimmed, while its preview is dragged. */
@@ -56,20 +56,20 @@
     content: '';
     position: absolute;
     inset-inline: 0;
-    height: var(--nx-drop-indicator-width);
-    background: var(--nx-drop-indicator-color);
+    height: var(--dx-drop-indicator-width);
+    background: var(--dx-drop-indicator-color);
     pointer-events: none;
   }
   [data-drop-target='top']::after {
-    top: calc(var(--nx-drop-indicator-width) / -2);
+    top: calc(var(--dx-drop-indicator-width) / -2);
   }
   [data-drop-target='bottom']::after {
-    bottom: calc(var(--nx-drop-indicator-width) / -2);
+    bottom: calc(var(--dx-drop-indicator-width) / -2);
   }
 
   /* `virtual='variable'`: every row mounts, and the browser skips the layout of rows out of view. */
   [data-virtual='variable'] > :not([data-virtual-spacer]) {
     content-visibility: auto;
-    contain-intrinsic-block-size: auto var(--nx-block-size);
+    contain-intrinsic-block-size: auto var(--dx-block-size);
   }
 }

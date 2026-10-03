@@ -24,8 +24,8 @@ export const CONTROL_IDENTIFIERS = {
 } as const;
 
 const BASE_CLASSES = {
-  checkbox: 'nx-checkbox-native',
-  switch: 'nx-switch-native',
+  checkbox: 'dx-checkbox-native',
+  switch: 'dx-switch-native',
 } as const;
 
 const renderAttributes = (data: Record<string, string>) => {

@@ -15,7 +15,7 @@ import React, { StrictMode, Suspense, lazy, useCallback, useEffect, useState } f
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-// Next components style through `.nx-*` rules that ship separately from the theme.
+// Next components style through `.dx-*` rules that ship separately from the theme.
 import '@dxos/react-ui/theme.css';
 import { EdgeRegistryPluginProvider } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';

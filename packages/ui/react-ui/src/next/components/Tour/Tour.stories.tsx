@@ -113,7 +113,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-const backdrop = () => document.querySelector<HTMLElement>('.nx-tour-backdrop');
+const backdrop = () => document.querySelector<HTMLElement>('.dx-tour-backdrop');
 
 /**
  * The tour opens on a centred `dialog` step: an `alertdialog` at `level='popup'` named by its title and described by
@@ -135,7 +135,7 @@ export const Test: Story = {
     await expect(card).toHaveAttribute('data-type', 'dialog');
     await expect(card).toHaveAttribute('data-surface', 'popup');
     await expect(card).toHaveAttribute('data-size', 'md');
-    await expect(getComputedStyle(card).getPropertyValue('--nx-level').trim()).toBe('5');
+    await expect(getComputedStyle(card).getPropertyValue('--dx-level').trim()).toBe('5');
     await expect(card.querySelector('[data-part="arrow"]')).toBeNull();
     // Centred in the viewport.
     const rect = card.getBoundingClientRect();
@@ -151,7 +151,7 @@ export const Test: Story = {
     await waitFor(() => expect(card.querySelector('[data-part="arrow"]')).not.toBeNull());
     await expect(backdrop()).toBeVisible();
     await expect(within(card).getByText('2 of 3')).toBeVisible();
-    const spotlight = document.querySelector<HTMLElement>('.nx-tour-spotlight');
+    const spotlight = document.querySelector<HTMLElement>('.dx-tour-spotlight');
     await waitFor(() =>
       expect(spotlight?.getBoundingClientRect().width).toBeCloseTo(add.getBoundingClientRect().width, 0),
     );

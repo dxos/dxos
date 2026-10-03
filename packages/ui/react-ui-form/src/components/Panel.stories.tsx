@@ -83,7 +83,7 @@ export const Test: Story = {
 
     // 3. The body scrolls; the header and the footer's actions stay in the pane.
     // The toolbar is a scroll viewport too; the body's is the one that is a Container.
-    const viewport = panel.querySelector<HTMLElement>('.nx-scroll-viewport[data-scope="container"]');
+    const viewport = panel.querySelector<HTMLElement>('.dx-scroll-viewport[data-scope="container"]');
     invariant(viewport);
     await expect(viewport.scrollHeight > viewport.clientHeight).toBe(true);
     const bodyBox = viewport.getBoundingClientRect();

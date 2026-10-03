@@ -39,7 +39,7 @@ export const ControlFrame = composable<HTMLDivElement, ControlFrameProps>(
     const { className, style, ...rest } = composableProps<HTMLDivElement>(props, {
       classNames: recipes.controlFrame(),
     });
-    const rowsStyle: CSSProperties & CSSVariables = rows ? { '--nx-rows': String(rows) } : {};
+    const rowsStyle: CSSProperties & CSSVariables = rows ? { '--dx-rows': String(rows) } : {};
     return (
       <div
         {...rest}

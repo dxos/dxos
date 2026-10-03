@@ -44,12 +44,12 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
         <div className='flex justify-between items-center gap-2 text-sm'>
           <span className='text-description'>{[`${owner}/${name}`, number].filter(Boolean).join('#')}</span>
           {state && (
-            <span className='nx-tag nx-tag-inline' data-hue={stateHue[state]}>
+            <span className='dx-tag dx-tag-inline' data-hue={stateHue[state]}>
               {state}
             </span>
           )}
           {defaultBranch && (
-            <span className='nx-tag nx-tag-inline' data-hue='neutral'>
+            <span className='dx-tag dx-tag-inline' data-hue='neutral'>
               {defaultBranch}
             </span>
           )}
@@ -77,7 +77,7 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
       )}
       {url && (
         <Card.Row>
-          <a className='nx-link-accent text-sm' href={url} target='_blank' rel='noopener noreferrer'>
+          <a className='dx-link-accent text-sm' href={url} target='_blank' rel='noopener noreferrer'>
             Open on GitHub
           </a>
         </Card.Row>

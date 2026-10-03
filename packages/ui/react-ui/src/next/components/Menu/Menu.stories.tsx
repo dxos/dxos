@@ -313,11 +313,11 @@ export const Test: Story = {
     // The TriggerItem renders its data: icon, text and caret.
     const shareTrigger = within(menu).getByRole('menuitem', { name: 'Share' });
     await expect(shareTrigger.querySelector('[data-part="item-text"]')).toHaveTextContent('Share');
-    await expect(shareTrigger.querySelectorAll('.nx-icon')).toHaveLength(2);
+    await expect(shareTrigger.querySelectorAll('.dx-icon')).toHaveLength(2);
     // A disabled TriggerItem keeps its row but never opens its submenu.
     const exportTrigger = within(menu).getByRole('menuitem', { name: 'Export' });
     await expect(exportTrigger).toHaveAttribute('aria-disabled', 'true');
-    await expect(exportTrigger.querySelectorAll('.nx-icon')).toHaveLength(2);
+    await expect(exportTrigger.querySelectorAll('.dx-icon')).toHaveLength(2);
     await userEvent.click(exportTrigger);
     await expect(within(canvasElement.ownerDocument.body).queryByRole('menuitem', { name: 'PDF' })).toBeNull();
     await expect(menu).toBeVisible();
@@ -342,7 +342,7 @@ export const Test: Story = {
 
     // Items are block rows; the shortcut trails the label in the description colour.
     const cut = within(menu).getByRole('menuitem', { name: /Cut/ });
-    const block = parseFloat(getComputedStyle(menu).getPropertyValue('--nx-block-size')) * 16;
+    const block = parseFloat(getComputedStyle(menu).getPropertyValue('--dx-block-size')) * 16;
     await expect(cut.getBoundingClientRect().height).toBeCloseTo(block, 0);
     const shortcut = within(cut).getByText('⌘X');
     await expect(shortcut.getBoundingClientRect().right).toBeLessThanOrEqual(cut.getBoundingClientRect().right);

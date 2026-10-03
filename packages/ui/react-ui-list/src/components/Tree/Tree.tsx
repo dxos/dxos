@@ -93,7 +93,7 @@ export type TreeSelectEvent<T extends { id: string } = any> = {
 } & SelectModifiers;
 
 /** The disclosure (half a block), icon, label and trailing tracks every row lays out on. */
-const DEFAULT_COLUMNS = 'var(--nx-half-block-size) var(--nx-block-size) minmax(0, 1fr) auto';
+const DEFAULT_COLUMNS = 'var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) auto';
 
 /** How long recorded pointer modifiers stay valid for the machine's selection callback. */
 const MODIFIER_WINDOW = 500;
@@ -129,7 +129,7 @@ type TreeRootProps<T extends { id: string } = any> = {
   size?: Size;
   /**
    * Each row's grid template; the default is disclosure, icon, label and trailing tracks. A template that keeps
-   * `Tree.ItemIndicator` starts with its `var(--nx-half-block-size)` track.
+   * `Tree.ItemIndicator` starts with its `var(--dx-half-block-size)` track.
    */
   columns?: string;
   /**
@@ -572,7 +572,7 @@ const TreeRoot = <T extends { id: string }>({
     [onItemHover],
   );
 
-  const style: CSSProperties & Record<'--nx-tree-columns', string> = { '--nx-tree-columns': columns };
+  const style: CSSProperties & Record<'--dx-tree-columns', string> = { '--dx-tree-columns': columns };
 
   return (
     <TreeProvider
@@ -614,7 +614,7 @@ const TreeRoot = <T extends { id: string }>({
         scrollToIndexFn={virtual === 'fixed' ? scrollToNode : undefined}
         data-size={size}
         data-multiline={multiline ? '' : undefined}
-        className='nx-tree'
+        className='dx-tree'
         style={style}
         ref={rootRef}
       >
@@ -660,7 +660,7 @@ const dropEvent = (walk: TreeWalk, source: TreeData, data: Record<string | symbo
 
 /** The disclosure duration the tree's CSS resolves (the theme token, 0 under reduced motion), in milliseconds. */
 const disclosureDuration = (element: HTMLElement): number => {
-  const value = getComputedStyle(element).getPropertyValue('--nx-tree-disclosure-duration').trim();
+  const value = getComputedStyle(element).getPropertyValue('--dx-tree-disclosure-duration').trim();
   const duration = Number.parseFloat(value);
   return Number.isNaN(duration) ? 0 : value.endsWith('ms') ? duration : duration * 1000;
 };
@@ -687,7 +687,7 @@ type TreeLabelProps = ComponentPropsWithoutRef<typeof TreeView.Label> & {
 
 /** The machine's own label part, which it already points `aria-labelledby` at. */
 const TreeLabel = forwardRef<HTMLHeadingElement, TreeLabelProps>(({ srOnly, ...props }, forwardedRef) => (
-  <TreeView.Label {...props} data-sr-only={srOnly ? '' : undefined} className='nx-tree-label' ref={forwardedRef} />
+  <TreeView.Label {...props} data-sr-only={srOnly ? '' : undefined} className='dx-tree-label' ref={forwardedRef} />
 ));
 
 TreeLabel.displayName = 'Tree.Label';
@@ -702,7 +702,7 @@ TreeLabel.displayName = 'Tree.Label';
  */
 const TreeContentElement = composable<HTMLDivElement, {}>(({ children, ...props }, forwardedRef) => {
   const { onTreeKeyDown, onTreePointerDownCapture } = useTreeContext('Tree.Content');
-  const { className, ...rest } = composableProps(props, { classNames: 'nx-grid nx-tree-content' });
+  const { className, ...rest } = composableProps(props, { classNames: 'dx-container dx-tree-content' });
   return (
     <TreeView.Tree
       {...rest}
@@ -823,7 +823,7 @@ const TreeEndDropTarget = ({ treeId, root }: { treeId: string; root: TreeNode })
       role='none'
       data-tree-end=''
       data-drop-target={over ? 'top' : undefined}
-      className='nx-tree-end'
+      className='dx-tree-end'
     ></div>
   );
 };
@@ -964,7 +964,7 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
                       ),
                     );
                     // The preview's own root has no icon registry; the row's icon is already resolved, so it is copied.
-                    const icon = source.element.querySelector('.nx-tree-item-icon svg');
+                    const icon = source.element.querySelector('.dx-tree-item-icon svg');
                     if (!renderDragPreview && icon) {
                       container.firstElementChild?.prepend(icon.cloneNode(true));
                     }
@@ -1068,9 +1068,9 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
   const drop = dropTarget(drag.instruction);
 
   const style: CSSProperties & Record<`--${string}`, string> = {
-    '--nx-columns': 'var(--nx-tree-columns)',
-    '--nx-tree-depth': String(depth - 1),
-    ...(drop.level !== undefined ? { '--nx-tree-drop-level': String(drop.level - 1) } : {}),
+    '--dx-columns': 'var(--dx-tree-columns)',
+    '--dx-tree-depth': String(depth - 1),
+    ...(drop.level !== undefined ? { '--dx-tree-drop-level': String(drop.level - 1) } : {}),
   };
   const rowProps = {
     'data-tree-row': '',
@@ -1091,7 +1091,7 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
     'onClickCapture': handleClickCapture,
     'onMouseEnter': handleMouseEnter,
     style,
-    'className': 'nx-grid nx-row nx-tree-item',
+    'className': 'dx-container dx-row dx-tree-item',
   };
 
   const content = (
@@ -1106,7 +1106,7 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
       )}
       {indentGuides &&
         Array.from({ length: depth - 1 }, (_, level) => (
-          <span key={level} aria-hidden='true' className='nx-tree-indent-guide' style={guideStyle(level)} />
+          <span key={level} aria-hidden='true' className='dx-tree-indent-guide' style={guideStyle(level)} />
         ))}
     </>
   );
@@ -1133,8 +1133,8 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
 TreeItemRow.displayName = 'Tree.ItemRow';
 
 /** Each indent guide's column, as a typed custom property rather than a cast of `style`. */
-const guideStyle = (level: number): CSSProperties & Record<'--nx-tree-guide-level', string> => ({
-  '--nx-tree-guide-level': String(level),
+const guideStyle = (level: number): CSSProperties & Record<'--dx-tree-guide-level', string> => ({
+  '--dx-tree-guide-level': String(level),
 });
 
 //
@@ -1154,7 +1154,7 @@ type TreeItemGroupProps = {
  */
 const TreeItemGroup = ({ node, children }: TreeItemGroupProps) => {
   const phase = useDisclosurePhase(node);
-  const style: CSSProperties & Record<'--nx-tree-depth', string> = { '--nx-tree-depth': String(node.depth - 1) };
+  const style: CSSProperties & Record<'--dx-tree-depth', string> = { '--dx-tree-depth': String(node.depth - 1) };
   return (
     <TreeItemProvider node={node}>
       <div
@@ -1163,7 +1163,7 @@ const TreeItemGroup = ({ node, children }: TreeItemGroupProps) => {
         data-object-id={node.id}
         data-disclosure={phase}
         data-testid={node.props.testId}
-        className='nx-tree-group'
+        className='dx-tree-group'
         style={style}
       >
         {children ?? <TreeItemGroupLabel />}
@@ -1184,7 +1184,7 @@ const TreeItemGroupLabel = ({ children }: TreeItemGroupLabelProps) => {
   const { node } = useTreeItemContext('Tree.ItemGroupLabel');
   const { t } = useTranslation();
   return (
-    <Typography truncate classNames='nx-tree-group-label'>
+    <Typography truncate classNames='dx-tree-group-label'>
       {children ?? toLocalizedString(node.props.label, t)}
     </Typography>
   );
@@ -1209,10 +1209,10 @@ type TreeItemIndicatorProps = {
 const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
   const { node } = useTreeItemContext('Tree.ItemIndicator');
   return (
-    <Block classNames='nx-tree-item-indicator'>
+    <Block classNames='dx-tree-item-indicator'>
       {node.branch && (
-        <TreeView.BranchTrigger className='nx-tree-branch-trigger' data-empty={node.empty ? '' : undefined}>
-          <TreeView.BranchIndicator className='nx-tree-branch-indicator'>
+        <TreeView.BranchTrigger className='dx-tree-branch-trigger' data-empty={node.empty ? '' : undefined}>
+          <TreeView.BranchIndicator className='dx-tree-branch-indicator'>
             <Icon icon={icon} />
           </TreeView.BranchIndicator>
         </TreeView.BranchTrigger>
@@ -1247,7 +1247,7 @@ const TreeItemIcon = ({ icon, hue, children, ...props }: TreeItemIconProps) => {
   const glyph = icon ?? node.props.icon;
   const iconHue = node.props.iconHue;
   return (
-    <Block classNames='nx-tree-item-icon'>
+    <Block classNames='dx-tree-item-icon'>
       {children ?? (glyph && <Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />)}
     </Block>
   );
@@ -1270,7 +1270,7 @@ const TreeItemText = ({ children, 'data-testid': testId }: TreeItemTextProps) =>
   const { node } = useTreeItemContext('Tree.ItemText');
   const { t } = useTranslation();
   return (
-    <Typography truncate classNames='nx-tree-item-text' data-testid={testId}>
+    <Typography truncate classNames='dx-tree-item-text' data-testid={testId}>
       {children ?? toLocalizedString(node.props.label, t)}
     </Typography>
   );
@@ -1291,14 +1291,14 @@ const TreeItemCount = () => {
   const { count, modifiedCount } = node.props;
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Tag hue='rose' classNames='nx-tree-item-count'>
+      <Tag hue='rose' classNames='dx-tree-item-count'>
         {modifiedCount}
       </Tag>
     );
   }
   if (typeof count === 'number') {
     return (
-      <Tag hue='neutral' classNames='nx-tree-item-count'>
+      <Tag hue='neutral' classNames='dx-tree-item-count'>
         {count}
       </Tag>
     );
@@ -1322,7 +1322,7 @@ type TreeItemActionsProps = {
  * the row in play: hovered, focused within, selected, or holding an open menu.
  */
 const TreeItemActions = ({ children }: TreeItemActionsProps) => (
-  <div role='none' data-scope='tree-view' data-part='item-actions' className='nx-tree-item-actions'>
+  <div role='none' data-scope='tree-view' data-part='item-actions' className='dx-tree-item-actions'>
     {children}
   </div>
 );

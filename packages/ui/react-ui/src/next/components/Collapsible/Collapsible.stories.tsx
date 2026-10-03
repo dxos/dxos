@@ -63,7 +63,7 @@ export const Test: Story = {
     await expect(content).not.toBeVisible();
 
     // The trigger is a block row.
-    const block = parseFloat(getComputedStyle(trigger).getPropertyValue('--nx-block-size')) * 16;
+    const block = parseFloat(getComputedStyle(trigger).getPropertyValue('--dx-block-size')) * 16;
     await expect(trigger.getBoundingClientRect().height).toBeCloseTo(block, 0);
 
     await userEvent.click(trigger);

@@ -123,7 +123,7 @@ export const Test: Story = {
     await expect(color('tone-description-md')).not.toBe(plain);
     await expect(color('tone-subdued-md')).not.toBe(plain);
     await expect(color('tone-subdued-md')).not.toBe(color('tone-description-md'));
-    await expect(getComputedStyle(byTestId(canvasElement, 'spin-md')).animationName).toBe('nx-spin');
+    await expect(getComputedStyle(byTestId(canvasElement, 'spin-md')).animationName).toBe('dx-spin');
     // Spinners share a phase: each starts at the wall clock's offset into the turn.
     await expect(parseFloat(byTestId(canvasElement, 'spin-md').style.animationDelay)).toBeLessThanOrEqual(0);
     for (const size of SIZES) {

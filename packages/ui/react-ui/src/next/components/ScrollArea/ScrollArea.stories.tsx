@@ -141,7 +141,7 @@ export const Test: Story = {
     await assertAligned(canvasElement, 'overlay-md');
     const viewport = byTestId(canvasElement, 'overlay-md-viewport');
     const root = byTestId(canvasElement, 'overlay-md-root');
-    await expect(viewport).toHaveClass('nx-scroll-viewport');
+    await expect(viewport).toHaveClass('dx-scroll-viewport');
     await expect(root).toHaveAttribute('data-mode', 'overlay');
     await expect(getComputedStyle(viewport).scrollbarWidth).toBe('none');
 

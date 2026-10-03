@@ -310,7 +310,7 @@ const TaskListViewport = composable<HTMLDivElement, TaskListViewportProps>(
         {...rest}
         className={mx('flex flex-col min-h-0 dx-shrink', className)}
         // Each one-line row is one block tall, with no gap between rows.
-        style={rows === undefined ? style : { ...style, maxHeight: `calc(${rows} * var(--nx-block-size))` }}
+        style={rows === undefined ? style : { ...style, maxHeight: `calc(${rows} * var(--dx-block-size))` }}
         ref={forwardedRef}
       >
         {children}
@@ -352,16 +352,16 @@ const buildGridTemplate = ({
 }): { columns: string; gridTemplateColumns: string } => {
   const candidates: (readonly [name: string | undefined, size: string] | false)[] = [
     // The tree's disclosure cell and indent step are half a block, so a guide lands under its branch's chevron.
-    toggle && [undefined, 'var(--nx-half-block-size)'],
-    showGutter && ['gutter', 'var(--nx-block-size)'],
-    ['status', 'var(--nx-block-size)'],
+    toggle && [undefined, 'var(--dx-half-block-size)'],
+    showGutter && ['gutter', 'var(--dx-block-size)'],
+    ['status', 'var(--dx-block-size)'],
     ['title', 'minmax(0, 1fr)'],
     // Sized by its content: a row with no pull request holds no width for one.
     ['artifacts', 'auto'],
-    ['assignee', 'var(--nx-block-size)'],
-    showEstimates && ['estimate', 'var(--nx-block-size)'],
-    ['priority', 'var(--nx-block-size)'],
-    hasActions && ['actions', 'var(--nx-block-size)'],
+    ['assignee', 'var(--dx-block-size)'],
+    showEstimates && ['estimate', 'var(--dx-block-size)'],
+    ['priority', 'var(--dx-block-size)'],
+    hasActions && ['actions', 'var(--dx-block-size)'],
   ];
   const tracks = candidates.filter((track) => track !== false);
   const template = (named: (index: number) => boolean) =>
@@ -676,7 +676,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
         {...anchor}
         hue='neutral'
         size='sm'
-        // The anchor chip's outlined look (`.nx-tag-anchor`), so the pill matches a PR link in a description.
+        // The anchor chip's outlined look (`.dx-tag-anchor`), so the pill matches a PR link in a description.
         classNames='bg-input-surface text-base-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
         icon='ph--git-pull-request--regular'
         iconClassNames={pullRequestStateStyle[artifact.state]}

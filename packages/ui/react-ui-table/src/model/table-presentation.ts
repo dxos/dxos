@@ -195,7 +195,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           .map(getLabel)
           .filter(Predicate.isNotNullish)
           .map((title) => {
-            return `<span class="nx-tag nx-tag-inline" data-hue="neutral">${title}</span>`;
+            return `<span class="dx-tag dx-tag-inline" data-hue="neutral">${title}</span>`;
           })
           .join('');
 
@@ -208,7 +208,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const targetObj = SchemaEx.getValue(obj, field.path)?.target;
       if (targetObj) {
         const uri = Obj.getURI(targetObj);
-        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><dx-anchor eid=${uri} class="nx-control nx-button nx-button-square" data-size="sm" data-variant="ghost" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><dx-anchor eid=${uri} class="dx-control dx-button dx-button-square" data-size="sm" data-variant="ghost" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 
@@ -217,7 +217,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const value = SchemaEx.getValue(obj, field.path);
       const href = typeof value === 'string' ? safeHttpUrl(value) : undefined;
       if (href) {
-        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><a href="${escapeHtmlAttribute(href)}" target="_blank" rel="noopener noreferrer" class="nx-control nx-button nx-button-square" data-size="sm" data-variant="ghost" data-dx-grid-action="accessory"><dx-icon icon="ph--arrow-square-out--regular"/></a></div>`;
+        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><a href="${escapeHtmlAttribute(href)}" target="_blank" rel="noopener noreferrer" class="dx-control dx-button dx-button-square" data-size="sm" data-variant="ghost" data-dx-grid-action="accessory"><dx-icon icon="ph--arrow-square-out--regular"/></a></div>`;
       }
     }
 
@@ -240,7 +240,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       if (options) {
         const option = options.find((o) => o.id === value);
         if (option) {
-          cell.accessoryHtml = `<span class="nx-tag nx-tag-inline" data-hue="${option.color}">${option.title}</span>`;
+          cell.accessoryHtml = `<span class="dx-tag dx-tag-inline" data-hue="${option.color}">${option.title}</span>`;
         }
       }
     }
@@ -254,7 +254,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           .map((value) => {
             const option = options.find((o) => o.id === value);
             if (option) {
-              return `<span class="nx-tag nx-tag-inline" data-hue="${option.color}">${option.title}</span>`;
+              return `<span class="dx-tag dx-tag-inline" data-hue="${option.color}">${option.title}</span>`;
             }
             return null;
           })

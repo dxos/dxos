@@ -190,7 +190,7 @@ export const KeepOpenOutside: Story = {
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     await body.findByTestId('keep-open');
-    const scrim = canvasElement.ownerDocument.querySelector<HTMLElement>('.nx-dialog-backdrop');
+    const scrim = canvasElement.ownerDocument.querySelector<HTMLElement>('.dx-dialog-backdrop');
     await expect(scrim).not.toBeNull();
     // A modal dialog makes the page inert to the pointer, so the press is dispatched rather than simulated.
     scrim?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' }));
@@ -243,7 +243,7 @@ export const Docked: Story = {
   play: async ({ canvasElement }) => {
     const document = canvasElement.ownerDocument;
     const dialog = await within(document.body).findByTestId('docked');
-    await expect(document.querySelector('.nx-dialog-backdrop')).toBeNull();
+    await expect(document.querySelector('.dx-dialog-backdrop')).toBeNull();
     const positioner = dialog.parentElement;
     await expect(positioner && getComputedStyle(positioner).pointerEvents).toBe('none');
     await expect(getComputedStyle(dialog).pointerEvents).toBe('auto');
@@ -295,7 +295,7 @@ export const Test: Story = {
     const long = await open(canvasElement, 'long-md', 'Read terms');
     // An explicit size wins over the inherited one.
     await expectPopupSize(long, 'lg');
-    const viewport = long.querySelector<HTMLElement>('.nx-scroll-viewport');
+    const viewport = long.querySelector<HTMLElement>('.dx-scroll-viewport');
     await expect(viewport).not.toBeNull();
     await expect(viewport && viewport.scrollHeight > viewport.clientHeight).toBe(true);
 
@@ -323,7 +323,7 @@ export const Test: Story = {
       await expect(label.left, field).toBeCloseTo(title.left, 0);
     }
     await expect(footerStart).toBeCloseTo(title.left, 0);
-    const input = rect(dialog, '[data-testid="name"] .nx-input');
+    const input = rect(dialog, '[data-testid="name"] .dx-input');
     await expect(
       footer.getBoundingClientRect().right - parseFloat(getComputedStyle(footer).paddingInlineEnd),
     ).toBeCloseTo(input.right, 0);

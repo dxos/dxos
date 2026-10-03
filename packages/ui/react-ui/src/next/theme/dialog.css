@@ -4,8 +4,8 @@
  */
 
 @layer dx-components {
-  .nx-dialog-backdrop {
-    z-index: var(--nx-layer-dialog);
+  .dx-dialog-backdrop {
+    z-index: var(--dx-layer-dialog);
     position: fixed;
     inset: 0;
     background: var(--color-scrim-surface);
@@ -13,90 +13,90 @@
     backdrop-filter: blur(var(--blur-xs, 4px));
   }
 
-  .nx-dialog-positioner {
-    z-index: var(--nx-layer-dialog);
+  .dx-dialog-positioner {
+    z-index: var(--dx-layer-dialog);
     position: fixed;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .nx-dialog-positioner[data-placement='end'] {
+  .dx-dialog-positioner[data-placement='end'] {
     align-items: flex-end;
     padding-block-end: 1rem;
   }
-  .nx-dialog-positioner[data-placement='start'] {
+  .dx-dialog-positioner[data-placement='start'] {
     align-items: flex-start;
     padding-block-start: calc(env(safe-area-inset-top) + 1.2rem);
   }
   /* Without a scrim the page stays usable: only the dialog takes pointer events. */
-  .nx-dialog-positioner[data-scrim='none'] {
+  .dx-dialog-positioner[data-scrim='none'] {
     pointer-events: none;
   }
-  .nx-dialog-positioner[data-scrim='none'] > * {
+  .dx-dialog-positioner[data-scrim='none'] > * {
     pointer-events: auto;
   }
 
-  .nx-dialog {
-    --nx-dialog-width: min(32rem, 100% - 2rem);
-    --nx-dialog-gutter: var(--dx-gutter-md);
+  .dx-dialog {
+    --dx-dialog-width: min(32rem, 100% - 2rem);
+    --dx-dialog-gutter: var(--dx-gutter-md);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    width: var(--nx-dialog-width);
+    width: var(--dx-dialog-width);
     max-height: calc(100dvh - 2rem);
-    padding-block-start: var(--nx-gap-size);
+    padding-block-start: var(--dx-gap-size);
     overflow: hidden;
     border-radius: var(--radius-md, 0.375rem);
     /* Set off from the page it covers: a hairline edge and a deep shadow, as the current dialog. */
     border: 1px solid var(--color-separator);
     box-shadow: var(--shadow-2xl, 0 25px 50px -12px rgb(0 0 0 / 0.5));
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     /* The dialog is the pane (decision 5): its header, body and footer collapse at the same width. */
     container-type: inline-size;
   }
-  .nx-dialog:focus {
+  .dx-dialog:focus {
     outline: none;
   }
 
-  .nx-dialog-header {
+  .dx-dialog-header {
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    gap: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
-    padding-inline: var(--nx-dialog-gutter);
+    gap: var(--dx-gap-size);
+    min-height: var(--dx-block-size);
+    padding-inline: var(--dx-dialog-gutter);
   }
 
   /* The dialog's heading, at the current dialog's text-xl; its line stays within the header's block at every size. */
-  .nx-dialog-title {
+  .dx-dialog-title {
     flex: 1;
     min-width: 0;
     margin: 0;
     font-size: var(--text-xl);
-    line-height: min(var(--text-xl--line-height), var(--nx-block-size));
+    line-height: min(var(--text-xl--line-height), var(--dx-block-size));
     font-weight: 500;
   }
 
-  .nx-dialog-description {
+  .dx-dialog-description {
     margin: 0;
     color: var(--color-description);
   }
   /* Outside the Body it has no content track, so it takes the shared gutter itself. */
-  .nx-dialog > .nx-dialog-description {
-    padding-inline: var(--nx-dialog-gutter);
+  .dx-dialog > .dx-dialog-description {
+    padding-inline: var(--dx-dialog-gutter);
   }
 
-  .nx-dialog-body {
+  .dx-dialog-body {
     flex: 1 1 auto;
     min-height: 0;
   }
 
   /* The actions sit as far from the bottom edge as from the sides. */
-  .nx-dialog-footer {
+  .dx-dialog-footer {
     flex-shrink: 0;
-    padding-inline: var(--nx-dialog-gutter);
-    padding-block-end: var(--nx-dialog-gutter);
+    padding-inline: var(--dx-dialog-gutter);
+    padding-block-end: var(--dx-dialog-gutter);
   }
 }

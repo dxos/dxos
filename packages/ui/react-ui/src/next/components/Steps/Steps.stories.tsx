@@ -180,7 +180,7 @@ export const Test: Story = {
 
     // An uncounted stage spins, and selectable stages toggle.
     const build = canvas.getByRole('button', { name: 'Build' });
-    await expect(getComputedStyle(build, '::after').animationName).toBe('nx-spin');
+    await expect(getComputedStyle(build, '::after').animationName).toBe('dx-spin');
     await expect(build).toHaveAttribute('aria-pressed', 'false');
     await userEvent.click(build);
     await expect(build).toHaveAttribute('aria-pressed', 'true');

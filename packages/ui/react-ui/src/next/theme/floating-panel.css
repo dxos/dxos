@@ -6,9 +6,9 @@
  */
 
 @layer dx-components {
-  .nx-floating-panel {
+  .dx-floating-panel {
     /* Publishes its rung like the other absolute levels, so a `+1` Card inside resolves from it. */
-    --nx-level: 3;
+    --dx-level: 3;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -16,25 +16,25 @@
     border: 1px solid var(--color-separator);
     border-radius: var(--radius-sm, 0.25rem);
     box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
   }
-  .nx-floating-panel[data-behind] {
+  .dx-floating-panel[data-behind] {
     opacity: 0.95;
   }
 
   /* A block row plus its separator; the trailing Control's inset cells end at the panel edge. */
-  .nx-floating-panel-header {
+  .dx-floating-panel-header {
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    min-height: var(--nx-block-size);
-    padding-inline-start: var(--nx-gap-size);
+    min-height: var(--dx-block-size);
+    padding-inline-start: var(--dx-gap-size);
     border-bottom: 1px solid var(--color-separator);
     user-select: none;
   }
 
-  .nx-floating-panel-drag-trigger {
+  .dx-floating-panel-drag-trigger {
     display: flex;
     flex: 1;
     align-self: stretch;
@@ -42,40 +42,40 @@
     min-width: 0;
   }
 
-  .nx-floating-panel-title {
+  .dx-floating-panel-title {
     flex: 1;
     min-width: 0;
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: var(--nx-font-size);
+    font-size: var(--dx-font-size);
     font-weight: 500;
   }
 
-  .nx-floating-panel-control {
+  .dx-floating-panel-control {
     display: flex;
     flex-shrink: 0;
     align-items: center;
   }
 
-  .nx-floating-panel-body {
+  .dx-floating-panel-body {
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
   }
 
-  .nx-floating-panel-resize-trigger:is([data-axis='n'], [data-axis='s']) {
+  .dx-floating-panel-resize-trigger:is([data-axis='n'], [data-axis='s']) {
     height: 0.25rem;
   }
-  .nx-floating-panel-resize-trigger:is([data-axis='e'], [data-axis='w']) {
+  .dx-floating-panel-resize-trigger:is([data-axis='e'], [data-axis='w']) {
     width: 0.25rem;
   }
-  .nx-floating-panel-resize-trigger:is([data-axis='ne'], [data-axis='nw'], [data-axis='se'], [data-axis='sw']) {
+  .dx-floating-panel-resize-trigger:is([data-axis='ne'], [data-axis='nw'], [data-axis='se'], [data-axis='sw']) {
     width: 0.5rem;
     height: 0.5rem;
   }
-  .nx-floating-panel-resize-trigger[data-disabled] {
+  .dx-floating-panel-resize-trigger[data-disabled] {
     display: none;
   }
 }

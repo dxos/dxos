@@ -32,7 +32,7 @@ export type TypographyProps = {
 export const Typography = slottable<HTMLParagraphElement, TypographyProps>(
   ({ children, asChild, truncate, lines, tone, mono, ...props }, forwardedRef) => {
     const { className, style, ...rest } = composableProps(props, { classNames: recipes.typography() });
-    const linesStyle: CSSProperties & CSSVariables = lines ? { '--nx-lines': String(lines) } : {};
+    const linesStyle: CSSProperties & CSSVariables = lines ? { '--dx-lines': String(lines) } : {};
     return (
       <ark.p
         asChild={asChild}

@@ -3,25 +3,25 @@
  */
 
 @layer dx-components {
-  .nx-empty {
+  .dx-empty {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--nx-gap-size);
-    padding: var(--nx-block-size) var(--nx-gap-size);
+    gap: var(--dx-gap-size);
+    padding: var(--dx-block-size) var(--dx-gap-size);
     text-align: center;
     color: var(--color-description);
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
   }
   /* The icon reads as an illustration, so it takes the next block size up rather than the text's icon size. */
-  .nx-empty > .nx-icon {
-    width: var(--nx-block-size);
-    height: var(--nx-block-size);
+  .dx-empty > .dx-icon {
+    width: var(--dx-block-size);
+    height: var(--dx-block-size);
     color: var(--color-subdued);
   }
-  .nx-empty > p {
+  .dx-empty > p {
     margin: 0;
   }
 }

@@ -146,7 +146,7 @@ export const ProcessTree = React.memo(
 );
 
 /** Disclosure, status glyph, label, then the elapsed time and the terminate control. */
-const COLUMNS = 'var(--nx-half-block-size) var(--nx-block-size) minmax(0, 1fr) min-content min-content';
+const COLUMNS = 'var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) min-content min-content';
 
 type ProcessRowProps = {
   node: TreeNode<ProcessNode>;

@@ -214,7 +214,7 @@ type ScrollContainerScrollDownButtonProps = ThemedClassName<{
 
 /**
  * A floating icon button in the end corner, shown while unpinned, that scrolls to the end and pins again. It is a
- * Button, so it keeps Button's `data-scope`/`data-part`; `.nx-scroll-container-scroll-down` identifies it.
+ * Button, so it keeps Button's `data-scope`/`data-part`; `.dx-scroll-container-scroll-down` identifies it.
  */
 const ScrollContainerScrollDownButton = ({
   classNames,

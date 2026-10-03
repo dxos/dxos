@@ -61,7 +61,7 @@ export const Test: Story = {
     const indeterminate = canvas.getByRole('progressbar', { name: 'Indexing' });
     await expect(indeterminate).not.toHaveAttribute('aria-valuenow');
     const sweep = indeterminate.querySelector<HTMLElement>('[data-part="range"]');
-    await expect(sweep ? getComputedStyle(sweep).animationName : '').toBe('nx-progress-sweep');
+    await expect(sweep ? getComputedStyle(sweep).animationName : '').toBe('dx-progress-sweep');
 
     // A failed indeterminate run fills the track in the error colour and stops.
     const failed = canvas.getByRole('progressbar', { name: 'Failed' });

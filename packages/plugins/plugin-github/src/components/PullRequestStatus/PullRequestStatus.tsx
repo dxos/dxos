@@ -48,18 +48,18 @@ export const PullRequestStatus = ({ reference, title, state, review, ci }: PullR
       className='flex items-center gap-2 px-3 py-1.5 border-b border-subdued-separator text-sm min-w-0'
       data-testid='pull-request.status'
     >
-      <span className='nx-tag nx-tag-inline shrink-0' data-hue='neutral'>
+      <span className='dx-tag dx-tag-inline shrink-0' data-hue='neutral'>
         {reference}
       </span>
       {title && <span className='truncate grow'>{title}</span>}
       <div className='flex items-center gap-2 shrink-0 ml-auto'>
         {state && (
-          <span className='nx-tag nx-tag-inline' data-hue={stateHue[state]} data-testid='pull-request.status.state'>
+          <span className='dx-tag dx-tag-inline' data-hue={stateHue[state]} data-testid='pull-request.status.state'>
             {t(`pull-request-state.${state}.label`)}
           </span>
         )}
         <span
-          className='nx-tag nx-tag-inline'
+          className='dx-tag dx-tag-inline'
           data-hue={review ? reviewHue[review.state] : 'neutral'}
           data-testid='pull-request.status.review'
         >
@@ -68,7 +68,7 @@ export const PullRequestStatus = ({ reference, title, state, review, ci }: PullR
             : t('review-status.unknown.label')}
         </span>
         <span
-          className='nx-tag nx-tag-inline'
+          className='dx-tag dx-tag-inline'
           data-hue={ci ? ciHue[ci.state] : 'neutral'}
           data-testid='pull-request.status.ci'
         >

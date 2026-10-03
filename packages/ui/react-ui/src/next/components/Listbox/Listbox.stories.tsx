@@ -188,7 +188,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           </Listbox.Content>
         </Listbox.Root>
       </div>
-      <Listbox.Root items={FILES} columns='var(--nx-block-size) minmax(0, 1fr) 5rem'>
+      <Listbox.Root items={FILES} columns='var(--dx-block-size) minmax(0, 1fr) 5rem'>
         <Listbox.Content aria-label='Files'>
           {FILES.map((item) => (
             <Listbox.Item key={item.value} item={item} data-testid={`file-${item.value}-${size}`}>
@@ -245,10 +245,10 @@ export const Test: Story = {
       const bob = byTestId(canvasElement, `person-bob-${size}`);
       await expect(bob.getBoundingClientRect().height, `${size} described row`).toBeGreaterThan(block);
       await expect(bob.getBoundingClientRect().height, `${size} described row`).toBeLessThan(2 * block);
-      const icon = bob.querySelector<HTMLElement>('.nx-block')?.getBoundingClientRect();
+      const icon = bob.querySelector<HTMLElement>('.dx-block')?.getBoundingClientRect();
       await expect(icon?.width, `${size} icon cell`).toBeCloseTo(block, 0);
       const label = (value: string) =>
-        byTestId(canvasElement, `person-${value}-${size}`).querySelector('.nx-typography')?.getBoundingClientRect()
+        byTestId(canvasElement, `person-${value}-${size}`).querySelector('.dx-typography')?.getBoundingClientRect()
           .left;
       await expect(label('bob'), `${size} labels align`).toBeCloseTo(label('alice') ?? 0, 0);
       await expect(label('alice'), `${size} label after icon`).toBeCloseTo((icon?.left ?? 0) + block, 0);
@@ -329,7 +329,7 @@ export const Test: Story = {
     // In a scrolling Panel with `scroll={false}`: no ScrollArea of its own, rows on the panel's rails, and the panel
     // scrolls to keep the highlight in view.
     const inPanel = md.getByRole('listbox', { name: 'In panel' });
-    await expect(inPanel.closest('.nx-listbox')?.querySelector('.nx-scroll-root')).toBeNull();
+    await expect(inPanel.closest('.dx-listbox')?.querySelector('.dx-scroll-root')).toBeNull();
     const firstRow = within(inPanel).getByRole('option', { name: 'Item 1' });
     await expect(firstRow.getBoundingClientRect().left).toBeCloseTo(
       byTestId(canvasElement, 'panel-heading-md').getBoundingClientRect().left,
@@ -337,7 +337,7 @@ export const Test: Story = {
     );
     // The test id names the Panel.Body frame; its viewport is what scrolls.
     const panel =
-      byTestId(canvasElement, 'panel-md').querySelector<HTMLElement>(':scope > .nx-scroll-viewport') ??
+      byTestId(canvasElement, 'panel-md').querySelector<HTMLElement>(':scope > .dx-scroll-viewport') ??
       byTestId(canvasElement, 'panel-md');
     inPanel.focus();
     await userEvent.keyboard('{End}');

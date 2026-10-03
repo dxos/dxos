@@ -24,7 +24,7 @@ export const ZoomControls = (props: ControlProps): JSX.Element => {
     <div class={`flex flex-row gap-2 ${props.class ?? ''}`}>
       <button
         type='button'
-        class='nx-control nx-button nx-button-square nx-focus-ring'
+        class='dx-control dx-button dx-button-square dx-focus-ring'
         data-size='lg'
         onClick={() => props.onAction?.('zoom-in')}
         title='Zoom in'
@@ -33,7 +33,7 @@ export const ZoomControls = (props: ControlProps): JSX.Element => {
       </button>
       <button
         type='button'
-        class='nx-control nx-button nx-button-square nx-focus-ring'
+        class='dx-control dx-button dx-button-square dx-focus-ring'
         data-size='lg'
         onClick={() => props.onAction?.('zoom-out')}
         title='Zoom out'
@@ -49,7 +49,7 @@ export const ActionControls = (props: ControlProps): JSX.Element => {
     <div class={`flex flex-row gap-2 ${props.class ?? ''}`}>
       <button
         type='button'
-        class='nx-control nx-button nx-button-square nx-focus-ring'
+        class='dx-control dx-button dx-button-square dx-focus-ring'
         data-size='lg'
         onClick={() => props.onAction?.('start')}
         title='Start'
@@ -58,7 +58,7 @@ export const ActionControls = (props: ControlProps): JSX.Element => {
       </button>
       <button
         type='button'
-        class='nx-control nx-button nx-button-square nx-focus-ring'
+        class='dx-control dx-button dx-button-square dx-focus-ring'
         data-size='lg'
         onClick={() => props.onAction?.('toggle')}
         title='Toggle'

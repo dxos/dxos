@@ -194,7 +194,7 @@ export const Test: Story = {
     // The legend is a control-tall label row spanning the content track, like a Field's header.
     const legend = bounds(canvasElement, '[data-testid="profile"] [data-part="legend"]');
     const label = bounds(canvasElement, '[data-testid="name"] label');
-    const input = bounds(canvasElement, '[data-testid="name"] .nx-input');
+    const input = bounds(canvasElement, '[data-testid="name"] .dx-input');
     await expect(legend.height).toBeCloseTo(28, 0);
     await expect(legend.left).toBeCloseTo(label.left, 0);
     // The trailing Block is inset in a block-sized cell that ends at the control's edge.
@@ -244,7 +244,7 @@ export const Test: Story = {
     await expect(shipping).toHaveAttribute('data-surface', '+1');
     await expect(getComputedStyle(shipping).display).toBe('grid');
     for (const field of ['carrier', 'latitude']) {
-      const control = bounds(canvasElement, `[data-testid="${field}"] .nx-input`);
+      const control = bounds(canvasElement, `[data-testid="${field}"] .dx-input`);
       await expect(control.left).toBeCloseTo(input.left, 0);
       await expect(control.right).toBeCloseTo(input.right, 0);
     }

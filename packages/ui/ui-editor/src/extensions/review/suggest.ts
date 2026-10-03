@@ -353,9 +353,9 @@ const createControls = (
   Domino.of('div')
     .classNames('cm-suggest-controls')
     .append(
-      // Each control is a square `nx-button` div wrapping a Phosphor icon.
+      // Each control is a square `dx-button` div wrapping a Phosphor icon.
       Domino.of('div')
-        .classNames('nx-control nx-button nx-button-square cm-suggest-accept')
+        .classNames('dx-control dx-button dx-button-square cm-suggest-accept')
         .attributes({ 'role': 'button', 'data-size': 'sm', 'title': 'Accept change' })
         .append(Domino.svg('ph--check--regular'))
         .on('mousedown', (event) => {
@@ -371,7 +371,7 @@ const createControls = (
           }
         }),
       Domino.of('div')
-        .classNames('nx-control nx-button nx-button-square cm-suggest-reject')
+        .classNames('dx-control dx-button dx-button-square cm-suggest-reject')
         .attributes({ 'role': 'button', 'data-size': 'sm', 'title': 'Reject change' })
         .append(Domino.svg('ph--x--regular'))
         .on('mousedown', (event) => {

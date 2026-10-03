@@ -6,16 +6,16 @@
  */
 
 @layer dx-components {
-  .nx-carousel {
+  .dx-carousel {
     display: grid;
     grid-template-columns: min-content minmax(0, 1fr) min-content;
     grid-template-rows: minmax(0, 1fr) auto;
     align-items: center;
-    gap: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
     min-width: 0;
   }
 
-  .nx-carousel-item-group {
+  .dx-carousel-item-group {
     grid-column: 2;
     grid-row: 1;
     position: relative;
@@ -23,16 +23,16 @@
     aspect-ratio: 16 / 9;
     min-height: 0;
   }
-  .nx-carousel-item-group:focus {
+  .dx-carousel-item-group:focus {
     outline: none;
   }
   /* An outline, not the inset ring: the slides fill the track and would paint over an inset shadow. */
-  .nx-carousel-item-group:focus-visible {
-    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
-    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  .dx-carousel-item-group:focus-visible {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
   }
 
-  .nx-carousel-item {
+  .dx-carousel-item {
     position: relative;
     height: 100%;
     min-width: 0;
@@ -40,37 +40,37 @@
     background: var(--color-base-surface);
   }
 
-  .nx-carousel-prev-trigger {
+  .dx-carousel-prev-trigger {
     grid-column: 1;
     grid-row: 1;
   }
-  .nx-carousel-next-trigger {
+  .dx-carousel-next-trigger {
     grid-column: 3;
     grid-row: 1;
   }
 
-  .nx-carousel-indicator-group {
+  .dx-carousel-indicator-group {
     grid-column: 2;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: var(--nx-block-size);
+    min-height: var(--dx-block-size);
     overflow: hidden;
   }
 
   /* A dot centred in an icon-sized button: an outline ring, filled with the accent for the page in view. */
-  .nx-carousel-indicator {
+  .dx-carousel-indicator {
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    width: var(--nx-icon-size);
-    height: var(--nx-icon-size);
+    width: var(--dx-icon-size);
+    height: var(--dx-icon-size);
     padding: 0;
     border-radius: 9999px;
     color: var(--color-description);
     cursor: pointer;
   }
-  .nx-carousel-indicator::before {
+  .dx-carousel-indicator::before {
     content: '';
     box-sizing: border-box;
     width: 50%;
@@ -78,19 +78,19 @@
     border: 1.5px solid currentColor;
     border-radius: 9999px;
   }
-  .nx-carousel-indicator[data-current] {
+  .dx-carousel-indicator[data-current] {
     color: var(--color-accent-bg);
   }
-  .nx-carousel-indicator[data-current]::before {
+  .dx-carousel-indicator[data-current]::before {
     background: currentColor;
   }
 
-  .nx-carousel-caption {
+  .dx-carousel-caption {
     grid-column: 2;
     margin: 0;
     text-align: center;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     font-variant-numeric: tabular-nums;
     color: var(--color-description);
   }

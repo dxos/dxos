@@ -1,6 +1,6 @@
 /*
- * Next theme: rules match only `.nx-*` elements and variables are `--nx-*` (decision 2), so nothing here reaches the
- * current primitives.
+ * The component theme: rules match `.dx-*` elements and variables are `--dx-*` (DESIGN.md decision 2); ui-theme supplies
+ * the tokens, zones and states they read.
  */
 
 @import './size.css';

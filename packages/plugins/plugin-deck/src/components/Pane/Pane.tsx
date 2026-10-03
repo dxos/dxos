@@ -58,8 +58,8 @@ const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
       data-tauri-drag-region='deep'
       {...composableProps(props, {
         style: iconSize(5),
-        // `nx-scope` with `data-size`: the toolbar's controls take the large size, whatever the pane's.
-        classNames: 'nx-scope flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
+        // `dx-scope` with `data-size`: the toolbar's controls take the large size, whatever the pane's.
+        classNames: 'dx-scope flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
       })}
       data-size='lg'
       ref={forwardedRef}

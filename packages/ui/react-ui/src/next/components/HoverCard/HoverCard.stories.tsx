@@ -109,7 +109,7 @@ export const Test: Story = {
     const open = await body.findByTestId('profile-xl', {}, { timeout: 2_000 });
     await expect(open).toHaveAttribute('data-surface', 'popup');
     await expect(open).toHaveAttribute('data-size', 'xl');
-    await expect(getComputedStyle(open).getPropertyValue('--nx-level').trim()).toBe('5');
+    await expect(getComputedStyle(open).getPropertyValue('--dx-level').trim()).toBe('5');
     await waitFor(async () => {
       const card = open.getBoundingClientRect();
       const trigger = large.getBoundingClientRect();

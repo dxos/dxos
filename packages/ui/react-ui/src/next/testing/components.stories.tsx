@@ -64,7 +64,7 @@ const SizeSection = ({ size }: { size: Size }) => (
       <Block rail='start' data-testid={`row-${size}-rail-start`}>
         <Icon icon='ph--user--regular' />
       </Block>
-      <Label htmlFor={`name-${size}`} classNames='pe-(--nx-gap-size)'>
+      <Label htmlFor={`name-${size}`} classNames='pe-(--dx-gap-size)'>
         Name
       </Label>
       <Input id={`name-${size}`} data-testid={`row-input-${size}`} />
@@ -102,7 +102,7 @@ const SizeSection = ({ size }: { size: Size }) => (
 
 /** Every size by default; pick one in the properties panel by turning `allSizes` off. */
 const DefaultStory = ({ size = 'md', allSizes = true }: SizeArgs) => (
-  <div className='nx-scope @container flex flex-col gap-4 w-[40rem]' data-size='md'>
+  <div className='dx-scope @container flex flex-col gap-4 w-[40rem]' data-size='md'>
     {(allSizes ? SIZES : [size]).map((size) => (
       <SizeSection key={size} size={size} />
     ))}
@@ -133,7 +133,7 @@ const FOREIGN_RING = 'rgb(37, 99, 235)';
 
 /** Every focusable Next control, themed with the audit ring colour. */
 const FocusRingsStory = () => (
-  <div className='nx-scope' data-size='md' style={{ ['--nx-focus-ring-color' as string]: AUDIT_RING }}>
+  <div className='dx-scope' data-size='md' style={{ ['--dx-focus-ring-color' as string]: AUDIT_RING }}>
     <Container gutter='rail' level='base'>
       <Field.Root>
         <Field.Label>Input</Field.Label>
@@ -191,7 +191,7 @@ const FocusRingsStory = () => (
 
 /** Colours a focused part, its immediate relatives and the control row hosting it (DateInput's segments) paint for focus. */
 const focusPaint = (element: Element) =>
-  [element, element.parentElement, ...(element.parentElement?.children ?? []), element.closest('.nx-control')]
+  [element, element.parentElement, ...(element.parentElement?.children ?? []), element.closest('.dx-control')]
     .filter((node): node is Element => node instanceof Element)
     .map((node) => {
       const style = getComputedStyle(node);

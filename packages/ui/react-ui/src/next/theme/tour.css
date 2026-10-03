@@ -1,77 +1,77 @@
 /*
  * Tour: zag stacks the backdrop, spotlight and card on `--tour-layer` (0, 1, 2) above `--tour-z-index`, which every
- * part declares here (over menus and popovers); the card is a popup (`.nx-popup` supplies size, level and radius)
+ * part declares here (over menus and popovers); the card is a popup (`.dx-popup` supplies size, level and radius)
  * edged in the accent, so a step reads as guidance rather than as one of the app's own popups. A `dialog` step has no
  * target, so its positioner covers the viewport and centres the card.
  */
 
 @layer dx-components {
-  .nx-tour-backdrop,
-  .nx-tour-spotlight,
-  .nx-tour-positioner {
-    --tour-z-index: var(--nx-layer-tour);
+  .dx-tour-backdrop,
+  .dx-tour-spotlight,
+  .dx-tour-positioner {
+    --tour-z-index: var(--dx-layer-tour);
     z-index: calc(var(--tour-layer) + var(--tour-z-index));
   }
 
-  .nx-tour-backdrop {
+  .dx-tour-backdrop {
     background: var(--color-scrim-surface);
   }
 
   /* The box is the target's own rect (`useTour` zeroes zag's offset), so an inset ring paints over its border. */
-  .nx-tour-spotlight {
+  .dx-tour-spotlight {
     box-shadow: inset 0 0 0 2px var(--color-accent-bg);
     border-radius: var(--radius-sm, 0.25rem);
   }
 
-  .nx-tour-positioner[data-type='dialog'] {
+  .dx-tour-positioner[data-type='dialog'] {
     position: fixed;
     inset: 0;
     display: grid;
     place-items: center;
   }
 
-  .nx-tour {
+  .dx-tour {
     display: flex;
     flex-direction: column;
-    gap: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
     width: min(18rem, 100vw - 1rem);
-    padding: var(--nx-gap-size);
+    padding: var(--dx-gap-size);
     border: 1px solid var(--color-accent-bg);
-    --nx-arrow-border: var(--color-accent-bg);
+    --dx-arrow-border: var(--color-accent-bg);
   }
 
   /* A trailing CloseTrigger's inset cell ends at the card's padding edge, as in `Popover.Header`. */
-  .nx-tour-header {
+  .dx-tour-header {
     display: flex;
     align-items: center;
-    gap: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
+    gap: var(--dx-gap-size);
+    min-height: var(--dx-block-size);
   }
 
-  .nx-tour-title {
+  .dx-tour-title {
     flex: 1;
     min-width: 0;
     margin: 0;
     font-weight: 500;
   }
 
-  .nx-tour-description {
+  .dx-tour-description {
     margin: 0;
   }
 
-  .nx-tour-progress-text {
+  .dx-tour-progress-text {
     color: var(--color-description);
   }
 
-  .nx-tour-control {
+  .dx-tour-control {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
+    gap: var(--dx-gap-size);
+    min-height: var(--dx-block-size);
   }
   /* The footer row is one block like the header, so its buttons sit as far from the bottom as the close button from the top. */
-  .nx-tour-control > .nx-group {
+  .dx-tour-control > .dx-group {
     padding-block: 0;
   }
 

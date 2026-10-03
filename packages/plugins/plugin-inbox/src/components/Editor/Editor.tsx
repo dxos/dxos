@@ -60,7 +60,7 @@ export const Editor = ({
   return (
     <TextEditor.Root>
       <TextEditor.View
-        classNames={mx('dx-expand nx-input-box', classNames)}
+        classNames={mx('dx-expand dx-input-box', classNames)}
         extensions={extensions}
         value={value}
         onChange={onChange}

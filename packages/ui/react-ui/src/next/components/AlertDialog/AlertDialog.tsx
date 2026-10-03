@@ -27,8 +27,8 @@ const AlertDialogRoot = ({ ids, initialFocusEl, ...props }: AlertDialogRootProps
     const root = getRootNode();
     return 'getElementById' in root ? root.getElementById(elementId) : null;
   };
-  const contentId = ids?.content ?? `nx-alert-dialog-${id}-content`;
-  const cancelId = ids?.closeTrigger ?? `nx-alert-dialog-${id}-cancel`;
+  const contentId = ids?.content ?? `dx-alert-dialog-${id}-content`;
+  const cancelId = ids?.closeTrigger ?? `dx-alert-dialog-${id}-cancel`;
   return (
     <Dialog.Root
       {...props}

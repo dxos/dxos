@@ -309,9 +309,9 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
 
   return (
     // Menu row metrics without a Menu machine: the popover keeps focus in the editor, so `current` is the highlight.
-    <li ref={listRef} className='nx-menu-item' data-highlighted={current ? '' : undefined} onClick={handleSelect}>
+    <li ref={listRef} className='dx-menu-item' data-highlighted={current ? '' : undefined} onClick={handleSelect}>
       {item.icon && <Icon icon={item.icon} />}
-      <span className='nx-menu-item-text'>{toLocalizedString(item.label, t)}</span>
+      <span className='dx-menu-item-text'>{toLocalizedString(item.label, t)}</span>
     </li>
   );
 };

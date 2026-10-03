@@ -130,7 +130,7 @@ type DropIndicatorProps = ThemedClassName<{
 }>;
 
 /**
- * A line on one edge of a drop target, drawn in the focus-ring colour (`--nx-drop-indicator-color`), absolutely placed
+ * A line on one edge of a drop target, drawn in the focus-ring colour (`--dx-drop-indicator-color`), absolutely placed
  * so it takes no grid track in a row Container; the row must be positioned (Listbox rows are).
  */
 export const DropIndicator = ({ classNames, edge }: DropIndicatorProps) => (

@@ -94,7 +94,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-const announcer = (root: HTMLElement) => root.ownerDocument.getElementById('nx-drag-announcer');
+const announcer = (root: HTMLElement) => root.ownerDocument.getElementById('dx-drag-announcer');
 
 /**
  * At every size the handle is a control-sized ghost square in a block cell, described as a drag handle; in a list row it

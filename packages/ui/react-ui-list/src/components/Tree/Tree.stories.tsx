@@ -184,7 +184,7 @@ const renderComposedRow = (node: TreeNode<TestItem>) => (
 );
 
 /** Trailing columns on the Root's template: a custom icon cell, the label, then a figure and a control per row. */
-const COLUMNS = 'var(--nx-half-block-size) var(--nx-block-size) minmax(0, 1fr) min-content min-content';
+const COLUMNS = 'var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) min-content min-content';
 
 const renderColumnsRow = (node: TreeNode<TestItem>) => (
   <Tree.Item node={node}>
@@ -337,7 +337,7 @@ export const Multiline: Story = {
     const [description] = await within(canvasElement).findAllByTestId('tree-description');
     const row = description.closest<HTMLElement>('[data-tree-row]');
     const branch = within(canvasElement).getByTestId('row-fruit');
-    const label = row?.querySelector<HTMLElement>('.nx-tree-item-text');
+    const label = row?.querySelector<HTMLElement>('.dx-tree-item-text');
     if (!row || !label) {
       throw new Error('Multiline row not found.');
     }
@@ -380,7 +380,7 @@ export const Empty: Story = {
     await expect(within(canvasElement).getByRole('status')).toHaveTextContent('No items');
     // `Tree.Label srOnly` names the tree without taking space.
     await expect(within(canvasElement).getByRole('tree', { name: 'Tree' })).toBeInTheDocument();
-    const label = canvasElement.querySelector('.nx-tree-label');
+    const label = canvasElement.querySelector('.dx-tree-label');
     await expect(label?.getBoundingClientRect().height).toBeLessThanOrEqual(1);
   },
 };
@@ -388,7 +388,7 @@ export const Empty: Story = {
 const rows = (tree: HTMLElement) => within(tree).getAllByRole('treeitem');
 /** Visible labels, rows and group headers in order (the count badge is not part of a row's name). */
 const names = (tree: HTMLElement) =>
-  [...tree.querySelectorAll('.nx-tree-item-text, .nx-tree-group-label')].map((element) => element.textContent);
+  [...tree.querySelectorAll('.dx-tree-item-text, .dx-tree-group-label')].map((element) => element.textContent);
 const focusedName = () => document.activeElement?.textContent;
 
 /**
@@ -442,8 +442,8 @@ export const Test: Story = {
   play: async ({ canvasElement }) => {
     for (const row of canvasElement.querySelectorAll<HTMLElement>('[data-tree-row]')) {
       // The icon cell is one block square at the row's size; the disclosure cell is half as wide and as tall.
-      const block = row.querySelector('.nx-tree-item-icon')?.getBoundingClientRect().width ?? 0;
-      const caret = row.querySelector('.nx-tree-item-indicator')?.getBoundingClientRect();
+      const block = row.querySelector('.dx-tree-item-icon')?.getBoundingClientRect().width ?? 0;
+      const caret = row.querySelector('.dx-tree-item-indicator')?.getBoundingClientRect();
       await expect(block, 'icon cell is sized').toBeGreaterThan(0);
       await expect(row.getBoundingClientRect().height, 'row is one block').toBeCloseTo(block, 0);
       await expect(caret?.width, 'caret cell is half a block wide').toBeCloseTo(block / 2, 0);
@@ -470,16 +470,16 @@ export const Test: Story = {
       expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'true'),
     );
     await expect(rows(tree)).toHaveLength(5);
-    await waitFor(() => expect(opening.events('Apple')).toEqual(['enter:nx-tree-row-enter']));
+    await waitFor(() => expect(opening.events('Apple')).toEqual(['enter:dx-tree-row-enter']));
     await waitFor(() => expect(tree.querySelector('[data-disclosure]')).toBeNull());
     opening.stop();
 
     // A child's guide is centred on its parent's half-block caret cell.
     const apple = within(tree).getByRole('treeitem', { name: /Apple/ });
-    const guide = apple.querySelector('.nx-tree-indent-guide')?.getBoundingClientRect();
+    const guide = apple.querySelector('.dx-tree-indent-guide')?.getBoundingClientRect();
     const parentCaret = within(tree)
       .getByRole('treeitem', { name: /Fruit/ })
-      .querySelector('.nx-tree-item-indicator')
+      .querySelector('.dx-tree-item-indicator')
       ?.getBoundingClientRect();
     await expect(guide && parentCaret && guide.left - (parentCaret.left + parentCaret.width / 2)).toBeCloseTo(0, 0);
     within(tree).getByRole('treeitem', { name: /Fruit/ }).focus();
@@ -516,7 +516,7 @@ export const Test: Story = {
       expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'false'),
     );
     await expect(rows(tree)).toHaveLength(3);
-    await expect(closing.events('Banana')).toEqual(['conceal:nx-tree-row-conceal', 'removed']);
+    await expect(closing.events('Banana')).toEqual(['conceal:dx-tree-row-conceal', 'removed']);
     closing.stop();
 
     await userEvent.keyboard('{End}');
@@ -607,7 +607,7 @@ export const WindowedTest: Story = {
 
     // The host spans the pane's gutters, so the overlay thumb sits at the pane's right edge.
     const thumb = await waitFor(() => {
-      const element = tree.closest('.nx-scroll-root')?.querySelector<HTMLElement>(':scope > .absolute');
+      const element = tree.closest('.dx-scroll-root')?.querySelector<HTMLElement>(':scope > .absolute');
       if (!element) {
         throw new Error('missing thumb');
       }

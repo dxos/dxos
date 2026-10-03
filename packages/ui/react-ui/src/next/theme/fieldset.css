@@ -4,16 +4,16 @@
  */
 
 @layer dx-components {
-  .nx-fieldset {
+  .dx-fieldset {
     min-inline-size: 0;
   }
-  .nx-fieldset:not(.nx-grid) {
+  .dx-fieldset:not(.dx-container) {
     display: flex;
     flex-direction: column;
-    gap: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
   }
   /* A grid set (`gutter='inherit'`) spaces its rows as its parent grid does, since a subgrid shares columns only. */
-  .nx-fieldset.nx-grid {
+  .dx-fieldset.dx-container {
     row-gap: inherit;
   }
 
@@ -22,69 +22,69 @@
    * parent's content track, whose edge lines it inherits, so its fields keep the `content` placement (and any interior
    * column lines) while its padding offsets them. It keeps its host's surface; nesting never steps the level.
    */
-  .nx-fieldset.nx-grid[data-inset] {
+  .dx-fieldset.dx-container[data-inset] {
     grid-column: content;
     /* Half the size's gap, tighter than the form's own rows, so a group's fields read as one; its Content inherits it. */
-    row-gap: calc(var(--nx-gap-size) / 2);
-    padding: var(--nx-gap-size);
+    row-gap: calc(var(--dx-gap-size) / 2);
+    padding: var(--dx-gap-size);
     border: 1px solid var(--color-separator);
     border-radius: var(--radius-md, 0.375rem);
   }
   /* The set spans no `full` lines, so an inheriting grid inside it (a Collapsible Content) spans the set's tracks. */
-  .nx-fieldset.nx-grid[data-inset] > .nx-grid[data-gutter='inherit'] {
+  .dx-fieldset.dx-container[data-inset] > .dx-container[data-gutter='inherit'] {
     grid-column: 1 / -1;
   }
-  .nx-fieldset > .nx-control {
-    margin-block: var(--nx-control-inset);
+  .dx-fieldset > .dx-control {
+    margin-block: var(--dx-control-inset);
   }
 
-  .nx-fieldset-legend {
+  .dx-fieldset-legend {
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    gap: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
     width: 100%;
     /* Like `Field.Header`: the set's size, control-tall, in the label step, so a trailing action shares the fields' end column. */
-    min-height: var(--nx-control-size);
+    min-height: var(--dx-control-size);
     padding: 0;
-    font-size: var(--nx-label-font-size);
-    line-height: var(--nx-label-line-height);
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
     font-weight: 500;
     /* A group's label, like a field's (see `control.css`). */
     color: var(--color-subdued);
   }
   /* The legend text is a bare text node, so the first trailing part pushes the rest to the row's end. */
-  .nx-fieldset-legend
-    > :is(.nx-block, .nx-button, .nx-toggle-group):not(:is(.nx-block, .nx-button, .nx-toggle-group) ~ *) {
+  .dx-fieldset-legend
+    > :is(.dx-block, .dx-button, .dx-toggle-group):not(:is(.dx-block, .dx-button, .dx-toggle-group) ~ *) {
     margin-inline-start: auto;
   }
-  .nx-fieldset-legend > .nx-block {
-    width: var(--nx-control-size);
-    height: var(--nx-control-size);
-    margin: 0 var(--nx-control-inset);
+  .dx-fieldset-legend > .dx-block {
+    width: var(--dx-control-size);
+    height: var(--dx-control-size);
+    margin: 0 var(--dx-control-inset);
   }
-  .nx-fieldset-legend > .nx-button[data-square] {
+  .dx-fieldset-legend > .dx-button[data-square] {
     margin-block: 0;
   }
   /* A legend given its own size is a heading row: one block tall, in that size's text. */
-  .nx-fieldset-legend[data-size] {
-    min-height: var(--nx-block-size);
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+  .dx-fieldset-legend[data-size] {
+    min-height: var(--dx-block-size);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
   }
   /* A top-level section's title (the current Form's root legend): content, at text-lg. */
-  .nx-fieldset-legend[data-variant='section'] {
+  .dx-fieldset-legend[data-variant='section'] {
     font-size: var(--text-lg);
     line-height: var(--text-lg--line-height);
     color: var(--color-base-fg);
   }
   /* The section's subtitle reads at the body size in the description colour, as a settings row's description does. */
-  .nx-fieldset-legend[data-variant='section'] + .nx-field-helper {
+  .dx-fieldset-legend[data-variant='section'] + .dx-field-helper {
     font-size: var(--text-base);
     line-height: var(--text-base--line-height);
     color: var(--color-description);
   }
-  .nx-fieldset[data-disabled] {
+  .dx-fieldset[data-disabled] {
     opacity: 0.5;
   }
 }

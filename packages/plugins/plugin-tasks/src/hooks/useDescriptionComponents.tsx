@@ -32,7 +32,7 @@ export const useDescriptionComponents = (): MarkdownViewProps['components'] => {
         // The same leading icon the editor's chip carries, so a row and its edit pane agree.
         const icon = PreviewCapabilities.linkIcon(all, href);
         return (
-          <DxAnchor eid={href} className='nx-tag-anchor'>
+          <DxAnchor eid={href} className='dx-tag-anchor'>
             {icon && (
               <Icon icon={icon.icon} size='md' classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
             )}

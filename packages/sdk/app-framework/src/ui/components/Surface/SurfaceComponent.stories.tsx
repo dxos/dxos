@@ -29,7 +29,7 @@ type TestComponentProps = {
 const TestComponent = ({ styles, id }: TestComponentProps) => {
   return (
     <div className={mx('flex justify-center items-center border rounded-sm', styles.bg, styles.border)}>
-      <span className={mx('nx-tag nx-tag-inline font-mono text-lg', styles.fg)}>{id}</span>
+      <span className={mx('dx-tag dx-tag-inline font-mono text-lg', styles.fg)}>{id}</span>
     </div>
   );
 };

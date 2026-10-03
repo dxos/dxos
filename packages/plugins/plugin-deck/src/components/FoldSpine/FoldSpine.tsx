@@ -33,7 +33,7 @@ export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) 
     variant='ghost'
     onClick={onClick}
     aria-label={label}
-    // `.nx-button` supplies `justify-center`, which in this column would centre the sigil vertically
+    // `.dx-button` supplies `justify-center`, which in this column would centre the sigil vertically
     // instead of aligning it with the plank heading, and `px-3`/`rounded-xs`/`font-medium`, which the
     // utilities layer overrides here to keep the spine's own geometry and label weight.
     classNames={mx(

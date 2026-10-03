@@ -66,7 +66,7 @@ const ToastProvider = ({ duration = DEFAULT_DURATION, overlap = true, children }
       removeDelay: REMOVE_DELAY,
       pauseOnPageIdle: true,
       // The end offset widens at `md` (`toast.css`); the store takes a string, so a variable.
-      offsets: { top: '1rem', bottom: '1rem', left: '1rem', right: 'var(--nx-toast-offset-end, 1rem)' },
+      offsets: { top: '1rem', bottom: '1rem', left: '1rem', right: 'var(--dx-toast-offset-end, 1rem)' },
     }),
   );
   const [registry] = useState(() => new ToastRegistry());

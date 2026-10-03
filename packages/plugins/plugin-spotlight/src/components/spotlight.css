@@ -4,7 +4,7 @@
 
 /* The native panel already owns the frame, so the dialog inside it must contribute none. */
 /* Unlayered, so these win over `dx-components` without competing on specificity. */
-[data-spotlight] .nx-dialog {
+[data-spotlight] .dx-dialog {
   inline-size: 100%;
   max-inline-size: none;
   max-block-size: none;

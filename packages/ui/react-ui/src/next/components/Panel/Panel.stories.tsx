@@ -182,13 +182,13 @@ export const Test: Story = {
       // A Body that composes nothing is a plain slot: no ScrollArea frame of its own.
       const bareBodyElement = byTestId(canvasElement, `bare-body-${size}`);
       await expect(bareBodyElement).toHaveAttribute('data-part', 'body');
-      await expect(bareBodyElement.querySelector('.nx-scroll-root')).toBeNull();
+      await expect(bareBodyElement.querySelector('.dx-scroll-root')).toBeNull();
 
       // Size flows to the toolbar's controls and the body's rails.
       const add = byTestId(canvasElement, `add-${size}`).getBoundingClientRect();
       await expect(add.height, `${size} control`).toBeCloseTo(controlSize(size), 0);
       // The toolbar pads its inline edges by half a gap, then the control sits its inset into its cell.
-      const toolbar = byTestId(canvasElement, `add-${size}`).closest<HTMLElement>('.nx-toolbar');
+      const toolbar = byTestId(canvasElement, `add-${size}`).closest<HTMLElement>('.dx-toolbar');
       const toolbarPadding = toolbar ? parseFloat(getComputedStyle(toolbar).paddingLeft) : 0;
       await expect(add.left - rect.left, `${size} control inset`).toBeCloseTo(inset + toolbarPadding, 0);
       const rail = byTestId(canvasElement, `rail-${size}`).getBoundingClientRect();
@@ -212,7 +212,7 @@ export const Test: Story = {
 
     // The body scrolls, the thumb in the end gutter following it.
     const frame = byTestId(canvasElement, 'body-md');
-    const viewport = frame.querySelector<HTMLElement>(':scope > .nx-scroll-viewport');
+    const viewport = frame.querySelector<HTMLElement>(':scope > .dx-scroll-viewport');
     await expect(viewport).not.toBeNull();
     if (!viewport) {
       return;

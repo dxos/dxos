@@ -52,7 +52,7 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
   const label = typeof children === 'string' && children !== artifact.url ? children : artifact.name;
   if (artifact.kind === 'file') {
     return (
-      <a href={artifact.url} target='_blank' rel='noopener noreferrer' className='nx-tag-anchor'>
+      <a href={artifact.url} target='_blank' rel='noopener noreferrer' className='dx-tag-anchor'>
         {label}
       </a>
     );

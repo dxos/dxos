@@ -208,7 +208,7 @@ export const Test: Story = {
     const frame = popupFrame(listbox);
     await expect(frame.dataset.surface).toBe('popup');
     await expect(frame.dataset.size).toBe('md');
-    await expect(getComputedStyle(frame).getPropertyValue('--nx-level').trim()).toBe('5');
+    await expect(getComputedStyle(frame).getPropertyValue('--dx-level').trim()).toBe('5');
     await expect(listbox.dataset.scope).toBe('select');
     await expect(within(listbox).getAllByRole('option')).toHaveLength(OPTIONS.length);
     await expect(within(listbox).getByRole('option', { name: 'Black' })).toHaveAttribute('data-disabled');
@@ -244,11 +244,11 @@ export const Test: Story = {
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
     const view = canvas.getByRole('combobox', { name: 'View' });
-    await expect(view.querySelectorAll('.nx-icon')).toHaveLength(1);
+    await expect(view.querySelectorAll('.dx-icon')).toHaveLength(1);
     await userEvent.click(view);
     await userEvent.click(await body.findByRole('option', { name: 'Grid' }));
     await waitFor(() => expect(view).toHaveTextContent('Grid'));
-    const icons = view.querySelectorAll<SVGElement>('.nx-icon');
+    const icons = view.querySelectorAll<SVGElement>('.dx-icon');
     await expect(icons).toHaveLength(2);
     await expect(icons[0].getAttribute('aria-hidden')).toBe('true');
     await expect(icons[0].getBoundingClientRect().left).toBeLessThan(
@@ -272,12 +272,12 @@ export const Test: Story = {
     const kale = within(vegetables).getByRole('option', { name: 'Kale' });
     await expect(kale.querySelector('[data-part="item-text"]')).toHaveTextContent('Kale');
     await expect(kale.querySelector('[data-part="item-indicator"]')).not.toBeNull();
-    await expect(kale.querySelectorAll('.nx-icon')).toHaveLength(2);
+    await expect(kale.querySelectorAll('.dx-icon')).toHaveLength(2);
     const leek = within(vegetables).getByRole('option', { name: 'Leek' });
     await expect(leek.querySelector('[data-part="item-text"] [data-scope="tag"]')).not.toBeNull();
     await expect(leek.querySelector('[data-part="item-indicator"]')).not.toBeNull();
-    await expect(leek.querySelector('.nx-icon')?.getBoundingClientRect().left).toBeCloseTo(
-      kale.querySelector('.nx-icon')?.getBoundingClientRect().left ?? 0,
+    await expect(leek.querySelector('.dx-icon')?.getBoundingClientRect().left).toBeCloseTo(
+      kale.querySelector('.dx-icon')?.getBoundingClientRect().left ?? 0,
       0,
     );
     await userEvent.click(leek);
@@ -319,7 +319,7 @@ export const Test: Story = {
     const lookup = canvas.getByRole('combobox', { name: 'Lookup' });
     await expect(lookup).toHaveAttribute('aria-busy', 'true');
     const spinner = lookup.querySelector<SVGElement>('[data-spin]');
-    await expect(spinner && getComputedStyle(spinner).animationName).toBe('nx-spin');
+    await expect(spinner && getComputedStyle(spinner).animationName).toBe('dx-spin');
 
     // `fit='options'`: as wide as the widest option, whichever is chosen.
     for (const size of SIZES) {
@@ -353,7 +353,7 @@ export const Test: Story = {
       await expect(text.scrollWidth, `${text.textContent} unclipped`).toBeLessThanOrEqual(text.clientWidth);
     }
     for (const option of within(views).getAllByRole('option')) {
-      const icon = option.querySelector<SVGElement>('.nx-icon');
+      const icon = option.querySelector<SVGElement>('.dx-icon');
       await expect(icon?.getBoundingClientRect().width).toBeCloseTo(16, 0);
       await expect(icon?.getBoundingClientRect().left).toBeLessThan(option.getBoundingClientRect().left + 16);
     }

@@ -4,12 +4,12 @@
  */
 
 @layer dx-components {
-  .nx-progress {
+  .dx-progress {
     display: block;
     min-width: 0;
   }
 
-  .nx-progress-track {
+  .dx-progress-track {
     position: relative;
     display: block;
     height: 4px;
@@ -18,7 +18,7 @@
     background: var(--color-separator);
   }
 
-  .nx-progress-range {
+  .dx-progress-range {
     position: absolute;
     inset-block: 0;
     inset-inline-start: 0;
@@ -26,22 +26,22 @@
     background: var(--color-accent-bg);
     transition: width 200ms linear;
   }
-  .nx-progress[data-error] .nx-progress-range {
+  .dx-progress[data-error] .dx-progress-range {
     background: var(--color-error-surface);
   }
-  .nx-progress[data-mode='failed'] .nx-progress-range {
+  .dx-progress[data-mode='failed'] .dx-progress-range {
     width: 100%;
   }
-  .nx-progress[data-mode='indeterminate'] .nx-progress-range {
-    animation: nx-progress-sweep 2s ease-out infinite;
+  .dx-progress[data-mode='indeterminate'] .dx-progress-range {
+    animation: dx-progress-sweep 2s ease-out infinite;
   }
-  .nx-progress[data-mode='countdown'] .nx-progress-range {
+  .dx-progress[data-mode='countdown'] .dx-progress-range {
     width: 100%;
     transition: none;
-    animation: nx-progress-countdown 5s linear forwards;
+    animation: dx-progress-countdown 5s linear forwards;
   }
 
-  @keyframes nx-progress-sweep {
+  @keyframes dx-progress-sweep {
     0% {
       inset-inline-start: 0;
       width: 0%;
@@ -55,7 +55,7 @@
       width: 0%;
     }
   }
-  @keyframes nx-progress-countdown {
+  @keyframes dx-progress-countdown {
     from {
       width: 100%;
     }
@@ -65,10 +65,10 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nx-progress-range {
+    .dx-progress-range {
       transition: none;
     }
-    .nx-progress[data-mode='indeterminate'] .nx-progress-range {
+    .dx-progress[data-mode='indeterminate'] .dx-progress-range {
       animation: none;
       inset-inline-start: 0;
       width: 100%;

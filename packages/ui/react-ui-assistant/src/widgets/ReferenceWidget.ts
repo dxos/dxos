@@ -23,6 +23,6 @@ export class ReferenceWidget extends WidgetType {
     // line on both sides — the sentence the reference sits in stops flowing around it.
     return Domino.of('span')
       .classNames('inline-flex align-baseline')
-      .append(Domino.of('dx-anchor').classNames('nx-tag-anchor').attributes({ eid: this.eid }).text(this.text)).root;
+      .append(Domino.of('dx-anchor').classNames('dx-tag-anchor').attributes({ eid: this.eid }).text(this.text)).root;
   }
 }

@@ -54,7 +54,7 @@ export const Test: Story = {
       const bar = canvas.getByTestId('default');
       await expect(bar).toHaveAttribute('aria-hidden', 'true');
       await expect(bar.getBoundingClientRect().height).toBeCloseTo(block, 0);
-      await expect(getComputedStyle(bar).animationName).toBe('nx-skeleton-pulse');
+      await expect(getComputedStyle(bar).animationName).toBe('dx-skeleton-pulse');
 
       const circle = canvas.getByTestId('circle').getBoundingClientRect();
       await expect(circle.width).toBeCloseTo(block, 0);

@@ -254,7 +254,7 @@ export const Tags = {
           {['neutral', ...hues].map((hue) => (
             <div key={hue} className='grid grid-cols-[8rem_8rem]'>
               <div>
-                <span className='nx-tag nx-tag-inline' data-hue={hue}>
+                <span className='dx-tag dx-tag-inline' data-hue={hue}>
                   {hue}
                 </span>
               </div>

@@ -75,7 +75,7 @@ export const Test: Story = {
     await expect(canvas.getByText('Breadcrumbs')).toHaveAttribute('aria-current', 'page');
 
     // One row, a block tall, scrolling sideways once it overflows the 24rem pane.
-    const block = parseFloat(getComputedStyle(list).getPropertyValue('--nx-block-size')) * 16;
+    const block = parseFloat(getComputedStyle(list).getPropertyValue('--dx-block-size')) * 16;
     await expect(list.getBoundingClientRect().height).toBeCloseTo(block, 0);
     const tops = within(list)
       .getAllByRole('listitem')

@@ -91,7 +91,7 @@ export const Test: Story = {
     await expect(panel).toBe(body.getByTestId('panel'));
     await expect(panel).toHaveAttribute('data-surface', 'raised');
     await expect(panel).toHaveAttribute('data-size', 'md');
-    await expect(getComputedStyle(panel).getPropertyValue('--nx-level').trim()).toBe('3');
+    await expect(getComputedStyle(panel).getPropertyValue('--dx-level').trim()).toBe('3');
     await waitFor(async () => {
       const rect = panel.getBoundingClientRect();
       await expect(rect.width).toBeCloseTo(384, 0);
@@ -102,7 +102,7 @@ export const Test: Story = {
     await expect(panel.querySelectorAll('[data-part="resize-trigger"]')).toHaveLength(8);
     // A block row and its 1px separator.
     await expect(body.getByTestId('panel.header').getBoundingClientRect().height).toBeCloseTo(GEOMETRY.md.block + 1, 0);
-    const viewport = body.getByTestId('panel.body').querySelector<HTMLElement>('.nx-scroll-viewport');
+    const viewport = body.getByTestId('panel.body').querySelector<HTMLElement>('.dx-scroll-viewport');
     await waitFor(() => expect(viewport && viewport.scrollHeight > viewport.clientHeight).toBe(true));
 
     // Restore is hidden until the panel is staged; minimize folds it to the header.

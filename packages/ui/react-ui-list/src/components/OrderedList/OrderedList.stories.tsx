@@ -251,7 +251,7 @@ const StableIdsStory = () => {
 
 /** Rows sharing the Root's `columns`: every row's cells start at the same x. */
 const ColumnsStory = () => (
-  <OrderedList.Root items={ITEMS} getLabel={getLabel} columns='var(--nx-block-size) minmax(0, 1fr) 6rem'>
+  <OrderedList.Root items={ITEMS} getLabel={getLabel} columns='var(--dx-block-size) minmax(0, 1fr) 6rem'>
     {({ items }) => (
       <OrderedList.Content aria-label='Columns'>
         {items.map((item) => (
@@ -421,14 +421,14 @@ export const Test: Story = {
     await expect(panel.top).toBeGreaterThanOrEqual(row.bottom - 0.5);
 
     // Content scrolls by default: the list is its own ScrollArea's viewport.
-    await expect(list).toHaveClass('nx-scroll-viewport');
+    await expect(list).toHaveClass('dx-scroll-viewport');
 
     // 4. Remove, named by the row's text.
     await userEvent.click(canvas.getByRole('button', { name: 'Delete Delta' }));
     await waitFor(() => expect(order).toHaveTextContent('b c e a'));
 
     // 5. The drop target draws its edge.
-    const target = canvas.getByTestId('row-e-md').closest<HTMLElement>('.nx-collapsible');
+    const target = canvas.getByTestId('row-e-md').closest<HTMLElement>('.dx-collapsible');
     target?.setAttribute('data-drop-target', 'bottom');
     const line = target ? getComputedStyle(target, '::after') : undefined;
     await expect(line?.content).toBe('""');
@@ -441,7 +441,7 @@ export const Test: Story = {
     const observer = new MutationObserver((records) => {
       for (const record of records) {
         for (const node of record.addedNodes) {
-          const chip = node instanceof HTMLElement ? node.querySelector<HTMLElement>('.nx-drag-preview') : null;
+          const chip = node instanceof HTMLElement ? node.querySelector<HTMLElement>('.dx-drag-preview') : null;
           if (chip) {
             previews.push(chip);
           }

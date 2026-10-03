@@ -4,36 +4,36 @@
  */
 
 @layer dx-components {
-  .nx-link {
+  .dx-link {
     font: inherit;
     text-decoration: none;
     cursor: pointer;
     border-radius: var(--radius-sm, 0.25rem);
   }
-  .nx-link[data-variant='accent'] {
+  .dx-link[data-variant='accent'] {
     color: var(--color-accent-text);
   }
-  .nx-link[data-variant='accent']:hover {
+  .dx-link[data-variant='accent']:hover {
     color: var(--color-accent-text-hover, var(--color-accent-text));
   }
-  .nx-link[data-variant='neutral'] {
+  .dx-link[data-variant='neutral'] {
     color: inherit;
   }
-  .nx-link[data-variant='neutral']:hover {
+  .dx-link[data-variant='neutral']:hover {
     text-decoration: underline;
   }
 
-  /* Class forms for raw DOM and non-Link elements: `nx-link-accent` (the accent link), `nx-link-hover` (keeps its
+  /* Class forms for raw DOM and non-Link elements: `dx-link-accent` (the accent link), `dx-link-hover` (keeps its
      colour, takes the accent on hover). */
-  .nx-link-accent {
+  .dx-link-accent {
     color: var(--color-accent-text);
     cursor: pointer;
   }
-  .nx-link-accent:hover,
-  .nx-link-hover:hover {
+  .dx-link-accent:hover,
+  .dx-link-hover:hover {
     color: var(--color-accent-text-hover, var(--color-accent-text));
   }
-  .nx-link-hover {
+  .dx-link-hover {
     cursor: pointer;
   }
 }

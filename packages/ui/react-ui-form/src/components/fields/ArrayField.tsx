@@ -89,7 +89,7 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
   }
 
   const asObject = SchemaEx.isNestedType(elementType) && !Ref.isRefType(elementType);
-  const columns = [ordered && editable && 'var(--nx-block-size)', 'minmax(0, 1fr)', editable && 'var(--nx-block-size)']
+  const columns = [ordered && editable && 'var(--dx-block-size)', 'minmax(0, 1fr)', editable && 'var(--dx-block-size)']
     .filter(Boolean)
     .join(' ');
 

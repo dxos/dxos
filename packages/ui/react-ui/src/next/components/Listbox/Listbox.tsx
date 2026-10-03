@@ -346,7 +346,7 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
     const row = useMemo(() => ({ textId }), [textId]);
     // Under Root `columns` the row is a subgrid of the Content's tracks (theme); otherwise it has its own template.
     const { style: columnsStyle, ...attributes } = containerAttributes(
-      columns ? {} : { columns: 'var(--nx-item-columns)' },
+      columns ? {} : { columns: 'var(--dx-item-columns)' },
     );
     const itemProps = api.getItemProps({ item, highlightOnHover });
     const content = children ?? (

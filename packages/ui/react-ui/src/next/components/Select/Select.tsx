@@ -79,7 +79,7 @@ const SelectRoot = forwardRef<HTMLDivElement, SelectRootProps>(
         // Ark's 8px default reads as detached from the trigger.
         positioning={popupPositioning(POPUP_GUTTER, positioning)}
         collection={collection}
-        className={mx('nx-select', classNames)}
+        className={mx('dx-select', classNames)}
         ref={forwardedRef}
       >
         {children}

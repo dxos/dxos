@@ -5,32 +5,32 @@
  */
 
 @layer dx-components {
-  .nx-skeleton {
+  .dx-skeleton {
     min-width: 0;
-    height: var(--nx-block-size);
+    height: var(--dx-block-size);
     border-radius: var(--radius-md, 0.375rem);
     background: var(--color-separator);
-    animation: nx-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: dx-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-  .nx-skeleton[data-variant='text'] {
-    height: var(--nx-font-size);
-    margin-block: calc((var(--nx-line-height) - var(--nx-font-size)) / 2);
+  .dx-skeleton[data-variant='text'] {
+    height: var(--dx-font-size);
+    margin-block: calc((var(--dx-line-height) - var(--dx-font-size)) / 2);
     border-radius: var(--radius-sm, 0.25rem);
   }
-  .nx-skeleton[data-variant='circle'] {
+  .dx-skeleton[data-variant='circle'] {
     flex-shrink: 0;
-    width: var(--nx-block-size);
+    width: var(--dx-block-size);
     border-radius: 9999px;
   }
 
-  @keyframes nx-skeleton-pulse {
+  @keyframes dx-skeleton-pulse {
     50% {
       opacity: 0.5;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nx-skeleton {
+    .dx-skeleton {
       animation: none;
     }
   }

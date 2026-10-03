@@ -191,7 +191,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
             <MenuViewport
               {...props}
               data-columns={columns}
-              style={columns ? { ...style, gridTemplateColumns: `repeat(${columns}, var(--nx-block-size))` } : style}
+              style={columns ? { ...style, gridTemplateColumns: `repeat(${columns}, var(--dx-block-size))` } : style}
               ref={forwardedRef}
             >
               {children}
@@ -492,7 +492,7 @@ const parentEdgeRect = (element: unknown) => {
     return null;
   }
   const item = element.getBoundingClientRect();
-  const frame = element.closest('.nx-popup')?.getBoundingClientRect();
+  const frame = element.closest('.dx-popup')?.getBoundingClientRect();
   return { x: item.x, y: item.y, width: (frame?.right ?? item.right) - item.x, height: item.height };
 };
 

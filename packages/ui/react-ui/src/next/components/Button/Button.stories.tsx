@@ -163,7 +163,7 @@ export const Test: Story = {
   args: { allSizes: true, variants: true },
   play: async ({ canvasElement }) => {
     // A label never wraps: squeezed to a sliver, a button stays one control tall.
-    const sample = canvasElement.querySelector<HTMLElement>('.nx-button:not([data-square])');
+    const sample = canvasElement.querySelector<HTMLElement>('.dx-button:not([data-square])');
     if (sample) {
       const height = sample.getBoundingClientRect().height;
       sample.style.maxWidth = '2rem';
@@ -198,7 +198,7 @@ export const Test: Story = {
       const add = byTestId(canvasElement, `add-${size}`).getBoundingClientRect();
       // The cell starts after the toolbar's inline padding.
       const toolbarPadding = parseFloat(
-        getComputedStyle(byTestId(canvasElement, `add-${size}`).closest('.nx-toolbar') ?? canvasElement).paddingLeft,
+        getComputedStyle(byTestId(canvasElement, `add-${size}`).closest('.dx-toolbar') ?? canvasElement).paddingLeft,
       );
       await expect(add.left - inset, `add-${size} cell`).toBeCloseTo(toolbar.left + toolbarPadding, 0);
 
@@ -399,7 +399,7 @@ export const Test: Story = {
       0,
     );
     const spinner = byTestId(canvasElement, 'spin-md').querySelector('svg');
-    await expect(spinner && getComputedStyle(spinner).animationName).toBe('nx-spin');
+    await expect(spinner && getComputedStyle(spinner).animationName).toBe('dx-spin');
     await expect(byTestId(canvasElement, 'icon-class-md').querySelector('svg')).toHaveClass('text-success-text');
     for (const size of SIZES) {
       const glyph = byTestId(canvasElement, `icon-size-${size}`).querySelector('svg')?.getBoundingClientRect();
@@ -419,7 +419,7 @@ export const Test: Story = {
       element.remove();
       return resolved;
     };
-    await expect(probe('var(--nx-focus-ring-color)')).toBe(probe('var(--color-focus)'));
+    await expect(probe('var(--dx-focus-ring-color)')).toBe(probe('var(--color-focus)'));
     await expect(probe('var(--color-focus)')).not.toBe(probe('var(--color-secondary-border)'));
   },
 };

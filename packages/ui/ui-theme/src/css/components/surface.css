@@ -148,7 +148,7 @@
   .dx-toolbar-surface,
   .dx-group-surface,
   .dx-input-surface,
-  .nx-input-box {
+  .dx-input-box {
     --color-hover-surface: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
     );

@@ -109,7 +109,7 @@ export const Test: Story = {
     for (const size of SIZES) {
       const tag = byTestId(canvasElement, `tag-${size}`);
       const row = byTestId(canvasElement, `row-${size}`);
-      const inset = parseFloat(getComputedStyle(row).getPropertyValue('--nx-control-inset'));
+      const inset = parseFloat(getComputedStyle(row).getPropertyValue('--dx-control-inset'));
       const rect = tag.getBoundingClientRect();
       await expect(rect.height, size).toBeCloseTo(controlSize(size) - 2 * inset, 0);
       await expect(centreY(rect), size).toBeCloseTo(centreY(row.getBoundingClientRect()), 0);

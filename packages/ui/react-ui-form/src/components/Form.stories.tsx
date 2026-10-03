@@ -171,11 +171,11 @@ export const Test: Story = {
 
 /** Selectors for every trailing icon of a form column, control adornments and row actions alike. */
 const TRAILING_ICONS = [
-  '.nx-select-trigger [data-part="indicator"] svg',
-  '.nx-input-adornment > .nx-button:last-child svg',
-  '.nx-field-header > .nx-button svg',
-  '[role="option"] > .nx-button:last-child svg',
-  '[data-part="legend"] > .nx-button svg',
+  '.dx-select-trigger [data-part="indicator"] svg',
+  '.dx-input-adornment > .dx-button:last-child svg',
+  '.dx-field-header > .dx-button svg',
+  '[role="option"] > .dx-button:last-child svg',
+  '[data-part="legend"] > .dx-button svg',
 ].join(', ');
 
 /**
@@ -192,7 +192,7 @@ const expectTrailingColumn = async (canvasElement: HTMLElement) => {
   await expect(icons).toHaveLength(9);
   const probe = canvasElement.ownerDocument.createElement('span');
   probe.style.display = 'block';
-  probe.style.width = 'var(--nx-control-icon)';
+  probe.style.width = 'var(--dx-control-icon)';
   form.appendChild(probe);
   const iconSize = probe.getBoundingClientRect().width;
   probe.remove();

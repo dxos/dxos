@@ -90,7 +90,7 @@ const useBodyComponents = (): MarkdownViewProps['components'] => {
         }
         const icon = PreviewCapabilities.linkIcon(all, href);
         return (
-          <DxAnchor eid={href} className='nx-tag-anchor'>
+          <DxAnchor eid={href} className='dx-tag-anchor'>
             {icon && (
               <Icon icon={icon.icon} size='md' classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
             )}

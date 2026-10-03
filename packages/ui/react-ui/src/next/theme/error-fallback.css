@@ -5,19 +5,19 @@
  */
 
 @layer dx-components {
-  .nx-error-fallback {
+  .dx-error-fallback {
     display: flex;
     flex-direction: column;
-    gap: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
     min-width: 0;
     min-height: 0;
-    padding: calc(2 * var(--nx-gap-size));
+    padding: calc(2 * var(--dx-gap-size));
     overflow: auto;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
   }
 
-  .nx-error-fallback-title {
+  .dx-error-fallback-title {
     margin: 0;
     font-size: 1.125rem;
     line-height: 1.75rem;
@@ -25,28 +25,28 @@
     color: var(--color-error-text);
   }
 
-  .nx-error-fallback-message {
+  .dx-error-fallback-message {
     margin: 0;
     overflow-wrap: anywhere;
   }
 
   /* The copy button leads its section and keeps its own width rather than stretching across it. */
-  .nx-error-fallback-section {
+  .dx-error-fallback-section {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
     min-width: 0;
   }
-  .nx-error-fallback-section > :not(.nx-button) {
+  .dx-error-fallback-section > :not(.dx-button) {
     align-self: stretch;
   }
-  /* Overrides the generic `.nx-control` centring, so the button heads its section at the start edge. */
-  .nx-error-fallback-section > .nx-button {
+  /* Overrides the generic `.dx-control` centring, so the button heads its section at the start edge. */
+  .dx-error-fallback-section > .dx-button {
     align-self: flex-start;
   }
 
-  .nx-error-fallback-data {
+  .dx-error-fallback-data {
     margin: 0;
     overflow-x: auto;
     font-family: var(--font-mono);
@@ -54,7 +54,7 @@
     line-height: 1rem;
   }
 
-  .nx-error-stack {
+  .dx-error-stack {
     margin: 0;
     padding: 0;
     list-style: none;
@@ -63,64 +63,64 @@
     line-height: 1.25rem;
   }
 
-  .nx-error-stack-frame {
+  .dx-error-stack-frame {
     position: relative;
     display: grid;
     grid-template-columns: 1rem minmax(0, 1fr) auto auto;
     column-gap: 0.5rem;
     align-items: center;
   }
-  .nx-error-stack-frame[data-local] {
+  .dx-error-stack-frame[data-local] {
     cursor: pointer;
   }
-  .nx-error-stack-frame[data-local]:hover {
+  .dx-error-stack-frame[data-local]:hover {
     background: var(--color-hover-surface);
   }
 
   /* Tree connector in the first track: a vertical line through the row (half for the last) and a branch to it. */
-  .nx-error-stack-frame::before,
-  .nx-error-stack-frame::after {
+  .dx-error-stack-frame::before,
+  .dx-error-stack-frame::after {
     content: '';
     position: absolute;
     background: var(--color-neutral-500);
     pointer-events: none;
   }
-  .nx-error-stack-frame::before {
+  .dx-error-stack-frame::before {
     inset-inline-start: 0.5rem;
     inset-block: 0;
     width: 1px;
   }
-  .nx-error-stack-frame:last-child::before {
+  .dx-error-stack-frame:last-child::before {
     inset-block-end: 50%;
   }
-  .nx-error-stack-frame::after {
+  .dx-error-stack-frame::after {
     inset-inline-start: 0.5rem;
     top: 50%;
     width: 0.5rem;
     height: 1px;
   }
 
-  .nx-error-stack-function {
+  .dx-error-stack-function {
     grid-column: 2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--color-subdued);
   }
-  a.nx-error-stack-function {
+  a.dx-error-stack-function {
     color: inherit;
     text-decoration: none;
   }
 
-  .nx-error-stack-file,
-  .nx-error-stack-line {
+  .dx-error-stack-file,
+  .dx-error-stack-line {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.75rem;
     color: var(--color-subdued);
   }
-  .nx-error-stack-line {
+  .dx-error-stack-line {
     text-align: end;
   }
 }

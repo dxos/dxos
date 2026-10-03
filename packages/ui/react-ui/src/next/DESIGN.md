@@ -24,10 +24,10 @@
 2. **Sizes.** CSS is the source of truth: theme rules keyed by `[data-size=xs|sm|md|lg|xl]` define `--block-size`,
    `--line-height`, `--font-size`, `--icon-size`, `--gap-size`. `Container` only sets `data-size`; TS exports just
    the `Size` type and `SIZES` list. One icon scale serves rail Blocks and controls, with `md` at Tailwind's `size-4`:
-   `--nx-icon-size` xs 0.75rem, sm 0.875rem, md 1rem, lg 1.25rem, xl 1.5rem. The metrics live in `theme/size.css`.
+   `--dx-icon-size` xs 0.75rem, sm 0.875rem, md 1rem, lg 1.25rem, xl 1.5rem. The metrics live in `theme/size.css`.
    A Button (and so Toggle and `ToggleGroup.Item`) takes `size` too, setting `data-size` on itself alone, which
    `theme/size.css` scopes like any sized part.
-   Namespacing (provisional, to be renamed): rules match only `.nx-*` elements and variables are `--nx-*`, since
+   Namespacing _(renamed after the cut-over: the provisional `nx-` prefix became `dx-` once the current components' CSS was gone)_: rules match only `.dx-*` elements and variables are `--dx-*`, since
    `data-size`, `data-layout`, `--gutter`, `--icon-size` and `--line-height` are already used by current primitives.
 3. **Framework neutrality.** Design for Solid, build React only, following Ark's layering: behavior in framework-neutral
    zag machines (Ark's where one exists, our own `@zag-js/core` machine otherwise), styling in CSS rules and plain class
@@ -71,7 +71,7 @@
    storybook play tests assert per-size alignment and roles. Container gains gutter/columns/layout and a composed
    ScrollArea per decision 5, exercised by a nested-form story (rails, gutter Blocks, scrollbar in the end gutter).
    No plugin adoption yet.
-8. **Theming.** A theme only sets values: `--nx-*` variables plus ui-theme's color tokens (dark mode via
+8. **Theming.** A theme only sets values: `--dx-*` variables plus ui-theme's color tokens (dark mode via
    `light-dark()`), applied globally or under a scope such as `[data-theme=…]`. Structure — grid, placement, the
    element tree — is not themeable. Class recipes are plain TS functions shared by the React and Solid bindings; they
    are fixed at build time, not swapped at runtime through context (unlike the current `tx()` theme functions).
@@ -95,8 +95,8 @@
     deep subgrids and `:has` are the design's unmeasured risks.
 
 12. **Control sizing.** Controls (Input, Button, IconButton, Select trigger) are shorter than the block
-    and centred in it: `--nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset))`, with a per-size
-    inset (provisional: xs 1px, sm 2px, md 2px, lg 3px, xl 3px; controls 18/20/28/34/42px). `--nx-control-icon` equals `--nx-icon-size` (one
+    and centred in it: `--dx-control-size: calc(var(--dx-block-size) - 2 * var(--dx-control-inset))`, with a per-size
+    inset (provisional: xs 1px, sm 2px, md 2px, lg 3px, xl 3px; controls 18/20/28/34/42px). `--dx-control-icon` equals `--dx-icon-size` (one
     icon scale, decision 2), so an icon is the same size in a control as in a rail Block. The block stays the row height, so rails and Typography's first-line centring are unchanged.
 13. **Field layout.** Field is a part, not a container (containers are Container, Form, Toolbar). `Field.Root` is a
     flex stack placed in the content track: Label above the control, HelperText/ErrorText below. Labels do not share a
@@ -106,8 +106,8 @@
     (`Next.Listbox.useContext()`, `Next.Tabs.useContext()`); the layout is `Next.Splitter` with `collapseBelow`, a
     controllable `mode`, and `resizable={false}` by default with a static divider
     (`exemplars/MasterDetail.stories.tsx`).
-15. **One disclosure timing.** `--nx-disclosure-duration` (ui-theme's `--duration-tree-disclosure`, 0 under reduced
-    motion) with `--nx-disclosure-ease-open` (ease-out) and `--nx-disclosure-ease-close` (ease-in), shared by Tree,
+15. **One disclosure timing.** `--dx-disclosure-duration` (ui-theme's `--duration-tree-disclosure`, 0 under reduced
+    motion) with `--dx-disclosure-ease-open` (ease-out) and `--dx-disclosure-ease-close` (ease-in), shared by Tree,
     Collapsible, Accordion, Main and Splitter; Main keeps its own ease-in-out curve.
 16. **Ref arrays in forms.** `ArrayPresentation({ ordered?: boolean; display?: 'tag' | 'title' })`; Tag refs default
     to `'tag'`, other refs to `'title'`; `ordered` implies drag reorder.
@@ -136,18 +136,18 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
    (`ScrollArea.Root > ScrollArea.Viewport asChild > Container`) keeps one element per part, the frame detects an
    inheriting viewport in CSS (`:has`) with no coupling, and ScrollArea stays usable for non-grid content.
 8. **Levels need no React context.** Absolute levels reuse ui-theme's `data-surface` zones, which already paint and
-   re-derive every host aspect (hover, separators, placeholder, scrollbar). Each zone publishes `--nx-level` (its
+   re-derive every host aspect (hover, separators, placeholder, scrollbar). Each zone publishes `--dx-level` (its
    rung), and `level='+1'` resolves against the parent's rung with a style query
-   (`@container style(--nx-level: 2) { … }`), since every element is a style container. Level is independent of
+   (`@container style(--dx-level: 2) { … }`), since every element is a style container. Level is independent of
    rails: an inheriting (subgrid) container can lift its surface and keep the parent's tracks. Style queries on custom
    properties are Baseline: Chrome 111, Safari 18, Firefox 151 (May 2026).
 9. **Portals leave the sized scope.** Portalled content (Select's listbox) inherits neither `data-size` nor level, so
    `Select.Content` takes its own `size` and sets `data-surface='popup'`; unsized, it falls back to the `:root`
    defaults (md). Deriving the trigger's size would need JS measurement or context, both ruled out by decision 3.
 10. **`asChild` merges one element's parts.** `ScrollArea.Viewport asChild > Container` renders one element, whose
-    `data-scope`/`data-part` are the Container's (the child wins); the viewport is identified by `.nx-scroll-viewport`.
+    `data-scope`/`data-part` are the Container's (the child wins); the viewport is identified by `.dx-scroll-viewport`.
 11. **Controls in stacks.** A stack row has no block of its own, so the enclosing Container (or `Field.Root`) pads a
-    direct control child out to a block with `margin-block: var(--nx-control-inset)`; a `row` Container is at least
+    direct control child out to a block with `margin-block: var(--dx-control-inset)`; a `row` Container is at least
     one block tall and centres its items. Both are container rules, keeping decision 6.
 12. **Toolbar items join by hook.** The roving machine (`components/Toolbar/toolbar-machine.ts`) is framework-neutral; Button,
     IconButton, Input and Select.Trigger join the nearest Toolbar through React context carrying the machine's api
@@ -159,16 +159,16 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
    for a real keyboard contract; a row Container needs a track per child.
 2. ~~**`Select.Content` keeps an explicit `size`.**~~ (superseded by 57: popups inherit the trigger's size) Portalled content leaves the sized scope, and inferring the trigger's
    size would need React context or DOM measurement, both ruled out by decisions 3 and 11.
-3. **Toolbar gap is `--nx-control-inset`** (was `--nx-gap-size`, superseded once IconButtons took an inset cell, 19):
+3. **Toolbar gap is `--dx-control-inset`** (was `--dx-gap-size`, superseded once IconButtons took an inset cell, 19):
    Buttons, Inputs and Select triggers in a toolbar take the same inline margin as an IconButton's cell, so any two
    adjacent items are three insets apart (6px at md); Toolbar `Test` asserts it at md and lg.
 4. **`experimental.stories.tsx` removed**; `components.stories.tsx` covers it.
 5. **Controls fill with the host-derived well** (`--color-input-surface`, a small lightness step off the hosting
    surface) instead of ui-theme's fixed `--color-input-bg`, so they stay close to whatever panel hosts them.
-6. **Focus ring is Next's own**: `.nx-focus-ring` draws `--nx-focus-ring-width` (2px) in `--nx-focus-ring-color`
+6. **Focus ring is Next's own**: `.dx-focus-ring` draws `--dx-focus-ring-width` (2px) in `--dx-focus-ring-color`
    (orange by default), so a theme recolours it by setting one variable; the Select popup uses the same variables as
    an outline so item highlights cannot cover it.
-7. **Checkbox box is icon-sized** (`--nx-icon-size`, check mark at 75%), not control-sized; it stays centred in its block.
+7. **Checkbox box is icon-sized** (`--dx-icon-size`, check mark at 75%), not control-sized; it stays centred in its block.
 8. **Layout.** One folder per component under `components/` (`components/<Name>/<Name>.tsx` + `index.ts`, barrel at
    `components/index.ts`); `Next.tsx` assembles the namespace; `theme/`, `recipes.ts` and `sizes.ts` stay at the root.
 9. **`Field.Header` is the label row**: a `size='sm'` block row (by default) holding the Label and optional trailing
@@ -177,10 +177,10 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     Header, Body (`Container gutter='md'` as a composed `ScrollArea` viewport) and Footer (`Group justify='end'`) share
     one gutter. The Body keeps ScrollArea's `data-scope` (finding 10), and Select mounts its popup on open so a modal
     dialog's one-time `aria-hidden` sweep does not hide it.
-11. **Switch** is Ark Switch in a block-tall row like Checkbox, with an icon-tall track (`--nx-icon-size` high, 1.75×
+11. **Switch** is Ark Switch in a block-tall row like Checkbox, with an icon-tall track (`--dx-icon-size` high, 1.75×
     wide, 2px thumb inset) filled with the accent when checked. Its hidden native checkbox takes `role=switch`
     (follow-up 21).
-12. **Fieldset** is Ark Fieldset: a borderless `<fieldset>` stacking its Fields with `--nx-gap-size`, headed by a
+12. **Fieldset** is Ark Fieldset: a borderless `<fieldset>` stacking its Fields with `--dx-gap-size`, headed by a
     Legend that is an sm label row like `Field.Header`. Ark passes only `disabled` down to Fields, so `Field.Root`
     also defaults `invalid` from the enclosing set.
 13. **Image** is an `<img>` (required `alt`, lazy, async decode) in a frame with a fixed `aspectRatio` (16 / 9 by
@@ -196,12 +196,12 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     from its trigger and mounts only while open. Items are block rows (leading Icon, label, trailing shortcut in
     `--color-description`); the highlight is `--color-hover-surface` under the popup's outline focus ring.
 17. **Tooltip** is Ark Tooltip: portalled text at `level='popup'` with an explicit `size` (`sm` by default), padded by
-    `--nx-gap-size`, capped at 20rem, 2px from its trigger, opening after 300ms (`openDelay`), with an arrow (follow-up 32).
+    `--dx-gap-size`, capped at 20rem, 2px from its trigger, opening after 300ms (`openDelay`), with an arrow (follow-up 32).
     Tabbing between triggers is fixed in `Tooltip.Trigger` (follow-up 20); IconButton uses it for its label (22).
 18. ~~**Checkbox and Switch occupy an IconButton's cell**~~ (superseded by 19): the box/track was centred in a
-    `--nx-control-size`-wide cell.
-19. **IconButton, Checkbox and Switch occupy a block-sized cell** (`--nx-block-size` square, 32px at md). The visible
-    IconButton stays control-sized and is inset by `--nx-control-inset` on every side (margin inside the part, so a
+    `--dx-control-size`-wide cell.
+19. **IconButton, Checkbox and Switch occupy a block-sized cell** (`--dx-block-size` square, 32px at md). The visible
+    IconButton stays control-sized and is inset by `--dx-control-inset` on every side (margin inside the part, so a
     stack's or Field's `margin-block` inset is the same value and the occupied height stays one block); the checkbox
     box and switch track are centred in the cell with inline margin. An IconButton's icon therefore sits at the same x
     as a rail Block's, and labels after a checkbox or switch align with icon-button rows. Trailing Blocks in
@@ -234,7 +234,7 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     it still opens the native picker (Chromium/WebKit; Firefox keeps its own button). The focus ring and disabled
     dimming are drawn on the row from the input's state (`:has`). `data-testid` goes to the row, the ref to the input.
 26. **Popover** is Ark Popover, portalled like Menu (explicit `size`, `level='popup'`, 2px gutter, mounted only while
-    open), padded by `--nx-gap-size`; Header/Title/Description/CloseTrigger mirror Dialog. `CloseTrigger asChild`
+    open), padded by `--dx-gap-size`; Header/Title/Description/CloseTrigger mirror Dialog. `CloseTrigger asChild`
     closes through the popover api rather than zag's close-trigger props, whose `aria-label="close"` would rename a
     child such as "Done".
 27. **Combobox** is Ark Combobox over a flat option list (`ComboboxOption` = `SelectOption`): a control row holding
@@ -242,7 +242,7 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     Only typing narrows the list (`filter`, default case-insensitive label substring); a selection or clear resets
     it, so reopening shows every option. `Content` lists the filtered options itself unless given children, with an
     `empty` row.
-28. **Tag** is a pill `calc(var(--nx-control-size) - 2 * var(--nx-control-inset))` tall in the size's label text,
+28. **Tag** is a pill `calc(var(--dx-control-size) - 2 * var(--dx-control-inset))` tall in the size's label text,
     coloured by ui-theme's `--color-<hue>-surface`/`-fg` tokens with the current Tag's valence mapping (info cyan,
     success emerald, warning amber, error rose).
 29. ~~**ToggleIconButton**~~ (superseded by 36: now `Next.Toggle`) is Ark Toggle (`asChild`) over IconButton, so `aria-pressed` comes from the zag toggle
@@ -255,7 +255,7 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     Button, and an Input's label `for`). `expectAnchoredBelow` (`testing.ts`) asserts gap and alignment in the
     Select, Combobox, Menu, Popover and Form stories.
 32. **Tooltip and Popover arrows**, on by default (`arrow={false}` on `Content` drops them), as the current primitives
-    show them. Ark's `Arrow`/`ArrowTip` sized `--arrow-size: calc(var(--nx-gap-size) + 2px)` and painted with the
+    show them. Ark's `Arrow`/`ArrowTip` sized `--arrow-size: calc(var(--dx-gap-size) + 2px)` and painted with the
     popup's `--surface-bg`, so the arrow reads as part of the popup. zag grows the gutter by half the arrow box; the
     tip is scaled by 1/√2 so its corners touch that box instead of overhanging it, keeping the tip exactly the 2px
     gutter from the trigger. `expectArrow` (`testing.ts`) asserts colour, side, span and tip gap.
@@ -283,7 +283,7 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     left to `Next.Tag`. Pressed Toggles keep the accent over any variant.
 
 35. ~~**`IconButton iconOnly`** (default `true`)~~ (superseded by 36: `iconOnly` is opt-in on `Button`), as the current IconButton: `iconOnly={false}` renders the icon then
-    the `label` as text, at control height with Button's padding and `--nx-gap-size` between them, not squared or
+    the `label` as text, at control height with Button's padding and `--dx-gap-size` between them, not squared or
     inset; the text names it, so it has no `aria-label` and no Tooltip. `ToggleIconButton` passes it through.
 
 36. **One `Button`; `Toggle` replaces ToggleIconButton** (supersedes the separate IconButton of 19, 22, 29 and 35).
@@ -292,7 +292,7 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     (or `children`, which win) and `iconOnly?: true`, which requires `icon` and `label` and yields the square
     block-cell button of 19 (`data-square`), named by `aria-label` and labelled by a Tooltip (22; `showTooltip={false}`
     opts out). Variants and valences (34) apply to every form. The union type makes `label` required exactly when the
-    text is hidden. Icons are spaced from the label by `--nx-gap-size`. `Next.Toggle` is Ark Toggle over this Button
+    text is hidden. Icons are spaced from the label by `--dx-gap-size`. `Next.Toggle` is Ark Toggle over this Button
     with the same icon/label/`iconOnly` API, so a text toggle ("Bold") needs no second component; `aria-pressed`
     still comes from the zag toggle machine. All parts emit `data-scope='button'`.
 
@@ -326,7 +326,7 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     end-track width.
 
 40. **Button and Toggle parity.** `Button hue` fills with a Tag's hue: the per-hue rules in `tag.css` now set
-    `--nx-hue-bg`/`-fg` for `:is(.nx-tag, .nx-button)`, and a hued button's hover shifts brightness (0.94, 1.12 in dark),
+    `--dx-hue-bg`/`-fg` for `:is(.dx-tag, .dx-button)`, and a hued button's hover shifts brightness (0.94, 1.12 in dark),
     as the current `tag` variant does, since the tag palette has no hover step. `caretDown` appends a caret at 75% of the
     control icon, one inset from what it follows; an icon-only button with a caret, or `compact` (one inset of inline
     padding), gives up its square but keeps its inset cell. `tooltipSide` places the label Tooltip. `Toggle activeIcon`
@@ -348,7 +348,7 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     edge. `noAutoFill` sets `data-1p-ignore`; `variant='subdued'` drops the well.
 
 42. **Select parity.** `Select.ItemGroup`/`ItemGroupLabel` are Ark's parts, the label sharing Menu's caption rule
-    (`.nx-popup-group-label`). `SelectOption.iconHue` colours the option's icon in the item and trigger with a Tag
+    (`.dx-popup-group-label`). `SelectOption.iconHue` colours the option's icon in the item and trigger with a Tag
     hue's foreground (`Icon hue`, the current SelectField's `iconHue`). An Item's `children` replace its icon and label
     for custom content; the trigger still shows the option's `label`, which is also its typeahead text. `multiple` is
     Ark's, with `closeOnSelect` defaulting to off so the popup stays open while choosing; the trigger then lists the
@@ -422,7 +422,7 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
 
 49. **Scrolling regions always use `Next.ScrollArea`; popups use `width='thin'`** (amends 44 and 45). No Next part
     scrolls with `overflow: auto` and a native bar. Menu, Select and Combobox content sits in `PopupScroll`
-    (`components/ScrollArea/PopupScroll.tsx`): the ScrollArea frame is the popup surface (`.nx-popup`,
+    (`components/ScrollArea/PopupScroll.tsx`): the ScrollArea frame is the popup surface (`.dx-popup`,
     `data-surface='popup'`, `data-size`, capped at `min(--available-height, 20rem)`) and the Ark content is its
     viewport, because zag scrolls the highlighted item into view only when the content element itself overflows
     (`scrollIntoView` checks the root's `overflow`); an inner viewport would leave keyboard navigation stranded below
@@ -439,7 +439,7 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     `--color-inverse-surface` fill and `--color-inverse-fg` text, dark on a light theme and light on a dark one. The
     content carries no `data-surface`: that attribute enters a level zone whose rule paints the popup fill, which the
     inversion would have to out-rank, and a tooltip is a deliberate flip rather than a rung on the level ladder, so it
-    publishes no `--nx-level`. It still takes `.nx-popup` for size, radius and shadow, and publishes its fill as
+    publishes no `--dx-level`. It still takes `.dx-popup` for size, radius and shadow, and publishes its fill as
     `--surface-bg`, so the arrow (which paints `--surface-bg`) needs no rule of its own. Tooltip `Test` asserts the fill
     and text match the tokens' computed colours and differ from `--dx-surface-popup`; `expectArrow` checks the arrow.
 
@@ -472,7 +472,7 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     without one of its own passes its parent's to its Ark Root, so one handler on the root sees selections at any
     depth; a Sub's own `onSelect` still overrides. zag also selects the _highlighted_ value, and highlights on pointer
     move only while the interaction modality is `pointer`, so a synthetic hover after keyboard use highlights nothing.
-    A Sub's Content takes `.nx-submenu`, whose frame overhangs the positioner by `--nx-control-inset` (the viewport's
+    A Sub's Content takes `.dx-submenu`, whose frame overhangs the positioner by `--dx-control-inset` (the viewport's
     block padding) above for a `-start` placement and below for a flipped `-end` one, so the first (or last) item
     lines up with the row floating-ui aligns the positioner to, at every size and depth, with no gap between panels.
     Menu `Test` walks File ▸ New ▸ Diagram ▸ Flowchart from the keyboard at every size, asserting each Sub opens to
@@ -482,7 +482,7 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
 53. **Popups reposition outside ResizeObserver callbacks** (amends 49). The Select `multiple` case (the popup stays
     open while its trigger widens) logged "ResizeObserver loop completed with undelivered notifications". floating-ui's
     `autoUpdate` observes the trigger; its callback repositions, and zag's size middleware sets `--reference-width`
-    (the `.nx-popup` `min-width`) in a microtask before that delivery ends. The popup's ScrollArea viewport, which the
+    (the `.dx-popup` `min-width`) in a microtask before that delivery ends. The popup's ScrollArea viewport, which the
     overlay thumbs observe, is portalled near the body and so shallower than the trigger: the browser skips a
     shallower observation that changes mid-delivery and reports the loop. The thumbs were the victim, not the cause,
     so `ScrollAreaThumbs` is unchanged. `popupPositioning` (`PopupScroll.tsx`, used by Select, Combobox, Menu and
@@ -506,7 +506,7 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
       `Control` (floating-ui's anchor, so no virtual anchor as the current `PickerWrapper` needed), the trailing
       trigger is `DatePicker.Trigger asChild` over a ghost icon-only Button (the `Field.TriggerIcon` role), and the
       portalled Content (`level='popup'`, explicit `size`, finding 9) holds zag's day, month and year tables. The
-      calendar keeps its own, roughly square shape rather than the anchor's width (`.nx-popup`'s `--reference-width`
+      calendar keeps its own, roughly square shape rather than the anchor's width (`.dx-popup`'s `--reference-width`
       minimum is dropped): seven block-sized square days plus its padding at every size, placed `bottom-end` so it
       ends under the trigger. `min`/`max` disable days; picking a day keeps a date-time's time. `picker={false}` drops
       it; `time` has none.
@@ -515,11 +515,11 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
       invalid, disabled, read-only and required state itself. PinInput names its cells' `group` the same way; Ark's
       NumberInput and PasswordInput read the field themselves.
     - **`Next.PinInput`** is Ark `pin-input` with a string value: `length` (6), `mask`, `otp` (one-time-code autofill),
-      `type`, `onValueComplete`; each cell is a `--nx-control-size` square. **`Next.NumberInput`** is Ark
+      `type`, `onValueComplete`; each cell is a `--dx-control-size` square. **`Next.NumberInput`** is Ark
       `number-input` in the control row with trailing decrement/increment Buttons (`stepper={false}` hides them);
       **`Next.PasswordInput`** is Ark `password-input` with an eye toggle whose label follows the state
       (`ignorePasswordManagers` is Input's `noAutoFill`). Stepper and toggle labels are translated (55).
-    - **The control row is shared, not a new part.** Input's adorned row (`.nx-input-row`: adornments, outline ring,
+    - **The control row is shared, not a new part.** Input's adorned row (`.dx-input-row`: adornments, outline ring,
       disabled dimming, a trailing icon-only Button inset to fit) now also hosts DateInput, NumberInput and
       PasswordInput; a popup trigger is a Button in its `end` slot. A frame for third-party editors stays with AUDIT
       milestone 10.
@@ -576,7 +576,7 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     (`announce`, created at the end of the body, so it adds no grid track beside the handle), with react-ui
     translations (`drag-handle.*`). Without `onMove` the handle stays a pointer-only grip outside the tab order (43).
     `Next.DropIndicator` is an absolutely placed 2px line on a row's `top` or `bottom` edge in
-    `--nx-drop-indicator-color` (the focus-ring colour), taking no track in a row Container; Listbox rows are
+    `--dx-drop-indicator-color` (the focus-ring colour), taking no track in a row Container; Listbox rows are
     positioned for it. `Next.DragPreview` is a block-tall chip whose `data-size` and level come from its source row's
     nearest ancestors (`dragScope`: attribute reads, no layout), for pragmatic-drag-and-drop's portalled native
     preview (AUDIT 2.6). react-ui adds no drag binding: pointer dragging and reorder logic stay in react-ui-list.
@@ -588,10 +588,10 @@ From the react-ui-form Form spike (`react-ui-form/src/next/SPIKE.md`) and its us
 60. **Form nesting: enclosed and indented, no surface stepping.** A nested object is a grid Fieldset
     (`gutter='inherit'`, rendered as a `group` element, since a `<fieldset>` cannot be a subgrid) with `inset`: it spans
     only its parent's content track and inherits that track's edge lines, so its fields keep the `content` placement
-    (and any interior column line, such as the settings `control` line). Its 1px separator border and `--nx-gap-size`
+    (and any interior column line, such as the settings `control` line). Its 1px separator border and `--dx-gap-size`
     padding indent it one step per depth. It stays on its host's surface: stepping a level per depth does not scale,
     since the `+1` ladder runs out at popup. A grid set or Collapsible Content keeps its parent's row gap (`row-gap: inherit`),
-    except an inset set, which spaces its fields at half the size's `--nx-gap-size` (4px at md, against the form's 8px),
+    except an inset set, which spaces its fields at half the size's `--dx-gap-size` (4px at md, against the form's 8px),
     so they read as one group.
 61. **Row fields** (Phase 4 decision 3). `Field.Root layout='row'` is a subgrid row of its parent's `columns`: header
     and helper before the interior `control` line, the control after it, stacked below the collapse width.
@@ -613,9 +613,9 @@ From the react-ui-form Form spike (`react-ui-form/src/next/SPIKE.md`) and its us
     such as two forms side by side, instead of centring them.
 64. **Label colours: content outranks interface text.** Field labels, header Typography, Fieldset legends and help
     text (`Field.HelperText`) all use ui-theme's `--color-subdued`; help text is one size step smaller than its label
-    (`--nx-helper-font-size`, the next-smaller size's label step; xs and sm have no smaller step). Error text is
+    (`--dx-helper-font-size`, the next-smaller size's label step; xs and sm have no smaller step). Error text is
     unchanged. A Checkbox or Switch label is the control's own text and keeps the base colour. The required mark is the
-    current Form's: `--color-warning-text`, `max(0.125em, --nx-control-inset)` after the label text.
+    current Form's: `--color-warning-text`, `max(0.125em, --dx-control-inset)` after the label text.
 
 ## Phase 3: react-ui-form port
 
@@ -657,7 +657,7 @@ parallel-namespace approach; no compatibility shims).
 4. **Tree deferred** to the last milestone; decide after Listbox and drag-and-drop, with an Ark `tree-view` spike
    against `TreeModel` (lazy atom children, virtualization, drop-on-row).
 5. **Drag and drop stays on pragmatic-drag-and-drop** (vanilla core, Solid-compatible; reuses `useReorder` and plugins'
-   `onMove`/drop policies). Next adds a `DragHandle` part (ghost icon-only Button, grip icon), `--nx-*` drop
+   `onMove`/drop policies). Next adds a `DragHandle` part (ghost icon-only Button, grip icon), `--dx-*` drop
    indicators, a size-scaled drag preview, and keyboard move-up/down on the handle. Every reorder drag is a move:
    rows set `effectAllowed = 'move'` on `dragstart`, and the source row accepts itself as a no-op drop target, so no
    `dragover` in the list is left to the browser (which answers with its copy cursor). Known limitation: Chrome on
@@ -726,7 +726,7 @@ label that names the field.
    URLs, counts, units) uses `--color-description`; interface text (field labels, help text, legends, placeholders)
    uses `--color-subdued`, with help text one size below its label so the two stay distinct at the same colour.
 2. **Emphasis names, applied last.** When the current components are deleted, the text colours are renamed across the
-   whole codebase in one change to an emphasis scale: `--nx-text` (default), `--nx-text-muted` (today's description),
-   `--nx-text-subtle` (today's subdued). Names state emphasis, not use, so components pick a step and a new use needs
+   whole codebase in one change to an emphasis scale: `--dx-text` (default), `--dx-text-muted` (today's description),
+   `--dx-text-subtle` (today's subdued). Names state emphasis, not use, so components pick a step and a new use needs
    no new token; `primary`/`secondary` are avoided because `primary` already means the accent. Renaming earlier would
    leave two schemes in use until the old components go.

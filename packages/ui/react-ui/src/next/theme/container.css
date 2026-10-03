@@ -4,120 +4,120 @@
  */
 
 @layer dx-components {
-  .nx-grid[data-gutter='rail'] {
-    --nx-gutter: var(--nx-block-size);
+  .dx-container[data-gutter='rail'] {
+    --dx-gutter: var(--dx-block-size);
   }
-  .nx-grid[data-gutter='inset'] {
-    --nx-gutter: var(--nx-gap-size);
+  .dx-container[data-gutter='inset'] {
+    --dx-gutter: var(--dx-gap-size);
   }
-  .nx-grid[data-gutter='sm'] {
-    --nx-gutter: var(--dx-gutter-sm);
+  .dx-container[data-gutter='sm'] {
+    --dx-gutter: var(--dx-gutter-sm);
   }
-  .nx-grid[data-gutter='md'] {
-    --nx-gutter: var(--dx-gutter-md);
+  .dx-container[data-gutter='md'] {
+    --dx-gutter: var(--dx-gutter-md);
   }
-  .nx-grid[data-gutter='lg'] {
-    --nx-gutter: var(--dx-gutter-lg);
+  .dx-container[data-gutter='lg'] {
+    --dx-gutter: var(--dx-gutter-lg);
   }
-  .nx-grid[data-gutter='none'] {
-    --nx-gutter: 0px;
+  .dx-container[data-gutter='none'] {
+    --dx-gutter: 0px;
   }
 
-  .nx-grid {
+  .dx-container {
     display: grid;
     min-width: 0;
     align-content: start;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
   }
 
   /* Template root: the end track gives back whatever a native scrollbar consumes. */
-  .nx-grid:not([data-gutter='inherit']) {
+  .dx-container:not([data-gutter='inherit']) {
     grid-template-columns:
-      [full-start] var(--nx-gutter) [content-start] var(--nx-columns, minmax(0, 1fr))
-      [content-end] calc(var(--nx-gutter) - var(--nx-scroll-reserve, 0px)) [full-end];
+      [full-start] var(--dx-gutter) [content-start] var(--dx-columns, minmax(0, 1fr))
+      [content-end] calc(var(--dx-gutter) - var(--dx-scroll-reserve, 0px)) [full-end];
   }
 
   /* A subgrid's tracks are its parent's, so only a template root can be narrowed. */
-  .nx-grid[data-width='document']:not([data-gutter='inherit']) {
+  .dx-container[data-width='document']:not([data-gutter='inherit']) {
     width: 100%;
     max-width: var(--spacing-document-max-width, 50rem);
     margin-inline: auto;
     justify-self: center;
   }
 
-  .nx-grid[data-pad-block]:not([data-gutter='inherit']) {
-    padding-block: var(--nx-gutter);
+  .dx-container[data-pad-block]:not([data-gutter='inherit']) {
+    padding-block: var(--dx-gutter);
   }
 
-  .nx-grid[data-gutter='inherit'] {
+  .dx-container[data-gutter='inherit'] {
     grid-column: full;
     grid-template-columns: subgrid;
   }
   /* Own columns start a fresh template inside the parent's content track (decision 5); no gutters of its own. */
-  .nx-grid[data-gutter='inherit'][data-columns] {
+  .dx-container[data-gutter='inherit'][data-columns] {
     grid-column: content;
-    grid-template-columns: [full-start content-start] var(--nx-columns) [content-end full-end];
+    grid-template-columns: [full-start content-start] var(--dx-columns) [content-end full-end];
   }
 
   /*
    * A plugin surface (`<dx-surface>`, `display: contents`) adds no box, so its children are this grid's items: they
    * take the content track too, rather than auto-placing into the first (gutter) track.
    */
-  .nx-grid > *,
-  .nx-grid > dx-surface > *,
-  .nx-grid > dx-surface > dx-surface > * {
+  .dx-container > *,
+  .dx-container > dx-surface > *,
+  .dx-container > dx-surface > dx-surface > * {
     grid-column: content;
   }
-  .nx-grid > [data-place='full'] {
+  .dx-container > [data-place='full'] {
     grid-column: full;
   }
-  .nx-grid > [data-rail='start'] {
+  .dx-container > [data-rail='start'] {
     grid-column: full-start / content-start;
   }
-  .nx-grid > [data-rail='end'] {
+  .dx-container > [data-rail='end'] {
     grid-column: content-end / full-end;
   }
 
   /* Row gap only: the columns belong to the template (or the parent's, through subgrid). */
-  .nx-grid[data-gap='none'] {
+  .dx-container[data-gap='none'] {
     row-gap: 0;
   }
-  .nx-grid[data-gap='sm'] {
+  .dx-container[data-gap='sm'] {
     row-gap: 0.25rem;
   }
-  .nx-grid[data-gap='md'] {
+  .dx-container[data-gap='md'] {
     row-gap: 0.5rem;
   }
-  .nx-grid[data-gap='lg'] {
+  .dx-container[data-gap='lg'] {
     row-gap: 0.75rem;
   }
   /* A row with its own columns and no gutter tracks shares no parent's tracks, so its gap spaces the columns too. */
-  .nx-grid[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='sm'] {
+  .dx-container[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='sm'] {
     column-gap: 0.25rem;
   }
-  .nx-grid[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='md'] {
+  .dx-container[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='md'] {
     column-gap: 0.5rem;
   }
-  .nx-grid[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='lg'] {
+  .dx-container[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='lg'] {
     column-gap: 0.75rem;
   }
 
   /* A row is at least one block tall so controls centre in it. */
-  .nx-grid[data-layout='row'] {
-    grid-auto-rows: minmax(var(--nx-block-size), auto);
+  .dx-container[data-layout='row'] {
+    grid-auto-rows: minmax(var(--dx-block-size), auto);
     align-items: center;
   }
-  .nx-grid[data-layout='row'][data-align='start'] {
+  .dx-container[data-layout='row'][data-align='start'] {
     align-items: start;
   }
-  .nx-grid[data-layout='row'][data-align='stretch'] {
+  .dx-container[data-layout='row'][data-align='stretch'] {
     align-items: stretch;
   }
-  .nx-grid[data-layout='row'] > :not([data-rail]) {
+  .dx-container[data-layout='row'] > :not([data-rail]) {
     grid-column: auto;
   }
-  .nx-grid[data-layout='row'] > :nth-child(1 of :not([data-rail])) {
+  .dx-container[data-layout='row'] > :nth-child(1 of :not([data-rail])) {
     grid-column-start: content-start;
   }
 
@@ -125,16 +125,16 @@
    * Span (`data-span`): a count extends the child from wherever it starts; `full` takes every content track. The row
    * rules are repeated so they outrank the row's own `grid-column: auto`.
    */
-  .nx-grid > [data-span] {
-    grid-column-end: span var(--nx-span, 1);
+  .dx-container > [data-span] {
+    grid-column-end: span var(--dx-span, 1);
   }
-  .nx-grid > [data-span='full'] {
+  .dx-container > [data-span='full'] {
     grid-column: content;
   }
-  .nx-grid[data-layout='row'] > [data-span]:not([data-rail]) {
-    grid-column-end: span var(--nx-span, 1);
+  .dx-container[data-layout='row'] > [data-span]:not([data-rail]) {
+    grid-column-end: span var(--dx-span, 1);
   }
-  .nx-grid[data-layout='row'] > [data-span='full']:not([data-rail]) {
+  .dx-container[data-layout='row'] > [data-span='full']:not([data-rail]) {
     grid-column: content;
   }
 
@@ -142,48 +142,48 @@
    * A row cell sits in one track, so a subgrid there would carry none of the edge lines its children place against;
    * the cell names its own instead, and anything inheriting inside it aligns within that column.
    */
-  .nx-grid[data-layout='row'] > .nx-grid[data-gutter='inherit']:not([data-columns]) {
+  .dx-container[data-layout='row'] > .dx-container[data-gutter='inherit']:not([data-columns]) {
     grid-template-columns: [full-start content-start] minmax(0, 1fr) [content-end full-end];
   }
 
   /* In a stack a control has no row of its own, so the container pads it out to a block. */
-  .nx-grid[data-layout='stack'] > .nx-control {
-    margin-block: var(--nx-control-inset);
+  .dx-container[data-layout='stack'] > .dx-control {
+    margin-block: var(--dx-control-inset);
   }
 
-  .nx-block {
+  .dx-block {
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    width: var(--nx-block-size);
-    height: var(--nx-block-size);
+    width: var(--dx-block-size);
+    height: var(--dx-block-size);
     justify-self: center;
   }
 
   /* The current `IconBlock compact`: rail-wide, so columns still align, but only as tall as its content. */
-  .nx-block[data-compact] {
+  .dx-block[data-compact] {
     height: auto;
   }
 
   /* Responsive: collapse against the nearest query container (the pane), never the viewport. */
   @container (width < 24rem) {
     /* A card's rails are its icon column, not page margins, so they keep their width in a narrow pane. */
-    .nx-grid.nx-grid[data-gutter='rail']:not(.nx-card) {
-      --nx-gutter: var(--nx-gap-size);
+    .dx-container.dx-container[data-gutter='rail']:not(.dx-card) {
+      --dx-gutter: var(--dx-gap-size);
     }
-    .nx-grid[data-columns] {
-      --nx-columns: minmax(0, 1fr);
+    .dx-container[data-columns] {
+      --dx-columns: minmax(0, 1fr);
     }
-    .nx-grid:not(.nx-card) > [data-rail] {
+    .dx-container:not(.dx-card) > [data-rail] {
       display: none;
     }
-    .nx-grid[data-layout='row'] > :not([data-rail]),
-    .nx-grid > [data-span][data-span]:not([data-rail]) {
+    .dx-container[data-layout='row'] > :not([data-rail]),
+    .dx-container > [data-span][data-span]:not([data-rail]) {
       grid-column: content;
     }
   }
 
-  [data-debug] .nx-grid > * {
+  [data-debug] .dx-container > * {
     outline: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
   }
 }

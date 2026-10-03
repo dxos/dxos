@@ -77,7 +77,7 @@ export const Steps = forwardRef<HTMLDivElement, StepsProps>(
   ) => {
     const count = stepCount(steps);
     const { shown, handover } = useHandover(active, duration);
-    const rootStyle: CSSProperties & CSSVariables = { ...style, '--nx-steps-duration': `${duration}ms` };
+    const rootStyle: CSSProperties & CSSVariables = { ...style, '--dx-steps-duration': `${duration}ms` };
 
     return (
       <StepsPrimitive.Root

@@ -26,7 +26,7 @@ const Row = ({ id, label, testId }: { id: string; label: string; testId: string 
     <Block rail='start' data-testid={`${testId}-rail-start`}>
       <Icon icon='ph--user--regular' />
     </Block>
-    <Label htmlFor={id} classNames='pe-(--nx-gap-size)' data-testid={`${testId}-label`}>
+    <Label htmlFor={id} classNames='pe-(--dx-gap-size)' data-testid={`${testId}-label`}>
       {label}
     </Label>
     <Input id={id} data-testid={`${testId}-input`} />
@@ -78,7 +78,7 @@ const SideBySide = ({ size }: { size: Size }) => (
         <Container data-testid={`split-${side}-group-${size}`}>
           <Input aria-label={`${side} street`} data-testid={`split-${side}-input-${size}`} />
           <Container layout='row' columns='auto minmax(0, 1fr)' data-testid={`split-${side}-row-${size}`}>
-            <Label classNames='pe-(--nx-gap-size)'>City</Label>
+            <Label classNames='pe-(--dx-gap-size)'>City</Label>
             <Input aria-label={`${side} city`} data-testid={`split-${side}-city-${size}`} />
           </Container>
         </Container>
@@ -176,8 +176,8 @@ export const Test: Story = {
     const section = getComputedStyle(byTestId(canvasElement, 'section-md'));
     const raised = getComputedStyle(byTestId(canvasElement, 'raised-md'));
     await expect(raised.backgroundColor).not.toBe(section.backgroundColor);
-    await expect(Number(raised.getPropertyValue('--nx-level').trim())).toBe(
-      Number(section.getPropertyValue('--nx-level').trim()) + 1,
+    await expect(Number(raised.getPropertyValue('--dx-level').trim())).toBe(
+      Number(section.getPropertyValue('--dx-level').trim()) + 1,
     );
 
     await expect(rect(canvasElement, 'narrow-row-md-rail-start').width).toBe(0);

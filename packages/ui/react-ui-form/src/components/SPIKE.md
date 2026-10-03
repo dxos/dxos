@@ -156,7 +156,7 @@ The same container's `icon` renderer could not move yet: `IconPicker` is a curre
 since the Body is already the scrolling rail Container) and a Footer holding `Form.Actions`. The Test checks the 24px
 rail (an sm block), that the body overflows while the footer stays in the pane, and that the Select popup opens at
 `sm`. TestNarrow (20rem) checks the rails collapse to the inset. `Form.Root` renders no element, so it can enclose the
-whole panel. The toolbar is also a scroll viewport, so `.nx-scroll-viewport` alone does not find the body.
+whole panel. The toolbar is also a scroll viewport, so `.dx-scroll-viewport` alone does not find the body.
 
 ### 8. Settings layout (`Settings.stories.tsx`): option 1 works
 
@@ -196,11 +196,11 @@ Minimal and additive; each is covered by that component's Test story, and all 41
 
 1. **`Field.Root layout='row'` and `level`** (`Field.tsx`, `theme/control.css`, `theme/level.css`). A row field is a
    subgrid of its parent's columns: header and helper before the interior `control` line, other children after it,
-   stacked below the pane's collapse width. `level` draws the bordered card, and `.nx-field` joins the `+1` ladder.
+   stacked below the pane's collapse width. `level` draws the bordered card, and `.dx-field` joins the `+1` ladder.
    Covered by Field `Test` (row fields).
 2. **Grid `Fieldset`: `Fieldset.Root gutter='inherit'` and `level`** (`Fieldset.tsx`, `theme/fieldset.css`). It renders
    a `div role='group'` through Ark's `asChild`, with the Container attributes; `Legend` renders a `div` inside it. The
-   flex rules are now `:not(.nx-grid)`. Covered by Fieldset `Test` (a grid set holding a nested, collapsible,
+   flex rules are now `:not(.dx-container)`. Covered by Fieldset `Test` (a grid set holding a nested, collapsible,
    disabled grid set).
 3. **`Collapsible.Content gutter='inherit'`** (`Collapsible.tsx`, `theme/collapsible.css`), and `row-gap: inherit` for
    grid Fieldsets and Collapsible Contents. Covered by the same Fieldset `Test`.
@@ -230,7 +230,7 @@ Added in review (DESIGN follow-ups 60–64):
    `Panel.Body`) for rows of differing heights.
 8. **Label colours**: field labels, header Typography and legends use `--color-subdued`. Checkbox and Switch labels
    keep the base colour, since they are the control's own text. The required mark uses `--color-warning-text`, placed
-   `max(0.125em, --nx-control-inset)` after the label. Covered by Field `Test`, which resolves the tokens through a probe
+   `max(0.125em, --dx-control-inset)` after the label. Covered by Field `Test`, which resolves the tokens through a probe
    element and measures the gap with a Range.
 
 ## Review round 1

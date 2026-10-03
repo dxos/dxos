@@ -67,7 +67,7 @@ export const Test: Story = {
     const think = canvas.getByRole('button', { name: 'Thought for 2s' });
 
     // Triggers are block rows.
-    const block = parseFloat(getComputedStyle(search).getPropertyValue('--nx-block-size')) * 16;
+    const block = parseFloat(getComputedStyle(search).getPropertyValue('--dx-block-size')) * 16;
     await expect(search.getBoundingClientRect().height).toBeCloseTo(block, 0);
     await expect(search).toHaveAttribute('aria-expanded', 'false');
 

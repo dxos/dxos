@@ -351,7 +351,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           // content does, rather than 2rem inside it with nothing in the gap.
           !grid && (showControls ? 'grid-cols-[2rem_1fr_min-content]' : 'grid-cols-[1fr_min-content]'),
           // The tree's rows sit inside its content's inset gutter, so the pane insets by the same gap.
-          grid && 'px-(--nx-gap-size)',
+          grid && 'px-(--dx-gap-size)',
           className,
         )}
         // On the list's own template the pane's cells name their tracks, so the icon sits under the

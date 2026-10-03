@@ -4,7 +4,7 @@
  */
 
 @layer dx-components {
-  .nx-timestamp {
+  .dx-timestamp {
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }

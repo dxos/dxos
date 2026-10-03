@@ -187,7 +187,7 @@ export const Test: Story = {
     const notes = await body.findByTestId('notes-md');
     await expect(byTestId(canvasElement, 'notes-md-container').contains(notes)).toBe(true);
     const notesBody = byTestId(notes, 'notes-md-body');
-    const viewport = notesBody.querySelector<HTMLElement>('.nx-scroll-viewport');
+    const viewport = notesBody.querySelector<HTMLElement>('.dx-scroll-viewport');
     await waitFor(() => expect(viewport && viewport.scrollHeight > viewport.clientHeight).toBe(true));
     await expect(notes.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
     await waitFor(() => expect(notes.contains(canvasElement.ownerDocument.activeElement)).toBe(true));
@@ -213,7 +213,7 @@ export const Test: Story = {
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
     await expect(popover).toHaveAttribute('data-surface', 'popup');
     await expect(popover).toHaveAttribute('data-size', 'md');
-    await expect(getComputedStyle(popover).getPropertyValue('--nx-level').trim()).toBe('5');
+    await expect(getComputedStyle(popover).getPropertyValue('--dx-level').trim()).toBe('5');
     await expectAnchoredBelow(trigger, popover, 'center');
     await expectArrow(trigger, popover);
     await waitFor(() => expect(popover.contains(canvasElement.ownerDocument.activeElement)).toBe(true));

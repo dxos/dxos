@@ -62,8 +62,8 @@ export const createTooltipRenderer =
       root.append(
         Domino.of('button')
           // The classes a labelled ghost `Button` renders; geometry comes from the size scope on
-          // `.nx-button`, so no padding utility belongs here.
-          .classNames('nx-control nx-button nx-focus-ring group [&_span]:truncate', 'mt-1 self-start')
+          // `.dx-button`, so no padding utility belongs here.
+          .classNames('dx-control dx-button dx-focus-ring group [&_span]:truncate', 'mt-1 self-start')
           .attributes({ 'type': 'button', 'data-variant': 'ghost', 'aria-label': label })
           .append(Domino.svg('ph--plus--regular'))
           .append(Domino.of('span').text(label))

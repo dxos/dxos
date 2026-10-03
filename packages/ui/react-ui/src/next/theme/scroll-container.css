@@ -5,40 +5,40 @@
  */
 
 @layer dx-components {
-  .nx-scroll-container {
+  .dx-scroll-container {
     isolation: isolate;
   }
 
-  .nx-scroll-container-fade {
+  .dx-scroll-container-fade {
     position: absolute;
     inset-inline: 0;
     top: 0;
     z-index: 1;
-    height: calc(2 * var(--nx-block-size));
+    height: calc(2 * var(--dx-block-size));
     background: linear-gradient(to bottom, var(--surface-bg, var(--color-base-surface)), transparent);
     pointer-events: none;
     opacity: 0;
     transition: opacity 200ms ease-out;
   }
-  .nx-scroll-container-fade[data-state='visible'] {
+  .dx-scroll-container-fade[data-state='visible'] {
     opacity: 1;
   }
 
-  .nx-scroll-container-scroll-down {
+  .dx-scroll-container-scroll-down {
     position: absolute;
-    inset-inline-end: var(--nx-gap-size);
-    bottom: var(--nx-gap-size);
+    inset-inline-end: var(--dx-gap-size);
+    bottom: var(--dx-gap-size);
     z-index: 1;
     transition: opacity 300ms ease-out;
   }
-  .nx-scroll-container-scroll-down[data-state='hidden'] {
+  .dx-scroll-container-scroll-down[data-state='hidden'] {
     opacity: 0;
     pointer-events: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nx-scroll-container-fade,
-    .nx-scroll-container-scroll-down {
+    .dx-scroll-container-fade,
+    .dx-scroll-container-scroll-down {
       transition: none;
     }
   }

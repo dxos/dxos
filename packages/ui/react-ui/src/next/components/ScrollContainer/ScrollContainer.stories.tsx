@@ -58,7 +58,7 @@ export const Test: Story = {
     const canvas = within(sizeRow(canvasElement, 'md'));
     const viewport = canvas.getByTestId('viewport');
     const fade = canvas.getByTestId('frame').querySelector<HTMLElement>('[data-part="fade"]');
-    const button = canvas.getByTestId('frame').querySelector<HTMLElement>('.nx-scroll-container-scroll-down');
+    const button = canvas.getByTestId('frame').querySelector<HTMLElement>('.dx-scroll-container-scroll-down');
     if (!button) {
       throw new Error('missing scroll-down button');
     }

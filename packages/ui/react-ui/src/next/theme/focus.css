@@ -6,31 +6,31 @@
  */
 
 @layer dx-components {
-  .nx-focus-group,
-  .nx-focus-item {
+  .dx-focus-group,
+  .dx-focus-item {
     position: relative;
     outline: none;
   }
-  .nx-focus-group::after,
-  .nx-focus-item::after {
+  .dx-focus-group::after,
+  .dx-focus-item::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
   }
-  .nx-focus-group[data-border]::after,
-  .nx-focus-item[data-border]::after {
+  .dx-focus-group[data-border]::after,
+  .dx-focus-item[data-border]::after {
     box-shadow: inset 0 0 0 1px var(--color-separator);
   }
-  .nx-focus-group:focus-visible::after,
-  .nx-focus-item:focus-visible::after {
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  .dx-focus-group:focus-visible::after,
+  .dx-focus-item:focus-visible::after {
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
   }
-  .nx-focus-group[data-focus-state='active']::after {
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--color-accent-bg);
+  .dx-focus-group[data-focus-state='active']::after {
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--color-accent-bg);
   }
-  .nx-focus-group[data-focus-state='error']::after {
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--color-error-bg);
+  .dx-focus-group[data-focus-state='error']::after {
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--color-error-bg);
   }
 }

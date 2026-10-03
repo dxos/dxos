@@ -24,12 +24,12 @@ Rebuild on the agreed model: Container, ScrollArea, Toolbar, Block, Icon, Typogr
 
 ### Tasks
 
-- [x] **Namespace attributes and variables** — selectors scoped to `.nx-*`, variables `--nx-*` (provisional names; rename later).
-- [x] **Typography owns first-line centring** — `Next.Typography` pads to `--nx-block-size`; spike message row uses it.
+- [x] **Namespace attributes and variables** — selectors scoped to `.dx-*`, variables `--dx-*` (provisional names; rename later).
+- [x] **Typography owns first-line centring** — `Next.Typography` pads to `--dx-block-size`; spike message row uses it.
 - [x] **Move size metrics to CSS** — `[data-size=*]` rules in the theme; `sizes.ts` keeps only `Size`/`SIZES`. — `theme/size.css`; one icon scale (md = 1rem).
-- [x] **Add levels** — `level` prop emits `data-surface`; `--nx-level` rungs; style-query `+1`. — `theme/level.css`; spike Levels story passes on `Next.Container`.
+- [x] **Add levels** — `level` prop emits `data-surface`; `--dx-level` rungs; style-query `+1`. — `theme/level.css`; spike Levels story passes on `Next.Container`.
 - [x] **Input/Button fill `--block-size`** — superseded by decision 12.
-- [x] **Control sizing** — `--nx-control-inset`/`--nx-control-size`/`--nx-control-icon` per size; Input, Button, IconButton, Select trigger, Checkbox use them (decision 12). — asserted per size in `components.stories.tsx` Default.
+- [x] **Control sizing** — `--dx-control-inset`/`--dx-control-size`/`--dx-control-icon` per size; Input, Button, IconButton, Select trigger, Checkbox use them (decision 12). — asserted per size in `components.stories.tsx` Default.
 - [x] **Field** — Ark `Field`; flex stack in the content track; Label, HelperText, ErrorText (decision 13). — `Field.tsx`; `Next.Input` is Ark `Field.Input`.
 - [x] **Checkbox, Select, IconButton** — Ark Checkbox/Select; Select content at `level='popup'` in a portal; IconButton requires a label. — Select.Content takes its own `size` (finding 9).
 - [x] **Move CSS to `next/theme/`** — size, container, scroll-area, level, control; `@layer dx-components`; stories import `theme/index.css`; drop `SpikeStyles`. — spike illustrations moved to `spike/choices.css`.
@@ -45,7 +45,7 @@ Rebuild on the agreed model: Container, ScrollArea, Toolbar, Block, Icon, Typogr
 - [x] **`data-scope`/`data-part` on every part** — decision 10. — asserted in Roles; `asChild` caveat is finding 10.
 - [x] **Shared class recipes** — plain TS functions used by the bindings (decision 8). — `recipes.ts`.
 - [x] **Benchmark story** — 1,000 rows in a nested Container inside a ScrollArea (decision 11). — ~110ms mount+layout in headless Chromium.
-- [x] **Phase 1 review follow-ups** — `Next.Group` for form actions; explicit `Select.Content` size; toolbar gap `--nx-gap-size`; experimental story removed.
+- [x] **Phase 1 review follow-ups** — `Next.Group` for form actions; explicit `Select.Content` size; toolbar gap `--dx-gap-size`; experimental story removed.
 - [x] **Dialog** — Ark Dialog at `level='raised'` with explicit `size`; Body = Container + ScrollArea, Footer = Group (DESIGN.md follow-up 10). — `components/Dialog/`; Default, LongContent, Sizes play tests.
 
 ## Phase 2: More primitives
@@ -115,7 +115,7 @@ parts are listed there for the codemods.
 
 - [x] **Avatar** — Ark avatar; one `Avatar.Root` element (`src`/`fallback`/`icon`, hue, status ring), `Image`/`Fallback` parts; block-sized per size, `fill` for portraits. — Test asserts size, initials, ring, image load.
 - [x] **Tabs** — Ark tabs; `Root`/`List`/`Trigger` (a Button)/`Content`/`Indicator`; `keepMounted`, `selectedVariant`. — Test (sizes, manual activation, unmount) and Vertical.
-- [x] **Main** — app shell on `.nx-main-*` rules and `data-surface` zones; same parts as current. — Test (sidebar toggles) and Drawer (padding, resize).
+- [x] **Main** — app shell on `.dx-main-*` rules and `data-surface` zones; same parts as current. — Test (sidebar toggles) and Drawer (padding, resize).
 - [x] **Progress** — Ark progress; single component: `value`/`max`, indeterminate, error, countdown. — Test.
 - [x] **Splitter** — Ark splitter; `ResizeTrigger` replaces `Handle`. — Test (rem round-trip) and Collapsed.
 - [x] **Toast** — Ark toast; `Toaster` host, `Header`/`Title`/`Description`/`Footer`/`ActionTrigger`/`CloseTrigger`. — Test and Timeout.
@@ -158,9 +158,9 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
   - [x] `animate` flag on `Tree.Root` (default on): port the current Tree's disclosure animation (rows fade in on open; height conceal before a close commits; user-driven only, not persisted open state; theme duration, 0 when reduced motion), working with `virtualize='window'`.
 - [x] **Part naming** — DESIGN.md "Part naming" rules 1–13 applied (AUDIT.md §6 points 25–39): `Panel.Header`/`Body`/`Footer` (content-sized rows); Items render their default row from `item` or compose `ItemIcon`/`ItemText`/`ItemDescription`/`ItemIndicator`, with `ItemGroup`/`ItemGroupLabel` in Listbox and Combobox; Combobox `Control`/`Input`/`Trigger`/`ClearTrigger`; Menu `RadioItemGroup`/`TriggerItem`/`ItemShortcut`; `Field.RequiredIndicator` rendered by `Field.Label`; `Fieldset`; `SystemButton.Remove`; OrderedList `Content scroll`/`ItemText`; foreign re-exports dropped.
 
-- [x] **A2. Next lists (AUDIT.md §6 group B)** — `virtual` (`fixed` windows via the shared `useVirtualRows`, `variable` is `content-visibility`); Ark owns selection in every list (`selectionMode='none'`), `listboxSelection` adapts `useListSelection` values; part-based rows and Root `columns` subgrids; the ARIA grid keyboard; `data-drop-target` from `useReorder`; `nx-row` states; default DragPreview chip; optional `getId` + `useStableIds`; `SystemButton.Remove` named by `ItemText`; collapsible `OrderedList.Item` + `Detail` with a caret-only trigger (DetailItem removed); `Label`/`Empty` parts; `ItemIcon` `hue`. Pilots: plugin-registry (icon hue), plugin-sheet `RangeList` (Label, Empty, part layout).
+- [x] **A2. Next lists (AUDIT.md §6 group B)** — `virtual` (`fixed` windows via the shared `useVirtualRows`, `variable` is `content-visibility`); Ark owns selection in every list (`selectionMode='none'`), `listboxSelection` adapts `useListSelection` values; part-based rows and Root `columns` subgrids; the ARIA grid keyboard; `data-drop-target` from `useReorder`; `dx-row` states; default DragPreview chip; optional `getId` + `useStableIds`; `SystemButton.Remove` named by `ItemText`; collapsible `OrderedList.Item` + `Detail` with a caret-only trigger (DetailItem removed); `Label`/`Empty` parts; `ItemIcon` `hue`. Pilots: plugin-registry (icon hue), plugin-sheet `RangeList` (Label, Empty, part layout).
   - [ ] Reconcile `Next.Empty` with the A1 workstream's (this branch added a minimal one: `icon`, children, translated default).
-  - [x] Tree adopts `useVirtualRows` (`virtual='fixed'`) in place of its own window — the helper gained `pinned` (the focused row stays mounted) and `measure` (skip animating rows); Tree rows take `nx-row` and draw the shared drop line; `Tree.Empty` is `Next.Empty`.
+  - [x] Tree adopts `useVirtualRows` (`virtual='fixed'`) in place of its own window — the helper gained `pinned` (the focused row stays mounted) and `measure` (skip animating rows); Tree rows take `dx-row` and draw the shared drop line; `Tree.Empty` is `Next.Empty`.
 
 ## Phase A1: Next foundations
 

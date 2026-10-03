@@ -1,45 +1,45 @@
 /*
  * Tag: a small pill one control inset shorter than a control, coloured by ui-theme's per-hue role tokens. The hue
- * rules also colour a Button with `hue` (`--nx-hue-bg`/`-fg`, read in `control.css`), an Icon with `hue` (its
- * foreground only, e.g. a Select option's icon), an Avatar (`--nx-hue-fill` for its solid fill) and a Card Tile (its
+ * rules also colour a Button with `hue` (`--dx-hue-bg`/`-fg`, read in `control.css`), an Icon with `hue` (its
+ * foreground only, e.g. a Select option's icon), an Avatar (`--dx-hue-fill` for its solid fill) and a Card Tile (its
  * surface and icon).
  */
 
 @layer dx-components {
-  /* Hues are set by `data-hue`, or by a `nx-tag-<hue>` class where only a class can be set (a CodeMirror highlight style). */
-  .nx-tag {
-    --nx-hue-bg: var(--color-neutral-surface);
-    --nx-hue-fg: var(--color-neutral-fg);
+  /* Hues are set by `data-hue`, or by a `dx-tag-<hue>` class where only a class can be set (a CodeMirror highlight style). */
+  .dx-tag {
+    --dx-hue-bg: var(--color-neutral-surface);
+    --dx-hue-fg: var(--color-neutral-fg);
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
-    gap: var(--nx-control-inset);
+    gap: var(--dx-control-inset);
     flex-shrink: 0;
     max-width: 100%;
-    height: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
-    padding-inline: var(--nx-gap-size);
+    height: calc(var(--dx-control-size) - 2 * var(--dx-control-inset));
+    padding-inline: var(--dx-gap-size);
     border-radius: var(--radius-sm, 0.25rem);
-    font-size: var(--nx-label-font-size);
-    line-height: var(--nx-label-line-height);
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     user-select: none;
     align-self: center;
-    background: var(--nx-hue-bg);
-    color: var(--nx-hue-fg);
+    background: var(--dx-hue-bg);
+    color: var(--dx-hue-fg);
   }
-  .nx-tag .nx-icon {
-    width: calc(var(--nx-icon-size) * 0.75);
-    height: calc(var(--nx-icon-size) * 0.75);
+  .dx-tag .dx-icon {
+    width: calc(var(--dx-icon-size) * 0.75);
+    height: calc(var(--dx-icon-size) * 0.75);
   }
 
   /*
    * Inline: a chip inside a line of text (an editor decoration, a transcript, a table cell's HTML), sized by the text
-   * rather than the control scale; raw DOM sets `nx-tag nx-tag-inline` and `data-hue`.
+   * rather than the control scale; raw DOM sets `dx-tag dx-tag-inline` and `data-hue`.
    */
-  .nx-tag.nx-tag-inline {
+  .dx-tag.dx-tag-inline {
     height: auto;
     align-self: auto;
     padding-block: var(--spacing-tag-padding-block, 0.125rem);
@@ -57,7 +57,7 @@
    * line box, so a line carrying a chip stays the height of its neighbours; `inline-block` makes it a block container,
    * so an inherited hanging indent is reset.
    */
-  .nx-tag-anchor {
+  .dx-tag-anchor {
     display: inline-block;
     padding-inline: 8px;
     margin-block: -2px;
@@ -67,7 +67,7 @@
     box-shadow: inset 0 0 0 1px var(--color-neutral-border);
     cursor: pointer;
   }
-  .nx-tag-anchor:hover {
+  .dx-tag-anchor:hover {
     background: var(--color-hover-surface);
     box-shadow: inset 0 0 0 1px var(--color-info-border);
   }
@@ -76,44 +76,44 @@
    * Clickable: the root (`onClick` alone) or a trigger filling the pill up to the delete trigger (with `onDelete`) is a
    * button that keeps the pill's look, shifting brightness on hover like a hued Button, with the shared inset ring.
    */
-  .nx-tag-clickable,
-  .nx-tag-trigger {
+  .dx-tag-clickable,
+  .dx-tag-trigger {
     margin: 0;
     border: none;
     font: inherit;
     color: inherit;
     cursor: pointer;
   }
-  .nx-tag-trigger {
+  .dx-tag-trigger {
     display: inline-flex;
     align-items: center;
     gap: inherit;
     align-self: stretch;
     min-width: 0;
-    margin-inline-start: calc(-1 * var(--nx-gap-size));
+    margin-inline-start: calc(-1 * var(--dx-gap-size));
     padding-block: 0;
-    padding-inline: var(--nx-gap-size) 0;
+    padding-inline: var(--dx-gap-size) 0;
     border-radius: inherit;
     background: transparent;
   }
-  .nx-tag-clickable:hover:not(:disabled),
-  .nx-tag:has(> .nx-tag-trigger:hover) {
+  .dx-tag-clickable:hover:not(:disabled),
+  .dx-tag:has(> .dx-tag-trigger:hover) {
     filter: brightness(0.94);
   }
-  :where(.dark) :is(.nx-tag-clickable:hover:not(:disabled), .nx-tag:has(> .nx-tag-trigger:hover)) {
+  :where(.dark) :is(.dx-tag-clickable:hover:not(:disabled), .dx-tag:has(> .dx-tag-trigger:hover)) {
     filter: brightness(1.12);
   }
 
   /* Delete trigger: the tag's small icon in an inset square, ending one inset from the pill's end. */
-  .nx-tag:has(> .nx-tag-delete-trigger) {
-    padding-inline-end: var(--nx-control-inset);
+  .dx-tag:has(> .dx-tag-delete-trigger) {
+    padding-inline-end: var(--dx-control-inset);
   }
-  .nx-tag-delete-trigger {
+  .dx-tag-delete-trigger {
     display: inline-grid;
     place-items: center;
     flex-shrink: 0;
-    width: calc(var(--nx-icon-size) * 0.75 + 2 * var(--nx-control-inset));
-    height: calc(var(--nx-icon-size) * 0.75 + 2 * var(--nx-control-inset));
+    width: calc(var(--dx-icon-size) * 0.75 + 2 * var(--dx-control-inset));
+    height: calc(var(--dx-icon-size) * 0.75 + 2 * var(--dx-control-inset));
     margin: 0;
     padding: 0;
     border: none;
@@ -122,222 +122,222 @@
     color: inherit;
     cursor: pointer;
   }
-  .nx-tag-delete-trigger:hover {
+  .dx-tag-delete-trigger:hover {
     background: color-mix(in srgb, currentColor 15%, transparent);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='red'],
-  .nx-tag.nx-tag-red {
-    --nx-hue-bg: var(--color-red-surface);
-    --nx-hue-fg: var(--color-red-fg);
-    --nx-hue-fill: var(--color-red-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='red'],
+  .dx-tag.dx-tag-red {
+    --dx-hue-bg: var(--color-red-surface);
+    --dx-hue-fg: var(--color-red-fg);
+    --dx-hue-fill: var(--color-red-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='orange'],
-  .nx-tag.nx-tag-orange {
-    --nx-hue-bg: var(--color-orange-surface);
-    --nx-hue-fg: var(--color-orange-fg);
-    --nx-hue-fill: var(--color-orange-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='orange'],
+  .dx-tag.dx-tag-orange {
+    --dx-hue-bg: var(--color-orange-surface);
+    --dx-hue-fg: var(--color-orange-fg);
+    --dx-hue-fill: var(--color-orange-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='amber'],
-  .nx-tag.nx-tag-amber {
-    --nx-hue-bg: var(--color-amber-surface);
-    --nx-hue-fg: var(--color-amber-fg);
-    --nx-hue-fill: var(--color-amber-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='amber'],
+  .dx-tag.dx-tag-amber {
+    --dx-hue-bg: var(--color-amber-surface);
+    --dx-hue-fg: var(--color-amber-fg);
+    --dx-hue-fill: var(--color-amber-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='yellow'],
-  .nx-tag.nx-tag-yellow {
-    --nx-hue-bg: var(--color-yellow-surface);
-    --nx-hue-fg: var(--color-yellow-fg);
-    --nx-hue-fill: var(--color-yellow-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='yellow'],
+  .dx-tag.dx-tag-yellow {
+    --dx-hue-bg: var(--color-yellow-surface);
+    --dx-hue-fg: var(--color-yellow-fg);
+    --dx-hue-fill: var(--color-yellow-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='lime'],
-  .nx-tag.nx-tag-lime {
-    --nx-hue-bg: var(--color-lime-surface);
-    --nx-hue-fg: var(--color-lime-fg);
-    --nx-hue-fill: var(--color-lime-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='lime'],
+  .dx-tag.dx-tag-lime {
+    --dx-hue-bg: var(--color-lime-surface);
+    --dx-hue-fg: var(--color-lime-fg);
+    --dx-hue-fill: var(--color-lime-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='green'],
-  .nx-tag.nx-tag-green {
-    --nx-hue-bg: var(--color-green-surface);
-    --nx-hue-fg: var(--color-green-fg);
-    --nx-hue-fill: var(--color-green-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='green'],
+  .dx-tag.dx-tag-green {
+    --dx-hue-bg: var(--color-green-surface);
+    --dx-hue-fg: var(--color-green-fg);
+    --dx-hue-fill: var(--color-green-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='emerald'],
-  .nx-tag.nx-tag-emerald {
-    --nx-hue-bg: var(--color-emerald-surface);
-    --nx-hue-fg: var(--color-emerald-fg);
-    --nx-hue-fill: var(--color-emerald-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='emerald'],
+  .dx-tag.dx-tag-emerald {
+    --dx-hue-bg: var(--color-emerald-surface);
+    --dx-hue-fg: var(--color-emerald-fg);
+    --dx-hue-fill: var(--color-emerald-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='teal'],
-  .nx-tag.nx-tag-teal {
-    --nx-hue-bg: var(--color-teal-surface);
-    --nx-hue-fg: var(--color-teal-fg);
-    --nx-hue-fill: var(--color-teal-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='teal'],
+  .dx-tag.dx-tag-teal {
+    --dx-hue-bg: var(--color-teal-surface);
+    --dx-hue-fg: var(--color-teal-fg);
+    --dx-hue-fill: var(--color-teal-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='cyan'],
-  .nx-tag.nx-tag-cyan {
-    --nx-hue-bg: var(--color-cyan-surface);
-    --nx-hue-fg: var(--color-cyan-fg);
-    --nx-hue-fill: var(--color-cyan-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='cyan'],
+  .dx-tag.dx-tag-cyan {
+    --dx-hue-bg: var(--color-cyan-surface);
+    --dx-hue-fg: var(--color-cyan-fg);
+    --dx-hue-fill: var(--color-cyan-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='sky'],
-  .nx-tag.nx-tag-sky {
-    --nx-hue-bg: var(--color-sky-surface);
-    --nx-hue-fg: var(--color-sky-fg);
-    --nx-hue-fill: var(--color-sky-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='sky'],
+  .dx-tag.dx-tag-sky {
+    --dx-hue-bg: var(--color-sky-surface);
+    --dx-hue-fg: var(--color-sky-fg);
+    --dx-hue-fill: var(--color-sky-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='blue'],
-  .nx-tag.nx-tag-blue {
-    --nx-hue-bg: var(--color-blue-surface);
-    --nx-hue-fg: var(--color-blue-fg);
-    --nx-hue-fill: var(--color-blue-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='blue'],
+  .dx-tag.dx-tag-blue {
+    --dx-hue-bg: var(--color-blue-surface);
+    --dx-hue-fg: var(--color-blue-fg);
+    --dx-hue-fill: var(--color-blue-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='indigo'],
-  .nx-tag.nx-tag-indigo {
-    --nx-hue-bg: var(--color-indigo-surface);
-    --nx-hue-fg: var(--color-indigo-fg);
-    --nx-hue-fill: var(--color-indigo-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='indigo'],
+  .dx-tag.dx-tag-indigo {
+    --dx-hue-bg: var(--color-indigo-surface);
+    --dx-hue-fg: var(--color-indigo-fg);
+    --dx-hue-fill: var(--color-indigo-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='violet'],
-  .nx-tag.nx-tag-violet {
-    --nx-hue-bg: var(--color-violet-surface);
-    --nx-hue-fg: var(--color-violet-fg);
-    --nx-hue-fill: var(--color-violet-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='violet'],
+  .dx-tag.dx-tag-violet {
+    --dx-hue-bg: var(--color-violet-surface);
+    --dx-hue-fg: var(--color-violet-fg);
+    --dx-hue-fill: var(--color-violet-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='purple'],
-  .nx-tag.nx-tag-purple {
-    --nx-hue-bg: var(--color-purple-surface);
-    --nx-hue-fg: var(--color-purple-fg);
-    --nx-hue-fill: var(--color-purple-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='purple'],
+  .dx-tag.dx-tag-purple {
+    --dx-hue-bg: var(--color-purple-surface);
+    --dx-hue-fg: var(--color-purple-fg);
+    --dx-hue-fill: var(--color-purple-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='fuchsia'],
-  .nx-tag.nx-tag-fuchsia {
-    --nx-hue-bg: var(--color-fuchsia-surface);
-    --nx-hue-fg: var(--color-fuchsia-fg);
-    --nx-hue-fill: var(--color-fuchsia-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='fuchsia'],
+  .dx-tag.dx-tag-fuchsia {
+    --dx-hue-bg: var(--color-fuchsia-surface);
+    --dx-hue-fg: var(--color-fuchsia-fg);
+    --dx-hue-fill: var(--color-fuchsia-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='pink'],
-  .nx-tag.nx-tag-pink {
-    --nx-hue-bg: var(--color-pink-surface);
-    --nx-hue-fg: var(--color-pink-fg);
-    --nx-hue-fill: var(--color-pink-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='pink'],
+  .dx-tag.dx-tag-pink {
+    --dx-hue-bg: var(--color-pink-surface);
+    --dx-hue-fg: var(--color-pink-fg);
+    --dx-hue-fill: var(--color-pink-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='rose'],
-  .nx-tag.nx-tag-rose {
-    --nx-hue-bg: var(--color-rose-surface);
-    --nx-hue-fg: var(--color-rose-fg);
-    --nx-hue-fill: var(--color-rose-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='rose'],
+  .dx-tag.dx-tag-rose {
+    --dx-hue-bg: var(--color-rose-surface);
+    --dx-hue-fg: var(--color-rose-fg);
+    --dx-hue-fill: var(--color-rose-bg);
   }
   /* Valences reuse the hues the current `Tag` maps them to. */
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='info'],
-  .nx-tag.nx-tag-info {
-    --nx-hue-bg: var(--color-cyan-surface);
-    --nx-hue-fg: var(--color-cyan-fg);
-    --nx-hue-fill: var(--color-cyan-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='info'],
+  .dx-tag.dx-tag-info {
+    --dx-hue-bg: var(--color-cyan-surface);
+    --dx-hue-fg: var(--color-cyan-fg);
+    --dx-hue-fill: var(--color-cyan-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='success'],
-  .nx-tag.nx-tag-success {
-    --nx-hue-bg: var(--color-emerald-surface);
-    --nx-hue-fg: var(--color-emerald-fg);
-    --nx-hue-fill: var(--color-emerald-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='success'],
+  .dx-tag.dx-tag-success {
+    --dx-hue-bg: var(--color-emerald-surface);
+    --dx-hue-fg: var(--color-emerald-fg);
+    --dx-hue-fill: var(--color-emerald-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='warning'],
-  .nx-tag.nx-tag-warning {
-    --nx-hue-bg: var(--color-amber-surface);
-    --nx-hue-fg: var(--color-amber-fg);
-    --nx-hue-fill: var(--color-amber-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='warning'],
+  .dx-tag.dx-tag-warning {
+    --dx-hue-bg: var(--color-amber-surface);
+    --dx-hue-fg: var(--color-amber-fg);
+    --dx-hue-fill: var(--color-amber-bg);
   }
-  :is(.nx-tag, .nx-button, .nx-icon, .nx-avatar, .nx-card-tile)[data-hue='error'],
-  .nx-tag.nx-tag-error {
-    --nx-hue-bg: var(--color-rose-surface);
-    --nx-hue-fg: var(--color-rose-fg);
-    --nx-hue-fill: var(--color-rose-bg);
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='error'],
+  .dx-tag.dx-tag-error {
+    --dx-hue-bg: var(--color-rose-surface);
+    --dx-hue-fg: var(--color-rose-fg);
+    --dx-hue-fill: var(--color-rose-bg);
   }
 
   /*
    * A bare glyph takes its hue's text colour (light on dark, dark on light), as the current icons' `text-<hue>-text`;
-   * the Tag foreground (`--nx-hue-fg`) is tuned for text on the hue's fill and reads muted on a plain surface.
+   * the Tag foreground (`--dx-hue-fg`) is tuned for text on the hue's fill and reads muted on a plain surface.
    */
-  .nx-icon[data-hue] {
-    color: var(--nx-hue-fg);
+  .dx-icon[data-hue] {
+    color: var(--dx-hue-fg);
   }
-  .nx-icon[data-hue='red'] {
+  .dx-icon[data-hue='red'] {
     color: var(--color-red-text);
   }
-  .nx-icon[data-hue='orange'] {
+  .dx-icon[data-hue='orange'] {
     color: var(--color-orange-text);
   }
-  .nx-icon[data-hue='amber'] {
+  .dx-icon[data-hue='amber'] {
     color: var(--color-amber-text);
   }
-  .nx-icon[data-hue='yellow'] {
+  .dx-icon[data-hue='yellow'] {
     color: var(--color-yellow-text);
   }
-  .nx-icon[data-hue='lime'] {
+  .dx-icon[data-hue='lime'] {
     color: var(--color-lime-text);
   }
-  .nx-icon[data-hue='green'] {
+  .dx-icon[data-hue='green'] {
     color: var(--color-green-text);
   }
-  .nx-icon[data-hue='emerald'] {
+  .dx-icon[data-hue='emerald'] {
     color: var(--color-emerald-text);
   }
-  .nx-icon[data-hue='teal'] {
+  .dx-icon[data-hue='teal'] {
     color: var(--color-teal-text);
   }
-  .nx-icon[data-hue='cyan'] {
+  .dx-icon[data-hue='cyan'] {
     color: var(--color-cyan-text);
   }
-  .nx-icon[data-hue='sky'] {
+  .dx-icon[data-hue='sky'] {
     color: var(--color-sky-text);
   }
-  .nx-icon[data-hue='blue'] {
+  .dx-icon[data-hue='blue'] {
     color: var(--color-blue-text);
   }
-  .nx-icon[data-hue='indigo'] {
+  .dx-icon[data-hue='indigo'] {
     color: var(--color-indigo-text);
   }
-  .nx-icon[data-hue='violet'] {
+  .dx-icon[data-hue='violet'] {
     color: var(--color-violet-text);
   }
-  .nx-icon[data-hue='purple'] {
+  .dx-icon[data-hue='purple'] {
     color: var(--color-purple-text);
   }
-  .nx-icon[data-hue='fuchsia'] {
+  .dx-icon[data-hue='fuchsia'] {
     color: var(--color-fuchsia-text);
   }
-  .nx-icon[data-hue='pink'] {
+  .dx-icon[data-hue='pink'] {
     color: var(--color-pink-text);
   }
-  .nx-icon[data-hue='rose'] {
+  .dx-icon[data-hue='rose'] {
     color: var(--color-rose-text);
   }
-  .nx-icon[data-hue='info'] {
+  .dx-icon[data-hue='info'] {
     color: var(--color-cyan-text);
   }
-  .nx-icon[data-hue='success'] {
+  .dx-icon[data-hue='success'] {
     color: var(--color-emerald-text);
   }
-  .nx-icon[data-hue='warning'] {
+  .dx-icon[data-hue='warning'] {
     color: var(--color-amber-text);
   }
-  .nx-icon[data-hue='error'] {
+  .dx-icon[data-hue='error'] {
     color: var(--color-rose-text);
   }
 
   /* After the hue rule, so a valence wins when both are set. */
-  .nx-icon[data-valence='neutral'] {
+  .dx-icon[data-valence='neutral'] {
     color: var(--color-neutral-text);
   }
-  .nx-icon[data-valence='info'] {
+  .dx-icon[data-valence='info'] {
     color: var(--color-info-text);
   }
-  .nx-icon[data-valence='success'] {
+  .dx-icon[data-valence='success'] {
     color: var(--color-success-text);
   }
-  .nx-icon[data-valence='warning'] {
+  .dx-icon[data-valence='warning'] {
     color: var(--color-warning-text);
   }
-  .nx-icon[data-valence='error'] {
+  .dx-icon[data-valence='error'] {
     color: var(--color-error-text);
   }
 }

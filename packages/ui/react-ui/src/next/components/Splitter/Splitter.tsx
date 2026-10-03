@@ -148,7 +148,7 @@ type SplitterRootElementProps = {
   size?: number;
   defaultSize?: number;
   onSizeChange?: (size: number) => void;
-  /** Collapse animation in ms; defaults to the theme's `--nx-disclosure-duration` (0 under reduced motion). */
+  /** Collapse animation in ms; defaults to the theme's `--dx-disclosure-duration` (0 under reduced motion). */
   transition?: number;
   /** A draggable seam; when false (the default) the ResizeTrigger renders nothing and the sizes are fixed. */
   resizable?: boolean;
@@ -190,7 +190,7 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
     const [themeTransition, setThemeTransition] = useState(0);
     useLayoutEffect(() => {
       if (rootRef.current) {
-        setThemeTransition(cssDuration(rootRef.current, '--nx-disclosure-duration'));
+        setThemeTransition(cssDuration(rootRef.current, '--dx-disclosure-duration'));
       }
     }, []);
     const transition = transitionProp ?? themeTransition;
@@ -368,7 +368,7 @@ const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
         className={mx(recipes.splitterPanel(), className)}
         style={{
           transition: animate
-            ? `flex-grow ${transition}ms var(--nx-disclosure-ease-open), flex-basis ${transition}ms var(--nx-disclosure-ease-open)`
+            ? `flex-grow ${transition}ms var(--dx-disclosure-ease-open), flex-basis ${transition}ms var(--dx-disclosure-ease-open)`
             : undefined,
           // A pane growing from nothing must be allowed to be small on the way: its lower bound
           // returns at once with the mode, and would hold it at `minSize` until the basis caught up.

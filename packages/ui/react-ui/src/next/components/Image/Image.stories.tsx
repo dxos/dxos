@@ -144,7 +144,7 @@ export const Test: Story = {
     await waitFor(() => expect(getComputedStyle(backdrop).backgroundColor).toBe('rgb(242, 0, 0)'));
     const cutout = canvas.getByTestId('cutout-md');
     await waitFor(() => expect(cutout).toHaveAttribute('data-status', 'loaded'));
-    await expect(cutout.style.getPropertyValue('--nx-image-backdrop')).toBe('');
+    await expect(cutout.style.getPropertyValue('--dx-image-backdrop')).toBe('');
     await expect(getComputedStyle(cutout).backgroundColor).toBe('rgba(0, 0, 0, 0)');
   },
 };

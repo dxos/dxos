@@ -6,7 +6,7 @@ import { type ThemeMode } from '@dxos/ui-types';
 
 import { useThemeContext } from '../hooks/useThemeContext.ts';
 
-// Next styles through `.nx-*` CSS, so these read the existing ThemeProvider's values and never expose its `tx`.
+// Next styles through `.dx-*` CSS, so these read the existing ThemeProvider's values and never expose its `tx`.
 
 /** The ThemeProvider's light or dark mode. */
 export const useThemeMode = (): ThemeMode => useThemeContext().themeMode;

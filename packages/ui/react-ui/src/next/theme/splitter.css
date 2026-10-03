@@ -6,7 +6,7 @@
  */
 
 @layer dx-components {
-  .nx-splitter {
+  .dx-splitter {
     position: relative;
     display: flex;
     width: 100%;
@@ -15,11 +15,11 @@
     min-height: 0;
     overflow: hidden;
   }
-  .nx-splitter[data-orientation='vertical'] {
+  .dx-splitter[data-orientation='vertical'] {
     flex-direction: column;
   }
 
-  .nx-splitter-panel {
+  .dx-splitter-panel {
     position: relative;
     display: grid;
     grid-template-rows: minmax(0, 1fr);
@@ -27,18 +27,18 @@
   }
 
   /* A fixed splitter's seam: the divider alone, taking its 1px of the layout. */
-  .nx-splitter-divider {
+  .dx-splitter-divider {
     flex-shrink: 0;
     background: var(--color-separator);
   }
-  .nx-splitter-divider[data-orientation='horizontal'] {
+  .dx-splitter-divider[data-orientation='horizontal'] {
     width: 1px;
   }
-  .nx-splitter-divider[data-orientation='vertical'] {
+  .dx-splitter-divider[data-orientation='vertical'] {
     height: 1px;
   }
 
-  .nx-splitter-resize-trigger {
+  .dx-splitter-resize-trigger {
     position: relative;
     z-index: 10;
     flex-shrink: 0;
@@ -48,34 +48,34 @@
     touch-action: none;
     user-select: none;
   }
-  .nx-splitter-resize-trigger::before {
+  .dx-splitter-resize-trigger::before {
     content: '';
     position: absolute;
     display: block;
     background: var(--color-separator);
     transition: background-color 100ms ease-in-out;
   }
-  .nx-splitter-resize-trigger:is(:hover, :focus-visible, :active)::before {
+  .dx-splitter-resize-trigger:is(:hover, :focus-visible, :active)::before {
     background: var(--color-focus);
   }
-  .nx-splitter-resize-trigger:focus-visible {
+  .dx-splitter-resize-trigger:focus-visible {
     outline: none;
   }
-  .nx-splitter-resize-trigger[data-orientation='horizontal'] {
+  .dx-splitter-resize-trigger[data-orientation='horizontal'] {
     width: 7px;
     margin-inline: -3.5px;
   }
-  .nx-splitter-resize-trigger[data-orientation='horizontal']::before {
+  .dx-splitter-resize-trigger[data-orientation='horizontal']::before {
     inset-block: 0;
     inset-inline-start: 50%;
     width: 1px;
     transform: translateX(-50%);
   }
-  .nx-splitter-resize-trigger[data-orientation='vertical'] {
+  .dx-splitter-resize-trigger[data-orientation='vertical'] {
     height: 7px;
     margin-block: -3.5px;
   }
-  .nx-splitter-resize-trigger[data-orientation='vertical']::before {
+  .dx-splitter-resize-trigger[data-orientation='vertical']::before {
     inset-inline: 0;
     top: 50%;
     height: 1px;
