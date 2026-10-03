@@ -17,6 +17,7 @@ import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
 import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
+import { countWork } from '@dxos/util';
 
 import { type AutomergeHost } from '../automerge/index.ts';
 import { type ExecutionTrace, QueryExecutor, type QueryExecutorMode } from '../query/index.ts';
@@ -393,6 +394,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       const begin = performance.now();
       const { changed } = await query.executor.execQuery();
       const finishedAt = performance.now();
+      countWork('echo.queryExecutions');
       query.cost = this.#debounce.cost?.(query.executor.query, finishedAt - begin) ?? finishedAt - begin;
       query.debouncedUntil =
         query.cost < this.#debounce.minCost
@@ -401,7 +403,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       query.dirty = false;
       if (changed || query.firstResult) {
         query.firstResult = false;
-        query.sendResults(query.executor.getResults());
+        const results = query.executor.getResults();
+        countWork('echo.queryResultsSent');
+        countWork('echo.queryResultRows', results.length);
+        query.sendResults(results);
       }
     } catch (err) {
       log.catch(err, {
