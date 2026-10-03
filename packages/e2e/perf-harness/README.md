@@ -55,15 +55,16 @@ marked a level.
 | --------------------------------------------------- | ------------------------------------------------- | ------------- |
 | `thread.layoutCount`, `recalcStyleCount`            | `Performance.getMetrics` (page)                   | free, always  |
 | `thread.layoutObjects` (level), `taskOtherMs`, `devToolsCommandMs` | the same read                      | free, always  |
-| `traceCounters.render.*` → `styleRecalcElements`, `layoutDirtyObjects`, `forcedLayouts`, … | a `devtools.timeline` trace per stage, cut at the stage marks | `DX_PERF_COUNTERS` `trace` |
+| `traceCounters.render.*` → `styleRecalcElements`, `layoutDirtyObjects`, `forcedLayouts`, … | a `devtools.timeline` trace per stage, cut at the stage marks | `trace`: opt-in, +7% wall / +10–15% CPU |
 | `traceCounters.instructions[]` → `instructions*`, `instructionThreads` | `--enable-thread-instruction-count` deltas on the same trace | needs a PMU; see METRICS.md |
-| `jsCalls[]` → `jsCalls*`, `jsCallsTotal`            | V8 precise coverage, `callCount: true`            | `calls`       |
-| `react` → `reactCommits`, `reactRenders`, `reactMounts`, `reactWastedRenders` | React devtools global hook, installed by `installReactProbe` | `react` |
+| `jsCalls[]` → `jsCalls*`, `jsCallsTotal`            | V8 precise coverage, `callCount: true`            | `calls`: opt-in, +12–29% wall |
+| `react` → `reactCommits`, `reactRenders`, `reactMounts`, `reactWastedRenders` | React devtools global hook, installed by `installReactProbe` | `react`: on by default, +3–5% |
 | `data.counters` → `sqlite*`, `automerge*`, `echo*`  | the app's `__dxosWorkCounters` and `__dxosSqliteIo` | free, always |
 | `rpcCallsByMethod`                                  | `__dxosRpcTiming`'s per-method totals             | free, NDJSON only |
 | `network.byEndpoint`, `network.socketFrames`        | Playwright `response` / `websocket` events        | free; endpoints NDJSON only |
 
-`DX_PERF_COUNTERS` takes `all`, `none`, `default` (unset), or a list such as `trace,react`; every
+`DX_PERF_COUNTERS` takes `all`, `none`, `default` (unset: `react` alone, the one cheap enough to
+leave on — METRICS.md §"The work counters' cost"), or a list such as `trace,react`; every
 row records the set as `comparability.counters`. A counter that did not run publishes no column,
 so a missing column means "not measured" and a `0` means "no work". Per-stage breakdowns —
 `<stage>-calls.json` (top functions by calls, per realm) and `<stage>-react.json` (top components

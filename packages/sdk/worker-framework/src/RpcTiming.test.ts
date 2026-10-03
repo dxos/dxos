@@ -153,6 +153,7 @@ describe('rpc timing middleware', () => {
 
   test('resetStats clears the totals as well as the samples', ({ expect }) => {
     RpcTiming.recordSample({ tag: 'a', serviceMs: 5, queueWaitMs: 5, at: Date.now() });
+    expect(RpcTiming.getReadout().callsByMethod).toMatchObject({ a: 1 });
     RpcTiming.recordClientSample({ roundTripMs: 5, at: Date.now() });
 
     RpcTiming.resetStats();
@@ -170,6 +171,7 @@ describe('rpc timing middleware', () => {
       serviceSumMs: 0,
       roundTripSumMs: 0,
     });
+    expect(readout.callsByMethod).toEqual({});
     expect(readout.samples).toHaveLength(0);
     expect(readout.clientSamples).toHaveLength(0);
   });

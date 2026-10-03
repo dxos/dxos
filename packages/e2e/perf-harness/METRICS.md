@@ -538,6 +538,34 @@ rather than a diagnose artifact, and its profiles are kept in both (a whole run'
 ~19 MB, including one screenshot per stage — not the "hundreds of MB" an earlier revision of this
 file guessed at).
 
+### The work counters' cost
+
+Three iterations per configuration, interleaved (`none`, `trace`, `react`, `calls`, then again) so
+drift lands on all four alike, in the Claude Code cloud sandbox (4 cores). Medians of the flow's
+summed stages; `assistant-chat` (`blank`) excludes `seed`, whose cold storybook compile dominates
+it. `none` already includes the free counters (getMetrics, data probes, the instruction-count
+flag), so these are each costed counter's own increment.
+
+| counters | projects-tasks wall | CPU, all processes | tab task time | assistant-chat wall | CPU, all processes | tab task time |
+| -------- | ------------------- | ------------------ | ------------- | ------------------- | ------------------ | ------------- |
+| `none`   | 57.1 s              | 103.3 s            | 28.4 s        | 67.1 s              | 98.1 s             | 38.1 s        |
+| `react`  | +5.3%               | +4.2%              | +3.5%         | +3.1%               | +4.6%              | +4.8%         |
+| `trace`  | +7.2%               | +10.5%             | +8.2%         | +6.7%               | +14.5%             | +10.4%        |
+| `calls`  | +29.3%              | +26.0%             | +66.3%        | +11.7%              | +8.9%              | +22.5%        |
+
+So the default is `react` alone: a few percent, the same order as the profiler. `trace` costs
+past that in CPU — `devtools.timeline` records an event per script entry in every realm — and
+`calls` far past it, since precise coverage keeps every function's invocation counter live; both
+run on request (`DX_PERF_COUNTERS=trace,react` for a counting run) rather than inside the
+trended one.
+
+Across the same three iterations, the counts held where the stage is user-driven: on
+`assistant-turns`, `scroll-*`, `open-*` and `reopen-project` the coefficient of variation of
+`recalcStyleCount`, `styleRecalcElements`, `layoutDirtyObjects`, `reactRenders` and `jsCalls` was
+0–5% and mostly under 1%, against 1–5% for wall time and 2–8% for CPU on the same stages. Stages
+paced by the network (`await-replication`, `seed`) vary in counts too, because how much work they
+do depends on what arrived.
+
 ## Known gaps
 
 Recorded here so nobody rediscovers them as bugs.

@@ -17,8 +17,12 @@ export type CounterSet = {
   react: boolean;
 };
 
-/** What runs when `DX_PERF_COUNTERS` is unset; see METRICS.md §"Instrument cost, measured". */
-export const DEFAULT_COUNTERS: CounterSet = { trace: true, calls: false, react: true };
+/**
+ * What runs when `DX_PERF_COUNTERS` is unset: the React hook alone, measured at +3–5% wall. The
+ * trace (+7% wall, +10–15% CPU) and coverage (+12–29% wall) would move the CPU series the nightly
+ * trends, so they run on request; see METRICS.md §"Instrument cost, measured".
+ */
+export const DEFAULT_COUNTERS: CounterSet = { trace: false, calls: false, react: true };
 
 const NONE: CounterSet = { trace: false, calls: false, react: false };
 const ALL: CounterSet = { trace: true, calls: true, react: true };

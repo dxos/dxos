@@ -13,6 +13,7 @@ describe('parseCounters', () => {
   });
 
   test('a list enables exactly its names', ({ expect }) => {
+    expect(DEFAULT_COUNTERS).toEqual({ trace: false, calls: false, react: true });
     expect(parseCounters('calls, react')).toEqual({ trace: false, calls: true, react: true });
     expect(countersLabel(parseCounters('calls,react'))).toBe('calls+react');
     expect(countersLabel(parseCounters('none'))).toBe('none');
