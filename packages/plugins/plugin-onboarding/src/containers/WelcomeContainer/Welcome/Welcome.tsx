@@ -391,7 +391,7 @@ export const Welcome = ({
       }}
     >
       <Flex column gap='2xl' classNames='z-10 p-8 md:px-16'>
-        <ComposerLogoMark classNames='text-[80px]' />
+        <ComposerLogoMark classNames='text-[80px] leading-[1.5]' />
 
         {state === WelcomeState.INIT && !signupEnabled && loginTab}
 
