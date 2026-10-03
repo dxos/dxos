@@ -130,6 +130,8 @@ export type RunProps<R = never> = {
 export type BeginProps = {
   prompt: string | ContentBlock.Any[];
   system?: string;
+  /** The system prompt already formatted from `system` and the bindings, so it is not formatted twice. */
+  systemPrompt?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];
   skills?: readonly Skill.Skill[];
@@ -253,6 +255,7 @@ export class Request {
   begin = ({
     prompt,
     system,
+    systemPrompt: formatted,
     history = [],
     skills = [],
     objects = [],
@@ -265,7 +268,8 @@ export class Request {
       // Per-run allowance: a reused Request must not inherit a spent budget from the previous run.
       this.#unresolvedTools = 0;
 
-      const systemPrompt = yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie);
+      const systemPrompt =
+        formatted ?? (yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie));
 
       if (this._options.summarizationThreshold !== undefined) {
         const tokenCount = yield* AiPreprocessor.estimateTokens(
@@ -501,11 +505,18 @@ export class Request {
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
     Effect.gen({ self: this }, function* () {
-      yield* this.begin({ prompt, system: systemTemplate, history, objects, skills, instructions });
-
       const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects, instructions }).pipe(
         Effect.orDie,
       );
+      yield* this.begin({
+        prompt,
+        system: systemTemplate,
+        systemPrompt: system,
+        history,
+        objects,
+        skills,
+        instructions,
+      });
 
       do {
         const { done, finishReason } = yield* this.runAgentTurn({ system, toolkit });

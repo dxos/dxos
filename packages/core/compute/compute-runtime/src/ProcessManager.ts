@@ -738,7 +738,10 @@ export class Impl implements Manager {
       this.#handles.set(id, handle);
       this.#refreshProcessTree();
 
-      // Write initial durable record before running onSpawn.
+      // Write the initial durable record, spawn event included, before running onSpawn: one write
+      // rather than a put and a read-modify-write, since each is an IndexedDB round trip on the
+      // turn's critical path. The seq is passed to runOnSpawn so it's removed when the handler settles.
+      const spawnSeq = 1;
       yield* this.#store.putProcess({
         id,
         key: definition.key,
@@ -748,11 +751,8 @@ export class Impl implements Manager {
         ...(origin !== undefined ? { origin } : {}),
         state: Process.State.RUNNING,
         alarmDueAt: null,
-        events: [],
+        events: [{ _tag: 'spawn', seq: spawnSeq }],
       });
-
-      // Append spawn event; seq is passed to runOnSpawn so it's removed when the handler settles.
-      const spawnSeq = yield* this.#store.appendEvent(id, { _tag: 'spawn' });
       markWork('process.persisted');
       yield* handle.runOnSpawn(spawnSeq);
       markWork('process.started');

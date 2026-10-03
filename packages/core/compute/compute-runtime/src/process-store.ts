@@ -130,17 +130,25 @@ export class ProcessStore {
     });
   }
 
-  /** Persists a process record, adding it to the index if it is not already present. */
+  /**
+   * Persists a process record, adding it to the index if it is not already present.
+   *
+   * The record and the index are written concurrently: they are separate keys, and spawning waits
+   * on this, so serializing them would add a storage round trip to every process start.
+   */
   putProcess(record: PersistedProcess): Effect.Effect<void> {
     return this.#lock(record.id).withPermits(1)(
       Effect.gen({ self: this }, function* () {
         const encoded = yield* Schema.encodeEffect(RecordSchema)(record).pipe(Effect.orDie);
-        yield* this.#kv.set(recordKey(record.id), encoded).pipe(Effect.orDie);
-        const ids = yield* this.listProcessIds();
-        if (!ids.includes(record.id)) {
-          const nextIndex = yield* Schema.encodeEffect(IndexSchema)([...ids, record.id]).pipe(Effect.orDie);
-          yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
-        }
+        const writeRecord = this.#kv.set(recordKey(record.id), encoded).pipe(Effect.orDie);
+        const writeIndex = Effect.gen({ self: this }, function* () {
+          const ids = yield* this.listProcessIds();
+          if (!ids.includes(record.id)) {
+            const nextIndex = yield* Schema.encodeEffect(IndexSchema)([...ids, record.id]).pipe(Effect.orDie);
+            yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
+          }
+        });
+        yield* Effect.all([writeRecord, writeIndex], { concurrency: 'unbounded', discard: true });
         this.#seq.set(
           record.id,
           record.events.reduce((max, event) => Math.max(max, event.seq), 0),

@@ -218,6 +218,26 @@ export class Session extends Resource {
         objects: objects.length,
       });
 
+      // Formatted once per binding set rather than per model call: formatting loads every skill's
+      // template, each a wait behind the page's other work, and an unchanged prompt is also what
+      // lets the provider's prompt cache hit across turns. The atoms keep their arrays' identity
+      // until a binding changes them.
+      let formatted: { skills: Skill.Skill[]; objects: Obj.Unknown[]; text: string } | undefined;
+      const formatSystem = (currentSkills: Skill.Skill[], currentObjects: Obj.Unknown[]) =>
+        Effect.gen({ self: this }, function* () {
+          if (formatted?.skills === currentSkills && formatted.objects === currentObjects) {
+            return formatted.text;
+          }
+          const text = yield* formatSystemPrompt({
+            system: params.system,
+            skills: currentSkills,
+            objects: currentObjects,
+            instructions: this.#instructions,
+          }).pipe(Effect.orDie);
+          formatted = { skills: currentSkills, objects: currentObjects, text };
+          return text;
+        });
+
       const request = new AiRequest.Request({
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
@@ -232,6 +252,7 @@ export class Session extends Resource {
         instructions: this.#instructions,
         prompt: params.prompt,
         system: params.system,
+        systemPrompt: yield* formatSystem(skills, objects),
       });
 
       markWork('session.request-begun');
@@ -261,12 +282,7 @@ export class Session extends Resource {
 
         markWork('session.toolkit-built');
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
-        const system = yield* formatSystemPrompt({
-          system: params.system,
-          skills: currentSkills,
-          objects: this.context.getObjects(),
-          instructions: this.#instructions,
-        }).pipe(Effect.orDie);
+        const system = yield* formatSystem(currentSkills, this.context.getObjects());
         markWork('session.system-prompt-built');
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
