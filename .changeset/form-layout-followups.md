@@ -11,5 +11,5 @@ Layout and contrast fixes for the new `@dxos/react-ui` components:
 - List rows with a description keep their icon and actions on the title's line.
 - A scrolling block in a settings row (such as the debug port log) spans the row instead of collapsing to zero width.
 - Row hover and selection are lower-contrast, and a fieldset's collapse button is a ghost button.
-- `Project.description` is edited as multi-line text.
+- The `description` of Project, Task, TaskSet, Milestone, Organization, Issue, PullRequest, Event, Pipeline, Skill, Routine and Script is `Format.Text`, so forms edit it as multi-line text; `Format.Text` is also on the `Format` namespace from `@dxos/echo/Format`.
 - The task set's add-task editor stays at the bottom, below the list.
