@@ -20,15 +20,14 @@ export type Barrels = {
 };
 
 /** File graphs only: neither a derived graph nor a pass's previous run is a premise. */
-export const asserted = (quads: readonly Quad[]): Quad[] =>
-  quads.filter((quad) => Ontology.isFileGraph(quad.graph.value));
+const asserted = (quads: readonly Quad[]): Quad[] => quads.filter((quad) => Ontology.isFileGraph(quad.graph.value));
 
 /** Reads one predicate's asserted quads. */
 export const readAsserted = (store: Store.Api, predicate: { readonly value: string }) =>
   Effect.map(store.match(undefined, DataFactory.namedNode(predicate.value)), asserted);
 
 /** Each subject's objects, in the order read. */
-export const group = (quads: readonly Quad[]): Map<string, string[]> => {
+const group = (quads: readonly Quad[]): Map<string, string[]> => {
   const grouped = new Map<string, string[]>();
   for (const quad of quads) {
     const objects = grouped.get(quad.subject.value);
