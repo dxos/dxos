@@ -19,6 +19,8 @@ export class Store extends Context.Service<Store, StoreApi>()('fixture/Store') {
 
 export class Clock extends Context.Service<Clock, { readonly now: () => number }>()('fixture/Clock') {}
 
+export class Logger extends Context.Service<Logger, { readonly log: (line: string) => void }>()('fixture/Logger') {}
+
 export class NotFound {
   readonly _tag = 'NotFound';
 }
@@ -49,7 +51,9 @@ export const storeLayer = Layer.effect(
   }),
 );
 
-export const merged = Layer.mergeAll(clockLayer, storeLayer);
+export const loggerLayer = Layer.succeed(Logger, { log: () => undefined });
+
+export const merged = Layer.mergeAll(loggerLayer, storeLayer);
 export const provided = storeLayer.pipe(Layer.provide(clockLayer));
 export const providedDirect = Layer.provide(storeLayer, clockLayer);
 export const mergedTwo = Layer.merge(clockLayer, storeLayer);

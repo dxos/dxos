@@ -160,8 +160,9 @@ describe('type rules', () => {
     );
     expect(facts).toEqual([
       'clockLayer providesService Clock',
+      'loggerLayer providesService Logger',
       'merged layerRequires Clock',
-      'merged providesService Clock',
+      'merged providesService Logger',
       'merged providesService Store',
       'mergedTwo layerRequires Clock',
       'mergedTwo providesService Clock',
