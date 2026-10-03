@@ -16,6 +16,7 @@ import { EffectEx } from '@dxos/effect';
 
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
+import * as Summary from '../Summary.ts';
 import { indexFixture, writeFixture } from './fixture.ts';
 import * as Server from './Server.ts';
 
@@ -23,6 +24,7 @@ describe('mcp Server', () => {
   let root: string;
   let dir: string;
   let scope: Scope.Closeable;
+  let store: Store.Api;
   let toolkit: Effect.Success<typeof Server.CodeIndexToolkit>;
 
   beforeAll(async () => {
@@ -33,7 +35,7 @@ describe('mcp Server', () => {
     scope = await EffectEx.runPromise(Scope.make());
     toolkit = await EffectEx.runPromise(
       Effect.gen(function* () {
-        const store = yield* Server.open(dir);
+        store = yield* Server.open(dir);
         return yield* Effect.provide(Server.CodeIndexToolkit, Server.CodeIndexToolkit.toLayer(Server.handlers(store)));
       }).pipe(Scope.provide(scope)),
     );
@@ -78,9 +80,71 @@ describe('mcp Server', () => {
     expect(own.rows).toHaveLength(1);
   });
 
-  test('a malformed query is a tool failure carrying the message', async () => {
+  test("a malformed query is a tool failure carrying the engine's message", async () => {
     const error = await failure(toolkit.handle('query', { sparql: 'SELECT WHERE {' }));
     expect(error).toBeInstanceOf(Server.ToolFailure);
+    expect(error.message).toMatch(/^Failed to run SPARQL SELECT: \S/);
+  });
+
+  test('a query using a known prefix without declaring it gets the declaration', async () => {
+    const result = await call(
+      Server.Query.successSchema,
+      toolkit.handle('query', { sparql: 'SELECT ?path WHERE { ?f a deus:File ; deus:path ?path } ORDER BY ?path' }),
+    );
+    expect(result.prefixesInjected).toEqual(['deus']);
+    expect(result.rows).toHaveLength(5);
+    expect(result.warnings).toBeUndefined();
+
+    const declared = await call(
+      Server.Query.successSchema,
+      toolkit.handle('query', { sparql: `PREFIX deus: <${Ontology.PREFIX}> SELECT ?f WHERE { ?f a deus:File }` }),
+    );
+    expect(declared.prefixesInjected).toBeUndefined();
+  });
+
+  test('withPrefixes ignores prefixed names inside strings, IRIs and comments', () => {
+    expect(Server.withPrefixes('SELECT * WHERE { ?s ?p "pkg:x" . ?s ?q <urn:file:y> } # rdfs:label').injected).toEqual(
+      [],
+    );
+    const { sparql, injected } = Server.withPrefixes('ASK { ?s a deus:File ; deus:inPackage pkg:@test/fixture }');
+    expect(injected).toEqual(['deus', 'pkg']);
+    expect(sparql).toContain(`PREFIX pkg: <${Ontology.PACKAGE_BASE}>`);
+  });
+
+  test('an unknown deus: term is a warning naming the closest known terms', async () => {
+    const result = await call(
+      Server.Query.successSchema,
+      toolkit.handle('query', { sparql: 'SELECT ?key WHERE { ?op deus:operationkey ?key }' }),
+    );
+    expect(result.rows).toEqual([]);
+    expect(result.warnings).toEqual(['deus:operationkey is not in the vocabulary; did you mean deus:operationKey?']);
+
+    const asked = await call(Server.Ask.successSchema, toolkit.handle('ask', { sparql: 'ASK { ?s deus:importz ?o }' }));
+    expect(asked.warnings?.[0]).toContain('deus:imports');
+    expect(Server.deusTerms(`SELECT * WHERE { ?s <${Ontology.PREFIX}pathh> ?o ; deus:name "deus:nope" }`)).toEqual([
+      'name',
+      'pathh',
+    ]);
+  });
+
+  test('a query past its timeout is cancelled, and the server keeps answering', async () => {
+    // The native evaluator stops at its next quad read, so a query that would never finish is safe to
+    // abandon there. Comunica cannot be stopped mid-join, so the JS backend gets one that ends in a second.
+    const expensive =
+      Store.defaultBackend() === 'native'
+        ? 'SELECT (COUNT(*) AS ?n) WHERE { ?a ?b ?c . ?d ?e ?f . ?g ?h ?i . ?j ?k ?l }'
+        : 'SELECT (COUNT(*) AS ?n) WHERE { ?a ?b ?c . ?d ?e ?f . ?g deus:path ?h }';
+    const started = Date.now();
+    const error = await failure(toolkit.handle('query', { sparql: expensive, timeoutMs: 10 }));
+    expect(error.message).toContain('timed out after 10 ms');
+    expect(error.message).toContain('LIMIT');
+    expect(Date.now() - started).toBeLessThan(5_000);
+
+    const cheap = await call(
+      Server.Query.successSchema,
+      toolkit.handle('query', { sparql: 'SELECT ?path WHERE { ?f deus:path ?path }', timeoutMs: 10_000 }),
+    );
+    expect(cheap.rows).toHaveLength(5);
   });
 
   test('boundQuery caps a query at the engine', () => {
@@ -111,12 +175,31 @@ describe('mcp Server', () => {
     ).toEqual({ result: false });
   });
 
-  test('vocabulary lists asserted and derived terms with the namespace prefixes', async () => {
+  test('vocabulary describes asserted, derived and absent terms, with the namespace prefixes', async () => {
     const { prefixes, terms } = await call(Server.Vocabulary.successSchema, toolkit.handle('vocabulary', {}));
     expect(prefixes).toMatchObject({ deus: Ontology.PREFIX, file: Ontology.FILE_BASE, pkg: Ontology.PACKAGE_BASE });
-    expect(terms).toContainEqual({ term: 'File', kind: 'class', count: 5 });
-    expect(terms.find((term) => term.term === 'imports')).toMatchObject({ kind: 'property', count: 2 });
+    expect(terms.find((term) => term.term === 'File')).toMatchObject({ kind: 'class', count: 5, documented: true });
+    expect(terms.find((term) => term.term === 'imports')).toMatchObject({
+      kind: 'property',
+      count: 2,
+      subjectClass: 'deus:File',
+      range: 'deus:File',
+      description: expect.stringContaining('runtime'),
+    });
     expect(terms.find((term) => term.term === 'importsTestFile')).toMatchObject({ kind: 'property', count: 2 });
+    // Documented but never stated here: listed, so an agent can tell "absent" from "does not exist".
+    expect(terms.find((term) => term.term === 'EffectLayer')).toMatchObject({ kind: 'class', count: 0 });
+  });
+
+  test('vocabulary and stats read the summary the indexing pass recorded', async () => {
+    const recorded = await EffectEx.runPromise(Summary.read(store));
+    expect(recorded).toBeDefined();
+    const { terms } = await call(Server.Vocabulary.successSchema, toolkit.handle('vocabulary', {}));
+    for (const entry of recorded?.vocabulary ?? []) {
+      expect(terms).toContainEqual(expect.objectContaining(entry));
+    }
+    const stats = await call(Server.Stats.successSchema, toolkit.handle('stats', {}));
+    expect(stats).toMatchObject({ files: recorded?.files, quads: recorded?.quads });
   });
 
   test('describe resolves a path and shows both directions', async () => {
@@ -149,18 +232,64 @@ describe('mcp Server', () => {
     expect(byName.outgoing).toContainEqual({ predicate: 'rdf:type', object: 'deus:Package', objectKind: 'iri' });
   });
 
-  test('an ambiguous name lists candidates instead of choosing one', async () => {
+  test('an ambiguous name lists ranked candidates instead of choosing one', async () => {
     const result = await call(Server.Describe.successSchema, toolkit.handle('describe', { target: 'a' }));
     expect(result.iri).toBeUndefined();
+    // The package-public one first.
     expect(result.candidates.map((candidate) => candidate.iri)).toEqual([
-      Ontology.symbolIri('src/a.ts', 'a').value,
       Ontology.symbolIri('src/d.ts', 'a').value,
+      Ontology.symbolIri('src/a.ts', 'a').value,
     ]);
+    expect(result.candidates[0]).toMatchObject({ matchedBy: 'name' });
     expect(result.candidates[0].types).toContain('deus:Symbol');
+    expect(result).toMatchObject({ candidatesTotal: 2, truncated: { candidates: false } });
+  });
 
-    expect(
-      await call(Server.Describe.successSchema, toolkit.handle('describe', { target: 'no-such-thing' })),
-    ).toMatchObject({ candidates: [], outgoing: [] });
+  test('describe on no match returns the forms it accepts', async () => {
+    const result = await call(Server.Describe.successSchema, toolkit.handle('describe', { target: 'no-such-thing' }));
+    expect(result).toMatchObject({ candidates: [], outgoing: [], candidatesTotal: 0 });
+    expect(result.hint).toContain('Accepted forms');
+    expect(result.hint).toContain('Operation.make');
+  });
+
+  test.each([
+    ['Ns.c', 'src/c.ts', 'c', 'canonicalName'],
+    ['org.test.operation.c', 'src/c.ts', 'c', 'operationKey'],
+    ['org.test.type.b', 'src/b.ts', 'b', 'echoTypename'],
+    ['org.test.plugin.b', 'src/b.ts', 'b', 'pluginId'],
+    ['src/c.ts#c', 'src/c.ts', 'c', 'symbol'],
+    ['Other.c', 'src/c.ts', 'c', 'partial:name'],
+  ])('describe resolves %s', async (target, path, name, resolvedBy) => {
+    const result = await call(Server.Describe.successSchema, toolkit.handle('describe', { target }));
+    expect(result).toMatchObject({ iri: Ontology.symbolIri(path, name).value, resolvedBy });
+  });
+
+  test('describe resolves a path tail and a module member as imported', async () => {
+    const tail = await call(Server.Describe.successSchema, toolkit.handle('describe', { target: 'b.ts' }));
+    expect(tail).toMatchObject({ iri: Ontology.fileIri('src/b.ts').value, resolvedBy: 'partial:path' });
+
+    const member = await call(Server.Describe.successSchema, toolkit.handle('describe', { target: 'effect#succeed' }));
+    expect(member).toMatchObject({ iri: Ontology.memberIri('effect', 'succeed').value, resolvedBy: 'member' });
+    expect(member.incoming).toContainEqual({
+      subject: Ontology.symbolIri('src/c.ts', 'c').value,
+      predicate: 'deus:implDependsOn',
+    });
+  });
+
+  test('describe counts incoming triples per predicate and spreads the capped list across them', async () => {
+    const result = await call(
+      Server.Describe.successSchema,
+      toolkit.handle('describe', { target: 'src/c.ts', limit: 2 }),
+    );
+    expect(result.incomingCounts).toEqual(
+      expect.arrayContaining([
+        { predicate: 'deus:imports', count: 1 },
+        { predicate: 'deus:importsTestFile', count: 1 },
+      ]),
+    );
+    expect(new Set(result.incoming.map((edge) => edge.predicate))).toEqual(
+      new Set(['deus:imports', 'deus:importsTestFile']),
+    );
   });
 
   test('files filters by prefix and language', async () => {
@@ -175,6 +304,7 @@ describe('mcp Server', () => {
     expect(stats).toMatchObject({ backend: Store.defaultBackend(), dir, files: 5 });
     expect(stats.quads).toBeGreaterThan(0);
     expect(stats.derived).toContainEqual({ graph: Ontology.derivedGraphIri('test').value, quads: 2 });
+    expect(stats.derived).toContainEqual({ graph: Ontology.derivedGraphIri('names').value, quads: 5 });
   });
 
   test('design returns the pruned graph and a mermaid draft, scored by baseline without a key', async () => {

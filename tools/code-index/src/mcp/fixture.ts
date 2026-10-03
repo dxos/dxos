@@ -22,21 +22,33 @@ export const writeFixture = async (root: string): Promise<void> => {
   await writeFile(join(root, 'package.json'), JSON.stringify({ name: '@test/fixture', version: '1.0.0' }));
   await writeFile(join(root, 'src', 'a.ts'), "import { b } from './b';\nexport const a = b;\n");
   await writeFile(join(root, 'src', 'b.ts'), "import { c } from './c';\nexport const b = c;\n");
-  await writeFile(join(root, 'src', 'c.ts'), "import * as Effect from 'effect';\nexport const c = Effect;\n");
+  await writeFile(join(root, 'src', 'c.ts'), "import * as Effect from 'effect';\nexport const c = Effect.succeed;\n");
   await writeFile(join(root, 'src', 'd.ts'), 'export const a = 2;\n');
   await git(root, 'init', '--quiet');
 };
 
-const REASONER = {
-  name: 'test',
-  rules: `
+const REASONERS = [
+  {
+    name: 'test',
+    rules: `
     @prefix deus: <${Ontology.PREFIX}>.
     { ?a deus:imports ?b } => { ?a deus:importsTestFile ?b }.
   `,
-};
+  },
+  // The keys `describe` resolves besides paths and names, which the fixture's plain code cannot conclude.
+  {
+    name: 'names',
+    rules: `
+    @prefix deus: <${Ontology.PREFIX}>.
+    { ?s deus:name "c"; deus:kind "variable" } => { ?s deus:canonicalName "Ns.c"; deus:operationKey "org.test.operation.c" }.
+    { ?s deus:name "b"; deus:kind "variable" } => { ?s deus:echoTypename "org.test.type.b"; deus:pluginId "org.test.plugin.b" }.
+    { ?f deus:path "src/d.ts"; deus:declares ?s } => { ?s deus:packagePublic true }.
+  `,
+  },
+];
 
 /** Indexes the fixture through the ordinary read-write store, which is closed again before any reader opens it. */
 export const indexFixture = (root: string, dir: string) =>
   EffectEx.runPromise(
-    Effect.scoped(Effect.provide(Indexer.run({ root, workers: 1, reasoners: [REASONER] }), Store.layer(dir))),
+    Effect.scoped(Effect.provide(Indexer.run({ root, workers: 1, reasoners: REASONERS }), Store.layer(dir))),
   );

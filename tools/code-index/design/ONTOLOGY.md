@@ -119,17 +119,18 @@ typescript analyzer walks up from its file to the nearest `package.json` to asse
 | `deus:Extension`    | A block-type definition named by URI, shared by every table naming it.  |
 | `deus:FileGlob`     | A path glob a spec field names, compiled to a regular expression.       |
 
-### Derived by rules — all `rdfs:subClassOf deus:Symbol`
+### Derived by rules — on symbols
 
-The class hierarchy lives in `ontology/deus.ttl` (loaded as facts) so `?s a deus:Symbol` keeps
-matching and LDkit gets one lens per class.
+No `rdfs:subClassOf` is stated anywhere: each class below is concluded on a node the parser already
+typed `deus:Symbol`, so `?s a deus:Symbol` keeps matching it, and a query names the derived class
+directly.
 
 | Class                      | Recognized by                                                                                                                                                                                                | Rule file                  |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
-| `deus:EffectService`       | `deus:extends module:effect/Context#Service`                                                                                                                                                                 | `rules/effect.n3`          |
-| `deus:EffectLayer`         | `deus:constructedBy` one of `module:effect/Layer#{effect,succeed,scoped,mergeAll,unwrap,provide}`                                                                                                            | `rules/effect.n3`          |
-| `deus:Schema`              | `deus:constructedBy module:effect/Schema#{Struct,TaggedStruct,Class,Union,…}`                                                                                                                                | `rules/effect.n3`          |
-| `deus:DomainError`         | `deus:extends module:@dxos/errors#BaseError.extend` or `module:effect/Data#TaggedError`                                                                                                                      | `rules/effect.n3`          |
+| `deus:EffectService`       | `deus:extends module:effect/Context#Service`                                                                                                                                                                 | `rules/10-effect.n3`       |
+| `deus:EffectLayer`         | `deus:constructedBy` one of `module:effect/Layer#{effect,succeed,scoped,mergeAll,unwrap,provide}`                                                                                                            | `rules/10-effect.n3`       |
+| `deus:Schema`              | `deus:constructedBy module:effect/Schema#{Struct,TaggedStruct,Class,Union,…}`                                                                                                                                | `rules/10-effect.n3`       |
+| `deus:DomainError`         | `deus:extends module:@dxos/errors#BaseError.extend` or `module:effect/Data#TaggedError`                                                                                                                      | `rules/10-effect.n3`       |
 | `deus:EchoType`            | `deus:extends`/`deus:constructedBy`/`deus:pipedThrough` `module:@dxos/echo#Type.makeObject` (also the `@dxos/echo/Type` subpath, the `@dxos/react-client/echo` re-export, and `Type.ts` inside `@dxos/echo`) | `rules/20-echo.n3`         |
 | `deus:EchoRelation`        | The same, through `Type.makeRelation`                                                                                                                                                                        | `rules/20-echo.n3`         |
 | `deus:Operation`           | `deus:constructedBy` `Operation.make` — addressed as `@dxos/compute/Operation#make`, `@dxos/compute#Operation.make`, or its declaring file                                                                   | `rules/30-compute.n3`      |
@@ -137,10 +138,11 @@ matching and LDkit gets one lens per class.
 | `deus:OperationHandlerSet` | `deus:constructedBy OperationHandlerSet.{make,merge,lazy,reactive}`, or a symbol typed `OperationHandlerSet`                                                                                                 | `rules/30-compute.n3`      |
 | `deus:Skill`               | `deus:constructedBy Skill.make`, a symbol typed `Skill.Definition`, or a factory typed `() => Skill.Skill`                                                                                                   | `rules/30-compute.n3`      |
 | `deus:Capability`          | `deus:constructedBy …app-framework…Capability#{make,makeSingleton}` (any addressing, incl. `deus:constructedByPath`)                                                                                         | `rules/41-capabilities.n3` |
-| `deus:Plugin`              | `deus:constructedBy module:@dxos/app-framework/Plugin#define` — the body, with its modules                                                                                                                   | `rules/composer.n3`        |
-| `deus:LazyPlugin`          | `deus:constructedBy …Plugin#lazy` — the shim that defers loading the body                                                                                                                                    | `rules/composer.n3`        |
-| `deus:PluginMeta`          | `deus:constructedBy …Plugin#{getMetaFromConfig,makeMeta}`                                                                                                                                                    | `rules/composer.n3`        |
-| `deus:Rpc`                 | `deus:constructedBy module:effect/rpc/RpcGroup#make`                                                                                                                                                         | `rules/effect.n3`          |
+| `deus:Plugin`              | `deus:constructedBy module:@dxos/app-framework/Plugin#define` — the body, with its modules                                                                                                                   | `rules/40-composer.n3`     |
+| `deus:LazyPlugin`          | `deus:constructedBy …Plugin#lazy` — the shim that defers loading the body                                                                                                                                    | `rules/40-composer.n3`     |
+| `deus:PluginMeta`          | `deus:constructedBy …Plugin#{getMetaFromConfig,makeMeta}`                                                                                                                                                    | `rules/40-composer.n3`     |
+| `deus:Rpc`                 | `deus:constructedBy module:effect/rpc/RpcGroup#make`                                                                                                                                                         | `rules/10-effect.n3`       |
+| `deus:PluginModule`        | Built by `Capability.makeModule`/`lazyModule`/`inlineModule`, or by a helper whose signature returns `Capability.Module`, that was built by `Capability.moduleMaker`, or that calls one of those             | `rules/40-composer.n3`     |
 
 Adding a framework is adding a rule file. The member IRIs above are stable because they follow the
 specifier as written in source, not the file the specifier resolves to.
@@ -179,6 +181,7 @@ Any other block type stays a plain `deus:SpecBlock`.
 | `deus:importsType`          | `deus:File`    | Resolved import used **only** in type positions, or written `import type` — erased at runtime. |
 | `deus:importsModule`        | `xsd:string`   | Unresolved specifier, verbatim (bare package, virtual module, missing file).                   |
 | `deus:reexports`            | `deus:File`    | `export * from` / `export { x } from` — the edge public-API reachability follows.              |
+| `deus:describesPackage`     | `deus:Package` | On `package.json` and `moon.yml`: the `Package` node the file states facts about.              |
 | `deus:declares`             | `deus:Symbol`  | A top-level declaration the file introduces.                                                   |
 | `deus:unresolvedReferences` | `xsd:integer`  | Identifier references the resolver could not bind (see Resolution). A quality gauge.           |
 | `deus:parseError`           | `xsd:string`   | One message per parse diagnostic; present only on failure.                                     |
@@ -211,28 +214,29 @@ A specifier is recorded in exactly one of `imports` / `importsType` / `importsMo
 
 ### Symbol
 
-| Property                 | Range                       | Meaning                                                                                                                                                                                                    |
-| ------------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `deus:name`              | `xsd:string`                | Declared name; `default` for an anonymous default export.                                                                                                                                                  |
-| `deus:kind`              | `xsd:string`                | `function`, `class`, `variable`, `type`, `interface`, `enum`, `namespace`, `unknown`.                                                                                                                      |
-| `deus:exported`          | `xsd:boolean`               | **Module-public**: the declaration leaves its module.                                                                                                                                                      |
-| `deus:line`              | `xsd:integer`               | 1-based line of the declaration.                                                                                                                                                                           |
-| `deus:extends`           | `deus:Symbol`/`deus:Member` | Heritage clause target. When the clause is a call (`extends Context.Service<…>()('id')`, `extends BaseError.extend(...)`), the callee.                                                                     |
-| `deus:constructedBy`     | `deus:Symbol`/`deus:Member` | The callee when the initializer is a call. `.pipe(...)` chains are unwrapped: the innermost call's callee is `constructedBy`, each piped call's callee is `deus:pipedThrough`.                             |
-| `deus:pipedThrough`      | `deus:Symbol`/`deus:Member` | Callees applied via `.pipe(...)` to the constructed value (e.g. `Type.Obj`, `Operation.withHandler`).                                                                                                      |
-| `deus:derivedFrom`       | `deus:Symbol`/`deus:Member` | The base of a `.pipe(...)` chain when it is a reference rather than a call (`SentenceNormalization.pipe(...)` → `SentenceNormalization`). A handler is _derived from_ its operation.                       |
-| `deus:argument`          | `deus:Symbol`/`deus:Member` | The first argument of the constructing call, when it is an identifier reference (`Layer.effect(Store, …)` → `Store`).                                                                                      |
-| `deus:constructedByPath` | `xsd:string`                | The dotted path the `deus:constructedBy` symbol IRI did not consume: `Capability$.make` through `import { Capability as Capability$ } from '../core'` lands on the namespace `Capability`, leaving `make`. |
-| `deus:passesLiteral`     | `deus:Argument`             | A string literal (≤ 256 chars) this declaration passes into a call outside any function body — see Argument. `DXN.make('a', '0.1.0')` → slots `"0"`, `"1"`; two keys deep: `"0.plugin.key"`.               |
-| `deus:passes`            | `deus:Argument`             | A reference this declaration passes into a call anywhere in its span — see Argument.                                                                                                                       |
-| `deus:apiDependsOn`      | `deus:Symbol`/`deus:Member` | A reference from a **type position** of this declaration — see API vs implementation.                                                                                                                      |
-| `deus:implDependsOn`     | `deus:Symbol`/`deus:Member` | A reference from a **value position** (body, initializer).                                                                                                                                                 |
-| `deus:namespaceOf`       | `deus:File`                 | On a `namespace` symbol from `export * as N from './y'`: the module it publishes whole. The name is a fact of the barrel, the identifiers it qualifies are facts of `./y`.                                 |
-| `deus:loads`             | `deus:File`                 | A file the declaration imports dynamically (`() => import('./y')`): what a lazy shim or module defers.                                                                                                     |
-| `deus:snippet`           | `xsd:string`                | The definition with implementation abbreviated — valid TypeScript, see Snippets.                                                                                                                           |
-| `deus:doc`               | `xsd:string`                | The JSDoc summary (first paragraph), when present.                                                                                                                                                         |
-| `deus:deprecated`        | `xsd:boolean`               | A `@deprecated` tag is present.                                                                                                                                                                            |
-| `deus:hasType`           | `deus:Type`                 | The type of the value a `variable` or `function` symbol declares, inferred per file — see Types. Absent when unknown.                                                                                      |
+| Property                 | Range                       | Meaning                                                                                                                                                                                                      |
+| ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `deus:name`              | `xsd:string`                | Declared name; `default` for an anonymous default export.                                                                                                                                                    |
+| `deus:kind`              | `xsd:string`                | `function`, `class`, `variable`, `type`, `interface`, `enum`, `namespace`, `unknown`, and `reexport` on an alias symbol (below).                                                                             |
+| `deus:exported`          | `xsd:boolean`               | **Module-public**: the declaration leaves its module.                                                                                                                                                        |
+| `deus:line`              | `xsd:integer`               | 1-based line of the declaration.                                                                                                                                                                             |
+| `deus:extends`           | `deus:Symbol`/`deus:Member` | Heritage clause target. When the clause is a call (`extends Context.Service<…>()('id')`, `extends BaseError.extend(...)`), the callee.                                                                       |
+| `deus:constructedBy`     | `deus:Symbol`/`deus:Member` | The callee when the initializer is a call. `.pipe(...)` chains are unwrapped: the innermost call's callee is `constructedBy`, each piped call's callee is `deus:pipedThrough`.                               |
+| `deus:pipedThrough`      | `deus:Symbol`/`deus:Member` | Callees applied via `.pipe(...)` to the constructed value (e.g. `Type.Obj`, `Operation.withHandler`).                                                                                                        |
+| `deus:derivedFrom`       | `deus:Symbol`/`deus:Member` | The base of a `.pipe(...)` chain when it is a reference rather than a call (`SentenceNormalization.pipe(...)` → `SentenceNormalization`). A handler is _derived from_ its operation.                         |
+| `deus:argument`          | `deus:Symbol`/`deus:Member` | The first argument of the constructing call, when it is an identifier reference (`Layer.effect(Store, …)` → `Store`).                                                                                        |
+| `deus:constructedByPath` | `xsd:string`                | The dotted path the `deus:constructedBy` symbol IRI did not consume: `Capability$.make` through `import { Capability as Capability$ } from '../core'` lands on the namespace `Capability`, leaving `make`.   |
+| `deus:passesLiteral`     | `deus:Argument`             | A string literal (≤ 256 chars) this declaration passes into a call outside any function body — see Argument. `DXN.make('a', '0.1.0')` → slots `"0"`, `"1"`; two keys deep: `"0.plugin.key"`.                 |
+| `deus:passes`            | `deus:Argument`             | A reference this declaration passes into a call anywhere in its span — see Argument.                                                                                                                         |
+| `deus:apiDependsOn`      | `deus:Symbol`/`deus:Member` | A reference from a **type position** of this declaration — see API vs implementation.                                                                                                                        |
+| `deus:implDependsOn`     | `deus:Symbol`/`deus:Member` | A reference from a **value position** (body, initializer).                                                                                                                                                   |
+| `deus:aliasOf`           | `deus:Symbol`               | On an alias symbol (`deus:kind "reexport"`) for `export { x } from './y'` or `export { default as X } from './y'`: the declaration it stands for. `rules/90-aliases.n3` copies the origin's classes onto it. |
+| `deus:namespaceOf`       | `deus:File`                 | On a `namespace` symbol from `export * as N from './y'`: the module it publishes whole. The name is a fact of the barrel, the identifiers it qualifies are facts of `./y`.                                   |
+| `deus:loads`             | `deus:File`                 | A file the declaration imports dynamically (`() => import('./y')`): what a lazy shim or module defers.                                                                                                       |
+| `deus:snippet`           | `xsd:string`                | The definition with implementation abbreviated — valid TypeScript, see Snippets.                                                                                                                             |
+| `deus:doc`               | `xsd:string`                | The JSDoc summary (first paragraph), when present.                                                                                                                                                           |
+| `deus:deprecated`        | `xsd:boolean`               | A `@deprecated` tag is present.                                                                                                                                                                              |
+| `deus:hasType`           | `deus:Type`                 | The type of the value a `variable` or `function` symbol declares, inferred per file — see Types. Absent when unknown.                                                                                        |
 
 ### Argument
 
@@ -335,10 +339,10 @@ type.
 | `deus:echoReferences`        | An ECHO type and each ECHO type a `Ref.Ref(X)` field names — in its own span or in the schema it is built from — resolved through barrels and namespaces (one unambiguous match only).                                                                                                                                                                                      | `rules/20-echo.n3`         |
 | `deus:relationSource`        | An `EchoRelation`'s `source` endpoint (`Type.makeRelation(dxn)({ source: A, target: B })`), when it is an ECHO type (`Obj.Unknown` is not).                                                                                                                                                                                                                                 | `rules/20-echo.n3`         |
 | `deus:relationTarget`        | Its `target` endpoint, likewise.                                                                                                                                                                                                                                                                                                                                            | `rules/20-echo.n3`         |
-| `deus:providesService`       | The key a providing constructor (`Layer.effect/succeed/sync/scoped/mock`) is built for, named by its declaration (or by its member when it resolves to none); each service in the `ROut` of its inferred type; and what the layer it is piped from or merges first provides (`rules/15-types.n3`).                                                                          | `rules/effect.n3`          |
-| `deus:requiresService`       | A layer built by `Layer.effect/scoped/effectDiscard` whose initializer refers to a service key other than the one it provides — what its code reads, not what remains after `Layer.provide` (that is `layerRequires`). Skipped when it calls `Effect.serviceOption`.                                                                                                        | `rules/effect.n3`          |
+| `deus:providesService`       | The key a providing constructor (`Layer.effect/succeed/sync/scoped/mock`) is built for, named by its declaration (or by its member when it resolves to none); each service in the `ROut` of its inferred type; and what the layer it is piped from or merges first provides (`rules/15-types.n3`).                                                                          | `rules/10-effect.n3`       |
+| `deus:requiresService`       | A layer built by `Layer.effect/scoped/effectDiscard` whose initializer refers to a service key other than the one it provides — what its code reads, not what remains after `Layer.provide` (that is `layerRequires`). Skipped when it calls `Effect.serviceOption`.                                                                                                        | `rules/10-effect.n3`       |
 | `deus:layerRequires`         | A layer's `RIn`: each service its inferred `Layer<ROut, E, RIn>` type still needs. Exact where the type is known.                                                                                                                                                                                                                                                           | `rules/15-types.n3`        |
-| `deus:resolvesTo`            | A reference IRI as an importer wrote it (`file:<barrel>#X` through `export *` barrels and named re-exports, `module:<specifier>#X` paired with the import's `file:` reference) and the declaration it denotes; concluded only for the service keys the layer facts name.                                                                                                    | `rules/effect.n3`          |
+| `deus:resolvesTo`            | A reference IRI as an importer wrote it (`file:<barrel>#X` through `export *` barrels and named re-exports, `module:<specifier>#X` paired with the import's `file:` reference) and the declaration it denotes; concluded only for the service keys the layer facts name.                                                                                                    | `rules/10-effect.n3`       |
 | `deus:importsTestFile`       | A non-test file importing a test file.                                                                                                                                                                                                                                                                                                                                      | `rules/50-example.n3`      |
 | `deus:canonicalName`         | **The name an external importer writes**, stated only when it differs from `deus:name`: `<Namespace>.<identifier>` when the declaring module is published whole via `export * as N`. Elsewhere the canonical name is `deus:name`; a query reads `COALESCE(?canonical, ?name)`.                                                                                              | `rules/60-canonical.n3`    |
 | `deus:publishedBy`           | File → `Package`: the file is a `deus:entry` of the package, or reachable from one through `deus:reexports` or a namespace's `deus:namespaceOf`.                                                                                                                                                                                                                            | `rules/65-packages.n3`     |
@@ -369,6 +373,26 @@ type.
 | `deus:unspecified`           | `true` on an `Operation` no spec block specifies.                                                                                                                                                                                                                                                                                                                           | `rules/80-gaps.n3`         |
 | `deus:unusedDependency`      | `declaresDep` without `usesPackage`. Deps used only from config, CSS or scripts the index does not parse show up here too.                                                                                                                                                                                                                                                  | `rules/80-gaps.n3`         |
 | classes in the table above   | `deus:EffectService`, `deus:EchoType`, …                                                                                                                                                                                                                                                                                                                                    | per framework              |
+
+### Rule-internal vocabulary
+
+Terms the rule files use to talk to themselves. They are facts stated by a rule file or helpers
+concluded backward (`<=`) inside it, not part of the vocabulary a query should rely on; most never
+reach a derived graph, and `vocabulary` lists them with count 0 when they do not.
+
+| Term                                                                  | Meaning                                                                                                          | Rule file             |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `deus:computeRole`                                                    | Which compute API a callee IRI is (`"operation"`, `"handler"`, `"handlerSet"`, …), stated per addressing.        | `rules/30-compute.n3` |
+| `deus:EchoDxnFactory`, `deus:EchoRefFactory`                          | The `DXN.make` and `Ref.Ref` members (every addressing) the ECHO rules key on.                                   | `rules/20-echo.n3`    |
+| `deus:echoFactoryOf`, `deus:echoClass`                                | A `Type.makeObject`/`makeRelation` IRI and the class it builds; `true` on `EchoType` and `EchoRelation`.         | `rules/20-echo.n3`    |
+| `deus:echoDxnOf`, `deus:echoDxnVersionOf`                             | A typename or version literal and the declaration passing it to `DXN.make` — what `echoTypename` is chosen from. | `rules/20-echo.n3`    |
+| `deus:echoDenotes`                                                    | An argument and the declaration its reference resolves to, through barrels and namespaces.                       | `rules/20-echo.n3`    |
+| `deus:echoIsSchema`, `deus:echoRefines`                               | A `Schema` or a refinement of one; a schema and each schema it derives from (reflexive).                         | `rules/20-echo.n3`    |
+| `deus:echoBarrelOf`                                                   | A barrel and a file it imports.                                                                                  | `rules/20-echo.n3`    |
+| `deus:echoMemberName`, `deus:echoMemberPath`, `deus:echoMemberString` | A member IRI split into `(package name)` / `(package namespace name)`, and as a string.                          | `rules/20-echo.n3`    |
+
+`deus:dependsOn` appears only in a commented-out example in `rules/50-example.n3`; nothing concludes
+it.
 
 A `rule` block's reviewed files are deliberately **not** materialized as `deus:reviews`: on this
 repository that is 841,129 pairs, because 98 rules share a few repo-wide globs. They are the path
@@ -486,13 +510,13 @@ Two kinds, one contract:
 - **N3 rule files** (`rules/*.n3`) — run by EYE over the facts whose predicates the file names
   (an unbound predicate disables the narrowing). Right for classification and joins that introduce
   vocabulary: small output, declarative, diffable.
-- **JS reasoners** (`rules/*.ts`) — `Reasoner.make({ name, run })`, where `run` receives a context
-  with `select` / `ask` / `construct` (SPARQL over the current graph, property paths included) and
-  `emit(quads)`. Right for whatever N3 does badly: reachability that must be materialized (walk it
-  with `deus:reexports+` in a query rather than a closure rule), string and path manipulation,
-  anything needing a set, a sort, or a lookup table.
+- **JS passes** (`src/Reasoner.ts`, built in rather than loaded from `rules/`) — a `{ name, derive }`
+  that reads the file graphs and replaces its own `graph:pass/<name>` (`Store.writePass`). Right for
+  whatever N3 does badly: reachability that must be materialized (walk it with `deus:reexports+` in a
+  query rather than a closure rule), string and path manipulation, anything needing a set, a sort, or
+  a lookup table.
 
-Reasoners run in filename order at the end of an indexing pass; each sees the file graphs plus the
+Passes run first, then the rule files in filename order, at the end of an indexing pass; each sees the file graphs plus the
 derived graphs of reasoners before it, never its own previous output. A pass runs none of them when
 the ledger records that this exact rule set already ran over the facts the store holds (a rule-set
 signature and the store's write generation, in SQLite `meta`), so a pass run with `--no-reason`, or
@@ -505,8 +529,10 @@ The test for which kind to write: if the conclusion is a _class_ or a _join_, N3
 _walk_ or a _computation_, JS. Never a closure rule over a whole relation in N3 (see Derived). The
 one recursion shipped, `deus:publishedBy` in `65-packages.n3`, is seeded by the package entries and
 follows only `deus:reexports`, so its output is the set of public files (a few thousand), not a
-closure of the import graph. JS reasoners are not built yet, so the computations specs need — glob
-compilation and reference splitting — are done by the parser (see SpecField).
+closure of the import graph. The one JS pass shipped is `bind-types` (`src/TypeBinding.ts`), which
+binds type terms across files into `graph:pass/bind-types` before the rule files run; the
+computations specs need — glob compilation and reference splitting — are still done by the parser
+(see SpecField).
 
 Deleting a file does not dirty the files that imported it, so an unchanged importer keeps its
 `deus:imports` edge to the departed file until that importer is itself reindexed.
