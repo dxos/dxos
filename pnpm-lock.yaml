@@ -337,8 +337,8 @@ catalogs:
       specifier: 0.1.61
       version: 0.1.61
     '@oxc-project/types':
-      specifier: 0.139.0
-      version: 0.139.0
+      specifier: 0.152.0
+      version: 0.152.0
     '@panproto/core':
       specifier: 0.56.1
       version: 0.56.1
@@ -24829,7 +24829,7 @@ importers:
         version: link:../../packages/common/log
       '@oxc-project/types':
         specifier: 'catalog:'
-        version: 0.139.0
+        version: 0.152.0
       rolldown:
         specifier: ~1.2.12
         version: 1.2.12
@@ -29371,9 +29371,6 @@ packages:
 
   '@oxc-project/types@0.127.0':
     resolution: {integrity: sha512-aIYXQBo4lCbO4z0R3FHeucQHpF46l2LbMdxRvqvuRuW2OxdnSkcng5B8+K12spgLDj93rtN3+J2Vac/TIO+ciQ==}
-
-  '@oxc-project/types@0.139.0':
-    resolution: {integrity: sha512-r9gHphtCs+1M7J0pw6Sn/hh/Wpa/iQrOOkrNAlVLF/gHq+/CJmHIWKKUUhdWjcD6CIa8idarspCsASiXCXvFUw==}
 
   '@oxc-project/types@0.148.0':
     resolution: {integrity: sha512-Nm4s/jB+4FpFsPhWGEC4h7rzksesmtnMXomo6rCMcg/b8zLQuOziRgkCS1fxDCXOlJB/6Q8oABOZ/OP6RIPj9A==}
@@ -51152,8 +51149,6 @@ snapshots:
     optional: true
 
   '@oxc-project/types@0.127.0': {}
-
-  '@oxc-project/types@0.139.0': {}
 
   '@oxc-project/types@0.148.0': {}
 
