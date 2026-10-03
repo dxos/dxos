@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent-runtime",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Local agent process runtime (agent-service) and assistant-coupled test helpers.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -46,7 +46,9 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/mcp-client": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",

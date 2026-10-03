@@ -5,12 +5,12 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { AssignTasks, PlanReminder, UpdateTasks } from './definitions';
+import { AskQuestion, PlanReminder, UpdateTasks } from './definitions.ts';
 
-export * as PlanningOperations from './definitions';
+export * as PlanningOperations from './definitions.ts';
 
 export const PlanningHandlers = OperationHandlerSet.lazy([
-  UpdateTasks.pipe(Operation.lazyHandler(() => import('./update-tasks'))),
-  AssignTasks.pipe(Operation.lazyHandler(() => import('./assign-tasks'))),
-  PlanReminder.pipe(Operation.lazyHandler(() => import('./plan-reminder'))),
+  UpdateTasks.pipe(Operation.lazyHandler(() => import('./update-tasks.ts'))),
+  AskQuestion.pipe(Operation.lazyHandler(() => import('./ask-question.ts'))),
+  PlanReminder.pipe(Operation.lazyHandler(() => import('./plan-reminder.ts'))),
 ]);

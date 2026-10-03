@@ -3,13 +3,13 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
+import * as AiError from 'effect/ai/AiError';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -18,7 +18,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { ContentBlock, type Message } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer } from '../testing/index.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 

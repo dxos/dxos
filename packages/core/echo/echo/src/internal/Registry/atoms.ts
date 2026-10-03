@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
-import type * as Registry from '../../Registry';
-import * as Type from '../../Type';
+import type * as Registry from '../../Registry.ts';
+import * as Type from '../../Type.ts';
 
 /**
  * Atom family for the type entity registered under a typename.

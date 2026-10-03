@@ -8,8 +8,8 @@
 
 import { describe, test } from 'vitest';
 
-import { runExtractor } from './index';
-import { MAX_HTML_LENGTH, snapshotExtractor } from './snapshot';
+import { runExtractor } from './index.ts';
+import { MAX_HTML_LENGTH, snapshotExtractor } from './snapshot.ts';
 
 describe('snapshot extractor', () => {
   test('captures source, hints, and html', async ({ expect }) => {

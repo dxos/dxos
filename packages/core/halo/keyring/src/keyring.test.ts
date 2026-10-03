@@ -8,8 +8,8 @@ import { verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { Keyring } from './keyring';
-import { generateJWKKeyPair, parseJWKKeyPair } from './testing';
+import { Keyring } from './keyring.ts';
+import { generateJWKKeyPair, parseJWKKeyPair } from './testing.ts';
 
 describe('Keyring', () => {
   test('sign & verify', async () => {

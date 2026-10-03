@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './FundamentalsPanel';
+export * from './FundamentalsPanel.tsx';

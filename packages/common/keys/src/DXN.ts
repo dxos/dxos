@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import type * as URI from './URI';
+import type * as URI from './URI.ts';
 
 /**
  * Full DXN regex per spec: `dxn:<nsid>[:<version>]`.
@@ -169,22 +169,22 @@ export const make: {
 
 /**
  * Parses a full DXN string. Returns undefined on failure.
+ *
+ * Validates rather than catching `parse`, because rejection is the common case on the query path —
+ * every type filter tests each candidate's typename against both grammars — and the `Error` that
+ * used to allocate, with its stack, dominated it.
  */
-export const tryMake = (dxn: string): DXN | undefined => {
-  try {
-    return parse(dxn);
-  } catch {
-    return undefined;
-  }
-};
+export const tryMake = (dxn: string): DXN | undefined =>
+  typeof dxn === 'string' && DXN_SPEC_REGEXP.test(dxn) ? (dxn as DXN) : undefined;
 
 // Internal — full-grammar validator. Callers outside this module should use
 // `make(nsid, version?)` or `tryMake(dxn)`.
 const parse = (dxn: string): DXN => {
-  if (typeof dxn === 'string' && DXN_SPEC_REGEXP.test(dxn)) {
-    return dxn as DXN;
+  const parsed = tryMake(dxn);
+  if (parsed === undefined) {
+    throw new Error(`Invalid DXN: ${dxn}`);
   }
-  throw new Error(`Invalid DXN: ${dxn}`);
+  return parsed;
 };
 
 /**

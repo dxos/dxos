@@ -6,7 +6,7 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 import { getIconRegistry } from '@dxos/react-ui';
 
-import { type IconMarkup } from './key';
+import { type IconMarkup } from './key.ts';
 
 const SPRITE_SELECTOR = '[data-dx-icon-sprite]';
 const DEFAULT_VIEW_BOX = '0 0 256 256';

@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { Database, Obj, Ref, Tag } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
@@ -148,8 +148,7 @@ export const toggleTag = Effect.fn('SystemTags.toggleTag')(function* (
   // Lazily provision the tag index for containers created before the `tags` field existed.
   let index = container.tags?.target;
   if (!index) {
-    index = db.add(TagIndex.make());
-    Obj.setParent(index, container);
+    index = db.add(Obj.make(TagIndex.TagIndex, { index: {}, [Obj.Parent]: container }));
     Obj.update(container, (container) => {
       container.tags = Ref.make(index!);
     });
@@ -185,8 +184,7 @@ export const applyTagToAll = Effect.fn('SystemTags.applyTagToAll')(function* (
   // existed has none, and bulk labelling should not be the one path that fails on it.
   let index = container.tags?.target;
   if (!index) {
-    index = db.add(TagIndex.make());
-    Obj.setParent(index, container);
+    index = db.add(Obj.make(TagIndex.TagIndex, { index: {}, [Obj.Parent]: container }));
     Obj.update(container, (container) => {
       container.tags = Ref.make(index!);
     });

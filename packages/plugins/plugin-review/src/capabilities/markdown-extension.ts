@@ -13,7 +13,7 @@ import { type EditorState, commentsState, documentId, overlap } from '@dxos/ui-e
 import { meta } from '#meta';
 import { CommentCapabilities } from '#types';
 
-import { commentSync } from '../extensions';
+import { commentSync } from '../extensions/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

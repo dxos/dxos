@@ -12,8 +12,8 @@ import { Ref } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 
-import { type EchoDatabase } from '../proxy-db';
-import { EchoTestBuilder } from './echo-test-builder';
+import { type EchoDatabase } from '../proxy-db/index.ts';
+import { EchoTestBuilder } from './echo-test-builder.ts';
 
 // Matrix of e2e tests for STRONG-DEPENDENCY resolution exercised through the public database API
 // (db.add / Relation.make / db.query / Relation.getSource|getTarget / feed / Obj.getParent),
@@ -283,10 +283,10 @@ describe('strong dependency resolution', () => {
   //
 
   describe('relation source/target — feed → automerge', () => {
-    // Expected to fail: a relation in a feed whose source lives in the automerge database hangs
-    // during query because the strong-dep resolver cannot yet bridge feed→database direction in-memory.
-    // Unskip once feed→db strong-dep resolution is implemented.
-    test.fails('in-memory', async () => {
+    // Resolves because the writer's feed handle already reflects the appended relation, so the query
+    // returns it without decoding it again; decoding it is what the resolver cannot yet do (see the
+    // reload case below).
+    test('in-memory', async () => {
       await using peer = await builder.createPeer({ types: TYPES });
       await using db = await peer.createDatabase();
       const feed = db.add(Feed.make({}));

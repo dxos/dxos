@@ -9,9 +9,8 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { extendedMarkdown } from './extended-markdown';
-import { type XmlWidgetRegistry } from './xml-tags';
-import { nodeToJson } from './xml-util';
+import { extendedMarkdown } from './extended-markdown.ts';
+import { nodeToJson } from './xml-util.ts';
 
 const testRegistry = {
   prompt: { block: true },
@@ -27,13 +26,6 @@ const testRegistry = {
 };
 
 describe('extended-markdown', () => {
-  const createEditorState = (doc: string, registry?: XmlWidgetRegistry) => {
-    return EditorState.create({
-      doc,
-      extensions: [extendedMarkdown({ registry: registry ?? testRegistry })],
-    });
-  };
-
   // Flaky.
   test.skip('tree', async ({ expect }) => {
     const doc = trim`
@@ -55,7 +47,7 @@ describe('extended-markdown', () => {
       <toolkit />
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
 
     const nodes: SyntaxNode[] = [];
     const tree = syntaxTree(state);
@@ -123,7 +115,7 @@ describe('extended-markdown', () => {
       -
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
     const tree = syntaxTree(state);
 
     tree.iterate({
@@ -144,7 +136,7 @@ describe('extended-markdown', () => {
       Regular paragraph.
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
     const tree = syntaxTree(state);
 
     const nodeNames: string[] = [];
@@ -167,7 +159,7 @@ describe('extended-markdown', () => {
       Paragraph text.
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
     const tree = syntaxTree(state);
 
     const nodeNames: string[] = [];
@@ -187,7 +179,7 @@ describe('extended-markdown', () => {
       ## Heading After Trailing
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
     const tree = syntaxTree(state);
 
     const nodeNames: string[] = [];
@@ -226,7 +218,7 @@ describe('extended-markdown', () => {
       More text.
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
     const tree = syntaxTree(state);
 
     const nodeNames: string[] = [];
@@ -257,7 +249,7 @@ describe('extended-markdown', () => {
       \`\`\`
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
     const tree = state.sliceDoc(0, state.doc.length);
 
     // Verify the document is parsed without errors.
@@ -283,7 +275,7 @@ describe('extended-markdown', () => {
       </prompt>
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
     const tree = state.sliceDoc(0, state.doc.length);
 
     // Verify the document contains custom tags.
@@ -309,7 +301,7 @@ describe('extended-markdown', () => {
       \`\`\`
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
     const tree = state.sliceDoc(0, state.doc.length);
 
     // Verify mixed content is preserved.
@@ -325,7 +317,7 @@ describe('extended-markdown', () => {
       \`<prompt>inline code</prompt>\`
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
     const tree = state.sliceDoc(0, state.doc.length);
 
     // Verify code blocks are preserved as-is.
@@ -358,7 +350,7 @@ describe('extended-markdown', () => {
       \`\`\`
     `;
 
-    const state = createEditorState(doc);
+    const state = EditorState.create({ doc, extensions: [extendedMarkdown({ registry: testRegistry })] });
     const tree = state.sliceDoc(0, state.doc.length);
 
     // Verify complex structures are handled.
@@ -368,15 +360,24 @@ describe('extended-markdown', () => {
 
   test('should handle empty and edge cases', ({ expect }) => {
     const emptyDoc = '';
-    const emptyState = createEditorState(emptyDoc);
+    const emptyState = EditorState.create({
+      doc: emptyDoc,
+      extensions: [extendedMarkdown({ registry: testRegistry })],
+    });
     expect(emptyState.doc.length).toBe(0);
 
     const onlyPromptDoc = '<prompt>Only prompt content</prompt>';
-    const onlyPromptState = createEditorState(onlyPromptDoc);
+    const onlyPromptState = EditorState.create({
+      doc: onlyPromptDoc,
+      extensions: [extendedMarkdown({ registry: testRegistry })],
+    });
     expect(onlyPromptState.sliceDoc(0)).toBe(onlyPromptDoc);
 
     const unclosedPromptDoc = '<prompt>Unclosed prompt';
-    const unclosedState = createEditorState(unclosedPromptDoc);
+    const unclosedState = EditorState.create({
+      doc: unclosedPromptDoc,
+      extensions: [extendedMarkdown({ registry: testRegistry })],
+    });
     expect(unclosedState.sliceDoc(0)).toBe(unclosedPromptDoc);
   });
 });

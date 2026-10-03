@@ -15,6 +15,7 @@ import {
   ReactSurface,
   Schema,
   SkillDefinition,
+  Tour,
   Translations,
   UndoMappings,
 } from '#capabilities';
@@ -31,6 +32,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Tour),
   Plugin.addModule(Translations),
   Plugin.addModule(UndoMappings),
   Plugin.make,

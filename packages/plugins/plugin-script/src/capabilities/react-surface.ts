@@ -15,13 +15,13 @@ import { DeploymentDialog, ScriptProperties, TestContainer } from '#containers';
 import { meta } from '#meta';
 import { Notebook } from '#types';
 
-import { DEPLOYMENT_DIALOG } from '../constants';
+import { DEPLOYMENT_DIALOG } from '../constants.ts';
 import {
   NotebookArticleSurface,
   ScriptArticleSurface,
   ScriptLogsSurface,
   ScriptSettingsSurface,
-} from './ScriptSurfaces';
+} from './ScriptSurfaces.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

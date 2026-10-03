@@ -6,7 +6,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { Text } from '@dxos/schema';
 
-import { htmlToMarkdown, markdownToHtml } from '../operations/html-markdown';
+import { htmlToMarkdown, markdownToHtml } from '../operations/html-markdown.ts';
 
 // BookHive's catalog service account, which owns the canonical `buzz.bookhive.catalogBook` records. The
 // published book's `hiveBookUri` points here (its rkey is the hive id) — how BookHive associates the record.

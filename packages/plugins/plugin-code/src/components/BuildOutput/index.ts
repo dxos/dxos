@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './BuildOutput';
+export * from './BuildOutput.tsx';

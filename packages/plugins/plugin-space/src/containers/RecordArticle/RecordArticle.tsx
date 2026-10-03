@@ -7,13 +7,14 @@ import React, { useCallback } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Card, Flex, Icon, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Card, Field, Flex, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
   type ActionGraphProps,
-  Menu,
+  ActionToolbar,
   MenuBuilder,
   graphActions,
   isToolbarAction,
@@ -21,7 +22,7 @@ import {
 } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
-import { RelatedObjectCard, RelatedTypeFilter } from '#components';
+import { ObjectCard, RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
 import { meta } from '#meta';
 import { SpaceSurface } from '#types';
@@ -29,6 +30,7 @@ import { SpaceSurface } from '#types';
 export const RecordArticle = ({ role, subject, attendableId }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { actions, onAction } = useMenuActions(attendableId);
+  useObject(subject);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
   // fall back to typename query which matches TypeSchema.typename.
   const db = Obj.getDatabase(subject);
@@ -53,12 +55,8 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
@@ -80,9 +78,9 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             {/* TODO(burdon): Only show label if surface exists? */}
             {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}
             <Flex column gap='form'>
-              <Input.Root>
-                <Input.Label>{t('related-actions.label')}</Input.Label>
-              </Input.Root>
+              <Field.Root>
+                <Field.Label>{t('related-actions.label')}</Field.Label>
+              </Field.Root>
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
             </Flex>
 
@@ -91,9 +89,9 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
               <div
                 className={mx('dx-expand flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
               >
-                <Input.Root>
-                  <Input.Label>{t('related-objects.label')}</Input.Label>
-                </Input.Root>
+                <Field.Root>
+                  <Field.Label>{t('related-objects.label')}</Field.Label>
+                </Field.Root>
                 {/* `self-start` so the group sizes to its icons rather than stretching this column. */}
                 <RelatedTypeFilter classNames='self-start' types={types} onToggle={toggle} />
                 {/* The masonry's own gutter would inset these cards relative to the record card above,
@@ -101,7 +99,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 {/* `centered={false}` on the ROOT, which is column alignment — distinct from
                     `Content`'s prop of the same name below (ScrollArea's scrollbar padding). Centred
                     columns drift right of the record card above them, which shares this column. */}
-                <Masonry.Root Tile={RelatedObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
+                <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
                   <Masonry.Content padding={false} centered={false}>
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>

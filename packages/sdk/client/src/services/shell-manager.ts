@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { Event } from '@dxos/async';
 import {
   DEFAULT_SHELL_CHANNEL,
@@ -16,12 +19,13 @@ import {
   type InvitationUrlRequest,
   type LayoutRequest,
   ShellDisplay,
-} from '@dxos/protocols/proto/dxos/iframe';
+} from '@dxos/protocols/buf/dxos/iframe_pb';
+import { AppContextRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { RPC_TIMEOUT } from '../common';
-import { type IFrameManager } from './iframe-manager';
+import { RPC_TIMEOUT } from '../common.ts';
+import { type IFrameManager } from './iframe-manager.ts';
 
 const shellStyles = Object.entries({
   'display': 'none',
@@ -57,7 +61,7 @@ export class ShellManager {
     invariant(this._shellRpc, 'ShellManager not open');
     log('set layout', request);
     this._display = ShellDisplay.FULLSCREEN;
-    this.contextUpdate.emit({ display: this._display });
+    this.contextUpdate.emit(create(AppContextRequestSchema, { display: this._display }));
     await this._shellRpc.rpc.ShellService.setLayout(request, { timeout: RPC_TIMEOUT });
     // Focus the first focusable element when the iframe has something to display so that keybindings global to the iframe (e.g. Escape) work as expected.
     (
@@ -114,6 +118,7 @@ export class ShellManager {
               this._display = request.display;
             }
             this.contextUpdate.emit(request);
+            return create(EmptySchema, {});
           },
         },
       },

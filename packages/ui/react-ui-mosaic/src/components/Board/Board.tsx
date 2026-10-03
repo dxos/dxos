@@ -18,12 +18,12 @@ import { type DndContainerHandler, useDndRootContext } from '@dxos/react-ui-dnd'
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { useContainerDebug } from '../../hooks';
-import { Focus } from '../Focus';
-import { Mosaic, type MosaicPlaceholderProps, type MosaicStackProps, mosaicStyles } from '../Mosaic';
-import { BoardContextProvider, type BoardContextValue, useBoardContext } from './BoardContext';
-import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column';
-import { BoardItem, type BoardItemProps } from './Item';
+import { useContainerDebug } from '../../hooks/index.ts';
+import { Focus } from '../Focus/index.ts';
+import { Mosaic, type MosaicPlaceholderProps, type MosaicStackProps, mosaicStyles } from '../Mosaic/index.ts';
+import { BoardContextProvider, type BoardContextValue, useBoardContext } from './BoardContext.ts';
+import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column.tsx';
+import { BoardItem, type BoardItemProps } from './Item.tsx';
 
 //
 // Root

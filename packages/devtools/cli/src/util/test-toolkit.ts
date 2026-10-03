@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
@@ -14,7 +14,7 @@ import { DXN } from '@dxos/keys';
 export const toolkit = Toolkit.make(
   Tool.make('time', {
     description: 'Gets the current time.',
-    parameters: Schema.Struct({}),
+    parameters: Tool.EmptyParams,
     success: Schema.String.annotate({
       description: 'The current time in ISO format.',
     }),

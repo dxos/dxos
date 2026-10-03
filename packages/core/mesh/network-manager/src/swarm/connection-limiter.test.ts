@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 
-import { ConnectionLimiter } from './connection-limiter';
+import { ConnectionLimiter } from './connection-limiter.ts';
 
 describe('ConnectionLimiter', () => {
   function* setupPeers(

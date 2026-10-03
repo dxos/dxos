@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './HaloProvider';
-export * from './useCredentials';
-export * from './useDevices';
-export * from './useIdentity';
-export * from './useInvitationFlow';
-export * from './useInvitations';
-export * from './useMembers';
-export * from './useSpaces';
+export * from './HaloProvider.tsx';
+export * from './useCredentials.ts';
+export * from './useDevices.ts';
+export * from './useIdentity.ts';
+export * from './useInvitationFlow.ts';
+export * from './useInvitations.ts';
+export * from './useMembers.ts';
+export * from './useSpaces.ts';

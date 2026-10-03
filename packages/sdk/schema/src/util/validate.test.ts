@@ -23,7 +23,7 @@ describe('validate', () => {
     const TestSchema = Schema.Number.pipe(
       Schema.decodeTo(
         Schema.Number,
-        SchemaTransformation.make({
+        SchemaTransformation.makeTransformation({
           decode: SchemaGetter.transform(Number.clamp({ minimum: -180, maximum: 180 })),
           encode: SchemaGetter.passthrough(),
         }),
@@ -56,7 +56,7 @@ describe('validate', () => {
 
   test('Schema to/from AST', ({ expect }) => {
     const TestSchema = Schema.Struct({
-      name: Schema.String.pipe(Schema.check(Schema.isPattern(/^\w+$/))),
+      name: Schema.String.pipe(Schema.check(Schema.isPattern(/^\w+$/u))),
     }).mapFields(Struct.map(Schema.mutableKey));
 
     type TestType = Schema.Schema.Type<typeof TestSchema>;

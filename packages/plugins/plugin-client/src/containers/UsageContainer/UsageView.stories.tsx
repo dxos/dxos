@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { UsageView } from './UsageView';
+import { UsageView } from './UsageView.tsx';
 
 // Mock payload shaped like the `/api/metering/profile/usage` response.
 const usageData: GetProfileUsageResponse = {

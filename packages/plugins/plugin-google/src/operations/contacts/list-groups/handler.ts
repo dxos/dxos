@@ -3,10 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { withAuthorization } from '@dxos/compute-runtime';
@@ -16,7 +16,7 @@ import { Database, Obj } from '@dxos/echo';
 import { GoogleContacts } from '#apis';
 import { GoogleOperation } from '#types';
 
-import { AccessTokenNotPopulatedError } from '../../../errors';
+import { AccessTokenNotPopulatedError } from '../../../errors.ts';
 
 const CONTACT_GROUPS_BASE_URL = 'https://people.googleapis.com/v1/contactGroups';
 

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { diffSpans, diffStats, merge3 } from './diff';
+import { diffSpans, diffStats, merge3 } from './diff.ts';
 
 describe('diffSpans', () => {
   test('computes insert/delete/equal spans', ({ expect }) => {

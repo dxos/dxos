@@ -6,14 +6,14 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Ref from 'effect/Ref';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { log } from '@dxos/log';
 
-import * as ActivationEvent from '../activation-event';
-import type * as Plugin from '../plugin';
+import * as ActivationEvent from '../activation-event.ts';
+import type * as Plugin from '../plugin.ts';
 import {
   type ActivationMessage,
   type PluginFailure,
@@ -21,7 +21,7 @@ import {
   type PluginFailureReason,
   type PluginInitializationError,
   PluginTimeoutError,
-} from './manager-types';
+} from './manager-types.ts';
 
 /**
  * The plugin manager's shared substrate, owned by no single unit: the observable state, the

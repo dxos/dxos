@@ -6,7 +6,7 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 
 import { meta } from '#meta';
 
-import { type EditorState } from '../../tools';
+import { type EditorState } from '../../tools/index.ts';
 
 /** Creates the view options toggle group. */
 export const createViewActions =

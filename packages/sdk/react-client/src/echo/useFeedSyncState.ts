@@ -6,9 +6,11 @@ import { useEffect, useState } from 'react';
 
 import { type SpaceId } from '@dxos/keys';
 
-import { useClient } from '../client';
+import { useClient } from '../client/index.ts';
 
-const DEFAULT_POLL_INTERVAL_MS = 5_000;
+// Each poll issues a `peekPull` round-trip to edge per space per namespace, so a stats readout polls
+// an order of magnitude slower than the data path it observes.
+const DEFAULT_POLL_INTERVAL_MS = 15_000;
 
 export type FeedSyncState = {
   /** Combined blocks to pull + push across namespaces. */
@@ -19,8 +21,10 @@ export type FeedSyncState = {
 
 export type FeedSyncStateMap = Record<SpaceId, FeedSyncState>;
 
+const isDocumentVisible = (): boolean => globalThis.document?.visibilityState !== 'hidden';
+
 /**
- * Polls feed replication state per space.
+ * Polls feed replication state per space, while the document is visible.
  */
 export const useFeedSyncState = (pollIntervalMs = DEFAULT_POLL_INTERVAL_MS): FeedSyncStateMap => {
   const client = useClient();
@@ -33,6 +37,7 @@ export const useFeedSyncState = (pollIntervalMs = DEFAULT_POLL_INTERVAL_MS): Fee
     }
 
     let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | undefined;
 
     const poll = async () => {
       const spaces = client.spaces.get();
@@ -60,16 +65,42 @@ export const useFeedSyncState = (pollIntervalMs = DEFAULT_POLL_INTERVAL_MS): Fee
       }
     };
 
-    void poll();
-    const interval = setInterval(() => void poll(), pollIntervalMs);
+    // Polling resumes with an immediate poll so the readout is not stale for a whole interval.
+    const start = () => {
+      if (interval !== undefined) {
+        return;
+      }
+      void poll();
+      interval = setInterval(() => void poll(), pollIntervalMs);
+    };
+
+    const stop = () => {
+      if (interval === undefined) {
+        return;
+      }
+      clearInterval(interval);
+      interval = undefined;
+    };
+
+    const handleVisibilityChange = () => (isDocumentVisible() ? start() : stop());
+
+    if (isDocumentVisible()) {
+      start();
+    }
+
+    const document = globalThis.document;
+    document?.addEventListener('visibilitychange', handleVisibilityChange);
 
     const spacesSubscription = client.spaces.subscribe(() => {
-      void poll();
+      if (isDocumentVisible()) {
+        void poll();
+      }
     });
 
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      stop();
+      document?.removeEventListener('visibilitychange', handleVisibilityChange);
       spacesSubscription.unsubscribe();
     };
   }, [client, pollIntervalMs]);

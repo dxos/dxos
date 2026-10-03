@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { useEffect, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { createContext } from '@dxos/react-hooks';
 
-import { Selection, ViewState } from '../../types';
+import { Selection, ViewState } from '../../types/index.ts';
 
 // Kept out of `ViewStateProvider.tsx`: react-refresh only fast-refreshes a module whose exports are
 // all components, so the context and hooks exported beside it force a full page reload on every edit.

@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from 'effect/unstable/cli/Command';
+import * as Command from 'effect/cli/Command';
 
-import { publish } from './publish';
-import { publishPackage } from './publish-package';
-import { publishPublisher } from './publish-publisher';
-import { records } from './records';
-import { unpublish } from './unpublish';
-import { verify } from './verify';
+import { publishPackage } from './publish-package.ts';
+import { publishPublisher } from './publish-publisher.ts';
+import { publish } from './publish.ts';
+import { records } from './records.ts';
+import { unpublish } from './unpublish.ts';
+import { verify } from './verify.ts';
 
 /**
  * `dx registry *` — commands for publishing and inspecting records that the

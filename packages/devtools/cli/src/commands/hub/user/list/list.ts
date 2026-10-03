@@ -2,20 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Command from 'effect/unstable/cli/Command';
 
 import { CommandConfig } from '@dxos/cli-util';
 
-import { formatHubError, hubApiRequest } from '../../util';
+import { HubApiError, formatHubError, hubApiRequest } from '../../util.ts';
 
 export const list = Command.make(
   'list',
   {},
   Effect.fn(function* () {
     const result = yield* hubApiRequest<unknown>('GET', '/api/waitlist').pipe(
-      Effect.catch((error) => Effect.fail(new Error(formatHubError(error)))),
+      Effect.catch((error) => Effect.fail(new HubApiError({ message: formatHubError(error), cause: error }))),
     );
 
     if (yield* CommandConfig.isJson) {

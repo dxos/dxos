@@ -6,23 +6,23 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import type * as Observability from '@dxos/observability/Observability';
 import { FeedbackForm } from '@dxos/plugin-support/components';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import {
   AlertDialog,
   type AlertDialogRootProps,
   Banner,
-  DropdownMenu,
   IconButton,
+  Menu,
   Popover,
+  SystemIconButton,
   useFileDownload,
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util';
+import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util/index.ts';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -49,7 +49,8 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
   logStore: IdbLogStore;
-  observability?: Promise<Observability.Observability>;
+  /** Files the report. Absent when nothing can file one, which hides the feedback affordance. */
+  onSubmitReport?: (report: SupportOperation.SupportRequest) => Promise<void>;
   needRefresh?: boolean;
   onRefresh?: () => void;
   onReset?: () => Promise<void>;
@@ -58,7 +59,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
 export const ResetDialog = ({
   error: errorProp,
   logStore,
-  observability: observabilityProp,
+  onSubmitReport,
   needRefresh,
   defaultOpen,
   open,
@@ -92,9 +93,7 @@ export const ResetDialog = ({
     log.error('fatal dialog', { error: errorProp, fatal_dialog: true });
   }, [errorProp]);
 
-  const handleCopyError = useCallback(() => {
-    void navigator.clipboard.writeText(JSON.stringify(error));
-  }, [error]);
+  const handleCopyError = useCallback(() => JSON.stringify(error), [error]);
 
   const handleDownloadLogs = useCallback(async () => {
     const file = await exportManualLogDownload(logStore);
@@ -103,29 +102,23 @@ export const ResetDialog = ({
 
   const handleSaveFeedback = useCallback(
     async (values: SupportOperation.SupportRequest) => {
-      if (!observabilityProp) {
-        return;
+      if (!onSubmitReport) {
+        return false;
       }
 
-      // Collapse the richer SupportRequest into the legacy `{ message, includeLogs }`
-      // shape consumed by Observability. Triage metadata (type/severity/area/version)
-      // is embedded as a Markdown trailer so it travels with the message.
-      const trailer = [
-        `**Type:** ${values.type}`,
-        `**Severity:** ${values.severity}`,
-        values.area && `**Area:** ${values.area}`,
-        values.version && `**Version:** ${values.version}`,
-      ]
-        .filter(Boolean)
-        .join('\n');
-      const message = [`# ${values.title}`, values.body, '---', trailer].filter(Boolean).join('\n\n');
-
-      const observability = await observabilityProp;
-      void observability.feedback.captureUserFeedback({ message, includeLogs: values.includeLogs });
       setFeedbackOpen(false);
-      setFeedbackSent(true);
+      try {
+        await onSubmitReport(values);
+        setFeedbackSent(true);
+        return true;
+      } catch (err) {
+        // The dialog is already showing a fatal error; a second one helps nobody, so the only
+        // signal is that the sent confirmation never appears.
+        log.warn('crash report not filed', { err });
+        return false;
+      }
     },
-    [observabilityProp],
+    [onSubmitReport],
   );
 
   const handleRefresh = useCallback(() => {
@@ -170,12 +163,7 @@ export const ResetDialog = ({
                       data-testid='resetDialog.showStackTrace'
                     />
                     <div className='flex items-center gap-1'>
-                      <IconButton
-                        icon='ph--clipboard--duotone'
-                        iconOnly
-                        label={t('copy-error.label')}
-                        onClick={handleCopyError}
-                      />
+                      <SystemIconButton.Clipboard iconOnly label={t('copy-error.label')} onCopy={handleCopyError} />
                       <IconButton
                         icon='ph--download-simple--regular'
                         iconOnly
@@ -216,8 +204,8 @@ export const ResetDialog = ({
               data-testid='resetDialog.recovery'
             />
             {onReset && (
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
+              <Menu.Root>
+                <Menu.Trigger asChild>
                   <IconButton
                     icon='ph--trash--regular'
                     iconOnly
@@ -225,22 +213,22 @@ export const ResetDialog = ({
                     data-testid='resetDialog.reset'
                     variant='destructive'
                   />
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content side='top'>
-                    <DropdownMenu.Viewport>
-                      <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
+                </Menu.Trigger>
+                <Menu.Portal>
+                  <Menu.Content side='top'>
+                    <Menu.Viewport>
+                      <Menu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
                         {t('reset-app-confirm.label')}
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Viewport>
-                    <DropdownMenu.Arrow />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+                      </Menu.Item>
+                    </Menu.Viewport>
+                    <Menu.Arrow />
+                  </Menu.Content>
+                </Menu.Portal>
+              </Menu.Root>
             )}
 
             <div className='flex-grow' />
-            {observabilityProp &&
+            {onSubmitReport &&
               isNotMobile &&
               (feedbackSent ? (
                 <IconButton icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
@@ -252,11 +240,11 @@ export const ResetDialog = ({
                   <Popover.Portal>
                     <Popover.Content>
                       <Popover.Viewport>
-                        <FeedbackForm.Root>
+                        <FeedbackForm.Root onSubmit={handleSaveFeedback}>
                           <Form.Viewport>
                             <Form.Content>
-                              <Form.FieldSet />
-                              <FeedbackForm.SubmitPosthog onSubmit={handleSaveFeedback} />
+                              <Form.Fields />
+                              <FeedbackForm.Submit />
                             </Form.Content>
                           </Form.Viewport>
                         </FeedbackForm.Root>

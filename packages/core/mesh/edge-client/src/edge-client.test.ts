@@ -7,16 +7,16 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth';
-import { protocol } from './defs';
-import { EdgeClient } from './edge-client';
-import { type EdgeIdentity } from './edge-identity';
-import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
-import { createTestEdgeWsServer } from './testing';
+import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth.ts';
+import { protocol } from './defs.ts';
+import { EdgeClient } from './edge-client.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
+import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors.ts';
+import { createTestEdgeWsServer } from './testing/index.ts';
 
 describe('EdgeClient', () => {
   let wsServerPort = 8001;
@@ -42,17 +42,17 @@ describe('EdgeClient', () => {
 
     const { client } = await openNewClient(endpoint);
 
-    expect(client.status.state).toBe(EdgeStatus.ConnectionState.NOT_CONNECTED);
+    expect(client.status.state).toBe(EdgeStatus_ConnectionState.NOT_CONNECTED);
     admitConnection.wake();
-    await expect.poll(() => client.status.state).toBe(EdgeStatus.ConnectionState.CONNECTED);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
 
     admitConnection.reset();
     await closeConnection();
     expect(client.isOpen).is.true;
-    await expect.poll(() => client.status.state).toBe(EdgeStatus.ConnectionState.NOT_CONNECTED);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus_ConnectionState.NOT_CONNECTED);
 
     admitConnection.wake();
-    await expect.poll(() => client.status.state).toBe(EdgeStatus.ConnectionState.CONNECTED);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
   });
 
   test('set identity reconnects', async () => {
@@ -142,6 +142,29 @@ describe('EdgeClient', () => {
     await client.send(Context.default(), textMessage('Hello world 2', newIdentity));
     await expect.poll(() => messageSourceLog.length).toBe(2);
     expect(messageSourceLog.map((m) => m.peerKey)).toStrictEqual([oldIdentity.peerKey, newIdentity.peerKey]);
+  });
+
+  // EDGE's router writes to a device's newest open socket. After a router reset in production, an attempt
+  // the client had given up on was admitted after its retry, and took every reply until the page reloaded.
+  test('a connect attempt that timed out does not keep its socket for a late admission', async () => {
+    const admitFirstAttempt = new Trigger();
+    const { endpoint, cleanup, sendMessage, openConnectionCount, admittedAttempts } = await createTestEdgeWsServer(
+      wsServerPort++,
+      { admitConnectionAttempt: (attempt) => (attempt === 1 ? admitFirstAttempt.wait() : Promise.resolve()) },
+    );
+    onTestFinished(cleanup);
+
+    const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: endpoint, timeout: 200 });
+    const received: (string | undefined)[] = [];
+    client.onMessage((message) => received.push(protocol.getPayload(message, TextMessageSchema).message));
+    await openAndClose(client);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
+
+    admitFirstAttempt.wake();
+    await expect.poll(() => admittedAttempts()).toContain(1);
+    await sendMessage(textMessage('to the newest socket'));
+    await expect.poll(() => received).toEqual(['to the newest socket']);
+    expect(openConnectionCount()).toBe(1);
   });
 
   test.skipIf(!process.env.EDGE_ENDPOINT)('connect to local edge server', async () => {

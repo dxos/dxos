@@ -12,6 +12,8 @@ tasks:
       DX_TELEMETRY_TAG: e2e
       # The service worker breaks `page.route` interception.
       DX_PWA: 'false'
+    options:
+      mutex: e2e-ports
     deps:
       - test-utils:build
       - vite-plugin-icons:build

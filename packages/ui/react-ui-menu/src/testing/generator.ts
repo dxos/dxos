@@ -3,8 +3,8 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { useContext, useEffect } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -12,8 +12,8 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 
-import { type ActionGraphProps } from '../hooks/useMenuActions';
-import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
+import { type ActionGraphProps, makeMenuActions } from '../hooks/useMenuActions.ts';
+import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types.ts';
 
 export type CreateActionsProps = Partial<{
   type?: typeof AppGraphNode.ActionType | typeof AppGraphNode.ActionGroupType;
@@ -93,7 +93,7 @@ export const createNestedActionsResolver = (props?: {
   });
   const items: MenuItemsAccessor = (group?: MenuItemGroup) =>
     graph.connections(group?.id ?? GraphNode.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
-  return { items };
+  return makeMenuActions({ items });
 };
 
 /**

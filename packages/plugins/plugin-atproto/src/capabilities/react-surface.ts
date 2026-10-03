@@ -12,9 +12,9 @@ import { Obj } from '@dxos/echo';
 
 import { AtprotoCompanion, PdsBrowser } from '#containers';
 
-import { getRecordAnnotation } from '../annotation';
-import { isPdsSubject } from '../pds';
-import { ATPROTO_COMPANION_VARIANT } from './app-graph-builder';
+import { getRecordAnnotation } from '../annotation.ts';
+import { isPdsSubject } from '../pds.ts';
+import { ATPROTO_COMPANION_VARIANT } from './app-graph-builder.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
         id: 'pdsBrowser',
         filter: AppSurface.subject(AppSurface.Article, isPdsSubject),
         component: PdsBrowser,
-        props: ({ role, data: { subject } }) => ({ role, space: subject.space }),
+        props: ({ role, data: { subject } }) => ({ role, db: subject.db }),
       }),
     ]),
   ),

@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useContext, useMemo } from 'react';
 import { expect, within } from 'storybook/test';
 
@@ -14,18 +14,17 @@ import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { Loading, withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { useEventHandlerAdapter } from '../../hooks';
-import { TestColumn, TestItem } from '../../testing';
-import { Focus } from '../Focus';
-import { Board } from './Board';
-import { type BoardModel } from './BoardContext';
-import { DefaultBoardColumn } from './Column';
+import { useEventHandlerAdapter } from '../../hooks/index.ts';
+import { TestColumn, TestItem } from '../../testing/index.ts';
+import { Focus } from '../Focus/index.ts';
+import { Board } from './Board.tsx';
+import { type BoardModel } from './BoardContext.ts';
+import { DefaultBoardColumn } from './Column.tsx';
 
 random.seed(999);
 

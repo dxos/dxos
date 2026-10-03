@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 import { invariant } from '@dxos/invariant';
 
-import * as LanguageModelFixture from './LanguageModelFixture';
+import * as LanguageModelFixture from './LanguageModelFixture.ts';
 
 // Manual-tagged (opt-in, never runs in CI): a property/fuzz check that the fixture matcher is the
 // load-bearing defence. Deterministic id generation only holds ids stable while the surrounding

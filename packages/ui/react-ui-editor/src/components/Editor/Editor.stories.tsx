@@ -20,8 +20,8 @@ import {
   decorateMarkdown,
 } from '@dxos/ui-editor';
 
-import { createMenuGroup } from '../EditorMenuProvider';
-import { Editor, type EditorViewProps } from './Editor';
+import { createMenuGroup } from '../EditorMenuProvider/index.ts';
+import { Editor, type EditorViewProps } from './Editor.tsx';
 
 random.seed(1234);
 

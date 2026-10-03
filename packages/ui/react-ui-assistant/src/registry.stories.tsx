@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { assistantRegistry } from './registry';
-import { translations } from './translations';
+import { assistantRegistry } from './registry.tsx';
+import { translations } from './translations.ts';
 
 // Shared across stories: the store is the thread's, not an item's — a widget's state has to survive
 // the item unmounting as the reader scrolls past it.
@@ -287,6 +287,35 @@ export const ToolkitFailed: Story = {
       failure('tc-2', 'search_index', 'ENOENT: no such file or directory'),
       call('tc-3', 'write_document'),
       result('tc-3', 'write_document', { ok: true }),
+    ]),
+  },
+};
+
+const evalCode = (code: string) => ({ code: trim`${code}` });
+
+/** Code mode's `eval`: printed output comes back as plain text, and a throw fails the call with it. */
+export const ToolkitCodeMode: Story = {
+  args: {
+    content: toolkit([
+      call(
+        'tc-1',
+        'eval',
+        evalCode(`
+          const tasks = await query({ typename: 'com.example.type.task' });
+          print('count', tasks.length);
+          print('titles', tasks.map((task) => task.title));
+        `),
+      ),
+      result('tc-1', 'eval', 'count 2\ntitles [\n  "Write the docs",\n  "Fix the build"\n]'),
+      call(
+        'tc-2',
+        'eval',
+        evalCode(`
+          print('updating', 2, 'tasks');
+          await ops['dxn:com.example.operation.score']({ title: 42 });
+        `),
+      ),
+      failure('tc-2', 'eval', 'updating 2 tasks\nError: Expected string, actual 42\n  at ["title"]'),
     ]),
   },
 };

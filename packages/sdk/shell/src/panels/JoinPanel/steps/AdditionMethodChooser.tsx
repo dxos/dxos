@@ -6,9 +6,9 @@ import React from 'react';
 
 import { Icon, useTranslation } from '@dxos/react-ui';
 
-import { CompoundButton, InputLabel } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type JoinStepProps } from '../JoinPanelProps';
+import { CompoundButton, InputLabel } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type JoinStepProps } from '../JoinPanelProps.ts';
 
 export type AdditionMethodChooserProps = JoinStepProps;
 

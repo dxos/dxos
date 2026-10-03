@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 
 import { Shell } from '#shell';
 
-import { materializeScripts } from './apply-edits-program';
-import { resolveWithin } from './path-scope';
+import { materializeScripts } from './apply-edits-program.ts';
+import { resolveWithin } from './path-scope.ts';
 
 // Raw promises throughout: this module is the node platform boundary (a connect middleware over
 // `child_process` and stream callbacks), and an Effect runtime inside a dev-server request handler
@@ -78,6 +78,12 @@ export const make = ({
       return next();
     }
 
+    // Origin and content-type checks only stop a browser; a server started with `--host` listens on
+    // every interface, and any other machine's HTTP client could run scripts here without this.
+    if (!isLoopback(req.socket.remoteAddress)) {
+      return fail(res, 403, 'shell requests are accepted from this machine only');
+    }
+
     // A JSON content type is not a formality: it is the one request a cross-origin page cannot send
     // without a preflight, and this route answers no preflight — so the browser blocks any caller
     // other than the app itself. `text/plain` would sail straight through as a simple request.
@@ -126,6 +132,10 @@ export const make = ({
     res.end(JSON.stringify(result));
   };
 };
+
+/** Whether a peer address is this machine, including the IPv4-mapped IPv6 form. */
+export const isLoopback = (address: string | undefined): boolean =>
+  address !== undefined && (address === '::1' || /^127\./.test(address) || /^::ffff:127\./.test(address));
 
 /** An opaque origin — `null`, from a sandboxed frame — has no host, so it can never match. */
 const hostOf = (origin: string): string | undefined => {

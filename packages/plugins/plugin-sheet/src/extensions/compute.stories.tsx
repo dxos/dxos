@@ -26,8 +26,8 @@ import { Sheet as SheetComponent, useComputeGraph } from '#components';
 import { useTestSheet, withComputeGraphDecorator } from '#testing';
 import { Sheet } from '#types';
 
-import { useSheetModel } from '../model';
-import { compute, computeGraphFacet } from './compute';
+import { useSheetModel } from '../model/index.ts';
+import { compute, computeGraphFacet } from './compute.ts';
 
 const str = (...lines: string[]) => lines.join('\n');
 

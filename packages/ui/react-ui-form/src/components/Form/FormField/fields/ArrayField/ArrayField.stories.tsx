@@ -7,14 +7,14 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
-import { FormLayoutAnnotation, FormOrderedAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import * as Annotation from '@dxos/echo/Annotation';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { TestLayout } from '../../../../../testing';
-import { Form } from '../../../Form';
+import { TestLayout } from '../../../../../testing/index.ts';
+import { Form } from '../../../Form.tsx';
 
 // Mirrors the structure of `Pipeline` (`@dxos/types`): a scalar header plus an
 // array of `Column`-like structs. The array is the field we render as either a
@@ -25,8 +25,8 @@ const Column = Schema.Struct({
 })
   .mapFields(Struct.map(Schema.mutableKey))
   .pipe(
-    LabelAnnotation.set(['name']),
-    FormLayoutAnnotation.set({
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.FormLayoutAnnotation.set({
       default: trim`
       <grid cols="2">
         <field name="name"/>
@@ -51,12 +51,12 @@ const Pipeline = Schema.Struct({
 
 const OrderedPipeline = Schema.Struct({
   ...headerFields,
-  columns: columnsField.pipe(FormOrderedAnnotation.set(true)),
+  columns: columnsField.pipe(Annotation.FormOrderedAnnotation.set(true)),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 const StringPipeline = Schema.Struct({
   ...headerFields,
-  columns: Schema.Array(Schema.String).pipe(FormOrderedAnnotation.set(true)),
+  columns: Schema.Array(Schema.String).pipe(Annotation.FormOrderedAnnotation.set(true)),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 type PipelineValues = { name?: string; description?: string; columns: readonly unknown[] };
@@ -87,7 +87,7 @@ const DefaultStory = ({ schema, values: initial }: { schema: Schema.Codec<any, a
       >
         <Form.Viewport scroll>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

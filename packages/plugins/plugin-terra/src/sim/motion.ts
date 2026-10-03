@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TerraConfigValues, type Vec3, seaRadius } from '../engine';
-import * as TerraObject from '../types/TerraObject';
-import { BOOST_FRACTION, DESCENT_FRACTION, behaviorFor } from './behaviors';
-import { angleBetween, bearingTo, toUnit } from './geo';
-import { FALLBACK_UNIT, clampNonNegative, walkRoute } from './path';
+import { type TerraConfigValues, type Vec3, seaRadius } from '../engine/index.ts';
+import * as TerraObject from '../types/TerraObject.ts';
+import { BOOST_FRACTION, DESCENT_FRACTION, behaviorFor } from './behaviors.ts';
+import { angleBetween, bearingTo, toUnit } from './geo.ts';
+import { FALLBACK_UNIT, clampNonNegative, walkRoute } from './path.ts';
 
 /** Flight stage of a rocket, derived from flight fraction — never stored across calls. */
 export type RocketPhase = 'boost' | 'cruise' | 'descent';

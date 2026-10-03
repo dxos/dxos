@@ -4,8 +4,8 @@
 
 import { Vector3 } from '@babylonjs/core/Maths/math';
 
-import { type Vec3 } from '../engine';
-import { type ObjectState, tangentFrame } from '../sim';
+import { type Vec3 } from '../engine/index.ts';
+import { type ObjectState, tangentFrame } from '../sim/index.ts';
 
 const DEG = Math.PI / 180;
 

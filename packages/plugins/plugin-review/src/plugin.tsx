@@ -22,6 +22,7 @@ import {
   ReviewState,
   Schema,
   SkillDefinition,
+  TourFragment,
   Translations,
   UndoMappings,
 } from '#capabilities';
@@ -52,6 +53,7 @@ export const ReviewPlugin = Plugin.define<ReviewPluginOptions>(meta).pipe(
   Plugin.addModule(ReviewState),
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
+  Plugin.addModule(TourFragment),
   Plugin.addModule(Translations),
   Plugin.addModule(UndoMappings),
   // Default comment-thread agent runner (one-shot LLM call per scheduled turn). `AgentRunner`

@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 
 import { ClientCapabilities } from '#types';
 
-import { CreateAgent } from './definitions';
+import { CreateAgent } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof CreateAgent> = CreateAgent.pipe(
   Operation.withHandler(

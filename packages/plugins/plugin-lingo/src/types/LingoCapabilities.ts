@@ -4,13 +4,13 @@
 
 // @import-as-namespace
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
-import type * as LingoSettings from './LingoSettings';
+import type * as LingoSettings from './LingoSettings.ts';
 
 /** Plugin settings atom, shared by the settings surface and the reader companion. */
 export const Settings = Capability.makeSingleton<Atom.Writable<LingoSettings.Settings>>()(

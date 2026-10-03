@@ -137,7 +137,7 @@ sequenceDiagram
 5. The renderer ([`registry.tsx`](../src/components/ChatThread/registry.tsx)) maps blocks to
    markdown-with-XML: user text → `<prompt>`, reasoning/status/summary → streaming XML tags,
    `toolCall` → self-closing `<toolCall id/>` plus a **side-channel**
-   (`applyToolBlockToWidgetState` → `XmlWidgetStateManager.updateWidget`) that streams tool
+   (`applyToolBlockToWidgetState` → `WidgetStateManager.updateWidget`) that streams tool
    input/result into widget state; view filtering by `ChatView`
    (`summary`/`normal`/`thinking`/`debug`).
 6. **`MarkdownStream`** (CodeMirror) applies the typewriter drip on `append` (bypassed for
@@ -296,7 +296,7 @@ scriptedAiService([
 ]);
 ```
 
-`scriptedAiService` shares one cached model across `AiService.model()` calls, so sessions in
+`scriptedAiService` shares one cached model across `AiService.languageModel()` calls, so sessions in
 separate processes consume the same routes. The single-list form is unchanged (a single
 match-all route).
 

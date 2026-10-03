@@ -31,6 +31,7 @@ runs:
 
     - uses: FabianLars-crabnebula/cloud-release@e0bb6ccebcb78f71883ebde2320f76aae6b9eb92
       with:
-        command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }} --channel ${{ steps.release-channel.outputs.channel }}
+        # An empty channel means the default one, which the CLI selects by being given no `--channel` at all.
+        command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }}${{ steps.release-channel.outputs.channel != '' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
         api-key: ${{ inputs.api-key }}
         working-directory: ${{ inputs.working-directory }}

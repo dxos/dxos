@@ -1,0 +1,1 @@
+plugin-navtree: fix graph key binding scopes and stop re-registering unchanged bindings (#13149)

@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
 import { ContentBlock, File } from '@dxos/types';
 
-import * as FileCapabilities from './FileCapabilities';
+import * as FileCapabilities from './FileCapabilities.ts';
 
 export const Create = Operation.make({
   meta: { key: DXN.make('org.dxos.operation.file.create'), name: 'Create File', icon: 'ph--file--regular' },
@@ -70,6 +70,39 @@ export const CreateFromSource = Operation.make({
   services: [Database.Service, Capability.Service],
 });
 
+/**
+ * Creates a file from bytes already uploaded to blob storage over a signed URL.
+ *
+ * The third arm alongside {@link CreateFromSource}'s two, and the one for a file that exists only
+ * on the caller's disk: `base64` would have a model emit the bytes token by token, and `http`
+ * requires them to already be served somewhere public. Here the caller uploads directly (see the
+ * MCP server's `createUpload` tool) and passes only the id, so a screen recording costs the same
+ * few tokens as a screenshot.
+ *
+ * No media type or size input: nothing the caller says about the bytes is trusted or needed, since
+ * the blob service measured them as they arrived.
+ */
+export const CreateFromUpload = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.file.createFromUpload'),
+    name: 'Create File From Upload',
+    description:
+      'Creates a file in the space from a completed direct upload, given the uploadId returned by ' +
+      'the createUpload tool. Use after the upload command has succeeded.',
+    icon: 'ph--upload--regular',
+  },
+  input: Schema.Struct({
+    uploadId: Schema.String.annotate({
+      description: 'The uploadId returned by createUpload, whose bytes have already been uploaded.',
+    }),
+    name: Schema.optional(Schema.String.annotate({ description: 'Filename to record on the file object.' })),
+  }),
+  output: Schema.Struct({
+    object: Type.getSchema(File.File),
+  }),
+  services: [Database.Service, Capability.Service],
+});
+
 export const Read = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.file.read'),
@@ -84,5 +117,34 @@ export const Read = Operation.make({
     }),
   }),
   output: ContentBlock.ContentBlockResult,
+  services: [Database.Service],
+});
+
+/**
+ * Names a file's bytes to the host that will sign a download URL for them — the reverse of
+ * {@link CreateFromUpload}.
+ *
+ * Host-internal: the MCP hosts' `createDownload` tool invokes it and signs the URL, since the
+ * signing secret (EDGE) or the loopback listener (`dx mcp serve`) lives in the host, not in the
+ * operation runtime. No skill lists it, so it is never offered to a model directly.
+ */
+export const ResolveDownload = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.file.resolveDownload'),
+    name: 'Resolve File Download',
+    description: 'Resolves a file to the id its host signs a download URL for.',
+    icon: 'ph--file-arrow-down--regular',
+  },
+  input: Schema.Struct({
+    file: Ref.Ref(File.File).annotate({ description: 'The file to download.' }),
+  }),
+  output: Schema.Struct({
+    downloadId: Schema.String.annotate({
+      description: 'Opaque to the caller; names the bytes to the host that signs the download URL.',
+    }),
+    name: Schema.optional(Schema.String),
+    type: Schema.String,
+    size: Schema.Number,
+  }),
   services: [Database.Service],
 });

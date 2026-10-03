@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { log } from '@dxos/log';
 
 import { Notebook } from '#types';
 
-import { evalScript } from './eval';
-import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
+import { evalScript } from './eval.ts';
+import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser.ts';
 
 /**
  * Compute graph that evaluates the notebook cells.

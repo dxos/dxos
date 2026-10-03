@@ -29,15 +29,15 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { meta } from '#meta';
 import { ConnectorSpec } from '#types';
 
-import { connectionDeckSubject } from './constants';
+import { connectionDeckSubject } from './constants.ts';
 import {
   ConnectionAuthExpiredError,
   ConnectionSyncError,
   SyncRoutineMissingError,
   TargetAccountMismatchError,
   isUnauthorizedError,
-} from './errors';
-import * as SyncTemplate from './SyncTemplate';
+} from './errors.ts';
+import * as SyncTemplate from './SyncTemplate.ts';
 
 /**
  * The binding between a local object (a Mailbox, a Calendar) and the remote feed a `Connection` syncs
@@ -66,6 +66,13 @@ const refEntityId = (ref: Ref.Ref<any>): string | undefined => {
   const uri = EID.tryParse(ref.uri);
   return uri === undefined ? undefined : EID.getEntityId(uri);
 };
+
+/**
+ * Navigation subject for a connection, for a caller that has to send the user to it — e.g. to
+ * reauthenticate after its provider rejected the stored credential.
+ */
+export const connectionSubject = (spaceId: string, connectionId: string): string =>
+  connectionDeckSubject(GraphPath.getSpacePath(spaceId), connectionId);
 
 /**
  * True when `cursor` is an external-sync cursor authenticated by `connection`'s access token.
@@ -427,7 +434,7 @@ export const syncAll = <A, E, R>({
     // Serialized invocation the reauth toast runs on click — data (operation key + input), not a live
     // callback, since it rides on the error across the process boundary.
     const openConnection = Operation.prepare(LayoutOperation.Open, {
-      subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connection.id)],
+      subject: [connectionSubject(db.spaceId, connection.id)],
       navigation: 'immediate',
     });
 

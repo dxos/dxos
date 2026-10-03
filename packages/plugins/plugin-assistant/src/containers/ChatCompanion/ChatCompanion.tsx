@@ -12,9 +12,11 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { AssistantOperation } from '#types';
 
-import ChatArticle from '../ChatArticle';
+import ChatArticle from '../ChatArticle/index.ts';
 
-export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>;
+export type ChatCompanionProps = Omit<AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>, 'subject'> & {
+  subject?: Chat.Chat;
+};
 
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role = 'article', subject: chat, companionTo, attendableId }, forwardedRef) => {

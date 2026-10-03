@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './stream';
-export * from './testing';
+export * from './stream.ts';
+export * from './testing/index.ts';
 
-export * from './create-controller';
-export * from './MarkdownStream';
+export * from './create-controller.ts';
+export * from './MarkdownStream.tsx';

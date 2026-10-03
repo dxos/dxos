@@ -6,19 +6,19 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
+import * as Account from '@dxos/plugin-client/Account';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { OnboardingManager } from '../onboarding-manager';
-import { OnboardingCapabilities } from './capabilities';
+import { OnboardingManager } from '../onboarding-manager.ts';
+import { OnboardingCapabilities } from './capabilities.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { invokePromise } = yield* Capabilities.OperationInvoker;
     const client = yield* ClientCapabilities.Client;
     const searchProps = new URLSearchParams(window.location.search);
-    const hubUrl = getEnvString(client.config, 'DX_HUB_URL');
+    const hubUrl = Account.getHubUrl(client.config);
 
     const token = searchProps.get('token') ?? undefined;
     const manager = new OnboardingManager({
@@ -42,7 +42,12 @@ export default Capability.makeModule(
     // wired up in the constructor.
     void manager.initialize().catch((error) => log.catch(error));
 
-    yield* Effect.addFinalizer(() => Effect.sync(() => manager.destroy()));
-    return Capability.contribute(OnboardingCapabilities.Onboarding, manager);
+    yield* Effect.addFinalizer(() => Effect.promise(() => manager.destroy().catch((error) => log.catch(error))));
+    return [
+      Capability.contribute(OnboardingCapabilities.Onboarding, manager),
+      Capability.contribute(ClientCapabilities.OnIdentityDeleted, ({ target }) =>
+        Effect.tryPromise(() => manager.onIdentityDeleted({ target })),
+      ),
+    ];
   }),
 );

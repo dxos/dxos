@@ -23,7 +23,7 @@ import {
   extractFactsUnitStage,
   messageSource,
   statsStage,
-} from './stages';
+} from './stages/index.ts';
 
 export type EmailFactPipelineOptions = {
   /** ECHO space database, required by `EmailPipelineCtx` even though this assembly never writes to it. */

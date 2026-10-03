@@ -3,7 +3,7 @@
 Public extensions exported by this package, grouped by their theme folder under `src/extensions/`.
 Each is a value (or factory) you drop into an editor's `extensions` array.
 
-```text
+````text
 extensions/
   core/
     createBasicExtensions         — base editor: keymaps, history, brackets, read-only, wrapping, tabs
@@ -85,13 +85,19 @@ extensions/
     folding/
       folding                     — generic code-fold gutter with caret marker + theme
       turnFolding                 — turn-response folding driven by a custom gutter + TurnSource
+  walkthrough/
+    diffBlocks                    — render a ```diff fence as a side-by-side (or unified) diff chunk
+    walkthroughSidebar            — navigation rail: sections, the files each touches, change counts
+    walkthroughOutline            — the same reading of the document, for a host-rendered panel
+    walkthroughTheme              — reading-mode tuning: neutral headings and inline code
+    parseDiff / parseFenceInfo    — unified-diff and fence-info parsing, for a non-editor consumer
   demo/
     blast                         — particle "code blast" cursor effect
     snippets                      — keymap to type demo snippets char-by-char
   debug/
     debugNodeLogger               — log every syntax-tree node type on each update
     debugTree                     — serialise the syntax tree to JSON on state change
-```
+````
 
 ## Refactoring opportunities
 

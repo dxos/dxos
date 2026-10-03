@@ -6,9 +6,9 @@ import { Keyring } from '@dxos/keyring';
 import { type Directory, type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import type { ValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
-import { FeedFactory } from '../feed-factory';
-import { FeedStore } from '../feed-store';
-import { type TestGenerator, type TestItem, defaultTestGenerator, defaultValueEncoding } from './test-generator';
+import { HypercoreFactory } from '../hypercore-factory.ts';
+import { HypercoreStore } from '../hypercore-store.ts';
+import { type TestGenerator, type TestItem, defaultTestGenerator, defaultValueEncoding } from './test-generator.ts';
 
 export type TestBuilderOptions<T extends {}> = {
   storage?: Storage;
@@ -71,8 +71,8 @@ export class TestBuilder<T extends {}> {
     return this;
   }
 
-  createFeedFactory(): FeedFactory<T> {
-    return new FeedFactory<T>({
+  createHypercoreFactory(): HypercoreFactory<T> {
+    return new HypercoreFactory<T>({
       root: this.root,
       signer: this.keyring,
       hypercore: {
@@ -81,9 +81,9 @@ export class TestBuilder<T extends {}> {
     });
   }
 
-  createFeedStore(): FeedStore<T> {
-    return new FeedStore<T>({
-      factory: this.createFeedFactory(),
+  createHypercoreStore(): HypercoreStore<T> {
+    return new HypercoreStore<T>({
+      factory: this.createHypercoreFactory(),
     });
   }
 }

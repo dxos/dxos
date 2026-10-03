@@ -13,7 +13,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Model, Scene } from '#types';
 
-import { type SpacetimeController, SpacetimeEditor } from './SpacetimeEditor';
+import { type SpacetimeController, SpacetimeEditor } from './SpacetimeEditor.tsx';
 
 const DefaultStory = () => {
   const controller = useRef<SpacetimeController>(null);

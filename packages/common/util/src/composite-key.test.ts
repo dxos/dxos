@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { compositeKey, splitCompositeKey } from './composite-key';
+import { compositeKey, splitCompositeKey } from './composite-key.ts';
 
 describe('compositeKey', () => {
   test('joins parts with colon', ({ expect }) => {

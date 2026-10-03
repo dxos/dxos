@@ -24,7 +24,7 @@ import {
   removeStyle,
   setHeading,
   toggleList,
-} from './formatting';
+} from './formatting.ts';
 
 export const emptyFormatting: Formatting = {
   blankLine: false,

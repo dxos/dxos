@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { isBlockedHost, safeFetchBytes, validateExternalUrl } from './safe-fetch';
+import { isBlockedHost, safeFetchBytes, validateExternalUrl } from './safe-fetch.ts';
 
 describe('isBlockedHost', () => {
   test('blocks loopback and unspecified addresses', ({ expect }) => {
@@ -127,7 +127,20 @@ describe('safeFetchBytes', () => {
         },
       }),
     ).rejects.toThrow(/Refusing to follow a redirect/);
-    expect(seen[0]?.redirect).toBe('error');
+    // `manual`, not `error`: Cloudflare Workers reject `error`, which failed every fetch on the edge.
+    expect(seen[0]?.redirect).toBe('manual');
+  });
+
+  test('refuses an opaque redirect, which is how a browser reports a manual one', async ({ expect }) => {
+    const opaque = new Response(null, { status: 200 });
+    Object.defineProperty(opaque, 'type', { value: 'opaqueredirect' });
+    await expect(
+      safeFetchBytes(new URL('https://example.com/a'), {
+        maxBytes: 1024,
+        timeoutMs: 1000,
+        fetch: async () => opaque,
+      }),
+    ).rejects.toThrow(/Refusing to follow a redirect/);
   });
 
   test('raises a non-ok response', async ({ expect }) => {

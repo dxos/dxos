@@ -4,7 +4,7 @@
 
 import { afterEach, describe, test, vi } from 'vitest';
 
-import * as NativePasskey from './NativePasskey';
+import * as NativePasskey from './NativePasskey.ts';
 
 /**
  * Build a minimal WebAuthn attestation object for testing.
@@ -140,6 +140,34 @@ describe('getRelyingPartyId', () => {
     vi.stubGlobal('location', undefined);
     expect(NativePasskey.getRelyingPartyId()).toBe(NativePasskey.APP_DOMAIN);
   });
+});
+
+describe('getPasskeySupport', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test.for([
+    { shell: true, platform: 'MacIntel', native: true, webAuthn: false, expected: 'native' },
+    // DX-1324: a shell whose signed identity cannot complete a native request must not fall back to WebAuthn either.
+    { shell: true, platform: 'MacIntel', native: false, webAuthn: true, expected: 'none' },
+    // A webview the shell did not vouch for gets no passkeys rather than a bridge that may be absent.
+    { shell: true, platform: 'MacIntel', native: undefined, webAuthn: true, expected: 'none' },
+    { shell: true, platform: 'Linux x86_64', native: undefined, webAuthn: true, expected: 'web' },
+    { shell: false, platform: 'MacIntel', native: false, webAuthn: true, expected: 'web' },
+    { shell: false, platform: 'MacIntel', native: undefined, webAuthn: false, expected: 'none' },
+  ])(
+    'shell $shell on $platform, host flag $native, WebAuthn $webAuthn -> $expected',
+    ({ shell, platform, native, webAuthn, expected }, { expect }) => {
+      if (shell) {
+        vi.stubGlobal('__TAURI__', {});
+      }
+      const credentials = webAuthn ? { create: () => {}, get: () => {} } : undefined;
+      vi.stubGlobal('navigator', { platform, credentials });
+      vi.stubGlobal('__DX_NATIVE_PASSKEYS__', native);
+      expect(NativePasskey.getPasskeySupport()).toBe(expected);
+    },
+  );
 });
 
 describe('extractPublicKeyFromAttestation', () => {

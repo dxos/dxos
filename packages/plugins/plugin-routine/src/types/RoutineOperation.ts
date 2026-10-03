@@ -19,7 +19,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EID as _EchoURIReference } from '@dxos/keys';
 
-import { TriggerTemplate } from './Routine';
+import { TriggerTemplate } from './Routine.ts';
 export { _EchoURIReference };
 
 export const CreateTriggerFromTemplate = Operation.make({

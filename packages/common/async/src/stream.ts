@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MaybePromise, throwUnhandledError } from '@dxos/util';
 
-import { Trigger } from './trigger';
+import { Trigger } from './trigger.ts';
 
 /** Narrows a caught `unknown` to `Error` — a thrown value is not guaranteed to be one. */
 const toCaughtError = (err: unknown): Error => (err instanceof Error ? err : new Error(String(err)));

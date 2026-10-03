@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useMemo } from 'react';
 
-import { type FilterFunction, GlobalFilterContext } from './GlobalFilterContext';
+import { type FilterFunction, GlobalFilterContext } from './GlobalFilterContext.ts';
 
 export type GlobalFilterProviderProps = PropsWithChildren<{
   /** The filter function to apply globally. */

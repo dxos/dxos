@@ -5,7 +5,7 @@
 import { useAtomSet } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useContext, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -27,7 +27,7 @@ export type UseToolbarProps = {
  * handlers, and the reactive menu action graph. The action graph reads its state — view filter,
  * curate-busy flag, and whether the magazine has feeds — via `get` inside the builder, so it
  * subscribes to those atoms and rebuilds whenever they change. Returns the menu props (spread into
- * `Menu.Root`) plus `viewAtom`, which the article also reads to filter the visible posts.
+ * `ActionToolbar`) plus `viewAtom`, which the article also reads to filter the visible posts.
  */
 export const useToolbar = ({ magazine }: UseToolbarProps) => {
   const invoker = useOperationInvoker();
@@ -83,7 +83,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
         const subscription = feed?.target;
         if (Obj.instanceOf(Subscription.Subscription, subscription)) {
           Obj.update(magazine, (magazine) => {
-            magazine.feeds = [...magazine.feeds, Ref.make(subscription)];
+            magazine.feeds.push(Ref.make(subscription));
           });
         }
       }),

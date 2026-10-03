@@ -18,7 +18,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 
-import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes/index.ts';
 import {
   AnyInput,
   AnyOutput,
@@ -30,8 +30,8 @@ import {
   ValueBag,
   layerNoop as computeNodeContextLayerNoop,
   synchronizedComputeFunction,
-} from '../types';
-import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
+} from '../types/index.ts';
+import { WorkflowLoader, type WorkflowLoaderProps } from './loader.ts';
 
 const TestLayer = Layer.mergeAll(
   computeNodeContextLayerNoop,

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { LogLevel, shortLevelName } from './config';
-import { type LogEntry } from './context';
+import { LogLevel, shortLevelName } from './config.ts';
+import { type LogEntry } from './context.ts';
 
 /**
  * Compact JSONL log record with short property names for small serialized size.

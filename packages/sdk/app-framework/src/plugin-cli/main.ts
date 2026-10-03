@@ -4,7 +4,7 @@
 
 import path from 'node:path';
 
-import { generate } from './generate';
+import { generate } from './generate.ts';
 
 // TODO(wittjosiah): Roll into dx cli? Once we stop shipping non-core plugins bundled into the cli
 //  it might be light weight enough to support this use case.
@@ -13,14 +13,20 @@ const USAGE = `dx-plugin — plugin-authoring toolchain shipped with @dxos/app-f
 Usage: dx-plugin <command>
 
 Commands:
-  gen [--dir <path>]  Generate the headless #capabilities barrels (src/capabilities/gen/) from
+  gen [--dir <path>] [--verbose]
+                      Generate the headless #capabilities barrels (src/capabilities/gen/) from
                       the canonical barrel's environments annotations, and sync the package.json
-                      #capabilities condition map.`;
+                      #capabilities condition map. --verbose reports each generated file.`;
 
 const gen = (args: string[]): void => {
   const dirFlagIndex = args.indexOf('--dir');
   const pluginDir = path.resolve(dirFlagIndex === -1 ? process.cwd() : args[dirFlagIndex + 1]);
+  // Silent by default since it runs as a prebuild step for every plugin and floods build output.
+  const verbose = args.includes('--verbose');
   const result = generate(pluginDir);
+  if (!verbose) {
+    return;
+  }
   if (result.environments.length === 0) {
     // eslint-disable-next-line no-console
     console.log('dx-plugin gen: no environments annotations found; nothing generated.');

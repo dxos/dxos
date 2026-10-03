@@ -9,12 +9,12 @@ import * as Schema from 'effect/Schema';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
-import * as internal from './internal';
-import * as objInternal from './internal/Obj';
-import type * as Ref from './Ref';
-import type * as Relation from './Relation';
-import type * as Tag from './Tag';
-import * as Type from './Type';
+import * as internal from './internal/index.ts';
+import * as objInternal from './internal/Obj/index.ts';
+import type * as Ref from './Ref.ts';
+import type * as Relation from './Relation.ts';
+import type * as Tag from './Tag.ts';
+import * as Type from './Type.ts';
 
 // Re-export KindId and SnapshotKindId from internal.
 export const KindId = internal.KindId;
@@ -103,6 +103,8 @@ export type Properties<T> = Omit<T, 'id' | KindId | Relation.Source | Relation.T
 /**
  * Check if a value is an ECHO entity (object or relation).
  * Returns `false` for snapshots.
+ *
+ * @performance O(1) brand check; no allocation.
  */
 export const isEntity: (value: unknown) => value is Unknown = internal.isEntity;
 
@@ -118,6 +120,8 @@ export const isEntity: (value: unknown) => value is Unknown = internal.isEntity;
  * const matches = <T extends Type.AnyObj | Type.AnyRelation>(type: T, value: unknown) =>
  *   Entity.instanceOf(type, value);
  * ```
+ *
+ * @performance O(1) type-URI comparison with a typename fallback; no schema validation.
  */
 export const instanceOf: {
   <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
@@ -132,6 +136,8 @@ export const instanceOf: {
 /**
  * Check if a value is an ECHO entity snapshot.
  * Returns `false` for entities.
+ *
+ * @performance O(1) brand check; no allocation.
  */
 export const isSnapshot = (value: unknown): value is Snapshot => {
   if (typeof value !== 'object' || value === null) {
@@ -141,6 +147,11 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
 };
 
 // TODO(dmaretskyi): Type introspection -- move to kind.
+/**
+ * Get the entity kind declared by a schema type annotation.
+ *
+ * @performance O(1) schema annotation read.
+ */
 export const getKind = internal.getEntityKind;
 
 /**
@@ -186,6 +197,9 @@ export type AnyInput = Unknown | Snapshot;
  * `DXN.tryMake(uri)` at the point of use.
  *
  * @param options.prefer - Controls the URI form (see {@link internal.GetURIOptions}).
+ *
+ * @performance O(1); returns the stored URI, constructing (and allocating) one only when `options.prefer` asks for
+ * another form.
  */
 export const getURI = (entity: AnyInput, options?: internal.GetURIOptions): URI.URI =>
   isTypeEntity(entity) ? Type.getURI(entity as Type.AnyEntity, options) : internal.getUri(entity as Unknown, options);
@@ -194,6 +208,8 @@ export const getURI = (entity: AnyInput, options?: internal.GetURIOptions): URI.
  * Get the DXN of an entity's type. For object/relation instances this is the URI
  * of the type they were created from; for a type entity it is the URI of the
  * meta-type ({@link Type.Type}, `dxn:org.dxos.type.schema:0.1.0`).
+ *
+ * @performance O(1) read of the stored type URI.
  */
 export const getTypeURI = (entity: AnyInput): URI.URI | undefined =>
   isTypeEntity(entity) ? Type.getURI(Type.Type) : internal.getTypeURI(entity as Unknown);
@@ -208,6 +224,8 @@ export const getTypeURI = (entity: AnyInput): URI.URI | undefined =>
  *
  * For a type entity, returns the meta-type {@link Type.Type} (a type entity's
  * type is "Type").
+ *
+ * @performance O(1) read of the type back-reference.
  */
 export const getType = (entity: AnyInput): Type.AnyEntity | undefined =>
   isTypeEntity(entity) ? Type.Type : (internal.getType(entity) as Type.AnyEntity | undefined);
@@ -216,12 +234,16 @@ export const getType = (entity: AnyInput): Type.AnyEntity | undefined =>
  * Get the typename of an entity's type. For object/relation instances this is the
  * typename of the type they were created from; for a type entity it is the type's
  * own typename (e.g. `com.example.type.person`).
+ *
+ * @performance O(1); reads the schema type annotation (database objects resolve the schema by registry URI lookup).
  */
 export const getTypename = (entity: AnyInput): string | undefined =>
   isTypeEntity(entity) ? Type.getTypename(entity as Type.AnyEntity) : internal.getTypename(entity as Unknown);
 
 /**
  * Get the database an entity belongs to.
+ *
+ * @performance O(1) slot read.
  */
 export const getDatabase = (entity: Unknown | Snapshot): any | undefined => internal.getDatabase(entity);
 
@@ -229,21 +251,27 @@ export const getDatabase = (entity: Unknown | Snapshot): any | undefined => inte
  * Get the metadata for an entity.
  * Returns mutable meta when passed a mutable entity (inside change callback).
  * Returns read-only meta when passed a regular entity or snapshot.
+ *
+ * @performance O(1); returns the live (memoized) meta proxy, not a copy.
  */
 // TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
-export function getMeta(entity: Mutable<Unknown>): internal.EntityMeta;
+export function getMeta(entity: Mutable<Unknown>): internal.Meta;
 export function getMeta(entity: Unknown | Snapshot): internal.ReadonlyMeta;
-export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): internal.EntityMeta | internal.ReadonlyMeta {
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): internal.Meta | internal.ReadonlyMeta {
   return internal.getMetaChecked(entity);
 }
 
 /**
  * Get foreign keys for an entity from the specified source.
+ *
+ * @performance O(k) in the foreign-key count; allocates a filtered array.
  */
 export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[] => internal.getKeys(entity, source);
 
 /**
  * Check if an entity is deleted.
+ *
+ * @performance O(1) slot read.
  */
 export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDeleted(entity);
 
@@ -252,6 +280,8 @@ export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDel
  *
  * @param options.fallback `'typename'` returns the entity's typename when no
  *   label is set (e.g. `org.dxos.type.table`).
+ *
+ * @performance O(label accessors); reads the fields named by the schema `LabelAnnotation`.
  */
 export const getLabel = (entity: Unknown | Snapshot, options?: internal.GetLabelOptions): string | undefined =>
   internal.getLabel(entity, options);
@@ -259,11 +289,15 @@ export const getLabel = (entity: Unknown | Snapshot, options?: internal.GetLabel
 /**
  * Set the label of an entity.
  * Must be called within an `Entity.update` / `Obj.update` / `Relation.update` callback.
+ *
+ * @performance O(1); writes the first `LabelAnnotation` accessor, a no-op without a schema.
  */
 export const setLabel = (entity: Mutable<Unknown>, label: string): void => internal.setLabel(entity, label);
 
 /**
  * Get the description of an entity.
+ *
+ * @performance O(1); reads the field named by the schema `DescriptionAnnotation`.
  */
 export const getDescription = (entity: Unknown | Snapshot): string | undefined => internal.getDescription(entity);
 
@@ -271,17 +305,23 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
  * Get the icon annotation for an entity (object or relation), resolved via its type-level
  * `IconAnnotation`. Returns the full `{ icon, hue }` annotation so callers can use both
  * the phosphor icon name and the suggested colour.
+ *
+ * @performance O(1) schema annotation lookup, but decodes the annotation value on every call (not cached).
  */
 export const getIcon = (entity: Unknown | Snapshot): internal.IconAnnotation | undefined => internal.getIcon(entity);
 
 /**
  * Convert an entity to its JSON representation.
+ *
+ * @performance O(n) in entity size; serializes the whole entity on every call.
  */
 export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSON(entity);
 
 /**
  * Subscribe to changes on an entity (object or relation).
  * @returns Unsubscribe function.
+ *
+ * @performance O(1) listener registration; the callback runs synchronously after every committed change.
  */
 export const subscribe = (entity: Unknown, callback: () => void): (() => void) => {
   return internal.subscribe(entity, callback);
@@ -319,6 +359,8 @@ export type Mutable<T> = internal.Mutable<T>;
  * ```
  *
  * Note: For type-specific operations, prefer `Obj.update` or `Relation.update`.
+ *
+ * @performance Synchronous; costs the mutations made in the callback plus one batched notification.
  */
 export const update = <T extends Unknown>(entity: T, callback: internal.ChangeCallback<T>): void => {
   internal.change(entity, callback);
@@ -327,12 +369,16 @@ export const update = <T extends Unknown>(entity: T, callback: internal.ChangeCa
 /**
  * Add a tag to an entity.
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
+ *
+ * @performance O(t) in the tag count; dedupes by ref URI before appending.
  */
 export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from an entity.
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
+ *
+ * @performance O(t) in the tag count.
  */
 export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
 
@@ -340,6 +386,22 @@ export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void
 // Atoms
 //
 
+/**
+ * Create a reactive snapshot atom for an entity (object or relation).
+ *
+ * @performance O(1) memoized atom-family lookup; every emission takes an O(n) `getSnapshot` of the entity.
+ */
 export const atom = objInternal.makeEntity;
+/**
+ * Create a reactive atom for the label of an entity.
+ *
+ * @performance O(1) memoized atom-family lookup; recomputes the label on every entity change, emitting only on
+ * difference.
+ */
 export const labelAtom = objInternal.makeLabelAtom;
+/**
+ * Get the name of the property that holds the label of an entity.
+ *
+ * @performance O(1); reads the first accessor of the schema `LabelAnnotation`.
+ */
 export const labelProperty = internal.getLabelProperty;

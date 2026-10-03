@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './symbols';
+export * from './symbols.ts';

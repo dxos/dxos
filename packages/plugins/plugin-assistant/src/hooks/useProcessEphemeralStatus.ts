@@ -5,8 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -16,8 +16,7 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
-
-import { resolveEphemeralStatusUpdate } from '#execution-graph';
+import { resolveEphemeralStatusUpdate } from '@dxos/react-ui-trace';
 
 const atomEmpty = Atom.make(() => [] as const);
 

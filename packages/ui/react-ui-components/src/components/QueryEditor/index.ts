@@ -4,4 +4,4 @@
 
 export type { EditorController } from '@dxos/react-ui-editor';
 
-export * from './QueryEditor';
+export * from './QueryEditor.tsx';

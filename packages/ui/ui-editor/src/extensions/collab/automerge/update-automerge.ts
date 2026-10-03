@@ -9,7 +9,7 @@ import { type EditorState, type StateField, type Text, type Transaction } from '
 
 import { Doc } from '@dxos/echo-doc';
 
-import { type State } from './defs';
+import { type State } from './defs.ts';
 
 /**
  * Applies CodeMirror transactions to the Automerge document (via `changeAt` from the last synced

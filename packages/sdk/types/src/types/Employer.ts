@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
-import * as Organization from './Organization';
-import * as Person from './Person';
+import * as Organization from './Organization.ts';
+import * as Person from './Person.ts';
 
 /**
  * Employer relation.

@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import { type TopicDraft } from '@dxos/pipeline-email';
 import { Message } from '@dxos/types';
 
+import { renderIndex, renderTopicReport } from '../testing/harness/internal/active-topics-report.ts';
 import {
   type ActiveTopicsDeps,
   type ClusterSignals,
@@ -21,8 +22,7 @@ import {
   runActiveTopics,
   topicSlug,
   toSuggestedTopic,
-} from '../testing/harness/internal/active-topics';
-import { renderIndex, renderTopicReport } from '../testing/harness/internal/active-topics-report';
+} from '../testing/harness/internal/active-topics.ts';
 
 const NOW = new Date('2026-01-15T00:00:00.000Z').getTime();
 const DAY = 24 * 60 * 60 * 1000;

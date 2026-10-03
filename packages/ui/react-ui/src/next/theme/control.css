@@ -1,0 +1,646 @@
+/*
+ * Leaf parts. The block is the row height; controls are `--nx-control-size` tall and centred in it (decision 12), so
+ * rails and first-line text centring are unchanged.
+ */
+
+@layer dx-components {
+  /* Focus ring: its own themable variables rather than ui-theme's ring, so a theme can recolour it (decision 8). */
+  :root {
+    --nx-focus-ring-color: var(--color-orange-500, oklch(70.5% 0.213 47.604));
+    --nx-focus-ring-width: 2px;
+  }
+  .nx-focus-ring:focus {
+    outline: none;
+  }
+  .nx-focus-ring:focus-visible {
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+  /*
+   * Tailwind's forms plugin paints a blue ring and border on every focused field from the base layer; a Next field
+   * either draws its own ring (`.nx-focus-ring`) or delegates it to its wrapper (DateInput, Combobox), so neither
+   * may show the plugin's.
+   */
+  :is(input, textarea, select)[class*='nx-']:focus {
+    border-color: transparent;
+    outline: none;
+  }
+  :is(input, textarea, select)[class*='nx-']:focus:not(.nx-focus-ring:focus-visible) {
+    box-shadow: none;
+  }
+
+  .nx-typography {
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    padding-block: calc((var(--nx-block-size) - var(--nx-line-height)) / 2);
+  }
+
+  .nx-typography[data-truncate] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nx-typography[data-tone='description'] {
+    color: var(--color-description);
+  }
+
+  .nx-icon {
+    flex-shrink: 0;
+    width: var(--nx-icon-size);
+    height: var(--nx-icon-size);
+  }
+  /* A busy indicator (e.g. a loading Select's spinner); still under `prefers-reduced-motion`. */
+  .nx-icon[data-spin] {
+    animation: nx-spin 1s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nx-icon[data-spin] {
+      animation: none;
+    }
+  }
+  @keyframes nx-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .nx-control {
+    box-sizing: border-box;
+    height: var(--nx-control-size);
+    align-self: center;
+    padding-block: 0;
+    padding-inline: var(--nx-gap-size);
+    border: none;
+    border-radius: var(--radius-sm, 0.25rem);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+  .nx-control .nx-icon {
+    /* A one-line label can outgrow its row; the icon keeps its size rather than absorbing the squeeze. */
+    flex-shrink: 0;
+    width: var(--nx-control-icon);
+    height: var(--nx-control-icon);
+  }
+
+  /* Controls fill with the host-derived well (a small step off whatever surface hosts them), not a fixed raised fill. */
+  .nx-input {
+    width: 100%;
+    min-width: 0;
+    background: var(--color-input-surface);
+  }
+  .nx-input[data-variant='subdued'] {
+    background: transparent;
+  }
+
+  /*
+   * An adorned Input is a control row (like DateInput's): the adornments and a bare input, with the ring drawn on the
+   * row as an outline (wrapper rings, Phase 3 follow-up 6) from the input's focus.
+   */
+  .nx-input-row {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+  }
+  .nx-input-row:has(> .nx-input-field:focus-visible) {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
+  .nx-input-row:has(> .nx-input-field:disabled) {
+    opacity: 0.5;
+  }
+  .nx-input-field {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+  }
+  /* A trailing icon-only Button ends flush with the row, its inset cell standing in for the row's padding. */
+  .nx-input-adornment {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--nx-control-inset);
+    color: var(--color-description);
+  }
+  .nx-input-row:has(> .nx-input-adornment:last-child > .nx-button[data-square]:last-child) {
+    padding-inline-end: 0;
+  }
+  .nx-input-adornment > .nx-button[data-square] {
+    margin: 0;
+    height: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
+    width: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
+    margin-inline: var(--nx-control-inset);
+  }
+  /* Compact icon-only buttons abut, one segmented run (a stepper's − and +); the last keeps the row's end inset. */
+  .nx-input-adornment > .nx-button[data-square][data-compact] {
+    margin-inline: 0;
+  }
+  .nx-input-adornment > .nx-button[data-square][data-compact]:last-child {
+    margin-inline-end: var(--nx-control-inset);
+  }
+  .nx-input-adornment > .nx-button[data-compact] + .nx-button[data-compact] {
+    margin-inline-start: calc(-1 * var(--nx-control-inset));
+  }
+
+  .nx-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Spaces a leading or trailing icon from the label like a row's items. */
+    gap: var(--nx-gap-size);
+    width: fit-content;
+    min-width: var(--nx-control-size);
+    /* A button is one line at control height; a wrapped label would overflow it. The explicit `min-width` replaces the
+       flex minimum of its content, so without `flex-shrink: 0` a crowded row would squeeze the label out of it. */
+    white-space: nowrap;
+    flex-shrink: 0;
+    background: var(--color-input-surface);
+    cursor: pointer;
+  }
+  .nx-button:hover:not(:disabled) {
+    background: var(--color-hover-surface);
+  }
+  /* Variants map the current Button's (ui-theme `button.css`) onto the same color tokens. */
+  .nx-button[data-variant='primary'] {
+    background: var(--color-accent-bg);
+    color: var(--color-accent-fg);
+  }
+  .nx-button[data-variant='primary']:hover:not(:disabled) {
+    background: var(--color-accent-bg-hover, var(--color-accent-bg));
+  }
+  .nx-button[data-variant='ghost'] {
+    background: transparent;
+  }
+  /*
+   * A border, not an inset shadow, so the focus ring (an inset shadow) still shows over it; the separator rather than
+   * the current Button's `--color-base-surface`, which vanishes on a base surface.
+   */
+  .nx-button[data-variant='outline'] {
+    border: 1px solid var(--color-separator);
+    background: transparent;
+  }
+  .nx-button[data-variant='destructive'] {
+    background: var(--color-error-bg);
+    color: var(--color-accent-fg);
+  }
+  .nx-button[data-variant='destructive']:hover:not(:disabled) {
+    background: var(--color-error-bg-hover);
+  }
+  /* Without `data-valence` it adopts an enclosing valence surface's colours (e.g. a Banner), else neutral. */
+  .nx-button[data-variant='valence'] {
+    --nx-valence-bg: var(--dx-valence-bg, var(--color-neutral-bg));
+    --nx-valence-bg-hover: var(--dx-valence-bg-hover, var(--color-neutral-bg-hover));
+    background: var(--nx-valence-bg);
+    color: var(--color-inverse-fg);
+  }
+  .nx-button[data-variant='valence']:hover:not(:disabled) {
+    background: var(--nx-valence-bg-hover);
+  }
+  .nx-button[data-valence='neutral'] {
+    --nx-valence-bg: var(--color-neutral-bg);
+    --nx-valence-bg-hover: var(--color-neutral-bg-hover);
+  }
+  .nx-button[data-valence='info'] {
+    --nx-valence-bg: var(--color-info-bg);
+    --nx-valence-bg-hover: var(--color-info-bg-hover);
+  }
+  .nx-button[data-valence='success'] {
+    --nx-valence-bg: var(--color-success-bg);
+    --nx-valence-bg-hover: var(--color-success-bg-hover);
+  }
+  .nx-button[data-valence='warning'] {
+    --nx-valence-bg: var(--color-warning-bg);
+    --nx-valence-bg-hover: var(--color-warning-bg-hover);
+  }
+  .nx-button[data-valence='error'] {
+    --nx-valence-bg: var(--color-error-bg);
+    --nx-valence-bg-hover: var(--color-error-bg-hover);
+  }
+  /* A Tag's hue in place of the variant's fill; the tag palette has no hover step, so hover shifts brightness. */
+  .nx-button[data-hue] {
+    background: var(--nx-hue-bg);
+    color: var(--nx-hue-fg);
+  }
+  .nx-button[data-hue]:hover:not(:disabled) {
+    background: var(--nx-hue-bg);
+    filter: brightness(0.94);
+  }
+  :where(.dark) .nx-button[data-hue]:hover:not(:disabled) {
+    filter: brightness(1.12);
+  }
+  /* Dense: one inset of inline padding; an icon-only button gives up its square for it. */
+  .nx-button[data-compact] {
+    min-width: 0;
+    padding-inline: var(--nx-control-inset);
+  }
+  .nx-button[data-square]:is([data-compact], [data-caret]) {
+    width: auto;
+    padding-inline: var(--nx-control-inset);
+  }
+  /* The caret is a smaller trailing icon, a full gap from a label so the two read apart. */
+  .nx-button[data-caret] > .nx-icon:last-child {
+    width: calc(var(--nx-control-icon) * 0.75);
+    height: calc(var(--nx-control-icon) * 0.75);
+  }
+  /* With no label the caret belongs to the icon, so it sits an inset from it rather than a gap. */
+  .nx-button[data-square][data-caret] > .nx-icon:last-child {
+    margin-inline-start: calc(var(--nx-control-inset) - var(--nx-gap-size));
+  }
+  .nx-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  /* Inset on every side, so an icon-only button occupies a block-sized cell and its icon lines up with a rail Block's. */
+  .nx-button[data-square] {
+    width: var(--nx-control-size);
+    margin: var(--nx-control-inset);
+    padding-inline: 0;
+  }
+
+  .nx-label {
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
+  }
+  /* Visually hidden, still in the accessibility tree (Tailwind's `sr-only`). */
+  .nx-label[data-sr-only] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Field (decision 13): a flex stack in the content track; the field pads its control out to a block. */
+  .nx-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .nx-field > .nx-control {
+    margin-block: var(--nx-control-inset);
+  }
+  /* The label row is a small block row (size sm by default), so trailing icons and icon buttons fit at its end. */
+  .nx-field-header {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+  }
+  /* A trailing Block matches an icon-only Button's visible box and block-sized cell, so static and interactive icons align. */
+  .nx-field-header > .nx-block {
+    width: var(--nx-control-size);
+    height: var(--nx-control-size);
+    margin: var(--nx-control-inset);
+  }
+  .nx-field-header > .nx-label {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+  /* The required mark trails the label text in the error colour; hidden from the name, since `aria-required` says it. */
+  .nx-field-required {
+    margin-inline-start: 0.125em;
+    color: var(--color-error-text, currentColor);
+  }
+  .nx-field-helper,
+  .nx-field-error {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+  }
+  .nx-field-helper {
+    color: var(--color-description);
+  }
+  .nx-field-error {
+    color: var(--color-error-text);
+  }
+
+  /*
+   * Validation valence (the current Field's): the control takes the valence's border as a 1px inset line and its
+   * focus ring, and the HelperText its text colour; `error` also makes the field invalid (ErrorText).
+   */
+  .nx-field[data-valence='success'] {
+    --nx-valence-border: var(--color-success-border);
+    --nx-valence-text: var(--color-success-text);
+  }
+  .nx-field[data-valence='info'] {
+    --nx-valence-border: var(--color-info-border);
+    --nx-valence-text: var(--color-info-text);
+  }
+  .nx-field[data-valence='warning'] {
+    --nx-valence-border: var(--color-warning-border);
+    --nx-valence-text: var(--color-warning-text);
+  }
+  .nx-field[data-valence='error'] {
+    --nx-valence-border: var(--color-error-border);
+    --nx-valence-text: var(--color-error-text);
+  }
+  .nx-field[data-valence] {
+    --nx-focus-ring-color: var(--nx-valence-border);
+  }
+  /* Select and Combobox roots take no box, so their controls are the field's grandchildren. */
+  .nx-field[data-valence] > .nx-control,
+  .nx-field[data-valence] > :is(.nx-select, .nx-combobox) > .nx-control {
+    box-shadow: inset 0 0 0 1px var(--nx-valence-border);
+  }
+  .nx-field[data-valence] > .nx-control:focus-visible,
+  .nx-field[data-valence] > :is(.nx-select, .nx-combobox) > .nx-control:focus-visible {
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-valence-border);
+  }
+  .nx-field[data-valence] > .nx-field-helper {
+    color: var(--nx-valence-text);
+  }
+
+  .nx-checkbox {
+    display: inline-flex;
+    align-items: center;
+    /* Start, not centre: in a column (Field) the cross axis is horizontal, so centre would float it mid-track. */
+    align-self: start;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    cursor: pointer;
+  }
+  /* The box is icon-sized, so it reads like the icons beside it rather than like a text control. */
+  .nx-checkbox-control {
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--nx-icon-size);
+    height: var(--nx-icon-size);
+    /* Centred in a block-sized cell, so a checkbox takes the same space as an icon-only Button and labels align. */
+    margin-inline: calc((var(--nx-block-size) - var(--nx-icon-size)) / 2);
+    border-radius: var(--radius-sm, 0.25rem);
+    background: var(--color-input-surface);
+  }
+  /* Absolute, not a percentage: the Ark indicator wrapper has no definite height, so 75% fell back to 150px. */
+  .nx-checkbox-control .nx-icon {
+    width: calc(var(--nx-icon-size) * 0.75);
+    height: calc(var(--nx-icon-size) * 0.75);
+  }
+  .nx-checkbox-control[data-state='checked'],
+  .nx-checkbox-control[data-state='indeterminate'] {
+    background: var(--color-accent-bg);
+    color: var(--color-accent-fg);
+  }
+
+  .nx-checkbox-control[data-focus-visible] {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
+
+  /* The select root takes no box, so its label and trigger are laid out as the parent's children. */
+  .nx-select {
+    display: contents;
+  }
+  :is(.nx-field, .nx-grid[data-layout='stack']) > .nx-select > .nx-control {
+    margin-block: var(--nx-control-inset);
+  }
+
+  .nx-select-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-control-inset);
+    width: 100%;
+    min-width: 0;
+    background: var(--color-input-surface);
+    cursor: pointer;
+    text-align: start;
+  }
+  .nx-select-trigger[aria-busy='true'] {
+    cursor: progress;
+  }
+  /* The value takes the free space, so a leading option icon sits at the start and the caret at the end. */
+  .nx-select-trigger > [data-part='value-text'] {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /*
+   * `fit='options'`: the value's cell (with the chosen icon's) also holds every option's icon and label, hidden and
+   * zero-height, so the trigger is as wide as the widest of them whichever is chosen.
+   */
+  .nx-select-trigger[data-fit='options'] {
+    display: inline-grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 0;
+    width: auto;
+    justify-self: start;
+  }
+  .nx-field > .nx-select > .nx-select-trigger[data-fit='options'] {
+    align-self: start;
+  }
+  .nx-select-trigger[data-fit='options'] > * {
+    grid-row: 1;
+  }
+  .nx-select-trigger[data-fit='options'] > .nx-icon {
+    grid-column: 1;
+    margin-inline-end: var(--nx-control-inset);
+  }
+  .nx-select-trigger[data-fit='options'] > [data-part='value-text'] {
+    grid-column: 2;
+  }
+  .nx-select-trigger[data-fit='options'] > [data-part='indicator'] {
+    grid-column: 3;
+    margin-inline-start: var(--nx-control-inset);
+  }
+  .nx-select-value-sizer {
+    grid-column: 1 / 3;
+    display: flex;
+    flex-direction: column;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+  .nx-select-value-sizer > * {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-control-inset);
+    white-space: nowrap;
+  }
+
+  /* Portalled content leaves every sized scope, so it sets its own metrics and level. */
+  .nx-popup {
+    min-width: var(--reference-width, 8rem);
+    padding-block: var(--nx-control-inset);
+    border-radius: var(--radius-sm, 0.25rem);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+  }
+  /* An outline, not the shared inset ring: outlines paint after descendants, so item highlights cannot cover it. */
+  .nx-popup:focus {
+    outline: none;
+  }
+  .nx-popup:focus-visible {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
+  /*
+   * A scrolling popup (Menu, Select, Combobox): the ScrollArea frame is the surface and the Ark content its viewport,
+   * since zag scrolls the highlighted item into view only inside a scrolling content element.
+   */
+  .nx-scroll-root.nx-popup {
+    /* Inline-size containment would size the popup without its items. */
+    container-type: normal;
+    max-width: var(--available-width, none);
+    max-height: min(var(--available-height, 20rem), 20rem);
+    padding-block: 0;
+    /* The viewport's focus ring is inset at the frame's edge, so the overlay thumb sits inside it. */
+    --scroll-thumb-inset: var(--nx-focus-ring-width);
+  }
+  /* Only while it overflows, a popup reserves the thumb's strip (the thumb, one ring inset either side) at its end. */
+  .nx-scroll-root.nx-popup[data-overflow-y] > .nx-scroll-viewport {
+    padding-inline-end: calc(var(--nx-scroll-width) + 2 * var(--scroll-thumb-inset));
+  }
+  .nx-scroll-root.nx-popup:has(> .nx-scroll-viewport[hidden]) {
+    display: none;
+  }
+  .nx-popup > .nx-scroll-viewport {
+    padding-block: var(--nx-control-inset);
+    scroll-padding-block: var(--nx-control-inset);
+    border-radius: inherit;
+  }
+  .nx-popup > .nx-scroll-viewport:focus {
+    outline: none;
+  }
+  .nx-popup > .nx-scroll-viewport:focus-visible {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
+  /* A small caption naming the Menu or Select group that follows. */
+  .nx-popup-group-label {
+    display: flex;
+    align-items: center;
+    min-height: var(--nx-control-size);
+    padding-inline: var(--nx-gap-size);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
+    color: var(--color-description);
+  }
+  .nx-select-item {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    height: var(--nx-block-size);
+    padding-inline: var(--nx-gap-size);
+    cursor: pointer;
+  }
+  .nx-select-item[data-highlighted] {
+    background: var(--color-hover-surface);
+  }
+  .nx-select-item[data-disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+  /* One line: a popup capped at the viewport's width truncates its longest labels rather than wrapping them. */
+  .nx-select-item [data-part='item-text'] {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Padded top and bottom so an action row reads apart from the fields above it. */
+  .nx-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    padding-block: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+  }
+  .nx-group[data-justify='end'] {
+    justify-content: flex-end;
+  }
+  .nx-group[data-justify='between'] {
+    justify-content: space-between;
+  }
+  /* Equal shares of the width; a lone child stretches across (the current `Form.Submit`). */
+  .nx-group[data-fill] {
+    flex-wrap: nowrap;
+  }
+  .nx-group[data-fill] > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /*
+   * The gap is one control inset: square icon-only Buttons already sit in an inset cell, and every other control takes the
+   * same inline margin, so any two adjacent items are three insets apart.
+   */
+  .nx-toolbar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--nx-control-inset);
+    width: 100%;
+    min-height: var(--nx-block-size);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+  /* The toolbar's ScrollArea frame takes the place the toolbar would, and never sizes it without its items. */
+  .nx-scroll-root.nx-toolbar-scroll {
+    flex-shrink: 0;
+    width: 100%;
+    container-type: normal;
+  }
+  .nx-toolbar > .nx-control:not([data-square]),
+  .nx-toolbar > .nx-select > .nx-control {
+    margin-inline: var(--nx-control-inset);
+  }
+  .nx-toolbar > .nx-input {
+    flex: 1;
+  }
+  .nx-toolbar > .nx-select > .nx-select-trigger {
+    width: fit-content;
+  }
+  /* Text takes the free space and truncates, padded like a control so it lines up with a neighbouring Button's label. */
+  .nx-toolbar-text {
+    flex: 1;
+    min-width: 0;
+    padding-inline: var(--nx-gap-size);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* A link is control-tall with a control's inline margin and padding, so its ring matches a Button's. */
+  .nx-toolbar-link {
+    display: inline-flex;
+    align-items: center;
+    height: var(--nx-control-size);
+    margin-inline: var(--nx-control-inset);
+    padding-inline: var(--nx-gap-size);
+    border-radius: var(--radius-sm, 0.25rem);
+    color: var(--color-accent-text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .nx-toolbar-link:hover {
+    color: var(--color-accent-text-hover, var(--color-accent-text));
+    text-decoration: underline;
+  }
+  .nx-toolbar-link[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: default;
+    text-decoration: none;
+  }
+  .nx-button[data-drag-handle] {
+    cursor: grab;
+  }
+}

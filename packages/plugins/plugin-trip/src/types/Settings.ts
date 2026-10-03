@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { DEFAULT_PLANNING_WINDOW_DAYS, DEFAULT_TRIP_GAP_DAYS } from '../operations/extractor/config';
+import { DEFAULT_PLANNING_WINDOW_DAYS, DEFAULT_TRIP_GAP_DAYS } from '../operations/extractor/config.ts';
 
 /**
  * Plugin settings for the Trip extractor.

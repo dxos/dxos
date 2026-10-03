@@ -9,7 +9,7 @@ import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { Syntax } from './Syntax';
+import { Syntax } from './Syntax.tsx';
 
 random.seed(0);
 

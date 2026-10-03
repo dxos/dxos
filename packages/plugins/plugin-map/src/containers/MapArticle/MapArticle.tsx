@@ -10,7 +10,7 @@ import { Flex, type FlexProps, Panel, useControlledState } from '@dxos/react-ui'
 import { useSelection } from '@dxos/react-ui-attention';
 import { type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
 
-import { type GeoControlProps, GlobeControl, MapControl } from '#components';
+import { type GeoControlProps, GlobeControl, MAP_MIN_ZOOM, MapControl } from '#components';
 import { MapCapabilities } from '#types';
 
 // Shared defaults so toggling between map and globe starts at the same position
@@ -30,9 +30,23 @@ const interpolate = (value: number, from: [number, number], to: [number, number]
   return to[0] + t * (to[1] - to[0]);
 };
 
-// Clamp map zoom-out to 4.
-const mapToGlobeZoom = (zoom: number) => interpolate(Math.max(4, zoom), ZOOM_ANCHORS.map, ZOOM_ANCHORS.globe);
-const globeToMapZoom = (zoom: number) => Math.floor(interpolate(zoom, ZOOM_ANCHORS.globe, ZOOM_ANCHORS.map));
+// Below the anchors a world-view map becomes the whole globe: the map's minimum zoom (where markers
+// spread across the world are fitted) is globe zoom 1 (the whole sphere).
+const WORLD_ANCHORS: { map: [number, number]; globe: [number, number] } = {
+  map: [MAP_MIN_ZOOM, ZOOM_ANCHORS.map[0]],
+  globe: [1, ZOOM_ANCHORS.globe[0]],
+};
+
+const mapToGlobeZoom = (zoom: number) =>
+  zoom < ZOOM_ANCHORS.map[0]
+    ? interpolate(Math.max(WORLD_ANCHORS.map[0], zoom), WORLD_ANCHORS.map, WORLD_ANCHORS.globe)
+    : interpolate(zoom, ZOOM_ANCHORS.map, ZOOM_ANCHORS.globe);
+const globeToMapZoom = (zoom: number) =>
+  Math.floor(
+    zoom < ZOOM_ANCHORS.globe[0]
+      ? interpolate(zoom, WORLD_ANCHORS.globe, WORLD_ANCHORS.map)
+      : interpolate(zoom, ZOOM_ANCHORS.globe, ZOOM_ANCHORS.map),
+  );
 
 export type MapControlType = 'globe' | 'map';
 
@@ -164,6 +178,6 @@ const MapArticleInner = ({
   );
 };
 
-const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />;
 
 MapArticle.displayName = 'MapArticle';

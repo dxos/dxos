@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { decodePingAck, decodePingRequest } from './types';
+import { decodePingAck, decodePingRequest } from './types.ts';
 
 describe('ping codecs', () => {
   test('decodes a well-formed request', ({ expect }) => {

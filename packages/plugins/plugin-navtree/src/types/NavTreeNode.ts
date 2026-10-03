@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Label } from '@dxos/react-ui';
+import { type TreeData } from '@dxos/react-ui-list';
 import { type MaybePromise, type Position } from '@dxos/util';
 
 export type NavTreeItemGraphNode = AppGraphNode.Node<
@@ -14,10 +17,18 @@ export type NavTreeItemGraphNode = AppGraphNode.Node<
       persistenceKey: string;
       acceptPersistenceClass: Set<string>;
       acceptPersistenceKey: Set<string>;
+      /** Parents sharing a scope move items between them; a drop from outside it links instead. */
+      moveScope: string;
+      canDrop: (source: TreeData) => boolean;
+      blockInstruction: (source: TreeData, instruction: Instruction) => boolean;
+      /** Whether an item added here would only be listed, its parent elsewhere; `from` is the parent it moves out of. */
+      isLink: (activeNode: NavTreeItemGraphNode, from?: NavTreeItemGraphNode) => boolean;
       onRearrange: (nextOrder: unknown[]) => MaybePromise<void>;
-      onCopy: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
-      onTransferStart: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
-      onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
+      /** An item is moving from here to `destinationParent`; called before the destination's `onMoveIn`. */
+      onMoveOut: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
+      /** An item is moving here from another parent; `index` is its position among this node's children. */
+      onMoveIn: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
+      onLink: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
     }
   >
 >;

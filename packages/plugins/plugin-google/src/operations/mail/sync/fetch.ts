@@ -17,8 +17,8 @@ import * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 import { GoogleMail } from '#apis';
 import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '#services';
 
-import { GoogleApiError } from '../../../errors';
-import { type AttachmentMetadata } from '../mapper';
+import { GoogleApiError } from '../../../errors.ts';
+import { type AttachmentMetadata } from '../mapper.ts';
 
 /**
  * Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.

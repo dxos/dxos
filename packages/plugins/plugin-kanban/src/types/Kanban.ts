@@ -73,6 +73,7 @@ export class Kanban extends Type.makeObject<Kanban>(DXN.make('org.dxos.type.kanb
     LabelAnnotation.set(['name']),
     ViewAnnotation.set(['spec', 'view']),
     Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

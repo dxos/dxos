@@ -6,9 +6,9 @@ import { type CancellableInvitation } from '@dxos/client-protocol';
 import { useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 
-import { type AgentFormProps } from '../../components';
-import { useEdgeAgentHandlers } from './useEdgeAgentsHandlers';
-import { useKubeAgentHandlers } from './useKubeAgentHandlers';
+import { type AgentFormProps } from '../../components/index.ts';
+import { useEdgeAgentHandlers } from './useEdgeAgentsHandlers.ts';
+import { useKubeAgentHandlers } from './useKubeAgentHandlers.ts';
 
 export const useAgentHandlers = (params: {
   invitations: CancellableInvitation[];

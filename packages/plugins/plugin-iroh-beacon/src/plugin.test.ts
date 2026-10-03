@@ -19,7 +19,7 @@ describe('IrohBeaconPlugin', () => {
 
     // Both of this plugin's real modules are demand-gated, so the plugin contributes nothing to
     // the boot floor. Asserted rather than assumed: an omitted gate is invisible to every other
-    // check, and the beacon rides `SpacesReady` precisely to stay off startup.
+    // check, and the beacon rides `SpacesAvailable` precisely to stay off startup.
     const active = harness.manager.getActive();
     // Runtime event: the harness never observes ready spaces.
     expect(active).not.toContain(moduleId('BeaconServiceModule'));

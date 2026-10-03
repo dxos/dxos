@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as Bookmark from './Bookmark';
+import * as Bookmark from './Bookmark.ts';
 
 const snapshot = {
   source: {

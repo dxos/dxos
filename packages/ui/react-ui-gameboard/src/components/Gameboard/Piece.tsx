@@ -13,9 +13,9 @@ import { log } from '@dxos/log';
 import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useGameboardContext } from './GameboardContext';
-import { type Location, type PieceRecord, type Player, isEqualLocation, isLocation } from './types';
-import { type DOMRectBounds } from './util';
+import { useGameboardContext } from './GameboardContext.ts';
+import { type Location, type PieceRecord, type Player, isEqualLocation, isLocation } from './types.ts';
+import { type DOMRectBounds } from './util.ts';
 
 export type PieceProps = ThemedClassName<{
   Component: FC<SVGProps<SVGSVGElement>>;

@@ -4,12 +4,12 @@
 
 // @import-as-namespace
 
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
+import { shallowEqual } from '@dxos/util';
 
 /**
  * A per-object state side-map: a standalone object holding a `Record<objectId, S>` with small
@@ -27,8 +27,8 @@ import { type EntityId } from '@dxos/keys';
 export class StateMap extends Type.makeObject<StateMap>(DXN.make('org.dxos.type.stateMap', '0.1.0'))(
   Schema.Struct({
     /** Per-object state keyed by object id. Values are open records projected to `S` by accessors. */
-    state: Schema.Record(Obj.ID, Schema.Any).pipe(FormInputAnnotation.set(false)),
-  }).pipe(Annotation.HiddenAnnotation.set(true)),
+    state: Schema.Record(Obj.ID, Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
+  }),
 ) {}
 
 /** Creates an empty StateMap object. */
@@ -50,15 +50,6 @@ export interface Accessor<S extends object> {
   /** Removes an object's entry. */
   remove(id: EntityId): void;
 }
-
-const shallowEqual = (a: Record<string, unknown>, b: Record<string, unknown>): boolean => {
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
-  if (keysA.length !== keysB.length) {
-    return false;
-  }
-  return keysA.every((key) => a[key] === b[key]);
-};
 
 type SliceKey = readonly [StateMap, EntityId];
 

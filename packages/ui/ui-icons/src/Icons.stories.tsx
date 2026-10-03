@@ -14,7 +14,7 @@ import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getSize } from '@dxos/ui-theme';
 
-import { PxIcons } from './index';
+import { PxIcons } from './index.ts';
 
 // The sizes an icon actually has to survive: a toolbar button down to inline text.
 const sizes = [16, 12, 8, 6, 5, 4] as const;

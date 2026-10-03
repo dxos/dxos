@@ -4,4 +4,4 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const NativeSettings: ComponentType<any> = lazy(() => import('./NativeSettings'));
+export const NativeSettings: ComponentType<any> = lazy(() => import('./NativeSettings/index.ts'));

@@ -8,10 +8,10 @@ import type * as Schema from 'effect/Schema';
 
 import { DXN, type URI } from '@dxos/keys';
 
-import type * as Database from './Database';
-import type * as Entity from './Entity';
-import { type EntityMeta, MetaId, getSchemaURI } from './internal';
-import * as Type from './Type';
+import type * as Database from './Database.ts';
+import type * as Entity from './Entity.ts';
+import { type EntityMeta, MetaId, getSchemaURI } from './internal/index.ts';
+import * as Type from './Type.ts';
 
 export const TypeId = '~@dxos/echo/Migration' as const;
 export type TypeId = typeof TypeId;
@@ -26,6 +26,8 @@ export interface Migration {
 
 /**
  * Type guard for values produced by {@link define} / {@link defineRename}.
+ *
+ * @performance O(1) brand check; no allocation.
  */
 export const isMigration = (value: unknown): value is Migration => {
   if (typeof value !== 'object' || value === null) {
@@ -99,6 +101,8 @@ export interface ObjectMigration extends Migration {
 
 /**
  * Narrows a migration to an {@link ObjectMigration}.
+ *
+ * @performance O(1).
  */
 export const isObjectMigration = (migration: Migration): migration is ObjectMigration => migration.kind === 'object';
 
@@ -114,6 +118,8 @@ export const isObjectMigration = (migration: Migration): migration is ObjectMigr
  *   onMigration: async () => {},
  * });
  * ```
+ *
+ * @performance O(1) at definition time; reads both schema URIs.
  */
 export const define = <From extends MigrationSchemaInput, To extends MigrationSchemaInput>(
   options: DefineObjectMigrationOptions<From, To>,
@@ -163,6 +169,8 @@ export interface RenameMigration extends Migration {
 
 /**
  * Narrows a migration to a {@link RenameMigration}.
+ *
+ * @performance O(1).
  */
 export const isRenameMigration = (migration: Migration): migration is RenameMigration => migration.kind === 'rename';
 
@@ -179,6 +187,8 @@ export const isRenameMigration = (migration: Migration): migration is RenameMigr
  *   to: 'org.example.operation.bar',
  * });
  * ```
+ *
+ * @performance O(1) at definition time.
  */
 export const defineRename = <const From extends string, const To extends string>(options: {
   from: ValidName<From>;

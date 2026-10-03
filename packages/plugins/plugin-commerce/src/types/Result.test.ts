@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as Result from './Result';
+import * as Result from './Result.ts';
 
 describe('Result type', () => {
   test('make + instanceOf', ({ expect }) => {

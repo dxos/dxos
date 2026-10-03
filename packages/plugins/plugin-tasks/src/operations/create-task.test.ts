@@ -9,8 +9,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
-import createTask from './create-task';
+import createMilestone from './create-milestone.ts';
+import createTask from './create-task.ts';
 
 describe('create-task', () => {
   it.effect("defaults status and joins the set's tasks array", () =>
@@ -27,7 +27,7 @@ describe('create-task', () => {
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
-  it.effect('a sub-task joins the same flat array and points at its parent', () =>
+  it.effect("a sub-task is listed and owned by its parent, not the set's roots", () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
@@ -39,11 +39,10 @@ describe('create-task', () => {
         parentTask: Ref.make(parent),
       });
 
-      expect(child.parentTask?.target?.id).toBe(parent.id);
-      expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, child.id]);
-      expect(Task.rootTasks(TaskSet.resolveTasks(taskSet)).map((task) => task.id)).toEqual([parent.id]);
-      // The parent edge means membership: a sub-task is parented to the set, not its `parentTask`.
-      expect(Obj.getParent(child)?.id).toBe(taskSet.id);
+      expect(Task.parentTaskId(child)).toBe(parent.id);
+      expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id]);
+      expect(parent.subtasks?.map((ref) => ref.target?.id)).toEqual([child.id]);
+      expect(TaskSet.resolveTasks(taskSet).map((task) => task.id)).toEqual([parent.id, child.id]);
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 

@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as TableOperationHandlerSet from './TableOperationHandlerSet';
+export * as TableOperationHandlerSet from './TableOperationHandlerSet.ts';

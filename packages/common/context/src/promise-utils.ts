@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Context } from './context';
-import { ContextDisposedError } from './context-disposed-error';
+import { ContextDisposedError } from './context-disposed-error.ts';
+import { type Context } from './context.ts';
 
 /**
  * @returns A promise that rejects when the context is disposed.

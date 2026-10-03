@@ -4,15 +4,15 @@
 
 import { DiscordConfig, type DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { Database, Error, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 
-import { DISCORD_API_BASE } from '../constants';
-import { makeEdgeProxyHttpClientLayer } from './proxy-http-client';
+import { DISCORD_API_BASE } from '../constants.ts';
+import { makeEdgeProxyHttpClientLayer } from './proxy-http-client.ts';
 
 /**
  * Build a `DiscordREST` layer pinned to a specific bot token.

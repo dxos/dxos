@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -13,7 +13,7 @@ import { bench, describe } from 'vitest';
 
 import { layerFile } from '@dxos/sql-sqlite/platform';
 
-import { parseBenchCount } from './testing/bench-util';
+import { parseBenchCount } from './testing/bench-util.ts';
 
 // Raw-SQLite baseline for the ECHO benchmarks in `echo.bench.ts`, run through the same driver
 // (`@dxos/sql-sqlite`'s node layer) so the delta between the two isolates ECHO's overhead.

@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 
 import {
@@ -16,9 +16,15 @@ import {
 } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
+import {
+  type AppSurface,
+  useAppGraph,
+  useDetailNavigation,
+  useProgressMonitor,
+  useShowItem,
+} from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
+import { QueryBuilder, formatTag } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
@@ -30,7 +36,7 @@ import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/rea
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
-  Menu,
+  ActionToolbar,
   MenuBuilder,
   TOOLBAR_DISPOSITION,
   graphActions,
@@ -52,17 +58,18 @@ import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
 import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { POPOVER_SAVE_FILTER } from '../../constants';
-import { messageMatchesQuery } from '../../util';
-import { InitializeMailbox } from './InitializeMailbox';
+import { POPOVER_SAVE_FILTER } from '../../constants.ts';
+import { getFeedObjectPath, getMailboxPath } from '../../paths.ts';
+import { messageMatchesQuery } from '../../util/index.ts';
+import { InitializeMailbox } from './InitializeMailbox.tsx';
 import {
   buildMailboxSelection,
   buildSystemTagSelection,
   buildThreadSemiJoin,
   getFilterTagUris,
   getSearchText,
-} from './mailbox-search';
-import { MailboxFilter } from './MailboxFilter';
+} from './mailbox-search.ts';
+import { MailboxFilter } from './MailboxFilter.tsx';
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;
@@ -91,9 +98,10 @@ export const MailboxArticle = ({
 }: MailboxArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(InboxCapabilities.Settings);
-  const id = attendableId ?? Obj.getURI(mailbox);
-  const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(mailbox);
+  // The mailbox view's graph node id: messages open as its children and it roots their level chain.
+  const id = attendableId ?? (db ? getMailboxPath(db.spaceId, mailbox.id) : Obj.getURI(mailbox));
+  const currentId = useSelection(id, 'single');
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
@@ -286,27 +294,19 @@ export const MailboxArticle = ({
 
   const handleClear = useCallback(() => applyFilterText(filterProp ?? ''), [filterProp, applyFilterText]);
 
+  const openDetail = useDetailNavigation({
+    contextId: id,
+    getPath: (messageId) => getFeedObjectPath(id, messageId),
+  });
   const handleNavigate = useCallback(
     (messageId: string, newPlank = false) => {
-      const message = messages.find((m) => m.id === messageId);
-      if (!message || !db) {
+      if (!db || !messages.some((message) => message.id === messageId)) {
         return;
       }
-      // Open the message's conversation as its own plank beside the mailbox (add), never a companion.
-      // The conversation node lives under this mailbox view; `MessageArticle` renders the whole thread.
-      // Ordinarily `level` names the rung in the mailbox's declared chain, so reading down the mailbox
-      // reuses one plank; meta/ctrl click asks for a plank of its own, so it opens without a level and
-      // keeps whatever is already there.
-      void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: message.id } });
-      void invokePromise(LayoutOperation.Open, {
-        subject: [`${id}/${message.id}`],
-        ...(newPlank ? {} : { root: id, level: 'message' }),
-        pivotId: id,
-        disposition: 'add',
-        navigation: 'immediate',
-      });
+
+      openDetail(messageId, { modified: newPlank });
     },
-    [db, id, messages, invokePromise],
+    [db, messages, openDetail],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: messages, currentId, onSelect: handleNavigate });
@@ -314,9 +314,6 @@ export const MailboxArticle = ({
   const handleAction = useCallback<InboxStackActionHandler>(
     (action) => {
       switch (action.type) {
-        // A message click ('current') and a conversation click ('current-conversation') both open the
-        // one unified conversation (thread) view — a single message is just a one-message conversation —
-        // as a standalone plank beside the mailbox.
         case 'current':
         case 'current-conversation': {
           const message = messages.find((message) => message.id === action.messageId);
@@ -382,10 +379,11 @@ export const MailboxArticle = ({
 
         case 'select-tag': {
           const previous = filterTextRef.current;
+          const token = formatTag(action.label);
           // Check if tag already exists.
           const tags = previous.split(/\s+/).filter(Boolean);
-          if (tags.at(-1)?.toLowerCase() !== '#' + action.label.toLowerCase()) {
-            applyFilterText([previous.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ');
+          if (tags.at(-1)?.toLowerCase() !== token.toLowerCase()) {
+            applyFilterText([previous.trim(), token].filter(Boolean).join(' ') + ' ');
           }
           filterEditorRef.current?.focus();
           break;
@@ -442,13 +440,9 @@ export const MailboxArticle = ({
   return (
     <Panel.Root data-testid='inbox.mailbox'>
       <ElevationProvider elevation='positioned'>
-        <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
-          <Panel.Toolbar asChild>
-            <Menu.Toolbar>
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-        </Menu.Root>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+        </Panel.Toolbar>
       </ElevationProvider>
       <Panel.Content>
         <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>

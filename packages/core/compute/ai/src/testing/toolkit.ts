@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { trim } from '@dxos/util';
 
-import { CalculatorTool, calculatorHandler } from './calculator';
+import { CalculatorTool, calculatorHandler } from './calculator.ts';
 
 export const TestingToolkit = Toolkit.make(
   CalculatorTool,

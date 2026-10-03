@@ -3,9 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import React from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
@@ -38,7 +38,7 @@ import { Message, Outline, Task } from '@dxos/types';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { ChatArticle, ChatArticleProps } from './ChatArticle';
+import { ChatArticle, ChatArticleProps } from './ChatArticle.tsx';
 
 /**
  * Replaces the AI service the plugin would build with a scripted model, so a story can drive the real
@@ -59,7 +59,7 @@ const scriptedAiServiceMiddleware = (replies: readonly string[]) => {
     ),
   );
   const layer = Layer.succeed(LanguageModel.LanguageModel, model);
-  return (_upstream: AiService.Service) => ({ model: () => layer });
+  return (upstream: AiService.Service): AiService.Service => ({ ...upstream, languageModel: () => layer });
 };
 
 /**

@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
 
-import { type Task } from './types';
+import { type Task } from './types.ts';
 
 export type TaskItemProps = {
   task: Task;

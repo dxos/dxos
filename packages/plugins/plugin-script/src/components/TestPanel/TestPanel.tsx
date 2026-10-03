@@ -5,7 +5,7 @@
 import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Avatar, Grid, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Avatar, Field, Grid, Icon, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -115,8 +115,8 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
         <MessageThread ref={scrollerRef} state={state} history={history} />
         {/* TODO(burdon): Replace with Form based on the function's input schema. */}
         <Toolbar.Root>
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Field.Input
               ref={inputRef}
               autoFocus
               placeholder={t('function-request.placeholder')}
@@ -124,7 +124,7 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
               onChange={(ev) => setInput(ev.target.value)}
               onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
             />
-          </Input.Root>
+          </Field.Root>
           <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
           <Toolbar.IconButton icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
         </Toolbar.Root>
@@ -171,7 +171,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
-  const wrapper = 'p-1 px-2 rounded-md bg-hover-surface overflow-auto';
+  const wrapper = 'p-1 px-2 rounded-md bg-hover-surface';
   return (
     <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
       {error && <div className={mx(wrapper, 'whitespace-pre text-error-text')}>{String(error)}</div>}

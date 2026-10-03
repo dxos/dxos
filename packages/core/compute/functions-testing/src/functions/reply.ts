@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { Reply } from './definitions';
+import { Reply } from './definitions.ts';
 
 export default Reply.pipe(
   Operation.withHandler(

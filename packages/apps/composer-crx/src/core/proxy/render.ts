@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DEFAULT_RENDER_TIMEOUT_MS, type RenderAck, type RenderRequest } from './types';
+import { DEFAULT_RENDER_TIMEOUT_MS, type RenderAck, type RenderRequest } from './types.ts';
 
 /**
  * Minimal, injectable surface of the browser APIs `renderUrl` depends on.

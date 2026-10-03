@@ -15,7 +15,7 @@ import {
 import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
-import { reconcileAnnotation } from './defs';
+import { reconcileAnnotation } from './defs.ts';
 
 /**
  * Applies Automerge patches to the CodeMirror view as changes, keeping the given selection mapped

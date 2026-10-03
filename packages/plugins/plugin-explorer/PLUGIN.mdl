@@ -18,10 +18,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -205,7 +205,7 @@ feat F-4: Node Interaction
 ## Acceptance
 
 ```mdl
-test T-1: Graph creation
+scenario T-1: Graph creation
   given: user opens the object creation dialog and selects Graph
   when: a typename is selected and the form submitted
   then:
@@ -215,7 +215,7 @@ test T-1: Graph creation
 ```
 
 ```mdl
-test T-2: Article mounts model
+scenario T-2: Article mounts model
   given: a Graph with a populated query
   when: ExplorerArticle is rendered with role === article
   then:
@@ -225,7 +225,7 @@ test T-2: Article mounts model
 ```
 
 ```mdl
-test T-3: Variant switch preserves positions
+scenario T-3: Variant switch preserves positions
   given: force variant is active with nodes positioned
   when: user switches to cluster variant
   then:
@@ -235,7 +235,7 @@ test T-3: Variant switch preserves positions
 ```
 
 ```mdl
-test T-4: Query filter updates graph
+scenario T-4: Query filter updates graph
   given: ExplorerArticle is open with all objects visible
   when: user types a typename filter in QueryEditor
   then:
@@ -245,7 +245,7 @@ test T-4: Query filter updates graph
 ```
 
 ```mdl
-test T-5: Node hover preview
+scenario T-5: Node hover preview
   given: force-directed graph with at least one ECHO object node
   when: pointer enters that node
   then:
@@ -254,7 +254,7 @@ test T-5: Node hover preview
 ```
 
 ```mdl
-test T-6: Lattice sort order
+scenario T-6: Lattice sort order
   given: database contains objects of two typenames A and B
   when: lattice variant is active
   then:
@@ -263,7 +263,7 @@ test T-6: Lattice sort order
 ```
 
 ```mdl
-test T-7: Model closed on unmount
+scenario T-7: Model closed on unmount
   given: ExplorerArticle is mounted and SpaceGraphModel is open
   when: component unmounts
   then:
@@ -275,8 +275,8 @@ test T-7: Model closed on unmount
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 plugin-explorer is not in `getDefaults` or the dev-only default set (see
 `packages/apps/composer-app/src/plugin-defs.tsx`) — it is OFF by default. Neither `createGraph` nor
@@ -286,7 +286,7 @@ plugin-explorer is not in `getDefaults` or the dev-only default set (see
 query editor calls `buildFilter` as a plain in-process function. Both steps are human-only.
 
 ```mdl
-flow QA-1: Create a Graph and switch layout variants
+test QA-1: Create a Graph and switch layout variants
   desc: The core explorer round-trip — create a Graph object, watch it render, switch between layout variants.
   actors: human
   covers: [F-1.1, F-1.2, F-1.3, F-3.1, T-1, T-2, T-3]
@@ -294,8 +294,8 @@ flow QA-1: Create a Graph and switch layout variants
   given:
     - an identity exists
     - space: a space is open, containing at least one object of some typename to visualize
-    - no Graph named "QA Graph" exists — ABORT rather than reusing one this flow did not create
-  test:
+    - no Graph named "QA Graph" exists — ABORT rather than reusing one this test did not create
+  steps:
     - name: Create the Graph
       do: In the navtree, click + on the space and choose Explorer > Graph. Name it "QA Graph" and pick a typename to seed the view.
       expect: a Graph object named "QA Graph" is created and opens as an article, rendering an SVG force-directed graph of matching objects
@@ -316,10 +316,10 @@ flow QA-1: Create a Graph and switch layout variants
       do: Right-click "QA Graph" in the navtree and choose Delete.
       expect: the row leaves the navtree and its plank closes
       note: |
-        NO `invoke` here either — the flow never captured a live reference to the Graph (its
+        NO `invoke` here either — the test never captured a live reference to the Graph (its
         creation had no `invoke`/`capture`), so a runner must resolve it by querying
         `space.db.query(dxos.Filter.everything())` for the object named "QA Graph" and call
-        `org.dxos.operation.space.removeObjects` with that reference, rather than the flow
+        `org.dxos.operation.space.removeObjects` with that reference, rather than the test
         guessing an id it was never given.
 ```
 
@@ -352,8 +352,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

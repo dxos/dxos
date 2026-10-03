@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Document, type RawSentence, type Sentence, type Token } from './Document';
-import { sourceHash } from './hash';
+import { type Document, type RawSentence, type Sentence, type Token } from './Document.ts';
+import { sourceHash } from './hash.ts';
 
 /**
  * Align offset-free tagger output against the source text to compute exact character offsets.

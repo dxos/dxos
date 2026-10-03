@@ -2,89 +2,167 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
-import { AutomergeHost } from '../automerge';
-import { createTestSqliteRuntime } from '../testing';
-import { DocumentsSynchronizer } from './documents-synchronizer';
+import { AutomergeHost } from '../automerge/index.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { DocumentsSynchronizer } from './documents-synchronizer.ts';
+
+/** A client-side replica fed by `sendUpdates`, the way `RepoProxy` integrates host batches. */
+class TestClient<T = Record<string, unknown>> {
+  readonly #docs = new Map<string, A.Doc<T>>();
+  readonly #ready = new Map<string, Trigger>();
+
+  readonly receive = (batch: { updates?: Array<{ documentId: string; mutation?: Uint8Array }> }) => {
+    for (const { documentId, mutation } of batch.updates ?? []) {
+      if (!mutation) {
+        continue;
+      }
+      this.#docs.set(documentId, A.loadIncremental<T>(this.#docs.get(documentId) ?? A.init<T>(), mutation));
+      this.#trigger(documentId).wake();
+    }
+  };
+
+  loaded(documentId: string): Promise<void> {
+    return this.#trigger(documentId).wait();
+  }
+
+  /** The replica of a document this client has received, which the caller knows has arrived. */
+  doc(documentId: string): A.Doc<T> {
+    const doc = this.#docs.get(documentId);
+    invariant(doc, 'Document not received');
+    return doc;
+  }
+
+  /** The replica as it stands, which a condition may be waiting to arrive. */
+  peek(documentId: string): A.Doc<T> | undefined {
+    return this.#docs.get(documentId);
+  }
+
+  /** Applies a change locally and returns the bytes a client would send with `DataService.update`. */
+  change(documentId: string, fn: A.ChangeFn<T>): Uint8Array {
+    const before = this.#docs.get(documentId);
+    invariant(before, 'Document not received');
+    const after = A.change(before, fn);
+    this.#docs.set(documentId, after);
+    return A.saveSince(after, A.getHeads(before));
+  }
+
+  #trigger(documentId: string): Trigger {
+    let trigger = this.#ready.get(documentId);
+    if (!trigger) {
+      trigger = new Trigger();
+      this.#ready.set(documentId, trigger);
+    }
+    return trigger;
+  }
+}
 
 describe('DocumentsSynchronizer', () => {
-  test('two synchronizers receive updates for shared document', async () => {
+  test('splits pending documents over the batch cap and delivers the remainder', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = new AutomergeHost({ runtime });
     await openAndClose(host);
-    const handle = await host.createDoc<{ text: string }>({ text: 'initial' });
+    const handles = await Promise.all(
+      Array.from({ length: 5 }, (_, index) => host.createDoc<{ text: string }>({ text: `doc-${index}` })),
+    );
 
-    // Create two synchronizers (simulates two clients connected to the same host).
-    const initialSync1 = new Trigger();
-    const initialSync2 = new Trigger();
-    const propagatedUpdate2 = new Trigger();
-    let initialSyncSettled = false;
-    const synchronizer1 = new DocumentsSynchronizer({
+    const batches: number[] = [];
+    const delivered = new Set<string>();
+    const allDelivered = new Trigger();
+    const synchronizer = new DocumentsSynchronizer({
       automergeHost: host,
+      maxBatchDocuments: 2,
       sendUpdates: (batch) => {
-        for (const update of batch.updates ?? []) {
-          if (update.documentId === handle.documentId) {
-            initialSync1.wake();
-          }
+        const updates = (batch.updates ?? []).filter((update) => update.mutation);
+        batches.push(updates.length);
+        updates.forEach((update) => delivered.add(update.documentId));
+        if (delivered.size === handles.length) {
+          allDelivered.wake();
         }
       },
     });
-    await openAndClose(synchronizer1);
+    await openAndClose(synchronizer);
 
-    const updates2: string[] = [];
-    const synchronizer2 = new DocumentsSynchronizer({
-      automergeHost: host,
-      sendUpdates: (batch) => {
-        for (const update of batch.updates ?? []) {
-          updates2.push(update.documentId);
-          if (update.documentId === handle.documentId) {
-            if (initialSyncSettled) {
-              propagatedUpdate2.wake();
-            } else {
-              initialSync2.wake();
-            }
-          }
-        }
-      },
-    });
-    await openAndClose(synchronizer2);
+    await synchronizer.addDocuments(handles.map((handle) => handle.documentId));
+    await allDelivered.wait({ timeout: 5_000 });
 
-    // Both synchronizers subscribe to the same document.
-    await synchronizer1.addDocuments([handle.documentId]);
-    await synchronizer2.addDocuments([handle.documentId]);
+    expect(Math.max(...batches)).toBeLessThanOrEqual(2);
+    expect(batches.filter((size) => size > 0).length).toBeGreaterThanOrEqual(3);
+  });
 
-    await asyncTimeout(Promise.all([initialSync1.wait(), initialSync2.wait()]), 1_000);
-    initialSyncSettled = true;
-    const initialUpdates2 = updates2.length;
+  test('a client write reaches the other subscriber and the heads store without a lease on the host', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, residency: { evictionDelay: 0, minResidentDocuments: 0 } });
+    await openAndClose(host);
+    const created = await host.createDoc<{ text: string }>({ text: 'initial' });
+    const documentId = created.documentId;
+    await host.flush(Context.default());
+    created[Symbol.dispose]();
 
-    // Synchronizer 1 makes a change (simulates client 1 creating an object).
+    const client1 = new TestClient<{ text: string }>();
+    const client2 = new TestClient<{ text: string }>();
+    const synchronizer1 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client1.receive });
+    const synchronizer2 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client2.receive });
+    await openAndClose(synchronizer1, synchronizer2);
+    await synchronizer1.addDocuments([documentId]);
+    await synchronizer2.addDocuments([documentId]);
+    await asyncTimeout(Promise.all([client1.loaded(documentId), client2.loaded(documentId)]), 1_000);
+
+    // Subscribed and idle: nothing on the host holds the document.
+    await host.drainEvictions();
+    expect(host.leasedDocsCount).to.equal(0);
+    expect(host.loadedDocumentIds).to.not.contain(documentId);
+
     await synchronizer1.update(Context.default(), [
-      {
-        documentId: handle.documentId,
-        mutation: new Uint8Array([]), // Empty mutation for test - the actual mutation is applied via handle.change
-      },
+      { documentId, mutation: client1.change(documentId, (doc) => (doc.text = 'modified by client 1')) },
     ]);
+    await asyncTimeout(
+      waitForCondition({ condition: () => client2.peek(documentId)?.text === 'modified by client 1' }),
+      1_000,
+    );
+    // The host stored the write and recorded its heads where the indexer scans, without keeping the
+    // document loaded.
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).to.not.contain(documentId);
+    const stored = new Map<string, unknown>();
+    for await (const entry of host.listDocumentHeads()) {
+      stored.set(entry.documentId, entry.heads);
+    }
+    expect(stored.get(documentId)).to.deep.equal(A.getHeads(client1.doc(documentId)));
+  });
 
-    // Apply the actual change to the handle (simulates what happens when client sends mutation).
-    handle.change((doc: any) => {
-      doc.text = 'modified by client 1';
-    });
+  test('unsubscribing while the initial load is in flight releases the lease', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    // Minted elsewhere, so this host waits on the network for it.
+    const other = createTestSqliteRuntime();
+    onTestFinished(() => other.dispose());
+    const otherHost = new AutomergeHost({ runtime: other.runtime });
+    await openAndClose(otherHost);
+    const { documentId } = await otherHost.createDoc<{ text: string }>({ text: 'elsewhere' });
 
-    await asyncTimeout(propagatedUpdate2.wait(), 1_000);
+    const synchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
+    await openAndClose(synchronizer);
+    await synchronizer.addDocuments([documentId]);
+    expect(host.leasedDocsCount).to.equal(1);
 
-    // Synchronizer 2 should receive the update even though synchronizer 1 made the change.
-    expect(updates2.length).to.be.greaterThan(initialUpdates2);
+    synchronizer.removeDocuments([documentId]);
+    expect(host.leasedDocsCount).to.equal(0);
   });
 
   test('do not get init changes for client created docs', async () => {
@@ -93,10 +171,12 @@ describe('DocumentsSynchronizer', () => {
     onTestFinished(() => dispose());
     const host = new AutomergeHost({ runtime });
     await openAndClose(host);
+    const sentUpdate = new Trigger();
     const synchronizer = new DocumentsSynchronizer({
       automergeHost: host,
       sendUpdates: () => {
         counter++;
+        sentUpdate.wake();
       },
     });
     await openAndClose(synchronizer);
@@ -107,12 +187,12 @@ describe('DocumentsSynchronizer', () => {
     // Add document to synchronizer (simulates updateSubscription with addIds).
     await synchronizer.addDocuments([handle.documentId]);
 
-    // Wait for the changes to be processed.
-    await sleep(100);
+    // Wait for the scheduled job to flush the initial sync.
+    await asyncTimeout(sentUpdate.wait(), 1_000);
 
     // Updates will be sent for the initial sync (this is expected behavior).
     // The key is that subsequent updates from the client should be properly synced.
-    expect(counter).to.be.greaterThanOrEqual(0);
+    expect(counter).to.be.greaterThanOrEqual(1);
   });
 
   describe('persistence', () => {
@@ -138,8 +218,8 @@ describe('DocumentsSynchronizer', () => {
         // Add to synchronizer (simulates updateSubscription with addIds).
         await synchronizer.addDocuments([documentId]);
 
-        // Wait for auto-save (no explicit flush).
-        await sleep(500);
+        // Wait for the background auto-save to persist the document to disk (no explicit flush).
+        await waitForCondition({ condition: () => host.hasDocOnDisk(documentId), timeout: 2_000 });
 
         await host.close();
         await synchronizer.close();
@@ -162,29 +242,5 @@ describe('DocumentsSynchronizer', () => {
         await host.close();
       }
     });
-  });
-
-  // Unsubscribing must release the host's lease, or a client releasing an object frees nothing here.
-  test('unsubscribing releases the document on the host', async () => {
-    const { runtime, dispose } = createTestSqliteRuntime();
-    onTestFinished(() => dispose());
-    const host = new AutomergeHost({ runtime });
-    await openAndClose(host);
-
-    const created = await host.createDoc<{ text: string }>({ text: 'subscribed' });
-    const documentId = created.documentId;
-    await host.flush(Context.default());
-    created[Symbol.dispose]();
-
-    const synchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
-    await openAndClose(synchronizer);
-    await synchronizer.addDocuments([documentId]);
-    await host.drainEvictions();
-    expect(host.loadedDocumentIds).to.contain(documentId);
-
-    synchronizer.removeDocuments([documentId]);
-    await host.drainEvictions();
-    expect(host.loadedDocumentIds).to.not.contain(documentId);
-    expect(host.leasedDocsCount).to.equal(0);
   });
 });

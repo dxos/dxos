@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentType,
   type CSSProperties,
@@ -18,12 +17,13 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 
 import { useFocusGroup } from '@dxos/react-focus';
+import { createContext } from '@dxos/react-hooks';
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
 import { composable, composableProps, useMergeRefs } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
-import { prefersReducedMotion, useFlip } from './useFlip';
-import { useMasonryLayout } from './useMasonryLayout';
+import { prefersReducedMotion, useFlip } from './useFlip.ts';
+import { useMasonryLayout } from './useMasonryLayout.ts';
 
 /** Reveal the grid once the layout has been stable for this long (the initial reflow has settled). */
 const REVEAL_SETTLE_MS = 80;
@@ -306,7 +306,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
                   // the column, or a narrow (single-column, mobile) container overflows
                   // and shows a horizontal scrollbar.
                   className={[
-                    '[&>*]:min-w-0!',
+                    '*:min-w-0!',
                     selectable && 'cursor-pointer',
                     selected && 'rounded-md ring-2 ring-inset ring-primary-500',
                   ]

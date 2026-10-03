@@ -34,10 +34,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -226,7 +226,7 @@ feat F-4: Consumers resolve FactStore through the seam
 ## Acceptance
 
 ```mdl
-test T-1: Registry instance identity
+scenario T-1: Registry instance identity
   given: a FactStoreRegistry
   when: forSpace('a') is called twice and forSpace('b') once
   then:
@@ -236,7 +236,7 @@ test T-1: Registry instance identity
 ```
 
 ```mdl
-test T-2: QueryFacts returns matching facts
+scenario T-2: QueryFacts returns matching facts
   given: a memory FactStore seeded with facts about alice (subject) and acme (object)
   when: QueryFacts runs with { entity: 'alice' } and with { minConfidence: 0.9 }
   then:
@@ -246,7 +246,7 @@ test T-2: QueryFacts returns matching facts
 ```
 
 ```mdl
-test T-3: SummarizeSubject grounds on facts
+scenario T-3: SummarizeSubject grounds on facts
   given: a memory FactStore seeded with facts about a person, and a memoized LLM
   when: SummarizeSubject runs with that subject
   then:
@@ -256,7 +256,7 @@ test T-3: SummarizeSubject grounds on facts
 ```
 
 ```mdl
-test T-4: FactsCompanion rendering
+scenario T-4: FactsCompanion rendering
   given: a space store with facts (storybook)
   when: FactsCompanion renders over a subject
   then:
@@ -265,7 +265,7 @@ test T-4: FactsCompanion rendering
 ```
 
 ```mdl
-test T-5: Enrich → query integration (lives in plugin-inbox)
+scenario T-5: Enrich → query integration (lives in plugin-inbox)
   given: a mailbox feed with messages and the brain-provided store
   when: EnrichMailbox runs, then QueryFacts for a participant entity
   then: facts extracted from the messages are returned
@@ -273,8 +273,8 @@ test T-5: Enrich → query integration (lives in plugin-inbox)
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 This plugin has no create operation of its own — facts land in the store via upstream pipelines
 (`plugin-inbox`'s `EnrichMailbox`), never through a user gesture this plugin owns — so there is
@@ -282,7 +282,7 @@ nothing for `before`/`test` to create and nothing for `after` to undo. `queryFac
 `summarizeSubject` are both agent-invocable read operations (`op@1.1`, keys below).
 
 ```mdl
-flow QA-1: Query and summarize facts already in the store
+test QA-1: Query and summarize facts already in the store
   desc: The plugin's own surface — QueryFacts and SummarizeSubject against a pre-populated FactStore.
   actors: both
   covers: [F-2.1, F-2.3, F-3.1, T-2, T-3]
@@ -292,7 +292,7 @@ flow QA-1: Query and summarize facts already in the store
     - space: a space is open whose FactStore already holds facts about entity "alice-smith" —
       seeded by a prior plugin-inbox EnrichMailbox run (see F-4.1); this plugin has no operation
       that creates a fact itself
-  test:
+  steps:
     - name: Query facts about the entity
       do: (no direct UI for a structured query — this is the assistant path; a human instead opens
         the FactsCompanion below and types "alice-smith" into its filter)
@@ -338,8 +338,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

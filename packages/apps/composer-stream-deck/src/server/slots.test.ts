@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { assignSlots, slotOf } from './slots';
+import { assignSlots, slotOf } from './slots.ts';
 
 const at = (column: number, row = 0) => ({ coordinates: { column, row } });
 

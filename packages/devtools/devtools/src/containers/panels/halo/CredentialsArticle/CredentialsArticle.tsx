@@ -1,0 +1,65 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+import React, { useMemo } from 'react';
+
+import { Format } from '@dxos/echo/Format';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Space } from '@dxos/react-client/echo';
+import { Panel, Toolbar } from '@dxos/react-ui';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+
+import { MasterDetailTable } from '../../../../components/index.ts';
+import { SpaceSelector } from '../../../../containers/index.ts';
+import { useCredentials, useDevtoolsState } from '../../../../hooks/index.ts';
+import { assertionTypeName } from '../../../../util/index.ts';
+import { type ArticleProps } from '../../types.ts';
+
+export const CredentialsArticle = ({ role, ...props }: ArticleProps & { space?: Space }) => {
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
+  const credentials = useCredentials({ spaceKey: state.haloSpaceKey ?? space?.key });
+
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'id', format: Format.TypeFormat.DID, tooltip: true, size: 120 },
+      { name: 'issuer', format: Format.TypeFormat.DID, tooltip: true, size: 120 },
+      { name: 'type', format: Format.TypeFormat.String, size: 380 },
+      { name: 'issuanceDate', format: Format.TypeFormat.DateTime, title: 'issued', size: 194 },
+    ],
+    [],
+  );
+
+  const data = useMemo(
+    () =>
+      credentials.map((credential: Credential) => ({
+        id: credential.id?.toString() ?? '',
+        issuer: credential.issuer?.toString() ?? '',
+        type: assertionTypeName(credential),
+        issuanceDate: credential.issuanceDate,
+        _original: credential,
+      })),
+    [credentials],
+  );
+
+  return (
+    <Panel.Root role={role}>
+      {!props.space && (
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <SpaceSelector />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+      )}
+      <Panel.Content>
+        <MasterDetailTable
+          properties={properties}
+          data={data}
+          detailsTransform={(d) => d._original}
+          detailsPosition='bottom'
+        />
+      </Panel.Content>
+    </Panel.Root>
+  );
+};

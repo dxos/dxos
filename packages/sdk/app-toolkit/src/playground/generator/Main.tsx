@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { IconButton } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
-import { PlaygroundRoles } from '../roles';
+import { PlaygroundRoles } from '../roles.ts';
 
 const Item = ({
   id,

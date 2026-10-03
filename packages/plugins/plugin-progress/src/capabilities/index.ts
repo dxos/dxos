@@ -20,16 +20,16 @@ export const ProgressRegistry = Capability.lazyModule(
     provides: [AppCapabilities.ProgressRegistry],
     activatesOn: ActivationEvents.Startup,
   },
-  () => import('./progress-registry'),
+  () => import('./progress-registry.ts'),
 );
 export const TraceProgressSink = Capability.lazyModule(
   'TraceProgressSink',
   { provides: [Capabilities.TraceSink] },
-  () => import('./trace-progress-sink'),
+  () => import('./trace-progress-sink.ts'),
 );
 export const ReactSurface = Capability.lazyModule(
   'ReactSurface',
   { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
+  () => import('./react-surface.ts'),
 );
 export const Translations = AppCapability.translations(translations);

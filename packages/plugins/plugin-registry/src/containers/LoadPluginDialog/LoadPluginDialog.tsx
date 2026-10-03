@@ -2,24 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
-import { Button, Dialog, Flex, Input, useTranslation } from '@dxos/react-ui';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Button, Dialog, Field, Flex, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import { RegistryOperation, describeLoadError } from '#operations';
 
 export const LoadPluginDialog = () => {
-  const manager = usePluginManager();
+  const { invokePromise } = useOperationInvoker();
   const { t } = useTranslation(meta.profile.key);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
-  const handleLoad = useCallback(() => {
+  const handleLoad = useCallback(async () => {
     const trimmed = url.trim();
     if (!trimmed) {
       return;
@@ -27,21 +26,15 @@ export const LoadPluginDialog = () => {
 
     setLoading(true);
     setError(null);
-
-    void Effect.gen(function* () {
-      const plugin = yield* manager.add(trimmed);
-      yield* manager.enable(plugin.meta.profile.key);
+    // `invokePromise` reports a handler failure as `{ error }` rather than rejecting.
+    const { error } = await invokePromise(RegistryOperation.LoadPlugin, { url: trimmed });
+    setLoading(false);
+    if (error) {
+      setError(describeLoadError(error));
+    } else {
       closeRef.current?.click();
-    }).pipe(
-      Effect.catch((err) =>
-        Effect.sync(() => {
-          setError(String(err));
-        }),
-      ),
-      Effect.tap(() => Effect.sync(() => setLoading(false))),
-      EffectEx.runAndForwardErrors,
-    );
-  }, [url, manager]);
+    }
+  }, [url, invokePromise]);
 
   return (
     <Dialog.Content>
@@ -54,9 +47,9 @@ export const LoadPluginDialog = () => {
       <Dialog.Body>
         {/* TODO(burdon): Form section. */}
         <Flex column gap='lg'>
-          <Input.Root validationValence={error ? 'error' : undefined}>
-            <Input.Label>{t('plugin-url.label')}</Input.Label>
-            <Input.TextInput
+          <Field.Root validationValence={error ? 'error' : undefined}>
+            <Field.Label>{t('plugin-url.label')}</Field.Label>
+            <Field.Input
               placeholder='https://example.com/manifest.json'
               value={url}
               onChange={(event) => {
@@ -65,16 +58,16 @@ export const LoadPluginDialog = () => {
               }}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
-                  handleLoad();
+                  void handleLoad();
                 }
               }}
               disabled={loading}
               autoFocus
             />
-            {error && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-          </Input.Root>
+            {error && <Field.HelperText>{error}</Field.HelperText>}
+          </Field.Root>
           <Flex justify='end'>
-            <Button variant='primary' disabled={!url.trim() || loading} onClick={handleLoad}>
+            <Button variant='primary' disabled={!url.trim() || loading} onClick={() => void handleLoad()}>
               {loading ? t('loading.label') : t('load-plugin.label')}
             </Button>
           </Flex>

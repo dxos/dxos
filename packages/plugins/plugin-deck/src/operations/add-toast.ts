@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DeckCapabilities } from '#types';
 
-import { upsertToast } from '../util';
+import { upsertToast } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.AddToast> = LayoutOperation.AddToast.pipe(
   Operation.withHandler(

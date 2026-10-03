@@ -6,10 +6,10 @@ import { describe, expect, test } from 'vitest';
 
 import { Terra } from '#types';
 
-import { toUnit } from './geo';
-import { buildNavGrid, isPassable } from './nav-grid';
-import { domainCandidates } from './reachable';
-import { planRoute } from './route';
+import { toUnit } from './geo.ts';
+import { buildNavGrid, isPassable } from './nav-grid.ts';
+import { domainCandidates } from './reachable.ts';
+import { planRoute } from './route.ts';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'route-1' } }));
 const grid = buildNavGrid(config, 16);

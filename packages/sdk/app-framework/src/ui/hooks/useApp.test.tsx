@@ -10,10 +10,11 @@ import { vi } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { ActivationEvents, Capabilities } from '../../common';
-import { Capability, Plugin, PluginManager } from '../../core';
-import { STARTUP_WATCHDOG_TICK_MS } from './startup-watchdog';
-import { STARTUP_FAILED_EVENT, type StartupDiagnostics, useApp } from './useApp';
+import { ActivationEvents, Capabilities } from '../../common/index.ts';
+import { Capability, Plugin, PluginManager } from '../../core/index.ts';
+import { PluginManagerError } from '../../core/plugin-manager/errors.ts';
+import { STARTUP_WATCHDOG_TICK_MS } from './startup-watchdog.ts';
+import { STARTUP_FAILED_EVENT, type StartupDiagnostics, useApp } from './useApp.tsx';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test', tags: ['system'] });
@@ -22,7 +23,7 @@ const pluginLoader = (plugins: Plugin.Plugin[]) =>
   Effect.fn(function* (id: string) {
     const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
     if (!plugin) {
-      return yield* Effect.fail(new Error(`Plugin not found: ${id}`));
+      return yield* Effect.fail(new PluginManagerError({ message: `Plugin not found: ${id}` }));
     }
     return { plugin };
   });
@@ -55,11 +56,22 @@ describe('useApp startup failure reporting', () => {
       const listener = (event: CustomEvent<StartupDiagnostics>) => reported.push(event.detail);
       window.addEventListener(STARTUP_FAILED_EVENT, listener);
 
-      const { unmount } = render(<TimedHost manager={manager} />);
-      yield* Effect.promise(() => waitFor(() => assert.isTrue(manager.getActive().length > 0)));
-      yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 2 * STARTUP_WATCHDOG_TICK_MS)));
-      window.removeEventListener(STARTUP_FAILED_EVENT, listener);
-      unmount();
+      // Fake the watchdog's own timers (as `startup-watchdog.test.ts` does) so the "never times
+      // out" window is asserted by advancing virtual time rather than waiting out real seconds;
+      // installed before mount so the watchdog's `setInterval`/`performance.now` are fake from creation.
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] });
+      let unmount = () => {};
+      try {
+        ({ unmount } = render(<TimedHost manager={manager} />));
+        yield* Effect.promise(() => waitFor(() => assert.isTrue(manager.getActive().length > 0)));
+        vi.advanceTimersByTime(2 * STARTUP_WATCHDOG_TICK_MS);
+      } finally {
+        // Restore real timers even if the render/wait/advance above throws, so a failure here
+        // can't leak fake timers into whichever test runs next in this worker.
+        window.removeEventListener(STARTUP_FAILED_EVENT, listener);
+        unmount();
+        vi.useRealTimers();
+      }
 
       assert.deepStrictEqual(reported, []);
     }),
@@ -71,7 +83,7 @@ describe('useApp startup failure reporting', () => {
         Plugin.addModule({
           id: 'Failing',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.fail(new Error('TEST: module failed')),
+          activate: () => Effect.fail(new PluginManagerError({ message: 'TEST: module failed' })),
         }),
         Plugin.make,
       )();

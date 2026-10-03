@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { parsimmon as P } from './parsimmon';
+import { parsimmon as P } from './parsimmon.ts';
 
 /**
  * Parsed block.

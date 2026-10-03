@@ -94,6 +94,11 @@ WS_CONNECTED = "dxos.edge.ws.connected"
 WORKER_REALMS = "dxos.process.type in ('shared-worker', 'dedicated-worker', 'service-worker')"
 
 panels = {
+  "stat-clients": number("Clients reporting", "Number of distinct metric streams in the window \u2014 one per client realm exporting client-level gauges. Counts series, not people: a client that reloads and gets a new deviceKey counts twice, a client that spans a deploy counts once per build revision, and a client that went away mid-window still counts. This is the denominator for every 'per client' panel below \u2014 an average that moves while this moves is a population change, not a behaviour change.", [
+      scalar_query("A", metric=SPACES, time_agg="latest", space_agg="count", reduce_to="last", legend="")], precision="0"),
+  "clients-by-version": timeseries("Clients reporting by SDK version", "The same client census as the tile above, split by `service.version` \u2014 which is the SDK constant `DXOS_VERSION`, bumped at release, NOT the app build (that is `vcs.ref.head.revision`). Reads as a rollout curve: an old version's line decaying toward zero is the fleet migrating off it, a line that never decays is clients pinned to a stale build. The lines sum to 'Clients reporting', so a step in the total with no new version line is a population change rather than a deploy.",
+      series(bq("A", SPACES, "latest", "count", "last", "{{service.version}}", group=["service.version"])),
+      unit="none", precision="0"),
   "stat-spaces": number("Spaces per client (avg)", "", [
       scalar_query("A", metric=SPACES, time_agg="avg", space_agg="avg", reduce_to="last", legend="")]),
   "stat-docs": number("Documents loaded per client (avg)", "location=local — the resident document count.", [
@@ -199,15 +204,17 @@ panels = {
       {"A": "bytes", "B": "bytes"}),
 }
 
-order = [("stat-spaces",0,0,3,3),("stat-docs",3,0,3,3),("stat-unsynced",6,0,3,3),("stat-heap-pressure",9,0,3,3),
-         ("sync-duration",0,3,6,6),("sync-stalled",6,3,6,6),
-         ("spaces-dist",0,9,6,6),("spaces-ready",6,9,6,6),
-         ("docs-location",0,15,6,6),("unsynced-backlog",6,15,6,6),
-         ("sync-pending",0,21,6,6),("ws-connected",6,21,6,6),
-         ("ws-reconnect-reason",0,27,6,6),("ws-session-reconnects",6,27,6,6),
-         ("loop-lag-main",0,33,6,6),("loop-lag-worker",6,33,6,6),
-         ("rpc-timings",0,39,6,6),("heap-used",6,39,6,6),
-         ("heap-by-device",0,45,6,6)]
+order = [("stat-clients",0,0,3,3),("stat-spaces",3,0,3,3),("stat-docs",6,0,2,3),
+         ("stat-unsynced",8,0,2,3),("stat-heap-pressure",10,0,2,3),
+         ("clients-by-version",0,3,12,6),
+         ("sync-duration",0,9,6,6),("sync-stalled",6,9,6,6),
+         ("spaces-dist",0,15,6,6),("spaces-ready",6,15,6,6),
+         ("docs-location",0,21,6,6),("unsynced-backlog",6,21,6,6),
+         ("sync-pending",0,27,6,6),("ws-connected",6,27,6,6),
+         ("ws-reconnect-reason",0,33,6,6),("ws-session-reconnects",6,33,6,6),
+         ("loop-lag-main",0,39,6,6),("loop-lag-worker",6,39,6,6),
+         ("rpc-timings",0,45,6,6),("heap-used",6,45,6,6),
+         ("heap-by-device",0,51,6,6)]
 
 dashboard = {
   "name": "client-metrics-vibptxv0",

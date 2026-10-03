@@ -5,13 +5,28 @@
 import * as Schema from 'effect/Schema';
 import { type PRNG, type ULIDFactory, monotonicFactory } from 'ulidx';
 
+import { withStatics } from './schema-statics.ts';
+
 // Crockford Base32 alphabet used by ULID. Excludes I, L, O, U.
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+// The tail of a ULID is its random component, so 6 characters give ~1e9 values -- collision-free
+// enough to name an object in conversation, while short enough to remember.
+const MNEMONIC_LENGTH = 6;
+const MNEMONIC_PATTERN = new RegExp(`^[0-9A-HJKMNP-TV-Z]{${MNEMONIC_LENGTH}}$`, 'i');
 
 // TODO(dmaretskyi): Make brand.
 // export const EntityIdBrand: unique symbol = Symbol('@dxos/echo/EntityId');
 // export const EntityIdSchema = Schema.ULID.pipe(S.brand(EntityIdBrand));
-const EntityIdSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i))).annotate({
+// JSON Schema patterns take no flags, so the canonical uppercase form is exported in place of the
+// case-insensitive check, which effect would otherwise drop.
+const EntityIdSchema = Schema.String.pipe(
+  Schema.check(
+    Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i, {
+      toJsonSchema: () => ({ pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$' }),
+    }),
+  ),
+).annotate({
   description: 'A Universally Unique Lexicographically Sortable Identifier',
   pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$',
 });
@@ -99,6 +114,29 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
    * NOTE: The generated IDs depend on the order of EntityId.random() calls, which might be affected by test order, scheduling, etc.
    */
   'dangerouslySetSeed'(time: number, seed: number): void;
+
+  /**
+   * Number of trailing id characters that form a mnemonic.
+   */
+  readonly 'mnemonicLength': number;
+
+  /**
+   * The mnemonic of an id: its last {@link mnemonicLength} characters, uppercased.
+   * Short enough for a person to read out or type, and stable for the life of the object.
+   */
+  'getMnemonic'(id: string): string;
+
+  /**
+   * Normalizes a user-supplied mnemonic (trims, uppercases) so it can be compared with
+   * {@link getMnemonic}.
+   */
+  'normalizeMnemonic'(mnemonic: string): string;
+
+  /**
+   * @returns true if the string is a well-formed mnemonic (exactly {@link mnemonicLength}
+   * Crockford base32 characters, case-insensitive).
+   */
+  'isValidMnemonic'(mnemonic: string): boolean;
 }
 
 /**
@@ -111,7 +149,7 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
 let factory: ULIDFactory = monotonicFactory();
 let seedTime: number | undefined;
 
-export const EntityId: EntityIdClass = Object.assign(EntityIdSchema, {
+export const EntityId: EntityIdClass = withStatics(EntityIdSchema, {
   isValid: (id: string): id is EntityId => {
     try {
       Schema.decodeSync(EntityIdSchema)(id);
@@ -156,6 +194,14 @@ export const EntityId: EntityIdClass = Object.assign(EntityIdSchema, {
     factory = monotonicFactory(makeTestPRNG(seed));
     seedTime = time;
   },
+
+  mnemonicLength: MNEMONIC_LENGTH,
+
+  getMnemonic: (id: string): string => id.slice(-MNEMONIC_LENGTH).toUpperCase(),
+
+  normalizeMnemonic: (mnemonic: string): string => mnemonic.trim().toUpperCase(),
+
+  isValidMnemonic: (mnemonic: string): boolean => MNEMONIC_PATTERN.test(mnemonic.trim()),
 });
 
 /**

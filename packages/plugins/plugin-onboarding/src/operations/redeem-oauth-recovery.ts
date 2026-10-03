@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ATPROTO_OAUTH_SCOPES, type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
-import { RedeemOAuthRecovery } from './definitions';
-import { beginOAuthFlow, createEdgeHttpClient } from './shared';
+import { RedeemOAuthRecovery } from './definitions.ts';
+import { beginOAuthFlow, createEdgeHttpClient } from './shared.ts';
 
 /**
  * Recover an existing identity by completing an OAuth flow with a registered recovery provider
@@ -29,10 +29,10 @@ import { beginOAuthFlow, createEdgeHttpClient } from './shared';
 const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRecovery.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (data) {
-      const client = yield* Capability.get(ClientCapabilities.Client);
+      const config = yield* Capability.get(ClientCapabilities.Config);
 
       const provider = data.provider as OAuthProvider;
-      const edgeClient = createEdgeHttpClient(client);
+      const edgeClient = createEdgeHttpClient(config);
       // The recovery flow does not consume these — the user's space/token are resolved server-side
       // from the recovery binding. Random values satisfy InitiateOAuthFlowRequest validation.
       const accessTokenId = EntityId.random();

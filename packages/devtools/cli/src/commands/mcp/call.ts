@@ -2,24 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Args from 'effect/cli/Argument';
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as Args from 'effect/unstable/cli/Argument';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 
-import { McpProtocolError, ToolCallResult, initialize, request } from './client';
-import { requireSession, serverUrlOption } from './util';
+import { McpProtocolError, ToolCallResult, initialize, request } from './client.ts';
+import { requireSession, serverUrlOption } from './util.ts';
 
 export const call = Command.make(
   'call',
   {
-    tool: Args.string('tool').pipe(Args.withDescription('Tool name (see `dx mcp tools`).')),
-    input: Options.string('input').pipe(
+    tool: Args.String('tool').pipe(Args.withDescription('Tool name (see `dx mcp tools`).')),
+    input: Options.String('input').pipe(
       Options.withDescription('Tool arguments as JSON.'),
       Options.withSchema(Schema.fromJsonString(Schema.Unknown)),
       Options.optional,

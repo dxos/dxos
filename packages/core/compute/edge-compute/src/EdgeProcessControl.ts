@@ -5,14 +5,15 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as Layer from 'effect/Layer';
+import type * as Rpc from 'effect/rpc/Rpc';
+import * as RpcClient from 'effect/rpc/RpcClient';
+import type * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as RpcSerialization from 'effect/rpc/RpcSerialization';
 import type * as Scope from 'effect/Scope';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import type * as Rpc from 'effect/unstable/rpc/Rpc';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
-import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
 
 import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
@@ -20,8 +21,8 @@ import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import { Context as DxosContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 
-import { createEdgeClient } from './edge-client';
-import { decodeEvent, decodeSnapshot, toSpawnRequest } from './process-snapshot';
+import { createEdgeClient } from './edge-client.ts';
+import { decodeEvent, decodeSnapshot, toSpawnRequest } from './process-snapshot.ts';
 
 /**
  * EDGE implementation of {@link RemoteProcessManager.Control}: the seven compute-service process
@@ -51,13 +52,28 @@ export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.
       Effect.orDie,
     ),
 
-  submitInput: ({ spaceId, pid, input }: RemoteProcessManager.ProcessTarget & { readonly input: unknown }) =>
-    Effect.tryPromise(() => getEdgeClient().submitProcessInput(DxosContext.default(), spaceId, pid, { input })).pipe(
-      Effect.orDie,
-    ),
+  submitInput: ({
+    spaceId,
+    pid,
+    input,
+    idempotencyKey,
+  }: RemoteProcessManager.ProcessTarget & RemoteProcessManager.Idempotent & { readonly input: unknown }) =>
+    Effect.tryPromise(() =>
+      getEdgeClient().submitProcessInput(DxosContext.default(), spaceId, pid, {
+        input,
+        ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),
+      }),
+    ).pipe(Effect.orDie),
 
-  terminate: ({ spaceId, pid }: RemoteProcessManager.ProcessTarget) =>
-    Effect.tryPromise(() => getEdgeClient().terminateProcess(DxosContext.default(), spaceId, pid)).pipe(Effect.orDie),
+  terminate: ({ spaceId, pid, idempotencyKey }: RemoteProcessManager.ProcessTarget & RemoteProcessManager.Idempotent) =>
+    Effect.tryPromise(() =>
+      getEdgeClient().terminateProcess(
+        DxosContext.default(),
+        spaceId,
+        pid,
+        idempotencyKey !== undefined ? { idempotencyKey } : undefined,
+      ),
+    ).pipe(Effect.orDie),
 
   readEvents: ({ spaceId, pid, cursor }: RemoteProcessManager.ProcessTarget & { readonly cursor: number }) =>
     Effect.tryPromise(() => getEdgeClient().readProcessEvents(DxosContext.default(), spaceId, pid, cursor)).pipe(
@@ -101,7 +117,7 @@ export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.
       return yield* RpcClient.make(group).pipe(
         Effect.provideServiceEffect(RpcClient.Protocol, RpcClient.makeProtocolHttp(httpClient)),
       );
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(RpcSerialization.layerNdjson), Effect.orDie),
+    }).pipe(Effect.provide(Layer.provideMerge(FetchHttpClient.layer, RpcSerialization.layerNdjson)), Effect.orDie),
 });
 /**
  * Build from a `Client`, deferring edge-client creation until first use (identity may be absent at

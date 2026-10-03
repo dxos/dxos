@@ -11,10 +11,10 @@ import { invariant } from '@dxos/invariant';
 import { modalStateEffect } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
 
-import { type EditorMenuProviderProps } from './EditorMenuProvider';
-import { type EditorMenuGroup, type EditorMenuItem } from './menu';
-import { filterMenuGroups, getMenuItem, getNextMenuItem, getPreviousMenuItem } from './menu';
-import { type PopoverOptions, popover, popoverRangeEffect, popoverStateField } from './popover';
+import { type EditorMenuProviderProps } from './EditorMenuProvider.tsx';
+import { type EditorMenuGroup, type EditorMenuItem } from './menu.ts';
+import { filterMenuGroups, getMenuItem, getNextMenuItem, getPreviousMenuItem } from './menu.ts';
+import { type PopoverOptions, popover, popoverRangeEffect, popoverStateField } from './popover.ts';
 
 export type GetMenuContext = {
   state: EditorState;

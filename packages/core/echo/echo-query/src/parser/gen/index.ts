@@ -3,8 +3,8 @@
 //
 
 import { LRParser } from '@lezer/lr';
-import { parser } from './query';
-import * as terms from './query.terms';
+import { parser } from './query.ts';
+import * as terms from './query.terms.ts';
 
 export namespace QueryDSL {
   export const Parser: LRParser = parser;

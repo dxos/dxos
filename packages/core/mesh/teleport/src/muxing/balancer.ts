@@ -7,8 +7,10 @@ import varint from 'varint';
 import { Event, type Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { concatUint8Arrays } from '@dxos/util';
 
-import { Framer } from './framer';
+import { type DuplexStream } from './duplex-stream.ts';
+import { Framer } from './framer.ts';
 
 const MAX_CHUNK_SIZE = 8192;
 
@@ -19,12 +21,12 @@ type Chunk = {
 };
 
 type ChunkEnvelope = {
-  msg: Buffer;
+  msg: Uint8Array;
   trigger?: Trigger;
 };
 
 type ChannelBuffer = {
-  buffer: Buffer;
+  buffer: Uint8Array;
   msgLength: number;
 };
 
@@ -45,7 +47,8 @@ export class Balancer {
 
   private _sending = false;
   public incomingData = new Event<Uint8Array>();
-  public readonly stream = this._framer.stream;
+  public readonly stream: DuplexStream = this._framer.stream;
+  public readonly closed = this._framer.closed;
 
   constructor(private readonly _sysChannelId: number) {
     this._channels.push(_sysChannelId);
@@ -66,6 +69,14 @@ export class Balancer {
     return this._sendBuffers.size;
   }
 
+  get readableLength(): number {
+    return this._framer.readableLength;
+  }
+
+  get writableLength(): number {
+    return this._framer.writableLength;
+  }
+
   addChannel(channel: number): void {
     this._channels.push(channel);
   }
@@ -79,6 +90,13 @@ export class Balancer {
     if (this._sendBuffers.size !== 0) {
       log.info('destroying balancer with pending calls');
     }
+    // Nothing queued will go out now; release the waiters instead of leaving them to time out. They resolve although
+    // their frames were dropped: the muxer's destruction, not the send, is how a caller learns the link is gone.
+    for (const buffer of this._sendBuffers.values()) {
+      for (const { trigger } of buffer) {
+        trigger?.wake();
+      }
+    }
     this._sendBuffers.clear();
     this._framer.destroy();
   }
@@ -88,15 +106,18 @@ export class Balancer {
     if (!this._receiveBuffers.has(channelId)) {
       if (chunk.length < dataLength!) {
         this._receiveBuffers.set(channelId, {
-          buffer: Buffer.from(chunk),
+          // Copied: `chunk` views the framer's receive buffer, which is resliced and reallocated
+          // as more bytes arrive, so retaining the view across turns is not safe.
+          buffer: new Uint8Array(chunk),
           msgLength: dataLength!,
         });
       } else {
-        this.incomingData.emit(chunk);
+        // Copied for the same reason as below: `chunk` views the framer's receive buffer.
+        this.incomingData.emit(new Uint8Array(chunk));
       }
     } else {
       const channelBuffer = this._receiveBuffers.get(channelId)!;
-      channelBuffer.buffer = Buffer.concat([channelBuffer.buffer, chunk]);
+      channelBuffer.buffer = concatUint8Arrays(channelBuffer.buffer, chunk);
       if (channelBuffer.buffer.length < channelBuffer.msgLength) {
         return;
       }
@@ -175,7 +196,7 @@ export class Balancer {
     chunk = this._getNextChunk();
     while (chunk) {
       // TODO(nf): determine whether this is needed since we await the chunk send
-      if (!this._framer.writable) {
+      if (!this._framer.writable && !this._framer.isClosed) {
         log('PAUSE for drain');
         await this._framer.drain.waitForCount(1);
         log('RESUME for drain');
@@ -194,10 +215,10 @@ export class Balancer {
   }
 }
 
-export const encodeChunk = ({ channelId, dataLength, chunk }: Chunk): Buffer => {
+export const encodeChunk = ({ channelId, dataLength, chunk }: Chunk): Uint8Array => {
   const channelTagLength = varint.encodingLength(channelId);
   const dataLengthLength = dataLength ? varint.encodingLength(dataLength) : 0;
-  const message = Buffer.allocUnsafe(channelTagLength + dataLengthLength + chunk.length);
+  const message = new Uint8Array(channelTagLength + dataLengthLength + chunk.length);
   varint.encode(channelId, message);
   if (dataLength) {
     varint.encode(dataLength, message, channelTagLength);

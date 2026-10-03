@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -9,7 +10,6 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { existsSync } from 'node:fs';
 import { readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -30,18 +30,18 @@ import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/te
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { buildDigest, narrateDigest, renderDigest } from '../corpus/digest';
-import { commitmentLedger } from '../corpus/ledger';
-import { type Summarizer } from '../corpus/prompts';
-import { buildRollups } from '../corpus/rollups';
-import { clusterThreads, materializeTopics, summarizeTopics } from '../corpus/topics';
-import { buildEntityIndex, reconcileFactEntities } from '../internal/fact-index';
-import { buildThreads } from '../internal/threads';
-import { type FactIndexer, extractFactsStage } from '../stages/extract-facts';
-import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts';
-import { Thread } from '../types';
-import { emailToMessage } from './email-fixtures';
-import { parquetSource } from './parquet';
+import { buildDigest, narrateDigest, renderDigest } from '../corpus/digest.ts';
+import { commitmentLedger } from '../corpus/ledger.ts';
+import { type Summarizer } from '../corpus/prompts.ts';
+import { buildRollups } from '../corpus/rollups.ts';
+import { clusterThreads, materializeTopics, summarizeTopics } from '../corpus/topics.ts';
+import { buildEntityIndex, reconcileFactEntities } from '../internal/fact-index.ts';
+import { buildThreads } from '../internal/threads.ts';
+import { type FactIndexer, extractFactsStage } from '../stages/extract-facts.ts';
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts.ts';
+import { Thread } from '../types/index.ts';
+import { emailToMessage } from './email-fixtures.ts';
+import { parquetSource } from './parquet.ts';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) lives under ROOT_DIR with
 // layout `${ROOT_DIR}/data/train-*.parquet`. ROOT_DIR defaults to the local checkout produced by
@@ -237,9 +237,11 @@ const logStage = (label: string): Stage.Stage<Message.Message, Message.Message> 
 
 describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', () => {
   // Model layer built ONCE so it is not rebuilt per message.
-  // `AiService.model` provides the `LanguageModel`, resolved through the local Ollama provider;
+  // `AiService.languageModel` provides the `LanguageModel`, resolved through the local Ollama provider;
   // `OllamaAiServiceLayer` provides the `AiService` it requires.
-  const modelLayer = AiService.model(MODEL, { provider: Provider.ollama.id }).pipe(Layer.provide(OllamaAiServiceLayer));
+  const modelLayer = AiService.languageModel(MODEL, { provider: Provider.ollama.id }).pipe(
+    Layer.provide(OllamaAiServiceLayer),
+  );
   const runtime = ManagedRuntime.make(modelLayer.pipe(Layer.orDie));
 
   // In-memory fact substrate for this run; shares the Ollama-backed AiService the extraction resolves

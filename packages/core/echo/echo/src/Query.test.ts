@@ -9,16 +9,17 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as Aggregate from './Aggregate';
-import * as Dataset from './Dataset';
-import * as Feed from './Feed';
-import * as Filter from './Filter';
-import * as Obj from './Obj';
-import * as Order from './Order';
-import * as Query from './Query';
-import * as Ref from './Ref';
-import { TestSchema } from './testing';
-import * as Type from './Type';
+import * as Aggregate from './Aggregate.ts';
+import * as Annotation from './Annotation.ts';
+import * as Dataset from './Dataset.ts';
+import * as Feed from './Feed.ts';
+import * as Filter from './Filter.ts';
+import * as Obj from './Obj.ts';
+import * as Order from './Order.ts';
+import * as Query from './Query.ts';
+import * as Ref from './Ref.ts';
+import { TestSchema } from './testing/index.ts';
+import * as Type from './Type.ts';
 
 describe('query api', () => {
   describe('Query', () => {
@@ -869,8 +870,7 @@ describe('query api', () => {
 
     test('hasParent matches via toPredicate', ({ expect }) => {
       const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
-      const child = Obj.make(TestSchema.Person, { name: 'Child' });
-      Obj.setParent(child, parent);
+      const child = Obj.make(TestSchema.Person, { [Obj.Parent]: parent, name: 'Child' });
       expect(Filter.toPredicate(child, Filter.hasParent())).toBe(true);
       expect(Filter.toPredicate(child, Filter.hasParent(false))).toBe(false);
       expect(Filter.toPredicate(parent, Filter.hasParent(false))).toBe(true);
@@ -1182,6 +1182,22 @@ describe('query api', () => {
       const filter = Filter.or(Filter.type(TestSchema.Person), Filter.type(TestSchema.Organization));
       const pretty = Filter.pretty(filter);
       expect(pretty).toContain('Filter.or');
+    });
+
+    test('Filter.annotation checks presence of any annotation, but compares only scalar values', () => {
+      const Status = Annotation.make({ id: 'org.dxos.annotation.test-status', schema: Schema.String });
+      const Shape = Annotation.make({
+        id: 'org.dxos.annotation.test-shape',
+        schema: Schema.Struct({ sides: Schema.Number }),
+      });
+
+      expect(Filter.annotation(Shape).ast).toEqual({ type: 'annotation', key: Shape.key });
+      expect(Filter.annotation(Status, 'done').ast).toEqual({ type: 'annotation', key: Status.key, value: 'done' });
+
+      // @ts-expect-error — the value must match the annotation's type.
+      Filter.annotation(Status, 1);
+      // @ts-expect-error — a struct-valued annotation cannot be compared.
+      Filter.annotation(Shape, { sides: 3 });
     });
   });
 });

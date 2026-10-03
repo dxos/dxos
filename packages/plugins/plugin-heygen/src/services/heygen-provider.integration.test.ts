@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { makeHeyGenProvider } from './heygen-service';
+import { makeHeyGenProvider } from './heygen-service.ts';
 
 //
 // Live integration test against the real HeyGen API. Skipped unless HEYGEN_API_KEY is set, so it

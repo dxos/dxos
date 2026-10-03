@@ -11,7 +11,7 @@ import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
 import { BrainOperation } from '#types';
 
-import { settingsAtom } from './settings';
+import { settingsAtom } from './settings.ts';
 
 /**
  * Contributes fact analysis as a feed processor rather than a toolbar menu item.

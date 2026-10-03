@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
 
-import { upsertToast } from '../util';
+import { upsertToast } from '../util/index.ts';
 
 const NOTIFY_TOAST_DURATION = 5_000;
 const ERROR_TOAST_DURATION = 10_000;
@@ -153,9 +153,13 @@ export default Capability.makeModule(
         description: ['plugin-failure.description', { ns: meta.profile.key }],
         icon: 'ph--warning--regular',
         duration: ERROR_TOAST_DURATION,
-        actionLabel: ['plugin-failure-action.label', { ns: meta.profile.key }],
-        actionAlt: ['plugin-failure-action.alt', { ns: meta.profile.key }],
-        onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
+        ...(SettingsOperation.isPluginRegistryAvailable(registry.get(manager.enabled))
+          ? {
+              actionLabel: ['plugin-failure-action.label', { ns: meta.profile.key }],
+              actionAlt: ['plugin-failure-action.alt', { ns: meta.profile.key }],
+              onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
+            }
+          : {}),
       };
       const state = registry.get(ephemeralAtom);
       registry.set(ephemeralAtom, { ...state, toasts: upsertToast(state.toasts, toast) });

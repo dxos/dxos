@@ -6,15 +6,15 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/reactivity/Atom';
 import type * as Scope from 'effect/Scope';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { DXN } from '@dxos/keys';
 
-import type * as ActivationEvent from './activation-event';
-import type * as CapabilityManager from './capability-manager';
-import { CapabilityNotFoundError } from './errors';
-import type * as Plugin from './plugin';
+import type * as ActivationEvent from './activation-event.ts';
+import type * as CapabilityManager from './capability-manager.ts';
+import { CapabilityNotFoundError } from './errors.ts';
+import type * as Plugin from './plugin.ts';
 
 //
 // Capability Service Layer
@@ -235,7 +235,14 @@ export interface MultiTag<T, S extends string = any>
   readonly arity: 'multi';
 }
 
-export type AnyTag = Tag<any, any> | MultiTag<any, any>;
+/**
+ * Either arity of capability tag. One interface rather than a union of the two tag types: in a
+ * constraint position `missingEffectContext` reads the union as an Effect and reports one
+ * constituent's identifier as a missing service.
+ */
+export interface AnyTag extends Context.Key<CapabilityIdentifier<any, Arity>, any>, InterfaceDef<any> {
+  readonly arity: Arity;
+}
 
 /**
  * Compile-time error surfaced when the service type is omitted from the curried factory form.
@@ -491,17 +498,16 @@ export interface Module<Options = void> {
 }
 
 /**
- * A package.json export/import condition a module is additionally split out for, via
- * {@link ModuleSpec}'s `environments` — `'node'` and `'workerd'` in this repo.
+ * A package.json export/import condition a module loads under, via {@link ModuleSpec}'s
+ * `environments` — `'browser'`, `'tauri'`, `'node'` and `'workerd'` in this repo.
  *
  * Deliberately an open string rather than a union: conditions are defined by whichever build tool
  * resolves the package, so the framework has no business enumerating them (a consumer targeting
  * `deno`, `electron`, or a private condition is equally valid).
  *
- * There is no `'browser'` member because there is no `browser` condition — the canonical barrel IS
- * the `default` condition, which is what a browser resolves. Omitting `environments` therefore
- * means "do not split this module by environment", not "browser-only": no per-condition variant is
- * generated for it at all.
+ * Every condition is treated alike: the list names each runtime the module loads under, so a browser
+ * module that should also reach the desktop app names `'tauri'` too. Omitting `environments` means
+ * the module loads under every condition the plugin names.
  *
  * The annotation must be a literal array at the authoring site: barrel generation reads it
  * statically (variants are emitted per condition, since bundlers follow lazy loaders), so a
@@ -521,7 +527,7 @@ type ModuleSpec<Provides extends readonly AnyTag[], Requires extends readonly An
   readonly activatesOn?: ActivationEvent.Events;
   /** Maps plugin options to the body's props; omit when they coincide. */
   readonly props?: (options: Options) => Props;
-  /** Conditions this module is additionally split out for (literal array); omitted means no split. */
+  /** Conditions this module loads under (literal array); omitted means every condition. */
   readonly environments?: readonly Environment[];
 };
 
@@ -626,7 +632,7 @@ export type MakerOptions<
   activatesOn?: ActivationEvent.Events;
   /** Maps plugin options to the body's props; omit when they coincide. */
   props?: (options: Options) => Props;
-  /** Conditions this module is additionally split out for (literal array); omitted means no split. */
+  /** Conditions this module loads under (literal array); omitted means every condition. */
   environments?: readonly Environment[];
 };
 
@@ -640,11 +646,10 @@ export type MakerOptions<
  * owner makes the well-behaved activation the default for every provider (e.g. operation
  * handlers park until an operation is invoked) — startup is not assumed.
  *
- * `defaults.environments` does the same for the runtime axis: a capability family that is headless
- * by construction (schema, operation handlers) declares every environment once here rather than
- * making each of ~36 plugins repeat the annotation — an omission that silently drops the module
- * from the generated headless barrels. A UI-bound family leaves it unset, keeping browser-only the
- * default. The call site's own `environments` still wins.
+ * `defaults.environments` does the same for the runtime axis: a family declares the conditions its
+ * modules load under once here (every runtime for schema and operation handlers, `browser` and
+ * `tauri` for UI) rather than making each plugin repeat them. The call site's own `environments`
+ * still wins.
  */
 export const moduleMaker =
   <C extends AnyTag>(

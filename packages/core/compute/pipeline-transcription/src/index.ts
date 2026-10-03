@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './asr';
-export * from './pipeline';
-export * from './runtime';
-export * from './stages';
-export * from './types';
+export * from './asr/index.ts';
+export * from './pipeline.ts';
+export * from './runtime/index.ts';
+export * from './stages/index.ts';
+export * from './types/index.ts';

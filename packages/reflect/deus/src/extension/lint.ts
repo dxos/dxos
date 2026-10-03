@@ -5,7 +5,7 @@
 import { type Diagnostic, linter } from '@codemirror/lint';
 import { type EditorView } from '@codemirror/view';
 
-import { BLOCK_TYPES } from './constants';
+import { BLOCK_TYPES } from './constants.ts';
 
 const KNOWN_BLOCK_TYPES = new Set(BLOCK_TYPES);
 

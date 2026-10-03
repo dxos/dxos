@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Resource } from '@dxos/context';
 
-import { type TableRow } from './table-model';
+import { type TableRow } from './table-model.ts';
 
 export type SelectionMode = 'single' | 'multiple';
 

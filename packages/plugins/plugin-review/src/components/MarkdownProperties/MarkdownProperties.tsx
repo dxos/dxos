@@ -40,7 +40,7 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
   const currentLabel = selection.kind === 'branch' && activeBranch ? activeBranch.name : t('main-branch.label');
 
   return (
-    <Form.Section title={t('versions.title')}>
+    <Form.FieldSet label={t('versions.title')}>
       {/* `standalone` labels nothing focusable, so it renders a span rather than an orphan <label>. */}
       <Form.Label
         standalone
@@ -58,7 +58,7 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
           onClick={handleCheckpoint}
         />
       </div>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

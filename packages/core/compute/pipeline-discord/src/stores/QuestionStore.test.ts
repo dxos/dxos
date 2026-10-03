@@ -9,9 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
-import { SqlTransaction } from '@dxos/sql-sqlite';
-
-import * as QuestionStore from './QuestionStore';
+import * as QuestionStore from './QuestionStore.ts';
 
 const suite = (name: string, layer: Layer.Layer<QuestionStore.QuestionStore>) =>
   describe(name, () => {
@@ -59,9 +57,6 @@ describe('QuestionStore', () => {
   suite('memory', QuestionStore.layerMemory);
   suite(
     'sql',
-    QuestionStore.layerSql.pipe(
-      Layer.provideMerge(SqlTransaction.layer),
-      Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
-    ),
+    QuestionStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))),
   );
 });

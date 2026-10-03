@@ -9,7 +9,7 @@ import { DxAvatar, type DxAvatarProps } from '@dxos/lit-ui/react';
 import { Icon } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
-import { nameToHue } from './avatar-name';
+import { nameToHue } from './avatar-name.ts';
 
 /**
  * Conventional field holding an object's picture, as a URL.

@@ -5,8 +5,8 @@
 import { Box, Spacer, Text, Transform, measureElement } from 'ink';
 import React, { useRef } from 'react';
 
-import type { VersionId } from '../lockfile';
-import { ellipsis } from '../util';
+import type { VersionId } from '../lockfile/index.ts';
+import { ellipsis } from '../util/index.ts';
 
 export type PackageListProps = {
   packages: {

@@ -10,8 +10,8 @@ import path from 'node:path';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { INITIAL_URL } from './app-manager';
 import {
+  INITIAL_URL,
   appendBenchmarkRow,
   appendRunSample,
   collectStartupReport,
@@ -19,7 +19,7 @@ import {
   trackNetwork,
   waitForReady,
   writeReport,
-} from './harness-helpers';
+} from './harness-helpers.ts';
 
 // Surface the DX_PWA requirement as a test-level failure rather than a hard
 // `process.exit` at spec-collection time — keeps the playwright report and
@@ -34,8 +34,8 @@ test.beforeAll(() => {
  * Registers a `longtask` PerformanceObserver before any page script runs — `collectStartupReport`
  * reads the accumulated entries from `window.__longTasks` to compute Total Blocking Time.
  */
-const observeLongTasks = (page: Page): Promise<void> =>
-  page.addInitScript(() => {
+const observeLongTasks = async (page: Page): Promise<void> => {
+  await page.addInitScript(() => {
     window.__longTasks = [];
     try {
       if (PerformanceObserver.supportedEntryTypes?.includes('longtask')) {
@@ -49,6 +49,7 @@ const observeLongTasks = (page: Page): Promise<void> =>
       // Long Tasks API unsupported in this browser (firefox/webkit) — `__longTasks` stays empty.
     }
   });
+};
 
 test.describe.serial('Startup timing harness', () => {
   // First-paint and module-graph evaluation each take real wall clock; webkit can be much slower.

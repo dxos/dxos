@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, printList, spaceIdWithDefault, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -13,7 +13,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Context } from '@dxos/context';
 import { Database, Filter, Query } from '@dxos/echo';
 
-import { getTriggerRemoteStatus, printTrigger } from './util';
+import { getTriggerRemoteStatus, printTrigger } from './util.ts';
 
 export const list = Command.make(
   'list',

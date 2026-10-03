@@ -5,8 +5,8 @@
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import type * as Tour from '@dxos/app-toolkit/Tour';
 import { sleep } from '@dxos/async';
-import type * as Tour from '@dxos/plugin-support/Tour';
 
 const ensureSidebar: Tour.Step['before'] = async (capabilities: CapabilityManager.CapabilityManager) => {
   const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
@@ -14,69 +14,51 @@ const ensureSidebar: Tour.Step['before'] = async (capabilities: CapabilityManage
   return await sleep(200);
 };
 
-const base: Partial<Tour.Step> = {
-  disableBeacon: true,
-  disableOverlay: true,
-  offset: 0,
-  styles: {
-    options: {
-      arrowColor: 'var(--color-accent-bg)',
-    },
-  },
-};
-
 // TODO(burdon): Move text to translation object.
 // TODO(burdon): Prefer `data-joyride` over `data-testid`.
 export const steps: Tour.Step[] = [
   {
-    ...base,
     before: ensureSidebar,
     target: '[data-testid="spacePlugin.addSpace"]',
     title: 'Sharing',
-    content: 'Create shared spaces to collaborate with others.',
+    description: 'Create shared spaces to collaborate with others.',
     placement: 'bottom',
   },
   {
-    ...base,
     before: ensureSidebar,
     target: '[data-testid="navtree.workspace.visible"] [data-testid="spacePlugin.createObject"]',
     title: 'Creating content',
-    content: 'Press (+) to add new content.',
+    description: 'Press (+) to add new content.',
     placement: 'bottom',
   },
   {
-    ...base,
     before: ensureSidebar,
     target: '[data-joyride="welcome/account"]',
     title: 'Profile',
-    content: 'Manage your profile and devices.',
+    description: 'Manage your profile and devices.',
   },
   {
-    ...base,
     before: ensureSidebar,
     target: '[data-testid="treeView.appSettings"]',
     title: 'Settings',
-    content: 'Configure settings.',
+    description: 'Configure settings.',
   },
   {
-    ...base,
     before: ensureSidebar,
     target: '[data-testid="treeView.pluginRegistry"]',
     title: 'Plugins',
-    content: 'Enable plugins.',
+    description: 'Enable plugins.',
   },
-  // TODO(burdon): Open companion.
   {
-    ...base,
     before: ensureSidebar,
-    target: '[data-testid="plankHeading.companion"]',
+    // The pane's tabs while it is open, which it is by default; its open control once the reader closes it.
+    target: '[data-testid="deck.companion"] [role="tablist"], [data-testid="plankHeading.companion"]',
     title: 'Companions',
-    content: 'View companion surfaces.',
+    description: 'View companion surfaces.',
   },
   {
-    ...base,
     target: '[data-joyride="welcome/feedback"]',
     title: 'Feedback',
-    content: "We'd love to hear about your experience, use cases, or anything else that's on your mind.",
+    description: "We'd love to hear about your experience, use cases, or anything else that's on your mind.",
   },
 ];

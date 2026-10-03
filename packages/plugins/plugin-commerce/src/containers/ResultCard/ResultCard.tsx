@@ -9,7 +9,7 @@ import { Card, Flex, SystemIconButton, composable, useTranslation } from '@dxos/
 
 import { meta } from '#meta';
 
-import { type Result } from '../../types/Result';
+import { type Result } from '../../types/Result.ts';
 
 export type ResultCardProps = {
   subject: Result;

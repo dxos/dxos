@@ -4,10 +4,10 @@
 
 import { type Context } from '@dxos/context';
 
-import type { SpaceList } from '../echo/space-list';
-import type { HaloProxy } from '../halo/halo-proxy';
-import type { MeshProxy } from '../mesh/mesh-proxy';
-import type { Shell } from '../services';
+import type { SpaceList } from '../echo/space-list.ts';
+import type { HaloProxy } from '../halo/halo-proxy.ts';
+import type { MeshProxy } from '../mesh/mesh-proxy.ts';
+import type { Shell } from '../services/index.ts';
 
 export class ClientRuntime {
   readonly spaces: SpaceList;

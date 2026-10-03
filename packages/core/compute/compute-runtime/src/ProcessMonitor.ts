@@ -6,16 +6,16 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Process from '@dxos/compute/Process';
 import type * as Trace from '@dxos/compute/Trace';
 
-import { ProcessManagerService } from './process-manager-service';
-import * as RemoteProcessManager from './RemoteProcessManager';
-import * as RemoteTraceMonitor from './RemoteTraceMonitor';
+import { ProcessManagerService } from './process-manager-service.ts';
+import * as RemoteProcessManager from './RemoteProcessManager.ts';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
  * Aggregate {@link Process.ProcessMonitorService} that merges the local

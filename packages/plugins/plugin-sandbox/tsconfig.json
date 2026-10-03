@@ -14,14 +14,21 @@
   ],
   "include": [
     "dx.config.ts",
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ],
   "references": [
     {
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/util"
@@ -39,22 +46,52 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

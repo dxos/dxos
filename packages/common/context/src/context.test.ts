@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Context } from './context';
+import { Context } from './context.ts';
 
 describe('Context', () => {
   test('dispose calls dispose hooks', () => {

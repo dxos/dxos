@@ -9,7 +9,7 @@ produce the right thing?). See the README's "Developing this plugin" section for
 
 | Case | What it protects |
 | --- | --- |
-| `qa-list` | `/dxos:qa list` resolves and renders the numbered flow table from `list-flows.mjs` |
+| `qa-list` | `/dxos:qa list` resolves and renders the numbered test table from `list-tests.mjs` |
 
 `plugin eval` is early access. Where it is not enabled, the same assertion can be made directly:
 

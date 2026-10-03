@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { IbkrImportError } from '../errors';
-import { parseCash, parsePositions, parseTrades } from '../services';
-import { getOrCreatePortfolioFeed } from './feed';
+import { IbkrImportError } from '../errors.ts';
+import { parseCash, parsePositions, parseTrades } from '../services/index.ts';
+import { getOrCreatePortfolioFeed } from './feed.ts';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.ImportPortfolioReport> =
   IbkrOperation.ImportPortfolioReport.pipe(
@@ -24,7 +24,9 @@ const handler: Operation.WithHandler<typeof IbkrOperation.ImportPortfolioReport>
         // Stamp the import time like the daily sync stamps its fetch time, so reads select the newest snapshot.
         const fetchedAt = new Date().toISOString();
         const feed = yield* getOrCreatePortfolioFeed;
-        yield* Feed.append(feed, [Obj.make(Ibkr.Report, { xml, fetchedAt })]);
+        yield* Feed.append(feed, [Obj.make(Ibkr.Report, { xml, fetchedAt })]).pipe(
+          Effect.provideService(Database.Origin, 'system'),
+        );
         return {
           fetchedAt,
           positions: parsePositions(xml).length,

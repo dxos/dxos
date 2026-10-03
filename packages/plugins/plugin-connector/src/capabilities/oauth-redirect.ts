@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 
 import { ConnectorCoordination } from '#types';
 
-import { OAUTH_REDIRECT_PATH } from '../constants';
+import { OAUTH_REDIRECT_PATH } from '../constants.ts';
 
 /** Edge stamps the literal "undefined" into the URL when no tokens were produced. */
 const isPresent = (value: string | null): value is string => !!value && value !== 'undefined';

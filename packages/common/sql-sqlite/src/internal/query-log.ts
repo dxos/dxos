@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 /** Log context is truncated at a fixed length; oversized params (blobs, long strings) must not push `time` out of it. */
@@ -67,4 +68,40 @@ export const logSqliteQuery = ({ sql, params, results, time }: SqliteQueryLogEnt
   } else {
     log.trace('sqlite query', context);
   }
+};
+
+/**
+ * Log the query and put it on the DevTools timeline. The timeline entry carries the same bounded
+ * parameters as the log line: `performance.measure` clones `detail` in full and keeps it forever, so a
+ * raw automerge blob bound to one statement would otherwise be copied per query.
+ */
+export const recordSqliteQueryMetrics = (
+  sql: string,
+  params: ReadonlyArray<unknown>,
+  resultCount: number,
+  begin: number,
+): void => {
+  const end = performance.now();
+  logSqliteQuery({ sql, params, results: resultCount, time: end - begin });
+  // Checked here, not just inside `trackEntry`, so the bundler folds the payload away with the constant.
+  if (!Performance.TRACK_ENTRIES_ENABLED) {
+    return;
+  }
+
+  Performance.trackEntry({
+    name: sql.slice(0, 128),
+    start: begin,
+    end,
+    devtools: {
+      dataType: 'track-entry',
+      track: 'Query',
+      trackGroup: 'SQlite',
+      color: 'tertiary-dark',
+      properties: [
+        ['sql', sql],
+        ['params', summarizeLoggedParams(params)],
+        ['resultCount', resultCount],
+      ],
+    },
+  });
 };

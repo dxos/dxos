@@ -9,7 +9,7 @@ import { Database } from '@dxos/echo';
 
 import { CodeOperation } from '#types';
 
-import { type LoadedFile, compileEntry } from '../compiler';
+import { type LoadedFile, compileEntry } from '../compiler/index.ts';
 
 /**
  * F-12a: single-file TypeScript transpile via the @typescript/vfs language

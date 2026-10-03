@@ -12,7 +12,7 @@ import {
   SwarmResponseSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import { Protocol } from './protocol';
+import { Protocol } from './protocol.ts';
 
 describe('protocol', () => {
   test('protocol', () => {

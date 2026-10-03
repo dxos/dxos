@@ -3,6 +3,8 @@
 //
 
 export { type Halo } from '@dxos/client-protocol';
-export { type Contact, Device, DeviceKind, type Identity } from '@dxos/protocols/proto/dxos/client/services';
-export { type Credential, DeviceType, type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+export { Device_PresenceState, DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
+export { type Contact, type Device, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+export { DeviceType } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+export { type Credential, type Presentation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 export { SpacesService } from '@dxos/protocols/rpc';

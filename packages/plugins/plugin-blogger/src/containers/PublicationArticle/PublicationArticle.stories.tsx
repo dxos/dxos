@@ -22,7 +22,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Blog } from '#types';
 
-import { PublicationArticle } from './PublicationArticle';
+import { PublicationArticle } from './PublicationArticle.tsx';
 
 const POST_COUNT = 3;
 
@@ -35,7 +35,8 @@ const makeStoryPublication = (): Blog.Publication => {
       description: `Summary for post ${i + 1}.`,
     });
     Obj.update(publication, (publication) => {
-      publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+      publication.posts ??= [];
+      publication.posts.push(Ref.make(post));
     });
   }
 

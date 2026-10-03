@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type RenderBrowserApi, renderUrl } from './render';
+import { type RenderBrowserApi, renderUrl } from './render.ts';
 
 type Listener = (tabId: number, changeInfo: { status?: string }) => void;
 

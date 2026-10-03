@@ -9,4 +9,5 @@ export default defineConfig({
     index: 'src/index.ts',
     playwright: 'src/playwright.ts',
   },
+  test: { node: true },
 });

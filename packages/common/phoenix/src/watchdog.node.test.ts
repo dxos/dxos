@@ -6,8 +6,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
-import { WatchDog } from './watchdog';
+import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils.ts';
+import { WatchDog } from './watchdog.ts';
 
 describe.skipIf(process.env.CI)('WatchDog', () => {
   test('Start/stop process', async () => {

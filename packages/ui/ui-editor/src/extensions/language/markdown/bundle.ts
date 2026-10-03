@@ -14,8 +14,8 @@ import { type MarkdownConfig } from '@lezer/markdown';
 
 import { isTruthy } from '@dxos/util';
 
-import { mermaidHighlighting, mermaidLanguageDescription } from '../mermaid';
-import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
+import { mermaidHighlighting, mermaidLanguageDescription } from '../mermaid/index.ts';
+import { markdownHighlightStyle, markdownTagsExtensions } from './highlight.ts';
 
 export type MarkdownBundleOptions = {
   /** Additional fenced-code languages prepended to the standard language-data list. */

@@ -7,22 +7,32 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 import { Provider } from '@dxos/ai';
 import { useAtomCapabilityState, useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AiContext } from '@dxos/assistant';
-import { McpServer } from '@dxos/assistant-toolkit';
 import type * as ChatModule from '@dxos/assistant/Chat';
-import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
+import * as McpServer from '@dxos/compute/McpServer';
+import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { IconButton, Input, Popover, Select, Toolbar, useTranslation } from '@dxos/react-ui';
+import { AccessToken } from '@dxos/link';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { Field, Flex, IconButton, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
+import {
+  getSkillId,
+  useActiveSkills,
+  useContextObjects,
+  useFilteredTypes,
+  useMcpServerSignIn,
+  useMcpServerStatus,
+  useSkillHandlers,
+  useSkills,
+} from '#hooks';
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset } from '#types';
 
-import { resolveProvider } from '../../processor';
+import { resolveProvider } from '../../processor/index.ts';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
@@ -32,7 +42,7 @@ const styles = {
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
   db: Database.Database;
   chat?: ChatModule.Chat;
-  context: AiContext.Binder;
+  context?: AiContext.Binder;
   registry?: Registry.Registry;
 };
 
@@ -46,13 +56,17 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
     <div className='flex'>
       <Popover.Root>
         <Popover.Trigger asChild>
-          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context-objects.button')} />
+          <IconButton
+            variant='ghost'
+            icon='ph--plus--regular'
+            iconOnly
+            label={t('context-objects.button')}
+            disabled={!context}
+          />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={styles.panel}>
-            <Popover.Viewport>
-              <ObjectsPanel db={db} context={context} />
-            </Popover.Viewport>
+            <Popover.Viewport>{context && <ObjectsPanel db={db} context={context} />}</Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>
@@ -65,6 +79,8 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             icon='ph--sliders-horizontal--regular'
             iconOnly
             label={t('context-settings.button')}
+            data-testid='assistant.options'
+            disabled={!context}
           />
         </Popover.Trigger>
         <Popover.Portal>
@@ -76,13 +92,16 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
-                    <SkillsPanel registry={registry} db={db} context={context} />
+                    {context && <SkillsPanel registry={registry} db={db} context={context} />}
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
                     <McpServersPanel db={db} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+                  </Tabs.Panel>
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
+                    <EnvironmentPanel chat={chat} />
                   </Tabs.Panel>
                   <Tabs.Tablist classNames={[styles.toolbar]}>
                     <Tabs.IconButton value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
@@ -92,7 +111,17 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
                       icon='ph--plugs-connected--regular'
                       label={t('options.mcp.title')}
                     />
-                    <Tabs.IconButton value='model' icon='ph--cpu--regular' label={t('options.chat-model.title')} />
+                    <Tabs.IconButton
+                      value='model'
+                      icon='ph--cpu--regular'
+                      label={t('options.chat-model.title')}
+                      data-testid='assistant.options.model'
+                    />
+                    <Tabs.IconButton
+                      value='environment'
+                      icon='ph--hard-drives--regular'
+                      label={t('options.environment.title')}
+                    />
                   </Tabs.Tablist>
                 </Tabs.Viewport>
               </Tabs.Root>
@@ -110,7 +139,7 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
 
   const skills = useSkills({ registry, db });
   const activeSkills = useActiveSkills({ context });
-  const { onUpdateSkill } = useSkillHandlers({ db, context, registry });
+  const { onUpdateSkill } = useSkillHandlers({ context });
   const { results, handleSearch } = useSearchListResults({
     items: skills,
     extract: (skill) => skill.name,
@@ -123,16 +152,16 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
             centered search surface, so the scroll strip is not reserved on both sides. */}
         <SearchList.Viewport padding={false}>
           {results.map((skill) => {
-            const skillKey = Obj.getMeta(skill).key ?? skill.id;
-            const isActive = activeSkills.has(skillKey);
+            const skillId = getSkillId(skill);
+            const isActive = activeSkills.has(skillId);
             return (
               <SearchList.Item
                 classNames='flex items-center overflow-hidden'
-                key={skillKey}
-                value={skillKey}
+                key={skillId}
+                value={skillId}
                 label={skill.name}
                 checked={isActive}
-                onSelect={() => onUpdateSkill?.(skillKey, !isActive)}
+                onSelect={() => onUpdateSkill?.(skill, !isActive)}
               />
             );
           })}
@@ -162,6 +191,43 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   );
 };
 
+/**
+ * Where this conversation's agent runs. A per-chat property rather than a setting, mirroring a
+ * trigger's own `remote` flag: `edge` keeps the conversation running with the client closed.
+ * `AgentService` reads the location at spawn, so switching tears the running process down and
+ * respawns it on the other host.
+ */
+const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
+  const { t } = useTranslation(meta.profile.key);
+  const [remote, setRemote] = useObject(chat, 'remote');
+  const client = useOptionalCapability(ClientCapabilities.Client);
+  // Offered only where an edge service is configured, which is the same condition that decides
+  // whether `RemoteProcessManager` is the real manager or `layerNoop`: against the noop a spawn has
+  // no `list` or `spawn`, so choosing `remote` would persist a flag the next prompt cannot honour.
+  const environments = client?.config.values.runtime?.services?.edge?.url
+    ? CHAT_ENVIRONMENTS
+    : CHAT_ENVIRONMENTS.filter((environment) => environment !== 'remote');
+  const value: ChatEnvironment = remote ? 'remote' : 'local';
+  const handleChange = useCallback((value: string) => setRemote(value === 'remote'), [setRemote]);
+
+  return (
+    <Listbox.Root value={value} onValueChange={handleChange} autoFocus>
+      <Listbox.Content aria-label={t('options.environment.title')}>
+        {environments.map((environment) => (
+          <Listbox.Item key={environment} id={environment} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.ItemLabel>{t(`chat-environment.${environment}.label`)}</Listbox.ItemLabel>
+            <Listbox.Indicator />
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
+  );
+};
+
+type ChatEnvironment = (typeof CHAT_ENVIRONMENTS)[number];
+
+const CHAT_ENVIRONMENTS = ['local', 'remote'] as const;
+
 const ModelsPanel = ({
   presets,
   preset,
@@ -171,9 +237,14 @@ const ModelsPanel = ({
   return (
     <div className='dx-expand flex flex-col'>
       <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
-        <Listbox.Content aria-label={t('options.chat-model.title')}>
+        <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
-            <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.Item
+              key={id}
+              id={id}
+              classNames='px-2 py-1 dx-focus-ring rounded-xs'
+              data-testid={`assistant.models.${id}`}
+            >
               <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
               <Listbox.Indicator />
             </Listbox.Item>
@@ -211,10 +282,9 @@ const OnlineSwitch = () => {
 
   return (
     <div className='px-1 flex items-center gap-2'>
-      <Input.Root>
-        <Input.Switch checked={online} onCheckedChange={handleChange} data-testid='assistant.online' />
-        <Input.Label>{t('online-switch.label')}</Input.Label>
-      </Input.Root>
+      <Field.Switch checked={online} onCheckedChange={handleChange} data-testid='assistant.online'>
+        {t('online-switch.label')}
+      </Field.Switch>
     </div>
   );
 };
@@ -223,14 +293,34 @@ type McpServersPanelProps = {
   db: Database.Database;
 };
 
+type McpServerDraft = {
+  name: string;
+  url: string;
+  protocol: McpServer.Spec['protocol'];
+  apiKey?: string;
+};
+
 const McpServersPanel = ({ db }: McpServersPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   const servers = useQuery(db, Filter.type(McpServer.McpServer));
   const [adding, setAdding] = useState(false);
 
   const handleAdd = useCallback(
-    (name: string, url: string, protocol: 'sse' | 'http', apiKey?: string) => {
-      db.add(Obj.make(McpServer.McpServer, { name, url, protocol, apiKey, enabled: true }));
+    ({ name, url, protocol, apiKey }: McpServerDraft) => {
+      // The key goes in an `AccessToken` rather than on the server, so it resolves through the
+      // credentials service like every other secret in the space.
+      const accessToken = apiKey
+        ? db.add(AccessToken.make({ source: new URL(url).hostname, account: name, token: apiKey }))
+        : undefined;
+      db.add(
+        Obj.make(McpServer.McpServer, {
+          name,
+          url,
+          protocol,
+          enabled: true,
+          ...(accessToken && { accessToken: Ref.make(accessToken) }),
+        }),
+      );
       setAdding(false);
     },
     [db],
@@ -238,29 +328,36 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
 
   const handleRemove = useCallback(
     (server: McpServer.McpServer) => {
+      const accessToken = server.accessToken?.peek();
       db.remove(server);
+      if (accessToken) {
+        db.remove(accessToken);
+      }
     },
     [db],
   );
 
   return (
-    <div className='p-form-chrome'>
-      {servers.map((server) => (
-        <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
-      ))}
+    <Flex column gap='xs' classNames='p-form-chrome' data-testid='assistant.mcp-servers'>
+      <Listbox.Root>
+        <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
+          {servers.map((server) => (
+            <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
       {adding ? (
         <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <div>
-          <IconButton
-            variant='ghost'
-            icon='ph--plus--regular'
-            label={t('mcp-server-add.label')}
-            onClick={() => setAdding(true)}
-          />
-        </div>
+        <IconButton
+          variant='ghost'
+          icon='ph--plus--regular'
+          label={t('mcp-server-add.label')}
+          onClick={() => setAdding(true)}
+          data-testid='assistant.mcp-server.add'
+        />
       )}
-    </div>
+    </Flex>
   );
 };
 
@@ -271,34 +368,86 @@ type McpServerRowProps = {
 
 /**
  * `useQuery` returns live objects but only re-renders on result-identity changes,
- * so we must subscribe to the per-server `enabled` field via `useObject` to keep the
- * switch in sync with mutations made through the returned setter.
+ * so we must subscribe to the per-server `enabled`/`oauth`/`name`/`url` fields via `useObject`
+ * to keep the row in sync with mutations made through the returned setters (or elsewhere).
  */
 const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [enabled, setEnabled] = useObject(server, 'enabled');
+  // Subscribed so the status re-checks once a sign-in stores tokens.
+  useObject(server, 'oauth');
+  const [name] = useObject(server, 'name');
+  const [url] = useObject(server, 'url');
+  const [revision, setRevision] = useState(0);
+  const status = useMcpServerStatus(server, { enabled: enabled !== false, revision });
+  const { signIn, pending, error } = useMcpServerSignIn(server);
+  const handleSignIn = useCallback(() => {
+    void signIn().then(() => setRevision((revision) => revision + 1));
+  }, [signIn]);
+
+  const statusLabel =
+    status.state === 'connected'
+      ? t('mcp-server-status.connected', { count: status.tools.length })
+      : status.state === 'error'
+        ? status.message
+        : t(`mcp-server-status.${status.state}`);
 
   return (
-    <div className='flex items-center gap-2 px-form-chrome'>
-      <Input.Root>
-        <Input.Label srOnly>{server.name}</Input.Label>
-        <Input.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
-      </Input.Root>
-      <span className='flex-1 truncate text-sm'>{server.name}</span>
-      <span className='truncate text-xs text-description'>{server.url}</span>
-      <IconButton
-        variant='ghost'
-        icon='ph--x--regular'
-        iconOnly
-        label={t('mcp-server-remove.label')}
-        onClick={() => onRemove(server)}
-      />
-    </div>
+    <Listbox.Item id={server.id} classNames='flex-col items-stretch px-form-chrome' data-testid='assistant.mcp-server'>
+      <Flex align='center' gap='sm'>
+        <Field.Root>
+          <Field.Label srOnly>{name}</Field.Label>
+          <Field.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
+        </Field.Root>
+        <Flex column grow classNames='min-w-0'>
+          <span className='truncate text-sm'>{name}</span>
+          <span className='truncate text-xs text-description'>{url}</span>
+        </Flex>
+        {status.state === 'unauthorized' && (
+          <IconButton
+            variant='primary'
+            icon='ph--sign-in--regular'
+            label={t('mcp-server-sign-in.label')}
+            disabled={pending}
+            onClick={handleSignIn}
+            data-testid='assistant.mcp-server.sign-in'
+          />
+        )}
+        {(status.state === 'error' || status.state === 'unauthorized') && (
+          <IconButton
+            variant='ghost'
+            icon='ph--arrow-clockwise--regular'
+            iconOnly
+            label={t('mcp-server-retry.label')}
+            onClick={() => setRevision((revision) => revision + 1)}
+          />
+        )}
+        <IconButton
+          variant='ghost'
+          icon='ph--x--regular'
+          iconOnly
+          label={t('mcp-server-remove.label')}
+          onClick={() => onRemove(server)}
+        />
+      </Flex>
+      <span
+        className={mx(
+          'text-xs truncate',
+          status.state === 'connected' && 'text-success-text',
+          (status.state === 'error' || status.state === 'unauthorized' || error) && 'text-error-text',
+        )}
+        title={error ?? statusLabel}
+        data-testid='assistant.mcp-server.status'
+        data-state={status.state}
+      >
+        {error ?? statusLabel}
+      </span>
+    </Listbox.Item>
   );
 };
 
 type McpServerFormProps = {
-  onSubmit: (name: string, url: string, protocol: 'sse' | 'http', apiKey?: string) => void;
+  onSubmit: (draft: McpServerDraft) => void;
   onCancel: () => void;
 };
 
@@ -306,67 +455,88 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
-  const [protocol, setProtocol] = useState<'sse' | 'http'>('sse');
+  // Streamable HTTP is the current transport; the client falls back to SSE when a server answers 405.
+  const [protocol, setProtocol] = useState<McpServer.Spec['protocol']>('http');
   const [apiKey, setApiKey] = useState('');
 
-  const canSubmit = name.trim().length > 0 && url.trim().length > 0;
+  const validUrl = URL.canParse(url.trim());
+  const canSubmit = name.trim().length > 0 && validUrl;
   const handleSubmit = useCallback(() => {
     if (canSubmit) {
-      onSubmit(name.trim(), url.trim(), protocol, apiKey.trim() || undefined);
+      onSubmit({ name: name.trim(), url: url.trim(), protocol, apiKey: apiKey.trim() || undefined });
     }
   }, [canSubmit, name, url, protocol, apiKey, onSubmit]);
 
   return (
-    <div className='space-y-2 px-form-chrome'>
-      <Input.Root>
-        <Input.Label srOnly>{t('mcp-server-name.label')}</Input.Label>
-        <Input.TextInput
+    <form
+      className='space-y-2 px-form-chrome'
+      onSubmit={(event) => {
+        event.preventDefault();
+        handleSubmit();
+      }}
+    >
+      <Field.Root>
+        <Field.Label srOnly>{t('mcp-server-name.label')}</Field.Label>
+        <Field.Input
           placeholder={t('mcp-server-name.placeholder')}
           value={name}
           onChange={(event) => setName(event.target.value)}
           autoFocus
+          data-testid='assistant.mcp-server.name'
         />
-      </Input.Root>
-      <Input.Root>
-        <Input.Label srOnly>{t('mcp-server-url.label')}</Input.Label>
-        <Input.TextInput
+      </Field.Root>
+      <Field.Root>
+        <Field.Label srOnly>{t('mcp-server-url.label')}</Field.Label>
+        <Field.Input
+          type='url'
           placeholder={t('mcp-server-url.placeholder')}
           value={url}
           onChange={(event) => setUrl(event.target.value)}
+          data-testid='assistant.mcp-server.url'
         />
-      </Input.Root>
-      <Select.Root value={protocol} onValueChange={(value) => setProtocol(value as 'sse' | 'http')}>
+      </Field.Root>
+      <Select.Root value={protocol} onValueChange={(value) => setProtocol(value === 'sse' ? 'sse' : 'http')}>
         <Select.TriggerButton placeholder={t('mcp-server-protocol.label')} />
         <Select.Portal>
           <Select.Content>
             <Select.Viewport>
-              <Select.Option value='sse'>SSE</Select.Option>
               <Select.Option value='http'>HTTP</Select.Option>
+              <Select.Option value='sse'>SSE</Select.Option>
             </Select.Viewport>
           </Select.Content>
         </Select.Portal>
       </Select.Root>
-      <Input.Root>
-        <Input.Label srOnly>{t('mcp-server-api-key.label')}</Input.Label>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Label srOnly>{t('mcp-server-api-key.label')}</Field.Label>
+        <Field.Input
           type='password'
+          autoComplete='off'
           placeholder={t('mcp-server-api-key.placeholder')}
           value={apiKey}
           onChange={(event) => setApiKey(event.target.value)}
+          data-testid='assistant.mcp-server.api-key'
         />
-      </Input.Root>
+      </Field.Root>
       <div className='flex gap-2'>
         <IconButton
+          type='submit'
           variant='ghost'
           icon='ph--check--regular'
           iconOnly
           label={t('save.button')}
-          onClick={handleSubmit}
           disabled={!canSubmit}
+          data-testid='assistant.mcp-server.save'
         />
-        <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('cancel.button')} onClick={onCancel} />
+        <IconButton
+          type='button'
+          variant='ghost'
+          icon='ph--x--regular'
+          iconOnly
+          label={t('cancel.button')}
+          onClick={onCancel}
+        />
       </div>
-    </div>
+    </form>
   );
 };
 
@@ -441,7 +611,6 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>
             <Select.Content>
-              <Select.ScrollUpButton />
               <Select.Viewport>
                 <Select.Option value={ANY}>{t('any-type-filter.label')}</Select.Option>
                 {typeOptions.map(({ uri, label }) => (
@@ -450,8 +619,6 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   </Select.Option>
                 ))}
               </Select.Viewport>
-              <Select.ScrollDownButton />
-              <Select.Arrow />
             </Select.Content>
           </Select.Portal>
         </Select.Root>

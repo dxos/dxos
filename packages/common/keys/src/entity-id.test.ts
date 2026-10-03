@@ -4,7 +4,7 @@
 
 import { describe, test, vi } from 'vitest';
 
-import { EntityId } from './entity-id';
+import { EntityId } from './entity-id.ts';
 
 describe('EntityId', () => {
   describe('isValid', () => {
