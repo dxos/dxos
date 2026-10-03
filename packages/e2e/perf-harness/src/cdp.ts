@@ -14,27 +14,43 @@ import { type TargetKind } from './types.ts';
  *
  * Adopted from `composer-app/scripts/memory/measure.mjs`, which hit the same wall first.
  */
+type Pending = {
+  resolve: (value: any) => void;
+  reject: (error: Error) => void;
+  timer?: ReturnType<typeof setTimeout>;
+};
+
 export class Cdp {
   readonly #ws: WebSocket;
   #id = 0;
-  #pending = new Map<number, { resolve: (value: any) => void; reject: (error: Error) => void }>();
+  #pending = new Map<number, Pending>();
   #listeners = new Map<string, Set<(params: any) => void>>();
 
   private constructor(ws: WebSocket) {
     this.#ws = ws;
   }
 
-  static async connect(wsUrl: string): Promise<Cdp> {
+  static async connect(wsUrl: string, { timeoutMs }: { timeoutMs?: number } = {}): Promise<Cdp> {
     const ws = new WebSocket(wsUrl);
     await new Promise<void>((resolve, reject) => {
-      ws.addEventListener('open', () => resolve(), { once: true });
-      ws.addEventListener('error', () => reject(new Error(`CDP connect failed: ${wsUrl}`)), { once: true });
+      const timer =
+        timeoutMs === undefined
+          ? undefined
+          : setTimeout(() => {
+              ws.close();
+              reject(new Error(`CDP connect timed out: ${wsUrl}`));
+            }, timeoutMs);
+      ws.addEventListener('open', () => (clearTimeout(timer), resolve()), { once: true });
+      ws.addEventListener('error', () => (clearTimeout(timer), reject(new Error(`CDP connect failed: ${wsUrl}`))), {
+        once: true,
+      });
     });
     const client = new Cdp(ws);
 
     // Otherwise every in-flight request awaits a socket that will never answer.
     const fail = (reason: string) => {
-      for (const { reject } of client.#pending.values()) {
+      for (const { reject, timer } of client.#pending.values()) {
+        clearTimeout(timer);
         reject(new Error(reason));
       }
       client.#pending.clear();
@@ -46,6 +62,7 @@ export class Cdp {
       const pending = message.id != null ? client.#pending.get(message.id) : undefined;
       if (pending) {
         client.#pending.delete(message.id);
+        clearTimeout(pending.timer);
         message.error ? pending.reject(new Error(String(message.error.message))) : pending.resolve(message.result);
       } else if (message.method) {
         for (const listener of client.#listeners.get(message.method) ?? []) {
@@ -64,49 +81,50 @@ export class Cdp {
    * listener has already drained `#pending` would never settle — and `trySend` has no timeout, so
    * the awaiting stage would hang until playwright's outer budget aborted the whole flow. A target
    * that disappears between `refreshTargets` and a read is exactly that case.
+   *
+   * `timeoutMs` rejects a command the target accepts but never answers (a shared worker leaves
+   * `HeapProfiler.collectGarbage` pending forever) and drops it from `#pending`, so an unanswered
+   * request on a session kept across stages is not retained for the rest of the run.
    */
-  send<T = any>(method: string, params: Record<string, unknown> = {}): Promise<T> {
+  send<T = any>(
+    method: string,
+    params: Record<string, unknown> = {},
+    { timeoutMs }: { timeoutMs?: number } = {},
+  ): Promise<T> {
     if (this.#ws.readyState !== WebSocket.OPEN) {
       return Promise.reject(new Error(`CDP socket is not open (readyState ${this.#ws.readyState})`));
     }
     const id = ++this.#id;
     return new Promise<T>((resolve, reject) => {
-      this.#pending.set(id, { resolve, reject });
+      const timer =
+        timeoutMs === undefined
+          ? undefined
+          : setTimeout(() => {
+              this.#pending.delete(id);
+              reject(new Error(`CDP ${method} timed out after ${timeoutMs} ms`));
+            }, timeoutMs);
+      this.#pending.set(id, { resolve, reject, timer });
       try {
         this.#ws.send(JSON.stringify({ id, method, params }));
       } catch (error) {
         // Removed before rejecting, so a later drain cannot settle it twice.
         this.#pending.delete(id);
+        clearTimeout(timer);
         reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }
 
-  /**
-   * Send and swallow — for domains a given target type does not implement.
-   *
-   * `timeoutMs` also gives up on a command the target accepts but never answers (a shared worker
-   * leaves `HeapProfiler.collectGarbage` pending forever), resolving `undefined` as a failure does.
-   */
+  /** Send and swallow — for domains a given target type does not implement, and timeouts. */
   async trySend<T = any>(
     method: string,
     params: Record<string, unknown> = {},
-    { timeoutMs }: { timeoutMs?: number } = {},
+    options: { timeoutMs?: number } = {},
   ): Promise<T | undefined> {
-    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      const sent = this.send<T>(method, params);
-      if (timeoutMs === undefined) {
-        return await sent;
-      }
-      const expired = new Promise<undefined>((resolve) => {
-        timer = setTimeout(() => resolve(undefined), timeoutMs);
-      });
-      return await Promise.race([sent, expired]);
+      return await this.send<T>(method, params, options);
     } catch {
       return undefined;
-    } finally {
-      clearTimeout(timer);
     }
   }
 
@@ -186,15 +204,24 @@ export type Attached = {
   hasPerformanceDomain: boolean;
 };
 
+/** Ample for a live realm to answer; a target still listed while it shuts down may never answer. */
+const ATTACH_TIMEOUT_MS = 10_000;
+
 const attach = async (info: TargetInfo): Promise<Attached | undefined> => {
   const { type, webSocketDebuggerUrl } = info;
   if (!webSocketDebuggerUrl || !isMeasured(type)) {
     return undefined;
   }
   try {
-    const cdp = await Cdp.connect(webSocketDebuggerUrl);
-    await cdp.trySend('HeapProfiler.enable');
-    const performance = await cdp.trySend('Performance.enable');
+    const cdp = await Cdp.connect(webSocketDebuggerUrl, { timeoutMs: ATTACH_TIMEOUT_MS });
+    // Every measured realm answers `Runtime.evaluate`; one that does not would hang every later read.
+    const alive = await cdp.trySend('Runtime.evaluate', { expression: '0' }, { timeoutMs: ATTACH_TIMEOUT_MS });
+    if (alive === undefined) {
+      cdp.close();
+      return undefined;
+    }
+    await cdp.trySend('HeapProfiler.enable', {}, { timeoutMs: ATTACH_TIMEOUT_MS });
+    const performance = await cdp.trySend('Performance.enable', {}, { timeoutMs: ATTACH_TIMEOUT_MS });
     return {
       info,
       name: targetName(info),

@@ -125,15 +125,16 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
       await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
     });
 
-    // Unloaded with every session closed, and only once the old shared worker is gone: one that a
-    // debugger held across the unload is reused by the next load, which then renders nothing.
+    // Unloaded with every session closed, and only once the old workers are gone: a shared worker a
+    // debugger held across the unload is reused by the next load, which then renders nothing, and a
+    // worker still listed while it shuts down would be attached at boot's opening boundary.
     runner.detach();
     await page.goto('about:blank');
     await expect
-      .poll(async () => (await listTargets(debugPort)).some((target) => target.type === 'shared_worker'), {
+      .poll(async () => (await listTargets(debugPort)).filter((target) => target.type !== 'page').length, {
         timeout: BUDGET_MS,
       })
-      .toBe(false);
+      .toBe(0);
 
     await runner.stage('boot', async () => {
       await page.goto(storyUrl(storyId), { timeout: BUDGET_MS });

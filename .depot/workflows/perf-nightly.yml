@@ -331,7 +331,7 @@ jobs:
               busy) budgets=budgets-busy.json ;;
               *) budgets=budgets.json ;;
             esac
-            # Budgets are calibrated from this job's own published rows, so the first nights run unscored.
+            # A fixture's budgets come from this job's own published rows, so it runs unscored until they exist.
             if [ ! -f "packages/core/compute/assistant-e2e/src/playwright/perf/$budgets" ]; then
               echo "::warning::No $scale chat budgets yet; stage rows were published, nothing scored."
               continue
