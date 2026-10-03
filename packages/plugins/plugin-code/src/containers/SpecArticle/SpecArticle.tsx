@@ -10,7 +10,7 @@ import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Panel, useThemeMode } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -41,7 +41,7 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
  */
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
   ({ role, subject: spec, content, attendableId, readOnly = spec == null }, forwardedRef) => {
-    const themeMode = Next.useThemeMode();
+    const themeMode = useThemeMode();
     const identity = useIdentity();
     const space = spec ? getSpace(spec) : undefined;
 
@@ -72,16 +72,16 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 
     return (
       <Editor.Root extensions={extensions}>
-        <Next.Panel.Root role={role} ref={forwardedRef}>
+        <Panel.Root role={role} ref={forwardedRef}>
           {!readOnly && (
-            <Next.Panel.Header>
+            <Panel.Header>
               <Editor.Toolbar role={role} attendableId={attendableId} />
-            </Next.Panel.Header>
+            </Panel.Header>
           )}
-          <Next.Panel.Body>
+          <Panel.Body>
             <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : content} />
-          </Next.Panel.Body>
-        </Next.Panel.Root>
+          </Panel.Body>
+        </Panel.Root>
       </Editor.Root>
     );
   },

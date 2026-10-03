@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Card, DragHandle } from '@dxos/react-ui';
 import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Event } from '@dxos/types';
@@ -42,13 +42,13 @@ const EventCardStory = () => {
   const subject = useMemo(() => createMockEvent(), []);
   return (
     <IntrinsicCardContainer>
-      <Next.Card.Root>
-        <Next.Card.Header>
-          <Next.DragHandle />
-          <Next.Card.Title>{Obj.getLabel(subject)}</Next.Card.Title>
-        </Next.Card.Header>
+      <Card.Root>
+        <Card.Header>
+          <DragHandle />
+          <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+        </Card.Header>
         <EventCard role='card--content' subject={subject} />
-      </Next.Card.Root>
+      </Card.Root>
     </IntrinsicCardContainer>
   );
 };

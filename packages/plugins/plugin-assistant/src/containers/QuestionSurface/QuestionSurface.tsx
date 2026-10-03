@@ -8,7 +8,7 @@ import { CardIconSlot, useActiveSpace, useObjectMenuItems } from '@dxos/app-tool
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EntityId } from '@dxos/keys';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 
@@ -52,30 +52,30 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
   return (
     // `fullWidth`: a card defaults to `dx-card-max-width`, which is right where cards are laid out
     // beside each other and wrong in a message, where the thread's column is the width to fill.
-    <Next.Card.Root classNames='my-2' size='sm'>
-      <Next.Card.Header>
-        <Next.Block>
+    <Card.Root classNames='my-2' size='sm'>
+      <Card.Header>
+        <Block>
           <CardIconSlot subject={object}>
-            <Next.Icon icon='ph--question--regular' />
+            <Icon icon='ph--question--regular' />
           </CardIconSlot>
-        </Next.Block>
+        </Block>
         {/* The task, not the question: a `Card.Title` truncates to one line by design, and the
             question is a sentence the reader has to read in full — so the body carries it. */}
-        <Next.Card.Title>{object.title}</Next.Card.Title>
+        <Card.Title>{object.title}</Card.Title>
         {/* The task's actions, as a task card anywhere else offers them. */}
-        <Next.Block rail='end'>
+        <Block rail='end'>
           <ActionMenu disabled={!menuItems.length} actions={menuItems}>
-            <Next.Button
+            <Button
               variant='ghost'
               icon='ph--dots-three-vertical--regular'
               iconOnly
               label={t('question-actions.label')}
             />
           </ActionMenu>
-        </Next.Block>
-      </Next.Card.Header>
+        </Block>
+      </Card.Header>
       <QuestionCard task={object} questionId={questionId} />
-    </Next.Card.Root>
+    </Card.Root>
   );
 };
 

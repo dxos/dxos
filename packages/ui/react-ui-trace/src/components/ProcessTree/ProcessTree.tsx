@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import * as Process from '@dxos/compute/Process';
-import { Next, composable, composableProps } from '@dxos/react-ui';
+import { Button, Icon, Tooltip, composable, composableProps } from '@dxos/react-ui';
 import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
 import { Unit } from '@dxos/util';
 
@@ -168,7 +168,7 @@ const ProcessRow = ({ node, onProcessTerminate }: ProcessRowProps) => {
       </span>
       <span>
         {process && onProcessTerminate && process.state !== Process.State.TERMINATED && (
-          <Next.Button
+          <Button
             icon='ph--x--regular'
             iconOnly
             size='sm'
@@ -186,8 +186,8 @@ const ProcessRow = ({ node, onProcessTerminate }: ProcessRowProps) => {
 };
 
 const StatusIcon = ({ process }: { process: Process.Info }) => (
-  <Next.Tooltip.Trigger content={process.state.toString()}>
-    <Next.Icon
+  <Tooltip.Trigger content={process.state.toString()}>
+    <Icon
       size='md'
       spin={process.state === Process.State.RUNNING}
       valence={
@@ -208,7 +208,7 @@ const StatusIcon = ({ process }: { process: Process.Info }) => (
         Match.orElse(() => 'ph--spinner-gap--regular'),
       )}
     />
-  </Next.Tooltip.Trigger>
+  </Tooltip.Trigger>
 );
 
 const sortProcesses = (processes: readonly Process.Info[]): Process.Info[] => {

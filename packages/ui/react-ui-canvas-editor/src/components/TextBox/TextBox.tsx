@@ -7,7 +7,7 @@ import { Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   type BasicExtensionsOptions,
@@ -36,7 +36,7 @@ export type TextBoxProps = ThemedClassName<
 
 export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
   ({ classNames, value = '', centered, onEnter, onCancel, language, ...rest }, forwardedRef) => {
-    const themeMode = Next.useThemeMode();
+    const themeMode = useThemeMode();
     const modified = useRef(false);
     const doc = useRef(value);
     useEffect(() => {

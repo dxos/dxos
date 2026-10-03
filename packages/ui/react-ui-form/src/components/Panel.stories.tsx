@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { invariant } from '@dxos/invariant';
-import { Next } from '@dxos/react-ui';
+import { Container, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
@@ -25,27 +25,27 @@ const DefaultStory = (_: PaneArgs) => {
       onSave={() => {}}
       onCancel={() => setValues(SCALAR_VALUES)}
     >
-      <Next.Panel.Root size='sm' data-testid='panel'>
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
-            <Next.Toolbar.Text>Profile</Next.Toolbar.Text>
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport asChild>
-              <Next.Container>
+      <Panel.Root size='sm' data-testid='panel'>
+        <Panel.Header>
+          <Toolbar.Root>
+            <Toolbar.Text>Profile</Toolbar.Text>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport asChild>
+              <Container>
                 <Form.Content>
                   <Form.Fields />
                 </Form.Content>
-              </Next.Container>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
-        </Next.Panel.Body>
-        <Next.Panel.Footer>
+              </Container>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+        <Panel.Footer>
           <Form.Actions />
-        </Next.Panel.Footer>
-      </Next.Panel.Root>
+        </Panel.Footer>
+      </Panel.Root>
     </Form.Root>
   );
 };

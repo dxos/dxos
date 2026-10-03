@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { TogglePanel } from '../TogglePanel/index.ts';
@@ -44,9 +44,9 @@ export const Default: Story = {
               <div className='px-1'>
                 <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
               </div>
-              <Next.ScrollArea.Root orientation='vertical'>
-                <Next.ScrollArea.Viewport>{content[selected].content}</Next.ScrollArea.Viewport>
-              </Next.ScrollArea.Root>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport>{content[selected].content}</ScrollArea.Viewport>
+              </ScrollArea.Root>
             </TogglePanel.Body>
           </TogglePanel.Content>
         </TogglePanel.Root>

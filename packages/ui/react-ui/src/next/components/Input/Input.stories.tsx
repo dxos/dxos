@@ -9,32 +9,32 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button, Icon, Input } from '../index.ts';
 
 /** Plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, `subdued` and `mono`. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Input placeholder='Search' aria-label='Search' noAutoFill data-testid={`input-${size}`} />
-    <Next.Input placeholder='Disabled' aria-label='Disabled' disabled />
-    <Next.Input
-      start={<Next.Icon icon='ph--magnifying-glass--regular' />}
+    <Input placeholder='Search' aria-label='Search' noAutoFill data-testid={`input-${size}`} />
+    <Input placeholder='Disabled' aria-label='Disabled' disabled />
+    <Input
+      start={<Icon icon='ph--magnifying-glass--regular' />}
       placeholder='Find…'
       aria-label='Find'
       data-testid={`start-${size}`}
     />
-    <Next.Input end='.dxos.org' placeholder='workspace' aria-label='Workspace' data-testid={`end-${size}`} />
-    <Next.Input
-      end={<Next.Button icon='ph--x--regular' label='Clear' iconOnly variant='ghost' />}
+    <Input end='.dxos.org' placeholder='workspace' aria-label='Workspace' data-testid={`end-${size}`} />
+    <Input
+      end={<Button icon='ph--x--regular' label='Clear' iconOnly variant='ghost' />}
       defaultValue='Query'
       aria-label='Query'
       data-testid={`button-end-${size}`}
     />
-    <Next.Input variant='subdued' placeholder='Subdued' aria-label='Subdued' data-testid={`subdued-${size}`} />
-    <Next.Input variant='mono' defaultValue='sk-0001' aria-label='Key' data-testid={`mono-${size}`} />
-    <Next.Input
+    <Input variant='subdued' placeholder='Subdued' aria-label='Subdued' data-testid={`subdued-${size}`} />
+    <Input variant='mono' defaultValue='sk-0001' aria-label='Key' data-testid={`mono-${size}`} />
+    <Input
       variant='mono'
       copyable
       readOnly

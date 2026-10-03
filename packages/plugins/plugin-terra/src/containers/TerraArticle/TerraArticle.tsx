@@ -10,7 +10,7 @@ import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Panel, Select, Tabs, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -346,34 +346,34 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header classNames='dx-expand'>
+    <Panel.Root role={role}>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
           <div className='grow' />
           {view === 'camera' && (
             <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
           )}
-          <Next.Tabs.Root
+          <Tabs.Root
             orientation='horizontal'
             value={view}
             onValueChange={handleViewChange}
             selectedVariant={hasAttention ? 'primary' : 'default'}
           >
-            <Next.Tabs.List>
-              <Next.Tabs.Trigger value='scene' data-testid='terra.toolbar.view-scene'>
+            <Tabs.List>
+              <Tabs.Trigger value='scene' data-testid='terra.toolbar.view-scene'>
                 {t('scene-view.label')}
-              </Next.Tabs.Trigger>
-              <Next.Tabs.Trigger value='map' data-testid='terra.toolbar.view-map'>
+              </Tabs.Trigger>
+              <Tabs.Trigger value='map' data-testid='terra.toolbar.view-map'>
                 {t('map-view.label')}
-              </Next.Tabs.Trigger>
-              <Next.Tabs.Trigger value='camera' data-testid='terra.toolbar.view-camera'>
+              </Tabs.Trigger>
+              <Tabs.Trigger value='camera' data-testid='terra.toolbar.view-camera'>
                 {t('camera-view.label')}
-              </Next.Tabs.Trigger>
-            </Next.Tabs.List>
-          </Next.Tabs.Root>
+              </Tabs.Trigger>
+            </Tabs.List>
+          </Tabs.Root>
         </ActionToolbar>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className='relative grow'>
           {/* Kept mounted and merely hidden while the map shows: the render loop is what advances
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
@@ -392,8 +392,8 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
             <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
@@ -409,24 +409,21 @@ type CameraTargetSelectProps = {
 const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelectProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Next.Select.Root
+    <Select.Root
       value={value ? [value] : []}
       onValueChange={({ value: [value] }) => value && onChange(value)}
       items={definitions.map((definition) => ({ value: definition.id, label: definition.name ?? definition.kind }))}
     >
-      <Next.Select.Trigger
+      <Select.Trigger
         placeholder={t('camera-target.placeholder')}
         data-testid='terra.toolbar.camera-target'
         classNames='min-w-32'
       />
-      <Next.Select.Content>
+      <Select.Content>
         {definitions.map((definition) => (
-          <Next.Select.Item
-            key={definition.id}
-            item={{ value: definition.id, label: definition.name ?? definition.kind }}
-          />
+          <Select.Item key={definition.id} item={{ value: definition.id, label: definition.name ?? definition.kind }} />
         ))}
-      </Next.Select.Content>
-    </Next.Select.Root>
+      </Select.Content>
+    </Select.Root>
   );
 };

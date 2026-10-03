@@ -21,7 +21,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Button, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type Commit, Timeline, buildExecutionGraph } from '@dxos/react-ui-trace';
@@ -47,22 +47,22 @@ type BaseStoryArgs = PropsWithChildren<{
 }>;
 
 const BaseStory = ({ children, toolbar }: BaseStoryArgs) => (
-  <Next.Panel.Root classNames='h-full min-h-0'>
-    <Next.Panel.Header>{toolbar}</Next.Panel.Header>
-    <Next.Panel.Body>{children}</Next.Panel.Body>
-  </Next.Panel.Root>
+  <Panel.Root classNames='h-full min-h-0'>
+    <Panel.Header>{toolbar}</Panel.Header>
+    <Panel.Body>{children}</Panel.Body>
+  </Panel.Root>
 );
 
 const JsonInspectorPanel = ({ data }: { data: unknown }) => (
-  <Next.ScrollContainer.Root pin>
-    <Next.ScrollContainer.Content width='thin'>
-      <Next.ScrollContainer.Viewport>
+  <ScrollContainer.Root pin>
+    <ScrollContainer.Content width='thin'>
+      <ScrollContainer.Viewport>
         <JsonHighlighter data={data} classNames='text-xs' />
-      </Next.ScrollContainer.Viewport>
-      <Next.ScrollContainer.ScrollDownButton />
-      <Next.ScrollContainer.Fade />
-    </Next.ScrollContainer.Content>
-  </Next.ScrollContainer.Root>
+      </ScrollContainer.Viewport>
+      <ScrollContainer.ScrollDownButton />
+      <ScrollContainer.Fade />
+    </ScrollContainer.Content>
+  </ScrollContainer.Root>
 );
 
 const DefaultStory = () => {
@@ -123,9 +123,9 @@ const DefaultStory = () => {
   return (
     <BaseStory
       toolbar={
-        <Next.Toolbar.Root>
-          <Next.Button icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
-        </Next.Toolbar.Root>
+        <Toolbar.Root>
+          <Button icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
+        </Toolbar.Root>
       }
     >
       {/* The process selection is view state, which needs a provider to hold it. */}
@@ -280,30 +280,30 @@ const TimelinePlayback = ({
   return (
     <BaseStory
       toolbar={
-        <Next.Toolbar.Root>
-          <Next.Button icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
-          <Next.Button icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
-          <Next.Button
+        <Toolbar.Root>
+          <Button icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
+          <Button icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
+          <Button
             icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
             iconOnly
             label={playing ? 'Pause (Space)' : 'Play (Space)'}
             onClick={handleTogglePlay}
           />
-          <Next.Button icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
-          <Next.Button icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
-          <Next.Toolbar.Text classNames='text-right text-sm tabular-nums opacity-70'>
+          <Button icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
+          <Button icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
+          <Toolbar.Text classNames='text-right text-sm tabular-nums opacity-70'>
             {step} / {total}
-          </Next.Toolbar.Text>
-        </Next.Toolbar.Root>
+          </Toolbar.Text>
+        </Toolbar.Root>
       }
     >
       <div className={mx('grid h-full min-h-0 grid-cols-3 divide-x divide-separator')}>
         <JsonInspectorPanel data={spanTree} />
 
         <div className='min-h-0'>
-          <Next.ScrollContainer.Root pin>
-            <Next.ScrollContainer.Content width='thin'>
-              <Next.ScrollContainer.Viewport ref={setTimelineViewport}>
+          <ScrollContainer.Root pin>
+            <ScrollContainer.Content width='thin'>
+              <ScrollContainer.Viewport ref={setTimelineViewport}>
                 <Timeline
                   branches={branches}
                   commits={commits}
@@ -311,11 +311,11 @@ const TimelinePlayback = ({
                   scroller={timelineViewport}
                   onSelect={setSelectedCommit}
                 />
-              </Next.ScrollContainer.Viewport>
-              <Next.ScrollContainer.ScrollDownButton />
-              <Next.ScrollContainer.Fade />
-            </Next.ScrollContainer.Content>
-          </Next.ScrollContainer.Root>
+              </ScrollContainer.Viewport>
+              <ScrollContainer.ScrollDownButton />
+              <ScrollContainer.Fade />
+            </ScrollContainer.Content>
+          </ScrollContainer.Root>
         </div>
 
         <JsonInspectorPanel data={selectedCommitDetail} />

@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -154,15 +154,15 @@ const PullRow = ({ pull }: { pull: GithubPullRequest }) => (
 const Content = () => {
   const { pulls } = useComponentContext();
   return (
-    <Next.ScrollArea.Root orientation='vertical'>
-      <Next.ScrollArea.Viewport>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
         <ul className='flex flex-col p-1'>
           {pulls.map((pull) => (
             <PullRow key={pull.number} pull={pull} />
           ))}
         </ul>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
@@ -170,7 +170,7 @@ const StatusBar = () => {
   const { t } = useTranslation(meta.profile.key);
   const { repo } = useComponentContext();
   return (
-    <Next.Button
+    <Button
       icon='ph--github-logo--regular'
       label={t('view-on-github.button')}
       variant='primary'

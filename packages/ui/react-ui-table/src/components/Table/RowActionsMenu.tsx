@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Menu, toLocalizedString, useTranslation, virtualAnchor } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -21,18 +21,18 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
     return null;
   }
   return (
-    <Next.Menu.Root
+    <Menu.Root
       open={true}
       onOpenChange={({ open }) => !open && modals.close()}
-      positioning={Next.virtualAnchor(modals.trigger)}
+      positioning={virtualAnchor(modals.trigger)}
     >
-      <Next.Menu.Content>
+      <Menu.Content>
         {/* Custom actions */}
         {model.rowActions?.length > 0 && (
           <>
-            <Next.Menu.ItemGroup>
+            <Menu.ItemGroup>
               {model.rowActions?.map((action) => (
-                <Next.Menu.Item
+                <Menu.Item
                   key={action.id}
                   data-testid={`row-action-${action.id}`}
                   onClick={() => {
@@ -42,13 +42,13 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
                   item={{ value: action.id, label: toLocalizedString(action.label, t) }}
                 />
               ))}
-            </Next.Menu.ItemGroup>
-            <Next.Menu.Separator />
+            </Menu.ItemGroup>
+            <Menu.Separator />
           </>
         )}
         {/* Default actions */}
         {model.features.dataEditable !== false && (
-          <Next.Menu.Item
+          <Menu.Item
             data-testid='row-menu-delete'
             onClick={() => model.deleteRow(state.rowIndex)}
             item={{
@@ -57,7 +57,7 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
             }}
           />
         )}
-      </Next.Menu.Content>
-    </Next.Menu.Root>
+      </Menu.Content>
+    </Menu.Root>
   );
 };

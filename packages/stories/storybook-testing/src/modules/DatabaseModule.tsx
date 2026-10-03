@@ -12,7 +12,18 @@ import { type EntityId } from '@dxos/keys';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
-import { Next, composable, composableProps } from '@dxos/react-ui';
+import {
+  Block,
+  Button,
+  Card,
+  Icon,
+  Panel,
+  ScrollArea,
+  ToggleGroup,
+  Toolbar,
+  composable,
+  composableProps,
+} from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -81,19 +92,19 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
   );
 
   return (
-    <Next.Panel.Root classNames='relative h-full'>
-      <Next.Panel.Header>
+    <Panel.Root classNames='relative h-full'>
+      <Panel.Header>
         <DatabaseSearchBar space={space} view={view} onSubmit={handleSubmit} onViewChange={handleViewChange} />
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='relative min-h-0'>
+      </Panel.Header>
+      <Panel.Body classNames='relative min-h-0'>
         {view === 'graph' && <ForceGraph classNames='min-h-[50vh]' model={model} />}
 
         {view === 'object-tree' && (
-          <Next.ScrollArea.Root classNames='h-full'>
-            <Next.ScrollArea.Viewport>
+          <ScrollArea.Root classNames='h-full'>
+            <ScrollArea.Viewport>
               <ObjectsTree db={space.db} onSelect={(entity) => setSelectedId(entity.id)} />
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         )}
 
         {view === 'cards' && (
@@ -129,7 +140,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
         )}
 
         <div className='absolute bottom-4 right-4 z-10'>
-          <Next.Button
+          <Button
             variant='ghost'
             icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
             iconOnly
@@ -137,8 +148,8 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
             onClick={() => setOpen((open) => !open)}
           />
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
@@ -154,13 +165,13 @@ const DatabaseSearchBar = composable<HTMLDivElement, DatabaseSearchBarProps>(
     const editorRef = useRef<EditorController>(null);
 
     return (
-      <Next.Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+      <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
         <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
-        <Next.Toolbar.ToggleGroup type='single' value={view} onValueChange={onViewChange}>
+        <Toolbar.ToggleGroup type='single' value={view} onValueChange={onViewChange}>
           {VIEW_OPTIONS.map(({ value, icon, label }) => (
-            <Next.ToggleGroup.Item key={value} value={value} icon={icon} label={label} iconOnly />
+            <ToggleGroup.Item key={value} value={value} icon={icon} label={label} iconOnly />
           ))}
-        </Next.Toolbar.ToggleGroup>
+        </Toolbar.ToggleGroup>
         {/* <Toolbar.IconButton
         icon='ph--magnifying-glass--regular'
         iconOnly
@@ -179,7 +190,7 @@ const DatabaseSearchBar = composable<HTMLDivElement, DatabaseSearchBarProps>(
         label='Flush'
         onClick={handleFlush}
       /> */}
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
     );
   },
 );
@@ -235,13 +246,13 @@ const DatabaseCardTile = ({ data }: { data: DatabaseCardTileData | undefined; in
   const iconAnnotation = Obj.getIcon(object);
 
   return (
-    <Next.Card.Root classNames={['cursor-pointer', current && 'ring-2 ring-focus']} onClick={() => onSelect(object.id)}>
-      <Next.Card.Header>
-        <Next.Block>
-          <Next.Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} tone='subdued' />
-        </Next.Block>
-        <Next.Card.Title truncate>{label}</Next.Card.Title>
-      </Next.Card.Header>
-    </Next.Card.Root>
+    <Card.Root classNames={['cursor-pointer', current && 'ring-2 ring-focus']} onClick={() => onSelect(object.id)}>
+      <Card.Header>
+        <Block>
+          <Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} tone='subdued' />
+        </Block>
+        <Card.Title truncate>{label}</Card.Title>
+      </Card.Header>
+    </Card.Root>
   );
 };

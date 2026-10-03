@@ -11,10 +11,10 @@ import { expect } from 'storybook/test';
 import { random } from '@dxos/random';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Block, Container, Icon, Typography } from '../index.ts';
 
 random.seed(123);
 
@@ -22,38 +22,38 @@ const TEXT = random.lorem.paragraph();
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Container>
-      <Next.Block rail='start' data-testid={`icon-${size}`}>
-        <Next.Icon icon='ph--chat-circle--regular' />
-      </Next.Block>
-      <Next.Typography data-testid={`text-${size}`}>{TEXT}</Next.Typography>
-    </Next.Container>
-    <Next.Container layout='row' columns='minmax(0, 1fr) auto'>
-      <Next.Typography truncate data-testid={`truncate-${size}`}>
+    <Container>
+      <Block rail='start' data-testid={`icon-${size}`}>
+        <Icon icon='ph--chat-circle--regular' />
+      </Block>
+      <Typography data-testid={`text-${size}`}>{TEXT}</Typography>
+    </Container>
+    <Container layout='row' columns='minmax(0, 1fr) auto'>
+      <Typography truncate data-testid={`truncate-${size}`}>
         {TEXT}
-      </Next.Typography>
-      <Next.Typography tone='description' data-testid={`description-${size}`}>
+      </Typography>
+      <Typography tone='description' data-testid={`description-${size}`}>
         Description
-      </Next.Typography>
-    </Next.Container>
-    <Next.Container>
-      <Next.Typography lines={2} data-testid={`lines-${size}`}>
+      </Typography>
+    </Container>
+    <Container>
+      <Typography lines={2} data-testid={`lines-${size}`}>
         {TEXT} {TEXT}
-      </Next.Typography>
-      <Next.Typography tone='subdued' data-testid={`subdued-${size}`}>
+      </Typography>
+      <Typography tone='subdued' data-testid={`subdued-${size}`}>
         Subdued interface text
-      </Next.Typography>
-      <Next.Typography mono data-testid={`mono-${size}`}>
+      </Typography>
+      <Typography mono data-testid={`mono-${size}`}>
         did:key:z6Mk
-      </Next.Typography>
-    </Next.Container>
-    <Next.Container>
-      <Next.Typography asChild>
+      </Typography>
+    </Container>
+    <Container>
+      <Typography asChild>
         <h2 className='font-medium' data-testid={`heading-${size}`}>
           Typography as a heading
         </h2>
-      </Next.Typography>
-    </Next.Container>
+      </Typography>
+    </Container>
   </>
 );
 

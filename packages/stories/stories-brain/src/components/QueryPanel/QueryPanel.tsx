@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { Format } from '@dxos/echo';
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 // Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
@@ -50,28 +50,28 @@ export const QueryPanel = ({
   onReset,
   classNames,
 }: QueryPanelProps) => (
-  <Next.Panel.Root classNames={classNames}>
-    <Next.Panel.Header>
-      <Next.Toolbar.Root>
-        <Next.Toolbar.Separator />
-        <Next.Button
+  <Panel.Root classNames={classNames}>
+    <Panel.Header>
+      <Toolbar.Root>
+        <Toolbar.Separator />
+        <Button
           icon='ph--sparkle--regular'
           iconOnly
           label='Generate SPARQL'
           disabled={!!busy || !question}
           onClick={onGenerate}
         />
-        <Next.Button icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
-        <Next.Button
+        <Button icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
+        <Button
           icon='ph--arrow-counter-clockwise--regular'
           iconOnly
           label='Reset query'
           disabled={!!busy}
           onClick={onReset}
         />
-      </Next.Toolbar.Root>
-    </Next.Panel.Header>
-    <Next.Panel.Body>
+      </Toolbar.Root>
+    </Panel.Header>
+    <Panel.Body>
       <Form.Root
         schema={QueryOptions}
         values={{ question, query }}
@@ -86,6 +86,6 @@ export const QueryPanel = ({
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
-    </Next.Panel.Body>
-  </Next.Panel.Root>
+    </Panel.Body>
+  </Panel.Root>
 );

@@ -40,7 +40,23 @@ import React, {
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-import { Next, composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Block,
+  DragPreview,
+  Empty,
+  Icon,
+  type IconHue,
+  ScrollArea,
+  type Size,
+  Tag,
+  Typography,
+  VirtualSpacer,
+  composable,
+  composableProps,
+  toLocalizedString,
+  useTranslation,
+  useVirtualRows,
+} from '@dxos/react-ui';
 import { hues } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
@@ -110,7 +126,7 @@ type TreeRootProps<T extends { id: string } = any> = {
    * the drag scope, so trees mounted under one root (a tree per workspace tab) accept each other's rows.
    */
   path?: string[];
-  size?: Next.Size;
+  size?: Size;
   /**
    * Each row's grid template; the default is disclosure, icon, label and trailing tracks. A template that keeps
    * `Tree.ItemIndicator` starts with its `var(--nx-half-block-size)` track.
@@ -731,7 +747,7 @@ const TreeContent = ({ children }: TreeContentProps) => {
   const { rows } = walk;
   const windowed = virtual === 'fixed';
   const focused = windowed && focusedValue ? walk.rowIndex.get(focusedValue) : undefined;
-  const windowing = Next.useVirtualRows({
+  const windowing = useVirtualRows({
     mode: virtual,
     count: rows.length,
     pinned: focused,
@@ -752,25 +768,25 @@ const TreeContent = ({ children }: TreeContentProps) => {
   const content: ReactNode[] = [];
   let next = 0;
   for (const span of windowing.spans) {
-    content.push(<Next.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(span.first - next)} />);
+    content.push(<VirtualSpacer key={`gap-${next}`} height={windowing.spacer(span.first - next)} />);
     for (let index = span.first; index <= span.last; index++) {
       const node = rows[index];
       content.push(<Fragment key={node.value}>{renderRow(node)}</Fragment>);
     }
     next = span.last + 1;
   }
-  content.push(<Next.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(rows.length - next)} />);
+  content.push(<VirtualSpacer key={`gap-${next}`} height={windowing.spacer(rows.length - next)} />);
 
   return (
-    <Next.ScrollArea.Root>
-      <Next.ScrollArea.Viewport asChild>
+    <ScrollArea.Root>
+      <ScrollArea.Viewport asChild>
         <TreeContentElement ref={windowing.listRef}>
           {content}
           {draggable && dropAtEnd && <TreeEndDropTarget treeId={treeId} root={walk.root} />}
           {trailing}
         </TreeContentElement>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
@@ -942,9 +958,9 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
                     const root = createRoot(container);
                     flushSync(() =>
                       root.render(
-                        <Next.DragPreview source={source.element}>
+                        <DragPreview source={source.element}>
                           {renderDragPreview ? renderDragPreview(node) : <span className='truncate'>{label}</span>}
-                        </Next.DragPreview>,
+                        </DragPreview>,
                       ),
                     );
                     // The preview's own root has no icon registry; the row's icon is already resolved, so it is copied.
@@ -1168,9 +1184,9 @@ const TreeItemGroupLabel = ({ children }: TreeItemGroupLabelProps) => {
   const { node } = useTreeItemContext('Tree.ItemGroupLabel');
   const { t } = useTranslation();
   return (
-    <Next.Typography truncate classNames='nx-tree-group-label'>
+    <Typography truncate classNames='nx-tree-group-label'>
       {children ?? toLocalizedString(node.props.label, t)}
-    </Next.Typography>
+    </Typography>
   );
 };
 
@@ -1193,15 +1209,15 @@ type TreeItemIndicatorProps = {
 const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
   const { node } = useTreeItemContext('Tree.ItemIndicator');
   return (
-    <Next.Block classNames='nx-tree-item-indicator'>
+    <Block classNames='nx-tree-item-indicator'>
       {node.branch && (
         <TreeView.BranchTrigger className='nx-tree-branch-trigger' data-empty={node.empty ? '' : undefined}>
           <TreeView.BranchIndicator className='nx-tree-branch-indicator'>
-            <Next.Icon icon={icon} />
+            <Icon icon={icon} />
           </TreeView.BranchIndicator>
         </TreeView.BranchTrigger>
       )}
-    </Next.Block>
+    </Block>
   );
 };
 
@@ -1211,7 +1227,7 @@ TreeItemIndicator.displayName = 'Tree.ItemIndicator';
 // ItemIcon
 //
 
-type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Next.Icon>> & {
+type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Icon>> & {
   /** Replaces the Icon in the cell, for a glyph that carries its own state (a tooltip, an animation, a per-state hue). */
   children?: ReactNode;
 };
@@ -1219,7 +1235,7 @@ type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Next.Icon>> & {
 const ICON_HUES: readonly string[] = ['neutral', 'success', 'info', 'warning', 'error', ...hues];
 
 /** Narrows the model's free-form `iconHue` to a hue the Icon can draw. */
-const isIconHue = (value: string | undefined): value is Next.IconHue => !!value && ICON_HUES.includes(value);
+const isIconHue = (value: string | undefined): value is IconHue => !!value && ICON_HUES.includes(value);
 
 /**
  * The icon cell: one block holding the row's icon (`itemProps.icon`, hued by `itemProps.iconHue`), or `children` in
@@ -1231,10 +1247,9 @@ const TreeItemIcon = ({ icon, hue, children, ...props }: TreeItemIconProps) => {
   const glyph = icon ?? node.props.icon;
   const iconHue = node.props.iconHue;
   return (
-    <Next.Block classNames='nx-tree-item-icon'>
-      {children ??
-        (glyph && <Next.Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />)}
-    </Next.Block>
+    <Block classNames='nx-tree-item-icon'>
+      {children ?? (glyph && <Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />)}
+    </Block>
   );
 };
 
@@ -1255,9 +1270,9 @@ const TreeItemText = ({ children, 'data-testid': testId }: TreeItemTextProps) =>
   const { node } = useTreeItemContext('Tree.ItemText');
   const { t } = useTranslation();
   return (
-    <Next.Typography truncate classNames='nx-tree-item-text' data-testid={testId}>
+    <Typography truncate classNames='nx-tree-item-text' data-testid={testId}>
       {children ?? toLocalizedString(node.props.label, t)}
-    </Next.Typography>
+    </Typography>
   );
 };
 
@@ -1276,16 +1291,16 @@ const TreeItemCount = () => {
   const { count, modifiedCount } = node.props;
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Next.Tag hue='rose' classNames='nx-tree-item-count'>
+      <Tag hue='rose' classNames='nx-tree-item-count'>
         {modifiedCount}
-      </Next.Tag>
+      </Tag>
     );
   }
   if (typeof count === 'number') {
     return (
-      <Next.Tag hue='neutral' classNames='nx-tree-item-count'>
+      <Tag hue='neutral' classNames='nx-tree-item-count'>
         {count}
-      </Next.Tag>
+      </Tag>
     );
   }
   // Holds the count's track even when empty, so the cells after it (actions, item end) keep their own columns.
@@ -1328,7 +1343,7 @@ type TreeEmptyProps = {
 /** `Next.Empty` (its text the children or the translated "No items"), rendered only while the root has no children. */
 const TreeEmpty = forwardRef<HTMLDivElement, TreeEmptyProps>((props, forwardedRef) => {
   const { walk } = useTreeContext('Tree.Empty');
-  return walk.rows.length === 0 ? <Next.Empty {...props} ref={forwardedRef} /> : null;
+  return walk.rows.length === 0 ? <Empty {...props} ref={forwardedRef} /> : null;
 });
 
 TreeEmpty.displayName = 'Tree.Empty';

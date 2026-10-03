@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
@@ -42,14 +42,14 @@ const DefaultStory = () => {
   }, []);
 
   return (
-    <Next.Card.Root>
-      <Next.Card.Header>
-        <Next.Card.Title>Citrin Cooperman Advisors LLC</Next.Card.Title>
-      </Next.Card.Header>
-      <Next.Card.Body>
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Citrin Cooperman Advisors LLC</Card.Title>
+      </Card.Header>
+      <Card.Body>
         <RelatedMessages messages={messages} onMessageClick={() => {}} />
-      </Next.Card.Body>
-    </Next.Card.Root>
+      </Card.Body>
+    </Card.Root>
   );
 };
 

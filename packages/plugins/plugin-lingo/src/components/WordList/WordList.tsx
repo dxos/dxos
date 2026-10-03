@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { Word } from '#types';
@@ -75,7 +75,7 @@ const ProgressPips = ({ word }: { word: Word.Word }) => {
   return (
     <span className='flex items-center gap-1' title={`${box}/${Word.BOX_COUNT}`}>
       {Array.from({ length: Word.BOX_COUNT }, (_, index) => (
-        <Next.Icon
+        <Icon
           key={index}
           icon={index < box ? 'ph--circle--fill' : 'ph--circle--regular'}
           size='xs'

@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Group, SystemButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 import {
   type AudioInputDevice,
@@ -157,8 +157,8 @@ export const Mic = ({ docId }: MicProps) => {
         : t('start-recording.label');
 
   return (
-    <Next.Group compact>
-      <Next.SystemButton.Mic
+    <Group compact>
+      <SystemButton.Mic
         iconOnly
         variant='ghost'
         disabled={microphoneDenied}
@@ -179,6 +179,6 @@ export const Mic = ({ docId }: MicProps) => {
         onEntityExtractionChange={handleEntityExtractionChange}
         onSelectDevice={handleSelectDevice}
       />
-    </Next.Group>
+    </Group>
   );
 };

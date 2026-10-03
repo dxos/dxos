@@ -16,7 +16,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, Menu, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -118,9 +118,9 @@ const StackContent = forwardRef<HTMLDivElement, StackContentProps>(({ children, 
   const { eventHandler, viewport } = useStackContext('Stack.Content');
   return (
     <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-      <Next.ScrollArea.Root {...props} orientation='vertical' ref={forwardedRef}>
+      <ScrollArea.Root {...props} orientation='vertical' ref={forwardedRef}>
         {children}
-      </Next.ScrollArea.Root>
+      </ScrollArea.Root>
     </Mosaic.Container>
   );
 });
@@ -150,9 +150,9 @@ const StackViewport = forwardRef<HTMLDivElement, StackViewportProps>(
     );
 
     return (
-      <Next.ScrollArea.Viewport classNames={classNames} ref={setRefs}>
+      <ScrollArea.Viewport classNames={classNames} ref={setRefs}>
         {children}
-      </Next.ScrollArea.Viewport>
+      </ScrollArea.Viewport>
     );
   },
 );
@@ -198,15 +198,15 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const rail = (
     <div className='grid grid-rows-[min-content_1fr]'>
       <div className='p-1 dx-toolbar-surface'>
-        <Next.Menu.Root open={optionsMenuOpen} onOpenChange={({ open }) => setOptionsMenuOpen(open)}>
-          <Next.Menu.Trigger asChild>
+        <Menu.Root open={optionsMenuOpen} onOpenChange={({ open }) => setOptionsMenuOpen(open)}>
+          <Menu.Trigger asChild>
             <AttentionSigilButton size='md' attendableId={attendableId}>
-              <Next.Icon icon={icon} classNames='transition-opacity' />
+              <Icon icon={icon} classNames='transition-opacity' />
             </AttentionSigilButton>
-          </Next.Menu.Trigger>
-          <Next.Menu.Content>
+          </Menu.Trigger>
+          <Menu.Content>
             {isCollapsed ? (
-              <Next.Menu.Item
+              <Menu.Item
                 item={{
                   value: 'section.expand',
                   label: t('expand.label'),
@@ -216,7 +216,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
                 data-testid='section.expand'
               />
             ) : (
-              <Next.Menu.Item
+              <Menu.Item
                 item={{
                   value: 'section.collapse',
                   label: t('collapse.label'),
@@ -226,30 +226,30 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
                 data-testid='section.collapse'
               />
             )}
-            <Next.Menu.Separator />
-            <Next.Menu.Item
+            <Menu.Separator />
+            <Menu.Item
               item={{ value: 'section.add', label: t('add-section.label'), icon: 'ph--plus--regular' }}
               onClick={() => onAdd(id)}
               data-testid='section.add'
             />
-            <Next.Menu.Item
+            <Menu.Item
               item={{ value: 'section.move-up', label: t('move-up.label'), icon: 'ph--arrow-line-up--regular' }}
               onClick={() => onMoveUp(id)}
               data-testid='section.move-up'
             />
-            <Next.Menu.Item
+            <Menu.Item
               item={{ value: 'section.move-down', label: t('move-down.label'), icon: 'ph--arrow-line-down--regular' }}
               onClick={() => onMoveDown(id)}
               data-testid='section.move-down'
             />
-            <Next.Menu.Separator />
-            <Next.Menu.Item
+            <Menu.Separator />
+            <Menu.Item
               item={{ value: 'section.remove', label: t('remove-section.label'), icon: 'ph--trash--regular' }}
               onClick={() => onDelete(id)}
               data-testid='section.remove'
             />
-          </Next.Menu.Content>
-        </Next.Menu.Root>
+          </Menu.Content>
+        </Menu.Root>
       </div>
       <div className='p-1'>
         {/* Inline glyph (not a sprite `Icon`) so the handle stays visible in the tile's native drag image. */}

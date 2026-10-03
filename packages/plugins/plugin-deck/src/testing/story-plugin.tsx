@@ -22,7 +22,7 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading } from '@dxos/react-ui/testing';
@@ -174,8 +174,8 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
           }
 
           return (
-            <Next.Panel.Root>
-              <Next.Panel.Body classNames='grid grid-rows-[min-content_1fr]'>
+            <Panel.Root>
+              <Panel.Body classNames='grid grid-rows-[min-content_1fr]'>
                 {attendableId && <ItemComponent id={attendableId} />}
                 <Syntax.Root data={subject}>
                   <Syntax.Content>
@@ -185,8 +185,8 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
                     </Syntax.Viewport>
                   </Syntax.Content>
                 </Syntax.Root>
-              </Next.Panel.Body>
-            </Next.Panel.Root>
+              </Panel.Body>
+            </Panel.Root>
           );
         },
       }),

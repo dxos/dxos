@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { DX_ANCHOR_ACTIVATE, DxAnchorActivate, Next } from '@dxos/react-ui';
+import { Block, Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover, virtualAnchor } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { File, PullRequest, Task, TaskSet } from '@dxos/types';
@@ -395,16 +395,16 @@ const iconFor = (artifact: Obj.Unknown): string =>
 
 const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequest }) => (
   <>
-    <Next.Card.Row>
-      <Next.Card.Text variant='description'>
+    <Card.Row>
+      <Card.Text variant='description'>
         {PullRequest.reference(pullRequest)} · {pullRequest.state} · {pullRequest.headBranch} → {pullRequest.baseBranch}
-      </Next.Card.Text>
-    </Next.Card.Row>
-    <Next.Card.Row>
-      <Next.Card.Text variant='description' data-testid='artifact-preview.pullRequest'>
+      </Card.Text>
+    </Card.Row>
+    <Card.Row>
+      <Card.Text variant='description' data-testid='artifact-preview.pullRequest'>
         +{pullRequest.additions ?? 0} −{pullRequest.deletions ?? 0}
-      </Next.Card.Text>
-    </Next.Card.Row>
+      </Card.Text>
+    </Card.Row>
   </>
 );
 
@@ -451,10 +451,10 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
   }, [handleActivate]);
 
   return (
-    <Next.Popover.Root
+    <Popover.Root
       open={open}
       onOpenChange={({ open }) => setOpen(open)}
-      positioning={Next.virtualAnchor(triggerRef)}
+      positioning={virtualAnchor(triggerRef)}
       autoFocus={false}
     >
       {children}
@@ -462,26 +462,26 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
         {opened}
       </output>
       {artifact && (
-        <Next.Popover.Content>
-          <Next.Popover.Body classNames='dx-card-popover-width'>
-            <Next.Card.Root border={false} data-testid='artifact-preview'>
-              <Next.Card.Header>
-                <Next.Block>
-                  <Next.Icon icon={iconFor(artifact)} />
-                </Next.Block>
-                <Next.Card.Title>{Obj.getLabel(artifact)}</Next.Card.Title>
-              </Next.Card.Header>
+        <Popover.Content>
+          <Popover.Body classNames='dx-card-popover-width'>
+            <Card.Root border={false} data-testid='artifact-preview'>
+              <Card.Header>
+                <Block>
+                  <Icon icon={iconFor(artifact)} />
+                </Block>
+                <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
+              </Card.Header>
               {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
               {Obj.instanceOf(File.File, artifact) && (
-                <Next.Card.Row>
+                <Card.Row>
                   <FilePreview file={artifact} />
-                </Next.Card.Row>
+                </Card.Row>
               )}
-            </Next.Card.Root>
-          </Next.Popover.Body>
-        </Next.Popover.Content>
+            </Card.Root>
+          </Popover.Body>
+        </Popover.Content>
       )}
-    </Next.Popover.Root>
+    </Popover.Root>
   );
 };
 

@@ -7,7 +7,7 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DEFAULT_INPUT } from '@dxos/conductor';
-import { Next } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks/index.ts';
@@ -22,9 +22,9 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
   // TODO(burdon): Subject property?
   return (
     <Box shape={shape}>
-      <Next.Card.Root grid>
+      <Card.Root grid>
         {value !== null && <Surface.Surface type={AppSurface.CardContent} data={{ subject: value }} limit={1} />}
-      </Next.Card.Root>
+      </Card.Root>
     </Box>
   );
 };

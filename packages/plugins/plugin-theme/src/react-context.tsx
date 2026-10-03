@@ -10,7 +10,7 @@ import React, { ReactNode } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Next, type ThemeMode, ThemeProvider, type ThemeProviderProps, defaultTx } from '@dxos/react-ui';
+import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, defaultTx } from '@dxos/react-ui';
 import { ACCENT_HUES, type AccentHue, applyAccent } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -93,12 +93,12 @@ export default Capability.makeModule(
         // theme provider only exposes that instance to React.
         return (
           <ThemeProvider {...{ tx: propsTx, themeMode, platform }}>
-            <Next.Toast.Provider>
+            <Toast.Provider>
               {children}
               {/* Toasts render in the viewport, not where their roots sit, and their close button is a
                     tooltip trigger, which throws without a provider above it. */}
-              <Next.Toast.Toaster />
-            </Next.Toast.Provider>
+              <Toast.Toaster />
+            </Toast.Provider>
           </ThemeProvider>
         );
       },

@@ -9,19 +9,19 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { controlSize, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Input, Tabs, type TabsOrientation, type TabsSelectedVariant, Typography } from '../index.ts';
 
 type StoryArgs = SizeArgs & {
-  orientation?: Next.TabsOrientation;
-  selectedVariant?: Next.TabsSelectedVariant;
+  orientation?: TabsOrientation;
+  selectedVariant?: TabsSelectedVariant;
   keepMounted?: boolean;
 };
 
 const DefaultStory = ({ size, orientation, selectedVariant, keepMounted }: StoryArgs) => (
-  <Next.Tabs.Root
+  <Tabs.Root
     defaultValue='overview'
     orientation={orientation}
     selectedVariant={selectedVariant}
@@ -29,21 +29,21 @@ const DefaultStory = ({ size, orientation, selectedVariant, keepMounted }: Story
     classNames='h-40'
     data-testid={`tabs-${size}`}
   >
-    <Next.Tabs.List aria-label='Project'>
-      <Next.Tabs.Trigger value='overview' label='Overview' />
-      <Next.Tabs.Trigger value='tasks' icon='ph--check-square--regular' label='Tasks' />
-      <Next.Tabs.Trigger value='settings' icon='ph--gear--regular' label='Settings' iconOnly />
-    </Next.Tabs.List>
-    <Next.Tabs.Content value='overview'>
-      <Next.Typography>A summary of the project.</Next.Typography>
-    </Next.Tabs.Content>
-    <Next.Tabs.Content value='tasks'>
-      <Next.Typography>Three open tasks.</Next.Typography>
-    </Next.Tabs.Content>
-    <Next.Tabs.Content value='settings'>
-      <Next.Input aria-label='Name' defaultValue='Apollo' />
-    </Next.Tabs.Content>
-  </Next.Tabs.Root>
+    <Tabs.List aria-label='Project'>
+      <Tabs.Trigger value='overview' label='Overview' />
+      <Tabs.Trigger value='tasks' icon='ph--check-square--regular' label='Tasks' />
+      <Tabs.Trigger value='settings' icon='ph--gear--regular' label='Settings' iconOnly />
+    </Tabs.List>
+    <Tabs.Content value='overview'>
+      <Typography>A summary of the project.</Typography>
+    </Tabs.Content>
+    <Tabs.Content value='tasks'>
+      <Typography>Three open tasks.</Typography>
+    </Tabs.Content>
+    <Tabs.Content value='settings'>
+      <Input aria-label='Name' defaultValue='Apollo' />
+    </Tabs.Content>
+  </Tabs.Root>
 );
 
 const meta = {
@@ -129,19 +129,19 @@ export const Vertical: Story = {
 /** `Trigger asChild`: the child element is the tab, unstyled (e.g. a rail of avatars), with the tab's state and keys. */
 export const CustomTrigger: Story = {
   render: () => (
-    <Next.Tabs.Root defaultValue='a' orientation='vertical'>
-      <Next.Tabs.List>
+    <Tabs.Root defaultValue='a' orientation='vertical'>
+      <Tabs.List>
         {['a', 'b'].map((value) => (
-          <Next.Tabs.Trigger key={value} asChild value={value}>
+          <Tabs.Trigger key={value} asChild value={value}>
             <button type='button' aria-label={`Space ${value}`} className='size-8 rounded-full bg-input-surface'>
               {value.toUpperCase()}
             </button>
-          </Next.Tabs.Trigger>
+          </Tabs.Trigger>
         ))}
-      </Next.Tabs.List>
-      <Next.Tabs.Content value='a'>First</Next.Tabs.Content>
-      <Next.Tabs.Content value='b'>Second</Next.Tabs.Content>
-    </Next.Tabs.Root>
+      </Tabs.List>
+      <Tabs.Content value='a'>First</Tabs.Content>
+      <Tabs.Content value='b'>Second</Tabs.Content>
+    </Tabs.Root>
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

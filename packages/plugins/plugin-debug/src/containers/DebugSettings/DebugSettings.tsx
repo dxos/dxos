@@ -11,7 +11,7 @@ import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
-import { Next, useFileDownload, useTranslation } from '@dxos/react-ui';
+import { Button, Select, Switch, Toast as UiToast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { gzip, setDeep } from '@dxos/util';
@@ -159,14 +159,14 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
         <Form.Content>
           <Form.FieldSet label={meta.profile.name ?? meta.profile.key} actions={scope}>
             <Form.Field label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
-              <Next.Switch
+              <Switch
                 disabled={!onSettingsChange}
                 checked={settings.wireframe}
                 onCheckedChange={({ checked }) => handleWireframeChange(checked)}
               />
             </Form.Field>
             <Form.Field label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
-              <Next.Switch
+              <Switch
                 disabled={!onSettingsChange}
                 checked={traceAll}
                 onCheckedChange={({ checked }) => handleTraceAllChange(checked)}
@@ -177,7 +177,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.tracing-panel.label')}
               description={t('settings.tracing-panel.description')}
             >
-              <Next.Button
+              <Button
                 icon='ph--arrow-square-out--regular'
                 iconOnly
                 label={t('settings.tracing-panel.label')}
@@ -189,7 +189,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-diagnostics.label')}
               description={t('settings.download-diagnostics.description')}
             >
-              <Next.Button
+              <Button
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-diagnostics.label')}
@@ -201,7 +201,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-logs.label')}
               description={t('settings.download-logs.description')}
             >
-              <Next.Button
+              <Button
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-logs.label')}
@@ -209,7 +209,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               />
             </Form.Field>
             <Form.Field standalone label={t('settings.repair.label')} description={t('settings.repair.description')}>
-              <Next.Button
+              <Button
                 icon='ph--first-aid-kit--regular'
                 iconOnly
                 label={t('settings.repair.label')}
@@ -219,17 +219,17 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
 
             {/* TODO(burdon): Move to layout? */}
             {toast && (
-              <Next.Toast.Root defaultOpen duration={5_000} onOpenChange={(open) => !open && setToast(undefined)}>
-                <Next.Toast.Header icon='ph--gift--duotone'>{toast.title}</Next.Toast.Header>
-                {toast.description && <Next.Toast.Description>{toast.description}</Next.Toast.Description>}
-              </Next.Toast.Root>
+              <UiToast.Root defaultOpen duration={5_000} onOpenChange={(open) => !open && setToast(undefined)}>
+                <UiToast.Header icon='ph--gift--duotone'>{toast.title}</UiToast.Header>
+                {toast.description && <UiToast.Description>{toast.description}</UiToast.Description>}
+              </UiToast.Root>
             )}
 
             <Form.Field
               label={t('settings.choose-storage-adaptor.label')}
               description={t('settings.choose-storage-adaptor.description')}
             >
-              <Next.Select.Root
+              <Select.Root
                 disabled={!onSettingsChange}
                 value={Object.entries(StorageAdapters)
                   .filter(([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore)
@@ -241,16 +241,13 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
                   label: t(`settings.storage-adaptor.${key}.label`),
                 }))}
               >
-                <Next.Select.Trigger disabled={!onSettingsChange} placeholder={t('settings.data-store.label')} />
-                <Next.Select.Content>
+                <Select.Trigger disabled={!onSettingsChange} placeholder={t('settings.data-store.label')} />
+                <Select.Content>
                   {Object.keys(StorageAdapters).map((key) => (
-                    <Next.Select.Item
-                      key={key}
-                      item={{ value: key, label: t(`settings.storage-adaptor.${key}.label`) }}
-                    />
+                    <Select.Item key={key} item={{ value: key, label: t(`settings.storage-adaptor.${key}.label`) }} />
                   ))}
-                </Next.Select.Content>
-              </Next.Select.Root>
+                </Select.Content>
+              </Select.Root>
             </Form.Field>
           </Form.FieldSet>
 

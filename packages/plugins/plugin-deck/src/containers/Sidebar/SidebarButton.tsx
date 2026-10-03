@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, type ButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 
 import { useDeckCompanions, useDeckState } from '#hooks';
@@ -15,7 +15,7 @@ import { meta } from '#meta';
 export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
-}: ThemedClassName<Pick<Next.ButtonProps, 'variant'>>) => {
+}: ThemedClassName<Pick<ButtonProps, 'variant'>>) => {
   const { updateState } = useDeckState();
   const { t } = useTranslation(meta.profile.key);
 
@@ -27,7 +27,7 @@ export const ToggleSidebarButton = ({
   }, [updateState]);
 
   return (
-    <Next.Button
+    <Button
       variant={variant}
       icon='ph--sidebar--regular'
       iconOnly
@@ -48,7 +48,7 @@ export const CloseSidebarButton = () => {
   }, [updateState]);
 
   return (
-    <Next.Button
+    <Button
       variant='ghost'
       icon='ph--caret-line-left--regular'
       iconOnly
@@ -87,7 +87,7 @@ export const ToggleComplementarySidebarButton = ({
   );
 
   return (
-    <Next.Button
+    <Button
       variant='ghost'
       classNames={['[&>svg]:-scale-x-100', classNames]}
       icon='ph--sidebar-simple--regular'

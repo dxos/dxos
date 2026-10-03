@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Next } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 
 import { ActionItems, DayAhead, Permissions, ProfileGrid, ProfileSummary } from '#components';
 import { Sidekick } from '#types';
@@ -14,7 +14,7 @@ export type SidekickArticleProps = AppSurface.ObjectArticleProps<Sidekick.Profil
 
 export const SidekickArticle = ({ role, subject: _sidekick, attendableId: _attendableId }: SidekickArticleProps) => {
   return (
-    <Next.Container role={role} gutter='lg'>
+    <Container role={role} gutter='lg'>
       <div>
         <DayAhead />
         <ActionItems items={[]} />
@@ -22,7 +22,7 @@ export const SidekickArticle = ({ role, subject: _sidekick, attendableId: _atten
         <ProfileSummary />
         <Permissions entries={[]} />
       </div>
-    </Next.Container>
+    </Container>
   );
 };
 

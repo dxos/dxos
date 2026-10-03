@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { invariant } from '@dxos/invariant';
-import { Next } from '@dxos/react-ui';
+import { Container, Panel, ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
@@ -24,11 +24,11 @@ const INITIAL: SettingsValues = { viewMode: 'preview', toolbar: true, fontSize: 
 const DefaultStory = (_: PaneArgs) => {
   const [values, setValues] = useState<SettingsValues>(INITIAL);
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container>
+    <Panel.Root>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container>
               <Form.Root
                 variant='settings'
                 schema={SettingsSchema}
@@ -44,11 +44,11 @@ const DefaultStory = (_: PaneArgs) => {
                   </Form.FieldSet>
                 </Form.Content>
               </Form.Root>
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

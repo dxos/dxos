@@ -5,7 +5,20 @@
 import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Grid, Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  Button,
+  Field,
+  Grid,
+  Icon,
+  Input,
+  ScrollArea,
+  type ThemedClassName,
+  Toolbar,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -113,9 +126,9 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
         {/* TODO(burdon): Replace with Thread. */}
         <MessageThread ref={scrollerRef} state={state} history={history} />
         {/* TODO(burdon): Replace with Form based on the function's input schema. */}
-        <Next.Toolbar.Root>
-          <Next.Field.Root>
-            <Next.Input
+        <Toolbar.Root>
+          <Field.Root>
+            <Input
               ref={inputRef}
               autoFocus
               placeholder={t('function-request.placeholder')}
@@ -123,10 +136,10 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
               onChange={(ev) => setInput(ev.target.value)}
               onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
             />
-          </Next.Field.Root>
-          <Next.Button icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
-          <Next.Button icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
-        </Next.Toolbar.Root>
+          </Field.Root>
+          <Button icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+          <Button icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
+        </Toolbar.Root>
       </div>
     );
   },
@@ -144,8 +157,8 @@ const MESSAGE_COLS = ['var(--dx-rail-item)', '1fr', 'var(--dx-rail-item)'];
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history }: MessageThreadProps, forwardedRef) => {
     return (
-      <Next.ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
-        <Next.ScrollArea.Viewport classNames='gap-6 p-2'>
+      <ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
+        <ScrollArea.Viewport classNames='gap-6 p-2'>
           {history.map((message, i) => (
             <Grid key={i} cols={MESSAGE_COLS} grow={false}>
               <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
@@ -158,12 +171,12 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
           {state === 'pending' && (
             <Grid cols={MESSAGE_COLS} grow={false}>
               <div className='p-1'>
-                <Next.Icon icon='ph--spinner--regular' size='xl' spin />
+                <Icon icon='ph--spinner--regular' size='xl' spin />
               </div>
             </Grid>
           )}
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   },
 );
@@ -186,4 +199,4 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
   );
 };
 
-const RobotAvatar = () => <Next.Avatar.Root size='sm' variant='circle' icon='ph--drone--regular' />;
+const RobotAvatar = () => <Avatar.Root size='sm' variant='circle' icon='ph--drone--regular' />;

@@ -5,7 +5,7 @@
 import React, { forwardRef } from 'react';
 
 import { type Type } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { Card, Panel, ScrollArea } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
 
 import { SpaceCapabilities } from '#types';
@@ -21,17 +21,17 @@ export type MergePreviewProps = {
  * and Cancel live in the TypeArticle toolbar that staged the preview.
  */
 export const MergePreview = forwardRef<HTMLDivElement, MergePreviewProps>(({ type, preview }, forwardedRef) => (
-  <Next.Panel.Root ref={forwardedRef}>
-    <Next.Panel.Body asChild>
-      <Next.ScrollArea.Root orientation='vertical'>
-        <Next.ScrollArea.Viewport>
-          <Next.Card.Root classNames='pb-form-gap'>
+  <Panel.Root ref={forwardedRef}>
+    <Panel.Body asChild>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport>
+          <Card.Root classNames='pb-form-gap'>
             <ObjectForm object={preview.preview} type={type} />
-          </Next.Card.Root>
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
-    </Next.Panel.Body>
-  </Next.Panel.Root>
+          </Card.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Panel.Body>
+  </Panel.Root>
 ));
 
 MergePreview.displayName = 'MergePreview';

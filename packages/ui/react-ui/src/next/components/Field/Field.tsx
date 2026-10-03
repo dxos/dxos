@@ -90,7 +90,7 @@ FieldHeader.displayName = 'Next.Field.Header';
 //
 
 type FieldLabelProps = ThemedClassName<FieldPrimitive.LabelProps> & {
-  /** Visually hidden but still names the control, like `Next.Label srOnly`. */
+  /** Visually hidden but still names the control, like `srOnly` on a standalone label. */
   srOnly?: boolean;
 };
 

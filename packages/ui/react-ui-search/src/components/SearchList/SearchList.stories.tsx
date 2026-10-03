@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Button, Field, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -42,11 +42,11 @@ const DefaultStory = ({ items = defaultItems }: StoryArgs) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <SearchList.Input placeholder='Search items...' autoFocus />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchList.Content>
             <SearchList.Viewport>
               {results.length > 0 ? (
@@ -64,8 +64,8 @@ const DefaultStory = ({ items = defaultItems }: StoryArgs) => {
               )}
             </SearchList.Viewport>
           </SearchList.Content>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SearchList.Root>
   );
 };
@@ -94,14 +94,14 @@ const ControlledStory = ({ items = defaultItems }: StoryArgs) => {
 
   return (
     <SearchList.Root onSearch={handleSearch} value={query}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
+      <Panel.Root>
+        <Panel.Header>
+          <Toolbar.Root>
             <SearchList.Input placeholder='Controlled search...' onChange={(e) => handleQueryChange(e.target.value)} />
-            <Next.Button onClick={() => handleQueryChange('')}>Clear Query</Next.Button>
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+            <Button onClick={() => handleQueryChange('')}>Clear Query</Button>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchList.Content>
             <SearchList.Viewport>
               {results.map((item) => (
@@ -115,11 +115,11 @@ const ControlledStory = ({ items = defaultItems }: StoryArgs) => {
               ))}
             </SearchList.Viewport>
           </SearchList.Content>
-        </Next.Panel.Body>
-        <Next.Panel.Footer>
+        </Panel.Body>
+        <Panel.Footer>
           <div className='flex p-2 items-center text-sm text-description'>Controlled query: &quot;{query}&quot;</div>
-        </Next.Panel.Footer>
-      </Next.Panel.Root>
+        </Panel.Footer>
+      </Panel.Root>
     </SearchList.Root>
   );
 };
@@ -172,11 +172,11 @@ const CustomRenderingStory = ({ items = defaultItems }: StoryArgs) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <SearchList.Input placeholder='Search with custom rendering...' autoFocus />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchList.Content>
             <SearchList.Viewport>
               {results.map((item) => (
@@ -190,8 +190,8 @@ const CustomRenderingStory = ({ items = defaultItems }: StoryArgs) => {
               ))}
             </SearchList.Viewport>
           </SearchList.Content>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SearchList.Root>
   );
 };
@@ -209,16 +209,16 @@ const WithEmptyStory = () => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <SearchList.Input placeholder='Try searching for anything...' />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchList.Content>
             <SearchList.Empty />
           </SearchList.Content>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SearchList.Root>
   );
 };
@@ -232,11 +232,11 @@ const WithoutViewportStory = ({ items = defaultItems }: StoryArgs) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <SearchList.Input placeholder='Search without viewport (no scroll)...' />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchList.Content>
             {results.map((item) => (
               <SearchList.Item
@@ -248,8 +248,8 @@ const WithoutViewportStory = ({ items = defaultItems }: StoryArgs) => {
               />
             ))}
           </SearchList.Content>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SearchList.Root>
   );
 };
@@ -269,11 +269,11 @@ const iconsItems: StoryItem[] = [
 const WithIconsStory = () => {
   return (
     <SearchList.Root>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <SearchList.Input placeholder='Search items with icons...' />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchList.Content>
             {iconsItems.map((item) => (
               <SearchList.Item
@@ -285,8 +285,8 @@ const WithIconsStory = () => {
               />
             ))}
           </SearchList.Content>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SearchList.Root>
   );
 };
@@ -349,18 +349,18 @@ const CustomInput = () => {
   };
 
   return (
-    <Next.Toolbar.Root>
-      <Next.Field.Root>
-        <Next.Input
+    <Toolbar.Root>
+      <Field.Root>
+        <Input
           type='text'
           value={query}
           placeholder='Custom input...'
           onChange={(ev) => onQueryChange(ev.target.value)}
           onKeyDown={handleKeyDown}
         />
-      </Next.Field.Root>
-      {query && <Next.Button icon='ph--x--regular' iconOnly label='Clear' onClick={() => onQueryChange('')} />}
-    </Next.Toolbar.Root>
+      </Field.Root>
+      {query && <Button icon='ph--x--regular' iconOnly label='Clear' onClick={() => onQueryChange('')} />}
+    </Toolbar.Root>
   );
 };
 
@@ -369,11 +369,11 @@ const CustomInputStory = ({ items = defaultItems }: StoryArgs) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <CustomInput />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchList.Content>
             <SearchList.Viewport>
               {results.map((item) => (
@@ -387,8 +387,8 @@ const CustomInputStory = ({ items = defaultItems }: StoryArgs) => {
               ))}
             </SearchList.Viewport>
           </SearchList.Content>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SearchList.Root>
   );
 };
@@ -408,11 +408,11 @@ const disabledItems: StoryItem[] = [
 const WithDisabledItemsStory = () => {
   return (
     <SearchList.Root>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <SearchList.Input placeholder='Arrow keys skip disabled items...' autoFocus />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchList.Content>
             {disabledItems.map((item, index) => (
               <SearchList.Item
@@ -425,8 +425,8 @@ const WithDisabledItemsStory = () => {
               />
             ))}
           </SearchList.Content>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SearchList.Root>
   );
 };
@@ -462,11 +462,11 @@ const WithGroupsStory = () => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <SearchList.Input placeholder='Search grouped items...' autoFocus />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchList.Content>
             <SearchList.Viewport>
               {Object.entries(grouped).map(([category, items]) => (
@@ -485,8 +485,8 @@ const WithGroupsStory = () => {
               {results.length === 0 && <SearchList.Empty />}
             </SearchList.Viewport>
           </SearchList.Content>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SearchList.Root>
   );
 };

@@ -27,7 +27,19 @@ import React, {
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Next, type ThemedClassName, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  DropIndicator,
+  Icon,
+  ScrollArea,
+  Tabs,
+  type ThemedClassName,
+  Tooltip,
+  toLocalizedString,
+  useMainLandmark,
+  useMediaQuery,
+  useTranslation,
+} from '@dxos/react-ui';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -120,8 +132,8 @@ const L0ItemRoot = memo(
       const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
 
       return (
-        <Next.Tooltip.Trigger asChild side='right' content={localizedString}>
-          <Next.Tabs.Trigger asChild value={item.id}>
+        <Tooltip.Trigger asChild side='right' content={localizedString}>
+          <Tabs.Trigger asChild value={item.id}>
             <button
               type='button'
               className={mx(
@@ -140,8 +152,8 @@ const L0ItemRoot = memo(
             >
               {children}
             </button>
-          </Next.Tabs.Trigger>
-        </Next.Tooltip.Trigger>
+          </Tabs.Trigger>
+        </Tooltip.Trigger>
       );
     },
   ),
@@ -241,7 +253,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {(closestEdge === 'top' || closestEdge === 'bottom') && <Next.DropIndicator edge={closestEdge} />}
+      {(closestEdge === 'top' || closestEdge === 'bottom') && <DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
 });
@@ -257,7 +269,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
     const hueFgStyle = hue && { style: { color: `var(--color-${hue}-fg)` } };
-    return <Next.Icon icon={item.properties.icon} size='xl' {...hueFgStyle} />;
+    return <Icon icon={item.properties.icon} size='xl' {...hueFgStyle} />;
   }
 
   const type = l0ItemType(item);
@@ -325,10 +337,10 @@ export const L0Menu = ({
   // Check if any items have onRearrange to enable drag-and-drop.
   const hasRearrangeableItems = topLevelItems.some((item) => item.properties.onRearrange);
   // The rail is a focus area of its own, before the panel beside it.
-  const landmark = Next.useMainLandmark(0);
+  const landmark = useMainLandmark(0);
 
   return (
-    <Next.Tabs.List
+    <Tabs.List
       {...landmark}
       data-tauri-drag-region='deep'
       classNames={[
@@ -343,7 +355,7 @@ export const L0Menu = ({
       <ActionMenu onAction={handleAction} group={parent} actions={menuActions}>
         {/* The trigger clones this child, so the testid belongs here rather than on `ActionMenu`. */}
         <div className='grid place-items-center' data-testid='spacePlugin.addSpace'>
-          <Next.Button
+          <Button
             size='lg'
             variant='ghost'
             iconSize='lg'
@@ -355,8 +367,8 @@ export const L0Menu = ({
       </ActionMenu>
 
       {/* Space list. */}
-      <Next.ScrollArea.Root orientation='vertical'>
-        <Next.ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
           {topLevelItems.map((item) => (
             <L0Item
               key={item.id}
@@ -367,8 +379,8 @@ export const L0Menu = ({
               {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
             />
           ))}
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
 
       {/* Actions. */}
       <div className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
@@ -395,6 +407,6 @@ export const L0Menu = ({
           </div>
         )}
       </div>
-    </Next.Tabs.List>
+    </Tabs.List>
   );
 };

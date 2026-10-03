@@ -12,7 +12,7 @@ import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, ty
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
-import { Next, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
@@ -154,7 +154,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
   return (
     <Form.FieldSet
       label={t('columns.label')}
-      actions={<Next.SystemButton.Add label={t('add-column.label')} onClick={handleAdd} />}
+      actions={<SystemButton.Add label={t('add-column.label')} onClick={handleAdd} />}
     >
       <OrderedList.Root<Pipeline.Column>
         items={columns}
@@ -173,7 +173,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
               >
                 <OrderedList.DragHandle />
                 <OrderedList.ItemText />
-                <Next.SystemButton.Remove
+                <SystemButton.Remove
                   label={t('delete-column.label')}
                   onClick={() => handleDelete(column)}
                   data-testid='column.delete'

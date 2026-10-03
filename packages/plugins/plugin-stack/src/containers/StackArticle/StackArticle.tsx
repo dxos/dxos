@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic } from '@dxos/react-ui-mosaic';
@@ -176,28 +176,28 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
   );
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header classNames='dx-toolbar-surface'>
-        <Next.Toolbar.Root classNames='dx-document'>
-          <Next.Button
+    <Panel.Root>
+      <Panel.Header classNames='dx-toolbar-surface'>
+        <Toolbar.Root classNames='dx-document'>
+          <Button
             icon='ph--plus--regular'
             iconOnly
             label={t('add-section.label')}
             data-testid='stack.addSection'
             onClick={handleAddSection}
           />
-          <Next.Toolbar.Separator />
+          <Toolbar.Separator />
           <ActionMenu actions={optionsMenu}>
-            <Next.Button
+            <Button
               icon='ph--dots-three-vertical--regular'
               iconOnly
               label={t('options.label')}
               data-testid='stack.options'
             />
           </ActionMenu>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         <Stack.Root
           id={Obj.getURI(collection)}
           attendableId={attendableId}
@@ -215,8 +215,8 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
             </Stack.Viewport>
           </Stack.Content>
         </Stack.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

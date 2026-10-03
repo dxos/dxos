@@ -8,7 +8,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Transcription, useFeedModelAdapter } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
@@ -50,15 +50,15 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Next.Panel.Header>
+      </Panel.Header>
 
-      <Next.Panel.Body asChild>
+      <Panel.Body asChild>
         <Transcription model={model} transcript={transcript} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

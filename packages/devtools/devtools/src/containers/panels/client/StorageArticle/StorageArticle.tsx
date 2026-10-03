@@ -10,7 +10,7 @@ import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Next } from '@dxos/react-ui';
+import { Button, Icon, Menu, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
 import { Bitbar, JsonView } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -169,38 +169,36 @@ export const StorageArticle = ({ role }: ArticleProps) => {
   const selectedValue = selected?.value as SelectionValue | undefined;
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Button onClick={refresh} disabled={isRefreshing}>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button onClick={refresh} disabled={isRefreshing}>
             Refresh
-          </Next.Button>
+          </Button>
           <div className='grow' />
-          <Next.Menu.Root positioning={{ placement: 'top' }}>
-            <Next.Menu.Trigger asChild>
-              <Next.Button>Reset Storage</Next.Button>
-            </Next.Menu.Trigger>
-            <Next.Menu.Content>
-              <Next.Menu.Item
+          <Menu.Root positioning={{ placement: 'top' }}>
+            <Menu.Trigger asChild>
+              <Button>Reset Storage</Button>
+            </Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item
                 onClick={async () => {
                   await services?.SystemService?.reset();
                   location.reload();
                 }}
                 item={{ value: 'Confirm Reset Storage?', label: 'Confirm Reset Storage?' }}
               />
-            </Next.Menu.Content>
-          </Next.Menu.Root>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
+            </Menu.Content>
+          </Menu.Root>
+        </Toolbar.Root>
+      </Panel.Header>
       {/* The tree takes the full width; a selected feed's detail opens beneath it. */}
-      <Next.Panel.Body
-        classNames={selectedValue?.kind === 'feed' ? 'grid grid-rows-2 divide-y divide-separator' : 'grid'}
-      >
-        <Next.ScrollArea.Root orientation='all'>
-          <Next.ScrollArea.Viewport>
+      <Panel.Body classNames={selectedValue?.kind === 'feed' ? 'grid grid-rows-2 divide-y divide-separator' : 'grid'}>
+        <ScrollArea.Root orientation='all'>
+          <ScrollArea.Viewport>
             <DataTree items={items} onSelect={setSelected} />
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
 
         {selectedValue?.kind === 'feed' && (
           <div className='grid grid-rows-[min-content_1fr] min-h-0'>
@@ -212,8 +210,8 @@ export const StorageArticle = ({ role }: ArticleProps) => {
             <JsonView data={selectedValue.feed} filter={false} />
           </div>
         )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
@@ -247,7 +245,7 @@ const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ item
         return (
           <div key={id} role='treeitem'>
             <div className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
-              <Next.Icon icon={iconName} />
+              <Icon icon={iconName} />
               {Element}
             </div>
             {items && items.length > 0 && (

@@ -11,12 +11,20 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import {
+  DragHandle,
+  type DragMoveDirection,
+  DragPreview,
+  DropIndicator,
+  Listbox,
+  type ListboxOption,
+  Typography,
+} from '../index.ts';
 
-const ITEMS: Next.ListboxOption[] = [
+const ITEMS: ListboxOption[] = [
   { value: 'one', label: 'One' },
   { value: 'two', label: 'Two' },
   { value: 'three', label: 'Three' },
@@ -30,7 +38,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [items, setItems] = useState(ITEMS);
   const [source, setSource] = useState<HTMLElement | null>(null);
   const rowRef = useRef<HTMLDivElement>(null);
-  const move = (value: string, direction: Next.DragMoveDirection) =>
+  const move = (value: string, direction: DragMoveDirection) =>
     setItems((items) => {
       const from = items.findIndex((item) => item.value === value);
       const to = direction === 'up' ? from - 1 : from + 1;
@@ -43,30 +51,30 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
     });
   return (
     <>
-      <Next.Listbox.Root items={items} selectionMode='none'>
-        <Next.Listbox.Content aria-label='Order' data-testid={`list-${size}`}>
+      <Listbox.Root items={items} selectionMode='none'>
+        <Listbox.Content aria-label='Order' data-testid={`list-${size}`}>
           {items.map((item, index) => (
-            <Next.Listbox.Item
+            <Listbox.Item
               key={item.value}
               item={item}
               data-testid={`row-${item.value}-${size}`}
               ref={index === 0 ? (element) => setSource(element) : index === 1 ? rowRef : undefined}
             >
-              <Next.Listbox.ItemText />
-              <Next.DragHandle
+              <Listbox.ItemText />
+              <DragHandle
                 label={`Move ${item.label}`}
                 onMove={(direction) => move(item.value, direction)}
                 data-testid={`handle-${item.value}-${size}`}
               />
-              {index === 1 && <Next.DropIndicator edge='top' />}
-            </Next.Listbox.Item>
+              {index === 1 && <DropIndicator edge='top' />}
+            </Listbox.Item>
           ))}
-        </Next.Listbox.Content>
-      </Next.Listbox.Root>
-      <Next.Typography data-testid={`order-${size}`}>{items.map((item) => item.value).join(' ')}</Next.Typography>
-      <Next.DragPreview source={source}>
+        </Listbox.Content>
+      </Listbox.Root>
+      <Typography data-testid={`order-${size}`}>{items.map((item) => item.value).join(' ')}</Typography>
+      <DragPreview source={source}>
         <span data-testid={`preview-${size}`}>{items[0].label}</span>
-      </Next.DragPreview>
+      </DragPreview>
     </>
   );
 };

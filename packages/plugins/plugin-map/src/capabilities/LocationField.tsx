@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, JsonSchema, Obj, URI } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
-import { Next } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope; `type` comes from the field AST. */
@@ -56,9 +56,9 @@ export const LocationField = ({ data, ...inputProps }: LocationFieldProps) => {
 
   // A provided field owns its row, so it carries its own label.
   return (
-    <Next.Field.Root>
-      <Next.Field.Label>{inputProps.label}</Next.Field.Label>
+    <Field.Root>
+      <Field.Label>{inputProps.label}</Field.Label>
       <SelectField {...props} options={coordinateProperties.map((property) => ({ value: property }))} />
-    </Next.Field.Root>
+    </Field.Root>
   );
 };

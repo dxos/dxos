@@ -8,16 +8,16 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Next } from '@dxos/react-ui';
+import { Dialog } from '@dxos/react-ui';
 
 import { translations } from '#translations';
 
 import { JoinDialog } from './JoinDialog.tsx';
 
 const DefaultStory = () => (
-  <Next.Dialog.Root defaultOpen>
+  <Dialog.Root defaultOpen>
     <JoinDialog />
-  </Next.Dialog.Root>
+  </Dialog.Root>
 );
 
 const meta = {

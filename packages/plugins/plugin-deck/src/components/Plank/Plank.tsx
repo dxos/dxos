@@ -15,7 +15,15 @@ import { Surface } from '@dxos/app-framework/ui';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { Next, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Breadcrumb,
+  Icon,
+  Popover,
+  type ThemedClassName,
+  toLocalizedString,
+  useMainLandmark,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -105,7 +113,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const { t } = useTranslation(meta.profile.key);
     const attentionAttrs = useAttentionAttributes(attendableId);
     // Each plank is a focus area of the shell; its companion follows it.
-    const landmark = Next.useMainLandmark(1, onKeyDown);
+    const landmark = useMainLandmark(1, onKeyDown);
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, landmark.ref);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
@@ -126,7 +134,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     );
 
     // Anchor the sigil's popover only when this plank's menu is the active popover target.
-    const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Next.Popover.Anchor : Fragment;
+    const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
 
     return (
       <Pane.Root {...landmark} ref={ref} classNames={classNames} {...attentionAttrs} data-testid='deck.plank'>
@@ -151,7 +159,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                   style={pending ? pendingStyle : undefined}
                 >
                   <span className='sr-only'>{label}</span>
-                  <Next.Icon icon={icon} />
+                  <Icon icon={icon} />
                 </Pane.Sigil>
               )}
             </ActionRoot>
@@ -161,11 +169,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               // attention-aware Pane.Title, sized to its content so it keeps a stable width.
               // `ps-1`, matching `Pane.Title`'s own `px-1`: the two branches below render at the same
               // origin, so the leading label must not shift as a trail appears or disappears.
-              <Next.Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1'>
-                <Next.Breadcrumb.List classNames='gap-1'>
+              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1'>
+                <Breadcrumb.List classNames='gap-1'>
                   {breadcrumbs.map((crumb) => (
                     <Fragment key={crumb.id}>
-                      <Next.Breadcrumb.Item asChild>
+                      <Breadcrumb.Item asChild>
                         <button
                           type='button'
                           className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
@@ -173,11 +181,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                         >
                           {crumb.label}
                         </button>
-                      </Next.Breadcrumb.Item>
-                      <Next.Breadcrumb.Separator />
+                      </Breadcrumb.Item>
+                      <Breadcrumb.Separator />
                     </Fragment>
                   ))}
-                  <Next.Breadcrumb.Item>
+                  <Breadcrumb.Item>
                     <Pane.Title
                       attendableId={attendableId}
                       related={related}
@@ -185,9 +193,9 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                     >
                       {label}
                     </Pane.Title>
-                  </Next.Breadcrumb.Item>
-                </Next.Breadcrumb.List>
-              </Next.Breadcrumb.Root>
+                  </Breadcrumb.Item>
+                </Breadcrumb.List>
+              </Breadcrumb.Root>
             ) : (
               <Pane.Title
                 attendableId={attendableId}

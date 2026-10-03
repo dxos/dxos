@@ -4,7 +4,7 @@
 
 import React, { type ComponentType, type ReactElement } from 'react';
 
-import { Next } from '../Next.tsx';
+import { Container, type Gutter } from '../components/index.ts';
 import { type Size, SIZES } from '../sizes.ts';
 
 /**
@@ -29,7 +29,7 @@ export const SIZE_ARG_TYPES = {
  */
 type SizesDecorator = (
   Story: ComponentType<{ args?: Record<string, unknown> }>,
-  context: { args: Record<string, unknown>; parameters?: { sizes?: { gutter?: Next.Gutter } } },
+  context: { args: Record<string, unknown>; parameters?: { sizes?: { gutter?: Gutter } } },
 ) => ReactElement;
 
 export type WithSizesOptions = {
@@ -50,7 +50,7 @@ export const withSizes =
     return (
       <div className='nx-scope @container flex flex-col w-full' data-size='md'>
         {shown.map((size) => (
-          <Next.Container
+          <Container
             key={size}
             size={size}
             gutter={context.parameters?.sizes?.gutter ?? 'rail'}
@@ -58,7 +58,7 @@ export const withSizes =
             data-testid={`size-${size}`}
           >
             <Story args={{ ...context.args, size }} />
-          </Next.Container>
+          </Container>
         ))}
       </div>
     );

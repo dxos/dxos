@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 
 import { keySymbols } from '@dxos/react-focus';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, Menu, type MenuOption, toLocalizedString, useTranslation, useVirtualAnchor } from '@dxos/react-ui';
 import { type MenuItemChrome } from '@dxos/ui-types';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -46,7 +46,7 @@ const isCheckable = (item: MenuItem): item is MenuAction =>
 const useItemData = (
   id: string,
   properties: Pick<MenuItemChrome, 'label' | 'icon' | 'disabled' | 'keyBinding'>,
-): Next.MenuOption => {
+): MenuOption => {
   const { t } = useTranslation(translationKey);
   const shortcut = resolveKeyBinding(properties.keyBinding);
   return {
@@ -86,18 +86,14 @@ type ActionItemProps = {
 
 const ItemIcon = ({ menu, action }: { menu: MenuActions; action: MenuAction | MenuItemGroup<MenuItemChrome> }) =>
   action.properties?.icon ? (
-    <Next.Menu.ItemIcon
-      spin={action.properties.spin}
-      size={menu.iconSize}
-      classNames={action.properties.iconClassNames}
-    />
+    <Menu.ItemIcon spin={action.properties.spin} size={menu.iconSize} classNames={action.properties.iconClassNames} />
   ) : null;
 
 const ActionMenuItem = ({ menu, action, group }: ActionItemProps) => {
   const item = useItemData(action.id, action.properties);
   const handleClick = useInvoke(menu, action, group);
   return (
-    <Next.Menu.Item
+    <Menu.Item
       item={item}
       onClick={handleClick}
       // Picking several values from a multi-select group should not close the menu after the first.
@@ -105,9 +101,9 @@ const ActionMenuItem = ({ menu, action, group }: ActionItemProps) => {
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
       <ItemIcon menu={menu} action={action} />
-      <Next.Menu.ItemText />
-      {item.shortcut && <Next.Menu.ItemShortcut />}
-    </Next.Menu.Item>
+      <Menu.ItemText />
+      {item.shortcut && <Menu.ItemShortcut />}
+    </Menu.Item>
   );
 };
 
@@ -115,7 +111,7 @@ const ActionCheckboxItem = ({ menu, action, group }: ActionItemProps) => {
   const item = useItemData(action.id, action.properties);
   const handleClick = useInvoke(menu, action, group);
   return (
-    <Next.Menu.CheckboxItem
+    <Menu.CheckboxItem
       item={item}
       // The graph owns the state: the action flips it and the item re-renders from `checked`.
       checked={!!action.properties.checked}
@@ -130,7 +126,7 @@ const ActionRadioItem = ({ menu, action, group }: ActionItemProps) => {
   const item = useItemData(action.id, action.properties);
   const handleClick = useInvoke(menu, action, group);
   return (
-    <Next.Menu.RadioItem
+    <Menu.RadioItem
       item={item}
       onClick={handleClick}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
@@ -142,20 +138,20 @@ const ActionRadioItem = ({ menu, action, group }: ActionItemProps) => {
 const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGroup<MenuItemChrome> }) => {
   const item = useItemData(group.id, group.properties);
   return (
-    <Next.Menu.Sub>
-      <Next.Menu.TriggerItem
+    <Menu.Sub>
+      <Menu.TriggerItem
         item={item}
         disabled={group.properties.disabled}
         {...(group.properties.testId && { 'data-testid': group.properties.testId })}
       >
         <ItemIcon menu={menu} action={group} />
-        <Next.Menu.ItemText />
-        <Next.Icon icon='ph--caret-right--regular' />
-      </Next.Menu.TriggerItem>
-      <Next.Menu.Content>
+        <Menu.ItemText />
+        <Icon icon='ph--caret-right--regular' />
+      </Menu.TriggerItem>
+      <Menu.Content>
         <ActionMenuItems menu={menu} group={group} />
-      </Next.Menu.Content>
-    </Next.Menu.Sub>
+      </Menu.Content>
+    </Menu.Sub>
   );
 };
 
@@ -180,7 +176,7 @@ const segment = (items: MenuItem[], multiple: boolean): Segment[] =>
 
 const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuItem; group?: MenuGroupContext }) => {
   if (isSeparator(item)) {
-    return <Next.Menu.Separator />;
+    return <Menu.Separator />;
   }
   if (isMenuGroup(item)) {
     // A graph group's properties are an open record, validated by the plugin that contributed them.
@@ -212,7 +208,7 @@ const ActionMenuItems = ({
     <>
       {segments.map((entry) =>
         entry.kind === 'radio' ? (
-          <Next.Menu.RadioItemGroup
+          <Menu.RadioItemGroup
             key={entry.id}
             value={entry.actions.find((action) => action.properties.checked)?.id ?? ''}
           >
@@ -221,7 +217,7 @@ const ActionMenuItems = ({
               .map((action) => (
                 <ActionRadioItem key={action.id} menu={menu} action={action} group={group} />
               ))}
-          </Next.Menu.RadioItemGroup>
+          </Menu.RadioItemGroup>
         ) : (
           <ActionMenuEntry key={entry.item.id} menu={menu} item={entry.item} group={group} />
         ),
@@ -329,7 +325,7 @@ export const ActionMenu = ({
   // Next's Content portals into a ref.
   const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
 
-  const positioning = Next.useVirtualAnchor(virtualRef);
+  const positioning = useVirtualAnchor(virtualRef);
 
   if (deferred && !built && trigger) {
     return cloneElement(trigger, {
@@ -341,21 +337,21 @@ export const ActionMenu = ({
   }
 
   return (
-    <Next.Menu.Root
+    <Menu.Root
       open={deferred ? deferredOpen : open}
       defaultOpen={defaultOpen}
       onOpenChange={({ open }) => handleOpenChange(open)}
       positioning={positioning}
     >
       {children && (
-        <Next.Menu.Trigger asChild disabled={disabled}>
+        <Menu.Trigger asChild disabled={disabled}>
           {children}
-        </Next.Menu.Trigger>
+        </Menu.Trigger>
       )}
-      <Next.Menu.Content container={containerRef}>
+      <Menu.Content container={containerRef}>
         <ActionMenuItems menu={menu} group={group} actions={typeof actions === 'function' ? actions() : actions} />
-      </Next.Menu.Content>
-    </Next.Menu.Root>
+      </Menu.Content>
+    </Menu.Root>
   );
 };
 

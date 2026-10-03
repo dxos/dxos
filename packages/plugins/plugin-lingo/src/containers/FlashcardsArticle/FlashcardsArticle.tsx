@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Flashcard } from '#components';
@@ -94,11 +94,11 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header classNames='dx-expand'>
+    <Panel.Root role={role}>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attentionId} />
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='flex flex-col'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col'>
         {word ? (
           <Flashcard
             key={word.id}
@@ -113,8 +113,8 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
             {session.answered > 0 && <span>{t('session-score.message', session)}</span>}
           </div>
         )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

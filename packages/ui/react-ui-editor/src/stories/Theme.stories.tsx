@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { useThemeMode } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
@@ -15,7 +15,7 @@ const createText = (monospace?: boolean) =>
   [`${monospace ? 'monospace' : 'body'}`, 'Hello world', '0123456789'].join('\n');
 
 const DefaultStory = () => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const [ext1, ext2] = useMemo(
     () => [
       //

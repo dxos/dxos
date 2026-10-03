@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Empty, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { MarkdownLink, MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
 
@@ -48,7 +48,7 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
           {parsed.markdown ? (
             <MarkdownView content={parsed.markdown} components={components} data-testid='pull-request.body' />
           ) : (
-            <Next.Empty>{t('no-description.message')}</Next.Empty>
+            <Empty>{t('no-description.message')}</Empty>
           )}
           <Form.FieldSet label={t('details.label')} data-testid='pull-request.details'>
             <Form.Fields />
@@ -92,11 +92,7 @@ const useBodyComponents = (): MarkdownViewProps['components'] => {
         return (
           <DxAnchor eid={href} className='dx-tag--anchor'>
             {icon && (
-              <Next.Icon
-                icon={icon.icon}
-                size='md'
-                classNames={['inline-block align-[-0.125em] me-1', icon.classNames]}
-              />
+              <Icon icon={icon.icon} size='md' classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
             )}
             {children === href ? (PreviewCapabilities.linkLabel(all, href) ?? children) : children}
           </DxAnchor>

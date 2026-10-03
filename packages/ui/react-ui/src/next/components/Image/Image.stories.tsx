@@ -9,9 +9,9 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Image, Typography } from '../index.ts';
 
 /** Inline SVG, so the stories never fetch from the network. */
 const LANDSCAPE = `data:image/svg+xml,${encodeURIComponent(
@@ -44,24 +44,18 @@ const DefaultStory = ({ size }: SizeArgs) => {
   const [clicks, setClicks] = useState(0);
   return (
     <div className='grid grid-cols-4 gap-2'>
-      <Next.Image src={LANDSCAPE} alt='Mountains at dusk' data-testid={`cover-${size}`} />
-      <Next.Image
-        src={LANDSCAPE}
-        alt='Mountains, contained'
-        aspectRatio='1'
-        fit='contain'
-        data-testid={`contain-${size}`}
-      />
-      <Next.Image src={BROKEN} alt='Missing photo' data-testid={`broken-${size}`} />
-      <Next.Image src={LANDSCAPE} alt='Mountains, square' aspectRatio='1' data-testid={`square-${size}`} />
-      <Next.Image
+      <Image src={LANDSCAPE} alt='Mountains at dusk' data-testid={`cover-${size}`} />
+      <Image src={LANDSCAPE} alt='Mountains, contained' aspectRatio='1' fit='contain' data-testid={`contain-${size}`} />
+      <Image src={BROKEN} alt='Missing photo' data-testid={`broken-${size}`} />
+      <Image src={LANDSCAPE} alt='Mountains, square' aspectRatio='1' data-testid={`square-${size}`} />
+      <Image
         src={LANDSCAPE}
         alt='Open mountains'
         onClick={() => setClicks((count) => count + 1)}
         data-testid={`clickable-${size}`}
       />
-      <Next.Typography data-testid={`clicks-${size}`}>Opened {clicks}</Next.Typography>
-      <Next.Image
+      <Typography data-testid={`clicks-${size}`}>Opened {clicks}</Typography>
+      <Image
         src={STRIP}
         alt='Red strip'
         aspectRatio='1'
@@ -69,7 +63,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
         backdrop='dominant'
         data-testid={`backdrop-${size}`}
       />
-      <Next.Image
+      <Image
         src={CUTOUT}
         alt='Cut-out'
         aspectRatio='1'

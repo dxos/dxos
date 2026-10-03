@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Select, type SelectOption, Typography, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
@@ -31,7 +31,7 @@ export const SelectField = ({
   onValueChange,
   onBlur,
 }: SelectFieldProps) => {
-  const items = useMemo<Next.SelectOption[]>(
+  const items = useMemo<SelectOption[]>(
     () => options.map(({ value, label, icon }) => ({ value: String(value), label: label ?? String(value), icon })),
     [options],
   );
@@ -39,9 +39,7 @@ export const SelectField = ({
   const value = getValue();
   if (presentationFor(presentation).isStatic) {
     return (
-      <Next.Typography truncate>
-        {options.find((option) => option.value === value)?.label ?? String(value ?? '')}
-      </Next.Typography>
+      <Typography truncate>{options.find((option) => option.value === value)?.label ?? String(value ?? '')}</Typography>
     );
   }
 
@@ -61,7 +59,7 @@ export const SelectField = ({
 };
 
 type SelectControlProps = {
-  items: Next.SelectOption[];
+  items: SelectOption[];
   value?: string;
   placeholder?: string;
   readonly?: boolean;
@@ -72,17 +70,17 @@ type SelectControlProps = {
 
 /** The Select a field row holds: Ark reads the enclosing `Field.Root` for the label and state ids. */
 export const SelectControl = ({ items, value, placeholder, readonly, loading, onValueChange }: SelectControlProps) => (
-  <Next.Select.Root
+  <Select.Root
     items={items}
     value={value === undefined ? [] : [value]}
     disabled={!!readonly}
     onValueChange={({ value: [next] }) => onValueChange(next)}
   >
-    <Next.Select.Trigger placeholder={placeholder} loading={loading} />
-    <Next.Select.Content>
+    <Select.Trigger placeholder={placeholder} loading={loading} />
+    <Select.Content>
       {items.map((item) => (
-        <Next.Select.Item key={item.value} item={item} />
+        <Select.Item key={item.value} item={item} />
       ))}
-    </Next.Select.Content>
-  </Next.Select.Root>
+    </Select.Content>
+  </Select.Root>
 );

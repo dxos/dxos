@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Next } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 
 import { VoxelEditor } from '#components';
 import { Voxel } from '#types';
@@ -18,11 +18,11 @@ export const VoxelCard = ({ subject: world }: VoxelCardProps) => {
   const { gridX, gridY, blockSize } = Voxel.getGridDimensions(world);
 
   return (
-    <Next.Card.Body>
-      <Next.Card.Row>
+    <Card.Body>
+      <Card.Row>
         <VoxelEditor voxels={voxels} gridX={gridX} gridY={gridY} blockSize={blockSize} readOnly />
-      </Next.Card.Row>
-    </Next.Card.Body>
+      </Card.Row>
+    </Card.Body>
   );
 };
 

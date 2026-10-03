@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { GeoLocation, type GeoPoint } from '@dxos/echo/Format';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Container, Field, Input, Typography, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -37,10 +37,10 @@ export const GeoPointField = ({
   const resolved = presentationFor(presentation);
   if (resolved.isStatic) {
     return !location.latitude && !location.longitude ? null : (
-      <Next.Typography truncate>
+      <Typography truncate>
         {Math.abs(location.latitude ?? 0).toFixed(5)}°{(location.latitude ?? 0) >= 0 ? 'N' : 'S'}{' '}
         {Math.abs(location.longitude ?? 0).toFixed(5)}°{(location.longitude ?? 0) >= 0 ? 'E' : 'W'}
-      </Next.Typography>
+      </Typography>
     );
   }
 
@@ -53,13 +53,13 @@ export const GeoPointField = ({
   };
 
   const coordinate = (name: Coordinate, bound: number) => (
-    <Next.Field.Root>
+    <Field.Root>
       {resolved.showLabel && (
-        <Next.Field.Header>
-          <Next.Field.Label>{t(`${name}.label`)}</Next.Field.Label>
-        </Next.Field.Header>
+        <Field.Header>
+          <Field.Label>{t(`${name}.label`)}</Field.Label>
+        </Field.Header>
       )}
-      <Next.Input
+      <Input
         type='number'
         step='0.00001'
         min={-bound}
@@ -69,14 +69,14 @@ export const GeoPointField = ({
         value={text[name]}
         onChange={(event) => handleChange(name, event.target.value)}
       />
-    </Next.Field.Root>
+    </Field.Root>
   );
 
   return (
-    <Next.Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+    <Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
       {coordinate('latitude', 90)}
       {coordinate('longitude', 180)}
-    </Next.Container>
+    </Container>
   );
 };
 

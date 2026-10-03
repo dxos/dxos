@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Button, Field, Panel, Switch, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
@@ -117,20 +117,20 @@ const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
   }, [manager]);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Button onClick={handleAdd}>Add</Next.Button>
-          <Next.Button onClick={handleSelect}>Pick</Next.Button>
-          <Next.Button onClick={handleError}>Error</Next.Button>
-          <Next.Toolbar.Separator />
-          <Next.Field.Root>
-            <Next.Field.Label classNames='pr-1'>Debug</Next.Field.Label>
-            <Next.Switch checked={debug} onCheckedChange={({ checked }) => handleToggleDebug(checked)} />
-          </Next.Field.Root>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='grid grid-cols-2 h-full gap-4 overflow-hidden'>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button onClick={handleAdd}>Add</Button>
+          <Button onClick={handleSelect}>Pick</Button>
+          <Button onClick={handleError}>Error</Button>
+          <Toolbar.Separator />
+          <Field.Root>
+            <Field.Label classNames='pr-1'>Debug</Field.Label>
+            <Switch checked={debug} onCheckedChange={({ checked }) => handleToggleDebug(checked)} />
+          </Field.Root>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-cols-2 h-full gap-4 overflow-hidden'>
         <SurfaceComponent
           key={debug ? 'debug' : 'prod'}
           type={ItemRole}
@@ -148,8 +148,8 @@ const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
             </Listbox.Content>
           </Listbox.Root>
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

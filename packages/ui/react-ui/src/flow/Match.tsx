@@ -5,14 +5,14 @@
 import React, { Children, type ReactNode, isValidElement } from 'react';
 
 type RootProps<T> = {
-  /** The discriminant each `Match` is tested against. */
+  /** The discriminant each `Case` is tested against. */
   on: T;
-  /** Rendered when no `Match` matches. */
+  /** Rendered when no `Case` matches. */
   fallback?: ReactNode;
   children: ReactNode;
 };
 
-type MatchProps<T> = {
+type CaseProps<T> = {
   /** Matched by strict equality with `on`, or by a predicate on it. */
   when: T | ((value: T) => boolean);
   children?: ReactNode;
@@ -22,26 +22,26 @@ type MatchProps<T> = {
 const isPredicate = <T,>(when: T | ((value: T) => boolean)): when is (value: T) => boolean =>
   typeof when === 'function';
 
-const SwitchMatch = <T,>({ children }: MatchProps<T>): ReactNode => <>{children}</>;
+const MatchCase = <T,>({ children }: CaseProps<T>): ReactNode => <>{children}</>;
 
-SwitchMatch.displayName = 'Switch.Match';
+MatchCase.displayName = 'Match.Case';
 
 /**
  * Structural mode switching after Solid's `<Switch>`/`<Match>` and the ui-template
- * `switch`/`match` grammar: exactly the first matching branch is rendered; the rest never exist.
+ * `switch`/`match` grammar (named `Match` here: `Switch` is the toggle control): exactly the first matching branch is rendered; the rest never exist.
  *
  * @example
  * ```tsx
- * <Switch.Root on={view} fallback={<ListView />}>
- *   <Switch.Match when='grid'>
+ * <Match.Root on={view} fallback={<ListView />}>
+ *   <Match.Case when='grid'>
  *     <GridView />
- *   </Switch.Match>
- * </Switch.Root>
+ *   </Match.Case>
+ * </Match.Root>
  * ```
  */
-const SwitchRoot = <T,>({ on, fallback = null, children }: RootProps<T>): ReactNode => {
+const MatchRoot = <T,>({ on, fallback = null, children }: RootProps<T>): ReactNode => {
   for (const child of Children.toArray(children)) {
-    if (!isValidElement<MatchProps<T>>(child) || child.type !== SwitchMatch) {
+    if (!isValidElement<CaseProps<T>>(child) || child.type !== MatchCase) {
       continue;
     }
     const { when } = child.props;
@@ -53,11 +53,11 @@ const SwitchRoot = <T,>({ on, fallback = null, children }: RootProps<T>): ReactN
   return <>{fallback}</>;
 };
 
-SwitchRoot.displayName = 'Switch.Root';
+MatchRoot.displayName = 'Match.Root';
 
-export const Switch = {
-  Root: SwitchRoot,
-  Match: SwitchMatch,
+export const Match = {
+  Root: MatchRoot,
+  Case: MatchCase,
 };
 
-export type { MatchProps as SwitchMatchProps, RootProps as SwitchRootProps };
+export type { CaseProps as MatchCaseProps, RootProps as MatchRootProps };

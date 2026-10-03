@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { useObject } from '@dxos/echo-react';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -53,10 +53,10 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
   }, [overall]);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root orientation='vertical'>
-          <Next.ScrollArea.Viewport>
+    <Panel.Root role={role}>
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
             {!result ? (
               <p className='p-3 text-description'>{t('scores.empty.label')}</p>
             ) : (
@@ -105,10 +105,10 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
                 </div>
               </Flex>
             )}
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

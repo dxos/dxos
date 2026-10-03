@@ -9,26 +9,26 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { realHover, realUnhover, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Link, type LinkProps, Typography } from '../index.ts';
 
-type StoryArgs = SizeArgs & Pick<Next.LinkProps, 'variant'>;
+type StoryArgs = SizeArgs & Pick<LinkProps, 'variant'>;
 
 const DefaultStory = ({ variant }: StoryArgs) => (
-  <Next.Typography data-testid='text'>
-    Read the <Next.Link href='https://dxos.org/guide'>guide</Next.Link>, published{' '}
-    <Next.Link href='https://github.com/dxos/dxos/releases' variant='neutral'>
+  <Typography data-testid='text'>
+    Read the <Link href='https://dxos.org/guide'>guide</Link>, published{' '}
+    <Link href='https://github.com/dxos/dxos/releases' variant='neutral'>
       2 days ago
-    </Next.Link>
+    </Link>
     , or open the{' '}
-    <Next.Link asChild variant={variant}>
+    <Link asChild variant={variant}>
       <a href='#changelog' target='_self'>
         changelog
       </a>
-    </Next.Link>
+    </Link>
     .
-  </Next.Typography>
+  </Typography>
 );
 
 const meta = {

@@ -13,16 +13,27 @@ import { random } from '@dxos/random';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
 import { byTestId, expectPopupSize, expectTooltip } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  Field,
+  Group,
+  Input,
+  Select,
+  type SelectOption,
+  SystemButton,
+  Typography,
+} from '../index.ts';
 
 random.seed(123);
 
 const PARAGRAPHS = Array.from({ length: 40 }, () => random.lorem.paragraph());
 
-const ROLES: Next.SelectOption[] = [
+const ROLES: SelectOption[] = [
   { value: 'owner', label: 'Owner' },
   { value: 'editor', label: 'Editor' },
   { value: 'viewer', label: 'Viewer' },
@@ -32,34 +43,34 @@ const DESCRIPTION = 'Update how others see you.';
 
 const ProfileForm = () => (
   <>
-    <Next.Field.Root data-testid='name'>
-      <Next.Field.Header>
-        <Next.Field.Label>Name</Next.Field.Label>
-      </Next.Field.Header>
-      <Next.Input placeholder='Ada Lovelace' />
-    </Next.Field.Root>
-    <Next.Field.Root data-testid='email'>
-      <Next.Field.Header>
-        <Next.Field.Label>Email</Next.Field.Label>
-      </Next.Field.Header>
-      <Next.Input type='email' placeholder='ada@example.com' />
-    </Next.Field.Root>
-    <Next.Field.Root data-testid='role'>
-      <Next.Select.Root items={ROLES}>
-        <Next.Field.Header>
-          <Next.Select.Label>Role</Next.Select.Label>
-        </Next.Field.Header>
-        <Next.Select.Trigger placeholder='Select a role' />
-        <Next.Select.Content>
+    <Field.Root data-testid='name'>
+      <Field.Header>
+        <Field.Label>Name</Field.Label>
+      </Field.Header>
+      <Input placeholder='Ada Lovelace' />
+    </Field.Root>
+    <Field.Root data-testid='email'>
+      <Field.Header>
+        <Field.Label>Email</Field.Label>
+      </Field.Header>
+      <Input type='email' placeholder='ada@example.com' />
+    </Field.Root>
+    <Field.Root data-testid='role'>
+      <Select.Root items={ROLES}>
+        <Field.Header>
+          <Select.Label>Role</Select.Label>
+        </Field.Header>
+        <Select.Trigger placeholder='Select a role' />
+        <Select.Content>
           {ROLES.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-    </Next.Field.Root>
-    <Next.Field.Root data-testid='subscribe'>
-      <Next.Checkbox label='Subscribe to updates' />
-    </Next.Field.Root>
+        </Select.Content>
+      </Select.Root>
+    </Field.Root>
+    <Field.Root data-testid='subscribe'>
+      <Checkbox label='Subscribe to updates' />
+    </Field.Root>
   </>
 );
 
@@ -73,41 +84,41 @@ type ProfileDialogProps = {
 };
 
 const ProfileDialog = ({ contentSize, title, testId, paragraphs }: ProfileDialogProps) => (
-  <Next.Dialog.Root>
-    <Next.Dialog.Trigger asChild>
-      <Next.Button data-testid={`${testId}-trigger`}>{title}</Next.Button>
-    </Next.Dialog.Trigger>
-    <Next.Dialog.Content size={contentSize} data-testid={testId}>
-      <Next.Dialog.Header data-testid='header'>
-        <Next.Dialog.Title>{title}</Next.Dialog.Title>
-        <Next.Dialog.CloseTrigger data-testid='close' />
-      </Next.Dialog.Header>
-      <Next.Dialog.Body data-testid='body'>
-        <Next.Dialog.Description>{DESCRIPTION}</Next.Dialog.Description>
+  <Dialog.Root>
+    <Dialog.Trigger asChild>
+      <Button data-testid={`${testId}-trigger`}>{title}</Button>
+    </Dialog.Trigger>
+    <Dialog.Content size={contentSize} data-testid={testId}>
+      <Dialog.Header data-testid='header'>
+        <Dialog.Title>{title}</Dialog.Title>
+        <Dialog.CloseTrigger data-testid='close' />
+      </Dialog.Header>
+      <Dialog.Body data-testid='body'>
+        <Dialog.Description>{DESCRIPTION}</Dialog.Description>
         {paragraphs ? (
-          PARAGRAPHS.slice(0, paragraphs).map((text, index) => <Next.Typography key={index}>{text}</Next.Typography>)
+          PARAGRAPHS.slice(0, paragraphs).map((text, index) => <Typography key={index}>{text}</Typography>)
         ) : (
           <ProfileForm />
         )}
-      </Next.Dialog.Body>
-      <Next.Dialog.Footer data-testid='footer'>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.SystemButton.Cancel iconOnly={false} />
-        </Next.Dialog.CloseTrigger>
-        <Next.SystemButton.Save iconOnly={false} />
-      </Next.Dialog.Footer>
-    </Next.Dialog.Content>
-  </Next.Dialog.Root>
+      </Dialog.Body>
+      <Dialog.Footer data-testid='footer'>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Cancel iconOnly={false} />
+        </Dialog.CloseTrigger>
+        <SystemButton.Save iconOnly={false} />
+      </Dialog.Footer>
+    </Dialog.Content>
+  </Dialog.Root>
 );
 
 /**
  * A form dialog, which takes its trigger row's size (Phase 4 decision 2), and one whose body scrolls, `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
-  <Next.Group>
+  <Group>
     <ProfileDialog title='Edit profile' testId={`dialog-${size}`} />
     <ProfileDialog contentSize='lg' title='Read terms' paragraphs={40} testId={`long-${size}`} />
-  </Next.Group>
+  </Group>
 );
 
 const meta = {
@@ -144,15 +155,15 @@ export const Default: Story = {};
 /** `srOnly` names and describes the dialog for assistive tech without showing a heading or text. */
 export const HiddenTitle: Story = {
   render: () => (
-    <Next.Dialog.Root defaultOpen>
-      <Next.Dialog.Content data-testid='hidden-title'>
-        <Next.Dialog.Title srOnly>Settings</Next.Dialog.Title>
-        <Next.Dialog.Description srOnly>{DESCRIPTION}</Next.Dialog.Description>
-        <Next.Dialog.Body>
+    <Dialog.Root defaultOpen>
+      <Dialog.Content data-testid='hidden-title'>
+        <Dialog.Title srOnly>Settings</Dialog.Title>
+        <Dialog.Description srOnly>{DESCRIPTION}</Dialog.Description>
+        <Dialog.Body>
           <ProfileForm />
-        </Next.Dialog.Body>
-      </Next.Dialog.Content>
-    </Next.Dialog.Root>
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog.Root>
   ),
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
@@ -165,16 +176,16 @@ export const HiddenTitle: Story = {
 /** `closeOnInteractOutside={false}` on the Content (the part a surface renders) keeps the dialog open on an outside click. */
 export const KeepOpenOutside: Story = {
   render: () => (
-    <Next.Dialog.Root defaultOpen>
-      <Next.Dialog.Content closeOnInteractOutside={false} data-testid='keep-open'>
-        <Next.Dialog.Header>
-          <Next.Dialog.Title>Unsaved</Next.Dialog.Title>
-        </Next.Dialog.Header>
-        <Next.Dialog.Body>
+    <Dialog.Root defaultOpen>
+      <Dialog.Content closeOnInteractOutside={false} data-testid='keep-open'>
+        <Dialog.Header>
+          <Dialog.Title>Unsaved</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
           <ProfileForm />
-        </Next.Dialog.Body>
-      </Next.Dialog.Content>
-    </Next.Dialog.Root>
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog.Root>
   ),
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
@@ -195,16 +206,16 @@ export const KeepOpenOutside: Story = {
 /** The Root's `placement` places Content it does not render (here `start`: hung from the top). */
 export const RootPlacement: Story = {
   render: () => (
-    <Next.Dialog.Root defaultOpen placement='start'>
-      <Next.Dialog.Content data-testid='hung'>
-        <Next.Dialog.Header>
-          <Next.Dialog.Title>Move to</Next.Dialog.Title>
-        </Next.Dialog.Header>
-        <Next.Dialog.Body>
-          <Next.Typography>{DESCRIPTION}</Next.Typography>
-        </Next.Dialog.Body>
-      </Next.Dialog.Content>
-    </Next.Dialog.Root>
+    <Dialog.Root defaultOpen placement='start'>
+      <Dialog.Content data-testid='hung'>
+        <Dialog.Header>
+          <Dialog.Title>Move to</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <Typography>{DESCRIPTION}</Typography>
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog.Root>
   ),
   play: async ({ canvasElement }) => {
     const dialog = await within(canvasElement.ownerDocument.body).findByTestId('hung');
@@ -218,16 +229,16 @@ export const RootPlacement: Story = {
 /** A non-modal dialog docked at the block end with no scrim (e.g. a chat panel): the page behind stays usable. */
 export const Docked: Story = {
   render: () => (
-    <Next.Dialog.Root modal={false} defaultOpen>
-      <Next.Dialog.Content placement='end' scrim={false} data-testid='docked'>
-        <Next.Dialog.Header>
-          <Next.Dialog.Title>Chat</Next.Dialog.Title>
-        </Next.Dialog.Header>
-        <Next.Dialog.Body>
-          <Next.Typography>{DESCRIPTION}</Next.Typography>
-        </Next.Dialog.Body>
-      </Next.Dialog.Content>
-    </Next.Dialog.Root>
+    <Dialog.Root modal={false} defaultOpen>
+      <Dialog.Content placement='end' scrim={false} data-testid='docked'>
+        <Dialog.Header>
+          <Dialog.Title>Chat</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <Typography>{DESCRIPTION}</Typography>
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog.Root>
   ),
   play: async ({ canvasElement }) => {
     const document = canvasElement.ownerDocument;

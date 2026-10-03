@@ -9,10 +9,10 @@ import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Avatar, type AvatarRootProps } from '../index.ts';
 
 /** Inline SVG, so the stories never fetch from the network. */
 const PORTRAIT = `data:image/svg+xml,${encodeURIComponent(
@@ -22,22 +22,22 @@ const PORTRAIT = `data:image/svg+xml,${encodeURIComponent(
   </svg>`,
 )}`;
 
-type StoryArgs = SizeArgs & Pick<Next.AvatarRootProps, 'variant' | 'status' | 'hue' | 'hueVariant' | 'fallback'>;
+type StoryArgs = SizeArgs & Pick<AvatarRootProps, 'variant' | 'status' | 'hue' | 'hueVariant' | 'fallback'>;
 
 /** Initials, an emoji, an icon, an image and a portrait filling its host, in a row with a visible name. */
 const DefaultStory = ({ size, variant, status, hue, hueVariant, fallback }: StoryArgs) => (
   <div className='flex items-center gap-2'>
-    <Next.Avatar.Root
+    <Avatar.Root
       {...{ variant, status, hue, hueVariant, fallback }}
       aria-labelledby={`name-${size}`}
       data-testid={`initials-${size}`}
     />
     <span id={`name-${size}`}>{fallback}</span>
-    <Next.Avatar.Root fallback='🦊' hue='amber' variant={variant} label='Fox' data-testid={`emoji-${size}`} />
-    <Next.Avatar.Root icon='ph--robot--regular' hue='violet' hueVariant='surface' label='Agent' />
-    <Next.Avatar.Root src={PORTRAIT} fallback='Pat Lee' status='active' label='Pat Lee' data-testid={`image-${size}`} />
+    <Avatar.Root fallback='🦊' hue='amber' variant={variant} label='Fox' data-testid={`emoji-${size}`} />
+    <Avatar.Root icon='ph--robot--regular' hue='violet' hueVariant='surface' label='Agent' />
+    <Avatar.Root src={PORTRAIT} fallback='Pat Lee' status='active' label='Pat Lee' data-testid={`image-${size}`} />
     <div className='w-20 shrink-0'>
-      <Next.Avatar.Root src={PORTRAIT} fill variant='square' label='Portrait' data-testid={`fill-${size}`} />
+      <Avatar.Root src={PORTRAIT} fill variant='square' label='Portrait' data-testid={`fill-${size}`} />
     </div>
   </div>
 );

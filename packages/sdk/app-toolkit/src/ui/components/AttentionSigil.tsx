@@ -13,7 +13,7 @@ import React, {
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { keySymbols } from '@dxos/react-focus';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, Menu, type MenuOption, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
@@ -35,7 +35,7 @@ const sigilSizeClassNames: Record<AttentionSigilButtonSize, string> = {
   lg: 'w-(--dx-rail-action) h-(--dx-rail-action)',
 };
 
-export type AttentionSigilButtonProps = Omit<ComponentPropsWithoutRef<typeof Next.Button>, 'variant' | 'size'> &
+export type AttentionSigilButtonProps = Omit<ComponentPropsWithoutRef<typeof Button>, 'variant' | 'size'> &
   Attention.AttendableId &
   Attention.Related & {
     isMenu?: boolean;
@@ -67,7 +67,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
     const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
     // TODO(wittjosiah): Disable hover styles when isMenu is false.
     return (
-      <Next.Button
+      <Button
         {...props}
         variant={variant}
         classNames={['shrink-0 px-0 min-h-0 relative dx-app-no-drag', sigilSizeClassNames[size], classNames]}
@@ -75,7 +75,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
       >
         {isMenu && <MenuSignifierHorizontal />}
         {children}
-      </Next.Button>
+      </Button>
     );
   },
 );
@@ -117,7 +117,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
         classNames={!hasActions && 'cursor-default'}
       >
         <span className='sr-only'>{triggerLabel}</span>
-        <Next.Icon icon={icon} />
+        <Icon icon={icon} />
       </AttentionSigilButton>
     );
 
@@ -126,19 +126,19 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
     }
 
     return (
-      <Next.Menu.Root open={optionsMenuOpen} onOpenChange={({ open }) => setOptionsMenuOpen(open)}>
-        <Next.Menu.Trigger asChild ref={forwardedRef}>
+      <Menu.Root open={optionsMenuOpen} onOpenChange={({ open }) => setOptionsMenuOpen(open)}>
+        <Menu.Trigger asChild ref={forwardedRef}>
           {button}
-        </Next.Menu.Trigger>
-        <Next.Menu.Content classNames='z-[31]'>
+        </Menu.Trigger>
+        <Menu.Content classNames='z-[31]'>
           {actionGroups?.map((actions, index) => {
-            const separator = index > 0 ? <Next.Menu.Separator /> : null;
+            const separator = index > 0 ? <Menu.Separator /> : null;
             return (
               <Fragment key={index}>
                 {separator}
                 {actions.map((action) => {
                   const shortcut = resolveKeyBinding(action.properties.keyBinding);
-                  const item: Next.MenuOption = {
+                  const item: MenuOption = {
                     value: action.id,
                     label: toLocalizedString(action.properties.label ?? '', t),
                     icon: action.properties.icon ?? 'ph--circle-dashed--regular',
@@ -157,7 +157,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
                   const testId = action.properties?.testId && { 'data-testid': action.properties.testId };
 
                   return action.properties.menuItemType === 'toggle' ? (
-                    <Next.Menu.CheckboxItem
+                    <Menu.CheckboxItem
                       key={action.id}
                       item={item}
                       checked={!!action.properties.isChecked}
@@ -165,15 +165,15 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
                       {...testId}
                     />
                   ) : (
-                    <Next.Menu.Item key={action.id} item={item} onClick={handleClick} {...testId} />
+                    <Menu.Item key={action.id} item={item} onClick={handleClick} {...testId} />
                   );
                 })}
               </Fragment>
             );
           })}
           {children}
-        </Next.Menu.Content>
-      </Next.Menu.Root>
+        </Menu.Content>
+      </Menu.Root>
     );
   },
 );

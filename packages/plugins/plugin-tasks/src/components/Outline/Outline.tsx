@@ -18,7 +18,7 @@ import React, {
 
 import { Doc } from '@dxos/echo-doc';
 import { composeRefs, createContext } from '@dxos/react-hooks';
-import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, useThemeMode, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   EditorMenuProvider,
@@ -215,7 +215,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
     viewRef,
   } = useOutlineContext(OUTLINE_CONTENT_NAME);
   const { t } = useTranslation(meta.profile.key);
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({

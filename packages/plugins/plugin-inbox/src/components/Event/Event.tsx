@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
-import { Next, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { ActionToolbar, type ActionToolbarProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -108,9 +108,9 @@ type EventViewportProps = {};
 
 const EventViewport = composable<HTMLDivElement, EventViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <Next.ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
-      <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+    <ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 });
 

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Next } from '@dxos/react-ui';
+import { Panel, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MasterDetail } from './MasterDetail.tsx';
@@ -39,9 +39,9 @@ const ITEMS: Record<string, Row[]> = {
 // Full-page frame matching the real usage (e.g. the PDS browser): a `Panel` whose content is a bounded
 // flex column that a horizontal `MasterDetail` fills via `flex-1`. Fixing scroll here fixes it there.
 const PageFrame = ({ children }: { children: React.ReactNode }) => (
-  <Next.Panel.Root>
-    <Next.Panel.Body classNames='flex flex-col dx-grow'>{children}</Next.Panel.Body>
-  </Next.Panel.Root>
+  <Panel.Root>
+    <Panel.Body classNames='flex flex-col dx-grow'>{children}</Panel.Body>
+  </Panel.Root>
 );
 
 // Horizontal orientation: list and detail sit side-by-side as columns, each pane scrolling vertically. The
@@ -111,10 +111,10 @@ const BasicStory = () => {
   const [selectedId, setSelectedId] = useState<string | undefined>('fruit');
   const selected = CATEGORIES.find((row) => row.id === selectedId);
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Body asChild classNames='py-trim-md'>
-        <Next.ScrollArea.Root orientation='vertical'>
-          <Next.ScrollArea.Viewport>
+    <Panel.Root>
+      <Panel.Body asChild classNames='py-trim-md'>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
             <MasterDetail<Row>
               classNames='dx-document'
               items={CATEGORIES}
@@ -125,10 +125,10 @@ const BasicStory = () => {
               emptyLabel='No categories'
               onSelect={setSelectedId}
             />
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

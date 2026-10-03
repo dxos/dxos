@@ -9,7 +9,7 @@ import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Json, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { EntityId } from '@dxos/keys';
-import { Next } from '@dxos/react-ui';
+import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -37,15 +37,15 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
   const [selectedObject] = useQuery(db, selectionQuery);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root />
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root />
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className={mx('grid divide-y divide-subdued-separator', db && 'grid-rows-[1fr_2fr]')}>
           {db && (
-            <Next.ScrollArea.Root>
-              <Next.ScrollArea.Viewport>
+            <ScrollArea.Root>
+              <ScrollArea.Viewport>
                 <ObjectsTree
                   db={db}
                   root={companionTo}
@@ -53,30 +53,30 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
                   onOpen={onOpen}
                   canOpen={canOpen}
                 />
-              </Next.ScrollArea.Viewport>
-            </Next.ScrollArea.Root>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           )}
           <Syntax.Root
             data={selectedObject}
             getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
           >
-            <Next.Panel.Root>
-              <Next.Panel.Header>
-                <Next.Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+            <Panel.Root>
+              <Panel.Header>
+                <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
                   <Syntax.Filter />
                   <Syntax.Depth />
-                </Next.Toolbar.Root>
-              </Next.Panel.Header>
-              <Next.Panel.Body asChild>
+                </Toolbar.Root>
+              </Panel.Header>
+              <Panel.Body asChild>
                 <Syntax.Viewport>
                   <Syntax.Code />
                 </Syntax.Viewport>
-              </Next.Panel.Body>
-            </Next.Panel.Root>
+              </Panel.Body>
+            </Panel.Root>
           </Syntax.Root>
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

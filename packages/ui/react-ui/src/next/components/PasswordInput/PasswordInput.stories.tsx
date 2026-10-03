@@ -11,27 +11,27 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Field, Input, PasswordInput } from '../index.ts';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Field.Root>
-      <Next.Field.Label>Password</Next.Field.Label>
-      <Next.PasswordInput defaultValue='hunter2' autoComplete='current-password' data-testid={`password-${size}`} />
-      <Next.Field.HelperText>At least 8 characters.</Next.Field.HelperText>
-    </Next.Field.Root>
-    <Next.Input aria-label='Note' data-testid={`input-${size}`} />
-    <Next.Field.Root>
-      <Next.Field.Label>API key</Next.Field.Label>
-      <Next.PasswordInput ignorePasswordManagers placeholder='sk-…' data-testid={`key-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root disabled>
-      <Next.Field.Label>Locked</Next.Field.Label>
-      <Next.PasswordInput defaultValue='secret' data-testid={`disabled-${size}`} />
-    </Next.Field.Root>
+    <Field.Root>
+      <Field.Label>Password</Field.Label>
+      <PasswordInput defaultValue='hunter2' autoComplete='current-password' data-testid={`password-${size}`} />
+      <Field.HelperText>At least 8 characters.</Field.HelperText>
+    </Field.Root>
+    <Input aria-label='Note' data-testid={`input-${size}`} />
+    <Field.Root>
+      <Field.Label>API key</Field.Label>
+      <PasswordInput ignorePasswordManagers placeholder='sk-…' data-testid={`key-${size}`} />
+    </Field.Root>
+    <Field.Root disabled>
+      <Field.Label>Locked</Field.Label>
+      <PasswordInput defaultValue='secret' data-testid={`disabled-${size}`} />
+    </Field.Root>
   </>
 );
 
@@ -97,7 +97,7 @@ const BlurStory = () => {
   const [blurred, setBlurred] = useState(0);
   return (
     <div className='flex flex-col gap-2'>
-      <Next.PasswordInput aria-label='Token' onBlur={() => setBlurred((count) => count + 1)} />
+      <PasswordInput aria-label='Token' onBlur={() => setBlurred((count) => count + 1)} />
       <span data-testid='blurred'>{blurred}</span>
     </div>
   );

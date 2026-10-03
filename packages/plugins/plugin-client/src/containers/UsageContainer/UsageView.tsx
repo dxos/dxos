@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Banner, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -196,7 +196,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
       return (
         <Form.Field standalone label={label} description={description}>
           {typeof percent === 'number' ? (
-            <Next.Progress value={percent / 100} label={t('usage-percent-used.label', { percent })} />
+            <Progress value={percent / 100} label={t('usage-percent-used.label', { percent })} />
           ) : (
             t('usage-unlimited.label')
           )}
@@ -212,10 +212,10 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
         <Form.Content>
           <Form.FieldSet label={t('usage-section.title')} description={t('usage-section.description')}>
             {message ? (
-              <Next.Banner.Root valence={message.valence}>
-                <Next.Banner.Title icon={message.icon}>{t(message.title)}</Next.Banner.Title>
-                <Next.Banner.Body>{t(message.description)}</Next.Banner.Body>
-              </Next.Banner.Root>
+              <Banner.Root valence={message.valence}>
+                <Banner.Title icon={message.icon}>{t(message.title)}</Banner.Title>
+                <Banner.Body>{t(message.description)}</Banner.Body>
+              </Banner.Root>
             ) : (
               <Form.Fields fieldProvider={meterFieldProvider} />
             )}

@@ -9,12 +9,12 @@ import React, { Component, type PropsWithChildren, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Slider, type SliderProps } from '../index.ts';
 
-type StoryArgs = SizeArgs & Pick<Next.SliderProps, 'min' | 'max' | 'step' | 'disabled'>;
+type StoryArgs = SizeArgs & Pick<SliderProps, 'min' | 'max' | 'step' | 'disabled'>;
 
 /** Renders the error a child throws, so a play test can read an invariant's message without failing the story. */
 class Caught extends Component<PropsWithChildren<{ testId: string }>, { message?: string }> {
@@ -37,7 +37,7 @@ const Controlled = (props: Omit<StoryArgs, 'size' | 'allSizes'>) => {
   const [value, setValue] = useState([25]);
   return (
     <>
-      <Next.Slider {...props} value={value} onValueChange={setValue} label='Volume' data-testid='controlled' />
+      <Slider {...props} value={value} onValueChange={setValue} label='Volume' data-testid='controlled' />
       <span data-testid='readout'>{value[0]}</span>
     </>
   );
@@ -46,9 +46,9 @@ const Controlled = (props: Omit<StoryArgs, 'size' | 'allSizes'>) => {
 const DefaultStory = ({ size: _size, allSizes: _allSizes, ...props }: StoryArgs) => (
   <>
     <Controlled {...props} />
-    <Next.Slider defaultValue={[0.4]} min={0.2} max={0.7} step={0.01} aria-label='Opacity' />
-    <Next.Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
-    <Next.Slider defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
+    <Slider defaultValue={[0.4]} min={0.2} max={0.7} step={0.01} aria-label='Opacity' />
+    <Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
+    <Slider defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
   </>
 );
 
@@ -73,10 +73,10 @@ const TestStory = (args: StoryArgs) => (
     {args.size === 'md' && (
       <>
         <Caught testId='partial-labels'>
-          <Next.Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum']} />
+          <Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum']} />
         </Caught>
         <Caught testId='no-labels'>
-          <Next.Slider defaultValue={[25, 75]} max={100} aria-label='Range' />
+          <Slider defaultValue={[25, 75]} max={100} aria-label='Range' />
         </Caught>
       </>
     )}

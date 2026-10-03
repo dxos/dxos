@@ -12,7 +12,20 @@ import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection } from '@dxos/link';
 import { useQuery } from '@dxos/react-client/echo';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import {
+  Block,
+  Button,
+  Card,
+  Container,
+  Field,
+  Flex,
+  Icon,
+  Input,
+  Panel,
+  ScrollArea,
+  Toolbar,
+  useTranslation,
+} from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getStyles } from '@dxos/ui-theme';
@@ -195,49 +208,49 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
     : undefined;
 
   const recordDetail = record ? (
-    <Next.ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
-      <Next.ScrollArea.Viewport classNames='p-2'>
-        <Next.Container gap='md' gutter='none'>
+    <ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
+      <ScrollArea.Viewport classNames='p-2'>
+        <Container gap='md' gutter='none'>
           <span className='font-mono text-xs text-description truncate'>{record.uri}</span>
           {mappedForCollection ? (
             <Flex column gap='sm'>
               {preview && previewIcon && (
-                <Next.Card.Root grid>
-                  <Next.Card.Header>
-                    <Next.Block>
-                      <Next.Icon
+                <Card.Root grid>
+                  <Card.Header>
+                    <Block>
+                      <Icon
                         icon={previewIcon.icon}
                         classNames={previewIcon.hue ? getStyles(previewIcon.hue).text : undefined}
                       />
-                    </Next.Block>
-                    <Next.Card.Title>{Obj.getLabel(preview)}</Next.Card.Title>
-                  </Next.Card.Header>
+                    </Block>
+                    <Card.Title>{Obj.getLabel(preview)}</Card.Title>
+                  </Card.Header>
                   <Surface.Surface type={AppSurface.CardContent} data={{ subject: preview }} limit={1} />
-                </Next.Card.Root>
+                </Card.Root>
               )}
               {alreadyImported ? (
                 <span className='text-sm text-success-text'>{t('imported.label')}</span>
               ) : (
-                <Next.Button variant='primary' classNames='self-start' onClick={handleImport}>
+                <Button variant='primary' classNames='self-start' onClick={handleImport}>
                   {t('import.label')}
-                </Next.Button>
+                </Button>
               )}
             </Flex>
           ) : (
             <JsonHighlighter data={record.value} />
           )}
-        </Next.Container>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+        </Container>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   ) : null;
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root classNames='px-2'>
-          <Next.Icon icon='ph--at--regular' size='md' tone='description' />
-          <Next.Field.Root>
-            <Next.Input
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root classNames='px-2'>
+          <Icon icon='ph--at--regular' size='md' tone='description' />
+          <Field.Root>
+            <Input
               classNames='grow'
               placeholder={t('handle.placeholder')}
               value={handleInput}
@@ -248,13 +261,11 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
                 }
               }}
             />
-          </Next.Field.Root>
-          <Next.Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>
-            {t('browse.label')}
-          </Next.Button>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='flex flex-col dx-grow py-2'>
+          </Field.Root>
+          <Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>{t('browse.label')}</Button>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col dx-grow py-2'>
         {error && <div className='px-2 pb-2 text-sm text-error-text'>{error}</div>}
         <MasterDetail<CollectionItem>
           orientation='horizontal'
@@ -282,7 +293,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
             ) : null
           }
         />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

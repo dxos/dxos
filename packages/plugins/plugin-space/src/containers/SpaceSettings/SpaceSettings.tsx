@@ -5,7 +5,7 @@
 import React, { type ReactNode } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Select, Switch, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -46,7 +46,7 @@ export const SpaceSettings = ({
         <Form.Content>
           <Form.FieldSet label={t('plugin.name')} actions={scope}>
             <Form.Field label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
-              <Next.Switch
+              <Switch
                 disabled={!onSettingsChange}
                 checked={settings?.showHidden}
                 onCheckedChange={({ checked }) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
@@ -55,7 +55,7 @@ export const SpaceSettings = ({
           </Form.FieldSet>
           <Form.FieldSet label={t('space-settings.label')} description={t('space-settings.description')}>
             <Form.Field label={t('settings.default-space.label')} description={t('settings.default-space.description')}>
-              <Next.Select.Root
+              <Select.Root
                 value={defaultSpaceId ? [defaultSpaceId] : []}
                 onValueChange={({ value: [value] }) => value && onDefaultSpaceChange?.(value)}
                 disabled={!onDefaultSpaceChange}
@@ -64,16 +64,16 @@ export const SpaceSettings = ({
                   label: toLocalizedString(getSpaceDisplayName(space), t),
                 }))}
               >
-                <Next.Select.Trigger placeholder={t('settings.default-space.placeholder')} />
-                <Next.Select.Content>
+                <Select.Trigger placeholder={t('settings.default-space.placeholder')} />
+                <Select.Content>
                   {eligibleDefaultSpaces?.map((space) => (
-                    <Next.Select.Item
+                    <Select.Item
                       key={space.id}
                       item={{ value: space.id, label: toLocalizedString(getSpaceDisplayName(space), t) }}
                     />
                   ))}
-                </Next.Select.Content>
-              </Next.Select.Root>
+                </Select.Content>
+              </Select.Root>
             </Form.Field>
             <Form.Field
               standalone
@@ -93,7 +93,7 @@ export const SpaceSettings = ({
                       <Listbox.ItemText classNames='min-h-0!'>
                         {toLocalizedString(getSpaceDisplayName(space), t)}
                       </Listbox.ItemText>
-                      <Next.Button
+                      <Button
                         icon='ph--faders--regular'
                         iconOnly
                         label={t('settings.open-settings.label')}

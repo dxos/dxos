@@ -6,7 +6,7 @@ import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Container, Icon, type ThemedClassName, Timestamp, Typography, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 import { Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -68,15 +68,15 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
 
   return (
     // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
-    <Next.Container asChild gutter='inherit' gap='sm' classNames={classNames} data-testid='taskList.properties'>
+    <Container asChild gutter='inherit' gap='sm' classNames={classNames} data-testid='taskList.properties'>
       <section>
-        <Next.Typography asChild tone='subdued' classNames='text-sm'>
+        <Typography asChild tone='subdued' classNames='text-sm'>
           <h2>{t('task-properties.label')}</h2>
-        </Next.Typography>
+        </Typography>
         {createdAt !== undefined && (
           <TaskProperty
             icon='ph--calendar-plus--regular'
-            label={<Next.Timestamp date={createdAt} />}
+            label={<Timestamp date={createdAt} />}
             unset
             testId='taskList.property.created'
           />
@@ -195,7 +195,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
           }
         />
       </section>
-    </Next.Container>
+    </Container>
   );
 };
 
@@ -219,7 +219,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
           greys, and with the same asterisk on both rows the mismatch read as a meaning the rows do
           not carry. A value keeps the hue its option table gives it. */}
       <div className={TASK_GRID_ICON}>
-        <Next.Icon icon={icon} classNames={mx(unset ? 'text-description' : iconClassNames)} />
+        <Icon icon={icon} classNames={mx(unset ? 'text-description' : iconClassNames)} />
       </div>
       <span className={mx('min-w-0 pe-1.5 text-sm truncate', unset && 'text-description')}>{label}</span>
     </>
@@ -242,7 +242,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
           grid would size the glyph column to the glyph instead of to the shared 24px. `w-fit`, since
           a property is as wide as its value and a full-width button would paint a bar across the
           pane on hover. */}
-      <Next.Button
+      <Button
         variant='ghost'
         size='sm'
         // `items-center`, overriding the shared grid's `items-start`: a property is one line, and the
@@ -253,7 +253,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
         data-testid={testId}
       >
         {content}
-      </Next.Button>
+      </Button>
     </ActionMenu>
   );
 };

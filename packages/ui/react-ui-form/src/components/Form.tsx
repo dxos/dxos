@@ -5,7 +5,21 @@
 import React, { type PropsWithChildren, forwardRef, useRef } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
-import { Next, composable, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Container,
+  DIALOG_AUTOFOCUS_ATTRIBUTE,
+  Field,
+  Group,
+  type Gutter,
+  Panel,
+  type PanelRootProps,
+  ScrollArea,
+  SystemButton,
+  composable,
+  useDefaultGutter,
+  useTranslation,
+} from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -31,10 +45,10 @@ export type FormViewportProps = PropsWithChildren<{
    */
   scroll?: boolean;
   /** The pane's size when `scroll`; otherwise the form inherits its host's. */
-  size?: Next.PanelRootProps['size'];
+  size?: PanelRootProps['size'];
   /** `document` keeps the form at the reading width when `scroll`, centred in the pane. */
-  width?: Next.PanelRootProps['width'];
-  gutter?: Next.Gutter;
+  width?: PanelRootProps['width'];
+  gutter?: Gutter;
 }>;
 
 /**
@@ -44,28 +58,28 @@ export type FormViewportProps = PropsWithChildren<{
  */
 export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
   ({ children, scroll, size, width, gutter, ...props }, forwardedRef) => {
-    const defaultGutter = Next.useDefaultGutter();
+    const defaultGutter = useDefaultGutter();
     return scroll ? (
-      <Next.Panel.Root
+      <Panel.Root
         {...props}
         size={size}
         width={width}
         gutter={gutter === 'inherit' ? undefined : gutter}
         ref={forwardedRef}
       >
-        <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport asChild>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport asChild>
               {/* The block inset keeps the last section off the pane's bottom edge when scrolled to the end. */}
-              <Next.Container padBlock>{children}</Next.Container>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+              <Container padBlock>{children}</Container>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
     ) : (
-      <Next.Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} ref={forwardedRef}>
+      <Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} ref={forwardedRef}>
         {children}
-      </Next.Container>
+      </Container>
     );
   },
 );
@@ -90,7 +104,7 @@ export const FormContent = forwardRef<HTMLDivElement, FormContentProps>(({ child
   const settings = variant === 'settings';
   // A settings form is a reading-width column of its own tracks (the current Form's `dx-document` settings content).
   return (
-    <Next.Container
+    <Container
       role='form'
       gutter={settings ? 'none' : 'inherit'}
       width={settings ? 'document' : undefined}
@@ -100,7 +114,7 @@ export const FormContent = forwardRef<HTMLDivElement, FormContentProps>(({ child
       ref={ref}
     >
       {children}
-    </Next.Container>
+    </Container>
   );
 });
 
@@ -128,19 +142,19 @@ export const FormActions = ({ submitLabel, submitDisabled }: FormActionsProps) =
   }
 
   return (
-    <Next.Group justify='end'>
+    <Group justify='end'>
       {onCancel && (
-        <Next.SystemButton.Cancel
+        <SystemButton.Cancel
           iconOnly={false}
           label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
           // Inside a dialog this claims the initial focus, so a reflexive Enter dismisses rather than commits.
-          {...{ [Next.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+          {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
         />
       )}
       {onSave && (
-        <Next.SystemButton.Save
+        <SystemButton.Save
           iconOnly={false}
           type='submit'
           label={submitLabel ?? t('save-button.label')}
@@ -149,7 +163,7 @@ export const FormActions = ({ submitLabel, submitDisabled }: FormActionsProps) =
           data-testid='save-button'
         />
       )}
-    </Next.Group>
+    </Group>
   );
 };
 
@@ -188,13 +202,13 @@ export const FormSubmit = ({ label, disabled, icon, busy }: FormSubmitProps) => 
   } as const;
 
   return (
-    <Next.Group fill>
+    <Group fill>
       {icon || busy ? (
-        <Next.Button {...buttonProps} variant='primary' icon={icon ?? 'ph--check--regular'} spin={busy} />
+        <Button {...buttonProps} variant='primary' icon={icon ?? 'ph--check--regular'} spin={busy} />
       ) : (
-        <Next.SystemButton.Save {...buttonProps} iconOnly={false} />
+        <SystemButton.Save {...buttonProps} iconOnly={false} />
       )}
-    </Next.Group>
+    </Group>
   );
 };
 
@@ -206,9 +220,9 @@ FormSubmit.displayName = 'Form.Submit';
 
 export const FormErrorText = ({ children }: PropsWithChildren) =>
   children ? (
-    <Next.Field.Root invalid>
-      <Next.Field.ErrorText data-testid='form.error'>{children}</Next.Field.ErrorText>
-    </Next.Field.Root>
+    <Field.Root invalid>
+      <Field.ErrorText data-testid='form.error'>{children}</Field.ErrorText>
+    </Field.Root>
   ) : null;
 
 FormErrorText.displayName = 'Form.ErrorText';

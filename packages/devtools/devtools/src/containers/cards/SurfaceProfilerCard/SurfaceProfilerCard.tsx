@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
-import { Flex, Grid, Next } from '@dxos/react-ui';
+import { Button, Container, Flex, Grid, Switch, SystemButton, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -106,13 +106,13 @@ const RoleDetail = ({ group }: { group: RoleGroup }) => (
       {group.ids.length} mounted · {group.totalRenders} renders · {group.errors} errors
     </span>
     {group.trouble && <span className='text-error-text'>unstable data or errors</span>}
-    <Next.Container gutter='none'>
+    <Container gutter='none'>
       {group.ids.map((id) => (
         <span key={id} className='font-mono text-info-text truncate'>
           {surfaceId(id)}
         </span>
       ))}
-    </Next.Container>
+    </Container>
   </Flex>
 );
 
@@ -138,14 +138,14 @@ export const SurfaceProfilerCard = ({
         title='Surfaces'
         action={
           onClear && (
-            <Next.Button iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
+            <Button iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
           )
         }
       />
       {onDebugChange && (
         <StatCard.Row
           label='Highlight surfaces'
-          action={<Next.Switch checked={!!debug} onCheckedChange={({ checked }) => onDebugChange(checked)} />}
+          action={<Switch checked={!!debug} onCheckedChange={({ checked }) => onDebugChange(checked)} />}
         />
       )}
       {groups.length === 0 && <StatCard.Row span label='No surfaces mounted.' />}
@@ -173,9 +173,9 @@ export const SurfaceProfilerCard = ({
             gap='sm'
             classNames={mx('font-mono tabular-nums text-end', group.avgActualDuration > SLOW_TIME && 'text-error-text')}
           >
-            <Next.Tooltip.Trigger asChild content={<RoleDetail group={group} />}>
+            <Tooltip.Trigger asChild content={<RoleDetail group={group} />}>
               <span className='truncate text-start'>{group.role}</span>
-            </Next.Tooltip.Trigger>
+            </Tooltip.Trigger>
             <span className='text-description'>{group.ids.length}</span>
             <span>{group.totalRenders > 0 ? group.avgActualDuration.toFixed(1) : '–'}</span>
             <span>{group.totalRenders > 0 ? group.maxActualDuration.toFixed(1) : '–'}</span>
@@ -190,7 +190,7 @@ export const SurfaceProfilerCard = ({
             <StatCard.Row
               key={surface.id ?? index}
               label={selectedGroup.role}
-              control={<Next.SystemButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
+              control={<SystemButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
             >
               <JsonHighlighter
                 classNames='text-sm'

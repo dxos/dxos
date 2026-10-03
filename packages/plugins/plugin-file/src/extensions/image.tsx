@@ -13,7 +13,7 @@ import { createRoot } from 'react-dom/client';
 import { Blob, Database, Filter, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
-import { Next, ThemeProvider, defaultTx } from '@dxos/react-ui';
+import { Progress, ThemeProvider, defaultTx } from '@dxos/react-ui';
 import { File } from '@dxos/types';
 import { focusField } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
@@ -221,7 +221,7 @@ class DxnImageWidget extends WidgetType {
       const root = createRoot(loader);
       root.render(
         <ThemeProvider tx={defaultTx}>
-          <Next.Progress indeterminate />
+          <Progress indeterminate />
         </ThemeProvider>,
       );
       widget.appendChild(loader);

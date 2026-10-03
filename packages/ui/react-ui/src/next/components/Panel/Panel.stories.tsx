@@ -9,11 +9,11 @@ import React from 'react';
 import { expect, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import { type CSSVariables } from '../Container/index.ts';
+import { Block, Button, Container, Icon, Panel, ScrollArea, Toolbar, Typography } from '../index.ts';
 
 /** A narrow reading width, so the story's pane is wider than the document. */
 const READING_WIDTH: CSSVariables = { '--spacing-document-max-width': '20rem' };
@@ -30,36 +30,36 @@ const ROWS = Array.from({ length: 30 }, (_, index) => `Item ${index + 1}`);
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <div data-place='full' className='h-64' data-testid={`host-${size}`}>
-    <Next.Panel.Root size={size} data-testid={`panel-${size}`}>
-      <Next.Panel.Header data-testid={`header-${size}`}>
-        <Next.Toolbar.Root>
-          <Next.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
-          <Next.Toolbar.Text>Inbox</Next.Toolbar.Text>
-          <Next.Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild data-testid={`body-${size}`}>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container gutter='rail'>
+    <Panel.Root size={size} data-testid={`panel-${size}`}>
+      <Panel.Header data-testid={`header-${size}`}>
+        <Toolbar.Root>
+          <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+          <Toolbar.Text>Inbox</Toolbar.Text>
+          <Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild data-testid={`body-${size}`}>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container gutter='rail'>
               {ROWS.map((label, index) => (
-                <Next.Container key={label} layout='row' data-testid={index === 0 ? `row-${size}` : undefined}>
-                  <Next.Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
-                    <Next.Icon icon='ph--envelope--regular' />
-                  </Next.Block>
-                  <Next.Typography data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Next.Typography>
-                </Next.Container>
+                <Container key={label} layout='row' data-testid={index === 0 ? `row-${size}` : undefined}>
+                  <Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
+                    <Icon icon='ph--envelope--regular' />
+                  </Block>
+                  <Typography data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Typography>
+                </Container>
               ))}
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-      <Next.Panel.Footer data-testid={`footer-${size}`}>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>{ROWS.length} items</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+      <Panel.Footer data-testid={`footer-${size}`}>
+        <Toolbar.Root>
+          <Toolbar.Text>{ROWS.length} items</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Footer>
+    </Panel.Root>
   </div>
 );
 
@@ -72,49 +72,49 @@ const TestStory = (args: SizeArgs) => (
   <>
     <DefaultStory {...args} />
     <div data-place='full' className='h-16' data-testid={`bare-host-${args.size}`}>
-      <Next.Panel.Root size={args.size}>
-        <Next.Panel.Header data-testid={`empty-header-${args.size}`} />
-        <Next.Panel.Body data-testid={`bare-body-${args.size}`}>
-          <Next.Typography>Body</Next.Typography>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+      <Panel.Root size={args.size}>
+        <Panel.Header data-testid={`empty-header-${args.size}`} />
+        <Panel.Body data-testid={`bare-body-${args.size}`}>
+          <Typography>Body</Typography>
+        </Panel.Body>
+      </Panel.Root>
     </div>
     <div data-place='full' className='h-16' style={READING_WIDTH}>
-      <Next.Panel.Root size={args.size} width='document' data-testid={`reading-${args.size}`}>
-        <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport asChild>
-              <Next.Container>
-                <Next.Typography data-testid={`reading-text-${args.size}`}>Reading width</Next.Typography>
-              </Next.Container>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+      <Panel.Root size={args.size} width='document' data-testid={`reading-${args.size}`}>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport asChild>
+              <Container>
+                <Typography data-testid={`reading-text-${args.size}`}>Reading width</Typography>
+              </Container>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
     </div>
     <div data-place='full' className='h-16'>
-      <Next.Panel.Root size={args.size} data-testid={`default-gutter-${args.size}`}>
-        <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport asChild>
-              <Next.Container data-testid={`default-gutter-body-${args.size}`}>
-                <Next.Container data-testid={`default-gutter-nested-${args.size}`}>
-                  <Next.Typography data-testid={`default-gutter-text-${args.size}`}>Default gutter</Next.Typography>
-                </Next.Container>
-              </Next.Container>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+      <Panel.Root size={args.size} data-testid={`default-gutter-${args.size}`}>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport asChild>
+              <Container data-testid={`default-gutter-body-${args.size}`}>
+                <Container data-testid={`default-gutter-nested-${args.size}`}>
+                  <Typography data-testid={`default-gutter-text-${args.size}`}>Default gutter</Typography>
+                </Container>
+              </Container>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
     </div>
     <div data-place='full' className='h-16'>
-      <Next.Panel.Root size={args.size} gutter='md' data-testid={`md-gutter-${args.size}`}>
-        <Next.Panel.Body>
-          <Next.Container>
-            <Next.Typography data-testid={`md-gutter-text-${args.size}`}>Panel gutter</Next.Typography>
-          </Next.Container>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+      <Panel.Root size={args.size} gutter='md' data-testid={`md-gutter-${args.size}`}>
+        <Panel.Body>
+          <Container>
+            <Typography data-testid={`md-gutter-text-${args.size}`}>Panel gutter</Typography>
+          </Container>
+        </Panel.Body>
+      </Panel.Root>
     </div>
   </>
 );

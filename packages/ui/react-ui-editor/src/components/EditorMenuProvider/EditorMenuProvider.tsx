@@ -19,10 +19,16 @@ import { useControllableState } from '@dxos/react-hooks';
 import {
   DX_ANCHOR_ACTIVATE,
   type DxAnchorActivate,
-  Next,
+  Field,
+  Icon,
+  Input,
+  Popover,
+  Separator,
+  Typography,
   toLocalizedString,
   useDynamicRef,
   useTranslation,
+  virtualAnchor,
 } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
@@ -178,10 +184,10 @@ export const EditorMenuProvider = ({
   );
 
   return (
-    <Next.Popover.Root
+    <Popover.Root
       open={open}
       onOpenChange={({ open }) => setOpen(open)}
-      positioning={{ ...Next.virtualAnchor(triggerRef), placement: 'bottom-start' }}
+      positioning={{ ...virtualAnchor(triggerRef), placement: 'bottom-start' }}
       // In search mode the query is typed into the popover's own input, so it must take focus.
       autoFocus={!!search}
       // Focus stays in the editor; the menu machine still routes Escape here.
@@ -193,7 +199,7 @@ export const EditorMenuProvider = ({
       }}
     >
       {/* Menu. */}
-      <Next.Popover.Content
+      <Popover.Content
         classNames={!search && !menuGroups.length ? 'hidden' : undefined}
         style={{
           // The search input shares the box, so `numItems` keeps meaning "items visible".
@@ -201,8 +207,8 @@ export const EditorMenuProvider = ({
         }}
       >
         {search && (
-          <Next.Field.Root>
-            <Next.Input
+          <Field.Root>
+            <Input
               ref={searchInputRef}
               variant='subdued'
               classNames='shrink-0 mb-1'
@@ -214,18 +220,18 @@ export const EditorMenuProvider = ({
               onChange={(event) => onQueryChange?.(event.target.value)}
               onKeyDown={handleSearchKeyDown}
             />
-          </Next.Field.Root>
+          </Field.Root>
         )}
-        <Next.Popover.Body>
+        <Popover.Body>
           <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
-        </Next.Popover.Body>
-      </Next.Popover.Content>
+        </Popover.Body>
+      </Popover.Content>
 
       {/* Content */}
       <div className='contents' ref={setRoot}>
         {children}
       </div>
-    </Next.Popover.Root>
+    </Popover.Root>
   );
 };
 
@@ -243,7 +249,7 @@ const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
       {groups.map((group, index) => (
         <Fragment key={group.id}>
           <MenuGroup group={group} currentItem={currentItem} onSelect={onSelect} />
-          {index < groups.length - 1 && <Next.Separator />}
+          {index < groups.length - 1 && <Separator />}
         </Fragment>
       ))}
     </ul>
@@ -265,9 +271,9 @@ const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
   return (
     <>
       {group.label && (
-        <Next.Typography tone='description' classNames='px-2'>
+        <Typography tone='description' classNames='px-2'>
           {toLocalizedString(group.label, t)}
-        </Next.Typography>
+        </Typography>
       )}
 
       {group.items.map((item) => (
@@ -304,7 +310,7 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   return (
     // Menu row metrics without a Menu machine: the popover keeps focus in the editor, so `current` is the highlight.
     <li ref={listRef} className='nx-menu-item' data-highlighted={current ? '' : undefined} onClick={handleSelect}>
-      {item.icon && <Next.Icon icon={item.icon} />}
+      {item.icon && <Icon icon={item.icon} />}
       <span className='nx-menu-item-text'>{toLocalizedString(item.label, t)}</span>
     </li>
   );

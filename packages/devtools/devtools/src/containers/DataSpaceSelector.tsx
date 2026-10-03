@@ -10,7 +10,7 @@ import { SpaceId } from '@dxos/keys';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Next } from '@dxos/react-ui';
+import { Select } from '@dxos/react-ui';
 
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks/index.ts';
 
@@ -49,7 +49,7 @@ export const DataSpaceSelector = () => {
 
   const items = spaces.map((space) => ({ value: space.id, label: `${space.id.slice(0, 6)} ${getLabel(space)}` }));
   return (
-    <Next.Select.Root
+    <Select.Root
       items={items}
       value={space ? [space.id] : []}
       onValueChange={({ value: [id] }) => {
@@ -59,12 +59,12 @@ export const DataSpaceSelector = () => {
         }
       }}
     >
-      <Next.Select.Trigger placeholder='Select space' />
-      <Next.Select.Content>
+      <Select.Trigger placeholder='Select space' />
+      <Select.Content>
         {items.map((item) => (
-          <Next.Select.Item key={item.value} item={item} />
+          <Select.Item key={item.value} item={item} />
         ))}
-      </Next.Select.Content>
-    </Next.Select.Root>
+      </Select.Content>
+    </Select.Root>
   );
 };

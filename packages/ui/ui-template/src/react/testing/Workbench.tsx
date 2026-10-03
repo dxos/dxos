@@ -11,7 +11,7 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { ReactNode, useRef } from 'react';
 
-import { Flex, Next } from '@dxos/react-ui';
+import { Empty, Flex, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Listbox } from '@dxos/react-ui-list';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -95,7 +95,7 @@ export type EditorProps = {
 
 /** One CodeMirror pane: monospace, theme-following, syntax highlighting on. */
 export const Editor = ({ value, extensions, onChange }: EditorProps) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   // The callback goes through a ref: an inline `onChange` closure changes identity every render,
   // and keying the editor on it would recreate CodeMirror — and drop focus — on each keystroke.
   const onChangeRef = useRef(onChange);
@@ -143,7 +143,7 @@ export const OperationLog = ({ entries }: OperationLogProps) => (
           </Listbox.ItemText>
         </Listbox.Item>
       ))}
-      {entries.length === 0 && <Next.Empty>No operations dispatched.</Next.Empty>}
+      {entries.length === 0 && <Empty>No operations dispatched.</Empty>}
     </Listbox.Content>
   </Listbox.Root>
 );

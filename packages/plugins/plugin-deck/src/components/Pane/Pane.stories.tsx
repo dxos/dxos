@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -26,11 +26,11 @@ const MainPane = ({ id, label }: { id: string; label: string }) => {
     <Pane.Root tabIndex={0} classNames='flex-1' {...attentionAttrs}>
       <Pane.Toolbar>
         <Pane.Sigil attendableId={id}>
-          <Next.Icon icon='ph--circle-dashed--regular' />
+          <Icon icon='ph--circle-dashed--regular' />
         </Pane.Sigil>
         <Pane.Title attendableId={id}>{label}</Pane.Title>
-        <Next.Button iconOnly variant='ghost' icon='ph--arrows-out--regular' label='Fullscreen' />
-        <Next.Button iconOnly variant='ghost' icon='ph--x--regular' label='Close' />
+        <Button iconOnly variant='ghost' icon='ph--arrows-out--regular' label='Fullscreen' />
+        <Button iconOnly variant='ghost' icon='ph--x--regular' label='Close' />
       </Pane.Toolbar>
       <Pane.Content classNames='grid place-items-center text-description'>
         <span>{label} content</span>
@@ -49,11 +49,11 @@ const SplitStory = () => {
       <Pane.Root>
         <Pane.Toolbar>
           <Pane.Tabs tabs={TABS} value={tab} onValueChange={setTab} attendableId='plank-main' related />
-          <Next.Button iconOnly variant='ghost' icon='ph--x--regular' label='Close companion' />
+          <Button iconOnly variant='ghost' icon='ph--x--regular' label='Close companion' />
         </Pane.Toolbar>
         <Pane.Content classNames='grid place-items-center text-description'>
           <span className='flex items-center gap-1'>
-            {activeTab && <Next.Icon icon={activeTab.icon} />}
+            {activeTab && <Icon icon={activeTab.icon} />}
             {tab}
           </span>
         </Pane.Content>

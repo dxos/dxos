@@ -9,7 +9,7 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { COMMANDS_DIALOG } from '@dxos/plugin-navtree/meta';
-import { Next, useAsyncEffect } from '@dxos/react-ui';
+import { Dialog, ErrorFallback, useAsyncEffect } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
 import { useSpotlightState } from './useSpotlightState.ts';
@@ -59,9 +59,9 @@ export const SpotlightLayout = () => {
 
   return (
     <div className='grid inset-0 overflow-hidden' data-spotlight>
-      <Next.Dialog.Root open={state.dialogOpen} modal={false}>
-        <Surface.Surface type={AppSurface.Dialog} data={dialogContent} limit={1} fallback={Next.ErrorFallback} />
-      </Next.Dialog.Root>
+      <Dialog.Root open={state.dialogOpen} modal={false}>
+        <Surface.Surface type={AppSurface.Dialog} data={dialogContent} limit={1} fallback={ErrorFallback} />
+      </Dialog.Root>
     </div>
   );
 };

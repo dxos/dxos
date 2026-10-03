@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Container, Panel, ScrollArea, Toolbar, Typography, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
@@ -71,23 +71,23 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
   const openQuestions = useMemo(() => Task.getQuestions(history ?? []).filter(({ answer }) => !answer), [history]);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root classNames='dx-document'>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root classNames='dx-document'>
           {/* Actions only: what the task IS — its status, estimate and priority — reads with the
               text below, while the toolbar carries what can be done to it. */}
-          <Next.Toolbar.Separator variant='gap' />
+          <Toolbar.Separator variant='gap' />
           <TaskActions task={task} />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport classNames='dx-document'>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport classNames='dx-document'>
             <TaskAttachmentDropZone onFiles={handleAttach}>
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the
                 section headings and the cards all start at the content track, and only a glyph
                 hangs outside it. */}
-              <Next.Container gutter='md' gap='lg' classNames='py-2'>
+              <Container gutter='md' gap='lg' classNames='py-2'>
                 {/* The task's own fields, not the list's strip: the pane has a subject, so it
                   needs neither the create case nor the selection the strip reads. */}
                 <TaskEditor
@@ -115,11 +115,11 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                   standing "Questions" label over nothing says the pane expects them, when what a
                   task with none has is nothing to answer. */}
                 {openQuestions.length > 0 && (
-                  <Next.Container asChild gutter='inherit' gap='md'>
+                  <Container asChild gutter='inherit' gap='md'>
                     <section data-testid='tasksPlugin.questions'>
-                      <Next.Typography asChild tone='subdued'>
+                      <Typography asChild tone='subdued'>
                         <h2>{t('task-questions.label')}</h2>
-                      </Next.Typography>
+                      </Typography>
                       {openQuestions.map((thread) => (
                         <TaskQuestion
                           key={thread.question.id}
@@ -128,7 +128,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                         />
                       ))}
                     </section>
-                  </Next.Container>
+                  </Container>
                 )}
 
                 <TaskAttachments
@@ -139,12 +139,12 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 />
                 {history && history.length > 0 && <TaskHistory entries={history} />}
                 <TaskArtifacts task={task} />
-              </Next.Container>
+              </Container>
             </TaskAttachmentDropZone>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
@@ -165,7 +165,7 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
 
   return (
     <ActionMenu deferUntilOpen actions={actions}>
-      <Next.Button
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--dots-three-vertical--regular'

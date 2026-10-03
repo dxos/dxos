@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { Next, useMergeRefs } from '@dxos/react-ui';
+import { useMergeRefs, useThemeMode } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import {
@@ -114,7 +114,7 @@ const EditorComponent = forwardRef<EditorController, EditorStoryArgs>(
     forwardedRef,
   ) => {
     invariant(object);
-    const themeMode = Next.useThemeMode();
+    const themeMode = useThemeMode();
     const attentionAttrs = useAttentionAttributes(id);
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({

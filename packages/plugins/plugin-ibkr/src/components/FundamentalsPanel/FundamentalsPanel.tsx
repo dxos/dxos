@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import { formatForDisplay } from '@dxos/schema';
 
@@ -105,7 +105,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
               {asOfDescription && <p className='text-description'>{asOfDescription}</p>}
             </div>
             {onRefresh ? (
-              <Next.Button
+              <Button
                 iconOnly
                 variant='ghost'
                 icon='ph--arrows-clockwise--regular'
@@ -117,17 +117,17 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
           </div>
 
           {loading ? (
-            <Next.Progress indeterminate label={t('fundamentals.heading')} />
+            <Progress indeterminate label={t('fundamentals.heading')} />
           ) : error ? (
-            <Next.Banner.Root valence='error'>
-              <Next.Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Next.Banner.Title>
-              <Next.Banner.Body>{error}</Next.Banner.Body>
-            </Next.Banner.Root>
+            <Banner.Root valence='error'>
+              <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>
+              <Banner.Body>{error}</Banner.Body>
+            </Banner.Root>
           ) : empty ? (
-            <Next.Banner.Root valence='neutral'>
-              <Next.Banner.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Next.Banner.Title>
-              <Next.Banner.Body>{t('fundamentals.empty.label')}</Next.Banner.Body>
-            </Next.Banner.Root>
+            <Banner.Root valence='neutral'>
+              <Banner.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Banner.Title>
+              <Banner.Body>{t('fundamentals.empty.label')}</Banner.Body>
+            </Banner.Root>
           ) : (
             <Form.Fields readonly fieldProvider={fieldProvider} />
           )}

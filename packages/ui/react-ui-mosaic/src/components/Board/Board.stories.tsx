@@ -13,7 +13,7 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui';
+import { Focus } from '@dxos/react-ui';
 import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Loading, withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
@@ -180,9 +180,9 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: StoryArgs) =>
           <Board.Content debug={debug} eventHandler={eventHandler} Tile={DefaultBoardColumn} />
         </Board.Root>
         {debug && (
-          <Next.Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
+          <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
             <Board.Debug classNames='p-2' />
-          </Next.Focus.Group>
+          </Focus.Group>
         )}
       </div>
     </Dnd.Root>

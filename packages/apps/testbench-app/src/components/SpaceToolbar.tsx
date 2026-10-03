@@ -6,7 +6,7 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Button, Select, Toolbar } from '@dxos/react-ui';
 
 export type SpaceToolbarProps = {
   spaces?: Space[];
@@ -49,25 +49,25 @@ export const SpaceToolbar = ({
   };
 
   return (
-    <Next.Toolbar.Root>
-      <Next.Button icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
+    <Toolbar.Root>
+      <Button icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
       <div className='flex w-32'>
-        <Next.Select.Root
+        <Select.Root
           items={spaces.map((space) => ({ value: space.key.toHex(), label: space.key.truncate() }))}
           value={selected ? [selected.toHex()] : []}
           onValueChange={({ value: [value] }) => value && handleChange(value)}
         >
-          <Next.Select.Trigger classNames='w-full' />
-          <Next.Select.Content>
+          <Select.Trigger classNames='w-full' />
+          <Select.Content>
             {spaces.map((space) => (
-              <Next.Select.Item
+              <Select.Item
                 key={space.key.toHex()}
                 classNames='font-mono'
                 item={{ value: space.key.toHex(), label: space.key.truncate() }}
               />
             ))}
-          </Next.Select.Content>
-        </Next.Select.Root>
+          </Select.Content>
+        </Select.Root>
       </div>
       <div className='flex gap-1'>
         <span>{spaces.length}</span>
@@ -76,20 +76,20 @@ export const SpaceToolbar = ({
       <div className='grow' />
       {space && (
         <>
-          <Next.Button
+          <Button
             icon={space.isOpen ? 'ph--trash--regular' : 'ph--clock-counter-clockwise--regular'}
             iconOnly
             label={space.isOpen ? 'Close space' : 'Open space'}
             onClick={() => onToggleOpen(selected)}
           />
-          <Next.Button icon='ph--upload-simple--regular' label='Import space.' onClick={handleImport} />
-          <Next.Button
+          <Button icon='ph--upload-simple--regular' label='Import space.' onClick={handleImport} />
+          <Button
             icon='ph--download-simple--regular'
             iconOnly
             label='Download backup'
             onClick={() => onExport(selected)}
           />
-          <Next.Button
+          <Button
             icon='ph--user-plus--regular'
             iconOnly
             label='Share'
@@ -98,6 +98,6 @@ export const SpaceToolbar = ({
           />
         </>
       )}
-    </Next.Toolbar.Root>
+    </Toolbar.Root>
   );
 };

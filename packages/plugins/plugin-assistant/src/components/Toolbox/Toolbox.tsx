@@ -9,7 +9,7 @@ import type * as Skill from '@dxos/compute/Skill';
 import { type Database, Filter, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Next, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { AssistantService } from '#types';
@@ -27,8 +27,8 @@ export type ToolboxProps = {
 export const Toolbox = composable<HTMLDivElement, ToolboxProps>(
   ({ functions, services, skills, activeSkills, ...props }, forwardedRef) => {
     return (
-      <Next.ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
-        <Next.ScrollArea.Viewport>
+      <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+        <ScrollArea.Viewport>
           {skills && skills.length > 0 && (
             <Section
               title='Skills'
@@ -65,8 +65,8 @@ export const Toolbox = composable<HTMLDivElement, ToolboxProps>(
           {functions && functions.length > 0 && (
             <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
           )}
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   },
 );

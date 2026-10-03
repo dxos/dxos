@@ -14,7 +14,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { PullRequest } from '@dxos/types';
@@ -325,13 +325,13 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   // The tablist only needs the `Tabs.Root` context, which wraps the whole panel.
   const tabs = useMemo(
     () => (
-      <Next.Tabs.List>
+      <Tabs.List>
         {TABS.map((value) => (
-          <Next.Tabs.Trigger key={value} value={value} data-testid={`pull-request.tab.${value}`}>
+          <Tabs.Trigger key={value} value={value} data-testid={`pull-request.tab.${value}`}>
             {t(`${value}-tab.label`)}
-          </Next.Tabs.Trigger>
+          </Tabs.Trigger>
         ))}
-      </Next.Tabs.List>
+      </Tabs.List>
     ),
     [t],
   );
@@ -494,19 +494,19 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   };
 
   return (
-    <Next.Tabs.Root
+    <Tabs.Root
       asChild
       orientation='horizontal'
       value={tab}
       onValueChange={(value) => setTab(TABS.find((candidate) => candidate === value) ?? 'overview')}
     >
-      <Next.Panel.Root role={role}>
-        <Next.Panel.Header>
+      <Panel.Root role={role}>
+        <Panel.Header>
           {/* `alwaysActive`: the tablist is navigation, not an attention-gated action, and a disabled
               Next toolbar disables every item in it. */}
           <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Flex column>
             <PullRequestStatus
               reference={reference}
@@ -546,8 +546,8 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
               />
             )}
           </Flex>
-        </Next.Panel.Body>
-        <Next.Panel.Footer classNames='border-t border-subdued-separator'>
+        </Panel.Body>
+        <Panel.Footer classNames='border-t border-subdued-separator'>
           <ProgressMeter
             state={
               walkthroughProgress?.status === 'running' || walkthroughProgress?.status === 'error'
@@ -560,8 +560,8 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
                 : undefined
             }
           />
-        </Next.Panel.Footer>
-      </Next.Panel.Root>
-    </Next.Tabs.Root>
+        </Panel.Footer>
+      </Panel.Root>
+    </Tabs.Root>
   );
 };

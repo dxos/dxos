@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Next } from '@dxos/react-ui';
+import { Main } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -22,12 +22,12 @@ import { DebugPanelDrawer, type DebugPanelDrawerProps } from './DebugPanelDrawer
 const Render = (props: DebugPanelDrawerProps) => {
   const state = useDrawerState();
   return (
-    <Next.Main.Root drawerState={state} onDrawerStateChange={setDrawerState}>
-      <Next.Main.Content classNames='p-4'>Main</Next.Main.Content>
-      <Next.Main.Drawer label='Drawer'>
+    <Main.Root drawerState={state} onDrawerStateChange={setDrawerState}>
+      <Main.Content classNames='p-4'>Main</Main.Content>
+      <Main.Drawer label='Drawer'>
         <DebugPanelDrawer {...props} />
-      </Next.Main.Drawer>
-    </Next.Main.Root>
+      </Main.Drawer>
+    </Main.Root>
   );
 };
 

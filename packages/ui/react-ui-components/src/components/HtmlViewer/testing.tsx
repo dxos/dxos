@@ -4,7 +4,7 @@
 
 import React, { type ReactNode } from 'react';
 
-import { Next, ThemeProvider, useThemeContext } from '@dxos/react-ui';
+import { Panel, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { trim } from '@dxos/util';
 
 import { type ColorScheme } from './color-scheme.ts';
@@ -245,10 +245,10 @@ export const Compare = ({ render }: { render: () => ReactNode }) => (
 
 /** Frame shared by both story suites: the sample's note above the rendered body (or comparison). */
 export const SampleFrame = ({ note, children }: { note: string; children: ReactNode }) => (
-  <Next.Panel.Root>
-    <Next.Panel.Header classNames='flex items-center p-1 text-description'>{note}</Next.Panel.Header>
-    <Next.Panel.Body classNames='overflow-auto'>{children}</Next.Panel.Body>
-  </Next.Panel.Root>
+  <Panel.Root>
+    <Panel.Header classNames='flex items-center p-1 text-description'>{note}</Panel.Header>
+    <Panel.Body classNames='overflow-auto'>{children}</Panel.Body>
+  </Panel.Root>
 );
 
 /** Finds the element hosting the shadow root the content is attached to. */

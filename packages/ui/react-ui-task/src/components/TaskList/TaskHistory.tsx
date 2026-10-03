@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Container, Icon, type ThemedClassName, Timestamp, Typography, useTranslation } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -115,7 +115,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
     // gutter with the pane's other glyphs and its text in the content track with the pane's text —
     // rather than in a second set of columns that happens to look similar.
     // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
-    <Next.Container
+    <Container
       asChild
       gutter='inherit'
       gap='sm'
@@ -125,9 +125,9 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
       classNames={mx('text-sm text-description', classNames)}
     >
       <section>
-        <Next.Typography asChild tone='subdued' classNames='text-sm'>
+        <Typography asChild tone='subdued' classNames='text-sm'>
           <h2>{t('task-history.label')}</h2>
-        </Next.Typography>
+        </Typography>
         {items.map((item) => (
           // The section's geometry, a grid rather than a flex row: the glyph column is a fixed 24px,
           // so a history glyph sits on the same axis as a property's however wide each section's text runs.
@@ -135,7 +135,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
             {/* The hue comes from the event table, through the same palette the status and priority
               glyphs read. */}
             <div className={TASK_GRID_ICON}>
-              <Next.Icon icon={item.icon} classNames={item.hue} size='md' />
+              <Icon icon={item.icon} classNames={item.hue} size='md' />
             </div>
             {/* The time rides with the description rather than in a column of its own: flush right
               against the content's edge is where the eye reads it, and a third track would make the
@@ -152,12 +152,12 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
               </span>
               {/* Compact and live, because the log is read as "what has been happening" rather than
                 as a record to cite — and the record is a hover away, in the tooltip. */}
-              <Next.Timestamp date={item.date} classNames='shrink-0 text-right' />
+              <Timestamp date={item.date} classNames='shrink-0 text-right' />
             </div>
           </div>
         ))}
       </section>
-    </Next.Container>
+    </Container>
   );
 };
 

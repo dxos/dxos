@@ -19,7 +19,7 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Next } from '@dxos/react-ui';
+import { Button, Icon, Menu } from '@dxos/react-ui';
 import { Tree, type TreeItemDataProps, type TreeModel, type TreeNode } from '@dxos/react-ui-list';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
@@ -104,13 +104,9 @@ const ObjectsTreeIcon = ({ item, path }: ObjectsTreeRowProps) => {
   const styles = scoped.iconHue ? getStyles(scoped.iconHue) : undefined;
   return (
     <>
-      {scoped.type === 'outgoing-relation' && (
-        <Next.Icon icon='ph--arrow-right--regular' classNames='w-4 h-4 opacity-70' />
-      )}
-      {scoped.type === 'incoming-relation' && (
-        <Next.Icon icon='ph--arrow-left--regular' classNames='w-4 h-4 opacity-70' />
-      )}
-      <Next.Icon icon={scoped.icon} classNames={['w-4 h-4', styles?.text]} />
+      {scoped.type === 'outgoing-relation' && <Icon icon='ph--arrow-right--regular' classNames='w-4 h-4 opacity-70' />}
+      {scoped.type === 'incoming-relation' && <Icon icon='ph--arrow-left--regular' classNames='w-4 h-4 opacity-70' />}
+      <Icon icon={scoped.icon} classNames={['w-4 h-4', styles?.text]} />
     </>
   );
 };
@@ -154,9 +150,9 @@ const ObjectsTreeColumns = ({ item, path }: ObjectsTreeRowProps) => {
   return (
     <div className='flex shrink-0 items-center gap-1'>
       {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
-      <Next.Menu.Root>
-        <Next.Menu.Trigger asChild>
-          <Next.Button
+      <Menu.Root>
+        <Menu.Trigger asChild>
+          <Button
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon='ph--dots-three-vertical--regular'
@@ -164,42 +160,39 @@ const ObjectsTreeColumns = ({ item, path }: ObjectsTreeRowProps) => {
             label='Actions'
             data-testid='objects-tree.row.actions'
           />
-        </Next.Menu.Trigger>
-        <Next.Menu.Content>
+        </Menu.Trigger>
+        <Menu.Content>
           {showOpen && (
-            <Next.Menu.Item
+            <Menu.Item
               onClick={handleOpen}
               item={{ value: 'Open', label: 'Open', icon: 'ph--arrow-square-out--regular' }}
             />
           )}
           {!node.deleted && (
-            <Next.Menu.Item
-              onClick={handleDelete}
-              item={{ value: 'Delete', label: 'Delete', icon: 'ph--trash--regular' }}
-            />
+            <Menu.Item onClick={handleDelete} item={{ value: 'Delete', label: 'Delete', icon: 'ph--trash--regular' }} />
           )}
           {node.deleted && (
-            <Next.Menu.Item
+            <Menu.Item
               onClick={handleRestore}
               item={{ value: 'Restore', label: 'Restore', icon: 'ph--arrow-counter-clockwise--regular' }}
             />
           )}
 
-          <Next.Menu.Separator />
-          <Next.Menu.Item
+          <Menu.Separator />
+          <Menu.Item
             onClick={handleCopyDXN}
             item={{ value: 'Copy DXN', label: 'Copy DXN', icon: 'ph--copy--regular' }}
           />
-          <Next.Menu.Item
+          <Menu.Item
             onClick={handleCopyJSON}
             item={{ value: 'Copy JSON', label: 'Copy JSON', icon: 'ph--brackets-curly--regular' }}
           />
-          <Next.Menu.Item
+          <Menu.Item
             onClick={handlePrintToConsole}
             item={{ value: 'Print to console', label: 'Print to console', icon: 'ph--terminal-window--regular' }}
           />
-        </Next.Menu.Content>
-      </Next.Menu.Root>
+        </Menu.Content>
+      </Menu.Root>
     </div>
   );
 };

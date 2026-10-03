@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type RefObject, useCallback } from 'react';
 
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Flex, Popover, Textarea, useTranslation, virtualAnchor } from '@dxos/react-ui';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -47,8 +47,8 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
           {t('comment-line.label', { file: target.file, line: target.line })}
         </span>
       )}
-      <Next.Field.Root>
-        <Next.Textarea
+      <Field.Root>
+        <Textarea
           autoFocus
           rows={4}
           placeholder={t('comment-placeholder.label')}
@@ -56,12 +56,12 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
           onChange={(event) => onValueChange(event.target.value)}
           onKeyDown={handleKeyDown}
         />
-      </Next.Field.Root>
+      </Field.Root>
       <Flex justify='end' gap='sm'>
-        <Next.Button onClick={onCancel}>{t('comment-cancel.label')}</Next.Button>
-        <Next.Button variant='primary' disabled={busy || !value.trim()} onClick={onSubmit}>
+        <Button onClick={onCancel}>{t('comment-cancel.label')}</Button>
+        <Button variant='primary' disabled={busy || !value.trim()} onClick={onSubmit}>
           {t('comment-submit.label')}
-        </Next.Button>
+        </Button>
       </Flex>
     </>
   );
@@ -85,19 +85,19 @@ export type LineCommentPopoverProps = CommentComposerProps & {
  * code it is about rather than against a band at the other end of the document.
  */
 export const LineCommentPopover = ({ open, anchorRef, ...props }: LineCommentPopoverProps) => (
-  <Next.Popover.Root
+  <Popover.Root
     open={open}
     onOpenChange={({ open: next }) => {
       if (!next) {
         props.onCancel();
       }
     }}
-    positioning={{ ...Next.virtualAnchor(anchorRef), placement: 'bottom-start' }}
+    positioning={{ ...virtualAnchor(anchorRef), placement: 'bottom-start' }}
   >
-    <Next.Popover.Content classNames='w-[28rem] max-w-[90cqi]'>
-      <Next.Popover.Body classNames='flex flex-col gap-2 p-2'>
+    <Popover.Content classNames='w-[28rem] max-w-[90cqi]'>
+      <Popover.Body classNames='flex flex-col gap-2 p-2'>
         <CommentComposer {...props} />
-      </Next.Popover.Body>
-    </Next.Popover.Content>
-  </Next.Popover.Root>
+      </Popover.Body>
+    </Popover.Content>
+  </Popover.Root>
 );

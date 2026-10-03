@@ -10,7 +10,7 @@ import { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } from '
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Next, useFileDownload } from '@dxos/react-ui';
+import { Button, Field, Icon, Input, Panel, ScrollArea, Textarea, Toolbar, useFileDownload } from '@dxos/react-ui';
 import { arrayToString, decodeUint8ArrayFromJson, isEncodedUint8Array } from '@dxos/util';
 
 import { type ArticleProps } from '../../types.ts';
@@ -273,24 +273,19 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
   }, [databaseInfo]);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root classNames='col-span-2'>
-          <Next.Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root classNames='col-span-2'>
+          <Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
             Run Query
-          </Next.Button>
-          <Next.Button onClick={refresh} disabled={isRefreshing}>
+          </Button>
+          <Button onClick={refresh} disabled={isRefreshing}>
             Refresh
-          </Next.Button>
-          <Next.Button
-            icon='ph--download--regular'
-            label='Export database'
-            onClick={handleExport}
-            disabled={isExporting}
-          />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='grid grid-cols-[240px_1fr] divide-x divide-separator h-full'>
+          </Button>
+          <Button icon='ph--download--regular' label='Export database' onClick={handleExport} disabled={isExporting} />
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-cols-[240px_1fr] divide-x divide-separator h-full'>
         <div className='flex flex-col h-full overflow-hidden'>
           <div className='p-2 border-b border-separator'>
             <div className='text-xs font-medium mb-2'>Database</div>
@@ -320,8 +315,8 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
             )}
           </div>
 
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport classNames='p-2'>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport classNames='p-2'>
               <div className='text-xs font-medium mb-2'>Tables</div>
               {tables.length === 0 ? (
                 <div className='text-sm text-neutral-400'>{isRefreshing ? 'Loading tables...' : 'No tables.'}</div>
@@ -338,42 +333,42 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
                       onClick={() => handleSelectTable(tableName)}
                       disabled={isRunning}
                     >
-                      <Next.Icon icon='ph--table--regular' size='md' />
+                      <Icon icon='ph--table--regular' size='md' />
                       {tableName}
                     </button>
                   ))}
                 </div>
               )}
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </div>
 
         <div className='flex flex-col h-full overflow-hidden'>
           <div className='flex flex-col gap-2 p-2 border-b border-separator'>
-            <Next.Field.Root>
-              <Next.Field.Label>SQL</Next.Field.Label>
-              <Next.Textarea
+            <Field.Root>
+              <Field.Label>SQL</Field.Label>
+              <Textarea
                 value={query}
                 onChange={({ target }) => setQuery(target.value)}
                 classNames='min-h-24 font-mono text-xs'
               />
-            </Next.Field.Root>
-            <Next.Field.Root>
-              <Next.Field.Label>Params (JSON array)</Next.Field.Label>
-              <Next.Input
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>Params (JSON array)</Field.Label>
+              <Input
                 value={params}
                 onChange={({ target }) => setParams(target.value)}
                 placeholder='[]'
                 classNames='text-xs'
                 variant='mono'
               />
-            </Next.Field.Root>
+            </Field.Root>
           </div>
 
           {error && <div className='p-2 text-sm text-red-500 font-mono'>{error}</div>}
 
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>
               {rows.length === 0 && !error ? (
                 <div className='p-2 text-sm text-neutral-400'>No rows.</div>
               ) : (
@@ -400,11 +395,11 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
                   </tbody>
                 </table>
               )}
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

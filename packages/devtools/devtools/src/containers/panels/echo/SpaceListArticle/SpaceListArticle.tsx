@@ -13,7 +13,7 @@ import { toDate } from '@dxos/protocols/buf';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Next, useFileDownload } from '@dxos/react-ui';
+import { Panel, useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { useDevtoolsDispatch } from '../../../../hooks/index.ts';
@@ -180,8 +180,8 @@ export const SpaceListArticle = ({
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Body classNames='flex-1'>
+    <Panel.Root role={role}>
+      <Panel.Body classNames='flex-1'>
         {/* TODO(burdon): This should not be a dialog. */}
         <DialogRestoreSpace
           {...(importTargetSpaceId !== null
@@ -209,7 +209,7 @@ export const SpaceListArticle = ({
           onRowClick={handleRowClicked}
           onRowAction={handleRowAction}
         />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

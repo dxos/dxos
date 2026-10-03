@@ -13,7 +13,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Next } from '@dxos/react-ui';
+import { Card, Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board,
@@ -199,11 +199,11 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
       onChange={handleChange}
       onAdd={({ x, y }) => void handleAddArtifact({ x, y })}
     >
-      <Next.Panel.Root role={role}>
-        <Next.Panel.Header>
+      <Panel.Root role={role}>
+        <Panel.Header>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Board.Container>
             <Board.Viewport>
               <Board.Backdrop />
@@ -215,7 +215,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
                       item={artifact}
                       key={artifact.id}
                       layout={itemLayout}
-                      title={<Next.Card.Title>{Obj.getLabel(artifact)}</Next.Card.Title>}
+                      title={<Card.Title>{Obj.getLabel(artifact)}</Card.Title>}
                     >
                       <Surface.Surface type={AppSurface.CardContent} data={{ subject: artifact }} limit={1} />
                     </Board.Cell>
@@ -224,8 +224,8 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
               </Board.Content>
             </Board.Viewport>
           </Board.Container>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </Board.Root>
   );
 };

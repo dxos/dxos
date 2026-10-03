@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Field, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useMapZoomHandler } from '../../hooks/index.ts';
@@ -23,34 +23,29 @@ const DefaultStory = ({ url: urlProp, markers = [] }: StoryArgs) => {
   const handleZoomAction = useMapZoomHandler(controller);
 
   return (
-    <Next.Panel.Root>
+    <Panel.Root>
       {urlProp && (
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
-            <Next.Field.Root>
-              <Next.Input
-                spellCheck={false}
-                placeholder='API KEY'
-                value={key}
-                onChange={(ev) => setKey(ev.target.value)}
-              />
-            </Next.Field.Root>
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
+        <Panel.Header>
+          <Toolbar.Root>
+            <Field.Root>
+              <Input spellCheck={false} placeholder='API KEY' value={key} onChange={(ev) => setKey(ev.target.value)} />
+            </Field.Root>
+          </Toolbar.Root>
+        </Panel.Header>
       )}
       {/* Map.Root is headless (context only), so it sits outside Panel.Content; Panel.Content asChild
           then targets the Leaflet frame (Map.Viewport) directly — no extra wrapper element. */}
       <Map.Root ref={setController}>
-        <Next.Panel.Body asChild>
+        <Panel.Body asChild>
           <Map.Viewport>
             <Map.Tiles url={url} />
             <Map.Markers markers={markers} />
             <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
             <Map.Action position='bottomright' />
           </Map.Viewport>
-        </Next.Panel.Body>
+        </Panel.Body>
       </Map.Root>
-    </Next.Panel.Root>
+    </Panel.Root>
   );
 };
 

@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { Next } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks/index.ts';
@@ -21,7 +21,7 @@ export const AudioComponent = ({ shape }: ShapeComponentProps<AudioShape>) => {
   // https://docs.pmnd.rs/react-three-fiber/api/canvas#render-props
   return (
     <div className='flex w-full justify-center items-center'>
-      <Next.Icon
+      <Icon
         icon={active ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'}
         classNames={['transition opacity-20 duration-1000', active && 'opacity-100 text-error-text']}
         size='xl'

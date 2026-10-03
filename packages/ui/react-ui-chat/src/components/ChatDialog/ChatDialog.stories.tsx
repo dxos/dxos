@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button, Field, Input, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -22,10 +22,10 @@ const meta = {
     const [expanded, setExpanded] = useState(true);
     return (
       <>
-        <Next.Toolbar.Root>
-          <Next.Button onClick={() => setOpen((open) => !open)}>Open</Next.Button>
-          <Next.Button onClick={() => setExpanded((expanded) => !expanded)}>Expand</Next.Button>
-        </Next.Toolbar.Root>
+        <Toolbar.Root>
+          <Button onClick={() => setOpen((open) => !open)}>Open</Button>
+          <Button onClick={() => setExpanded((expanded) => !expanded)}>Expand</Button>
+        </Toolbar.Root>
 
         <ChatDialog.Root
           {...args}
@@ -43,9 +43,9 @@ const meta = {
             ))}
           </ChatDialog.Content>
           <ChatDialog.Footer classNames='px-2 items-center'>
-            <Next.Field.Root>
-              <Next.Input classNames='border-none' placeholder='Test' />
-            </Next.Field.Root>
+            <Field.Root>
+              <Input classNames='border-none' placeholder='Test' />
+            </Field.Root>
           </ChatDialog.Footer>
         </ChatDialog.Root>
       </>

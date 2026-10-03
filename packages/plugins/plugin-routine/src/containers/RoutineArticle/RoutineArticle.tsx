@@ -11,7 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Routine from '@dxos/compute/Routine';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { RoutineForm } from '#components';
@@ -69,14 +69,14 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   }
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} classNames='dx-document' />
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <RoutineForm db={db} routine={subject} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

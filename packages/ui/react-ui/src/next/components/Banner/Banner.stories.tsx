@@ -13,9 +13,9 @@ import { type MessageValence } from '@dxos/ui-types';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Banner, Button, Container, Group } from '../index.ts';
 
 const VALENCES: MessageValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
@@ -23,23 +23,23 @@ const VALENCES: MessageValence[] = ['neutral', 'info', 'success', 'warning', 'er
 const DefaultStory = ({ size }: SizeArgs) => {
   const [open, setOpen] = useState(true);
   return (
-    <Next.Container gap='md'>
+    <Container gap='md'>
       {VALENCES.filter((valence) => valence !== 'error' || open).map((valence) => (
-        <Next.Banner.Root key={valence} valence={valence} data-testid={`${valence}-${size}`}>
-          <Next.Banner.Title onClose={valence === 'error' ? () => setOpen(false) : undefined}>
+        <Banner.Root key={valence} valence={valence} data-testid={`${valence}-${size}`}>
+          <Banner.Title onClose={valence === 'error' ? () => setOpen(false) : undefined}>
             {valence[0].toUpperCase() + valence.slice(1)}
-          </Next.Banner.Title>
-          <Next.Banner.Body>The body text lines up with the title, not the icon.</Next.Banner.Body>
+          </Banner.Title>
+          <Banner.Body>The body text lines up with the title, not the icon.</Banner.Body>
           {valence === 'error' && (
-            <Next.Group>
-              <Next.Button variant='valence' data-testid={`retry-${size}`}>
+            <Group>
+              <Button variant='valence' data-testid={`retry-${size}`}>
                 Retry
-              </Next.Button>
-            </Next.Group>
+              </Button>
+            </Group>
           )}
-        </Next.Banner.Root>
+        </Banner.Root>
       ))}
-    </Next.Container>
+    </Container>
   );
 };
 

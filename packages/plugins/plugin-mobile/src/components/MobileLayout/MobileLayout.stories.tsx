@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button, Container, Field, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { WithKeyboard } from '../../testing/index.ts';
@@ -13,27 +13,27 @@ import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout.tsx';
 
 const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) => {
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
           {label}
-          <Next.Toolbar.Separator />
+          <Toolbar.Separator />
           {children}
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
-        <Next.Container gutter='sm' classNames='py-form-chrome'>
-          <Next.Field.Root>
-            <Next.Input placeholder={label} />
-          </Next.Field.Root>
-        </Next.Container>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <Container gutter='sm' classNames='py-form-chrome'>
+          <Field.Root>
+            <Input placeholder={label} />
+          </Field.Root>
+        </Container>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
 const DefaultStory = () => {
-  const [splitterMode, setSplitterMode] = useState<Next.SplitterMode>('start');
+  const [splitterMode, setSplitterMode] = useState<SplitterMode>('start');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {
@@ -44,25 +44,25 @@ const DefaultStory = () => {
     <WithKeyboard>
       <MobileLayout.Root onKeyboardOpenChange={setKeyboardOpen}>
         <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'start' }}>
-          <Next.Splitter.Root orientation='vertical' mode={splitterMode} size={24}>
-            <Next.Splitter.Panel position='start'>
+          <Splitter.Root orientation='vertical' mode={splitterMode} size={24}>
+            <Splitter.Panel position='start'>
               <StoryPanel label='Main'>
                 {splitterMode === 'start' && (
-                  <Next.Button icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('split')} />
+                  <Button icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('split')} />
                 )}
               </StoryPanel>
-            </Next.Splitter.Panel>
-            <Next.Splitter.Panel position='end'>
+            </Splitter.Panel>
+            <Splitter.Panel position='end'>
               <StoryPanel label='Drawer'>
-                <Next.Button
+                <Button
                   icon={splitterMode === 'end' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
                   label={splitterMode === 'end' ? 'Collapse' : 'Expand'}
                   onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'split' ? 'end' : 'split'))}
                 />
-                <Next.Button icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('start')} />
+                <Button icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('start')} />
               </StoryPanel>
-            </Next.Splitter.Panel>
-          </Next.Splitter.Root>
+            </Splitter.Panel>
+          </Splitter.Root>
         </MobileLayout.Panel>
       </MobileLayout.Root>
     </WithKeyboard>

@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Flex, Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Checkbox, Flex, Icon, Panel, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { VariantGallery } from '#components';
@@ -127,17 +127,17 @@ export const MediaArtifactVariants = ({
           label: ['all.tab.label', { ns: meta.profile.key }],
           render: () => (
             <>
-              <Next.Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
+              <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
                 {t('all.tab.label')}
-              </Next.Button>
+              </Button>
               {variants.map((variant, index) => (
-                <Next.Button
+                <Button
                   key={variant.id}
                   variant={selected === index ? 'primary' : 'ghost'}
                   onClick={() => setSelected(index)}
                 >
-                  {variant.jobId ? <Next.Icon icon='ph--spinner-gap--regular' size='md' spin /> : index + 1}
-                </Next.Button>
+                  {variant.jobId ? <Icon icon='ph--spinner-gap--regular' size='md' spin /> : index + 1}
+                </Button>
               ))}
             </>
           ),
@@ -152,7 +152,7 @@ export const MediaArtifactVariants = ({
             variant: 'custom',
             label: ['cover.label', { ns: meta.profile.key }],
             render: () => (
-              <Next.Checkbox
+              <Checkbox
                 checked={isCover}
                 onCheckedChange={({ checked }) => handleCoverChange(checked === true)}
                 label={t('cover.label')}
@@ -171,11 +171,11 @@ export const MediaArtifactVariants = ({
   );
 
   return (
-    <Next.Panel.Root classNames={classNames}>
-      <Next.Panel.Header>
+    <Panel.Root classNames={classNames}>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='bg-scrim-surface'>
+      </Panel.Header>
+      <Panel.Body classNames='bg-scrim-surface'>
         {selected === 'all' ? (
           <VariantGallery
             variants={galleryItems}
@@ -209,8 +209,8 @@ export const MediaArtifactVariants = ({
             />
           ))
         )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

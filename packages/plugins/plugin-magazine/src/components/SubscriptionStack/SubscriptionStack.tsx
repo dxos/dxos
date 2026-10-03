@@ -4,7 +4,17 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Block,
+  Card,
+  Focus,
+  Icon,
+  Menu,
+  ScrollArea,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -52,7 +62,7 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
     }, []);
 
     return (
-      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -60,8 +70,8 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
         >
-          <Next.ScrollArea.Root orientation='vertical'>
-            <Next.ScrollArea.Viewport ref={setViewport}>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SubscriptionTile}
                 gap={8}
@@ -71,10 +81,10 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
                 getScrollElement={() => viewport}
                 estimateSize={() => 100}
               />
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Mosaic.Container>
-      </Next.Focus.Group>
+      </Focus.Group>
     );
   },
 );
@@ -128,24 +138,20 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
 
     return (
       <Mosaic.Tile asChild classNames='dx-hover dx-current' id={feed.id} data={data} location={location}>
-        <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-          <Next.Card.Root ref={forwardedRef}>
-            <Next.Card.Header>
-              <Next.Block>
-                <Next.Icon icon={icon} classNames={iconClassName} />
-              </Next.Block>
-              <Next.Card.Title>{feed.name ?? 'Untitled feed'}</Next.Card.Title>
-              <Next.Card.Menu label={t('toolbar-menu.label')}>
+        <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+          <Card.Root ref={forwardedRef}>
+            <Card.Header>
+              <Block>
+                <Icon icon={icon} classNames={iconClassName} />
+              </Block>
+              <Card.Title>{feed.name ?? 'Untitled feed'}</Card.Title>
+              <Card.Menu label={t('toolbar-menu.label')}>
                 {menuItems.map((item) => (
-                  <Next.Menu.Item
-                    key={item.label}
-                    item={{ value: item.label, label: item.label }}
-                    onClick={item.onClick}
-                  />
+                  <Menu.Item key={item.label} item={{ value: item.label, label: item.label }} onClick={item.onClick} />
                 ))}
-              </Next.Card.Menu>
-            </Next.Card.Header>
-            <Next.Card.Body>
+              </Card.Menu>
+            </Card.Header>
+            <Card.Body>
               {/* {feed.url && (
                 <Card.Row>
                   <Card.Text classNames='truncate' variant='description'>
@@ -154,13 +160,13 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
                 </Card.Row>
               )} */}
               {feed.description && (
-                <Next.Card.Row>
-                  <Next.Card.Text variant='description'>{feed.description}</Next.Card.Text>
-                </Next.Card.Row>
+                <Card.Row>
+                  <Card.Text variant='description'>{feed.description}</Card.Text>
+                </Card.Row>
               )}
-            </Next.Card.Body>
-          </Next.Card.Root>
-        </Next.Focus.Item>
+            </Card.Body>
+          </Card.Root>
+        </Focus.Item>
       </Mosaic.Tile>
     );
   },

@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState }
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
-import { Next, composable, composableProps } from '@dxos/react-ui';
+import { Block, Button, Card, Focus, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
@@ -34,10 +34,10 @@ export const SearchResultStack = composable<HTMLDivElement, SearchResultStackPro
     }, []);
 
     return (
-      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild>
-          <Next.ScrollArea.Root orientation='vertical'>
-            <Next.ScrollArea.Viewport ref={setViewport}>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SearchResultTile}
                 gap={8}
@@ -47,10 +47,10 @@ export const SearchResultStack = composable<HTMLDivElement, SearchResultStackPro
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
               />
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Mosaic.Container>
-      </Next.Focus.Group>
+      </Focus.Group>
     );
   },
 );
@@ -86,22 +86,22 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
 
     return (
       <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={result.id} data={data} location={location}>
-        <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-          <Next.Card.Root grid ref={forwardedRef} role='button' classNames='cursor-pointer'>
-            <Next.Card.Header ref={cardRef}>
-              <Next.Block />
-              <Next.Card.Title>
+        <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+          <Card.Root grid ref={forwardedRef} role='button' classNames='cursor-pointer'>
+            <Card.Header ref={cardRef}>
+              <Block />
+              <Card.Title>
                 <Highlighted text={label} query={query} />
-              </Next.Card.Title>
-              <Next.Block rail='end'>
+              </Card.Title>
+              <Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <Next.Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                  <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                 </ActionMenu>
-              </Next.Block>
-            </Next.Card.Header>
+              </Block>
+            </Card.Header>
             <Surface.Surface type={AppSurface.CardContent} data={{ subject: result.object }} limit={1} />
-          </Next.Card.Root>
-        </Next.Focus.Item>
+          </Card.Root>
+        </Focus.Item>
       </Mosaic.Tile>
     );
   },

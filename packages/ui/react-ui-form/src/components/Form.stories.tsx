@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Next } from '@dxos/react-ui';
+import { Container, Panel, type PanelRootProps, ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { NextJsonLayout, type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
@@ -16,7 +16,7 @@ import { SCALAR_VALUES, ScalarSchema, type ScalarValues } from './testing.ts';
 
 const fieldMap = { model: createSelectField({ options: ['opus', 'sonnet', 'haiku'] }) };
 
-type StoryArgs = PaneArgs & { size?: Next.PanelRootProps['size'] };
+type StoryArgs = PaneArgs & { size?: PanelRootProps['size'] };
 
 /**
  * Same contract as the current Form: schema, values, onValuesChanged, onSave/onCancel, fieldMap, test ids. The values
@@ -27,11 +27,11 @@ const DefaultStory = ({ size = 'md' }: StoryArgs) => {
   const [saved, setSaved] = useState(false);
   return (
     <NextJsonLayout data={values}>
-      <Next.Panel.Root size={size}>
-        <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport asChild>
-              <Next.Container>
+      <Panel.Root size={size}>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport asChild>
+              <Container>
                 <Form.Root
                   schema={ScalarSchema}
                   values={values}
@@ -47,11 +47,11 @@ const DefaultStory = ({ size = 'md' }: StoryArgs) => {
                     <Form.Actions />
                   </Form.Content>
                 </Form.Root>
-              </Next.Container>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+              </Container>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
     </NextJsonLayout>
   );
 };

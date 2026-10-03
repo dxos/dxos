@@ -9,35 +9,35 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button, ControlFrame, Icon } from '../index.ts';
 
 /** An editor stand-in (a one-line `contenteditable`) in a frame with adornments, a mono frame, and a disabled one. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.ControlFrame
-      start={<Next.Icon icon='ph--code--regular' />}
-      end={<Next.Button icon='ph--x--regular' label='Clear' iconOnly variant='ghost' />}
+    <ControlFrame
+      start={<Icon icon='ph--code--regular' />}
+      end={<Button icon='ph--x--regular' label='Clear' iconOnly variant='ghost' />}
       data-testid={`frame-${size}`}
     >
       <div role='textbox' aria-label='Expression' contentEditable suppressContentEditableWarning tabIndex={0}>
         a + b
       </div>
-    </Next.ControlFrame>
-    <Next.ControlFrame variant='mono' data-testid={`mono-${size}`}>
+    </ControlFrame>
+    <ControlFrame variant='mono' data-testid={`mono-${size}`}>
       <div role='textbox' aria-label='Key' contentEditable suppressContentEditableWarning tabIndex={0}>
         sk-0001
       </div>
-    </Next.ControlFrame>
-    <Next.ControlFrame disabled data-testid={`disabled-${size}`}>
+    </ControlFrame>
+    <ControlFrame disabled data-testid={`disabled-${size}`}>
       <div role='textbox' aria-label='Read-only' aria-disabled>
         Locked
       </div>
-    </Next.ControlFrame>
+    </ControlFrame>
     {/* The editable is nested, as an editor's content element is under its own root. */}
-    <Next.ControlFrame rows={3} start={<Next.Icon icon='ph--text-aa--regular' />} data-testid={`rows-${size}`}>
+    <ControlFrame rows={3} start={<Icon icon='ph--text-aa--regular' />} data-testid={`rows-${size}`}>
       <div>
         <div
           role='textbox'
@@ -50,7 +50,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
           One line
         </div>
       </div>
-    </Next.ControlFrame>
+    </ControlFrame>
   </>
 );
 

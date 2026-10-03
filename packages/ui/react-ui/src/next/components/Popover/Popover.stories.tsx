@@ -11,10 +11,10 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { random } from '@dxos/random';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectAnchoredBelow, expectArrow, expectPopupSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button, Field, Group, Input, Popover, Typography, useVirtualAnchor } from '../index.ts';
 
 type SharePopoverProps = {
   /** Overrides the size the popover inherits from its trigger's row. */
@@ -25,27 +25,27 @@ type SharePopoverProps = {
 };
 
 const SharePopover = ({ contentSize, arrow, label, testId }: SharePopoverProps) => (
-  <Next.Popover.Root>
-    <Next.Popover.Trigger asChild>
-      <Next.Button data-testid={`${testId}-trigger`}>{label}</Next.Button>
-    </Next.Popover.Trigger>
-    <Next.Popover.Content size={contentSize} arrow={arrow} data-testid={testId}>
-      <Next.Popover.Header>
-        <Next.Popover.Title>Share space</Next.Popover.Title>
-        <Next.Popover.CloseTrigger />
-      </Next.Popover.Header>
-      <Next.Popover.Description>Anyone with the link can view.</Next.Popover.Description>
-      <Next.Field.Root>
-        <Next.Field.Label>Link</Next.Field.Label>
-        <Next.Input defaultValue='https://composer.space/s/123' readOnly />
-      </Next.Field.Root>
-      <Next.Group justify='end'>
-        <Next.Popover.CloseTrigger asChild>
-          <Next.Button>Done</Next.Button>
-        </Next.Popover.CloseTrigger>
-      </Next.Group>
-    </Next.Popover.Content>
-  </Next.Popover.Root>
+  <Popover.Root>
+    <Popover.Trigger asChild>
+      <Button data-testid={`${testId}-trigger`}>{label}</Button>
+    </Popover.Trigger>
+    <Popover.Content size={contentSize} arrow={arrow} data-testid={testId}>
+      <Popover.Header>
+        <Popover.Title>Share space</Popover.Title>
+        <Popover.CloseTrigger />
+      </Popover.Header>
+      <Popover.Description>Anyone with the link can view.</Popover.Description>
+      <Field.Root>
+        <Field.Label>Link</Field.Label>
+        <Input defaultValue='https://composer.space/s/123' readOnly />
+      </Field.Root>
+      <Group justify='end'>
+        <Popover.CloseTrigger asChild>
+          <Button>Done</Button>
+        </Popover.CloseTrigger>
+      </Group>
+    </Popover.Content>
+  </Popover.Root>
 );
 
 random.seed(123);
@@ -57,27 +57,27 @@ const NotesPopover = ({ size }: SizeArgs) => {
   const container = useRef<HTMLDivElement>(null);
   return (
     <>
-      <Next.Popover.Root modal>
-        <Next.Popover.Trigger asChild>
-          <Next.Button data-testid={`notes-${size}-trigger`}>Notes</Next.Button>
-        </Next.Popover.Trigger>
-        <Next.Popover.Content container={container} data-testid={`notes-${size}`}>
-          <Next.Popover.Header>
-            <Next.Popover.Title>Notes</Next.Popover.Title>
-            <Next.Popover.CloseTrigger />
-          </Next.Popover.Header>
-          <Next.Popover.Body data-testid={`notes-${size}-body`}>
+      <Popover.Root modal>
+        <Popover.Trigger asChild>
+          <Button data-testid={`notes-${size}-trigger`}>Notes</Button>
+        </Popover.Trigger>
+        <Popover.Content container={container} data-testid={`notes-${size}`}>
+          <Popover.Header>
+            <Popover.Title>Notes</Popover.Title>
+            <Popover.CloseTrigger />
+          </Popover.Header>
+          <Popover.Body data-testid={`notes-${size}-body`}>
             {NOTES.map((note, index) => (
-              <Next.Typography key={index}>{note}</Next.Typography>
+              <Typography key={index}>{note}</Typography>
             ))}
-          </Next.Popover.Body>
-          <Next.Group justify='end'>
-            <Next.Popover.CloseTrigger asChild>
-              <Next.Button>Done</Next.Button>
-            </Next.Popover.CloseTrigger>
-          </Next.Group>
-        </Next.Popover.Content>
-      </Next.Popover.Root>
+          </Popover.Body>
+          <Group justify='end'>
+            <Popover.CloseTrigger asChild>
+              <Button>Done</Button>
+            </Popover.CloseTrigger>
+          </Group>
+        </Popover.Content>
+      </Popover.Root>
       <div ref={container} data-testid={`notes-${size}-container`} />
     </>
   );
@@ -89,23 +89,19 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
   const anchor = useRef<HTMLSpanElement>(null);
   return (
     <>
-      <Next.Button onClick={() => setOpen(true)} data-testid={`anchored-${size}-trigger`}>
+      <Button onClick={() => setOpen(true)} data-testid={`anchored-${size}-trigger`}>
         Open at anchor
-      </Next.Button>
-      <Next.Typography asChild>
+      </Button>
+      <Typography asChild>
         <span ref={anchor} data-testid={`anchor-${size}`}>
           Anchor
         </span>
-      </Next.Typography>
-      <Next.Popover.Root
-        open={open}
-        onOpenChange={({ open }) => setOpen(open)}
-        positioning={Next.useVirtualAnchor(anchor)}
-      >
-        <Next.Popover.Content data-testid={`anchored-${size}`}>
-          <Next.Popover.Description>Anchored to a span.</Next.Popover.Description>
-        </Next.Popover.Content>
-      </Next.Popover.Root>
+      </Typography>
+      <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={useVirtualAnchor(anchor)}>
+        <Popover.Content data-testid={`anchored-${size}`}>
+          <Popover.Description>Anchored to a span.</Popover.Description>
+        </Popover.Content>
+      </Popover.Root>
     </>
   );
 };
@@ -116,12 +112,12 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
  * the arrowless one, which is `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
-  <Next.Group>
+  <Group>
     <SharePopover label='Share' testId={`popover-${size}`} />
     <SharePopover contentSize='lg' arrow={false} label='Share (no arrow)' testId={`plain-${size}`} />
     <NotesPopover size={size} />
     <AnchoredPopover size={size} />
-  </Next.Group>
+  </Group>
 );
 
 const meta = {

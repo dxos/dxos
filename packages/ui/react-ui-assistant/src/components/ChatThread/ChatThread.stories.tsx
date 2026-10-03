@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { Next } from '@dxos/react-ui';
+import { Button, Field, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { FeedModel, MessageList, Outline, type OutlineMarker, useMessageList } from '@dxos/react-ui-feed';
 import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '@dxos/react-ui-feed/debug';
 import { createScenario, streamTurn } from '@dxos/react-ui-feed/testing';
@@ -132,30 +132,30 @@ const DefaultStory = ({
   return (
     <DebugProvider>
       <ChatThread.Root model={model} viewType={viewType} onEvent={handleEvent} controllerRef={controller}>
-        <Next.Panel.Root>
-          <Next.Panel.Header>
-            <Next.Toolbar.Root>
-              <Next.Button
+        <Panel.Root>
+          <Panel.Header>
+            <Toolbar.Root>
+              <Button
                 icon={auto ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
                 label={auto ? 'Stop the agent' : 'Let the agent talk'}
                 data-testid='assistant.auto'
                 onClick={toggleAuto}
               />
-              <Next.Toolbar.Separator />
+              <Toolbar.Separator />
               <MessageList.Nav ends={false} classNames='contents' />
-            </Next.Toolbar.Root>
-          </Next.Panel.Header>
+            </Toolbar.Root>
+          </Panel.Header>
 
-          <Next.Panel.Body classNames='flex flex-col'>
+          <Panel.Body classNames='flex flex-col'>
             <div className='dx-expand relative'>
               <PromptOutline model={model} />
               <ChatThread.Viewport classNames='dx-fullscreen' />
               {debug && <Probes model={model} />}
             </div>
             <PromptInput busy={busy} prompt={prompt} setPrompt={setPrompt} onSubmit={(prompt) => void answer(prompt)} />
-          </Next.Panel.Body>
-        </Next.Panel.Root>
+          </Panel.Body>
+        </Panel.Root>
         {debug && <Debug />}
       </ChatThread.Root>
     </DebugProvider>
@@ -185,15 +185,15 @@ const PromptInput = ({
 
   return (
     <div className='p-2'>
-      <Next.Field.Root>
-        <Next.Input
+      <Field.Root>
+        <Input
           placeholder={busy ? 'Answering…' : 'Ask something…'}
           value={prompt}
           data-testid='assistant.prompt'
           onChange={(event) => setPrompt(event.target.value)}
           onKeyDown={(event) => event.key === 'Enter' && submit()}
         />
-      </Next.Field.Root>
+      </Field.Root>
     </div>
   );
 };

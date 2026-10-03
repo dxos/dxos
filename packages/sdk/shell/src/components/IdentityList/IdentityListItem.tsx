@@ -8,7 +8,7 @@ import { generateName } from '@dxos/display-name';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { Next, type ThemedClassName, useId } from '@dxos/react-ui';
+import { Avatar, type ThemedClassName, toAvatarHue, useId } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { keyToFallback } from '@dxos/util';
 
@@ -37,10 +37,10 @@ export const IdentityListItem = forwardRef<
       data-testid='identity-list-item'
       ref={forwardedRef}
     >
-      <Next.Avatar.Root
+      <Avatar.Root
         aria-labelledby={labelId}
         status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inactive'}
-        hue={Next.toAvatarHue(profileString(identity, 'hue') ?? fallbackValue.hue)}
+        hue={toAvatarHue(profileString(identity, 'hue') ?? fallbackValue.hue)}
         fallback={profileString(identity, 'emoji') ?? fallbackValue.emoji}
         classNames='place-self-center'
       />

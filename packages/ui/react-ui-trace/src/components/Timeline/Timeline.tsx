@@ -8,7 +8,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import {
-  Next,
+  Icon,
   type ThemedClassName,
   composable,
   composableProps,
@@ -453,7 +453,7 @@ const CommitIcon = memo(({ commit }: { commit: Commit }) => {
   }
 
   return (
-    <Next.Icon
+    <Icon
       icon={commit.icon}
       size='md'
       spin={commit.icon === 'ph--spinner-gap--regular'}

@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Banner, Empty, Flex, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { trim } from '@dxos/util';
 
@@ -178,13 +178,13 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
 
   if (services.length === 0) {
     return (
-      <Next.Banner.Root valence='info'>
-        <Next.Banner.Title>{t('booking.no-providers.message')}</Next.Banner.Title>
-        <Next.Banner.Body classNames='flex flex-col py-1 gap-2'>
+      <Banner.Root valence='info'>
+        <Banner.Title>{t('booking.no-providers.message')}</Banner.Title>
+        <Banner.Body classNames='flex flex-col py-1 gap-2'>
           <span>{t('booking.enable-providers.message')}</span>
           <PluginRegistryButton />
-        </Next.Banner.Body>
-      </Next.Banner.Root>
+        </Banner.Body>
+      </Banner.Root>
     );
   }
 
@@ -203,18 +203,18 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
         <Form.Viewport>
           <Form.Content>
             {services.length > 1 && (
-              <Next.Select.Root
+              <Select.Root
                 value={service ? [service.id] : []}
                 onValueChange={({ value: [value] }) => value && setServiceId(value)}
                 items={services.map((candidate) => ({ value: candidate.id, label: candidate.label }))}
               >
-                <Next.Select.Trigger placeholder={t('booking.provider.placeholder')} />
-                <Next.Select.Content>
+                <Select.Trigger placeholder={t('booking.provider.placeholder')} />
+                <Select.Content>
                   {services.map((candidate) => (
-                    <Next.Select.Item key={candidate.id} item={{ value: candidate.id, label: candidate.label }} />
+                    <Select.Item key={candidate.id} item={{ value: candidate.id, label: candidate.label }} />
                   ))}
-                </Next.Select.Content>
-              </Next.Select.Root>
+                </Select.Content>
+              </Select.Root>
             )}
             <Form.Layout template={SEARCH_LAYOUT} />
             <Form.ErrorText>{error}</Form.ErrorText>
@@ -230,9 +230,9 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
       {/* Offers list: reuses the mosaic stack (own ScrollArea) so offers share the segment list affordances. */}
       {flightOffers && (
         <>
-          <Next.Separator />
+          <Separator />
           {flightOffers.length === 0 ? (
-            <Next.Empty>{t('booking.no-offers.message')}</Next.Empty>
+            <Empty>{t('booking.no-offers.message')}</Empty>
           ) : (
             <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
           )}

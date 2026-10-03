@@ -9,7 +9,7 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import type * as Tour from '@dxos/app-toolkit/Tour';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, type TourStepDetails, Tour as UiTour, useTour, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -22,7 +22,7 @@ const toStep = (
   step: Tour.Step,
   index: number,
   capabilities: CapabilityManager.CapabilityManager,
-): Next.TourStepDetails => ({
+): TourStepDetails => ({
   id: step.id ?? String(index + 1),
   type: 'tooltip',
   target: resolveTarget(step.target),
@@ -72,7 +72,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
   const resumeAt = useRef<string | undefined>(undefined);
   const pausing = useRef(false);
   const lastStepId = useRef<string | undefined>(undefined);
-  const tour = Next.useTour({
+  const tour = useTour({
     steps: tourSteps,
     closeOnInteractOutside: false,
     onStepChange: ({ stepId }) => {
@@ -137,15 +137,15 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
         stop: () => setRunning(false),
       }}
     >
-      <Next.Tour.Root tour={tour}>
-        <Next.Tour.Content
+      <UiTour.Root tour={tour}>
+        <UiTour.Content
           classNames='w-60 min-h-40 gap-0 p-2 border-accent-bg bg-accent-bg text-accent-fg'
           data-testid='helpPlugin.tooltip'
         >
           <div className='flex items-start'>
-            <Next.Tour.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
-            <Next.Tour.CloseTrigger asChild ref={closeRef}>
-              <Next.Button
+            <UiTour.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
+            <UiTour.CloseTrigger asChild ref={closeRef}>
+              <Button
                 size='md'
                 icon='ph--x--bold'
                 iconOnly
@@ -154,11 +154,11 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                 variant='primary'
                 data-testid='helpPlugin.tooltip.close'
               />
-            </Next.Tour.CloseTrigger>
+            </UiTour.CloseTrigger>
           </div>
-          <Next.Tour.Description classNames='grow px-4 my-2 text-accent-fg' />
-          <Next.Tour.Control>
-            <Next.Button
+          <UiTour.Description classNames='grow px-4 my-2 text-accent-fg' />
+          <UiTour.Control>
+            <Button
               classNames={[!tour.hasPrevStep && 'invisible']}
               icon='ph--caret-left--regular'
               iconOnly
@@ -169,7 +169,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
             />
             <div className='flex grow justify-center'>
               {Array.from({ length: tour.totalSteps }).map((_, index) => (
-                <Next.Icon
+                <Icon
                   key={index}
                   icon={stepIndex === index ? 'ph--circle--fill' : 'ph--circle--regular'}
                   size='xs'
@@ -178,13 +178,13 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
               ))}
             </div>
             {last ? (
-              <Next.Tour.CloseTrigger asChild>
-                <Next.Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
+              <UiTour.CloseTrigger asChild>
+                <Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
                   {t('tour-done.label')}
-                </Next.Button>
-              </Next.Tour.CloseTrigger>
+                </Button>
+              </UiTour.CloseTrigger>
             ) : (
-              <Next.Button
+              <Button
                 icon='ph--caret-right--regular'
                 iconOnly
                 label={t('tour-next.label')}
@@ -194,9 +194,9 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                 data-testid='helpPlugin.tooltip.next'
               />
             )}
-          </Next.Tour.Control>
-        </Next.Tour.Content>
-      </Next.Tour.Root>
+          </UiTour.Control>
+        </UiTour.Content>
+      </UiTour.Root>
     </TourContext.Provider>
   );
 };

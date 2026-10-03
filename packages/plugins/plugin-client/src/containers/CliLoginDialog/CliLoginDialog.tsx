@@ -10,7 +10,7 @@ import { EffectEx } from '@dxos/effect';
 import { type Invitation } from '@dxos/halo';
 import { useIdentity, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { ClientCapabilities, CliLogin } from '#types';
@@ -104,12 +104,12 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
   }, [identityService, callback, state]);
 
   return (
-    <Next.AlertDialog.Content size='md'>
-      <Next.AlertDialog.Body>
-        <Next.AlertDialog.Title>{t('cli-login-dialog.title')}</Next.AlertDialog.Title>
-        <Next.AlertDialog.Description classNames='py-2'>
+    <AlertDialog.Content size='md'>
+      <AlertDialog.Body>
+        <AlertDialog.Title>{t('cli-login-dialog.title')}</AlertDialog.Title>
+        <AlertDialog.Description classNames='py-2'>
           {identity ? t('cli-login-dialog.description') : t('cli-login-no-identity.message')}
-        </Next.AlertDialog.Description>
+        </AlertDialog.Description>
         {identity && (
           <div className='py-2'>
             <p className='text-sm text-subdued'>{t('cli-login-code.label')}</p>
@@ -124,33 +124,33 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
           {status === 'success' && t('cli-login-success.message')}
           {status === 'error' && t('cli-login-error.message', { error })}
         </p>
-      </Next.AlertDialog.Body>
-      <Next.AlertDialog.Footer>
+      </AlertDialog.Body>
+      <AlertDialog.Footer>
         {status === 'confirm' || status === 'sending' ? (
           <>
-            <Next.AlertDialog.Cancel data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
+            <AlertDialog.Cancel data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
               {t('cli-login-deny.label')}
-            </Next.AlertDialog.Cancel>
-            <Next.Button
+            </AlertDialog.Cancel>
+            <Button
               data-testid='cliLogin.authorize'
               variant='primary'
               disabled={!identity || status === 'sending'}
               onClick={handleAuthorize}
             >
               {t('cli-login-authorize.label')}
-            </Next.Button>
+            </Button>
           </>
         ) : (
-          <Next.AlertDialog.Action
+          <AlertDialog.Action
             data-testid='cliLogin.done'
             variant={status === 'success' ? 'primary' : 'default'}
             onClick={close}
           >
             {t(status === 'waiting' ? 'cli-login-cancel.label' : 'cli-login-done.label')}
-          </Next.AlertDialog.Action>
+          </AlertDialog.Action>
         )}
-      </Next.AlertDialog.Footer>
-    </Next.AlertDialog.Content>
+      </AlertDialog.Footer>
+    </AlertDialog.Content>
   );
 };
 

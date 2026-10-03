@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import type * as Tour from '@dxos/app-toolkit/Tour';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import { Next } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -42,22 +42,22 @@ const steps: Tour.Step[] = [
 const DefaultStory = () => {
   const [running, setRunning] = useState(false);
   return (
-    <Next.Panel.Root classNames='dx-base-surface'>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Button icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
-          <Next.Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
-          <Next.Toolbar.Separator variant='gap' />
-          <Next.Button icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='grid place-items-center'>
-        <Next.Button onClick={() => setRunning(true)} data-testid='story.start'>
+    <Panel.Root classNames='dx-base-surface'>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+          <Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
+          <Toolbar.Separator variant='gap' />
+          <Button icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='grid place-items-center'>
+        <Button onClick={() => setRunning(true)} data-testid='story.start'>
           Start tour
-        </Next.Button>
-      </Next.Panel.Body>
+        </Button>
+      </Panel.Body>
       <GuidedTour steps={steps} running={running} onRunningChanged={setRunning} />
-    </Next.Panel.Root>
+    </Panel.Root>
   );
 };
 
@@ -147,25 +147,25 @@ const LateStepsStory = () => {
   };
 
   return (
-    <Next.Panel.Root classNames='dx-base-surface'>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Button icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
-          <Next.Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
-          <Next.Toolbar.Separator variant='gap' />
-          <Next.Button icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='grid place-items-center gap-2'>
-        <Next.Button onClick={() => load(steps)} data-testid='story.startFirst'>
+    <Panel.Root classNames='dx-base-surface'>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+          <Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
+          <Toolbar.Separator variant='gap' />
+          <Button icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='grid place-items-center gap-2'>
+        <Button onClick={() => load(steps)} data-testid='story.startFirst'>
           Start first tour
-        </Next.Button>
-        <Next.Button onClick={() => load(laterSteps)} data-testid='story.startSecond'>
+        </Button>
+        <Button onClick={() => load(laterSteps)} data-testid='story.startSecond'>
           Start second tour
-        </Next.Button>
-      </Next.Panel.Body>
+        </Button>
+      </Panel.Body>
       <GuidedTour steps={current} running={running && current.length > 0} onRunningChanged={setRunning} />
-    </Next.Panel.Root>
+    </Panel.Root>
   );
 };
 
@@ -198,19 +198,19 @@ export const TestMissingTarget: Story = {
       { target: '[data-testid="story.absent"]', title: 'Missing', description: 'Never rendered.' },
     ];
     return (
-      <Next.Panel.Root classNames='dx-base-surface'>
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
-            <Next.Button icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
-        <Next.Panel.Body classNames='grid place-items-center'>
-          <Next.Button onClick={() => setRunning(true)} data-testid='story.start'>
+      <Panel.Root classNames='dx-base-surface'>
+        <Panel.Header>
+          <Toolbar.Root>
+            <Button icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body classNames='grid place-items-center'>
+          <Button onClick={() => setRunning(true)} data-testid='story.start'>
             Start tour
-          </Next.Button>
-        </Next.Panel.Body>
+          </Button>
+        </Panel.Body>
         <GuidedTour steps={withMissing} running={running} onRunningChanged={setRunning} />
-      </Next.Panel.Root>
+      </Panel.Root>
     );
   },
   play: async ({ canvasElement }) => {

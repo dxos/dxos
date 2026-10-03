@@ -6,7 +6,7 @@ import { type Extension, Prec } from '@codemirror/state';
 import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
 import { type BuildResult, QueryBuilder } from '@dxos/echo-query';
-import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode, useTranslation } from '@dxos/react-ui';
 import {
   Editor,
   type EditorController,
@@ -78,7 +78,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     const tagsRef = useRef(tags);
     tagsRef.current = tags;
 
-    const themeMode = Next.useThemeMode();
+    const themeMode = useThemeMode();
     const extensions = useMemo<Extension[]>(
       () => [
         createBasicExtensions({

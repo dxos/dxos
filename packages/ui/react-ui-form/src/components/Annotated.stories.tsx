@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Annotation, Format, Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui';
+import { Container, Panel, ScrollArea, Typography } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { hues } from '@dxos/ui-types';
 
@@ -86,11 +86,11 @@ const DefaultStory = (_: PaneArgs) => {
   const [organizationName] = useObject(organization, 'name');
   const [values, setValues] = useState<Values>(() => ({ apiKey: 'sk-1234', employer: Ref.make(organization) }));
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container>
+    <Panel.Root>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container>
               <Form.Root
                 schema={AnnotatedSchema}
                 values={values}
@@ -100,19 +100,19 @@ const DefaultStory = (_: PaneArgs) => {
                   <Form.Fields />
                 </Form.Content>
               </Form.Root>
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-      <Next.Panel.Footer>
-        <Next.Typography truncate data-testid='values'>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+      <Panel.Footer>
+        <Typography truncate data-testid='values'>
           {JSON.stringify({ ...values, employer: undefined })}
-        </Next.Typography>
-        <Next.Typography truncate data-testid='organization'>
+        </Typography>
+        <Typography truncate data-testid='organization'>
           {organizationName}
-        </Next.Typography>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+        </Typography>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

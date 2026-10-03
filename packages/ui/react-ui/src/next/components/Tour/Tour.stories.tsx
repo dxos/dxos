@@ -11,12 +11,12 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { byTestId } from '../../testing.ts';
+import { Button, Group, Tour, type TourStepDetails, useTour } from '../index.ts';
 
 const target = (testId: string) => () => document.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
 
-const STEPS: Next.TourStepDetails[] = [
+const STEPS: TourStepDetails[] = [
   {
     id: 'welcome',
     type: 'dialog',
@@ -56,46 +56,46 @@ const STEPS: Next.TourStepDetails[] = [
 
 /** Three targets and a button that starts the tour; the last step ends with a Done button of its own. */
 const DefaultStory = () => {
-  const tour = Next.useTour({ steps: useMemo(() => STEPS, []) });
+  const tour = useTour({ steps: useMemo(() => STEPS, []) });
   return (
     <>
-      <Next.Group>
-        <Next.Button icon='ph--plus--regular' iconOnly label='Add' data-testid='tour.add' />
-        <Next.Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='tour.search' />
-        <Next.Button onClick={() => tour.start()} data-testid='tour.start'>
+      <Group>
+        <Button icon='ph--plus--regular' iconOnly label='Add' data-testid='tour.add' />
+        <Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='tour.search' />
+        <Button onClick={() => tour.start()} data-testid='tour.start'>
           Start tour
-        </Next.Button>
-      </Next.Group>
-      <Next.Tour.Root tour={tour}>
-        <Next.Tour.Content data-testid='tour.card'>
-          <Next.Tour.Header>
-            <Next.Tour.Title />
-            <Next.Tour.CloseTrigger />
-          </Next.Tour.Header>
-          <Next.Tour.Description />
-          <Next.Tour.Control>
-            <Next.Tour.ProgressText />
-            <Next.Group>
-              <Next.Tour.Actions>
+        </Button>
+      </Group>
+      <Tour.Root tour={tour}>
+        <Tour.Content data-testid='tour.card'>
+          <Tour.Header>
+            <Tour.Title />
+            <Tour.CloseTrigger />
+          </Tour.Header>
+          <Tour.Description />
+          <Tour.Control>
+            <Tour.ProgressText />
+            <Group>
+              <Tour.Actions>
                 {(actions) =>
                   actions.map((action) => (
-                    <Next.Tour.ActionTrigger
+                    <Tour.ActionTrigger
                       key={action.label}
                       action={action}
                       variant={action.action === 'next' ? 'primary' : 'ghost'}
                     />
                   ))
                 }
-              </Next.Tour.Actions>
+              </Tour.Actions>
               {tour.lastStep && (
-                <Next.Tour.CloseTrigger asChild>
-                  <Next.Button variant='primary'>Done</Next.Button>
-                </Next.Tour.CloseTrigger>
+                <Tour.CloseTrigger asChild>
+                  <Button variant='primary'>Done</Button>
+                </Tour.CloseTrigger>
               )}
-            </Next.Group>
-          </Next.Tour.Control>
-        </Next.Tour.Content>
-      </Next.Tour.Root>
+            </Group>
+          </Tour.Control>
+        </Tour.Content>
+      </Tour.Root>
     </>
   );
 };

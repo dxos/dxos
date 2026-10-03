@@ -20,11 +20,14 @@ import React, {
 
 import { Obj } from '@dxos/echo';
 import {
+  Button,
   type ComposableProps,
-  Next,
+  Icon,
+  ScrollArea,
   type ThemedClassName,
   composable,
   composableProps,
+  useThemeMode,
   useTranslation,
 } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
@@ -179,7 +182,7 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
         ref={forwardedRef}
       >
         <div className='flex items-center justify-center'>
-          <Next.Button
+          <Button
             iconOnly
             variant='ghost'
             size='sm'
@@ -388,8 +391,8 @@ const ThreadMessages = ({
       currentId={currentId}
       eventHandler={eventHandler}
     >
-      <Next.ScrollArea.Root classNames={mx('col-span-2 dx-grow', classNames)} orientation='vertical'>
-        <Next.ScrollArea.Viewport ref={setViewport}>
+      <ScrollArea.Root classNames={mx('col-span-2 dx-grow', classNames)} orientation='vertical'>
+        <ScrollArea.Viewport ref={setViewport}>
           <Mosaic.VirtualStack
             Tile={ThreadItemAdapter}
             items={items}
@@ -398,8 +401,8 @@ const ThreadMessages = ({
             getScrollElement={() => viewport}
             estimateSize={() => estimateSize}
           />
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </Mosaic.Container>
   );
 };
@@ -425,7 +428,7 @@ export type ThreadTextboxProps = MessageMetadata & {
 /** Message composer pinned at the foot of a thread. */
 const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, ...metadata }: ThreadTextboxProps) => {
   const { t } = useTranslation(translationKey);
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const { registerComposerFocus } = useThreadContext('Thread.Textbox');
   const composerRef = useRef<{ focus: () => void } | null>(null);
   const messageRef = useRef('');
@@ -494,7 +497,7 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
         )}
         ref={forwardedRef}
       >
-        <Next.Icon
+        <Icon
           icon='ph--spinner--bold'
           classNames='w-6 h-4 invisible data-[visible=show]:visible animate-spin-slow'
           data-visible={activity ? 'show' : 'hide'}

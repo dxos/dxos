@@ -7,7 +7,7 @@ import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 're
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { Next, composable, composableProps } from '@dxos/react-ui';
+import { ScrollArea, SystemButton, composable, composableProps, useThemeMode } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis } from '@dxos/ui-types';
 
@@ -75,18 +75,18 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
     // The copy button sits on the scroll root so it stays put while the source scrolls under it.
     const source = sourceOf(props.children, props.fallback);
     return (
-      <Next.ScrollArea.Root
+      <ScrollArea.Root
         role={role ?? 'none'}
         style={style}
         classNames={[className, classNames, copyButton && 'relative group']}
         orientation={scroll}
         ref={forwardedRef}
       >
-        <Next.ScrollArea.Viewport>
+        <ScrollArea.Viewport>
           <SyntaxHighlighterLeaf {...props} />
-        </Next.ScrollArea.Viewport>
+        </ScrollArea.Viewport>
         {copyButton && <CopyOverlay source={source} />}
-      </Next.ScrollArea.Root>
+      </ScrollArea.Root>
     );
   },
 );
@@ -98,7 +98,7 @@ const sourceOf = (children: ReactNode, fallback = zeroWidthSpace): string =>
 
 const CopyOverlay = ({ source }: { source: string }) => (
   <div className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'>
-    <Next.SystemButton.Clipboard
+    <SystemButton.Clipboard
       iconOnly
       value={source}
       variant='ghost'
@@ -125,7 +125,7 @@ const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterP
     },
     forwardedRef,
   ) => {
-    const themeMode = Next.useThemeMode();
+    const themeMode = useThemeMode();
     const source = sourceOf(children, fallback);
     const language = source.length > MAX_HIGHLIGHTED_LENGTH ? 'text' : languageProp;
 

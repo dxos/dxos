@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Empty, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { type Frame } from '#types';
@@ -34,12 +34,12 @@ export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailP
   const artifact = useResolveRef(snapshot ? frame.artifact : undefined);
   if (!artifact) {
     return (
-      <Next.Empty classNames='h-full'>
+      <Empty classNames='h-full'>
         {
           <span className='flex flex-col items-center gap-2'>
             {t('frame-empty.message')}
             {onAddArtifact && (
-              <Next.Button
+              <Button
                 icon='ph--plus--regular'
                 label={t('add-frame-artifact.label')}
                 onClick={() => onAddArtifact(frame)}
@@ -47,7 +47,7 @@ export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailP
             )}
           </span>
         }
-      </Next.Empty>
+      </Empty>
     );
   }
 

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 /**
@@ -13,9 +13,9 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
  * inspect any live value beside its other modules.
  */
 export const JsonModule = ({ data }: { data?: { subject?: unknown } }) => (
-  <Next.Panel.Root>
-    <Next.Panel.Body classNames='overflow-auto p-2 text-sm'>
+  <Panel.Root>
+    <Panel.Body classNames='overflow-auto p-2 text-sm'>
       <JsonHighlighter data={data?.subject} />
-    </Next.Panel.Body>
-  </Next.Panel.Root>
+    </Panel.Body>
+  </Panel.Root>
 );

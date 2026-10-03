@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Flex, Next } from '@dxos/react-ui';
+import { Container, Flex, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -40,26 +40,26 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
   const gutter = layout.mode === 'mobile' ? 'md' : 'lg';
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Next.Panel.Header>
+      </Panel.Header>
 
-      <Next.Panel.Body asChild>
-        <Next.Container gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
-          <Next.ScrollArea.Root orientation='vertical'>
-            <Next.ScrollArea.Viewport>
+      <Panel.Body asChild>
+        <Container gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport>
               <Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
                 <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
               </Flex>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
           <div className='dx-document pb-4'>
             <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
           </div>
-        </Next.Container>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+        </Container>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

@@ -11,7 +11,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 
 import { type SelectionMode, SelectionModel } from '@dxos/graph';
 import type * as GraphModel from '@dxos/graph/GraphModel';
-import { Next } from '@dxos/react-ui';
+import { Button, Card, Popover, Toolbar, virtualAnchor } from '@dxos/react-ui';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { getHashStyles, mx } from '@dxos/ui-theme';
@@ -210,10 +210,10 @@ const DefaultStory = ({
   }, [selection, active]);
 
   return (
-    <Next.Popover.Root
+    <Popover.Root
       open={!!popover}
       onOpenChange={({ open: state }) => !state && setPopover(undefined)}
-      positioning={Next.virtualAnchor(popoverAnchorRef)}
+      positioning={virtualAnchor(popoverAnchorRef)}
       autoFocus={false}
     >
       <div className={mx('dx-fill grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
@@ -267,14 +267,14 @@ const DefaultStory = ({
         )}
       </div>
 
-      <Next.Popover.Content>
-        <Next.Popover.Body>
-          <Next.Card.Root>
+      <Popover.Content>
+        <Popover.Body>
+          <Card.Root>
             <JsonHighlighter data={popover} classNames='text-xs my-form-padding px-form-padding bg-transparent' />
-          </Next.Card.Root>
-        </Next.Popover.Body>
-      </Next.Popover.Content>
-    </Next.Popover.Root>
+          </Card.Root>
+        </Popover.Body>
+      </Popover.Content>
+    </Popover.Root>
   );
 };
 
@@ -314,16 +314,16 @@ const Debug = ({
 
   return (
     <div className='flex flex-col overflow-hidden'>
-      <Next.Toolbar.Root>
-        <Next.Button onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
-        <Next.Button onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
-        <Next.Button onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
-        <Next.Button onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
-        <Next.Button onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
-        <Next.Button onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
-        <Next.Button onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
-        <Next.Button onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
-      </Next.Toolbar.Root>
+      <Toolbar.Root>
+        <Button onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
+        <Button onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
+        <Button onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
+        <Button onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
+        <Button onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
+        <Button onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
+        <Button onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
+        <Button onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
+      </Toolbar.Root>
       <Syntax.Root data={data}>
         <Syntax.Content>
           <Syntax.Filter />

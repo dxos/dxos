@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { CompoundButton, type CompoundButtonProps } from './CompoundButton.tsx';
@@ -37,8 +37,8 @@ export const Default: Story = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
-    before: <Next.Icon icon='ph--clock-counter-clockwise' classNames='w-5 h-5' />,
-    after: <Next.Icon icon='ph--arrow-right' classNames='w-5 h-5' />,
+    before: <Icon icon='ph--clock-counter-clockwise' classNames='w-5 h-5' />,
+    after: <Icon icon='ph--arrow-right' classNames='w-5 h-5' />,
     disabled: false,
   },
 };
@@ -47,8 +47,8 @@ export const Primary: Story = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
-    before: <Next.Icon icon='ph--clock-counter-clockwise' classNames='w-5 h-5' />,
-    after: <Next.Icon icon='ph--arrow-right' classNames='w-5 h-5' />,
+    before: <Icon icon='ph--clock-counter-clockwise' classNames='w-5 h-5' />,
+    after: <Icon icon='ph--arrow-right' classNames='w-5 h-5' />,
     disabled: false,
     variant: 'primary',
   },

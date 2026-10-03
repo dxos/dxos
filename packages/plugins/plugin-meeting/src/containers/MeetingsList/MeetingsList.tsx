@@ -10,7 +10,7 @@ import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Channel } from '@dxos/types';
 
@@ -38,9 +38,9 @@ const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
       <span className='truncate'>{getLabel(meeting)}</span>
       {/* Visual affordance only — listbox options can't legally contain focusable
           descendants, so the row itself drives selection via onClick above. */}
-      <Next.Button tabIndex={-1} aria-hidden onClick={handleSelectMeeting}>
+      <Button tabIndex={-1} aria-hidden onClick={handleSelectMeeting}>
         {t('select-meeting.label')}
-      </Next.Button>
+      </Button>
     </Listbox.Item>
   );
 };
@@ -79,7 +79,7 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
   return (
     <div>
       <Flex align='center' justify='end' classNames='px-2 min-h-[3rem]'>
-        <Next.Button onClick={handleCreateMeeting}>{t('create-meeting.label')}</Next.Button>
+        <Button onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button>
       </Flex>
       <Listbox.Root items={sortedMeetings.map((meeting) => ({ value: meeting.id, label: getLabel(meeting) }))}>
         <Listbox.Content aria-label={t('meeting-list.label')}>

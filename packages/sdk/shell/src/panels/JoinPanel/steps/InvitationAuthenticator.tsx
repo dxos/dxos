@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Field, PinInput, useTranslation } from '@dxos/react-ui';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components/index.ts';
@@ -50,25 +50,25 @@ export const InvitationAuthenticator = ({
   return (
     <>
       <div className='grow flex flex-col justify-center gap-4'>
-        <Next.Field.Root
+        <Field.Root
           {...(failed && {
             validationValence: 'error',
           })}
         >
           {authMethod === Invitation_AuthMethod.SHARED_SECRET ? (
-            <Next.Field.Label asChild>
+            <Field.Label asChild>
               <InputLabel>{t('auth-code-input.label')}</InputLabel>
-            </Next.Field.Label>
+            </Field.Label>
           ) : (
             <>
-              <Next.Field.Label>
+              <Field.Label>
                 <InputLabel classNames='text-description'>{t('authenticating.label')}</InputLabel>
-              </Next.Field.Label>
+              </Field.Label>
               <div className='grow' />
             </>
           )}
           {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
-            <Next.PinInput
+            <PinInput
               {...{
                 disabled,
                 'density': 'lg',
@@ -84,10 +84,8 @@ export const InvitationAuthenticator = ({
               }}
             />
           )}
-          {failed && (
-            <Next.Field.ErrorText classNames='text-center'>{t('failed-to-authenticate.message')}</Next.Field.ErrorText>
-          )}
-        </Next.Field.Root>
+          {failed && <Field.ErrorText classNames='text-center'>{t('failed-to-authenticate.message')}</Field.ErrorText>}
+        </Field.Root>
 
         {invitationId && authMethod === Invitation_AuthMethod.SHARED_SECRET && (
           <>

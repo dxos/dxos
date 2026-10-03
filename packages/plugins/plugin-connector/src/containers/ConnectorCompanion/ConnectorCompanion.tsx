@@ -14,7 +14,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection, Cursor } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { useConnector } from '#hooks';
@@ -105,8 +105,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
         : t('never-synced.label');
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Body>
+    <Panel.Root role={role}>
+      <Panel.Body>
         <Form.Root variant='settings' schema={EMPTY_SCHEMA} values={EMPTY_VALUES}>
           <Form.Viewport scroll>
             <Form.Content>
@@ -118,7 +118,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                   error={!targetMissing && !sourceMissing && subject.lastError ? subject.lastError : undefined}
                 >
                   {targetMissing || sourceMissing ? (
-                    <Next.Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Next.Button>
+                    <Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button>
                   ) : undefined}
 
                   {connector?.sync?.optionsSchema && !targetMissing && !sourceMissing && (
@@ -137,15 +137,15 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                 {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
                 {!sourceMissing && (
                   <Form.Field standalone label={t('open-connection.label')}>
-                    <Next.Button onClick={handleOpenConnection}>{t('open-connection.label')}</Next.Button>
+                    <Button onClick={handleOpenConnection}>{t('open-connection.label')}</Button>
                   </Form.Field>
                 )}
               </Form.FieldSet>
             </Form.Content>
           </Form.Viewport>
         </Form.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

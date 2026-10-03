@@ -14,7 +14,20 @@
 import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { type Align, Flex, type Gap, Grid, type Justify, Next } from '@dxos/react-ui';
+import {
+  type Align,
+  Button,
+  Combobox,
+  Container,
+  Field,
+  Flex,
+  type Gap,
+  Grid,
+  Input,
+  type Justify,
+  Tabs,
+  Listbox as UiListbox,
+} from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
@@ -169,23 +182,23 @@ export const createReactRenderer = ({
       // published state, never a component callback.
       const disabled = node.data?.enabled ? !present(data.enabled) : undefined;
       return (
-        <Next.Button key={path} disabled={disabled} onClick={() => handlers.activate?.()}>
+        <Button key={path} disabled={disabled} onClick={() => handlers.activate?.()}>
           {asText(props.label)}
-        </Next.Button>
+        </Button>
       );
     } else {
       return (
-        <Next.Field.Root key={path}>
-          <Next.Container gutter='none'>
-            {props.label ? <Next.Field.Label>{asText(props.label)}</Next.Field.Label> : null}
-            <Next.Input
+        <Field.Root key={path}>
+          <Container gutter='none'>
+            {props.label ? <Field.Label>{asText(props.label)}</Field.Label> : null}
+            <Input
               placeholder={asText(props.placeholder)}
               value={asText(data.value)}
               // MVU: the input is controlled from published state; each change dispatches.
               onChange={(event) => handlers.input?.(event.target.value)}
             />
-          </Next.Container>
-        </Next.Field.Root>
+          </Container>
+        </Field.Root>
       );
     }
   },
@@ -213,10 +226,10 @@ export const createReactRenderer = ({
       }
       const selections = Array.isArray(data.selections) ? data.selections.map(asText) : [];
       return (
-        <Next.Listbox.Root key={path} items={options} selectionMode='multiple' value={selections}>
-          <Next.Listbox.Content>
+        <UiListbox.Root key={path} items={options} selectionMode='multiple' value={selections}>
+          <UiListbox.Content>
             {options.map((option) => (
-              <Next.Listbox.Item
+              <UiListbox.Item
                 key={option.value}
                 item={option}
                 // A shift-click must not start a text selection before the row's click handler runs.
@@ -226,8 +239,8 @@ export const createReactRenderer = ({
                 }
               />
             ))}
-          </Next.Listbox.Content>
-        </Next.Listbox.Root>
+          </UiListbox.Content>
+        </UiListbox.Root>
       );
     }
 
@@ -255,7 +268,7 @@ export const createReactRenderer = ({
     }
 
     return (
-      <Next.Container key={path} gap='sm' role='list' gutter='none'>
+      <Container key={path} gap='sm' role='list' gutter='none'>
         {items.map((item, index) => (
           <Flex key={asText(itemField(node, scope, item, 'id') ?? index)} role='listitem' align='center'>
             {node.children?.length
@@ -263,7 +276,7 @@ export const createReactRenderer = ({
               : asText(itemField(node, scope, item, 'label') ?? item)}
           </Flex>
         ))}
-      </Next.Container>
+      </Container>
     );
   },
 
@@ -314,7 +327,7 @@ export const createReactRenderer = ({
   combobox: ({ path, node, props, data, handlers, scope }) => {
     const items = Array.isArray(data.items) ? data.items : [];
     return (
-      <Next.Combobox.Root
+      <Combobox.Root
         key={path}
         items={toOptions(node, scope, items)}
         // The caller derives the filtered items from the published `filter`.
@@ -324,12 +337,12 @@ export const createReactRenderer = ({
         inputValue={asText(data.filter)}
         onInputValueChange={({ inputValue }) => handlers.input?.(inputValue)}
       >
-        <Next.Combobox.Trigger placeholder={asText(props.placeholder) || undefined} />
-        <Next.Combobox.Content>
-          <Next.Combobox.Input placeholder={asText(props.placeholder) || undefined} />
-          <Next.Combobox.List />
-        </Next.Combobox.Content>
-      </Next.Combobox.Root>
+        <Combobox.Trigger placeholder={asText(props.placeholder) || undefined} />
+        <Combobox.Content>
+          <Combobox.Input placeholder={asText(props.placeholder) || undefined} />
+          <Combobox.List />
+        </Combobox.Content>
+      </Combobox.Root>
     );
   },
 
@@ -344,25 +357,25 @@ export const createReactRenderer = ({
    * dispatches `select`. The panels live in a sibling `switch` — tabs only set state.
    */
   tabs: ({ path, node, data, handlers }) => (
-    <Next.Tabs.Root
+    <Tabs.Root
       key={path}
       orientation='horizontal'
       value={asText(data.value) || undefined}
       onValueChange={(next) => handlers.select?.(next)}
     >
-      <Next.Tabs.List>
+      <Tabs.List>
         {(node.children ?? [])
           .filter((child) => child.tag === 'tab')
           .map((tab) => {
             const value = asText(tab.props?.value);
             return (
-              <Next.Tabs.Trigger key={value} value={value}>
+              <Tabs.Trigger key={value} value={value}>
                 {asText(tab.props?.label ?? value)}
-              </Next.Tabs.Trigger>
+              </Tabs.Trigger>
             );
           })}
-      </Next.Tabs.List>
-    </Next.Tabs.Root>
+      </Tabs.List>
+    </Tabs.Root>
   ),
 
   // Rendered by `tabs` from its props; never on its own.

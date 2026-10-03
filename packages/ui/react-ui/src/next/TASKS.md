@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: the cut-over is on PR #13549 (old components deleted, every consumer on Next); next is removing the `Next` namespace, then the open items below. Pre-cut-over planning docs and the verification ledger are archived under `../../docs/archive/`._
+_Resume: the cut-over is on PR #13549 (old components deleted, every consumer on Next); the `Next` namespace is removed (components export flat); next are the open items below and the `nx-` → `dx-` theme merge. Pre-cut-over planning docs and the verification ledger are archived under `../../docs/archive/`._
 
 ## Phase 0: Design
 

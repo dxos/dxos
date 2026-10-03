@@ -7,7 +7,7 @@ import { EditorView } from '@codemirror/view';
 import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { type ObjectLinkProps, type WidgetDef, type WidgetState, type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -55,7 +55,7 @@ export const MarkdownBlock = memo(
     hits,
     onWidgetsChange,
   }: MarkdownBlockProps) => {
-    const themeMode = Next.useThemeMode();
+    const themeMode = useThemeMode();
     const [view, setView] = useState<EditorView | null>(null);
     // React widgets render in portals into hosts the extension places in the document, so the item has
     // to own them: a widget's tree belongs to the React root that rendered the item, not to CodeMirror.

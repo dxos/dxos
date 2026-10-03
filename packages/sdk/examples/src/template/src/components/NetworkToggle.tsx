@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Client } from '@dxos/react-client';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { Next } from '@dxos/react-ui';
+import { Checkbox } from '@dxos/react-ui';
 
 export const NetworkToggle = ({ clients }: { clients: Client[] }) => {
   const toggleNetwork = async (checked: boolean) => {
@@ -16,7 +16,7 @@ export const NetworkToggle = ({ clients }: { clients: Client[] }) => {
 
   return (
     <div className='flex'>
-      <Next.Checkbox
+      <Checkbox
         classNames='mr-2'
         onCheckedChange={({ checked }) => toggleNetwork(checked === true)}
         label={

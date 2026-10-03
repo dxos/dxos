@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Select, useTranslation } from '@dxos/react-ui';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { Ibkr } from '#types';
@@ -163,18 +163,18 @@ export const ReportSections = ({ positions, trades, cash, openLots, closedLots }
   return (
     <div className='grid grid-rows-[min-content_1fr] min-h-0 h-full'>
       <div className='p-2'>
-        <Next.Select.Root
+        <Select.Root
           value={[active?.id]}
           onValueChange={({ value: [value] }) => setSelected(value)}
           items={sections.map((section) => ({ value: section.id, label: section.label }))}
         >
-          <Next.Select.Trigger />
-          <Next.Select.Content>
+          <Select.Trigger />
+          <Select.Content>
             {sections.map((section) => (
-              <Next.Select.Item key={section.id} item={{ value: section.id, label: section.label }} />
+              <Select.Item key={section.id} item={{ value: section.id, label: section.label }} />
             ))}
-          </Next.Select.Content>
-        </Next.Select.Root>
+          </Select.Content>
+        </Select.Root>
       </div>
       {active && (
         // Distinct typename per section so the ephemeral table schemas do not collide in the registry.

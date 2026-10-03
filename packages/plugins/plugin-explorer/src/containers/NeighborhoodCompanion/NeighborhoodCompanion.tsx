@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { DxAnchorActivate, Next, useTranslation } from '@dxos/react-ui';
+import { DxAnchorActivate, Panel, ToggleGroup, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type TreeNode } from '@dxos/react-ui-graph';
 import '@dxos/react-ui-graph/styles/graph.css';
 
@@ -68,20 +68,20 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
   }
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root>
           <div className='grow' />
-          <Next.Toolbar.ToggleGroup type='single' value={String(depth)} onValueChange={handleDepthChange}>
+          <Toolbar.ToggleGroup type='single' value={String(depth)} onValueChange={handleDepthChange}>
             {DEPTHS.map((value) => (
-              <Next.Tooltip.Trigger key={value} asChild content={t('depth.label', { count: value })}>
-                <Next.ToggleGroup.Item value={String(value)} label={String(value)} />
-              </Next.Tooltip.Trigger>
+              <Tooltip.Trigger key={value} asChild content={t('depth.label', { count: value })}>
+                <ToggleGroup.Item value={String(value)} label={String(value)} />
+              </Tooltip.Trigger>
             ))}
-          </Next.Toolbar.ToggleGroup>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
+          </Toolbar.ToggleGroup>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Visualization.Root
           classNames='dx-base-surface'
           model={model}
@@ -91,8 +91,8 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
         >
           <Visualization.Graph onNodeHover={handleHover} />
         </Visualization.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

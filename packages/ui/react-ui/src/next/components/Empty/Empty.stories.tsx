@@ -11,18 +11,18 @@ import { expect, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Empty } from '../index.ts';
 
 /** The translated default, then an icon with the caller's own text. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Empty data-testid={`default-${size}`} />
-    <Next.Empty icon='ph--tray--regular' data-testid={`custom-${size}`}>
+    <Empty data-testid={`default-${size}`} />
+    <Empty icon='ph--tray--regular' data-testid={`custom-${size}`}>
       No documents yet
-    </Next.Empty>
+    </Empty>
   </>
 );
 

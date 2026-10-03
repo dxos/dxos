@@ -17,7 +17,7 @@ import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { Next, Switch, useTranslation } from '@dxos/react-ui';
+import { Match, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
@@ -309,27 +309,27 @@ export const TaskSetArticle = ({
   );
 
   return (
-    <Switch.Root
+    <Match.Root
       on={role}
       fallback={
-        <Next.Panel.Root role={role}>
-          <Next.Panel.Header>
-            <Next.Toolbar.Root inactive={!hasAttention}>{filterRow}</Next.Toolbar.Root>
-          </Next.Panel.Header>
-          <Next.Panel.Body>{content}</Next.Panel.Body>
-        </Next.Panel.Root>
+        <Panel.Root role={role}>
+          <Panel.Header>
+            <Toolbar.Root inactive={!hasAttention}>{filterRow}</Toolbar.Root>
+          </Panel.Header>
+          <Panel.Body>{content}</Panel.Body>
+        </Panel.Root>
       }
     >
       {/* Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
           chrome, so render the bare list under its own filter row — a nested Panel/scroll root would
           collapse width, but the filter has to come along or the host's copy of the list has none. */}
-      <Switch.Match when={AppSurface.Section.role}>
+      <Match.Case when={AppSurface.Section.role}>
         <div className='flex flex-col dx-grow'>
-          <Next.Toolbar.Root>{filterRow}</Next.Toolbar.Root>
+          <Toolbar.Root>{filterRow}</Toolbar.Root>
           {content}
         </div>
-      </Switch.Match>
-    </Switch.Root>
+      </Match.Case>
+    </Match.Root>
   );
 };
 

@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type ToastRootProps, Toast as UiToast, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -19,7 +19,7 @@ export const Toast = ({
   actionAlt,
   onAction,
   onOpenChange,
-}: LayoutOperation.Toast & Pick<Next.ToastRootProps, 'onOpenChange'>) => {
+}: LayoutOperation.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
   const { t } = useTranslation(meta.profile.key);
 
   // Control the open state so closing flips Radix's `open` (playing the exit animation) rather than
@@ -31,17 +31,17 @@ export const Toast = ({
   };
 
   return (
-    <Next.Toast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
-      <Next.Toast.Header icon={icon}>{title && toLocalizedString(title, t)}</Next.Toast.Header>
-      {description && <Next.Toast.Description>{toLocalizedString(description, t)}</Next.Toast.Description>}
+    <UiToast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
+      <UiToast.Header icon={icon}>{title && toLocalizedString(title, t)}</UiToast.Header>
+      {description && <UiToast.Description>{toLocalizedString(description, t)}</UiToast.Description>}
       {onAction && actionAlt && actionLabel && (
-        <Next.Toast.Footer>
-          <Next.Toast.ActionTrigger data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
+        <UiToast.Footer>
+          <UiToast.ActionTrigger data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
             {toLocalizedString(actionLabel, t)}
-          </Next.Toast.ActionTrigger>
-        </Next.Toast.Footer>
+          </UiToast.ActionTrigger>
+        </UiToast.Footer>
       )}
-    </Next.Toast.Root>
+    </UiToast.Root>
   );
 };
 

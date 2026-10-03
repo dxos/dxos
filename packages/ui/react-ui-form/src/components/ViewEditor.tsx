@@ -27,7 +27,7 @@ import {
 import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Field, Toggle, Typography, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
 import {
@@ -172,9 +172,9 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
         <Form.Content>
           {/* A read-only editor needs no notice that the schema is read-only. */}
           {schemaReadonly && !readonly && (
-            <Next.Banner.Root valence='info'>
-              <Next.Banner.Title>{t('system-schema.description')}</Next.Banner.Title>
-            </Next.Banner.Root>
+            <Banner.Root valence='info'>
+              <Banner.Title>{t('system-schema.description')}</Banner.Title>
+            </Banner.Root>
           )}
           <Form.Fields />
           {type && projectionModel && (
@@ -267,10 +267,10 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
 
   return (
     <>
-      <Next.Field.Header>
-        <Next.Typography truncate>{t('fields.label')}</Next.Typography>
+      <Field.Header>
+        <Typography truncate>{t('fields.label')}</Typography>
         {!readonly && (
-          <Next.Button
+          <Button
             iconOnly
             variant='ghost'
             icon='ph--plus--regular'
@@ -279,7 +279,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
             onClick={handleAdd}
           />
         )}
-      </Next.Field.Header>
+      </Field.Header>
       <OrderedList.Root
         items={fields}
         getId={(field) => field.id}
@@ -302,7 +302,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
                 >
                   <OrderedList.DragHandle />
                   <OrderedList.ItemText tone={hidden ? 'description' : undefined}>{field.path}</OrderedList.ItemText>
-                  <Next.Toggle
+                  <Toggle
                     iconOnly
                     variant='ghost'
                     pressed={hidden}
@@ -324,7 +324,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
                     data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                   />
                   {!readonly && (
-                    <Next.Button
+                    <Button
                       iconOnly
                       variant='ghost'
                       icon='ph--x--regular'

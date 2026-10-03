@@ -6,7 +6,7 @@ import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 
 
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
 import {
   Message as MessageComponent,
   type MessageMetadata,
@@ -141,9 +141,9 @@ export const CommentThread = ({
 
   const headerControls = (
     <div className='flex flex-row items-center gap-0.5 pe-2'>
-      {status === 'staged' && <Next.Tag hue='neutral'>{t('draft.button')}</Next.Tag>}
+      {status === 'staged' && <Tag hue='neutral'>{t('draft.button')}</Tag>}
       {onAcceptChange && !detached && status !== 'resolved' && (
-        <Next.Button
+        <Button
           data-testid='thread.accept-change'
           variant='ghost'
           icon='ph--check-circle--regular'
@@ -154,7 +154,7 @@ export const CommentThread = ({
         />
       )}
       {onResolve && !(status === 'staged') && (
-        <Next.Button
+        <Button
           data-testid='thread.resolve'
           variant='ghost'
           icon={status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
@@ -165,7 +165,7 @@ export const CommentThread = ({
         />
       )}
       {onThreadDelete && (
-        <Next.Button
+        <Button
           data-testid='thread.delete'
           variant='ghost'
           icon='ph--x--regular'
@@ -179,7 +179,7 @@ export const CommentThread = ({
   );
 
   const header = detached ? (
-    <Next.Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
+    <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
       <Thread.Header
         detached
         current={current}
@@ -187,7 +187,7 @@ export const CommentThread = ({
         onSelect={handleActivate}
         controls={headerControls}
       />
-    </Next.Tooltip.Trigger>
+    </Tooltip.Trigger>
   ) : (
     <Thread.Header current={current} title={thread.name} onSelect={handleActivate} controls={headerControls} />
   );

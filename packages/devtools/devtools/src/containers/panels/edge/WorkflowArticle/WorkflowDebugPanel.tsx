@@ -22,7 +22,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Next, type ThemedClassName, useAsyncEffect } from '@dxos/react-ui';
+import { Avatar, Button, Field, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -160,9 +160,9 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
     <div className={mx('dx-expand flex flex-col', props.classNames)}>
       <MessageThread ref={scrollerRef} history={history} />
 
-      <Next.Toolbar.Root>
-        <Next.Field.Root>
-          <Next.Input
+      <Toolbar.Root>
+        <Field.Root>
+          <Input
             ref={inputRef}
             autoFocus
             placeholder={'Input JSON'}
@@ -170,15 +170,15 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
             onChange={(ev) => setInput(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
-        </Next.Field.Root>
-        <Next.Button icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
-        <Next.Button
+        </Field.Root>
+        <Button icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+        <Button
           icon={isExecuting ? 'ph--stop--regular' : 'ph--trash--regular'}
           label={isExecuting ? 'Stop' : 'Clear'}
           iconOnly
           onClick={() => (isExecuting ? handleStop() : handleClear())}
         />
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
     </div>
   );
 };
@@ -226,7 +226,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
   );
 };
 
-const RobotAvatar = () => <Next.Avatar.Root size='sm' variant='circle' icon='ph--drone--regular' />;
+const RobotAvatar = () => <Avatar.Root size='sm' variant='circle' icon='ph--drone--regular' />;
 
 const createLocalExecutionContext = (
   space: Space,

@@ -9,7 +9,7 @@ import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
-import { Flex, Next, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Field, Flex, Icon, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -120,17 +120,17 @@ export const AccountContainer = () => {
           <Form.FieldSet label={t('account-section.title')} description={t('account-section.description')}>
             {accountState === 'loading' ? null : accountState === 'missing' ? (
               <>
-                <Next.Banner.Root valence='warning'>
-                  <Next.Banner.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Next.Banner.Title>
-                  <Next.Banner.Body>{t('no-edge-access.description')}</Next.Banner.Body>
-                </Next.Banner.Root>
+                <Banner.Root valence='warning'>
+                  <Banner.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Banner.Title>
+                  <Banner.Body>{t('no-edge-access.description')}</Banner.Body>
+                </Banner.Root>
                 <Form.Field standalone label={t('request-access.label')} description={t('request-access.description')}>
                   {requestSubmitted ? (
                     <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
                   ) : (
                     <form onSubmit={handleRequestAccess} className='flex gap-2 items-center justify-end'>
-                      <Next.Field.Root>
-                        <Next.Input
+                      <Field.Root>
+                        <Input
                           type='email'
                           required
                           placeholder={t('access-request-email.placeholder')}
@@ -138,32 +138,27 @@ export const AccountContainer = () => {
                           onChange={(event) => setRequestEmail(event.target.value)}
                           classNames='w-64 max-w-full min-w-0'
                         />
-                      </Next.Field.Root>
-                      <Next.Button type='submit' size='sm'>
+                      </Field.Root>
+                      <Button type='submit' size='sm'>
                         {t('request-access.label')}
-                      </Next.Button>
+                      </Button>
                     </form>
                   )}
                 </Form.Field>
               </>
             ) : accountState === 'error' && !account ? (
-              <Next.Banner.Root valence='error'>
-                <Next.Banner.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Next.Banner.Title>
-                <Next.Banner.Body>{t('account-offline.description')}</Next.Banner.Body>
-              </Next.Banner.Root>
+              <Banner.Root valence='error'>
+                <Banner.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Banner.Title>
+                <Banner.Body>{t('account-offline.description')}</Banner.Body>
+              </Banner.Root>
             ) : account ? (
               <>
                 <Form.Field standalone label={t('email.label')} description={account.email}>
                   {account.emailVerified ? (
-                    <Next.Icon
-                      icon='ph--check-circle--duotone'
-                      size='lg'
-                      classNames='justify-self-end'
-                      valence='success'
-                    />
+                    <Icon icon='ph--check-circle--duotone' size='lg' classNames='justify-self-end' valence='success' />
                   ) : (
                     <Flex column gap='xs' align='end'>
-                      <Next.Button
+                      <Button
                         icon='ph--paper-plane-tilt--regular'
                         label={t('resend-verification.label')}
                         onClick={handleResend}
@@ -174,9 +169,9 @@ export const AccountContainer = () => {
                   )}
                 </Form.Field>
                 <Form.Field standalone label={t('delete-account.label')} description={t('delete-account.description')}>
-                  <Next.Button variant='destructive' onClick={handleDeleteAccount}>
+                  <Button variant='destructive' onClick={handleDeleteAccount}>
                     {t('delete-account.label')}
-                  </Next.Button>
+                  </Button>
                 </Form.Field>
               </>
             ) : null}
@@ -188,7 +183,7 @@ export const AccountContainer = () => {
                 label={t('open-account-page.label')}
                 description={t('open-account-page.description')}
               >
-                <Next.Button
+                <Button
                   icon='ph--arrow-square-out--regular'
                   label={t('open-account-page.label')}
                   variant='default'

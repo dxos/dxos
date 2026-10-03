@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { useThemeMode } from '@dxos/react-ui';
 import { ViewState, useManager, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -91,7 +91,7 @@ const ITEMS: StoryItem[] = [
 type ItemEditorProps = { item: StoryItem; editorStore: EditorStateStore };
 
 const ItemEditor = ({ item, editorStore }: ItemEditorProps) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
 
   const { parentRef } = useTextEditor(
     () => ({

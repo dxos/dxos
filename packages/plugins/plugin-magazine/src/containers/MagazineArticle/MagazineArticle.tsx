@@ -11,7 +11,7 @@ import { type AppSurface, useProgressMonitor, useShowItem } from '@dxos/app-tool
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -90,12 +90,12 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
         <ActionToolbar {...menu} attendableId={attendableId} />
-      </Next.Panel.Header>
+      </Panel.Header>
 
-      <Next.Panel.Body>
+      <Panel.Body>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
           <Flex center classNames='h-full text-subdued text-sm'>
@@ -109,11 +109,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Next.Panel.Body>
-      <Next.Panel.Footer classNames='border-t border-subdued-separator'>
+      </Panel.Body>
+      <Panel.Footer classNames='border-t border-subdued-separator'>
         <ProgressMeter state={curateProgress} />
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

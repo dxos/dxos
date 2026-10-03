@@ -7,7 +7,17 @@ import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, use
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import { DxAnchorActivate, Next, useTranslation } from '@dxos/react-ui';
+import {
+  Block,
+  Button,
+  type ButtonProps,
+  Card,
+  DxAnchorActivate,
+  Icon,
+  SystemButton,
+  Tag,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type Actor, type Message } from '@dxos/types';
 import { mx, toHue } from '@dxos/ui-theme';
 
@@ -140,7 +150,7 @@ const AnchorIconButton = ({
   }, [value, openCard, onClick]);
 
   return (
-    <Next.Button
+    <Button
       onPointerEnter={startHover}
       onPointerLeave={cancelHover}
       classNames={compact ? 'min-h-0' : 'aspect-square'}
@@ -175,15 +185,15 @@ const RowDate = ({ start, end }: RowDateProps) => {
   const duration = [hours > 0 && `${hours}h`, minutes > 0 && `${minutes}m`].filter(Boolean).join(' ');
 
   return (
-    <Next.Card.Row>
-      <Next.Block>
-        <Next.Icon icon='ph--calendar--regular' />
-      </Next.Block>
+    <Card.Row>
+      <Block>
+        <Icon icon='ph--calendar--regular' />
+      </Block>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
         <div className='truncate text-description'>{format(start, 'PPp')}</div>
         {duration.length > 0 && <div className='text-description text-xs'>({duration})</div>}
       </div>
-    </Next.Card.Row>
+    </Card.Row>
   );
 };
 
@@ -205,14 +215,14 @@ const RowRef = ({ object }: RowRefProps) => {
 
   // TODO(burdon): Nav?
   return (
-    <Next.Card.Row>
-      <Next.Block>
+    <Card.Row>
+      <Block>
         <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
-      </Next.Block>
+      </Block>
       <div className='flex items-center'>
         <span className='truncate text-primary-text'>{label}</span>
       </div>
-    </Next.Card.Row>
+    </Card.Row>
   );
 };
 
@@ -254,12 +264,12 @@ type RowPersonProps = {
  * Static avatar variant — no contact resolution. Suitable for virtualized list tiles.
  */
 const PersonAvatarRow = ({ actor, size, onClick }: Pick<RowPersonProps, 'actor' | 'size' | 'onClick'>) => (
-  <Next.Card.Row>
-    <Next.Block>
+  <Card.Row>
+    <Block>
       <Avatar actor={actor} size={size} onClick={onClick} />
-    </Next.Block>
-    <Next.Card.Text>{avatarName(actor) || actor.email}</Next.Card.Text>
-  </Next.Card.Row>
+    </Block>
+    <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
+  </Card.Row>
 );
 
 /**
@@ -338,7 +348,7 @@ export const ContactAvatar = ({
         <Avatar actor={actor} size={size} onClick={onClick} />
       </div>
       {canCreate && (
-        <Next.Button
+        <Button
           variant='ghost'
           iconOnly
           icon='ph--user-circle-plus--regular'
@@ -369,8 +379,8 @@ const PersonContactRow = ({
   const { t } = useTranslation(translationKey);
 
   return (
-    <Next.Card.Row>
-      <Next.Block>
+    <Card.Row>
+      <Block>
         <ContactAvatar
           actor={actor}
           role={role}
@@ -380,20 +390,20 @@ const PersonContactRow = ({
           onContactCreate={onContactCreate}
           onClick={onClick}
         />
-      </Next.Block>
-      <Next.Card.Text>{avatarName(actor) || actor.email}</Next.Card.Text>
+      </Block>
+      <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
       {onRemove && (
-        <Next.Block rail='end'>
-          <Next.Button
+        <Block rail='end'>
+          <Button
             variant='ghost'
             iconOnly
             icon='ph--x--regular'
             label={t('remove-attendee.label')}
             onClick={onRemove}
           />
-        </Next.Block>
+        </Block>
       )}
-    </Next.Card.Row>
+    </Card.Row>
   );
 };
 
@@ -427,13 +437,13 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
   }
 
   return (
-    <Next.Card.Row>
-      <Next.Block>
-        <Next.Icon icon='ph--tag--regular' />
-      </Next.Block>
+    <Card.Row>
+      <Block>
+        <Icon icon='ph--tag--regular' />
+      </Block>
       <div className='flex flex-wrap gap-1 py-1' data-testid='extracted-tags'>
         {tags.map((tag) => (
-          <Next.Tag
+          <Tag
             key={tag.id}
             hue={toHue(tag.hue)}
             data-testid={`message-tag-${tag.id}`}
@@ -447,10 +457,10 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
             }
           >
             {tag.label ?? tag.id}
-          </Next.Tag>
+          </Tag>
         ))}
       </div>
-    </Next.Card.Row>
+    </Card.Row>
   );
 };
 
@@ -471,7 +481,7 @@ type RowStarProps = {
  * the click from bubbling so starring doesn't also select/activate the surrounding tile or card.
  */
 const RowStar = ({ starred, onToggle }: RowStarProps) => {
-  const handleClick = useCallback<NonNullable<Next.ButtonProps['onClick']>>(
+  const handleClick = useCallback<NonNullable<ButtonProps['onClick']>>(
     (event) => {
       event.stopPropagation();
       onToggle?.();
@@ -483,7 +493,7 @@ const RowStar = ({ starred, onToggle }: RowStarProps) => {
     return null;
   }
 
-  return <Next.SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={handleClick} />;
+  return <SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={handleClick} />;
 };
 
 RowStar.displayName = 'Row.Star';
@@ -509,13 +519,13 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
   }
 
   return (
-    <Next.Card.Row>
-      <Next.Block>
-        <Next.Icon icon='ph--paperclip--regular' />
-      </Next.Block>
+    <Card.Row>
+      <Block>
+        <Icon icon='ph--paperclip--regular' />
+      </Block>
       <div className='flex flex-wrap gap-1 py-1' data-testid='message-attachments'>
         {attachments.map((attachment, index) => (
-          <Next.Tag
+          <Tag
             key={attachment.ref.uri}
             hue='neutral'
             classNames={mx('inline-flex items-center gap-1', onAttachmentClick && 'cursor-pointer')}
@@ -539,12 +549,12 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
               },
             })}
           >
-            <Next.Icon icon='ph--file--regular' size='xs' />
+            <Icon icon='ph--file--regular' size='xs' />
             {attachment.name ?? attachment.ref.uri}
-          </Next.Tag>
+          </Tag>
         ))}
       </div>
-    </Next.Card.Row>
+    </Card.Row>
   );
 };
 

@@ -6,7 +6,7 @@ import { Collapsible } from '@ark-ui/react/collapsible';
 import React, { type ComponentPropsWithoutRef, type JSX, type PropsWithChildren } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import { Next, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { Block, Icon, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // Built on `@ark-ui/react`'s Collapsible (zag state machine), so the header is a real button with
@@ -99,15 +99,15 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
   const { duration } = useTogglePanelContext(HEADER_NAME);
 
   const disclosure = (
-    <Next.Block>
-      <Next.Icon
+    <Block>
+      <Icon
         size='md'
         icon={'ph--caret-right--regular'}
         style={{ transitionDuration: `${duration}ms` }}
         // The machine owns the state, so the caret reads it off the trigger rather than a prop.
         classNames={['transition transition-transform ease-in-out', 'group-data-[state=open]:rotate-90']}
       />
-    </Next.Block>
+    </Block>
   );
 
   return (
@@ -124,7 +124,7 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
         {children}
       </div>
       {caret === 'end' && disclosure}
-      {icon && <Next.Block>{icon}</Next.Block>}
+      {icon && <Block>{icon}</Block>}
     </Collapsible.Trigger>
   );
 };

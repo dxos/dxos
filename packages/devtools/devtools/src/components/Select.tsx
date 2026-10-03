@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { type SelectOption, Select as UiSelect } from '@dxos/react-ui';
 
 export type SelectProps = {
-  items?: Next.SelectOption[];
+  items?: SelectOption[];
   value?: string;
   onValueChange?: (value: string) => void;
   disabled?: boolean;
@@ -16,17 +16,17 @@ export type SelectProps = {
 
 /** A single-value Select over `items`. */
 export const Select = ({ items = [], value, onValueChange, disabled, placeholder = 'Select value' }: SelectProps) => (
-  <Next.Select.Root
+  <UiSelect.Root
     items={items}
     value={value === undefined ? [] : [value]}
     onValueChange={({ value: [next] }) => next !== undefined && onValueChange?.(next)}
     disabled={disabled}
   >
-    <Next.Select.Trigger placeholder={placeholder} />
-    <Next.Select.Content>
+    <UiSelect.Trigger placeholder={placeholder} />
+    <UiSelect.Content>
       {items.map((item) => (
-        <Next.Select.Item key={item.value} item={item} classNames='font-mono' />
+        <UiSelect.Item key={item.value} item={item} classNames='font-mono' />
       ))}
-    </Next.Select.Content>
-  </Next.Select.Root>
+    </UiSelect.Content>
+  </UiSelect.Root>
 );

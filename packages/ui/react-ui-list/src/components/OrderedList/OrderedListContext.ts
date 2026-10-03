@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Next, createContext } from '@dxos/react-ui';
+import { type DragMoveDirection, type ListboxOption, createContext } from '@dxos/react-ui';
 
 import { type ReorderListController } from '../../hooks/index.ts';
 
@@ -11,10 +11,10 @@ import { type ReorderListController } from '../../hooks/index.ts';
 export type OrderedListContextValue = {
   reorder: ReorderListController<unknown>;
   /** The listbox option of each row, by id. */
-  options: ReadonlyMap<string, Next.ListboxOption>;
+  options: ReadonlyMap<string, ListboxOption>;
   readonly?: boolean;
   /** Keyboard move from the row's DragHandle, resolved against the current order. */
-  move: (id: string, direction: Next.DragMoveDirection) => void;
+  move: (id: string, direction: DragMoveDirection) => void;
 };
 
 export const [OrderedListProvider, useOrderedListContext] = createContext<OrderedListContextValue>('OrderedList');

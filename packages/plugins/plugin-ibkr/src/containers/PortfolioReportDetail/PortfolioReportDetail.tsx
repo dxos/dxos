@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, SystemButton, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { ReportSections } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
@@ -58,11 +58,11 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
   }, [companionTo, db?.spaceId, invokePromise, subject]);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root classNames='justify-end'>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root classNames='justify-end'>
           {companionTo && (
-            <Next.Button
+            <Button
               disabled={syncingLots}
               variant='primary'
               iconClassNames={syncingLots ? 'animate-spin' : undefined}
@@ -73,13 +73,13 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
               }}
             />
           )}
-          <Next.SystemButton.Clipboard label={t('copy-xml.label')} value={subject.xml} />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='grid grid-rows-1 min-h-0'>
+          <SystemButton.Clipboard label={t('copy-xml.label')} value={subject.xml} />
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-rows-1 min-h-0'>
         <ReportSections positions={positions} trades={trades} cash={cash} openLots={openLots} closedLots={closedLots} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

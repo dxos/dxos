@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouteError } from 'react-router-dom';
 
-import { Next } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 
 export type ErrorProps = { noJoke?: boolean };
 
@@ -38,7 +38,7 @@ export const Error = ({ noJoke }: ErrorProps) => {
     <div className='flex flex-col m-8 overflow-hidden border border-separator divide-y divide-subdued-separator shadow-md'>
       {!noJoke && (
         <div className='flex items-center p-4'>
-          <Next.Icon icon={faceIcon} size='xl' classNames='text-neutral-500' />
+          <Icon icon={faceIcon} size='xl' classNames='text-neutral-500' />
           {joke && (
             <div className='flex flex-col opacity-50'>
               <span>

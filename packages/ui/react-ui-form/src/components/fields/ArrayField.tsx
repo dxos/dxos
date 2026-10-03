@@ -8,7 +8,7 @@ import React, { useCallback, useRef } from 'react';
 import { Annotation, Ref } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Container, Field, Typography, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
@@ -95,10 +95,10 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
 
   return (
     <>
-      <Next.Field.Header>
-        <Next.Typography truncate>{label}</Next.Typography>
+      <Field.Header>
+        <Typography truncate>{label}</Typography>
         {editable && (
-          <Next.Button
+          <Button
             iconOnly
             variant='ghost'
             icon='ph--plus--regular'
@@ -107,7 +107,7 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
             data-testid={`${SchemaEx.createJsonPath(path ?? [])}.add`}
           />
         )}
-      </Next.Field.Header>
+      </Field.Header>
       <OrderedList.Root
         items={items}
         getId={(item) => item.id}
@@ -122,7 +122,7 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
               <OrderedList.Item key={item.id} id={item.id} canDrag={ordered && editable}>
                 {ordered && editable && <OrderedList.DragHandle />}
                 {/* A cell holding a nested group must be a template root, so the group's subgrid finds `content`. */}
-                <Next.Container gutter='none'>
+                <Container gutter='none'>
                   <FormFieldDispatch
                     {...props}
                     type={elementType}
@@ -132,9 +132,9 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
                     readonly={!editable}
                     layout={asObject ? layout : 'inline'}
                   />
-                </Next.Container>
+                </Container>
                 {editable && (
-                  <Next.Button
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--x--regular'

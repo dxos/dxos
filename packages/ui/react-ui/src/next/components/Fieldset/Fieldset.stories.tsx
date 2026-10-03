@@ -9,9 +9,21 @@ import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import {
+  Block,
+  Button,
+  Checkbox,
+  Collapsible,
+  Container,
+  Field,
+  Fieldset,
+  Group,
+  Icon,
+  Input,
+  Switch,
+} from '../index.ts';
 
 /**
  * Valid and enabled sets, then an invalid and a disabled one, and a set whose fields span a two-column row; test ids are
@@ -19,123 +31,123 @@ import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.
  */
 const DefaultStory = () => (
   <>
-    <Next.Fieldset.Root data-testid='profile'>
-      <Next.Fieldset.Legend>
+    <Fieldset.Root data-testid='profile'>
+      <Fieldset.Legend>
         Profile
-        <Next.Block data-testid='profile-lock'>
-          <Next.Icon icon='ph--user--regular' />
-        </Next.Block>
-      </Next.Fieldset.Legend>
-      <Next.Field.Root data-testid='name'>
-        <Next.Field.Header>
-          <Next.Field.Label>Name</Next.Field.Label>
-        </Next.Field.Header>
-        <Next.Input placeholder='Ada Lovelace' />
-      </Next.Field.Root>
-      <Next.Field.Root data-testid='email'>
-        <Next.Field.Header>
-          <Next.Field.Label>Email</Next.Field.Label>
-        </Next.Field.Header>
-        <Next.Input type='email' placeholder='ada@example.com' />
-      </Next.Field.Root>
-      <Next.Fieldset.HelperText>Shown on your public page.</Next.Fieldset.HelperText>
-      <Next.Fieldset.ErrorText>Complete your profile.</Next.Fieldset.ErrorText>
-    </Next.Fieldset.Root>
+        <Block data-testid='profile-lock'>
+          <Icon icon='ph--user--regular' />
+        </Block>
+      </Fieldset.Legend>
+      <Field.Root data-testid='name'>
+        <Field.Header>
+          <Field.Label>Name</Field.Label>
+        </Field.Header>
+        <Input placeholder='Ada Lovelace' />
+      </Field.Root>
+      <Field.Root data-testid='email'>
+        <Field.Header>
+          <Field.Label>Email</Field.Label>
+        </Field.Header>
+        <Input type='email' placeholder='ada@example.com' />
+      </Field.Root>
+      <Fieldset.HelperText>Shown on your public page.</Fieldset.HelperText>
+      <Fieldset.ErrorText>Complete your profile.</Fieldset.ErrorText>
+    </Fieldset.Root>
 
-    <Next.Fieldset.Root data-testid='notifications'>
-      <Next.Fieldset.Legend>Notifications</Next.Fieldset.Legend>
-      <Next.Switch label='Email digests' defaultChecked />
-      <Next.Switch label='Mentions' />
-      <Next.Switch label='Product updates' />
-      <Next.Checkbox label='Email me a weekly digest' />
-    </Next.Fieldset.Root>
+    <Fieldset.Root data-testid='notifications'>
+      <Fieldset.Legend>Notifications</Fieldset.Legend>
+      <Switch label='Email digests' defaultChecked />
+      <Switch label='Mentions' />
+      <Switch label='Product updates' />
+      <Checkbox label='Email me a weekly digest' />
+    </Fieldset.Root>
 
-    <Next.Fieldset.Root invalid>
-      <Next.Fieldset.Legend>Account</Next.Fieldset.Legend>
-      <Next.Field.Root>
-        <Next.Field.Header>
-          <Next.Field.Label>Handle</Next.Field.Label>
-        </Next.Field.Header>
-        <Next.Input />
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Field.Header>
-          <Next.Field.Label>Recovery email</Next.Field.Label>
-        </Next.Field.Header>
-        <Next.Input type='email' />
-      </Next.Field.Root>
-      <Next.Fieldset.ErrorText>Complete your account.</Next.Fieldset.ErrorText>
-    </Next.Fieldset.Root>
+    <Fieldset.Root invalid>
+      <Fieldset.Legend>Account</Fieldset.Legend>
+      <Field.Root>
+        <Field.Header>
+          <Field.Label>Handle</Field.Label>
+        </Field.Header>
+        <Input />
+      </Field.Root>
+      <Field.Root>
+        <Field.Header>
+          <Field.Label>Recovery email</Field.Label>
+        </Field.Header>
+        <Input type='email' />
+      </Field.Root>
+      <Fieldset.ErrorText>Complete your account.</Fieldset.ErrorText>
+    </Fieldset.Root>
 
-    <Next.Fieldset.Root disabled>
-      <Next.Fieldset.Legend>Privacy</Next.Fieldset.Legend>
-      <Next.Switch label='Show online status' />
-      <Next.Switch label='Read receipts' />
-      <Next.Checkbox label='Share usage data' />
-      <Next.Input aria-label='Alias' />
-      <Next.Button>Reset</Next.Button>
-    </Next.Fieldset.Root>
+    <Fieldset.Root disabled>
+      <Fieldset.Legend>Privacy</Fieldset.Legend>
+      <Switch label='Show online status' />
+      <Switch label='Read receipts' />
+      <Checkbox label='Share usage data' />
+      <Input aria-label='Alias' />
+      <Button>Reset</Button>
+    </Fieldset.Root>
 
-    <Next.Fieldset.Root data-testid='address'>
-      <Next.Fieldset.Legend>Address</Next.Fieldset.Legend>
-      <Next.Container layout='row' columns='repeat(2, minmax(0, 1fr))' gap='md' data-testid='address-grid'>
-        <Next.Field.Root span='full' data-testid='street'>
-          <Next.Field.Header>
-            <Next.Field.Label>Street</Next.Field.Label>
-          </Next.Field.Header>
-          <Next.Input />
-        </Next.Field.Root>
-        <Next.Field.Root data-testid='city'>
-          <Next.Field.Header>
-            <Next.Field.Label>City</Next.Field.Label>
-          </Next.Field.Header>
-          <Next.Input />
-        </Next.Field.Root>
-        <Next.Field.Root data-testid='zip'>
-          <Next.Field.Header>
-            <Next.Field.Label>ZIP</Next.Field.Label>
-          </Next.Field.Header>
-          <Next.Input />
-        </Next.Field.Root>
-        <Next.Fieldset.Root span={2} data-testid='delivery'>
-          <Next.Fieldset.Legend>Delivery</Next.Fieldset.Legend>
-          <Next.Checkbox label='Leave at the door' />
-        </Next.Fieldset.Root>
-      </Next.Container>
-    </Next.Fieldset.Root>
+    <Fieldset.Root data-testid='address'>
+      <Fieldset.Legend>Address</Fieldset.Legend>
+      <Container layout='row' columns='repeat(2, minmax(0, 1fr))' gap='md' data-testid='address-grid'>
+        <Field.Root span='full' data-testid='street'>
+          <Field.Header>
+            <Field.Label>Street</Field.Label>
+          </Field.Header>
+          <Input />
+        </Field.Root>
+        <Field.Root data-testid='city'>
+          <Field.Header>
+            <Field.Label>City</Field.Label>
+          </Field.Header>
+          <Input />
+        </Field.Root>
+        <Field.Root data-testid='zip'>
+          <Field.Header>
+            <Field.Label>ZIP</Field.Label>
+          </Field.Header>
+          <Input />
+        </Field.Root>
+        <Fieldset.Root span={2} data-testid='delivery'>
+          <Fieldset.Legend>Delivery</Fieldset.Legend>
+          <Checkbox label='Leave at the door' />
+        </Fieldset.Root>
+      </Container>
+    </Fieldset.Root>
 
     {/* Grid sets: subgrids of the enclosing Container at any depth, the inner one folding a subgrid Collapsible. */}
-    <Next.Fieldset.Root gutter='inherit' level='+1' data-testid='shipping'>
-      <Next.Fieldset.Legend>Shipping</Next.Fieldset.Legend>
-      <Next.Field.Root data-testid='carrier'>
-        <Next.Field.Header>
-          <Next.Field.Label>Carrier</Next.Field.Label>
-        </Next.Field.Header>
-        <Next.Input />
-      </Next.Field.Root>
-      <Next.Collapsible.Root asChild defaultOpen>
-        <Next.Fieldset.Root gutter='inherit' level='+1' disabled data-testid='geo'>
-          <Next.Fieldset.Legend>
-            <Next.Collapsible.Trigger>Coordinates</Next.Collapsible.Trigger>
-          </Next.Fieldset.Legend>
-          <Next.Collapsible.Content gutter='inherit'>
-            <Next.Field.Root data-testid='latitude'>
-              <Next.Field.Header>
-                <Next.Field.Label>Latitude</Next.Field.Label>
-              </Next.Field.Header>
-              <Next.Input />
-            </Next.Field.Root>
-          </Next.Collapsible.Content>
-        </Next.Fieldset.Root>
-      </Next.Collapsible.Root>
-    </Next.Fieldset.Root>
+    <Fieldset.Root gutter='inherit' level='+1' data-testid='shipping'>
+      <Fieldset.Legend>Shipping</Fieldset.Legend>
+      <Field.Root data-testid='carrier'>
+        <Field.Header>
+          <Field.Label>Carrier</Field.Label>
+        </Field.Header>
+        <Input />
+      </Field.Root>
+      <Collapsible.Root asChild defaultOpen>
+        <Fieldset.Root gutter='inherit' level='+1' disabled data-testid='geo'>
+          <Fieldset.Legend>
+            <Collapsible.Trigger>Coordinates</Collapsible.Trigger>
+          </Fieldset.Legend>
+          <Collapsible.Content gutter='inherit'>
+            <Field.Root data-testid='latitude'>
+              <Field.Header>
+                <Field.Label>Latitude</Field.Label>
+              </Field.Header>
+              <Input />
+            </Field.Root>
+          </Collapsible.Content>
+        </Fieldset.Root>
+      </Collapsible.Root>
+    </Fieldset.Root>
 
-    <Next.Group justify='end'>
-      <Next.Button>Cancel</Next.Button>
-      <Next.Button type='submit' variant='primary'>
+    <Group justify='end'>
+      <Button>Cancel</Button>
+      <Button type='submit' variant='primary'>
         Save
-      </Next.Button>
-    </Next.Group>
+      </Button>
+    </Group>
   </>
 );
 

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Splitter } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 
 import { DebugPanelContext, type DebugPanelContextValue } from './DebugPanelContext.ts';
@@ -51,15 +51,15 @@ const SIDEBAR_SIZE = 16;
 
 /** The tree beside the selected tool's page, split the same way in every host. */
 const DebugPanelBody = () => (
-  <Next.Splitter.Root orientation='horizontal' anchor='start' resizable defaultSize={SIDEBAR_SIZE} minSize={8}>
-    <Next.Splitter.Panel position='start'>
+  <Splitter.Root orientation='horizontal' anchor='start' resizable defaultSize={SIDEBAR_SIZE} minSize={8}>
+    <Splitter.Panel position='start'>
       <DebugPanelSidebar />
-    </Next.Splitter.Panel>
-    <Next.Splitter.ResizeTrigger />
-    <Next.Splitter.Panel position='end'>
+    </Splitter.Panel>
+    <Splitter.ResizeTrigger />
+    <Splitter.Panel position='end'>
       <DebugPanelMain />
-    </Next.Splitter.Panel>
-  </Next.Splitter.Root>
+    </Splitter.Panel>
+  </Splitter.Root>
 );
 
 DebugPanelBody.displayName = 'DebugPanel.Body';

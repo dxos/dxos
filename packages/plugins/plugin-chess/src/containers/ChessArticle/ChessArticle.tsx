@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
@@ -67,23 +67,23 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
   // TODO(burdon): Separate component for section?
   return (
     <Chessboard.Root state={state} ref={controller}>
-      <Next.Panel.Root role={role} classNames='@container'>
+      <Panel.Root role={role} classNames='@container'>
         {role === AppSurface.Article.role && (
-          <Next.Panel.Header>
-            <Next.Toolbar.Root>
-              {isGameOver && <Next.Button onClick={handleNewGame}>{t('new-game.button')}</Next.Button>}
+          <Panel.Header>
+            <Toolbar.Root>
+              {isGameOver && <Button onClick={handleNewGame}>{t('new-game.button')}</Button>}
               <div className='grow' />
-              <Next.Button
+              <Button
                 icon='ph--info--regular'
                 iconOnly
                 label={t('toggle-info.button')}
                 classNames={mx('invisible @4xl:visible')}
                 onClick={() => setShowInfo((open) => !open)}
               />
-            </Next.Toolbar.Root>
-          </Next.Panel.Header>
+            </Toolbar.Root>
+          </Panel.Header>
         )}
-        <Next.Panel.Body>
+        <Panel.Body>
           <div
             className={mx(
               'grid dx-fill',
@@ -110,8 +110,8 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
               </div>
             )}
           </div>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </Chessboard.Root>
   );
 };

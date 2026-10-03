@@ -25,4 +25,9 @@ The react-ui cut-over: the Next components (Ark UI primitives styled by `.nx-*` 
 - `@dxos/ui-editor` markdown tables keep empty cells. `@dxos/ui-theme` adds `--color-focus` for the keyboard focus ring.
 - `@dxos/plugin-markdown` marks `Document.description` as markdown; the rename popover shows an object's properties.
 
-Breaking: the former `@dxos/react-ui` component APIs are gone; import the Next components from `@dxos/react-ui`.
+- `@dxos/react-ui` exports the components flat (`Button`, `Toolbar`, `Container`, …); the transitional `Next`
+  namespace is removed. The standalone `Label` is no longer exported (use `Field.Label`), the `Switch`/`Match` flow
+  helper is renamed `Match` (`Match.Root`/`Match.Case`), the layout `Container` is removed, and `Size` is the component
+  size scale (`xs`–`xl`; the spacing `Size` stays in `@dxos/ui-types`).
+
+Breaking: the former `@dxos/react-ui` component APIs are gone; import the components from `@dxos/react-ui` by name.

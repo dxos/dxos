@@ -5,7 +5,7 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
-import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Focus, Icon, ScrollArea, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
@@ -44,7 +44,7 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
     }, []);
 
     return (
-      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -52,8 +52,8 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
         >
-          <Next.ScrollArea.Root orientation='vertical'>
-            <Next.ScrollArea.Viewport ref={setViewport}>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={PostTile}
                 gap={8}
@@ -63,10 +63,10 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
                 getScrollElement={() => viewport}
                 estimateSize={() => 120}
               />
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Mosaic.Container>
-      </Next.Focus.Group>
+      </Focus.Group>
     );
   },
 );
@@ -99,51 +99,51 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
-      <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Next.Card.Root ref={forwardedRef}>
-          <Next.Card.Header>
-            <Next.Block>
-              <Next.Icon icon='ph--rss-simple--regular' />
-            </Next.Block>
-            <Next.Card.Text truncate>{post.title ?? t('post-title.placeholder')}</Next.Card.Text>
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Card.Root ref={forwardedRef}>
+          <Card.Header>
+            <Block>
+              <Icon icon='ph--rss-simple--regular' />
+            </Block>
+            <Card.Text truncate>{post.title ?? t('post-title.placeholder')}</Card.Text>
             {post.link && (
-              <Next.Block rail='end'>
+              <Block rail='end'>
                 <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
-                  <Next.Icon icon='ph--arrow-square-out--regular' size='md' />
+                  <Icon icon='ph--arrow-square-out--regular' size='md' />
                 </a>
-              </Next.Block>
+              </Block>
             )}
-          </Next.Card.Header>
-          <Next.Card.Body>
+          </Card.Header>
+          <Card.Body>
             {post.author && (
-              <Next.Card.Row>
-                <Next.Block>
-                  <Next.Icon icon='ph--user--regular' />
-                </Next.Block>
-                <Next.Card.Text variant='description'>{post.author}</Next.Card.Text>
-              </Next.Card.Row>
+              <Card.Row>
+                <Block>
+                  <Icon icon='ph--user--regular' />
+                </Block>
+                <Card.Text variant='description'>{post.author}</Card.Text>
+              </Card.Row>
             )}
             {(post.description || post.content) && (
-              <Next.Card.Row>
+              <Card.Row>
                 <MarkdownView
                   content={post.description ?? post.content}
                   classNames='line-clamp-5 text-sm text-description'
                 />
-              </Next.Card.Row>
+              </Card.Row>
             )}
             {published && (
-              <Next.Card.Row>
-                <Next.Block>
-                  <Next.Icon icon='ph--calendar--regular' />
-                </Next.Block>
-                <Next.Card.Text variant='description' classNames='text-info-text'>
+              <Card.Row>
+                <Block>
+                  <Icon icon='ph--calendar--regular' />
+                </Block>
+                <Card.Text variant='description' classNames='text-info-text'>
                   {published}
-                </Next.Card.Text>
-              </Next.Card.Row>
+                </Card.Text>
+              </Card.Row>
             )}
-          </Next.Card.Body>
-        </Next.Card.Root>
-      </Next.Focus.Item>
+          </Card.Body>
+        </Card.Root>
+      </Focus.Item>
     </Mosaic.Tile>
   );
 });

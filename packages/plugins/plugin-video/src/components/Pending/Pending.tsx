@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, composable, composableProps } from '@dxos/react-ui';
+import { Icon, composable, composableProps } from '@dxos/react-ui';
 
 export type PendingProps = {
   label: string;
@@ -17,7 +17,7 @@ export const Pending = composable<HTMLDivElement, PendingProps>(({ classNames, l
     ref={forwardedRef}
   >
     <span className='flex items-center gap-1'>
-      <Next.Icon icon='ph--spinner--regular' spin />
+      <Icon icon='ph--spinner--regular' spin />
       {label}
     </span>
   </div>

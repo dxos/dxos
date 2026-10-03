@@ -13,7 +13,7 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Field, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { SampleItem, SampleOperation } from '#types';
@@ -31,11 +31,11 @@ export const SampleProperties = ({ subject }: SamplePropertiesProps) => {
   }, [invokePromise, subject]);
 
   return (
-    <Next.Field.Root>
-      <Next.Field.Label>{t('randomize-item.label')}</Next.Field.Label>
-      <Next.Field.HelperText>{t('randomize-item-description.label')}</Next.Field.HelperText>
-      <Next.Button onClick={handleRandomize}>{t('randomize-item.label')}</Next.Button>
-    </Next.Field.Root>
+    <Field.Root>
+      <Field.Label>{t('randomize-item.label')}</Field.Label>
+      <Field.HelperText>{t('randomize-item-description.label')}</Field.HelperText>
+      <Button onClick={handleRandomize}>{t('randomize-item.label')}</Button>
+    </Field.Root>
   );
 };
 

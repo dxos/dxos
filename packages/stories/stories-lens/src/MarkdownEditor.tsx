@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Doc } from '@dxos/echo-doc';
-import { Next } from '@dxos/react-ui';
+import { useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import {
@@ -26,7 +26,7 @@ import {
 //
 
 export const MarkdownEditor = ({ text }: { text: Text.Text }) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const { parentRef } = useTextEditor(
     () => ({
       initialValue: text.content ?? '',

@@ -13,7 +13,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Panel, SystemButton, Toolbar, useThemeMode } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   PROMPT_ELEMENT,
@@ -71,16 +71,16 @@ const sampleText = buildSampleText();
 type StoryArgs = { text: string };
 
 const DefaultStory = ({ text }: StoryArgs) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const [collapsed, setCollapsed] = useState(false);
   const extensions = useMemo(() => chatExtensions(themeMode), [themeMode]);
   const { parentRef, view } = useTextEditor({ initialValue: text, extensions });
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root classNames='dx-document'>
-          <Next.SystemButton.Disclosure
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root classNames='dx-document'>
+          <SystemButton.Disclosure
             expanded={!collapsed}
             label={collapsed ? 'Expand all' : 'Collapse all'}
             onClick={() => {
@@ -96,12 +96,12 @@ const DefaultStory = ({ text }: StoryArgs) => {
               }
             }}
           />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='grid overflow-hidden'>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='grid overflow-hidden'>
         <div ref={parentRef} className='dx-expand' />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

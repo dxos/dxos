@@ -6,7 +6,7 @@ import { formatDistance } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Next, Trans, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Link, SystemButton, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta.ts';
 
@@ -56,29 +56,29 @@ export const AboutDialog = () => {
     isProd && version ? `${REPO}/releases/tag/v${version}` : commitHash ? `${REPO}/commit/${commitHash}` : REPO;
 
   return (
-    <Next.Dialog.Content size='sm'>
-      <Next.Dialog.Header>
-        <Next.Dialog.Title asChild>
+    <Dialog.Content size='sm'>
+      <Dialog.Header>
+        <Dialog.Title asChild>
           <h1 className="font-['Poiret One'] text-5xl" style={{ fontFamily: 'Poiret One' }}>
             composer
           </h1>
-        </Next.Dialog.Title>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.SystemButton.Close />
-        </Next.Dialog.CloseTrigger>
-      </Next.Dialog.Header>
-      <Next.Dialog.Body>
+        </Dialog.Title>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
+      </Dialog.Header>
+      <Dialog.Body>
         <div className='flex items-center text-description'>
           {t('version.label', { version: version ?? 'unknown' })}
         </div>
         <div className='flex flex-col gap-3'>
           {timestamp && (
             <div className='flex items-center gap-1'>
-              <Next.Link href={releaseUrl} variant='neutral'>
+              <Link href={releaseUrl} variant='neutral'>
                 {t('published.label', {
                   timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
                 })}
-              </Next.Link>
+              </Link>
             </div>
           )}
           {showEnv && <div className='flex items-center'>{t('environment.label', { environment: edgeEnv })}</div>}
@@ -88,18 +88,18 @@ export const AboutDialog = () => {
                 t,
                 i18nKey: 'powered-by-dxos.message',
                 components: {
-                  dxos: <Next.Link href='https://dxos.org' variant='neutral' />,
+                  dxos: <Link href='https://dxos.org' variant='neutral' />,
                 },
               }}
             />
           </p>
         </div>
-      </Next.Dialog.Body>
-      <Next.Dialog.Footer>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.Button variant='primary'>{t('close.label')}</Next.Button>
-        </Next.Dialog.CloseTrigger>
-      </Next.Dialog.Footer>
-    </Next.Dialog.Content>
+      </Dialog.Body>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
+          <Button variant='primary'>{t('close.label')}</Button>
+        </Dialog.CloseTrigger>
+      </Dialog.Footer>
+    </Dialog.Content>
   );
 };

@@ -9,10 +9,10 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Group, ToggleGroup, Typography } from '../index.ts';
 
 /** A single-select group of icon-only items (alignment) and a multiple-select group of text items (marks). */
 const DefaultStory = ({ size }: SizeArgs) => {
@@ -20,35 +20,35 @@ const DefaultStory = ({ size }: SizeArgs) => {
   const [marks, setMarks] = useState<string[]>(['bold']);
   return (
     <>
-      <Next.Group>
-        <Next.ToggleGroup.Root
+      <Group>
+        <ToggleGroup.Root
           type='single'
           value={align}
           onValueChange={setAlign}
           aria-label='Alignment'
           data-testid={`align-${size}`}
         >
-          <Next.ToggleGroup.Item value='left' icon='ph--text-align-left--regular' label='Left' iconOnly />
-          <Next.ToggleGroup.Item value='center' icon='ph--text-align-center--regular' label='Centre' iconOnly />
-          <Next.ToggleGroup.Item value='right' icon='ph--text-align-right--regular' label='Right' iconOnly />
-        </Next.ToggleGroup.Root>
-        <Next.ToggleGroup.Root
+          <ToggleGroup.Item value='left' icon='ph--text-align-left--regular' label='Left' iconOnly />
+          <ToggleGroup.Item value='center' icon='ph--text-align-center--regular' label='Centre' iconOnly />
+          <ToggleGroup.Item value='right' icon='ph--text-align-right--regular' label='Right' iconOnly />
+        </ToggleGroup.Root>
+        <ToggleGroup.Root
           type='multiple'
           value={marks}
           onValueChange={setMarks}
           aria-label='Marks'
           data-testid={`marks-${size}`}
         >
-          <Next.ToggleGroup.Item value='bold'>Bold</Next.ToggleGroup.Item>
-          <Next.ToggleGroup.Item value='italic'>Italic</Next.ToggleGroup.Item>
-          <Next.ToggleGroup.Item value='code' disabled>
+          <ToggleGroup.Item value='bold'>Bold</ToggleGroup.Item>
+          <ToggleGroup.Item value='italic'>Italic</ToggleGroup.Item>
+          <ToggleGroup.Item value='code' disabled>
             Code
-          </Next.ToggleGroup.Item>
-        </Next.ToggleGroup.Root>
-      </Next.Group>
-      <Next.Typography data-testid={`state-${size}`}>
+          </ToggleGroup.Item>
+        </ToggleGroup.Root>
+      </Group>
+      <Typography data-testid={`state-${size}`}>
         {align} / {marks.join(', ') || 'none'}
-      </Next.Typography>
+      </Typography>
     </>
   );
 };

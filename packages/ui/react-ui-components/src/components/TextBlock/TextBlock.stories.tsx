@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
@@ -35,16 +35,16 @@ const DefaultStory = ({ blocks, interval = 0 }: { blocks: string[]; interval?: n
 
   return (
     <div>
-      <Next.Toolbar.Root>
-        <Next.Button
+      <Toolbar.Root>
+        <Button
           onClick={() => {
             setText('');
             setRefresh({});
           }}
         >
           Restart
-        </Next.Button>
-      </Next.Toolbar.Root>
+        </Button>
+      </Toolbar.Root>
       <TextBlock classNames='p-2' text={text} />
     </div>
   );

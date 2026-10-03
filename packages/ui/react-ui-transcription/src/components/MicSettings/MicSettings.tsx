@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { MenuButton, type MenuButtonItem, useTranslation } from '@dxos/react-ui';
 
 import { type AudioInputDevice } from '../../capture/index.ts';
 import { translationKey } from '../../translations.ts';
@@ -41,7 +41,7 @@ export const MicSettings = ({
 }: MicSettingsProps) => {
   const { t } = useTranslation(translationKey);
 
-  const items: Next.MenuButtonItem[] = [
+  const items: MenuButtonItem[] = [
     { type: 'group', label: t('record-mode.label') },
     {
       type: 'option',
@@ -68,7 +68,7 @@ export const MicSettings = ({
       selected: selectedDeviceId === '',
       onSelect: () => onSelectDevice(''),
     },
-    ...devices.map((device): Next.MenuButtonItem => ({
+    ...devices.map((device): MenuButtonItem => ({
       type: 'option',
       label: device.label,
       selected: selectedDeviceId === device.deviceId,
@@ -85,7 +85,7 @@ export const MicSettings = ({
   ];
 
   return (
-    <Next.MenuButton
+    <MenuButton
       icon='ph--caret-down--regular'
       iconOnly
       compact

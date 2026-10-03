@@ -10,7 +10,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Empty, Icon, Tabs, toLocalizedString, useMainLandmark, useTranslation } from '@dxos/react-ui';
 import { Tree, type TreeNode } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
@@ -58,10 +58,10 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
   // The panel is a focus area of its own, after the rail.
-  const landmark = Next.useMainLandmark(0.5);
+  const landmark = useMainLandmark(0.5);
 
   return (
-    <Next.Tabs.Content
+    <Tabs.Content
       key={id}
       value={id}
       classNames={[
@@ -93,22 +93,22 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
             className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
             style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
           >
-            <Next.Icon icon='ph--spinner-gap--regular' size='xl' spin />
+            <Icon icon='ph--spinner-gap--regular' size='xl' spin />
           </div>
         ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
           unavailable && (
-            <Next.Empty
+            <Empty
               key={id}
               classNames='row-start-2 self-start animate-fade-in'
               style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
             >
               {t('workspace-unavailable.description')}
-            </Next.Empty>
+            </Empty>
           )
         ))}
-    </Next.Tabs.Content>
+    </Tabs.Content>
   );
 };
 
@@ -196,7 +196,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
       style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
-        <Next.Button
+        <Button
           classNames={[hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--caret-left--regular'
@@ -243,7 +243,7 @@ const MenuActions = ({
 
   if (menuActions.length === 1) {
     return (
-      <Next.Button
+      <Button
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
@@ -258,7 +258,7 @@ const MenuActions = ({
 
   return (
     <ActionMenu caller={NAV_TREE_ITEM} onAction={onAction} group={item} actions={menuActions as MenuItem[]}>
-      <Next.Button
+      <Button
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon='ph--dots-three-vertical--regular'

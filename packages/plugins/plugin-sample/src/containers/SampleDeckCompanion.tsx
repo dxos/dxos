@@ -10,7 +10,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Next } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { ActiveSpacePanel } from '#components';
 
@@ -18,14 +18,14 @@ export type SampleDeckCompanionProps = AppSurface.SpaceArticleProps;
 
 export const SampleDeckCompanion = ({ space }: SampleDeckCompanionProps) => {
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root />
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root />
+      </Panel.Header>
+      <Panel.Body>
         <ActiveSpacePanel spaceName={space.properties.name ?? space.id} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

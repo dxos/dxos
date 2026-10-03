@@ -7,7 +7,7 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 
 import type * as Template from '@dxos/compute/Template';
 import { type Obj } from '@dxos/echo';
-import { Grid, Next, useTranslation } from '@dxos/react-ui';
+import { Field, Grid, Input, Select, useTranslation } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -68,31 +68,31 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
             <Fragment key={input.name}>
               <div className='ps-3 text-blue-text'>{input.name}</div>
 
-              <Next.Field.Root>
-                <Next.Select.Root
+              <Field.Root>
+                <Select.Root
                   value={[input.kind]}
                   onValueChange={({ value: [kind] }) => handleInputKindChange(input.name, kind as Template.InputKind)}
                   items={inputs.map(({ kind, label }) => ({ value: kind, label: label }))}
                 >
-                  <Next.Select.Trigger placeholder='Type' classNames='w-full' />
-                  <Next.Select.Content>
+                  <Select.Trigger placeholder='Type' classNames='w-full' />
+                  <Select.Content>
                     {inputs.map(({ kind, label }) => (
-                      <Next.Select.Item key={kind} item={{ value: kind, label: label }} />
+                      <Select.Item key={kind} item={{ value: kind, label: label }} />
                     ))}
-                  </Next.Select.Content>
-                </Next.Select.Root>
-              </Next.Field.Root>
+                  </Select.Content>
+                </Select.Root>
+              </Field.Root>
 
               <div>
                 {input.kind === 'value' && (
-                  <Next.Field.Root>
-                    <Next.Input
+                  <Field.Root>
+                    <Input
                       placeholder={t('command.placeholder')}
                       classNames='w-full bg-transparent'
                       value={input.default ?? ''}
                       onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
                     />
-                  </Next.Field.Root>
+                  </Field.Root>
                 )}
               </div>
             </Fragment>

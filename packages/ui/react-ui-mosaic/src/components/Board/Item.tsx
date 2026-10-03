@@ -6,7 +6,7 @@ import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, us
 
 import { Obj } from '@dxos/echo';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, DragHandle, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { getHashStyles } from '@dxos/ui-theme';
 
@@ -65,47 +65,47 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
         location={location}
         debug={debug}
       >
-        <Next.Focus.Item asChild>
-          <Next.Card.Root
+        <Focus.Item asChild>
+          <Card.Root
             classNames={classNames}
             data-testid='board-item'
             ref={composedRef}
             onClick={(event) => event.currentTarget.focus()}
           >
-            <Next.Card.Header>
-              <Next.DragHandle ref={setDragHandle} data-testid='mosaicBoard.cardDragHandle' />
-              <Next.Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Next.Card.Title>
+            <Card.Header>
+              <DragHandle ref={setDragHandle} data-testid='mosaicBoard.cardDragHandle' />
+              <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Next.Block rail='end'>
+              <Block rail='end'>
                 <ActionMenu disabled={!items?.length} actions={items}>
-                  <Next.Button
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Next.Block>
-            </Next.Card.Header>
+              </Block>
+            </Card.Header>
             {/* TODO(burdon): Replace with surface. */}
-            <Next.Card.Row classNames='text-description'>
-              <Next.Block>
-                <Next.Icon icon='ph--note--regular' />
-              </Next.Block>
-              <Next.Card.Text>{description}</Next.Card.Text>
-            </Next.Card.Row>
-            <Next.Card.Row>
-              <Next.Block>
-                <Next.Icon icon='ph--tag--regular' />
-              </Next.Block>
+            <Card.Row classNames='text-description'>
+              <Block>
+                <Icon icon='ph--note--regular' />
+              </Block>
+              <Card.Text>{description}</Card.Text>
+            </Card.Row>
+            <Card.Row>
+              <Block>
+                <Icon icon='ph--tag--regular' />
+              </Block>
               {label && (
                 <div className='shrink-0 flex gap-1 items-center text-xs'>
-                  <Next.Tag hue={getHashStyles(label).hue}>{label}</Next.Tag>
+                  <Tag hue={getHashStyles(label).hue}>{label}</Tag>
                 </div>
               )}
-            </Next.Card.Row>
-          </Next.Card.Root>
-        </Next.Focus.Item>
+            </Card.Row>
+          </Card.Root>
+        </Focus.Item>
       </Mosaic.Tile>
     );
   },

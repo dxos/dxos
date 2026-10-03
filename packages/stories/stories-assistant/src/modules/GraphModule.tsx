@@ -11,7 +11,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
-import { Next, composable, composableProps } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -55,11 +55,11 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
   );
 
   return (
-    <Next.Panel.Root classNames='relative h-full'>
-      <Next.Panel.Header>
+    <Panel.Root classNames='relative h-full'>
+      <Panel.Header>
         <SearchBar space={space} onSubmit={handleSubmit} />
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='relative min-h-0'>
+      </Panel.Header>
+      <Panel.Body classNames='relative min-h-0'>
         <ForceGraph classNames='min-h-[50vh]' model={model} />
 
         {open && (
@@ -74,7 +74,7 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
         )}
 
         <div className='absolute bottom-4 right-4 z-10'>
-          <Next.Button
+          <Button
             variant='ghost'
             icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
             iconOnly
@@ -82,8 +82,8 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
             onClick={() => setOpen((open) => !open)}
           />
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
@@ -94,15 +94,15 @@ export const SearchBar = composable<HTMLDivElement, SearchBarProps>(({ space, on
   const editorRef = useRef<EditorController>(null);
 
   return (
-    <Next.Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
       <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} ref={editorRef} />
-      <Next.Button
+      <Button
         icon='ph--magnifying-glass--regular'
         iconOnly
         label='Search'
         onClick={() => onSubmit?.(editorRef.current?.getText() ?? '')}
       />
-      <Next.Button
+      <Button
         disabled={flushState === 'flushing'}
         icon={Match.value(flushState).pipe(
           Match.when('idle', () => 'ph--floppy-disk--regular'),
@@ -114,7 +114,7 @@ export const SearchBar = composable<HTMLDivElement, SearchBarProps>(({ space, on
         label='flush'
         onClick={handleFlush}
       />
-    </Next.Toolbar.Root>
+    </Toolbar.Root>
   );
 });
 

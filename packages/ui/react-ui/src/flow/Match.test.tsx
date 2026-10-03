@@ -6,21 +6,21 @@ import { cleanup, render, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { Switch } from './Switch.tsx';
+import { Match } from './Match.tsx';
 
-describe('Switch', () => {
+describe('Match', () => {
   afterEach(cleanup);
 
   test('renders the branch whose `when` strictly equals `on`', () => {
     render(
-      <Switch.Root on='b'>
-        <Switch.Match when='a'>
+      <Match.Root on='b'>
+        <Match.Case when='a'>
           <div data-testid='a' />
-        </Switch.Match>
-        <Switch.Match when='b'>
+        </Match.Case>
+        <Match.Case when='b'>
           <div data-testid='b' />
-        </Switch.Match>
-      </Switch.Root>,
+        </Match.Case>
+      </Match.Root>,
     );
     expect(screen.queryByTestId('a')).toBeNull();
     expect(screen.queryByTestId('b')).not.toBeNull();
@@ -28,14 +28,14 @@ describe('Switch', () => {
 
   test('renders only the first of several matching branches', () => {
     render(
-      <Switch.Root on='a'>
-        <Switch.Match when='a'>
+      <Match.Root on='a'>
+        <Match.Case when='a'>
           <div data-testid='first' />
-        </Switch.Match>
-        <Switch.Match when='a'>
+        </Match.Case>
+        <Match.Case when='a'>
           <div data-testid='second' />
-        </Switch.Match>
-      </Switch.Root>,
+        </Match.Case>
+      </Match.Root>,
     );
     expect(screen.queryByTestId('first')).not.toBeNull();
     expect(screen.queryByTestId('second')).toBeNull();
@@ -43,11 +43,11 @@ describe('Switch', () => {
 
   test('strict equality does not coerce', () => {
     render(
-      <Switch.Root on={1} fallback={<div data-testid='fallback' />}>
-        <Switch.Match when='1'>
+      <Match.Root on={1} fallback={<div data-testid='fallback' />}>
+        <Match.Case when='1'>
           <div data-testid='coerced' />
-        </Switch.Match>
-      </Switch.Root>,
+        </Match.Case>
+      </Match.Root>,
     );
     expect(screen.queryByTestId('coerced')).toBeNull();
     expect(screen.queryByTestId('fallback')).not.toBeNull();
@@ -55,14 +55,14 @@ describe('Switch', () => {
 
   test('predicate `when` matches on the discriminant', () => {
     render(
-      <Switch.Root on={5}>
-        <Switch.Match when={(value: number) => value < 3}>
+      <Match.Root on={5}>
+        <Match.Case when={(value: number) => value < 3}>
           <div data-testid='low' />
-        </Switch.Match>
-        <Switch.Match when={(value: number) => value >= 3}>
+        </Match.Case>
+        <Match.Case when={(value: number) => value >= 3}>
           <div data-testid='high' />
-        </Switch.Match>
-      </Switch.Root>,
+        </Match.Case>
+      </Match.Root>,
     );
     expect(screen.queryByTestId('low')).toBeNull();
     expect(screen.queryByTestId('high')).not.toBeNull();
@@ -70,20 +70,20 @@ describe('Switch', () => {
 
   test('no match and no fallback renders nothing', () => {
     const { container } = render(
-      <Switch.Root on='c'>
-        <Switch.Match when='a'>
+      <Match.Root on='c'>
+        <Match.Case when='a'>
           <div data-testid='a' />
-        </Switch.Match>
-      </Switch.Root>,
+        </Match.Case>
+      </Match.Root>,
     );
     expect(container.innerHTML).toBe('');
   });
 
   test('non-Match children are ignored', () => {
     render(
-      <Switch.Root on='a' fallback={<div data-testid='fallback' />}>
+      <Match.Root on='a' fallback={<div data-testid='fallback' />}>
         <div data-testid='stray' />
-      </Switch.Root>,
+      </Match.Root>,
     );
     expect(screen.queryByTestId('stray')).toBeNull();
     expect(screen.queryByTestId('fallback')).not.toBeNull();
@@ -91,11 +91,11 @@ describe('Switch', () => {
 
   test('adds no wrapper element', () => {
     const { container } = render(
-      <Switch.Root on='a'>
-        <Switch.Match when='a'>
+      <Match.Root on='a'>
+        <Match.Case when='a'>
           <div data-testid='a' />
-        </Switch.Match>
-      </Switch.Root>,
+        </Match.Case>
+      </Match.Root>,
     );
     expect(container.firstElementChild?.getAttribute('data-testid')).toBe('a');
   });

@@ -4,7 +4,7 @@
 
 import React, { type ComponentProps, useCallback, useMemo } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Select } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import type { FeedbackPluginOption } from './types.ts';
@@ -19,7 +19,7 @@ import type { FeedbackPluginOption } from './types.ts';
  * Binds `undefined` to Radix's reserved empty string: passing `undefined` itself would flip the
  * select to uncontrolled and strand its internal state.
  */
-type SelectRootProps = ComponentProps<typeof Next.Select.Root>;
+type SelectRootProps = ComponentProps<typeof Select.Root>;
 
 export type AreaSelectFieldProps = FormFieldRendererProps<string | undefined> & {
   plugins: ReadonlyArray<FeedbackPluginOption>;
@@ -68,26 +68,26 @@ export const AreaSelectField = ({
       {presentation === 'static' ? (
         <p>{resolved ? `${resolved.name} (${resolved.id})` : String(value)}</p>
       ) : (
-        <Next.Select.Root items={items} value={value ? [value] : []} onValueChange={handleValueChange}>
-          <Next.Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
-          <Next.Select.Content>
+        <Select.Root items={items} value={value ? [value] : []} onValueChange={handleValueChange}>
+          <Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
+          <Select.Content>
             {items.map((item) =>
               item.value === CLEAR_VALUE ? (
-                <Next.Select.Item key={item.value} item={item}>
-                  <Next.Select.ItemText classNames='text-description italic' />
-                </Next.Select.Item>
+                <Select.Item key={item.value} item={item}>
+                  <Select.ItemText classNames='text-description italic' />
+                </Select.Item>
               ) : (
-                <Next.Select.Item key={item.value} item={item}>
+                <Select.Item key={item.value} item={item}>
                   <div className='flex flex-col w-full text-left'>
-                    <Next.Select.ItemText />
+                    <Select.ItemText />
                     <div className='text-xs text-description font-mono py-1'>{item.value}</div>
                   </div>
-                  <Next.Select.ItemIndicator />
-                </Next.Select.Item>
+                  <Select.ItemIndicator />
+                </Select.Item>
               ),
             )}
-          </Next.Select.Content>
-        </Next.Select.Root>
+          </Select.Content>
+        </Select.Root>
       )}
     </Form.Field>
   );

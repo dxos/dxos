@@ -10,7 +10,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { PasswordInput, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -72,7 +72,7 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
             actions={<SettingsScope prefix={meta.profile.key} />}
           >
             <Form.Field label={t('api-key.label')}>
-              <Next.PasswordInput
+              <PasswordInput
                 placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
                 value={draft}
                 onValueChange={(value) => {

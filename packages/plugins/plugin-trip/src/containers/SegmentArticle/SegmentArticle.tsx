@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Panel, ToggleGroup, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 
 import { BookingSearch } from '#containers';
@@ -50,31 +50,31 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
   }
 
   return (
-    <Next.Panel.Root role={role} width='document'>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
+    <Panel.Root role={role} width='document'>
+      <Panel.Header>
+        <Toolbar.Root>
           <div className='grow' />
-          <Next.Toolbar.ToggleGroup
+          <Toolbar.ToggleGroup
             type='single'
             value={viewMode}
             onValueChange={(value) => value && setViewMode(value as ViewMode)}
           >
-            <Next.ToggleGroup.Item
+            <ToggleGroup.Item
               value='form'
               icon='ph--list-bullets--regular'
               iconOnly
               label={t('segment.view.form.label')}
             />
-            <Next.ToggleGroup.Item
+            <ToggleGroup.Item
               value='search'
               icon='ph--magnifying-glass--regular'
               iconOnly
               label={t('segment.view.search.label')}
             />
-          </Next.Toolbar.ToggleGroup>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+          </Toolbar.ToggleGroup>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         {viewMode === 'search' ? (
           // Key by segment id so switching/adding a segment resets the search form state.
           <BookingSearch key={segment.id} segment={segment} />
@@ -87,8 +87,8 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
             </Form.Viewport>
           </Form.Root>
         )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

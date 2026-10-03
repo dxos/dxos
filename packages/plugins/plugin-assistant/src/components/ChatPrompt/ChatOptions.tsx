@@ -13,7 +13,19 @@ import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos
 import { useObject, useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Field,
+  Flex,
+  Input,
+  PasswordInput,
+  Popover,
+  Select,
+  Switch,
+  Tabs,
+  Toolbar,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -54,24 +66,24 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
 
   return (
     <div className='flex'>
-      <Next.Popover.Root positioning={{ placement: 'top' }}>
-        <Next.Popover.Trigger asChild>
-          <Next.Button
+      <Popover.Root positioning={{ placement: 'top' }}>
+        <Popover.Trigger asChild>
+          <Button
             variant='ghost'
             icon='ph--plus--regular'
             iconOnly
             label={t('context-objects.button')}
             disabled={!context}
           />
-        </Next.Popover.Trigger>
-        <Next.Popover.Content classNames={styles.panel}>
-          <Next.Popover.Body>{context && <ObjectsPanel db={db} context={context} />}</Next.Popover.Body>
-        </Next.Popover.Content>
-      </Next.Popover.Root>
+        </Popover.Trigger>
+        <Popover.Content classNames={styles.panel}>
+          <Popover.Body>{context && <ObjectsPanel db={db} context={context} />}</Popover.Body>
+        </Popover.Content>
+      </Popover.Root>
 
-      <Next.Popover.Root positioning={{ placement: 'top' }}>
-        <Next.Popover.Trigger asChild>
-          <Next.Button
+      <Popover.Root positioning={{ placement: 'top' }}>
+        <Popover.Trigger asChild>
+          <Button
             variant='ghost'
             icon='ph--sliders-horizontal--regular'
             iconOnly
@@ -79,49 +91,45 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             data-testid='assistant.options'
             disabled={!context}
           />
-        </Next.Popover.Trigger>
-        <Next.Popover.Content classNames={styles.panel}>
-          <Next.Popover.Body>
-            <Next.Tabs.Root orientation='horizontal' defaultValue='view' classNames='grid grid-rows-[1fr_40px] w-full'>
-              <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
+        </Popover.Trigger>
+        <Popover.Content classNames={styles.panel}>
+          <Popover.Body>
+            <Tabs.Root orientation='horizontal' defaultValue='view' classNames='grid grid-rows-[1fr_40px] w-full'>
+              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
                 <ViewPanel chat={chat} />
-              </Next.Tabs.Content>
-              <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
+              </Tabs.Content>
+              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
                 {context && <SkillsPanel registry={registry} db={db} context={context} />}
-              </Next.Tabs.Content>
-              <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
+              </Tabs.Content>
+              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
                 <McpServersPanel db={db} />
-              </Next.Tabs.Content>
-              <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
+              </Tabs.Content>
+              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
                 <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-              </Next.Tabs.Content>
-              <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
+              </Tabs.Content>
+              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
                 <EnvironmentPanel chat={chat} />
-              </Next.Tabs.Content>
-              <Next.Tabs.List classNames={[styles.toolbar]}>
-                <Next.Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                <Next.Tabs.Trigger value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
-                <Next.Tabs.Trigger
-                  value='mcp-servers'
-                  icon='ph--plugs-connected--regular'
-                  label={t('options.mcp.title')}
-                />
-                <Next.Tabs.Trigger
+              </Tabs.Content>
+              <Tabs.List classNames={[styles.toolbar]}>
+                <Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
+                <Tabs.Trigger value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
+                <Tabs.Trigger value='mcp-servers' icon='ph--plugs-connected--regular' label={t('options.mcp.title')} />
+                <Tabs.Trigger
                   value='model'
                   icon='ph--cpu--regular'
                   label={t('options.chat-model.title')}
                   data-testid='assistant.options.model'
                 />
-                <Next.Tabs.Trigger
+                <Tabs.Trigger
                   value='environment'
                   icon='ph--hard-drives--regular'
                   label={t('options.environment.title')}
                 />
-              </Next.Tabs.List>
-            </Next.Tabs.Root>
-          </Next.Popover.Body>
-        </Next.Popover.Content>
-      </Next.Popover.Root>
+              </Tabs.List>
+            </Tabs.Root>
+          </Popover.Body>
+        </Popover.Content>
+      </Popover.Root>
     </div>
   );
 };
@@ -264,9 +272,9 @@ const ModelsPanel = ({
           ))}
         </Listbox.Content>
       </Listbox.Root>
-      <Next.Toolbar.Root>
+      <Toolbar.Root>
         <OnlineSwitch />
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
     </div>
   );
 };
@@ -295,7 +303,7 @@ const OnlineSwitch = () => {
 
   return (
     <div className='px-1 flex items-center gap-2'>
-      <Next.Switch
+      <Switch
         checked={online}
         onCheckedChange={({ checked }) => handleChange(checked)}
         data-testid='assistant.online'
@@ -365,7 +373,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
       {adding ? (
         <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <Next.Button
+        <Button
           variant='ghost'
           icon='ph--plus--regular'
           label={t('mcp-server-add.label')}
@@ -411,16 +419,16 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
   return (
     <Listbox.Item id={server.id} classNames='flex-col items-stretch px-form-chrome' data-testid='assistant.mcp-server'>
       <Flex align='center' gap='sm'>
-        <Next.Field.Root>
-          <Next.Field.Label srOnly>{name}</Next.Field.Label>
-          <Next.Switch checked={enabled !== false} onCheckedChange={({ checked }) => setEnabled(!!checked)} />
-        </Next.Field.Root>
+        <Field.Root>
+          <Field.Label srOnly>{name}</Field.Label>
+          <Switch checked={enabled !== false} onCheckedChange={({ checked }) => setEnabled(!!checked)} />
+        </Field.Root>
         <Flex column grow classNames='min-w-0'>
           <span className='truncate text-sm'>{name}</span>
           <span className='truncate text-xs text-description'>{url}</span>
         </Flex>
         {status.state === 'unauthorized' && (
-          <Next.Button
+          <Button
             variant='primary'
             icon='ph--sign-in--regular'
             label={t('mcp-server-sign-in.label')}
@@ -430,7 +438,7 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
           />
         )}
         {(status.state === 'error' || status.state === 'unauthorized') && (
-          <Next.Button
+          <Button
             variant='ghost'
             icon='ph--arrow-clockwise--regular'
             iconOnly
@@ -438,7 +446,7 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
             onClick={() => setRevision((revision) => revision + 1)}
           />
         )}
-        <Next.Button
+        <Button
           variant='ghost'
           icon='ph--x--regular'
           iconOnly
@@ -491,27 +499,27 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
         handleSubmit();
       }}
     >
-      <Next.Field.Root>
-        <Next.Field.Label srOnly>{t('mcp-server-name.label')}</Next.Field.Label>
-        <Next.Input
+      <Field.Root>
+        <Field.Label srOnly>{t('mcp-server-name.label')}</Field.Label>
+        <Input
           placeholder={t('mcp-server-name.placeholder')}
           value={name}
           onChange={(event) => setName(event.target.value)}
           autoFocus
           data-testid='assistant.mcp-server.name'
         />
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Field.Label srOnly>{t('mcp-server-url.label')}</Next.Field.Label>
-        <Next.Input
+      </Field.Root>
+      <Field.Root>
+        <Field.Label srOnly>{t('mcp-server-url.label')}</Field.Label>
+        <Input
           type='url'
           placeholder={t('mcp-server-url.placeholder')}
           value={url}
           onChange={(event) => setUrl(event.target.value)}
           data-testid='assistant.mcp-server.url'
         />
-      </Next.Field.Root>
-      <Next.Select.Root
+      </Field.Root>
+      <Select.Root
         value={[protocol]}
         onValueChange={({ value: [value] }) => setProtocol(value === 'sse' ? 'sse' : 'http')}
         items={[
@@ -519,24 +527,24 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           { value: 'sse', label: 'SSE' },
         ]}
       >
-        <Next.Select.Trigger placeholder={t('mcp-server-protocol.label')} />
-        <Next.Select.Content>
-          <Next.Select.Item item={{ value: 'http', label: 'HTTP' }} />
-          <Next.Select.Item item={{ value: 'sse', label: 'SSE' }} />
-        </Next.Select.Content>
-      </Next.Select.Root>
-      <Next.Field.Root>
-        <Next.Field.Label srOnly>{t('mcp-server-api-key.label')}</Next.Field.Label>
-        <Next.PasswordInput
+        <Select.Trigger placeholder={t('mcp-server-protocol.label')} />
+        <Select.Content>
+          <Select.Item item={{ value: 'http', label: 'HTTP' }} />
+          <Select.Item item={{ value: 'sse', label: 'SSE' }} />
+        </Select.Content>
+      </Select.Root>
+      <Field.Root>
+        <Field.Label srOnly>{t('mcp-server-api-key.label')}</Field.Label>
+        <PasswordInput
           ignorePasswordManagers
           placeholder={t('mcp-server-api-key.placeholder')}
           value={apiKey}
           onValueChange={setApiKey}
           data-testid='assistant.mcp-server.api-key'
         />
-      </Next.Field.Root>
+      </Field.Root>
       <div className='flex gap-2'>
-        <Next.Button
+        <Button
           type='submit'
           variant='ghost'
           icon='ph--check--regular'
@@ -545,7 +553,7 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           disabled={!canSubmit}
           data-testid='assistant.mcp-server.save'
         />
-        <Next.Button
+        <Button
           type='button'
           variant='ghost'
           icon='ph--x--regular'
@@ -630,20 +638,20 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
       </SearchList.Content>
 
       <div className={mx('flex flex-col', styles.toolbar)}>
-        <Next.Select.Root
+        <Select.Root
           items={typeItems}
           value={selectedUri === ANY ? [] : [selectedUri]}
           onValueChange={({ value: [value] }) =>
             setSelectedUri(typeOptions.find(({ uri }) => uri === value)?.uri ?? ANY)
           }
         >
-          <Next.Select.Trigger placeholder={t('type-filter.placeholder')} />
-          <Next.Select.Content>
+          <Select.Trigger placeholder={t('type-filter.placeholder')} />
+          <Select.Content>
             {typeItems.map((item) => (
-              <Next.Select.Item key={item.value} item={item} />
+              <Select.Item key={item.value} item={item} />
             ))}
-          </Next.Select.Content>
-        </Next.Select.Root>
+          </Select.Content>
+        </Select.Root>
         <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
       </div>
     </SearchList.Root>

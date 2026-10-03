@@ -10,7 +10,7 @@ import { Format } from '@dxos/echo/Format';
 import { SchemaAST } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
@@ -72,9 +72,9 @@ export const WorkflowArticle = ({ role, ...props }: ArticleProps & { space?: Spa
   }, [loader, displayMode]);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <ControlledSelector values={Object.values(DisplayMode)} value={displayMode} setValue={setDisplayMode} />
           <ControlledSelector
@@ -82,9 +82,9 @@ export const WorkflowArticle = ({ role, ...props }: ArticleProps & { space?: Spa
             value={executionMode}
             setValue={setExecutionMode}
           />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         <div className={'h-full grid grid-rows-[4fr_3fr]'}>
           <MasterDetailTable
             properties={properties}
@@ -97,8 +97,8 @@ export const WorkflowArticle = ({ role, ...props }: ArticleProps & { space?: Spa
             {selected && <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />}
           </div>
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

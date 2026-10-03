@@ -14,7 +14,7 @@ import {
   useCardPivot,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenuContribution } from '@dxos/react-ui-menu';
@@ -41,16 +41,16 @@ export const PipelineArticle = ({ role, subject: pipeline, attendableId }: Pipel
 
   return (
     <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
-      <Next.Panel.Root role={role}>
-        <Next.Panel.Header>
+      <Panel.Root role={role}>
+        <Panel.Header>
           <PipelineComponent.Toolbar inactive={!hasAttention} />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <PipelineComponent.Content asChild model={model}>
             <PipelineComponent.Columns pipeline={pipeline} />
           </PipelineComponent.Content>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </PipelineComponent.Root>
   );
 };

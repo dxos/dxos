@@ -20,7 +20,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Button, Field, Focus, Main, Panel, Textarea, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
@@ -43,8 +43,8 @@ const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   return (
-    <Next.Panel.Header classNames='border-b border-separator'>
-      <Next.Button
+    <Panel.Header classNames='border-b border-separator'>
+      <Button
         size='lg'
         icon='ph--circle--regular'
         label='Test'
@@ -52,7 +52,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
         variant={hasAttention ? 'primary' : 'ghost'}
         classNames='w-(--dx-rail-action) h-(--dx-rail-action)'
       />
-    </Next.Panel.Header>
+    </Panel.Header>
   );
 };
 
@@ -80,32 +80,32 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
   }, []);
 
   return (
-    <Next.Focus.Item asChild ref={rootElement}>
-      <Next.Panel.Root
+    <Focus.Item asChild ref={rootElement}>
+      <Panel.Root
         {...attentionAttrs}
         role='article'
         classNames='w-[30rem] shrink-0 h-full dx-base-surface border-e border-separator'
       >
         <StoryPlankHeading attendableId={attendableId} />
-        <Next.Panel.Body classNames='grid'>
-          <Next.Toolbar.Root classNames='border-b border-subdued-separator'>
-            <Next.Button>Test</Next.Button>
-          </Next.Toolbar.Root>
+        <Panel.Body classNames='grid'>
+          <Toolbar.Root classNames='border-b border-subdued-separator'>
+            <Button>Test</Button>
+          </Toolbar.Root>
 
           <div className={mx(container, 'm-2 bg-current-surface')}>
-            <Next.Field.Root>
-              <Next.Field.Label>Level 1 (group)</Next.Field.Label>
-            </Next.Field.Root>
+            <Field.Root>
+              <Field.Label>Level 1 (group)</Field.Label>
+            </Field.Root>
             <div className={mx(container, 'dx-base-surface')}>
-              <Next.Field.Root>
-                <Next.Field.Label>Level 2 (base)</Next.Field.Label>
-                <Next.Textarea placeholder='Enter text' />
-              </Next.Field.Root>
+              <Field.Root>
+                <Field.Label>Level 2 (base)</Field.Label>
+                <Textarea placeholder='Enter text' />
+              </Field.Root>
             </div>
           </div>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
-    </Next.Focus.Item>
+        </Panel.Body>
+      </Panel.Root>
+    </Focus.Item>
   );
 };
 
@@ -113,17 +113,17 @@ const DefaultStory = () => {
   const state = useAtomCapability(StoryState);
 
   return (
-    <Next.Main.Root navigationSidebarState='expanded'>
-      <Next.Main.NavigationSidebar label='Navigation' landmark={false} classNames='grid'>
+    <Main.Root navigationSidebarState='expanded'>
+      <Main.NavigationSidebar label='Navigation' landmark={false} classNames='grid'>
         <NavTreeContainer tab={state.tab} />
-      </Next.Main.NavigationSidebar>
-      <Next.Main.Content bounce handlesFocus>
+      </Main.NavigationSidebar>
+      <Main.Content bounce handlesFocus>
         <div className='flex grow overflow-x-auto'>
           <StoryPlank attendableId='space-0:object-0' />
           <StoryPlank attendableId='space-0:object-1' />
         </div>
-      </Next.Main.Content>
-    </Next.Main.Root>
+      </Main.Content>
+    </Main.Root>
   );
 };
 

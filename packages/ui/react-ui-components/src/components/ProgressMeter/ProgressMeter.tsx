@@ -5,7 +5,16 @@
 import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } from 'react';
 
 import { Progress as ProgressModel } from '@dxos/progress';
-import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Progress,
+  Steps,
+  TextCrawl,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -182,7 +191,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             <div className='min-w-0 flex-1 text-error-text truncate'>{error}</div>
           ) : (
             /* What the run is and what it is doing, in its own words, crawling as it moves through its phases. */
-            <Next.TextCrawl classNames='min-w-0 flex-1 text-xs text-description' lines={lines} greedy />
+            <TextCrawl classNames='min-w-0 flex-1 text-xs text-description' lines={lines} greedy />
           )}
           <div className='flex items-center gap-1 shrink-0 text-description'>
             <span className='tabular-nums'>
@@ -196,7 +205,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
               <span className='text-description'>({formatDuration(etaMs)})</span>
             )}
             {onCancel && (
-              <Next.Button
+              <Button
                 size='sm'
                 variant='ghost'
                 iconSize='xs'
@@ -213,7 +222,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
         {/* A declared plan is drawn as its stages, which carry the fraction on the line leaving the
             one in flight; with no plan there is only the fraction, so a bare bar says it. */}
         {stages > 0 ? (
-          <Next.Steps
+          <Steps
             classNames='self-center'
             steps={state.phases ?? 0}
             active={state.phase}
@@ -224,7 +233,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             onSelect={onSelect}
           />
         ) : (
-          <Next.Progress
+          <Progress
             classNames='w-full self-center'
             value={fraction}
             // Uncounted while it runs, and still uncounted when it fails — that is what fills the

@@ -9,25 +9,25 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Deferred, type DeferredProps, Switch, Typography } from '../index.ts';
 
-type StoryArgs = SizeArgs & Pick<Next.DeferredProps, 'delay' | 'minDuration'>;
+type StoryArgs = SizeArgs & Pick<DeferredProps, 'delay' | 'minDuration'>;
 
 const DefaultStory = ({ delay, minDuration }: StoryArgs) => {
   const [pending, setPending] = useState(false);
   return (
     <>
-      <Next.Switch label='Pending' checked={pending} onCheckedChange={({ checked }) => setPending(checked)} />
-      <Next.Deferred
+      <Switch label='Pending' checked={pending} onCheckedChange={({ checked }) => setPending(checked)} />
+      <Deferred
         pending={pending}
         delay={delay}
         minDuration={minDuration}
-        fallback={() => <Next.Typography data-testid='fallback'>No messages yet.</Next.Typography>}
+        fallback={() => <Typography data-testid='fallback'>No messages yet.</Typography>}
       >
-        <Next.Typography data-testid='content'>3 messages</Next.Typography>
-      </Next.Deferred>
+        <Typography data-testid='content'>3 messages</Typography>
+      </Deferred>
     </>
   );
 };

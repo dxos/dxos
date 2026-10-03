@@ -10,7 +10,7 @@ import { type Database, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, useTranslation } from '@dxos/react-ui';
 
 import { ConnectorAuthMenu } from '#components';
 import { meta } from '#meta';
@@ -50,7 +50,7 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
   return (
     <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>
       <Flex gap='sm' align='center'>
-        <Next.Icon icon='ph--plugs--regular' size='lg' tone='subdued' />
+        <Icon icon='ph--plugs--regular' size='lg' tone='subdued' />
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('integration-prompt.title', { service: label })}</p>
           <p className='text-sm text-subdued'>

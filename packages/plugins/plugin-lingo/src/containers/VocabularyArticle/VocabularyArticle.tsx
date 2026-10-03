@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { WordList } from '#components';
@@ -60,14 +60,14 @@ export const VocabularyArticle = ({ role, subject, attendableId }: VocabularyArt
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header classNames='dx-expand'>
+    <Panel.Root role={role}>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attentionId} />
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+      </Panel.Header>
+      <Panel.Body>
         <WordList words={sorted} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

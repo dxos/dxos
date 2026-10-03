@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { Grid, Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Grid, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
@@ -39,7 +39,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         player={orientation === 'white' ? 'black' : 'white'}
         icon={
           onClose && (
-            <Next.Button
+            <Button
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
@@ -58,7 +58,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         player={orientation}
         icon={
           onOrientationChange && (
-            <Next.Button
+            <Button
               classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
               icon='ph--arrows-clockwise--regular'
               iconOnly
@@ -188,7 +188,7 @@ const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps
       classNames='h-(--dx-rail-size) px-1 overflow-hidden'
     >
       <div className='place-items-center'>
-        <Next.Icon
+        <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
           size='xl'
           classNames={mx(turn && (model.game.isCheckmate() ? 'text-error-text' : 'text-success-text'))}

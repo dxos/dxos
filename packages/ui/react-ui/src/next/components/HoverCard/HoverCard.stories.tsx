@@ -9,33 +9,33 @@ import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { byTestId, expectArrow, expectPopupSize, realHover, realUnhover } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button, Group, HoverCard, Typography } from '../index.ts';
 
 /** A profile card above a button, and one below a text link without an arrow, at its own `lg` size. */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
-  <Next.Group>
-    <Next.HoverCard.Root>
-      <Next.HoverCard.Trigger asChild>
-        <Next.Button data-testid={`profile-${size}-trigger`}>Alice</Next.Button>
-      </Next.HoverCard.Trigger>
-      <Next.HoverCard.Content data-testid={`profile-${size}`}>
-        <Next.Typography>Alice Example</Next.Typography>
-        <Next.Typography tone='description'>Joined in March · 12 spaces</Next.Typography>
-      </Next.HoverCard.Content>
-    </Next.HoverCard.Root>
-    <Next.HoverCard.Root positioning={{ placement: 'bottom' }}>
-      <Next.HoverCard.Trigger asChild>
+  <Group>
+    <HoverCard.Root>
+      <HoverCard.Trigger asChild>
+        <Button data-testid={`profile-${size}-trigger`}>Alice</Button>
+      </HoverCard.Trigger>
+      <HoverCard.Content data-testid={`profile-${size}`}>
+        <Typography>Alice Example</Typography>
+        <Typography tone='description'>Joined in March · 12 spaces</Typography>
+      </HoverCard.Content>
+    </HoverCard.Root>
+    <HoverCard.Root positioning={{ placement: 'bottom' }}>
+      <HoverCard.Trigger asChild>
         <a href='#' data-testid={`link-${size}-trigger`}>
           composer.space
         </a>
-      </Next.HoverCard.Trigger>
-      <Next.HoverCard.Content size='lg' arrow={false} data-testid={`link-${size}`}>
-        <Next.Typography>A local-first workspace.</Next.Typography>
-      </Next.HoverCard.Content>
-    </Next.HoverCard.Root>
-  </Next.Group>
+      </HoverCard.Trigger>
+      <HoverCard.Content size='lg' arrow={false} data-testid={`link-${size}`}>
+        <Typography>A local-first workspace.</Typography>
+      </HoverCard.Content>
+    </HoverCard.Root>
+  </Group>
 );
 
 const meta = {

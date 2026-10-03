@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type Database } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 /**
@@ -31,15 +31,15 @@ const SyncStateModuleContainer = ({ space }: { space: Space }) => {
   }, [space.db]);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>Sync State</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Toolbar.Text>Sync State</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
         <JsonHighlighter data={syncState ?? {}} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

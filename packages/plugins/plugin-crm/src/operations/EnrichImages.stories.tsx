@@ -14,7 +14,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Block, Button, Card, Icon, Toolbar } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
@@ -58,33 +58,31 @@ const DefaultStory = () => {
 
   return (
     <div className='flex flex-col gap-2 p-2'>
-      <Next.Toolbar.Root>
-        <Next.Button onClick={handleEnrich} data-testid='crm.story.enrich'>
+      <Toolbar.Root>
+        <Button onClick={handleEnrich} data-testid='crm.story.enrich'>
           Enrich images
-        </Next.Button>
+        </Button>
         <span className='text-sm text-description' data-testid='crm.story.status'>
           {status}
         </span>
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
 
       {[...people, ...organizations].map((subject) => (
-        <Next.Card.Root key={subject.id}>
-          <Next.Card.Header>
-            <Next.Block>
-              <Next.Icon
-                icon={Obj.instanceOf(Person.Person, subject) ? 'ph--user--regular' : 'ph--buildings--regular'}
-              />
-            </Next.Block>
-            <Next.Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Next.Card.Title>
-          </Next.Card.Header>
-          <Next.Card.Body>
-            <Next.Card.Row>
-              <Next.Card.Text classNames='text-sm' data-testid={`crm.story.image.${subject.id}`} variant='description'>
+        <Card.Root key={subject.id}>
+          <Card.Header>
+            <Block>
+              <Icon icon={Obj.instanceOf(Person.Person, subject) ? 'ph--user--regular' : 'ph--buildings--regular'} />
+            </Block>
+            <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <Card.Row>
+              <Card.Text classNames='text-sm' data-testid={`crm.story.image.${subject.id}`} variant='description'>
                 {(subject as { image?: string }).image ?? 'image: none'}
-              </Next.Card.Text>
-            </Next.Card.Row>
-          </Next.Card.Body>
-        </Next.Card.Root>
+              </Card.Text>
+            </Card.Row>
+          </Card.Body>
+        </Card.Root>
       ))}
     </div>
   );

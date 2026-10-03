@@ -5,7 +5,17 @@
 import { format } from 'date-fns';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Block,
+  Card,
+  Focus,
+  Icon,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
@@ -48,38 +58,38 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
       data={data}
       location={location}
     >
-      <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Next.Card.Root border={false} ref={forwardedRef}>
-          <Next.Card.Header>
-            <Next.Block>
-              <Next.Icon icon='ph--airplane--regular' />
-            </Next.Block>
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Card.Root border={false} ref={forwardedRef}>
+          <Card.Header>
+            <Block>
+              <Icon icon='ph--airplane--regular' />
+            </Block>
             <div className='flex items-baseline justify-between gap-2 min-w-0'>
-              <Next.Card.Title truncate>{offer.operator.name}</Next.Card.Title>
-              <Next.Card.Text classNames='font-mono shrink-0'>
+              <Card.Title truncate>{offer.operator.name}</Card.Title>
+              <Card.Text classNames='font-mono shrink-0'>
                 {offer.totalAmount} {offer.currency}
-              </Next.Card.Text>
+              </Card.Text>
             </div>
-          </Next.Card.Header>
-          <Next.Card.Body>
+          </Card.Header>
+          <Card.Body>
             {(origin || destination) && (
-              <Next.Card.Row>
-                <Next.Card.Text variant='description'>
+              <Card.Row>
+                <Card.Text variant='description'>
                   {origin} → {destination}
-                </Next.Card.Text>
-              </Next.Card.Row>
+                </Card.Text>
+              </Card.Row>
             )}
             {departAt && (
-              <Next.Card.Row>
-                <Next.Block>
-                  <Next.Icon icon='ph--calendar--regular' />
-                </Next.Block>
-                <Next.Card.Text variant='description'>{format(new Date(departAt), 'PPp')}</Next.Card.Text>
-              </Next.Card.Row>
+              <Card.Row>
+                <Block>
+                  <Icon icon='ph--calendar--regular' />
+                </Block>
+                <Card.Text variant='description'>{format(new Date(departAt), 'PPp')}</Card.Text>
+              </Card.Row>
             )}
-          </Next.Card.Body>
-        </Next.Card.Root>
-      </Next.Focus.Item>
+          </Card.Body>
+        </Card.Root>
+      </Focus.Item>
     </Mosaic.Tile>
   );
 });
@@ -102,15 +112,15 @@ export const OfferStack = composable<HTMLDivElement, OfferStackProps>(
     const items = useMemo(() => offers.map((offer) => ({ offer, onSelect })), [offers, onSelect]);
 
     return (
-      <Next.Focus.Group asChild {...composableProps(props)} ref={forwardedRef}>
+      <Focus.Group asChild {...composableProps(props)} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId}>
-          <Next.ScrollArea.Root orientation='vertical'>
-            <Next.ScrollArea.Viewport>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport>
               <Mosaic.Stack Tile={OfferTile} items={items} draggable={false} getId={(item) => item.offer.id} />
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Mosaic.Container>
-      </Next.Focus.Group>
+      </Focus.Group>
     );
   },
 );

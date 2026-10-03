@@ -13,7 +13,7 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Menu, type ThemedClassName, virtualAnchor } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
@@ -775,14 +775,14 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         className='absolute size-0 pointer-events-none'
         style={{ left: menu?.at.x ?? 0, top: menu?.at.y ?? 0 }}
       />
-      <Next.Menu.Root
+      <Menu.Root
         open={menu !== undefined}
         onOpenChange={({ open }) => !open && closeMenu()}
-        positioning={{ ...Next.virtualAnchor(menuAnchorRef), placement: 'right', gutter: 4, overflowPadding: 8 }}
+        positioning={{ ...virtualAnchor(menuAnchorRef), placement: 'right', gutter: 4, overflowPadding: 8 }}
       >
-        <Next.Menu.Content>
+        <Menu.Content>
           {menu?.kind === 'point' && (
-            <Next.Menu.Item
+            <Menu.Item
               data-testid='remove-point'
               onSelect={() => {
                 const point = registry.get(atoms.point);
@@ -795,14 +795,14 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
           )}
           {menu?.kind === 'element' && (
             <>
-              <Next.Menu.Item
+              <Menu.Item
                 data-testid='menu-cut'
                 disabled={!capabilities.delete}
                 onSelect={cut}
                 item={{ value: 'Cut', label: 'Cut' }}
               />
-              <Next.Menu.Item data-testid='menu-copy' onSelect={copy} item={{ value: 'Copy', label: 'Copy' }} />
-              <Next.Menu.Item
+              <Menu.Item data-testid='menu-copy' onSelect={copy} item={{ value: 'Copy', label: 'Copy' }} />
+              <Menu.Item
                 data-testid='menu-delete'
                 disabled={!capabilities.delete}
                 onSelect={() => {
@@ -814,15 +814,15 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             </>
           )}
           {menu?.kind === 'canvas' && (
-            <Next.Menu.Item
+            <Menu.Item
               data-testid='menu-paste'
               disabled={!clipboard || !capabilities.create}
               onSelect={() => paste(menu.scene)}
               item={{ value: 'Paste', label: 'Paste' }}
             />
           )}
-        </Next.Menu.Content>
-      </Next.Menu.Root>
+        </Menu.Content>
+      </Menu.Root>
     </>
   );
 };

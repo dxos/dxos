@@ -13,7 +13,26 @@ import React, {
 } from 'react';
 
 import { logFileRegistry } from '@dxos/log';
-import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Checkbox,
+  ErrorStack,
+  Field,
+  Icon,
+  Input,
+  Panel,
+  Popover,
+  ScrollArea,
+  Select,
+  SystemButton,
+  type ThemedClassName,
+  Toggle,
+  Toolbar,
+  composable,
+  composableProps,
+  parseCaptureOwnerStack,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -216,30 +235,30 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
   const selectedLevel = (LEVELS as readonly string[]).includes(filter) ? filter : '';
 
   return (
-    <Next.Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-      <Next.Field.Root>
-        <Next.Input
+    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+      <Field.Root>
+        <Input
           placeholder={t('filter.placeholder')}
           value={filter}
           autoComplete='off'
           spellCheck={false}
           onChange={(ev) => setFilter(ev.target.value)}
         />
-      </Next.Field.Root>
-      <Next.Select.Root
+      </Field.Root>
+      <Select.Root
         value={[selectedLevel]}
         onValueChange={({ value: [value] }) => setFilter(value)}
         items={LEVELS.map((level) => ({ value: level, label: t(`level.${level}`) }))}
       >
-        <Next.Select.Trigger classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
-        <Next.Select.Content>
+        <Select.Trigger classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
+        <Select.Content>
           {LEVELS.map((level) => (
-            <Next.Select.Item key={level} classNames='text-sm' item={{ value: level, label: t(`level.${level}`) }} />
+            <Select.Item key={level} classNames='text-sm' item={{ value: level, label: t(`level.${level}`) }} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
+        </Select.Content>
+      </Select.Root>
       <LoggerLevels />
-      <Next.Toggle
+      <Toggle
         pressed={recording}
         onPressedChange={(pressed) => setRecording(() => pressed)}
         icon='ph--record--regular'
@@ -247,9 +266,9 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
         iconOnly
         label={t('record.label')}
       />
-      <Next.Button icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
-      <Next.Button icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
-    </Next.Toolbar.Root>
+      <Button icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
+      <Button icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
+    </Toolbar.Root>
   );
 });
 
@@ -279,41 +298,41 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
   );
 
   return (
-    <Next.Popover.Root>
-      <Next.Popover.Trigger asChild>
-        <Next.Button
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <Button
           icon='ph--sliders--regular'
           iconOnly
           label={t('levels.label')}
           classNames={mx(fileLevels.size > 0 && 'text-primary-text', classNames)}
         />
-      </Next.Popover.Trigger>
-      <Next.Popover.Content>
-        <Next.Popover.Body classNames='w-[24rem] max-h-[22rem]'>
-          <Next.Panel.Root>
-            <Next.Panel.Header>
-              <Next.Toolbar.Root>
-                <Next.Field.Root>
-                  <Next.Input
+      </Popover.Trigger>
+      <Popover.Content>
+        <Popover.Body classNames='w-[24rem] max-h-[22rem]'>
+          <Panel.Root>
+            <Panel.Header>
+              <Toolbar.Root>
+                <Field.Root>
+                  <Input
                     placeholder={t('levels.filter.placeholder')}
                     value={fileFilter}
                     autoComplete='off'
                     spellCheck={false}
                     onChange={(ev) => setFileFilter(ev.target.value)}
                   />
-                </Next.Field.Root>
-                <Next.Button
+                </Field.Root>
+                <Button
                   icon='ph--trash--regular'
                   iconOnly
                   label={t('levels.reset.label')}
                   disabled={fileLevels.size === 0}
                   onClick={clearFileLevels}
                 />
-              </Next.Toolbar.Root>
-            </Next.Panel.Header>
-            <Next.Panel.Body asChild>
-              <Next.ScrollArea.Root orientation='vertical'>
-                <Next.ScrollArea.Viewport>
+              </Toolbar.Root>
+            </Panel.Header>
+            <Panel.Body asChild>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport>
                   {visibleFiles.length === 0 && (
                     <div className='p-2 text-xs text-subdued'>
                       {t(files.length === 0 ? 'levels.empty.message' : 'search.no-matches.message')}
@@ -337,44 +356,41 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                               <Listbox.ItemText classNames='truncate text-xs' title={pkg ? `${pkg} · ${file}` : file}>
                                 {basename}
                               </Listbox.ItemText>
-                              <Next.Select.Root
+                              <Select.Root
                                 items={levelItems}
                                 value={[value]}
                                 onValueChange={({ value: [next] }) =>
                                   setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
                                 }
                               >
-                                <Next.Select.Trigger
-                                  classNames='w-full text-sm'
-                                  placeholder={t('levels.inherit.label')}
-                                />
-                                <Next.Select.Content>
-                                  <Next.Select.Item
+                                <Select.Trigger classNames='w-full text-sm' placeholder={t('levels.inherit.label')} />
+                                <Select.Content>
+                                  <Select.Item
                                     classNames='text-sm'
                                     item={{ value: 'inherit', label: t('levels.inherit.label') }}
                                   />
                                   {LEVELS.map((level) => (
-                                    <Next.Select.Item
+                                    <Select.Item
                                       key={level}
                                       classNames='text-sm'
                                       item={{ value: level, label: t(`level.${level}`) }}
                                     />
                                   ))}
-                                </Next.Select.Content>
-                              </Next.Select.Root>
+                                </Select.Content>
+                              </Select.Root>
                             </Listbox.Item>
                           );
                         })}
                       </Listbox.Content>
                     </Listbox.Root>
                   )}
-                </Next.ScrollArea.Viewport>
-              </Next.ScrollArea.Root>
-            </Next.Panel.Body>
-          </Next.Panel.Root>
-        </Next.Popover.Body>
-      </Next.Popover.Content>
-    </Next.Popover.Root>
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Panel.Body>
+          </Panel.Root>
+        </Popover.Body>
+      </Popover.Content>
+    </Popover.Root>
   );
 };
 
@@ -399,11 +415,11 @@ const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwar
   }, [rows]);
 
   return (
-    <Next.ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
-      <Next.ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
+    <ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
+      <ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
         {children}
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 });
 
@@ -456,7 +472,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
           {visible.map(({ id, entry, record }) => {
             const isExpanded = expanded.has(id);
             // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
-            const frames = isExpanded && record.error ? Next.parseCaptureOwnerStack(record.error) : null;
+            const frames = isExpanded && record.error ? parseCaptureOwnerStack(record.error) : null;
             return (
               <Listbox.Item
                 key={id}
@@ -467,9 +483,9 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 classNames='group grid grid-cols-[auto_1rem_8rem_1fr_max-content] gap-2 items-center p-0 dx-current'
               >
                 <div className='flex items-center pl-2'>
-                  <Next.Field.Root>
-                    <Next.Checkbox tabIndex={-1} checked={checked.has(id)} onCheckedChange={() => toggleChecked(id)} />
-                  </Next.Field.Root>
+                  <Field.Root>
+                    <Checkbox tabIndex={-1} checked={checked.has(id)} onCheckedChange={() => toggleChecked(id)} />
+                  </Field.Root>
                 </div>
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
                 <div
@@ -481,7 +497,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 <span className='truncate' title={record.message}>
                   {record.message}
                 </span>
-                <Next.SystemButton.Clipboard
+                <SystemButton.Clipboard
                   iconOnly
                   size='sm'
                   tabIndex={-1}
@@ -503,7 +519,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                         }}
                       />
                     </Syntax.Viewport>
-                    {frames && <Next.ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
+                    {frames && <ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
                   </div>
                 )}
               </Listbox.Item>
@@ -528,21 +544,21 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
   const { textFilter, setTextFilter } = useLoggerContext('Logger.Filter');
 
   return (
-    <Next.Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent' })} ref={forwardedRef}>
-      <Next.Field.Root>
-        <Next.Input
+    <Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent' })} ref={forwardedRef}>
+      <Field.Root>
+        <Input
           placeholder={t('search.placeholder')}
           value={textFilter}
           autoComplete='off'
           spellCheck={false}
           onChange={(ev) => setTextFilter(ev.target.value)}
-          start={<Next.Icon icon='ph--magnifying-glass--regular' />}
+          start={<Icon icon='ph--magnifying-glass--regular' />}
         />
-      </Next.Field.Root>
+      </Field.Root>
       {textFilter.length > 0 && (
-        <Next.Button icon='ph--x--regular' iconOnly label={t('search.clear.label')} onClick={() => setTextFilter('')} />
+        <Button icon='ph--x--regular' iconOnly label={t('search.clear.label')} onClick={() => setTextFilter('')} />
       )}
-    </Next.Toolbar.Root>
+    </Toolbar.Root>
   );
 });
 

@@ -13,7 +13,7 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Button, Panel, Switch, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 /**
@@ -70,20 +70,20 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
   const activeTriggers = triggers.filter((trigger) => trigger.enabled);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>Triggers</Next.Toolbar.Text>
-          <Next.Toolbar.Separator />
-          <Next.Button onClick={start} disabled={state?.enabled}>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Toolbar.Text>Triggers</Toolbar.Text>
+          <Toolbar.Separator />
+          <Button onClick={start} disabled={state?.enabled}>
             Start dispatcher
-          </Next.Button>
-          <Next.Button onClick={stop} disabled={!state?.enabled}>
+          </Button>
+          <Button onClick={stop} disabled={!state?.enabled}>
             Stop dispatcher
-          </Next.Button>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
+          </Button>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
         <JsonHighlighter
           data={{
             dispatcher: state?.enabled ? 'running' : 'stopped',
@@ -101,7 +101,7 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
                 <li key={trigger.id} className='flex flex-col gap-1 rounded border border-separator p-2'>
                   <div className='font-mono text-xs truncate'>{trigger.id}</div>
                   <div className='text-description'>{formatTriggerSpec(trigger)}</div>
-                  <Next.Switch
+                  <Switch
                     checked={trigger.remote === true}
                     onCheckedChange={({ checked }) => {
                       Obj.update(trigger, (trigger) => {
@@ -117,20 +117,20 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
                     </div>
                   )}
                   {Trigger.isManuallyInvokable(trigger.spec) && (
-                    <Next.Button
+                    <Button
                       onClick={() => handleInvoke(trigger)}
                       disabled={!state?.enabled || invokingId === trigger.id}
                     >
                       {invokingId === trigger.id ? 'Invoking…' : 'Invoke now'}
-                    </Next.Button>
+                    </Button>
                   )}
                 </li>
               );
             })}
           </ul>
         )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { type Next } from '@dxos/react-ui';
+import { type SelectOption } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -39,7 +39,7 @@ export const AsyncSelectField = ({
   const subset = useMemo(() => pickValues(values, lookup.deps), [values, lookup.deps]);
   const key = useMemo(() => JSON.stringify(subset), [subset]);
   const { loading, data } = useAsyncFieldEffect<readonly OptionsLookupEntry[]>(() => lookup.load(subset), key);
-  const items = useMemo<Next.SelectOption[]>(
+  const items = useMemo<SelectOption[]>(
     () => (data ?? []).map(({ value, label, icon }) => ({ value, label: label ?? value, icon })),
     [data],
   );

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -35,33 +35,33 @@ export const RepositoryToolbar = ({
   const commitItem = isCommit && currentRef ? { value: currentRef, label: currentRef.slice(0, 7) } : undefined;
   const branchItems = branches.map((branch) => ({ value: branch.name, label: branch.name }));
   return (
-    <Next.Toolbar.Root classNames='gap-1'>
-      <Next.Select.Root
+    <Toolbar.Root classNames='gap-1'>
+      <Select.Root
         items={commitItem ? [commitItem, ...branchItems] : branchItems}
         value={currentRef ? [currentRef] : []}
         onValueChange={({ value: [value] }) => value && onRefChange(value)}
         disabled={branches.length === 0}
       >
-        <Next.Select.Trigger
+        <Select.Trigger
           classNames='text-sm'
           placeholder={t('branch-select.placeholder')}
           data-testid='repository.branch'
         />
-        <Next.Select.Content>
-          {commitItem && <Next.Select.Item classNames='text-sm font-mono' item={commitItem} />}
+        <Select.Content>
+          {commitItem && <Select.Item classNames='text-sm font-mono' item={commitItem} />}
           {branchItems.map((item) => (
-            <Next.Select.Item key={item.value} classNames='text-sm' item={item} />
+            <Select.Item key={item.value} classNames='text-sm' item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-      <Next.Toolbar.Separator />
-      <Next.Button
+        </Select.Content>
+      </Select.Root>
+      <Toolbar.Separator />
+      <Button
         icon={view === 'files' ? 'ph--clock-counter-clockwise--regular' : 'ph--files--regular'}
         label={t(view === 'files' ? 'show-history.button' : 'show-files.button')}
         onClick={() => onViewChange(view === 'files' ? 'history' : 'files')}
         data-testid='repository.view'
       />
-      <Next.Button icon='ph--arrow-clockwise--regular' label={t('refresh.button')} iconOnly onClick={onRefresh} />
-    </Next.Toolbar.Root>
+      <Button icon='ph--arrow-clockwise--regular' label={t('refresh.button')} iconOnly onClick={onRefresh} />
+    </Toolbar.Root>
   );
 };

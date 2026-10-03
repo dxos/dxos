@@ -17,7 +17,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { Next } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { useSpeechRecognition } from '@dxos/react-ui-transcription';
 
@@ -51,14 +51,14 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
   useSpeechRecognition({ active: recording, onTranscript: handleTranscript });
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
           <Mic docId={DOC_ID} />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
+        </Toolbar.Root>
+      </Panel.Header>
 
-      <Next.Panel.Body>
+      <Panel.Body>
         <Listbox.Root value={matched} items={keywords.map((keyword) => ({ value: keyword, label: keyword }))}>
           <Listbox.Content aria-label='Keywords'>
             {keywords.map((keyword) => (
@@ -68,8 +68,8 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
             ))}
           </Listbox.Content>
         </Listbox.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

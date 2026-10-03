@@ -6,7 +6,7 @@ import { formatDistance, isValid } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Flex, Tooltip, useTranslation } from '@dxos/react-ui';
 
 import { StatusBar } from '#components';
 import { meta } from '#meta';
@@ -39,9 +39,9 @@ export const VersionNumber = (_props: VersionNumberProps) => {
   );
 
   return (
-    <Next.Tooltip.Trigger asChild content={content} side='top'>
+    <Tooltip.Trigger asChild content={content} side='top'>
       <StatusBar.Button classNames='h-full text-xs'>{short}</StatusBar.Button>
-    </Next.Tooltip.Trigger>
+    </Tooltip.Trigger>
   );
 };
 

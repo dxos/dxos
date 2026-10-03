@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Next, composable, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, composable, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
@@ -33,7 +33,7 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
 
     return (
       <ActionMenu caller={caller} onAction={handleAction} group={parent} actions={menuActions as MenuItem[]}>
-        <Next.Button
+        <Button
           {...props}
           classNames='shrink-0 px-2 pointer-fine:px-1'
           variant='ghost'
@@ -69,7 +69,7 @@ export const NavTreeItemMonolithicAction = (
   } = props;
   const runAction = useActionRunner();
   return (
-    <Next.Button
+    <Button
       variant={variant}
       classNames={['shrink-0', iconOnly ? 'px-2 pointer-fine:px-1' : 'p-2 pointer-fine:p-2 me-1']}
       icon={icon ?? fallbackIcon}

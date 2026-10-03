@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Card, type ImageProps, useTranslation } from '@dxos/react-ui';
 import { type File } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -23,7 +23,7 @@ export type FileCardProps = AppSurface.ObjectCardProps<File.File>;
 export const FileCard = ({ subject: file }: FileCardProps) => {
   const { t } = useTranslation(meta.profile.key);
 
-  const [fit, setFit] = useState<Next.ImageProps['fit']>('contain');
+  const [fit, setFit] = useState<ImageProps['fit']>('contain');
 
   const rendered = useFileUrl(file);
   if (!rendered) {
@@ -32,9 +32,9 @@ export const FileCard = ({ subject: file }: FileCardProps) => {
 
   const { url, type, size } = rendered;
   return (
-    <Next.Card.Body>
+    <Card.Body>
       {type.startsWith('image/') ? (
-        <Next.Card.Poster
+        <Card.Poster
           alt={file.name ?? ''}
           src={url}
           fit={fit}
@@ -43,14 +43,14 @@ export const FileCard = ({ subject: file }: FileCardProps) => {
       ) : type.startsWith('video/') ? (
         <video src={url} muted playsInline preload='metadata' className='block w-full aspect-video object-contain' />
       ) : (
-        <Next.Card.Row>
-          <Next.Card.Text variant='description'>
+        <Card.Row>
+          <Card.Text variant='description'>
             {type}
             {size !== undefined && ` · ${t('file-size.label', { size: formatSize(size) })}`}
-          </Next.Card.Text>
-        </Next.Card.Row>
+          </Card.Text>
+        </Card.Row>
       )}
-    </Next.Card.Body>
+    </Card.Body>
   );
 };
 

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Flex, Next } from '@dxos/react-ui';
+import { Flex, Panel } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 
 import { SpacetimeEditor } from '#components';
@@ -35,14 +35,14 @@ export const SceneArticle = ({ subject, attendableId, role }: SceneArticleProps)
 
   return (
     <SpacetimeEditor.Root scene={subject}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <SpacetimeEditor.Toolbar attendableId={attendableId} alwaysActive />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SpacetimeEditor.Canvas camera={camera} onCameraChange={setCamera} />
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SpacetimeEditor.Root>
   );
 };

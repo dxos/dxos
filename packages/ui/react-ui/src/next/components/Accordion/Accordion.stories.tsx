@@ -9,11 +9,11 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Accordion, type AccordionRootProps, Typography } from '../index.ts';
 
-type StoryArgs = SizeArgs & Pick<Next.AccordionRootProps, 'border' | 'multiple'>;
+type StoryArgs = SizeArgs & Pick<AccordionRootProps, 'border' | 'multiple'>;
 
 const ITEMS = [
   { value: 'search', icon: 'ph--magnifying-glass--regular', label: 'Search the web', detail: '12 results for "zag"' },
@@ -25,19 +25,19 @@ const DefaultStory = ({ border, multiple }: StoryArgs) => {
   const [open, setOpen] = useState<string[]>([]);
   return (
     <>
-      <Next.Accordion.Root border={border} multiple={multiple} value={open} onValueChange={setOpen}>
+      <Accordion.Root border={border} multiple={multiple} value={open} onValueChange={setOpen}>
         {ITEMS.map(({ value, icon, label, detail }) => (
-          <Next.Accordion.Item key={value} value={value} disabled={!detail} data-testid={`item-${value}`}>
-            <Next.Accordion.ItemTrigger icon={icon}>{label}</Next.Accordion.ItemTrigger>
+          <Accordion.Item key={value} value={value} disabled={!detail} data-testid={`item-${value}`}>
+            <Accordion.ItemTrigger icon={icon}>{label}</Accordion.ItemTrigger>
             {detail && (
-              <Next.Accordion.ItemContent>
-                <Next.Typography>{detail}</Next.Typography>
-              </Next.Accordion.ItemContent>
+              <Accordion.ItemContent>
+                <Typography>{detail}</Typography>
+              </Accordion.ItemContent>
             )}
-          </Next.Accordion.Item>
+          </Accordion.Item>
         ))}
-      </Next.Accordion.Root>
-      <Next.Typography data-testid='open'>Open: {open.join(', ') || 'none'}</Next.Typography>
+      </Accordion.Root>
+      <Typography data-testid='open'>Open: {open.join(', ') || 'none'}</Typography>
     </>
   );
 };

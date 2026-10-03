@@ -11,7 +11,7 @@ import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, type URI } from '@dxos/keys';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Group, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps, type RefFieldDataProps } from '#types';
@@ -70,14 +70,14 @@ export const InlineRefField = ({
       ) : (
         !readonly &&
         onCreate && (
-          <Next.Group fill>
-            <Next.Button
+          <Group fill>
+            <Button
               icon='ph--plus--regular'
               label={label || t('ref-field.placeholder')}
               disabled={!createType}
               onClick={() => void handleCreate()}
             />
-          </Next.Group>
+          </Group>
         )
       )}
     </FormFieldSet>

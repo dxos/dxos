@@ -4,17 +4,17 @@
 
 import React, { type ComponentProps } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Avatar, type AvatarStatus, toAvatarHue } from '@dxos/react-ui';
 import { hexToFallback } from '@dxos/util';
 
 import { L0ItemActiveTabIndicator } from '../Sidebar/index.ts';
 
 export type UserAccountAvatarProps = {
-  size?: ComponentProps<typeof Next.Avatar.Root>['size'];
+  size?: ComponentProps<typeof Avatar.Root>['size'];
   userId?: string;
   hue?: string;
   emoji?: string;
-  status?: Next.AvatarStatus;
+  status?: AvatarStatus;
   /** Shows a dot on the avatar, e.g. while invitations are pending. */
   badge?: boolean;
 };
@@ -32,11 +32,11 @@ export const UserAccountAvatar = ({ size, userId, hue, emoji, status, badge }: U
       >
         {/* Sized by the avatar so the badge sits on its corner, not the cell's. */}
         <span className='relative inline-grid'>
-          <Next.Avatar.Root
+          <Avatar.Root
             variant='circle'
             size={size ?? 'xl'}
             {...(resolved && { status: status ?? 'active' })}
-            hue={Next.toAvatarHue(hue || fallbackValue?.hue)}
+            hue={toAvatarHue(hue || fallbackValue?.hue)}
             fallback={emoji || fallbackValue?.emoji || ''}
             data-testid={resolved ? 'treeView.userAccount' : 'treeView.userAccount.pending'}
           />

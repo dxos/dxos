@@ -20,7 +20,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useSubmitOnEnter } from '@dxos/react-ui-form';
 import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
@@ -58,9 +58,9 @@ export type ObjectFormDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typ
 export const ObjectFormDialog = (props: ObjectFormDialogProps) => (
   // A click outside must not dismiss: this dialog holds unsaved form input, and a stray click on
   // the overlay would discard it with no undo. Escape and the close button remain.
-  <Next.Dialog.Content closeOnInteractOutside={false}>
+  <Dialog.Content closeOnInteractOutside={false}>
     <ObjectFormDialogBody {...props} />
-  </Next.Dialog.Content>
+  </Dialog.Content>
 );
 
 ObjectFormDialog.displayName = 'ObjectFormDialog';
@@ -351,17 +351,17 @@ const ObjectFormDialogBody = ({
 
   return (
     <>
-      <Next.Dialog.Header>
-        <Next.Dialog.Title>
+      <Dialog.Header>
+        <Dialog.Title>
           {t('create-object-dialog.title', {
             object: t('typename.label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
-        </Next.Dialog.Title>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.SystemButton.Close ref={closeRef} />
-        </Next.Dialog.CloseTrigger>
-      </Next.Dialog.Header>
-      <Next.Dialog.Body ref={bodyRef}>
+        </Dialog.Title>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close ref={closeRef} />
+        </Dialog.CloseTrigger>
+      </Dialog.Header>
+      <Dialog.Body ref={bodyRef}>
         <CreateObjectPanel
           options={options}
           spaces={spaces}
@@ -378,24 +378,24 @@ const ObjectFormDialogBody = ({
           onTargetChange={setTarget}
           onTypenameChange={setTypename}
         />
-      </Next.Dialog.Body>
+      </Dialog.Body>
       {object ? (
-        <Next.Dialog.Footer>
-          <Next.Dialog.CloseTrigger asChild>
-            <Next.Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Next.Button>
-          </Next.Dialog.CloseTrigger>
-          <Next.Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
+        <Dialog.Footer>
+          <Dialog.CloseTrigger asChild>
+            <Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button>
+          </Dialog.CloseTrigger>
+          <Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
             {t('object-form-confirm.label')}
-          </Next.Button>
-        </Next.Dialog.Footer>
+          </Button>
+        </Dialog.Footer>
       ) : (
         showTypeSelector &&
         registryAvailable && (
-          <Next.Dialog.Footer>
-            <Next.Dialog.CloseTrigger asChild>
+          <Dialog.Footer>
+            <Dialog.CloseTrigger asChild>
               <PluginRegistryButton />
-            </Next.Dialog.CloseTrigger>
-          </Next.Dialog.Footer>
+            </Dialog.CloseTrigger>
+          </Dialog.Footer>
         )
       )}
     </>

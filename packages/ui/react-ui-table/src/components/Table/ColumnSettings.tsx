@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Registry, type View } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { Popover, virtualAnchor } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 
 import { type ModalController, type TableModel } from '../../model/index.ts';
@@ -60,13 +60,9 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
   }
 
   return (
-    <Next.Popover.Root
-      modal={false}
-      open={state?.type === 'columnSettings'}
-      positioning={Next.virtualAnchor(modals.trigger)}
-    >
-      <Next.Popover.Content classNames='md:w-64'>
-        <Next.Popover.Body>
+    <Popover.Root modal={false} open={state?.type === 'columnSettings'} positioning={virtualAnchor(modals.trigger)}>
+      <Popover.Content classNames='md:w-64'>
+        <Popover.Body>
           <FieldEditor
             projection={model.projection}
             field={field}
@@ -74,8 +70,8 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
             onSave={handleSave}
             onCancel={handleCancel}
           />
-        </Next.Popover.Body>
-      </Next.Popover.Content>
-    </Next.Popover.Root>
+        </Popover.Body>
+      </Popover.Content>
+    </Popover.Root>
   );
 };

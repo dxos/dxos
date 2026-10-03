@@ -33,7 +33,6 @@ export * from './HoverCard/index.ts';
 export * from './Icon/index.ts';
 export * from './Image/index.ts';
 export * from './Input/index.ts';
-export * from './Label/index.ts';
 export * from './Link/index.ts';
 export * from './Listbox/index.ts';
 export * from './Main/index.ts';

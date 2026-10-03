@@ -9,7 +9,7 @@ import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Next } from '@dxos/react-ui';
+import { Block, Card, Icon } from '@dxos/react-ui';
 import { type ObjectLinkProps, type WidgetDef } from '@dxos/ui-editor';
 
 export type ObjectCardProps = {
@@ -37,17 +37,17 @@ export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
 
   const title = Obj.getLabel(subject)?.trim() || label || '';
   return (
-    <Next.Card.Root grid>
-      <Next.Card.Header>
-        <Next.Block>
+    <Card.Root grid>
+      <Card.Header>
+        <Block>
           <CardIconSlot subject={subject}>
-            <Next.Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--file--regular'} />
+            <Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--file--regular'} />
           </CardIconSlot>
-        </Next.Block>
-        <Next.Card.Title lines={1}>{title}</Next.Card.Title>
-      </Next.Card.Header>
+        </Block>
+        <Card.Title lines={1}>{title}</Card.Title>
+      </Card.Header>
       <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
-    </Next.Card.Root>
+    </Card.Root>
   );
 };
 

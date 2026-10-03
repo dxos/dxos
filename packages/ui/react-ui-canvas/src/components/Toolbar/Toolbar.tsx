@@ -11,7 +11,7 @@
 
 import React from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Menu, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { shortcutFor } from '../../model/keys.ts';
@@ -64,23 +64,23 @@ export type NavigationToolbarProps = ThemedClassName<{
 export const NavigationToolbar = ({ classNames, actions, children }: NavigationToolbarProps) => {
   const { path } = actions;
   return (
-    <Next.Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-toolbar'>
-      <Next.Button
+    <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-toolbar'>
+      <Button
         variant='ghost'
         disabled={path.length < 2}
         data-testid='toolbar-up'
         onClick={() => actions.onPath(path.length - 2)}
       >
         Up
-      </Next.Button>
+      </Button>
       <Breadcrumbs path={path} nameOf={actions.nameOf} onSelect={actions.onPath} />
       {children && (
         <>
-          <Next.Toolbar.Separator variant='line' />
-          <Next.Toolbar.Text classNames={readoutClasses}>{children}</Next.Toolbar.Text>
+          <Toolbar.Separator variant='line' />
+          <Toolbar.Text classNames={readoutClasses}>{children}</Toolbar.Text>
         </>
       )}
-    </Next.Toolbar.Root>
+    </Toolbar.Root>
   );
 };
 
@@ -89,9 +89,9 @@ export type DebugToolbarProps = ThemedClassName<{ children?: React.ReactNode }>;
 /** The camera's own numbers, away from the controls: nothing here acts on the scene. */
 export const DebugToolbar = ({ classNames, children }: DebugToolbarProps) => {
   return (
-    <Next.Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
-      <Next.Toolbar.Text classNames={readoutClasses}>{children}</Next.Toolbar.Text>
-    </Next.Toolbar.Root>
+    <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
+      <Toolbar.Text classNames={readoutClasses}>{children}</Toolbar.Text>
+    </Toolbar.Root>
   );
 };
 
@@ -104,8 +104,8 @@ export type ActionToolbarProps = ThemedClassName<{
 /** Everything that changes the view or the scene: camera, history, clipboard, creation and debug. */
 export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
   return (
-    <Next.Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
-      <Next.Button
+    <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--arrows-out--regular'
@@ -113,7 +113,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-fit'
         onClick={actions.fit}
       />
-      <Next.Button
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--magnifying-glass-plus--regular'
@@ -121,7 +121,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-zoom-in'
         onClick={actions.zoomIn}
       />
-      <Next.Button
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--magnifying-glass-minus--regular'
@@ -129,7 +129,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-zoom-out'
         onClick={actions.zoomOut}
       />
-      <Next.Button
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--grid-four--regular'
@@ -138,8 +138,8 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-snap'
         onClick={actions.toggleSnap}
       />
-      <Next.Toolbar.Separator variant='line' />
-      <Next.Button
+      <Toolbar.Separator variant='line' />
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--arrow-u-up-left--regular'
@@ -148,7 +148,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='undo'
         onClick={actions.undo}
       />
-      <Next.Button
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--arrow-u-up-right--regular'
@@ -157,8 +157,8 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='redo'
         onClick={actions.redo}
       />
-      <Next.Toolbar.Separator variant='line' />
-      <Next.Button
+      <Toolbar.Separator variant='line' />
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--scissors--regular'
@@ -167,7 +167,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='cut'
         onClick={actions.cut}
       />
-      <Next.Button
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--copy--regular'
@@ -176,7 +176,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='copy'
         onClick={actions.copy}
       />
-      <Next.Button
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--clipboard-text--regular'
@@ -185,7 +185,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='paste'
         onClick={actions.paste}
       />
-      <Next.Button
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--trash--regular'
@@ -194,10 +194,10 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-delete'
         onClick={actions.delete}
       />
-      <Next.Toolbar.Separator variant='line' />
-      <Next.Menu.Root positioning={{ placement: 'bottom-end', gutter: 4 }}>
-        <Next.Menu.Trigger asChild>
-          <Next.Button
+      <Toolbar.Separator variant='line' />
+      <Menu.Root positioning={{ placement: 'bottom-end', gutter: 4 }}>
+        <Menu.Trigger asChild>
+          <Button
             variant='ghost'
             iconOnly
             icon='ph--plus--regular'
@@ -205,20 +205,20 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
             disabled={!capabilities.create}
             data-testid='toolbar-create'
           />
-        </Next.Menu.Trigger>
+        </Menu.Trigger>
         {/* Portalled: inside the bar's flex flow the items would sit under the readout and the canvas. */}
-        <Next.Menu.Content>
+        <Menu.Content>
           {Object.values(nodes).map((def) => (
-            <Next.Menu.Item
+            <Menu.Item
               key={def.type}
               data-testid={`create-${def.type}`}
               onSelect={() => actions.create(def.type)}
               item={{ value: def.type, label: def.name }}
             />
           ))}
-        </Next.Menu.Content>
-      </Next.Menu.Root>
-      <Next.Button
+        </Menu.Content>
+      </Menu.Root>
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--tree-structure--regular'
@@ -227,7 +227,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-layout'
         onClick={actions.layout}
       />
-      <Next.Button
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--bug--regular'
@@ -236,6 +236,6 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-debug'
         onClick={actions.toggleDebug}
       />
-    </Next.Toolbar.Root>
+    </Toolbar.Root>
   );
 };

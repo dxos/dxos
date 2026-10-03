@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Focus, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { getStyles } from '@dxos/ui-theme';
@@ -94,17 +94,17 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       data={data}
       location={location}
     >
-      <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Next.Card.Root border={false} ref={forwardedRef}>
-          <Next.Card.Header>
-            <Next.Block>
-              <Next.Icon icon={icon} classNames={iconStyles?.text} />
-            </Next.Block>
-            <Next.Card.Title>{title}</Next.Card.Title>
-            <Next.Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
-          </Next.Card.Header>
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Card.Root border={false} ref={forwardedRef}>
+          <Card.Header>
+            <Block>
+              <Icon icon={icon} classNames={iconStyles?.text} />
+            </Block>
+            <Card.Title>{title}</Card.Title>
+            <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
+          </Card.Header>
           {flightDetails ? (
-            <Next.Card.Body>
+            <Card.Body>
               <Form.Root schema={Segment.FlightDetails} defaultValues={flightDetails} layout='static' readonly>
                 <Form.Viewport>
                   <Form.Content>
@@ -112,28 +112,28 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
                   </Form.Content>
                 </Form.Viewport>
               </Form.Root>
-            </Next.Card.Body>
+            </Card.Body>
           ) : (
             (route || date) && (
-              <Next.Card.Body>
+              <Card.Body>
                 {route && (
-                  <Next.Card.Row>
-                    <Next.Card.Text variant='description'>{route}</Next.Card.Text>
-                  </Next.Card.Row>
+                  <Card.Row>
+                    <Card.Text variant='description'>{route}</Card.Text>
+                  </Card.Row>
                 )}
                 {date && (
-                  <Next.Card.Row>
-                    <Next.Block>
-                      <Next.Icon icon='ph--calendar--regular' />
-                    </Next.Block>
-                    <Next.Card.Text variant='description'>{format(date, 'PPp')}</Next.Card.Text>
-                  </Next.Card.Row>
+                  <Card.Row>
+                    <Block>
+                      <Icon icon='ph--calendar--regular' />
+                    </Block>
+                    <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
+                  </Card.Row>
                 )}
-              </Next.Card.Body>
+              </Card.Body>
             )
           )}
-        </Next.Card.Root>
-      </Next.Focus.Item>
+        </Card.Root>
+      </Focus.Item>
     </Mosaic.Tile>
   );
 });

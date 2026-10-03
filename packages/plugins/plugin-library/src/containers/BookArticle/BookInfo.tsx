@@ -9,7 +9,7 @@ import { Obj, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { useObject } from '@dxos/react-client/echo';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Icon, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 
@@ -135,8 +135,8 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
 
   // TODO(wittjosiah): This whole page should be a Form with sections, partially read-only.
   return (
-    <Next.ScrollArea.Root orientation='vertical'>
-      <Next.ScrollArea.Viewport>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
         <Flex column gap='lg' classNames='mx-auto max-w-[48rem] p-4'>
           {/* Header — cover + catalog identity. */}
           <section className='flex gap-4 rounded-lg border border-separator p-4'>
@@ -144,7 +144,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               <img src={cover} alt='' className='w-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
               <Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input-surface'>
-                <Next.Icon icon='ph--book--regular' size='xl' tone='description' />
+                <Icon icon='ph--book--regular' size='xl' tone='description' />
               </Flex>
             )}
             <Flex column gap='sm' classNames='min-w-0'>
@@ -155,8 +155,8 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               {/* The user's own rating (1–10) as five stars in half-star increments. */}
               {stars != null && <StarRating value={stars / STARS_PER_STAR} />}
               <Flex gap='xs' align='center' wrap>
-                {live.status && <Next.Tag hue='info'>{STATUS_LABELS[live.status]}</Next.Tag>}
-                {live.owned && <Next.Tag hue='neutral'>{t('owned.label')}</Next.Tag>}
+                {live.status && <Tag hue='info'>{STATUS_LABELS[live.status]}</Tag>}
+                {live.owned && <Tag hue='neutral'>{t('owned.label')}</Tag>}
               </Flex>
               {(publication || externalLinks.length > 0) && (
                 <p className='text-sm text-description'>
@@ -179,9 +179,9 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               {catalog?.genres && catalog.genres.length > 0 && (
                 <Flex gap='xs' wrap>
                   {catalog.genres.map((genre) => (
-                    <Next.Tag key={genre} hue='neutral'>
+                    <Tag key={genre} hue='neutral'>
                       {genre}
-                    </Next.Tag>
+                    </Tag>
                   ))}
                 </Flex>
               )}
@@ -196,9 +196,9 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                 <MarkdownView content={description} classNames='text-sm' />
               </div>
               {showDescriptionToggle && (
-                <Next.Button variant='ghost' classNames='self-start' onClick={() => setExpanded((value) => !value)}>
+                <Button variant='ghost' classNames='self-start' onClick={() => setExpanded((value) => !value)}>
                   {t(expanded ? 'show-less.label' : 'show-more.label')}
-                </Next.Button>
+                </Button>
               )}
             </section>
           )}
@@ -218,8 +218,8 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
             </Form.Root>
           </section>
         </Flex>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
@@ -234,7 +234,7 @@ const StarRating = ({ value }: { value: number }) => (
       const filled = remainder >= 0.75;
       const half = !filled && remainder >= 0.25;
       return (
-        <Next.Icon
+        <Icon
           key={index}
           icon={filled ? 'ph--star--fill' : half ? 'ph--star-half--fill' : 'ph--star--regular'}
           size='lg'

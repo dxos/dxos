@@ -12,7 +12,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActions } from '@dxos/plugin-graph/hooks';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { getHotkeyScope, keySymbols } from '@dxos/react-focus';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
@@ -71,9 +71,9 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     });
 
     return (
-      <Next.Dialog.Content ref={forwardedRef}>
-        <Next.Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.profile.key })}</Next.Dialog.Title>
-        <Next.Dialog.Body>
+      <Dialog.Content ref={forwardedRef}>
+        <Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.profile.key })}</Dialog.Title>
+        <Dialog.Body>
           <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
             {/* Focused on mount, and marked so the dialog's own focus pass agrees: without either, the
                 caret stays outside the palette and Enter reaches the action bar's close button
@@ -82,7 +82,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
               autoFocus
               placeholder={t('command-list-input.placeholder')}
               escapeBehavior='dismiss'
-              {...{ [Next.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+              {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
             />
             <SearchList.Viewport>
               {results.map((action) => {
@@ -128,13 +128,13 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
               })}
             </SearchList.Viewport>
           </SearchList.Root>
-        </Next.Dialog.Body>
-        <Next.Dialog.Footer>
-          <Next.Dialog.CloseTrigger asChild>
-            <Next.Button classNames='w-full'>{t('close.label', { ns: osTranslations })}</Next.Button>
-          </Next.Dialog.CloseTrigger>
-        </Next.Dialog.Footer>
-      </Next.Dialog.Content>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.CloseTrigger asChild>
+            <Button classNames='w-full'>{t('close.label', { ns: osTranslations })}</Button>
+          </Dialog.CloseTrigger>
+        </Dialog.Footer>
+      </Dialog.Content>
     );
   },
 );

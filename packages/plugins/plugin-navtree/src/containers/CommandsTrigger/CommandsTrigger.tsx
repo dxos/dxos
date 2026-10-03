@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
 import { COMMANDS_DIALOG, meta } from '#meta';
 
@@ -15,15 +15,15 @@ export const CommandsTrigger = () => {
   const { invokePromise } = useOperationInvoker();
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Next.Button
+    <Button
       classNames='m-1 px-1 lg:px-2'
       onClick={() =>
         void invokePromise(LayoutOperation.UpdateDialog, { subject: COMMANDS_DIALOG, blockAlign: 'start' })
       }
     >
       <span className='text-description font-normal grow text-start'>{t('command-list-input.placeholder')}</span>
-      <Next.Icon icon='ph--magnifying-glass--regular' />
-    </Next.Button>
+      <Icon icon='ph--magnifying-glass--regular' />
+    </Button>
   );
 };
 

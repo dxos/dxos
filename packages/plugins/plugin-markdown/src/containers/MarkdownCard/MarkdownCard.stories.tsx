@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Card, DragHandle } from '@dxos/react-ui';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -33,13 +33,13 @@ const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
 
   return (
     <CardContainer icon='ph--text-aa--regular'>
-      <Next.Card.Root border={false}>
-        <Next.Card.Header>
-          <Next.DragHandle />
-          <Next.Card.Title>{Obj.getLabel(subject)}</Next.Card.Title>
-        </Next.Card.Header>
+      <Card.Root border={false}>
+        <Card.Header>
+          <DragHandle />
+          <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+        </Card.Header>
         <MarkdownCard subject={subject} {...args} />
-      </Next.Card.Root>
+      </Card.Root>
     </CardContainer>
   );
 };
@@ -86,12 +86,12 @@ const ComparisonStory = () => {
     <div className='flex items-start gap-4'>
       {subjects.map((subject) => (
         <CardContainer key={subject.id} icon='ph--text-aa--regular'>
-          <Next.Card.Root border={false}>
-            <Next.Card.Header>
-              <Next.Card.Title>{Obj.getLabel(subject)}</Next.Card.Title>
-            </Next.Card.Header>
+          <Card.Root border={false}>
+            <Card.Header>
+              <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+            </Card.Header>
             <MarkdownCard subject={subject} />
-          </Next.Card.Root>
+          </Card.Root>
         </CardContainer>
       ))}
     </div>

@@ -9,7 +9,7 @@ import { VoidInput } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Select } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { FunctionBody, getHeight } from './common/index.ts';
@@ -67,7 +67,7 @@ type TriggerKindSelectProps = {
 
 const TriggerKindSelect = ({ value, onValueChange }: TriggerKindSelectProps) => {
   return (
-    <Next.Select.Root
+    <Select.Root
       value={value === undefined ? [] : [value]}
       onValueChange={({ value: [next] }) => {
         const kind = Trigger.Kinds.find((kind) => kind === next);
@@ -77,12 +77,12 @@ const TriggerKindSelect = ({ value, onValueChange }: TriggerKindSelectProps) => 
       }}
       items={Trigger.Kinds.map((kind) => ({ value: kind, label: kind }))}
     >
-      <Next.Select.Trigger classNames='w-full px-0!' />
-      <Next.Select.Content>
+      <Select.Trigger classNames='w-full px-0!' />
+      <Select.Content>
         {Trigger.Kinds.map((kind) => (
-          <Next.Select.Item key={kind} item={{ value: kind, label: kind }} />
+          <Select.Item key={kind} item={{ value: kind, label: kind }} />
         ))}
-      </Next.Select.Content>
-    </Next.Select.Root>
+      </Select.Content>
+    </Select.Root>
   );
 };

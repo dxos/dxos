@@ -9,7 +9,7 @@ import { Model, Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { List, ListItem } from '@dxos/react-list';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Combobox, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -119,7 +119,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 >
                   <Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium'>{model.name}</span>
-                    <Next.Button
+                    <Button
                       icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
                       iconOnly
                       label={running ? t('settings.ollama.unload.label') : t('settings.ollama.load.label')}
@@ -130,7 +130,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                         )()
                       }
                     />
-                    <Next.Button
+                    <Button
                       icon='ph--trash--regular'
                       iconOnly
                       label={t('settings.ollama.remove.label')}
@@ -162,7 +162,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 >
                   <Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium text-description'>{name}</span>
-                    <Next.Button
+                    <Button
                       icon='ph--x--regular'
                       iconOnly
                       label={t('settings.ollama.cancel.label')}
@@ -189,7 +189,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
         {/* Root value is held empty so the trigger always shows the placeholder; the live text is
             the separate `query` driving the search field and suggestion filter. A query that names no
             pick is offered as the create row, which pulls it. */}
-        <Next.Combobox.Root
+        <Combobox.Root
           items={suggestions.map((pick) => ({ value: pick, label: pick }))}
           filter={null}
           open={open}
@@ -202,16 +202,16 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
           createLabel={(name) => t('settings.ollama.pull-custom.label', { name })}
           createIcon='ph--download-simple--regular'
         >
-          <Next.Combobox.Trigger classNames='w-full' placeholder={t('settings.ollama.pull.placeholder')} />
-          <Next.Combobox.Content>
-            <Next.Combobox.Input placeholder={t('settings.ollama.pull.placeholder')} />
-            <Next.Combobox.List>
+          <Combobox.Trigger classNames='w-full' placeholder={t('settings.ollama.pull.placeholder')} />
+          <Combobox.Content>
+            <Combobox.Input placeholder={t('settings.ollama.pull.placeholder')} />
+            <Combobox.List>
               {suggestions.map((pick) => (
-                <Next.Combobox.Item key={pick} item={{ value: pick, label: pick }} />
+                <Combobox.Item key={pick} item={{ value: pick, label: pick }} />
               ))}
-            </Next.Combobox.List>
-          </Next.Combobox.Content>
-        </Next.Combobox.Root>
+            </Combobox.List>
+          </Combobox.Content>
+        </Combobox.Root>
       </Form.Field>
     </Form.FieldSet>
   );

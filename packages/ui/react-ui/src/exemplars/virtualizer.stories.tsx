@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Next } from '../next/index.ts';
+import { Button, Panel, ScrollArea, Toolbar } from '../next/components/index.ts';
 
 random.seed(999);
 
@@ -59,13 +59,13 @@ export const Default = {
     const virtualItems = virtualizer.getVirtualItems();
 
     return (
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <ScrollToolbar items={items} index={index} setIndex={setIndex} />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root orientation='vertical'>
-            <Next.ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <div
                 style={{
                   position: 'relative',
@@ -94,10 +94,10 @@ export const Default = {
                   </div>
                 ))}
               </div>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
     );
   },
 };
@@ -112,33 +112,27 @@ const ScrollToolbar = ({
   setIndex: (index: number) => void;
 }) => {
   return (
-    <Next.Toolbar.Root>
-      <Next.Toolbar.Separator variant='gap' />
-      <Next.Button
-        variant='ghost'
-        icon='ph--arrow-line-left--regular'
-        iconOnly
-        label='start'
-        onClick={() => setIndex(0)}
-      />
-      <Next.Button
+    <Toolbar.Root>
+      <Toolbar.Separator variant='gap' />
+      <Button variant='ghost' icon='ph--arrow-line-left--regular' iconOnly label='start' onClick={() => setIndex(0)} />
+      <Button
         variant='ghost'
         icon='ph--arrows-out-line-horizontal--regular'
         iconOnly
         label='random'
         onClick={() => setIndex(Math.floor(Math.random() * items.length))}
       />
-      <Next.Button
+      <Button
         variant='ghost'
         icon='ph--arrow-line-right--regular'
         iconOnly
         label='end'
         onClick={() => setIndex(items.length - 1)}
       />
-      <Next.Toolbar.Separator variant='gap' />
-      <Next.Toolbar.Text>
+      <Toolbar.Separator variant='gap' />
+      <Toolbar.Text>
         {index + 1}/{items.length}
-      </Next.Toolbar.Text>
-    </Next.Toolbar.Root>
+      </Toolbar.Text>
+    </Toolbar.Root>
   );
 };

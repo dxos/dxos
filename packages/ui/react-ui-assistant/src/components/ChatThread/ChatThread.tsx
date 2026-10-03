@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Next, createContext, useTranslation } from '@dxos/react-ui';
+import { Button, createContext, useTranslation } from '@dxos/react-ui';
 import {
   type FeedModel,
   MessageList,
@@ -216,7 +216,7 @@ const ScrollToBottom = () => {
   const hidden = atEnd || following;
 
   return (
-    <Next.Button
+    <Button
       variant='primary'
       icon='ph--arrow-line-down--regular'
       iconOnly

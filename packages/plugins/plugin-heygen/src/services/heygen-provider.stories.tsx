@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { Next } from '@dxos/react-ui';
+import { Button, Field, PasswordInput } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -137,25 +137,20 @@ const ProviderHarness = () => {
 
   return (
     <div className='dx-expand flex flex-col gap-4 p-4 max-w-[40rem]'>
-      <Next.Field.Root>
-        <Next.Field.Label>HeyGen API key</Next.Field.Label>
-        <Next.PasswordInput
-          ignorePasswordManagers
-          placeholder='Paste API key'
-          value={apiKey}
-          onValueChange={setApiKey}
-        />
-      </Next.Field.Root>
+      <Field.Root>
+        <Field.Label>HeyGen API key</Field.Label>
+        <PasswordInput ignorePasswordManagers placeholder='Paste API key' value={apiKey} onValueChange={setApiKey} />
+      </Field.Root>
       <div className='flex gap-2'>
-        <Next.Button disabled={!apiKey.trim() || busy != null} onClick={() => run('avatars')}>
+        <Button disabled={!apiKey.trim() || busy != null} onClick={() => run('avatars')}>
           {busy === 'avatars' ? 'Loading avatars…' : 'List avatars'}
-        </Next.Button>
-        <Next.Button disabled={!apiKey.trim() || busy != null} onClick={() => run('voices')}>
+        </Button>
+        <Button disabled={!apiKey.trim() || busy != null} onClick={() => run('voices')}>
           {busy === 'voices' ? 'Loading voices…' : 'List voices'}
-        </Next.Button>
-        <Next.Button disabled={!apiKey.trim()} onClick={() => void inspect()}>
+        </Button>
+        <Button disabled={!apiKey.trim()} onClick={() => void inspect()}>
           Inspect raw fields
-        </Next.Button>
+        </Button>
       </div>
 
       <div className='dx-expand flex flex-col gap-2 overflow-y-auto'>

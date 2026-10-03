@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
+import { Carousel } from '../index.ts';
 
 const HUES = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -28,17 +28,17 @@ type StoryArgs = { count: number; continuous?: boolean; autoAdvance?: number };
 const DefaultStory = ({ count, continuous, autoAdvance }: StoryArgs) => {
   const images = IMAGES.slice(0, count);
   return (
-    <Next.Carousel.Root count={images.length} continuous={continuous} autoAdvance={autoAdvance} data-testid='carousel'>
-      <Next.Carousel.PrevTrigger />
-      <Next.Carousel.ItemGroup>
+    <Carousel.Root count={images.length} continuous={continuous} autoAdvance={autoAdvance} data-testid='carousel'>
+      <Carousel.PrevTrigger />
+      <Carousel.ItemGroup>
         {images.map((src, index) => (
-          <Next.Carousel.Item key={src} index={index} src={src} alt={`Slide ${index + 1}`} />
+          <Carousel.Item key={src} index={index} src={src} alt={`Slide ${index + 1}`} />
         ))}
-      </Next.Carousel.ItemGroup>
-      <Next.Carousel.NextTrigger />
-      <Next.Carousel.IndicatorGroup />
-      <Next.Carousel.Caption>{(page) => `Slide ${page + 1} of ${images.length}`}</Next.Carousel.Caption>
-    </Next.Carousel.Root>
+      </Carousel.ItemGroup>
+      <Carousel.NextTrigger />
+      <Carousel.IndicatorGroup />
+      <Carousel.Caption>{(page) => `Slide ${page + 1} of ${images.length}`}</Carousel.Caption>
+    </Carousel.Root>
   );
 };
 

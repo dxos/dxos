@@ -11,7 +11,7 @@ import React, { useCallback } from 'react';
 import { type Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Database, Obj } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -31,10 +31,10 @@ export const HueField = ({ data, label, readonly, getValue, onValueChange }: Spa
   }
 
   return (
-    <Next.Field.Root>
-      <Next.Field.Label>{label}</Next.Field.Label>
+    <Field.Root>
+      <Field.Label>{label}</Field.Label>
       <HuePicker disabled={!!readonly} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
-    </Next.Field.Root>
+    </Field.Root>
   );
 };
 
@@ -48,10 +48,10 @@ export const IconField = ({ data, label, readonly, getValue, onValueChange }: Sp
   }
 
   return (
-    <Next.Field.Root>
-      <Next.Field.Label>{label}</Next.Field.Label>
+    <Field.Root>
+      <Field.Label>{label}</Field.Label>
       <IconPicker disabled={!!readonly} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
-    </Next.Field.Root>
+    </Field.Root>
   );
 };
 
@@ -74,9 +74,9 @@ export const TypenameField = ({ data, ...inputProps }: SpaceFormFieldProps) => {
 
   // A provided field owns its row, so it carries its own label as the other fields here do.
   return (
-    <Next.Field.Root>
-      <Next.Field.Label>{inputProps.label}</Next.Field.Label>
+    <Field.Root>
+      <Field.Label>{inputProps.label}</Field.Label>
       <SelectField {...props} options={options} />
-    </Next.Field.Root>
+    </Field.Root>
   );
 };

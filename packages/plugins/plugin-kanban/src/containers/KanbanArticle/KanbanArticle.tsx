@@ -11,7 +11,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { KanbanBoard } from '#components';
@@ -87,10 +87,10 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
   }
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root />
-      </Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root />
+      </Panel.Header>
       <KanbanBoard.Root
         kanban={object}
         projection={projection}
@@ -99,11 +99,11 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
         onCardAdd={handleCardAdd}
         onCardRemove={handleCardRemove}
       >
-        <Next.Panel.Body asChild>
+        <Panel.Body asChild>
           <KanbanBoard.Content />
-        </Next.Panel.Body>
+        </Panel.Body>
       </KanbanBoard.Root>
-    </Next.Panel.Root>
+    </Panel.Root>
   );
 };
 
@@ -159,10 +159,10 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
   //   users can add items directly from the kanban (currently the column's
   //   "+" button is hidden because `onCardAdd` is undefined).
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root />
-      </Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root />
+      </Panel.Header>
       <KanbanBoard.Root
         kanban={object}
         projection={projection}
@@ -170,11 +170,11 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
         change={change}
         onCardRemove={handleCardRemove}
       >
-        <Next.Panel.Body asChild>
+        <Panel.Body asChild>
           <KanbanBoard.Content />
-        </Next.Panel.Body>
+        </Panel.Body>
       </KanbanBoard.Root>
-    </Next.Panel.Root>
+    </Panel.Root>
   );
 };
 

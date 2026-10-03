@@ -9,14 +9,14 @@ import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectDecorativeIconsHidden, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Block, Container, Icon, type IconHue, type IconValence, Toolbar, Typography } from '../index.ts';
 
-const VALENCES: Next.IconValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
+const VALENCES: IconValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
-const HUES: Next.IconHue[] = ['red', 'orange', 'amber', 'green', 'teal', 'sky', 'blue', 'violet', 'pink'];
+const HUES: IconHue[] = ['red', 'orange', 'amber', 'green', 'teal', 'sky', 'blue', 'violet', 'pink'];
 
 /**
  * An icon in each rail of a row, then one toolbar per colouring: valences (semantic text colours), palette hues, and
@@ -24,55 +24,55 @@ const HUES: Next.IconHue[] = ['red', 'orange', 'amber', 'green', 'teal', 'sky', 
  */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Container gutter='rail' layout='row'>
-      <Next.Block rail='start' data-testid={`rail-${size}`}>
-        <Next.Icon icon='ph--user--regular' />
-      </Next.Block>
-      <Next.Typography>Icon</Next.Typography>
-      <Next.Block rail='end'>
-        <Next.Icon icon='ph--x--regular' label='Clear' />
-      </Next.Block>
-    </Next.Container>
-    <Next.Toolbar.Root aria-label='Valence' data-testid={`valence-${size}`}>
-      <Next.Toolbar.Text>Valence</Next.Toolbar.Text>
+    <Container gutter='rail' layout='row'>
+      <Block rail='start' data-testid={`rail-${size}`}>
+        <Icon icon='ph--user--regular' />
+      </Block>
+      <Typography>Icon</Typography>
+      <Block rail='end'>
+        <Icon icon='ph--x--regular' label='Clear' />
+      </Block>
+    </Container>
+    <Toolbar.Root aria-label='Valence' data-testid={`valence-${size}`}>
+      <Toolbar.Text>Valence</Toolbar.Text>
       {VALENCES.map((valence) => (
-        <Next.Block key={valence}>
-          <Next.Icon icon='ph--circle--fill' valence={valence} data-testid={`valence-${valence}-${size}`} />
-        </Next.Block>
+        <Block key={valence}>
+          <Icon icon='ph--circle--fill' valence={valence} data-testid={`valence-${valence}-${size}`} />
+        </Block>
       ))}
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root aria-label='Hue' data-testid={`hue-${size}`}>
-      <Next.Toolbar.Text>Hue</Next.Toolbar.Text>
+    </Toolbar.Root>
+    <Toolbar.Root aria-label='Hue' data-testid={`hue-${size}`}>
+      <Toolbar.Text>Hue</Toolbar.Text>
       {HUES.map((hue) => (
-        <Next.Block key={hue}>
-          <Next.Icon icon='ph--tag--regular' hue={hue} data-testid={`hue-${hue}-${size}`} />
-        </Next.Block>
+        <Block key={hue}>
+          <Icon icon='ph--tag--regular' hue={hue} data-testid={`hue-${hue}-${size}`} />
+        </Block>
       ))}
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root aria-label='Valence over hue'>
-      <Next.Toolbar.Text>Valence over hue</Next.Toolbar.Text>
-      <Next.Block>
-        <Next.Icon icon='ph--warning--regular' hue='blue' valence='error' data-testid={`both-${size}`} />
-      </Next.Block>
-      <Next.Block>
-        <Next.Icon icon='ph--warning--regular' valence='error' data-testid={`error-${size}`} />
-      </Next.Block>
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root aria-label='Tone, spin and size'>
-      <Next.Toolbar.Text>Tone, spin, size</Next.Toolbar.Text>
-      <Next.Block>
-        <Next.Icon icon='ph--note--regular' tone='description' data-testid={`tone-description-${size}`} />
-      </Next.Block>
-      <Next.Block>
-        <Next.Icon icon='ph--note--regular' tone='subdued' data-testid={`tone-subdued-${size}`} />
-      </Next.Block>
-      <Next.Block>
-        <Next.Icon icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`} />
-      </Next.Block>
-      <Next.Block>
-        <Next.Icon icon='ph--star--regular' size='xs' data-testid={`small-${size}`} />
-      </Next.Block>
-    </Next.Toolbar.Root>
+    </Toolbar.Root>
+    <Toolbar.Root aria-label='Valence over hue'>
+      <Toolbar.Text>Valence over hue</Toolbar.Text>
+      <Block>
+        <Icon icon='ph--warning--regular' hue='blue' valence='error' data-testid={`both-${size}`} />
+      </Block>
+      <Block>
+        <Icon icon='ph--warning--regular' valence='error' data-testid={`error-${size}`} />
+      </Block>
+    </Toolbar.Root>
+    <Toolbar.Root aria-label='Tone, spin and size'>
+      <Toolbar.Text>Tone, spin, size</Toolbar.Text>
+      <Block>
+        <Icon icon='ph--note--regular' tone='description' data-testid={`tone-description-${size}`} />
+      </Block>
+      <Block>
+        <Icon icon='ph--note--regular' tone='subdued' data-testid={`tone-subdued-${size}`} />
+      </Block>
+      <Block>
+        <Icon icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`} />
+      </Block>
+      <Block>
+        <Icon icon='ph--star--regular' size='xs' data-testid={`small-${size}`} />
+      </Block>
+    </Toolbar.Root>
   </>
 );
 

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { DEFAULT_INPUT, isTruthy } from '@dxos/conductor';
-import { Next } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks/index.ts';
@@ -18,7 +18,7 @@ export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => 
 
   return (
     <div className='flex w-full justify-center items-center'>
-      <Next.Icon
+      <Icon
         icon='ph--sun--regular'
         classNames={['transition opacity-20 duration-1000', isTruthy(value) && 'opacity-100 text-yellow-500']}
         size='xl'

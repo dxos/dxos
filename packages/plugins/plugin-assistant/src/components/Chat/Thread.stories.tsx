@@ -19,7 +19,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { ChatThread, type ChatThreadEvent, type ChatView } from '@dxos/react-ui-assistant';
 import {
   type MessageGenerator,
@@ -131,9 +131,9 @@ const RemountableThread = (props: { messages: MessageType.Message[]; viewType?: 
   const [mounted, setMounted] = useState(true);
   return (
     <div className='flex flex-col h-full'>
-      <Next.Button data-testid='story.toggleMount' onClick={() => setMounted((value) => !value)}>
+      <Button data-testid='story.toggleMount' onClick={() => setMounted((value) => !value)}>
         {mounted ? 'Unmount' : 'Mount'}
-      </Next.Button>
+      </Button>
       {mounted && <Thread {...props} />}
     </div>
   );

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Empty, Panel, ScrollArea, Select, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type StageInfo = {
@@ -55,36 +55,36 @@ export const PipelinePanel = ({
   const pipeline = pipelines.find((item) => item.id === selected) ?? pipelines[0];
   const stages = pipeline?.stages ?? [];
   return (
-    <Next.Panel.Root classNames={classNames}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Select.Root
+    <Panel.Root classNames={classNames}>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Select.Root
             value={[selected]}
             onValueChange={({ value: [value] }) => onSelect(value)}
             items={pipelines.map((item) => ({ value: item.id, label: item.label }))}
           >
-            <Next.Select.Trigger placeholder='Pipeline' />
-            <Next.Select.Content>
+            <Select.Trigger placeholder='Pipeline' />
+            <Select.Content>
               {pipelines.map((item) => (
-                <Next.Select.Item key={item.id} item={{ value: item.id, label: item.label }} />
+                <Select.Item key={item.id} item={{ value: item.id, label: item.label }} />
               ))}
-            </Next.Select.Content>
-          </Next.Select.Root>
+            </Select.Content>
+          </Select.Root>
           <div className='grow' />
           <span className='text-sm text-description tabular-nums'>{processed} processed</span>
-          <Next.Button
+          <Button
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
             iconOnly
             label={running ? 'Stop' : 'Start'}
             disabled={running ? !onStop : !onStart}
             onClick={() => (running ? onStop?.() : onStart?.())}
           />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
-            {stages.length === 0 && <Next.Empty>No stages.</Next.Empty>}
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
+            {stages.length === 0 && <Empty>No stages.</Empty>}
             {stages.map((stage) => (
               <div
                 key={stage.id}
@@ -97,9 +97,9 @@ export const PipelinePanel = ({
                 {stage.description && <span className='text-sm text-description truncate'>{stage.description}</span>}
               </div>
             ))}
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

@@ -6,7 +6,7 @@ import React from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Accordion, Empty, Icon, type IconProps, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';
@@ -21,7 +21,7 @@ const STATUS_ICONS: Record<RunStatus, string> = {
   pending: 'ph--clock--regular',
 };
 
-const STATUS_ICON_PROPS: Record<RunStatus, Pick<Next.IconProps, 'valence' | 'tone'>> = {
+const STATUS_ICON_PROPS: Record<RunStatus, Pick<IconProps, 'valence' | 'tone'>> = {
   success: { valence: 'success' },
   failure: { valence: 'error' },
   incomplete: { valence: 'warning' },
@@ -40,39 +40,39 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
   const runs = useRoutineRuns(db, subject);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root />
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root orientation='vertical'>
-          <Next.ScrollArea.Viewport>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root />
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
             {runs.length === 0 ? (
-              <Next.Empty>{t('history.empty.message')}</Next.Empty>
+              <Empty>{t('history.empty.message')}</Empty>
             ) : (
-              <Next.Accordion.Root>
+              <Accordion.Root>
                 {runs.map((run) => (
-                  <Next.Accordion.Item key={getRunId(run)} value={getRunId(run)}>
-                    <Next.Accordion.ItemTrigger>
+                  <Accordion.Item key={getRunId(run)} value={getRunId(run)}>
+                    <Accordion.ItemTrigger>
                       <span className='flex items-center gap-2 min-w-0'>
-                        <Next.Icon icon={STATUS_ICONS[run.status]} {...STATUS_ICON_PROPS[run.status]} />
+                        <Icon icon={STATUS_ICONS[run.status]} {...STATUS_ICON_PROPS[run.status]} />
                         <span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>
                         <span className='truncate text-description'>
                           {`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}
                         </span>
                       </span>
-                    </Next.Accordion.ItemTrigger>
-                    <Next.Accordion.ItemContent>
+                    </Accordion.ItemTrigger>
+                    <Accordion.ItemContent>
                       <JsonHighlighter data={toJsonData(run)} classNames='[&_pre]:!text-xs [&_code]:!text-xs' />
-                    </Next.Accordion.ItemContent>
-                  </Next.Accordion.Item>
+                    </Accordion.ItemContent>
+                  </Accordion.Item>
                 ))}
-              </Next.Accordion.Root>
+              </Accordion.Root>
             )}
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

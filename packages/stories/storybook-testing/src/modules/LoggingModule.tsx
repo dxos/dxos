@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { Logger } from '@dxos/react-ui-debug';
 
 /**
@@ -13,18 +13,18 @@ import { Logger } from '@dxos/react-ui-debug';
  */
 export const LoggingModule = () => (
   <Logger.Root>
-    <Next.Panel.Root>
-      <Next.Panel.Header>
+    <Panel.Root>
+      <Panel.Header>
         <Logger.Toolbar />
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Logger.Content>
           <Logger.List />
         </Logger.Content>
-      </Next.Panel.Body>
-      <Next.Panel.Footer>
+      </Panel.Body>
+      <Panel.Footer>
         <Logger.Filter />
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+      </Panel.Footer>
+    </Panel.Root>
   </Logger.Root>
 );

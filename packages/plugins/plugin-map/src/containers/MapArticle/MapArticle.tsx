@@ -6,7 +6,7 @@ import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'reac
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Flex, type FlexProps, Next, useControlledState } from '@dxos/react-ui';
+import { Flex, type FlexProps, Panel, useControlledState } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
 
@@ -74,13 +74,13 @@ export const MapArticle = ({ role, subject, provider, ...props }: MapArticleProp
   const Root = role === AppSurface.Section.role ? Container : Fragment;
   return (
     <Root>
-      <Next.Panel.Root>
-        <Next.Panel.Body>
+      <Panel.Root>
+        <Panel.Body>
           {provider && (
             <MapArticleInner key={provider.id} provider={provider} role={role} subject={subject} {...props} />
           )}
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </Root>
   );
 };

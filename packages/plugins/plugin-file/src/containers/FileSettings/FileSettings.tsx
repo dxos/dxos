@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { useClient } from '@dxos/react-client';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -52,18 +52,18 @@ export const FileSettings = ({ subject }: FileSettingsProps) => {
               label={t('settings.backend.label')}
               description={active?.description ?? t('settings.backend.description')}
             >
-              <Next.Select.Root
+              <Select.Root
                 value={[activeStorage]}
                 onValueChange={({ value: [value] }) => handleChange(value)}
                 items={backends.map((backend) => ({ value: backend.storage, label: backend.name }))}
               >
-                <Next.Select.Trigger placeholder={t('settings.backend.placeholder')} />
-                <Next.Select.Content>
+                <Select.Trigger placeholder={t('settings.backend.placeholder')} />
+                <Select.Content>
                   {backends.map((backend) => (
-                    <Next.Select.Item key={backend.storage} item={{ value: backend.storage, label: backend.name }} />
+                    <Select.Item key={backend.storage} item={{ value: backend.storage, label: backend.name }} />
                   ))}
-                </Next.Select.Content>
-              </Next.Select.Root>
+                </Select.Content>
+              </Select.Root>
             </Form.Field>
           </Form.FieldSet>
         </Form.Content>

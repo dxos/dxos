@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Label, Next } from '@dxos/react-ui';
+import { type Label, Main } from '@dxos/react-ui';
 
 import { useBreakpoints, useDeckState } from '#hooks';
 import { meta } from '#meta';
@@ -27,7 +27,7 @@ export const Sidebar = () => {
   );
 
   return (
-    <Next.Main.NavigationSidebar
+    <Main.NavigationSidebar
       // The navigation surface declares its rail and panel as focus areas of their own.
       landmark={false}
       data-testid='deck.sidebar'
@@ -35,7 +35,7 @@ export const Sidebar = () => {
       classNames={['grid', topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
       <Surface.Surface type={AppSurface.Navigation} data={navigationData} limit={1} />
-    </Next.Main.NavigationSidebar>
+    </Main.NavigationSidebar>
   );
 };
 

@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { createObject } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { Next } from '@dxos/react-ui';
+import { useThemeMode } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -56,7 +56,7 @@ const documentText = (canvasElement: HTMLElement): string => {
 };
 
 const Render = (args: EditorViewProps) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
@@ -82,7 +82,7 @@ const ALICE = 'The fast brown fox jumps over the sleepy dog.';
 const BOB = 'The swift brown fox leaps over the lazy dog.';
 
 const MultiAuthorRender = (args: EditorViewProps) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),

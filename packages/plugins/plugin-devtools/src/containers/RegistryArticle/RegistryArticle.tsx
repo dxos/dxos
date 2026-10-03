@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { JsonView, Placeholder, Searchbar } from '@dxos/devtools';
 import { Entity, Format, Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { Next } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
@@ -130,13 +130,13 @@ export const RegistryArticle = ({ role }: { role?: string }) => {
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root>
           <Searchbar placeholder='Filter...' onChange={setFilter} />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         <div className={mx('h-full grid grid-cols-[2fr_1fr] overflow-hidden')}>
           <div className={mx('flex flex-col dx-grow overflow-hidden')}>
             <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClicked} />
@@ -145,8 +145,8 @@ export const RegistryArticle = ({ role }: { role?: string }) => {
             {detailJson ? <JsonView data={detailJson} /> : <Placeholder label='Details' />}
           </div>
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

@@ -16,7 +16,7 @@ import React, { useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Container, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type EscapeBehavior, Picker } from './Picker.tsx';
@@ -68,7 +68,7 @@ const DefaultStory = ({
   );
 
   return (
-    <Next.Container gutter='sm' classNames='border border-separator rounded-md py-form-gap'>
+    <Container gutter='sm' classNames='border border-separator rounded-md py-form-gap'>
       <Picker.Root>
         <Picker.Input
           autoFocus
@@ -76,8 +76,8 @@ const DefaultStory = ({
           placeholder={controlled ? 'Filter…' : '↑/↓ to navigate, Enter to pick'}
           {...(controlled && { value: query, onValueChange: setQuery })}
         />
-        <Next.ScrollArea.Root classNames='max-h-[20rem] py-form-gap'>
-          <Next.ScrollArea.Viewport>
+        <ScrollArea.Root classNames='max-h-[20rem] py-form-gap'>
+          <ScrollArea.Viewport>
             <ul role='listbox' className='flex flex-col'>
               {visible.map(({ item, originalIndex }) => {
                 const disabled = disabledIndices.includes(originalIndex);
@@ -99,13 +99,13 @@ const DefaultStory = ({
                 </li>
               )}
             </ul>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Picker.Root>
       <div className='text-sm text-description'>
         Picked: <span className='font-mono'>{picked ?? '—'}</span>
       </div>
-    </Next.Container>
+    </Container>
   );
 };
 

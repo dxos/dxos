@@ -7,7 +7,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { MAX_LIST_LIMIT, type PickerKind, TOOL_METADATA } from '@dxos/introspect-tools';
-import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Banner, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -149,10 +149,10 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
   if (!serverUrl) {
     return (
       <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
-        <Next.Banner.Root valence='info'>
-          <Next.Banner.Title>{t('not-configured.title')}</Next.Banner.Title>
-          <Next.Banner.Body>{t('not-configured.message')}</Next.Banner.Body>
-        </Next.Banner.Root>
+        <Banner.Root valence='info'>
+          <Banner.Title>{t('not-configured.title')}</Banner.Title>
+          <Banner.Body>{t('not-configured.message')}</Banner.Body>
+        </Banner.Root>
       </div>
     );
   }
@@ -163,10 +163,10 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
   if (error) {
     return (
       <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
-        <Next.Banner.Root valence='error'>
-          <Next.Banner.Title>{t('connection-failed.title')}</Next.Banner.Title>
-          <Next.Banner.Body>{error.message}</Next.Banner.Body>
-        </Next.Banner.Root>
+        <Banner.Root valence='error'>
+          <Banner.Title>{t('connection-failed.title')}</Banner.Title>
+          <Banner.Body>{error.message}</Banner.Body>
+        </Banner.Root>
       </div>
     );
   }

@@ -6,7 +6,7 @@ import React, { type ComponentProps, type ComponentPropsWithRef, type PropsWithC
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { MediaPlayer, type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -102,7 +102,7 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     if (!src) {
       return null;
     }
-    return <Next.MediaPlayer src={src} alt={alt} classNames='w-full' />;
+    return <MediaPlayer src={src} alt={alt} classNames='w-full' />;
   },
   ol: ({ children, ...props }) => (
     <ol className='ps-6 leading-tight list-decimal' {...props}>

@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { type Format } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { Next } from '@dxos/react-ui';
+import { Block, Field, Icon, Typography } from '@dxos/react-ui';
 
 import { type FormFieldLabelPlacement, type FormPresentation } from '#types';
 
@@ -20,7 +20,7 @@ const FORM_FIELD_NAME = 'Form.Field';
 
 /** A bound value rendered as text: what a `static` presentation shows in place of the control. */
 export const FormStaticValue = ({ value, format }: { value: unknown; format?: Format.TypeFormat }) => (
-  <Next.Typography truncate>{formatStaticValue(value, format)}</Next.Typography>
+  <Typography truncate>{formatStaticValue(value, format)}</Typography>
 );
 
 export type FormFieldProps<T = any> = PropsWithChildren<{
@@ -138,7 +138,7 @@ export const FormFieldRow = <T,>({
   // A toggle labels itself, except in a settings row, whose header column holds every label.
   const showHeader = resolved.showLabel && !!label && (labelPlacement !== 'beside' || settings);
   const row = (
-    <Next.Field.Root
+    <Field.Root
       layout={settings ? 'row' : 'stack'}
       level={settings ? '+1' : undefined}
       invalid={!!error}
@@ -157,24 +157,20 @@ export const FormFieldRow = <T,>({
       }
     >
       {showHeader && (
-        <Next.Field.Header>
-          {standalone || readonly ? (
-            <Next.Typography truncate>{label}</Next.Typography>
-          ) : (
-            <Next.Field.Label>{label}</Next.Field.Label>
-          )}
+        <Field.Header>
+          {standalone || readonly ? <Typography truncate>{label}</Typography> : <Field.Label>{label}</Field.Label>}
           {labelEnd}
           {error && (
-            <Next.Block>
-              <Next.Icon icon='ph--warning--regular' valence='error' label={error} />
-            </Next.Block>
+            <Block>
+              <Icon icon='ph--warning--regular' valence='error' label={error} />
+            </Block>
           )}
-        </Next.Field.Header>
+        </Field.Header>
       )}
-      {settings && description && <Next.Field.HelperText>{description}</Next.Field.HelperText>}
+      {settings && description && <Field.HelperText>{description}</Field.HelperText>}
       {control}
-      {resolved.showError && error && <Next.Field.ErrorText>{error}</Next.Field.ErrorText>}
-    </Next.Field.Root>
+      {resolved.showError && error && <Field.ErrorText>{error}</Field.ErrorText>}
+    </Field.Root>
   );
 
   return binding ? <FormFieldBindingProvider {...binding}>{row}</FormFieldBindingProvider> : row;

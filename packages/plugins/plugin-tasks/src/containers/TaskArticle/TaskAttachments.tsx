@@ -22,7 +22,7 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import { CardMasonry } from '@dxos/plugin-space/components';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Container, Icon, Typography, useTranslation } from '@dxos/react-ui';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -271,11 +271,11 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
 
   return (
     // A section of the pane's column, headed like the questions and artifacts around it.
-    <Next.Container asChild gutter='inherit' gap='md'>
+    <Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.attachments'>
-        <Next.Typography asChild tone='subdued'>
+        <Typography asChild tone='subdued'>
           <h2>{t('task-attachments.label')}</h2>
-        </Next.Typography>
+        </Typography>
         <div
           className={mx(
             'rounded-md border border-dashed',
@@ -300,13 +300,13 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
             </RemoveAttachmentContext.Provider>
           ) : (
             <>
-              <Next.Icon icon='ph--paperclip--regular' />
+              <Icon icon='ph--paperclip--regular' />
               {t('task-attachments.drop-area.label')}
             </>
           )}
         </div>
       </section>
-    </Next.Container>
+    </Container>
   );
 };
 

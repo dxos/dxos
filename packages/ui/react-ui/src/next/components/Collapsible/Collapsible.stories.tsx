@@ -9,24 +9,24 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { realHover, realUnhover, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Collapsible, Field, Input, Switch, Typography } from '../index.ts';
 
 const DefaultStory = () => (
-  <Next.Collapsible.Root>
-    <Next.Collapsible.Trigger>Advanced settings</Next.Collapsible.Trigger>
-    <Next.Collapsible.Content data-testid='content'>
-      <Next.Typography>These settings change how your space syncs.</Next.Typography>
-      <Next.Field.Root>
-        <Next.Field.Header>
-          <Next.Field.Label>Sync interval</Next.Field.Label>
-        </Next.Field.Header>
-        <Next.Input defaultValue='30s' />
-      </Next.Field.Root>
-      <Next.Switch label='Sync over cellular' />
-    </Next.Collapsible.Content>
-  </Next.Collapsible.Root>
+  <Collapsible.Root>
+    <Collapsible.Trigger>Advanced settings</Collapsible.Trigger>
+    <Collapsible.Content data-testid='content'>
+      <Typography>These settings change how your space syncs.</Typography>
+      <Field.Root>
+        <Field.Header>
+          <Field.Label>Sync interval</Field.Label>
+        </Field.Header>
+        <Input defaultValue='30s' />
+      </Field.Root>
+      <Switch label='Sync over cellular' />
+    </Collapsible.Content>
+  </Collapsible.Root>
 );
 
 const meta = {

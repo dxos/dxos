@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 export type RelatedItemsListProps = {
@@ -29,9 +29,9 @@ export const RelatedItemsList = ({ items, onNavigate }: RelatedItemsListProps) =
               onClick={() => onNavigate?.(item.id)}
               className='flex w-full items-center gap-2 px-3 py-2 text-start dx-focus-ring'
             >
-              <Next.Icon icon='ph--book-open--regular' size='md' />
+              <Icon icon='ph--book-open--regular' size='md' />
               <Listbox.ItemText>{item.name ?? 'Untitled'}</Listbox.ItemText>
-              <Next.Icon icon='ph--caret-right--regular' size='md' />
+              <Icon icon='ph--caret-right--regular' size='md' />
             </button>
           </Listbox.Item>
         ))}

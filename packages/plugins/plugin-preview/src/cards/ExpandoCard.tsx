@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { Next } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 const schemaForValue = (value: unknown): Schema.Codec<any, any> | undefined => {
@@ -63,7 +63,7 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
   );
 
   return (
-    <Next.Card.Body>
+    <Card.Body>
       <Form.Root schema={schema} values={subject} autoSave onSave={handleSave}>
         <Form.Viewport>
           <Form.Content>
@@ -71,6 +71,6 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
-    </Next.Card.Body>
+    </Card.Body>
   );
 };

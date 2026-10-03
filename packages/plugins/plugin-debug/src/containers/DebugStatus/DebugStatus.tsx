@@ -8,7 +8,7 @@ import { TimeoutError } from '@dxos/async';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Next } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 
 const styles = {
   success: 'text-sky-300 dark:text-green-700',
@@ -89,7 +89,7 @@ const ErrorIndicator = () => {
   if (errorRef.current) {
     return (
       <StatusBar.Item>
-        <Next.Button
+        <Button
           variant='ghost'
           icon='ph--warning-circle--duotone'
           iconOnly
@@ -102,7 +102,7 @@ const ErrorIndicator = () => {
   } else {
     return (
       <StatusBar.Item>
-        <Next.Button variant='ghost' icon='ph--check--regular' iconOnly label='No errors.' />
+        <Button variant='ghost' icon='ph--check--regular' iconOnly label='No errors.' />
       </StatusBar.Item>
     );
   }
@@ -121,13 +121,13 @@ const SwarmIndicator = () => {
   if (state === 0) {
     return (
       <StatusBar.Item>
-        <Next.Button variant='ghost' icon='ph--lightning--regular' iconOnly label='Connected to swarm.' />
+        <Button variant='ghost' icon='ph--lightning--regular' iconOnly label='Connected to swarm.' />
       </StatusBar.Item>
     );
   } else {
     return (
       <StatusBar.Item>
-        <Next.Button
+        <Button
           variant='ghost'
           icon='ph--lightning-slash--regular'
           iconOnly
@@ -168,7 +168,7 @@ const SavingIndicator = () => {
     case 2:
       return (
         <StatusBar.Item>
-          <Next.Button
+          <Button
             variant='ghost'
             icon='ph--circle--duotone'
             iconOnly
@@ -180,20 +180,14 @@ const SavingIndicator = () => {
     case 1:
       return (
         <StatusBar.Item>
-          <Next.Button
-            variant='ghost'
-            icon='ph--circle--duotone'
-            iconOnly
-            label='Saving...'
-            classNames={styles.success}
-          />
+          <Button variant='ghost' icon='ph--circle--duotone' iconOnly label='Saving...' classNames={styles.success} />
         </StatusBar.Item>
       );
     case 0:
     default:
       return (
         <StatusBar.Item>
-          <Next.Button variant='ghost' icon='ph--circle--duotone' iconOnly label='Modified indicator.' />
+          <Button variant='ghost' icon='ph--circle--duotone' iconOnly label='Modified indicator.' />
         </StatusBar.Item>
       );
   }

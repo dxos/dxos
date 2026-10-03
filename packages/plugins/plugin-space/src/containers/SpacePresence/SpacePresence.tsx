@@ -11,7 +11,18 @@ import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
-import { Next, type ThemedClassName, useDefaultValue, useId, useTranslation } from '@dxos/react-ui';
+import {
+  AttentionGlyph,
+  type AttentionGlyphProps,
+  Avatar,
+  Popover,
+  type ThemedClassName,
+  Tooltip,
+  toAvatarHue,
+  useDefaultValue,
+  useId,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { ComplexMap, hexToFallback } from '@dxos/util';
@@ -93,7 +104,7 @@ export type Member = Space.Member & {
   currentlyAttended: boolean;
 };
 
-type AvatarSize = ComponentProps<typeof Next.Avatar.Root>['size'];
+type AvatarSize = ComponentProps<typeof Avatar.Root>['size'];
 
 export type MemberPresenceProps = ThemedClassName<{
   size?: AvatarSize;
@@ -113,7 +124,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
   return (
     <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
       {members.slice(0, 3).map((member, i) => (
-        <Next.Tooltip.Trigger
+        <Tooltip.Trigger
           key={member.identityKey}
           side='bottom'
           content={getName(member)}
@@ -126,22 +137,22 @@ export const FullPresence = (props: MemberPresenceProps) => {
             onClick={() => onMemberClick?.(member)}
             size={size}
           />
-        </Next.Tooltip.Trigger>
+        </Tooltip.Trigger>
       ))}
 
       {members.length > 3 && (
-        <Next.Popover.Root positioning={{ placement: 'bottom' }}>
-          <Next.Popover.Trigger className='grid focus:outline-hidden'>
+        <Popover.Root positioning={{ placement: 'bottom' }}>
+          <Popover.Trigger className='grid focus:outline-hidden'>
             {/* TODO(wittjosiah): Make text fit. */}
-            <Next.Avatar.Root
+            <Avatar.Root
               status='inactive'
               style={{ zIndex: members.length - 4 }}
               fallback={`+${members.length - 3}`}
               size={size}
             />
-          </Next.Popover.Trigger>
-          <Next.Popover.Content>
-            <Next.Popover.Body classNames='max-h-56'>
+          </Popover.Trigger>
+          <Popover.Content>
+            <Popover.Body classNames='max-h-56'>
               <Listbox.Root
                 items={members.map((member) => ({ value: member.identityKey ?? '', label: member.identityKey ?? '' }))}
               >
@@ -160,9 +171,9 @@ export const FullPresence = (props: MemberPresenceProps) => {
                   ))}
                 </Listbox.Content>
               </Listbox.Root>
-            </Next.Popover.Body>
-          </Next.Popover.Content>
-        </Next.Popover.Root>
+            </Popover.Body>
+          </Popover.Content>
+        </Popover.Root>
       )}
     </div>
   );
@@ -184,9 +195,9 @@ const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
     const name = getName(member);
     const nameId = useId('presence-name');
     const avatar = (
-      <Next.Avatar.Root
+      <Avatar.Root
         status={status}
-        hue={Next.toAvatarHue(member.data?.hue || fallbackValue.hue)}
+        hue={toAvatarHue(member.data?.hue || fallbackValue.hue)}
         data-testid='spacePlugin.presence.member'
         data-status={status}
         size={size}
@@ -246,20 +257,20 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
 
 export type SmallPresenceProps = {
   count?: number;
-} & Pick<Next.AttentionGlyphProps, 'attended' | 'containsAttended'>;
+} & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Next.Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>
-      <Next.AttentionGlyph
+    <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>
+      <AttentionGlyph
         attended={attended}
         containsAttended={containsAttended}
         presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
         classNames='self-center mx-1'
       />
-    </Next.Tooltip.Trigger>
+    </Tooltip.Trigger>
   );
 };
 

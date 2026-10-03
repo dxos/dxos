@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Block, Card, DateInput, Field, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Segment } from '#types';
@@ -74,35 +74,35 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
     const departAt = Segment.getDepartAt(segment);
 
     return (
-      <Next.Card.Root ref={forwardedRef}>
-        <Next.Card.Header>
-          <Next.Block>
-            <Next.Icon icon={icon} />
-          </Next.Block>
-          <Next.Card.Title>{title}</Next.Card.Title>
-          <Next.Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
-        </Next.Card.Header>
-        <Next.Card.Body>
+      <Card.Root ref={forwardedRef}>
+        <Card.Header>
+          <Block>
+            <Icon icon={icon} />
+          </Block>
+          <Card.Title>{title}</Card.Title>
+          <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
+        </Card.Header>
+        <Card.Body>
           {route && (
-            <Next.Card.Row>
-              <Next.Card.Text variant='description'>{route}</Next.Card.Text>
-            </Next.Card.Row>
+            <Card.Row>
+              <Card.Text variant='description'>{route}</Card.Text>
+            </Card.Row>
           )}
-          <Next.Card.Row>
-            <Next.Block>
-              <Next.Icon icon='ph--calendar--regular' />
-            </Next.Block>
-            <Next.Field.Root>
-              <Next.DateInput
+          <Card.Row>
+            <Block>
+              <Icon icon='ph--calendar--regular' />
+            </Block>
+            <Field.Root>
+              <DateInput
                 type='datetime-local'
                 aria-label={t('segment.depart.placeholder')}
                 value={isoToLocalDateTime(departAt)}
                 onValueChange={handleDepartChange}
               />
-            </Next.Field.Root>
-          </Next.Card.Row>
-        </Next.Card.Body>
-      </Next.Card.Root>
+            </Field.Root>
+          </Card.Row>
+        </Card.Body>
+      </Card.Root>
     );
   },
 );

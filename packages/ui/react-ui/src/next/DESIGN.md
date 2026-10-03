@@ -17,7 +17,8 @@
 
 ## Decisions
 
-1. **Scope.** A parallel namespace (`Next.*`) alongside the current primitives; plugins opt in per component and old
+1. **Scope.** _(Superseded after the cut-over: the `Next` namespace is removed and the components export flat from
+   `@dxos/react-ui`.)_ A parallel namespace (`Next.*`) alongside the current primitives; plugins opt in per component and old
    primitives retire once unused. Only a subset of components is in scope, starting with those in the original
    experimental story (since replaced by `components.stories.tsx`): Container, Toolbar, Block, Icon, Input, Button, Typography.
 2. **Sizes.** CSS is the source of truth: theme rules keyed by `[data-size=xs|sm|md|lg|xl]` define `--block-size`,

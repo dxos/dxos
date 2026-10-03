@@ -14,7 +14,7 @@ import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
 import * as MapRole from '@dxos/plugin-map/MapRole';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -268,38 +268,38 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {/* Row 1: calendar + segment stack. */}
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] overflow-hidden'>
           <NaturalCalendar.Root>
-            <Next.Panel.Root classNames='hidden @3xl:block border-r border-subdued-separator'>
-              <Next.Panel.Header>
+            <Panel.Root classNames='hidden @3xl:block border-r border-subdued-separator'>
+              <Panel.Header>
                 <NaturalCalendar.Toolbar />
-              </Next.Panel.Header>
-              <Next.Panel.Body asChild>
+              </Panel.Header>
+              <Panel.Body asChild>
                 <NaturalCalendar.Grid
                   dates={calendarDates.map((startDate) => ({ startDate }))}
                   onSelect={handleDateSelect}
                   onSelectRange={handleDateRangeSelect}
                 />
-              </Next.Panel.Body>
-            </Next.Panel.Root>
+              </Panel.Body>
+            </Panel.Root>
           </NaturalCalendar.Root>
 
-          <Next.Panel.Root>
-            <Next.Panel.Header>
+          <Panel.Root>
+            <Panel.Header>
               <ActionToolbar {...menuActions} attendableId={attendableId} />
-            </Next.Panel.Header>
-            <Next.Panel.Body asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
-            </Next.Panel.Body>
-          </Next.Panel.Root>
+            </Panel.Body>
+          </Panel.Root>
         </div>
 
         {/* Row 2: generic map surface (plugin-map), toggled via the toolbar. It resolves the trip's
             markers via the contributed MarkerProvider and reads the current selection via useSelection. */}
         {showGlobe && mapAvailable && (
-          <Next.Panel.Root classNames='border-t border-separator'>
-            <Next.Panel.Body>
+          <Panel.Root classNames='border-t border-separator'>
+            <Panel.Body>
               <Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
-            </Next.Panel.Body>
-          </Next.Panel.Root>
+            </Panel.Body>
+          </Panel.Root>
         )}
       </div>
     </div>

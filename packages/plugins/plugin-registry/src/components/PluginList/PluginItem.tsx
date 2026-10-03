@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Card, Group, Icon, Link, Switch, Tag, type TagHue, Typography, useTranslation } from '@dxos/react-ui';
 import { ACCENT_HUES } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -101,35 +101,35 @@ export const PluginItem = ({
   const handleUpdate = useCallback(() => onUpdate?.(id), [id, onUpdate]);
 
   return (
-    <Next.Card.Root role='listitem' aria-labelledby={titleId} data-testid={`pluginList.${id}`}>
-      <Next.Card.Tile icon={icon} hue={hue} aria-label={t('details.label')} onClick={handleClick} />
-      <Next.Card.Body>
-        <Next.Card.Header>
-          <Next.Card.Title id={titleId} truncate>
+    <Card.Root role='listitem' aria-labelledby={titleId} data-testid={`pluginList.${id}`}>
+      <Card.Tile icon={icon} hue={hue} aria-label={t('details.label')} onClick={handleClick} />
+      <Card.Body>
+        <Card.Header>
+          <Card.Title id={titleId} truncate>
             {name ?? id}
-          </Next.Card.Title>
+          </Card.Title>
           {failure && <PluginFailureBadge failure={failure} />}
           {deviceOnly && (
-            <Next.Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' tone='description' />
+            <Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' tone='description' />
           )}
-        </Next.Card.Header>
+        </Card.Header>
         {description && (
-          <Next.Typography tone='description' lines={4}>
+          <Typography tone='description' lines={4}>
             {description}
-          </Next.Typography>
+          </Typography>
         )}
         {displayTags.length > 0 && (
-          <Next.Group>
+          <Group>
             {displayTags.map((tag) => (
-              <Next.Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
+              <Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
                 {tag.toUpperCase()}
-              </Next.Tag>
+              </Tag>
             ))}
-          </Next.Group>
+          </Group>
         )}
-        <Next.Card.Footer justify='between'>
-          <Next.Group>
-            <Next.Button
+        <Card.Footer justify='between'>
+          <Group>
+            <Button
               variant='ghost'
               iconOnly
               icon='ph--gear--regular'
@@ -137,38 +137,38 @@ export const PluginItem = ({
               disabled={!hasSettings}
               onClick={handleSettings}
             />
-            <Next.Link asChild variant='neutral'>
+            <Link asChild variant='neutral'>
               <button type='button' onClick={handleClick}>
                 {t('details.label')}
               </button>
-            </Next.Link>
-          </Next.Group>
+            </Link>
+          </Group>
           {isUpdating ? (
-            <Next.Button variant='primary' disabled label={t('updating.label')} />
+            <Button variant='primary' disabled label={t('updating.label')} />
           ) : showUpdateButton ? (
-            <Next.Button variant='primary' label={t('update.label')} onClick={handleUpdate} />
+            <Button variant='primary' label={t('update.label')} onClick={handleUpdate} />
           ) : showInstallButton ? (
-            <Next.Button
+            <Button
               variant='primary'
               disabled={isInstalling}
               label={isInstalling ? t('installing.label') : t('install.label')}
               onClick={handleInstall}
             />
           ) : (
-            <Next.Switch
+            <Switch
               aria-label={name ?? id}
               checked={isEnabled}
               disabled={readOnly}
               onCheckedChange={({ checked }) => onChange?.(id, checked)}
             />
           )}
-        </Next.Card.Footer>
-      </Next.Card.Body>
-    </Next.Card.Root>
+        </Card.Footer>
+      </Card.Body>
+    </Card.Root>
   );
 };
 
-const tagColors: Record<RegistryTagType, Next.TagHue> = {
+const tagColors: Record<RegistryTagType, TagHue> = {
   new: 'rose',
   // Tier hues ramp green -> blue -> purple so the ordering reads without knowing the labels.
   beta: 'green',

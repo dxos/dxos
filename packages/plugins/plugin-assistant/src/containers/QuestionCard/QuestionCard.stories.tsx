@@ -14,7 +14,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Block, Card, Icon } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -67,15 +67,15 @@ const DefaultStory = () => {
           <div className='flex flex-col gap-4 w-full items-center'>
             <span className='text-sm text-description'>{role}</span>
             <CardContainer role={role} icon='ph--question--regular'>
-              <Next.Card.Root border={false}>
-                <Next.Card.Header>
-                  <Next.Block>
-                    <Next.Icon icon='ph--question--regular' />
-                  </Next.Block>
-                  <Next.Card.Title>{task.title}</Next.Card.Title>
-                </Next.Card.Header>
+              <Card.Root border={false}>
+                <Card.Header>
+                  <Block>
+                    <Icon icon='ph--question--regular' />
+                  </Block>
+                  <Card.Title>{task.title}</Card.Title>
+                </Card.Header>
                 <QuestionCard task={task} questionId={question.question.id} />
-              </Next.Card.Root>
+              </Card.Root>
             </CardContainer>
           </div>
         </div>

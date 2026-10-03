@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Select, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -28,20 +28,20 @@ export const Picker = <T extends { value: string; label: string }>({
   const sorted = useMemo(() => values?.sort(({ label: a }, { label: b }) => a.localeCompare(b)) ?? [], [values]);
 
   return (
-    <Next.Select.Root
+    <Select.Root
       items={[{ value: NULL, label: t('picker-none.label') }, ...sorted]}
       value={[value ?? NULL]}
       onValueChange={({ value: [value] }) => onChange?.(value === NULL ? null : value)}
     >
-      <Next.Select.Trigger placeholder={placeholder ?? t('picker-select.label')} />
-      <Next.Select.Content>
-        <Next.Select.ItemGroup>
-          <Next.Select.Item item={{ value: NULL, label: t('picker-none.label') }} />
+      <Select.Trigger placeholder={placeholder ?? t('picker-select.label')} />
+      <Select.Content>
+        <Select.ItemGroup>
+          <Select.Item item={{ value: NULL, label: t('picker-none.label') }} />
           {sorted.map(({ value, label }) => (
-            <Next.Select.Item key={value} item={{ value: value, label: label }} />
+            <Select.Item key={value} item={{ value: value, label: label }} />
           ))}
-        </Next.Select.ItemGroup>
-      </Next.Select.Content>
-    </Next.Select.Root>
+        </Select.ItemGroup>
+      </Select.Content>
+    </Select.Root>
   );
 };

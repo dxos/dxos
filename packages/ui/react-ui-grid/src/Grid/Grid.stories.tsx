@@ -8,7 +8,7 @@ import React, { type MouseEvent, type RefObject, useCallback, useRef, useState }
 import { defaultRowSize } from '@dxos/lit-grid';
 import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Combobox, Menu, virtualAnchor } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -72,34 +72,30 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
       </Grid.Root>
 
       {/* Menu */}
-      <Next.Menu.Root
-        open={menuOpen}
-        onOpenChange={({ open }) => setMenuOpen(open)}
-        positioning={Next.virtualAnchor(triggerRef)}
-      >
-        <Next.Menu.Content>
-          <Next.Menu.Item
+      <Menu.Root open={menuOpen} onOpenChange={({ open }) => setMenuOpen(open)} positioning={virtualAnchor(triggerRef)}>
+        <Menu.Content>
+          <Menu.Item
             onClick={() => console.log('[Click on dropdown menu item]')}
             item={{ value: 'Hello', label: 'Hello' }}
           />
-        </Next.Menu.Content>
-      </Next.Menu.Root>
+        </Menu.Content>
+      </Menu.Root>
 
       {/* Multiselect */}
-      <Next.Combobox.Root
+      <Combobox.Root
         items={storybookItems}
         multiple
         open={popoverOpen}
         onOpenChange={({ open }) => setPopoverOpen(open)}
         value={multiSelectValue}
         onValueChange={({ value }) => setMultiselectValue(value)}
-        positioning={Next.virtualAnchor(triggerRef)}
+        positioning={virtualAnchor(triggerRef)}
       >
-        <Next.Combobox.Content>
-          <Next.Combobox.Input placeholder='Search...' />
-          <Next.Combobox.List />
-        </Next.Combobox.Content>
-      </Next.Combobox.Root>
+        <Combobox.Content>
+          <Combobox.Input placeholder='Search...' />
+          <Combobox.List />
+        </Combobox.Content>
+      </Combobox.Root>
     </div>
   );
 };

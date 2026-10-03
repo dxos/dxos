@@ -17,7 +17,7 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import { Next } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ModuleContainer } from './ModuleContainer.tsx';
@@ -32,16 +32,16 @@ const PanelC = Role.make<Record<string, any>>('org.dxos.storybook.storyModules.p
 const ExamplePanel = ({ label }: { label: string }) => {
   const space = useActiveSpace();
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>{label}</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='p-2'>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Toolbar.Text>{label}</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='p-2'>
         <p className='text-sm text-description'>space: {space?.id ?? '…'}</p>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

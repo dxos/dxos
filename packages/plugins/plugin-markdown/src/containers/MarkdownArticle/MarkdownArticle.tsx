@@ -18,7 +18,7 @@ import { EffectEx } from '@dxos/effect';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 import {
   Editor,
@@ -324,7 +324,7 @@ const MarkdownArticleImpl = forwardRef<
     );
 
     if (binding.loading) {
-      return <Next.Panel.Root role={role} ref={forwardedRef} />;
+      return <Panel.Root role={role} ref={forwardedRef} />;
     }
 
     return (
@@ -351,24 +351,24 @@ const MarkdownArticleImpl = forwardRef<
             <RegisterEditorView id={id} attendableId={attendableId} />
             <RefocusEditor request={focusRequest} />
             {binding.overlays}
-            <Next.Panel.Root role={role} ref={forwardedRef}>
+            <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
-                <Next.Panel.Header>
+                <Panel.Header>
                   <MarkdownEditor.Toolbar
                     classNames='dx-document'
                     customActions={customActions}
                     viewModes={viewModes}
                   />
-                </Next.Panel.Header>
+                </Panel.Header>
               )}
-              <Next.Panel.Body classNames='flex flex-col'>
+              <Panel.Body classNames='flex flex-col'>
                 {binding.banner}
                 <MarkdownEditor.Content initialValue={binding.initialValue} />
                 <Editor.Blocks />
                 {/* Developer diagnostics panel (live editor state), gated behind the debug setting. */}
                 {settings.debug && <Editor.Diagnostics />}
-              </Next.Panel.Body>
-            </Next.Panel.Root>
+              </Panel.Body>
+            </Panel.Root>
           </Editor.Root>
         )}
       </MarkdownEditorProvider>

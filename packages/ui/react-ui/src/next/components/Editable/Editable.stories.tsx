@@ -9,12 +9,12 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { controlSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button, Editable, type EditableRootProps, Input, Typography, useEditable } from '../index.ts';
 
 type StoryArgs = SizeArgs &
-  Pick<Next.EditableRootProps, 'activation' | 'blurBehavior' | 'disabled' | 'placeholder'> & {
+  Pick<EditableRootProps, 'activation' | 'blurBehavior' | 'disabled' | 'placeholder'> & {
     /** Names the preview, to prove a caller's own label survives the machine's. */
     previewLabel?: string;
     initialValue?: string;
@@ -35,7 +35,7 @@ const DefaultStory = ({
 
   return (
     <>
-      <Next.Editable.Root
+      <Editable.Root
         value={value}
         onValueChange={(next) => {
           setValue(next);
@@ -46,13 +46,13 @@ const DefaultStory = ({
         blurBehavior={blurBehavior}
         disabled={disabled}
       >
-        <Next.Editable.Preview aria-label={previewLabel} data-testid='editable.preview' />
-        <Next.Editable.Input data-testid='editable.input' />
-      </Next.Editable.Root>
+        <Editable.Preview aria-label={previewLabel} data-testid='editable.preview' />
+        <Editable.Input data-testid='editable.input' />
+      </Editable.Root>
       {/* `onValueChange` fires on commit, never per keystroke: one entry per edit. */}
-      <Next.Typography tone='description' data-testid='editable.commits'>
+      <Typography tone='description' data-testid='editable.commits'>
         {commits.length === 0 ? 'No commits yet' : `Commits: ${commits.join(' · ')}`}
-      </Next.Typography>
+      </Typography>
     </>
   );
 };
@@ -184,7 +184,7 @@ export const TestLabel: Story = {
 const HeldOpenStory = ({ initialValue = 'Ship the spring release', held = true }: StoryArgs) => {
   const [value, setValue] = useState(initialValue);
   const [commits, setCommits] = useState<string[]>([]);
-  const { draft, editing, setDraft, edit, commit, revert } = Next.useEditable({
+  const { draft, editing, setDraft, edit, commit, revert } = useEditable({
     value,
     // Held open, the pane IS the editor; left alone, the machine announces the commit itself.
     editing: held ? true : undefined,
@@ -196,17 +196,17 @@ const HeldOpenStory = ({ initialValue = 'Ship the spring release', held = true }
 
   return (
     <>
-      <Next.Input data-testid='held.input' value={draft} onChange={(event) => setDraft(event.target.value)} />
+      <Input data-testid='held.input' value={draft} onChange={(event) => setDraft(event.target.value)} />
       <div className='flex gap-2'>
-        <Next.Button data-testid='held.edit' onClick={() => edit()}>
+        <Button data-testid='held.edit' onClick={() => edit()}>
           Edit
-        </Next.Button>
-        <Next.Button data-testid='held.commit' onClick={() => commit()}>
+        </Button>
+        <Button data-testid='held.commit' onClick={() => commit()}>
           Commit
-        </Next.Button>
-        <Next.Button data-testid='held.revert' onClick={() => revert()}>
+        </Button>
+        <Button data-testid='held.revert' onClick={() => revert()}>
           Revert
-        </Next.Button>
+        </Button>
       </div>
       <span data-testid='held.editing'>{editing ? 'editing' : 'preview'}</span>
       <span data-testid='held.value'>{value}</span>

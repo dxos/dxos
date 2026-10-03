@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Next, composable } from '@dxos/react-ui';
+import { Banner, composable } from '@dxos/react-ui';
 
 import { InitializeEmpty } from './InitializeEmpty.tsx';
 import { useTargetConnection } from './useTargetConnection.ts';
@@ -37,9 +37,9 @@ export const Initialize = composable<HTMLDivElement, InitializeProps<any>>(
         {message && (
           // A connected-but-empty target is a statement of fact, not something to act on — only the
           // missing connection is, so the warning valence stays with it.
-          <Next.Banner.Root valence={connection ? 'info' : 'warning'}>
-            <Next.Banner.Title>{message}</Next.Banner.Title>
-          </Next.Banner.Root>
+          <Banner.Root valence={connection ? 'info' : 'warning'}>
+            <Banner.Title>{message}</Banner.Title>
+          </Banner.Root>
         )}
       </InitializeEmpty>
     );

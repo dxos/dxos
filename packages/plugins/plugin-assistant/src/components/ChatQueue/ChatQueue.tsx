@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Message } from '@dxos/types';
 
@@ -60,7 +60,7 @@ const QueuedItem = ({ message, onCancel }: QueuedItemProps) => {
           overflows its max-width and the start of the prompt is what gets cut. */}
       <span className='min-w-0 truncate'>{Message.extractText(message)}</span>
       {onCancel && (
-        <Next.Button
+        <Button
           iconOnly
           icon='ph--x--regular'
           variant='ghost'

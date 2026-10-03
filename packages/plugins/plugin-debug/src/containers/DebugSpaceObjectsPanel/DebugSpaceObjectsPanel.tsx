@@ -9,7 +9,7 @@ import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
-import { Grid, Next } from '@dxos/react-ui';
+import { Grid, Icon, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
@@ -27,23 +27,23 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
   );
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Input
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Input
             placeholder='Search...'
             aria-label='Search'
             noAutoFill
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
-            end={<Next.Icon icon='ph--magnifying-glass--regular' />}
+            end={<Icon icon='ph--magnifying-glass--regular' />}
           />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Grid rows={2} classNames='divide-y divide-subdued-separator'>
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>
               <ObjectsTree
                 db={space.db}
                 filter={filter}
@@ -51,12 +51,12 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
                 onOpen={onOpen}
                 canOpen={canOpen}
               />
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
           {selectedObject && <JsonHighlighter classNames='p-1' data={selectedObject} />}
         </Grid>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

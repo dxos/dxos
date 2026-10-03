@@ -4,7 +4,7 @@
 
 import React, { Children, type PropsWithChildren, type ReactNode, useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Collapsible, Fieldset, SystemButton } from '@dxos/react-ui';
 
 import { useFormContext } from '../hooks/index.ts';
 
@@ -44,33 +44,33 @@ export const FormFieldSet = ({
   const [open, setOpen] = useState(defaultOpen);
   const showLabel = layout !== 'inline' && !!label;
   const canCollapse = !!collapsible && showLabel && Children.toArray(children).length > 0;
-  const helper = description && <Next.Fieldset.HelperText>{description}</Next.Fieldset.HelperText>;
+  const helper = description && <Fieldset.HelperText>{description}</Fieldset.HelperText>;
   const legend = showLabel && (
-    <Next.Fieldset.Legend size={nested ? undefined : 'md'} variant={nested ? undefined : 'section'}>
+    <Fieldset.Legend size={nested ? undefined : 'md'} variant={nested ? undefined : 'section'}>
       {label}
       {actions}
-      {canCollapse && <Next.SystemButton.Disclosure label={label} expanded={open} onExpandedChange={setOpen} />}
-    </Next.Fieldset.Legend>
+      {canCollapse && <SystemButton.Disclosure label={label} expanded={open} onExpandedChange={setOpen} />}
+    </Fieldset.Legend>
   );
 
   if (canCollapse) {
     return (
-      <Next.Collapsible.Root asChild open={open} onOpenChange={({ open }) => setOpen(open)}>
-        <Next.Fieldset.Root gutter='inherit' inset={nested} data-testid={testId}>
+      <Collapsible.Root asChild open={open} onOpenChange={({ open }) => setOpen(open)}>
+        <Fieldset.Root gutter='inherit' inset={nested} data-testid={testId}>
           {legend}
           {helper}
-          <Next.Collapsible.Content gutter='inherit'>{children}</Next.Collapsible.Content>
-        </Next.Fieldset.Root>
-      </Next.Collapsible.Root>
+          <Collapsible.Content gutter='inherit'>{children}</Collapsible.Content>
+        </Fieldset.Root>
+      </Collapsible.Root>
     );
   }
 
   return (
-    <Next.Fieldset.Root gutter='inherit' inset={nested} data-testid={testId}>
+    <Fieldset.Root gutter='inherit' inset={nested} data-testid={testId}>
       {legend}
       {helper}
       {children}
-    </Next.Fieldset.Root>
+    </Fieldset.Root>
   );
 };
 

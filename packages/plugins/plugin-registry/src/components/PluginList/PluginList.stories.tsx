@@ -11,7 +11,7 @@ import * as PluginNS from '@dxos/app-framework/Plugin';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Container, Panel, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/ui-theme';
 
@@ -56,17 +56,17 @@ const DefaultStory = () => {
   };
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container gutter='md' padBlock>
+    <Panel.Root>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container gutter='md' padBlock>
               <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

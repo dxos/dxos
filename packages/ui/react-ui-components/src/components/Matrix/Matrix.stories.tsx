@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Matrix, type MatrixProps } from './Matrix.tsx';
@@ -15,9 +15,9 @@ const DefaultStory = (props: MatrixProps) => {
 
   return (
     <div className='flex flex-col grow'>
-      <Next.Toolbar.Root>
-        <Next.Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Next.Button>
-      </Next.Toolbar.Root>
+      <Toolbar.Root>
+        <Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button>
+      </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
         <Matrix {...props} active={active} />
       </div>

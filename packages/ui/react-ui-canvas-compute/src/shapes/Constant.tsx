@@ -5,7 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
-import { Next } from '@dxos/react-ui';
+import { Field, Switch } from '@dxos/react-ui';
 import {
   type ShapeComponentProps,
   TextBox,
@@ -74,14 +74,14 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
       )}
       {type === 'boolean' && (
         <div className='flex grow justify-center items-center'>
-          <Next.Field.Root>
-            <Next.Switch
+          <Field.Root>
+            <Switch
               checked={node.value}
               onCheckedChange={({ checked: value }) => {
                 node.value = value;
               }}
             />
-          </Next.Field.Root>
+          </Field.Root>
         </div>
       )}
     </Box>

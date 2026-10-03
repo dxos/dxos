@@ -14,7 +14,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useSpace } from '@dxos/react-client/echo';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
@@ -101,21 +101,21 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
   );
 
   return (
-    <Next.Dialog.Content>
-      <Next.Dialog.Header>
-        <Next.Dialog.Title>{t('add-to-collection-dialog.title')}</Next.Dialog.Title>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.SystemButton.Close />
-        </Next.Dialog.CloseTrigger>
-      </Next.Dialog.Header>
-      <Next.Dialog.Body>
+    <Dialog.Content>
+      <Dialog.Header>
+        <Dialog.Title>{t('add-to-collection-dialog.title')}</Dialog.Title>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
+      </Dialog.Header>
+      <Dialog.Body>
         <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
           <SearchList.Input
             classNames='px-0'
             autoFocus
             escapeBehavior='dismiss'
             placeholder={t('add-to-collection-dialog.placeholder')}
-            {...{ [Next.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+            {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
           />
           <SearchList.Viewport classNames='max-h-[24rem]'>
             {results.length === 0 && <SearchList.Empty />}
@@ -133,8 +133,8 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
             ))}
           </SearchList.Viewport>
         </SearchList.Root>
-      </Next.Dialog.Body>
-    </Next.Dialog.Content>
+      </Dialog.Body>
+    </Dialog.Content>
   );
 };
 

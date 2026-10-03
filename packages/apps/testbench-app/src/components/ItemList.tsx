@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { Next, composable, composableProps } from '@dxos/react-ui';
+import { Button, Checkbox, Field, ScrollArea, composable, composableProps, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { mapSchemaToFields } from '@dxos/schema';
 import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -18,8 +18,8 @@ export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | '
 export const ItemList = composable<HTMLDivElement, ItemListProps<Obj.Any>>(
   ({ objects, debug, onDelete, ...props }, forwardedRef) => {
     return (
-      <Next.ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
-        <Next.ScrollArea.Viewport>
+      <ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
+        <ScrollArea.Viewport>
           {objects
             .slice(0, MAX_RENDERED_COUNT)
             .map(
@@ -31,8 +31,8 @@ export const ItemList = composable<HTMLDivElement, ItemListProps<Obj.Any>>(
           {objects.length > MAX_RENDERED_COUNT && (
             <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
           )}
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   },
 );
@@ -70,25 +70,25 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
           <div key={property} className='flex'>
             {/* TODO(burdon): Check if editable or meta prop (e.g., id). */}
             {property === 'id' && (
-              <Next.Field.Root>
-                <Next.Field.Label classNames={labelProps}>{property}</Next.Field.Label>
+              <Field.Root>
+                <Field.Label classNames={labelProps}>{property}</Field.Label>
                 <div className='font-mono text-xs py-1'>{getValue(object, property).slice(0, 8)}</div>
-              </Next.Field.Root>
+              </Field.Root>
             )}
             {type === 'boolean' && (
-              <Next.Field.Root>
-                <Next.Field.Label classNames={labelProps}>{property}</Next.Field.Label>
-                <Next.Checkbox
+              <Field.Root>
+                <Field.Label classNames={labelProps}>{property}</Field.Label>
+                <Checkbox
                   checked={(object as any)[property]}
                   onCheckedChange={({ checked: state }) => setValue(object, property, !!state)}
                 />
-              </Next.Field.Root>
+              </Field.Root>
             )}
             {property !== 'id' && type === 'string' && (
-              <Next.Field.Root>
-                <Next.Field.Label classNames={labelProps}>{property}</Next.Field.Label>
+              <Field.Root>
+                <Field.Label classNames={labelProps}>{property}</Field.Label>
                 <Editor object={object} prop={property} />
-              </Next.Field.Root>
+              </Field.Root>
             )}
           </div>
         ))}
@@ -96,20 +96,14 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
       {/* TODO(burdon): Check if mutable. */}
       <div className='flex flex-col shrink-0'>
-        <Next.Button
-          icon='ph--x--regular'
-          iconOnly
-          label='Delete'
-          onClick={() => onDelete(object.id)}
-          variant='ghost'
-        />
+        <Button icon='ph--x--regular' iconOnly label='Delete' onClick={() => onDelete(object.id)} variant='ghost' />
       </div>
     </div>
   );
 };
 
 const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const { parentRef } = useTextEditor(() => {
     return {
       initialValue: object[prop],
@@ -132,7 +126,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object
   return (
     <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
-      <Next.Button icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
+      <Button icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
     </div>
   );
 };

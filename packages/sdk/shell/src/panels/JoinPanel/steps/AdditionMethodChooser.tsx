@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Icon, useTranslation } from '@dxos/react-ui';
 
 import { CompoundButton, InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
@@ -20,7 +20,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
 
   const sharedButtonProps = {
     disabled,
-    after: <Next.Icon icon='ph--caret-right--bold' size='md' />,
+    after: <Icon icon='ph--caret-right--bold' size='md' />,
     slots: { label: { className: 'text-sm' } },
   };
 
@@ -31,7 +31,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
         <CompoundButton
           {...sharedButtonProps}
           description={t('create-identity.description')}
-          before={<Next.Icon icon='ph--plus--regular' size='xl' />}
+          before={<Icon icon='ph--plus--regular' size='xl' />}
           onClick={() => send({ type: 'createIdentity' })}
           data-autofocus='choosingAuthMethod'
           data-testid='identity-chooser.create-identity'
@@ -41,7 +41,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
         <CompoundButton
           {...sharedButtonProps}
           description={t('join-identity.description')}
-          before={<Next.Icon icon='ph--qr-code--regular' size='xl' />}
+          before={<Icon icon='ph--qr-code--regular' size='xl' />}
           onClick={() => send({ type: 'acceptHaloInvitation' })}
           data-testid='identity-chooser.join-identity'
         >
@@ -50,7 +50,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
         <CompoundButton
           {...sharedButtonProps}
           description={t('recover-identity.description')}
-          before={<Next.Icon icon='ph--textbox--regular' size='xl' />}
+          before={<Icon icon='ph--textbox--regular' size='xl' />}
           onClick={() => send({ type: 'recoverIdentity' })}
           data-testid='identity-chooser.recover-identity'
         >

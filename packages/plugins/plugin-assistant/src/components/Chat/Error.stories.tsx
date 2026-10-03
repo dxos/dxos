@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Toast, useTranslation } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
@@ -35,19 +35,19 @@ const FailureToast = ({ rawError }: FailureToastProps) => {
   const action = error instanceof AiUsageQuotaError ? error.action : undefined;
 
   return (
-    <Next.Toast.Provider>
-      <Next.Toast.Toaster />
+    <Toast.Provider>
+      <Toast.Toaster />
       {/* Long, 32-bit-safe duration keeps the toast up for review; larger values overflow setTimeout and fire immediately. */}
-      <Next.Toast.Root open={open} duration={24 * 60 * 60 * 1000} onOpenChange={setOpen}>
-        <Next.Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Next.Toast.Header>
-        <Next.Toast.Description>{error.message}</Next.Toast.Description>
+      <Toast.Root open={open} duration={24 * 60 * 60 * 1000} onOpenChange={setOpen}>
+        <Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Toast.Header>
+        <Toast.Description>{error.message}</Toast.Description>
         {action && (
-          <Next.Toast.Footer>
-            <Next.Toast.ActionTrigger onClick={() => setOpen(false)}>{t(action.labelKey)}</Next.Toast.ActionTrigger>
-          </Next.Toast.Footer>
+          <Toast.Footer>
+            <Toast.ActionTrigger onClick={() => setOpen(false)}>{t(action.labelKey)}</Toast.ActionTrigger>
+          </Toast.Footer>
         )}
-      </Next.Toast.Root>
-    </Next.Toast.Provider>
+      </Toast.Root>
+    </Toast.Provider>
   );
 };
 

@@ -7,7 +7,7 @@ import React from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 
 import { ComputeGraphContextProvider, Sheet as SheetComponent, useComputeGraph } from '#components';
 import { Sheet, SheetCapabilities } from '#types';
@@ -51,17 +51,17 @@ const SheetArticleInner = ({
 
   return (
     <SheetComponent.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
-      <Next.Panel.Root classNames={role === AppSurface.Section.role && 'aspect-square w-full max-h-full min-h-0'}>
-        <Next.Panel.Header>
+      <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-square w-full max-h-full min-h-0'}>
+        <Panel.Header>
           <SheetComponent.Toolbar />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SheetComponent.Content />
-        </Next.Panel.Body>
-        <Next.Panel.Footer>
+        </Panel.Body>
+        <Panel.Footer>
           <SheetComponent.Statusbar />
-        </Next.Panel.Footer>
-      </Next.Panel.Root>
+        </Panel.Footer>
+      </Panel.Root>
     </SheetComponent.Root>
   );
 };

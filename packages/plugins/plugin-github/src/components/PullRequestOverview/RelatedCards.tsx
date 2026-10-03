@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '#meta';
@@ -65,39 +65,39 @@ const RelatedCard = ({ data: item }: { data: RelatedItem }) => {
   const { t } = useTranslation(meta.profile.key);
   if (item.kind === 'link') {
     return (
-      <Next.Card.Root data-testid={`pull-request.related.${item.id}`}>
+      <Card.Root data-testid={`pull-request.related.${item.id}`}>
         <CardHeading icon={item.icon} iconClassNames={item.iconClassNames} title={item.title} href={item.href} />
         {item.detail && (
-          <Next.Card.Row>
-            <Next.Card.Text variant='description' truncate>
+          <Card.Row>
+            <Card.Text variant='description' truncate>
               {item.detail}
-            </Next.Card.Text>
-          </Next.Card.Row>
+            </Card.Text>
+          </Card.Row>
         )}
-      </Next.Card.Root>
+      </Card.Root>
     );
   }
 
   const { artifact } = item;
   return (
-    <Next.Card.Root data-testid='pull-request.related.artifact'>
+    <Card.Root data-testid='pull-request.related.artifact'>
       <CardHeading
         icon={artifactIcon[artifact.kind]}
         title={artifact.label ?? t(`artifact-${artifact.kind}.label`)}
         href={artifact.url}
       />
-      <Next.Card.Row>
-        <Next.Card.Text variant='description' truncate>
+      <Card.Row>
+        <Card.Text variant='description' truncate>
           {artifact.name}
-        </Next.Card.Text>
-      </Next.Card.Row>
+        </Card.Text>
+      </Card.Row>
       {artifact.kind !== 'file' && (
-        <Next.Card.Body>
+        <Card.Body>
           {/* `col-span-3` spans the card's gutters, as `Card.Poster` does; the body is `display: contents`. */}
           <ArtifactMedia artifact={artifact} classNames='col-span-3 aspect-video max-h-[200px] object-cover' />
-        </Next.Card.Body>
+        </Card.Body>
       )}
-    </Next.Card.Root>
+    </Card.Root>
   );
 };
 
@@ -114,23 +114,23 @@ const CardHeading = ({
 }) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Next.Card.Header>
-      <Next.Block>
-        <Next.Icon icon={icon} classNames={iconClassNames} />
-      </Next.Block>
-      <Next.Card.Title>{title}</Next.Card.Title>
+    <Card.Header>
+      <Block>
+        <Icon icon={icon} classNames={iconClassNames} />
+      </Block>
+      <Card.Title>{title}</Card.Title>
       {href && (
-        <Next.Block rail='end'>
-          <Next.Button
+        <Block rail='end'>
+          <Button
             iconOnly
             variant='ghost'
             icon='ph--arrow-square-out--regular'
             label={t('open-link.label')}
             onClick={() => window.open(href, '_blank', 'noopener,noreferrer')}
           />
-        </Next.Block>
+        </Block>
       )}
-    </Next.Card.Header>
+    </Card.Header>
   );
 };
 

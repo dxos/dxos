@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 
 import { PageNumber, Pager, PresentationShell, PresenterContext, Layout as PresenterLayout } from '#components';
 
@@ -25,8 +25,8 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
   const [liveCollection] = useObject(collection);
 
   return (
-    <Next.Panel.Root role={role} classNames='relative'>
-      <Next.Panel.Body asChild>
+    <Panel.Root role={role} classNames='relative'>
+      <Panel.Body asChild>
         <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
           <PresenterLayout
             bottomRight={<PageNumber index={slide} count={liveCollection.objects.length} />}
@@ -43,8 +43,8 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
             />
           </PresenterLayout>
         </PresentationShell>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

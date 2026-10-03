@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 
 import { CallsCapabilities } from '#types';
@@ -29,14 +29,14 @@ export const CallSidebar = () => {
 
   return (
     <Call.Root>
-      <Next.Panel.Root>
-        <Next.Panel.Body asChild>
+      <Panel.Root>
+        <Panel.Body asChild>
           <Call.Viewport>
             <Call.Grid />
             <Call.Toolbar onLeave={handleLeave} />
           </Call.Viewport>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </Call.Root>
   );
 };

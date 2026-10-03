@@ -4,9 +4,9 @@
 
 import React, { type ChangeEventHandler, type ReactNode } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Field, Input, type InputProps as UiInputProps } from '@dxos/react-ui';
 
-export type InputProps = Next.InputProps & {
+export type InputProps = UiInputProps & {
   validationMessage?: string;
   label?: ReactNode;
   disabled?: boolean;
@@ -19,10 +19,10 @@ export type InputProps = Next.InputProps & {
  */
 export const TextInput = ({ validationMessage, label, ...props }: InputProps) => {
   return (
-    <Next.Field.Root>
-      <Next.Field.Label>{label}</Next.Field.Label>
-      <Next.Input {...props} classNames='py-2 mt-2 text-center' />
-      {validationMessage && <Next.Field.ErrorText>{validationMessage}</Next.Field.ErrorText>}
-    </Next.Field.Root>
+    <Field.Root>
+      <Field.Label>{label}</Field.Label>
+      <Input {...props} classNames='py-2 mt-2 text-center' />
+      {validationMessage && <Field.ErrorText>{validationMessage}</Field.ErrorText>}
+    </Field.Root>
   );
 };

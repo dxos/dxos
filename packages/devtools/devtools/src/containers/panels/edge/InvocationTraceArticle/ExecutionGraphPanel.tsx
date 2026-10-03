@@ -5,7 +5,7 @@
 import React, { type FC, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { ScrollArea } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-trace';
 
 import { useExecutionGraph } from './useExecutionGraph.ts';
@@ -19,10 +19,10 @@ export const ExecutionGraphPanel: FC<ExecutionGraphPanelProps> = ({ objects }) =
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
   return (
-    <Next.ScrollArea.Root orientation='vertical' classNames='flex flex-col h-full'>
-      <Next.ScrollArea.Viewport ref={setViewport}>
+    <ScrollArea.Root orientation='vertical' classNames='flex flex-col h-full'>
+      <ScrollArea.Viewport ref={setViewport}>
         <Timeline branches={branches} commits={commits} scroller={viewport} />
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };

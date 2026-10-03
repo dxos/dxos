@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Container, Field, Flex, Input, Select, SystemButton, useTranslation } from '@dxos/react-ui';
 import { ContactPicker } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -72,7 +72,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   }
 
   return (
-    <Next.Container gap='md' role='group' gutter='none'>
+    <Container gap='md' role='group' gutter='none'>
       <Flex align='center' gap='sm'>
         <ContactPicker
           contacts={contacts}
@@ -84,21 +84,21 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
           }}
           disabled={!canAdmit}
         />
-        <Next.Select.Root
+        <Select.Root
           value={[String(role)]}
           onValueChange={({ value: [value] }) =>
             setRole(ROLES.find((candidate) => String(candidate) === value) ?? SpaceMember_Role.EDITOR)
           }
           items={ROLES.map((value) => ({ value: String(value), label: t(roleLabel[value]) }))}
         >
-          <Next.Select.Trigger classNames='min-w-[6rem]' disabled={!canAdmit} />
-          <Next.Select.Content>
+          <Select.Trigger classNames='min-w-[6rem]' disabled={!canAdmit} />
+          <Select.Content>
             {ROLES.map((value) => (
-              <Next.Select.Item key={value} item={{ value: String(value), label: t(roleLabel[value]) }} />
+              <Select.Item key={value} item={{ value: String(value), label: t(roleLabel[value]) }} />
             ))}
-          </Next.Select.Content>
-        </Next.Select.Root>
-        <Next.SystemButton.Add
+          </Select.Content>
+        </Select.Root>
+        <SystemButton.Add
           iconOnly
           label={t('contact-picker-add.label')}
           disabled={!canAdmit || pending || !selected}
@@ -108,13 +108,13 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
       </Flex>
       {joinUrl && (
         <Flex gap='sm'>
-          <Next.Field.Root readOnly>
-            <Next.Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
-          </Next.Field.Root>
-          <Next.SystemButton.Clipboard value={joinUrl} />
+          <Field.Root readOnly>
+            <Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
+          </Field.Root>
+          <SystemButton.Clipboard value={joinUrl} />
         </Flex>
       )}
-    </Next.Container>
+    </Container>
   );
 };
 

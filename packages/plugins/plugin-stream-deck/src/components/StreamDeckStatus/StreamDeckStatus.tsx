@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -30,7 +30,7 @@ export const StreamDeckStatus = ({ model }: StreamDeckStatusProps) => {
       <span role='status' aria-label={label} title={label} data-testid='stream-deck.status'>
         {/* Default colour: the indicator's presence is the signal, so colour is reserved for a state
             that needs attention. */}
-        <Next.Icon icon='ph--squares-four--regular' size='lg' />
+        <Icon icon='ph--squares-four--regular' size='lg' />
       </span>
     </StatusBar.Item>
   );

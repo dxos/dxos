@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useState } from 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Main, useTranslation } from '@dxos/react-ui';
 
 import { useBreakpoints } from '#hooks';
 import { meta } from '#meta';
@@ -94,7 +94,7 @@ export const DeckContent = ({ children }: DeckContentProps) => {
   );
 
   return (
-    <Next.Main.Root
+    <Main.Root
       navigationSidebarState={fullscreen ? 'closed' : sidebarState}
       complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
       drawerState={effectiveDrawerState}
@@ -107,17 +107,17 @@ export const DeckContent = ({ children }: DeckContentProps) => {
     >
       <Sidebar />
       <ComplementarySidebar current={complementarySidebarPanel} />
-      <Next.Main.Drawer
+      <Main.Drawer
         label={t('drawer.label')}
         minHeight={DeckSchema.DRAWER_MIN_HEIGHT}
         maxHeight={DeckSchema.DRAWER_MAX_HEIGHT}
       >
         <Surface.Surface type={AppSurface.Drawer} limit={1} />
-      </Next.Main.Drawer>
-      <Next.Main.Overlay />
+      </Main.Drawer>
+      <Main.Overlay />
       {children}
       {topbar && <Banner variant='topbar' />}
-    </Next.Main.Root>
+    </Main.Root>
   );
 };
 

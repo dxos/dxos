@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { ShortcutsList } from '#components';
 import { meta } from '#meta';
@@ -13,17 +13,17 @@ export const ShortcutsDialogContent = () => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Next.Dialog.Content>
-      <Next.Dialog.Header>
-        <Next.Dialog.Title>{t('shortcuts-dialog.title')}</Next.Dialog.Title>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.SystemButton.Close />
-        </Next.Dialog.CloseTrigger>
-      </Next.Dialog.Header>
-      <Next.Dialog.Body>
+    <Dialog.Content>
+      <Dialog.Header>
+        <Dialog.Title>{t('shortcuts-dialog.title')}</Dialog.Title>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
+      </Dialog.Header>
+      <Dialog.Body>
         <ShortcutsList />
-      </Next.Dialog.Body>
-    </Next.Dialog.Content>
+      </Dialog.Body>
+    </Dialog.Content>
   );
 };
 

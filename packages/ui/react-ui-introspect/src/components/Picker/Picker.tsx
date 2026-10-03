@@ -9,7 +9,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Combobox } from '@dxos/react-ui';
 
 export type PickerProps = {
   options: ReadonlyArray<string>;
@@ -21,16 +21,16 @@ export type PickerProps = {
 export const Picker = ({ options, value, onValueChange, placeholder }: PickerProps) => {
   const items = useMemo(() => options.map((option) => ({ value: option, label: option })), [options]);
   return (
-    <Next.Combobox.Root
+    <Combobox.Root
       items={items}
       value={value ? [value] : []}
       onValueChange={({ value: [next] }) => next !== undefined && onValueChange(next)}
     >
-      <Next.Combobox.Trigger placeholder={placeholder} />
-      <Next.Combobox.Content>
-        <Next.Combobox.Input placeholder={placeholder ?? 'Search…'} />
-        <Next.Combobox.List />
-      </Next.Combobox.Content>
-    </Next.Combobox.Root>
+      <Combobox.Trigger placeholder={placeholder} />
+      <Combobox.Content>
+        <Combobox.Input placeholder={placeholder ?? 'Search…'} />
+        <Combobox.List />
+      </Combobox.Content>
+    </Combobox.Root>
   );
 };

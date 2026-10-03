@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Message, type Transcript } from '@dxos/types';
 import {
@@ -28,7 +28,7 @@ export type TranscriptionProps = {
 // TODO(burdon): Rename Transcript.
 export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
   ({ transcript: object, model, children, ...props }, forwardedRef) => {
-    const themeMode = Next.useThemeMode();
+    const themeMode = useThemeMode();
     const { parentRef } = useTextEditor(() => {
       return {
         extensions: [

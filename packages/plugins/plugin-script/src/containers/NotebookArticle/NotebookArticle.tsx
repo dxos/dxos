@@ -20,7 +20,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Graph from '@dxos/plugin-explorer/Graph';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Menu, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -174,25 +174,25 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
   );
 
   return (
-    <Next.Panel.Root role={role} width='document'>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root inactive={!hasAttention}>
-          <Next.Menu.Root>
-            <Next.Menu.Trigger asChild>
-              <Next.Button icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
-            </Next.Menu.Trigger>
+    <Panel.Root role={role} width='document'>
+      <Panel.Header>
+        <Toolbar.Root inactive={!hasAttention}>
+          <Menu.Root>
+            <Menu.Trigger asChild>
+              <Button icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
+            </Menu.Trigger>
             <NotebookMenu onCellInsert={handleCellInsert} />
-          </Next.Menu.Root>
-          <Next.Button
+          </Menu.Root>
+          <Button
             icon='ph--play--fill'
             iconOnly
             label={t('compute.label')}
             classNames='text-success-text'
             onClick={handleCompute}
           />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
         <NotebookStack
           db={db}
           notebook={notebook}
@@ -202,8 +202,8 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           onCellInsert={handleCellInsert}
           onCellDelete={handleCellDelete}
         />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

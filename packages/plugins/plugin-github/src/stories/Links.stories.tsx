@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Next } from '@dxos/react-ui';
+import { Block, Card, Icon, Popover, useThemeMode } from '@dxos/react-ui';
 import {
   EditorPreviewProvider,
   type EditorPreviewProviderProps,
@@ -41,28 +41,28 @@ const PreviewCard = () => {
     return null;
   }
   return (
-    <Next.Popover.Content
+    <Popover.Content
       classNames={[
         'origin-(--transform-origin)',
         'data-[state=open]:animate-popover-in',
         'data-[state=closed]:animate-popover-out',
       ]}
     >
-      <Next.Popover.Body>
-        <Next.Card.Root border={false} classNames='dx-card-popover'>
-          <Next.Card.Header>
-            <Next.Block>
-              <Next.Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
-            </Next.Block>
-            <Next.Card.Title>{Obj.getLabel(target.object) ?? target.label}</Next.Card.Title>
-            <Next.Popover.CloseTrigger asChild>
-              <Next.Card.Action system='close' />
-            </Next.Popover.CloseTrigger>
-          </Next.Card.Header>
+      <Popover.Body>
+        <Card.Root border={false} classNames='dx-card-popover'>
+          <Card.Header>
+            <Block>
+              <Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
+            </Block>
+            <Card.Title>{Obj.getLabel(target.object) ?? target.label}</Card.Title>
+            <Popover.CloseTrigger asChild>
+              <Card.Action system='close' />
+            </Popover.CloseTrigger>
+          </Card.Header>
           <Surface.Surface type={AppSurface.CardContent} data={{ subject: target.object }} limit={1} />
-        </Next.Card.Root>
-      </Next.Popover.Body>
-    </Next.Popover.Content>
+        </Card.Root>
+      </Popover.Body>
+    </Popover.Content>
   );
 };
 
@@ -76,7 +76,7 @@ type StoryArgs = {
  * surface renders the card.
  */
 const DefaultStory = ({ text }: StoryArgs) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
   const handleLookup = useCallback<NonNullable<EditorPreviewProviderProps['onLookup']>>(
     async (ref) => {

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button, Field, Input, Popover } from '@dxos/react-ui';
 
 export type NamePopoverProps = PropsWithChildren<{
   open: boolean;
@@ -33,13 +33,13 @@ export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit
   };
 
   return (
-    <Next.Popover.Root open={open} onOpenChange={({ open: next }) => !next && cancel()}>
-      <Next.Popover.Trigger asChild>{children}</Next.Popover.Trigger>
-      <Next.Popover.Content>
+    <Popover.Root open={open} onOpenChange={({ open: next }) => !next && cancel()}>
+      <Popover.Trigger asChild>{children}</Popover.Trigger>
+      <Popover.Content>
         <div className='flex items-center gap-1 p-2'>
-          <Next.Field.Root>
-            <Next.Field.Label srOnly>{placeholder}</Next.Field.Label>
-            <Next.Input
+          <Field.Root>
+            <Field.Label srOnly>{placeholder}</Field.Label>
+            <Input
               autoFocus
               placeholder={placeholder}
               value={value}
@@ -54,13 +54,13 @@ export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit
                 }
               }}
             />
-          </Next.Field.Root>
-          <Next.Button variant='primary' onClick={submit}>
+          </Field.Root>
+          <Button variant='primary' onClick={submit}>
             {submitLabel}
-          </Next.Button>
+          </Button>
         </div>
-      </Next.Popover.Content>
-    </Next.Popover.Root>
+      </Popover.Content>
+    </Popover.Root>
   );
 };
 

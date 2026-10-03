@@ -4,17 +4,17 @@
 
 import React from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, type ButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../translations.ts';
 
 /**
  * @deprecated use IconButton directly
  */
-export const CloseButton = ({ onDone, ...props }: Omit<Next.ButtonProps, 'onClick'> & { onDone?: () => void }) => {
+export const CloseButton = ({ onDone, ...props }: Omit<ButtonProps, 'onClick'> & { onDone?: () => void }) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Next.Button
+    <Button
       icon='ph--x--bold'
       iconSize='md'
       label={t('exit.label')}

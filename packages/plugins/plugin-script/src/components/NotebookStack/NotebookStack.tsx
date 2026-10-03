@@ -5,7 +5,15 @@
 import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Menu,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
@@ -95,11 +103,11 @@ export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
         eventHandler={eventHandler}
         ref={forwardedRef}
       >
-        <Next.ScrollArea.Root orientation='vertical' {...composableProps(props)}>
-          <Next.ScrollArea.Viewport ref={setViewport}>
+        <ScrollArea.Root orientation='vertical' {...composableProps(props)}>
+          <ScrollArea.Viewport ref={setViewport}>
             <Mosaic.Stack orientation='vertical' items={notebook?.cells ?? []} getId={getCellId} Tile={Tile} />
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Mosaic.Container>
     );
   },
@@ -136,24 +144,19 @@ const NotebookSection = ({
     >
       {/* Side rail */}
       <div className='flex flex-col p-1 border-e border-subdued-separator dx-attention-surface'>
-        <Next.Button
+        <Button
           ref={setDragHandle}
           variant='ghost'
           icon='ph--dots-six-vertical--regular'
           iconOnly
           label='Drag handle'
         />
-        <Next.Menu.Root>
-          <Next.Menu.Trigger asChild>
-            <Next.Button
-              variant='ghost'
-              icon='ph--dots-three--regular'
-              iconOnly
-              label={t('notebook-cell-insert.label')}
-            />
-          </Next.Menu.Trigger>
+        <Menu.Root>
+          <Menu.Trigger asChild>
+            <Button variant='ghost' icon='ph--dots-three--regular' iconOnly label={t('notebook-cell-insert.label')} />
+          </Menu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
-        </Next.Menu.Root>
+        </Menu.Root>
       </div>
 
       <NotebookCell db={db} cell={cell} env={env} graph={graph} promptResults={promptResults} />

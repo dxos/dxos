@@ -11,8 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
+import { Button, Toast, Typography } from '../index.ts';
 
 type StoryArgs = { size?: Size; duration?: number; title?: string; description?: string };
 
@@ -24,13 +24,13 @@ const DefaultStory = ({ size, duration, title, description }: StoryArgs) => {
   const [log, setLog] = useState<string[]>([]);
   const [retries, setRetries] = useState(0);
   return (
-    <Next.Toast.Provider>
+    <Toast.Provider>
       <div className='flex flex-col gap-2'>
-        <Next.Button onClick={() => setOpen(true)}>Show toast</Next.Button>
-        <Next.Typography data-testid='log'>{log.join(',')}</Next.Typography>
-        <Next.Typography data-testid='retries'>{retries}</Next.Typography>
+        <Button onClick={() => setOpen(true)}>Show toast</Button>
+        <Typography data-testid='log'>{log.join(',')}</Typography>
+        <Typography data-testid='retries'>{retries}</Typography>
       </div>
-      <Next.Toast.Root
+      <Toast.Root
         open={open}
         duration={duration}
         onOpenChange={(next) => {
@@ -38,14 +38,14 @@ const DefaultStory = ({ size, duration, title, description }: StoryArgs) => {
           setLog((entries) => [...entries, next ? 'open' : 'closed']);
         }}
       >
-        <Next.Toast.Header icon='ph--warning--regular'>{title}</Next.Toast.Header>
-        <Next.Toast.Description>{description}</Next.Toast.Description>
-        <Next.Toast.Footer>
-          <Next.Toast.ActionTrigger onClick={() => setRetries((count) => count + 1)}>Retry</Next.Toast.ActionTrigger>
-        </Next.Toast.Footer>
-      </Next.Toast.Root>
-      <Next.Toast.Toaster size={size} />
-    </Next.Toast.Provider>
+        <Toast.Header icon='ph--warning--regular'>{title}</Toast.Header>
+        <Toast.Description>{description}</Toast.Description>
+        <Toast.Footer>
+          <Toast.ActionTrigger onClick={() => setRetries((count) => count + 1)}>Retry</Toast.ActionTrigger>
+        </Toast.Footer>
+      </Toast.Root>
+      <Toast.Toaster size={size} />
+    </Toast.Provider>
   );
 };
 

@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Field, Panel, Switch, type ThemedClassName, Toolbar, useThemeMode } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -32,7 +32,7 @@ export type DocumentEditorProps = ThemedClassName<{
  * always receive the latest edits; variants select the pipeline via the parent's `onRun`.
  */
 export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onRun }: DocumentEditorProps) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const [text, setText] = useState(initialValue);
   const [underline, setUnderline] = useState(false);
   const extensions = useMemo(
@@ -48,32 +48,32 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
   );
 
   return (
-    <Next.Panel.Root classNames={classNames}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
+    <Panel.Root classNames={classNames}>
+      <Panel.Header>
+        <Toolbar.Root>
           {parse && (
-            <Next.Field.Root>
+            <Field.Root>
               <div className='flex items-center gap-2'>
-                <Next.Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
-                <Next.Field.Label classNames='text-sm text-description'>POS</Next.Field.Label>
+                <Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
+                <Field.Label classNames='text-sm text-description'>POS</Field.Label>
               </div>
-            </Next.Field.Root>
+            </Field.Root>
           )}
           <div className='grow' />
-          <Next.Button
+          <Button
             icon={busy ? 'ph--spinner-gap--regular' : 'ph--play--regular'}
             iconOnly
             label='Run pipeline'
             disabled={busy || !onRun}
             onClick={() => onRun?.(text)}
           />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         <Editor.Root>
           <Editor.View value={text} onChange={setText} extensions={extensions} />
         </Editor.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

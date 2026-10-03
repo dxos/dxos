@@ -8,7 +8,7 @@ import React, { type KeyboardEvent, type MouseEvent, useMemo } from 'react';
 import { Annotation, Entity, Obj, Ref, Type } from '@dxos/echo';
 import { type SchemaAST } from '@dxos/effect';
 import { URI } from '@dxos/keys';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Field, Group, SystemButton, Tag, Typography, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { DxAnchorActivate, hues } from '@dxos/ui-types';
 import { arrayMove } from '@dxos/util';
@@ -136,15 +136,15 @@ export const RefArrayField = ({
   if (isStatic) {
     const selected = ids.flatMap((id) => options.find((option) => option.id === id) ?? []);
     return selected.length === 0 ? (
-      <Next.Typography tone='description'>{t('empty-readonly-ref-field.label')}</Next.Typography>
+      <Typography tone='description'>{t('empty-readonly-ref-field.label')}</Typography>
     ) : (
-      <Next.Group>
+      <Group>
         {selected.map((option) => (
-          <Next.Tag key={option.id} hue={hues.find((hue) => hue === option.hue)}>
+          <Tag key={option.id} hue={hues.find((hue) => hue === option.hue)}>
             {option.label}
-          </Next.Tag>
+          </Tag>
         ))}
-      </Next.Group>
+      </Group>
     );
   }
 
@@ -239,9 +239,9 @@ const TitleRows = ({
 
   return (
     <>
-      <Next.Field.Header>
-        <Next.Typography truncate>{label}</Next.Typography>
-      </Next.Field.Header>
+      <Field.Header>
+        <Typography truncate>{label}</Typography>
+      </Field.Header>
       {rows.length > 0 && (
         <OrderedList.Root
           items={rows}
@@ -272,7 +272,7 @@ const TitleRows = ({
                     <OrderedList.ItemDescription>{option.description}</OrderedList.ItemDescription>
                   )}
                   {!readonly && (
-                    <Next.SystemButton.Remove
+                    <SystemButton.Remove
                       variant='ghost'
                       onClick={() => onChange(ids.filter((id) => id !== option.id))}
                     />

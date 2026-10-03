@@ -21,7 +21,63 @@ import { type MessageValence, hues } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import { Next } from '../next/Next.tsx';
+import {
+  Accordion,
+  AlertDialog,
+  Avatar,
+  Banner,
+  Breadcrumb,
+  Button,
+  type ButtonVariant,
+  Card,
+  Carousel,
+  Checkbox,
+  Collapsible,
+  Combobox,
+  type ComboboxOption,
+  Container,
+  DateInput,
+  Dialog,
+  DragHandle,
+  Editable,
+  Empty,
+  Field,
+  Group,
+  HoverCard,
+  Icon,
+  Input,
+  Link,
+  Menu,
+  MenuButton,
+  type MenuButtonItem,
+  NumberInput,
+  Panel,
+  PasswordInput,
+  PinInput,
+  Popover,
+  Progress,
+  QrCode,
+  ScrollArea,
+  Select,
+  type SelectOption,
+  Separator,
+  Skeleton,
+  Slider,
+  Splitter,
+  Steps,
+  Switch,
+  SystemButton,
+  Tabs,
+  Tag,
+  Textarea,
+  Timestamp,
+  Toast,
+  Toggle,
+  ToggleGroup,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from '../next/components/index.ts';
 import { type Size, SIZES } from '../next/sizes.ts';
 import { withTheme } from '../testing/index.ts';
 
@@ -41,26 +97,26 @@ const Section = ({ id, title, children }: SectionProps) => {
   const size = useContext(SizeContext);
   return (
     <section id={id} data-section={id} className='flex flex-col gap-2 m-4 py-4 border border-separator rounded-md'>
-      <Next.Typography asChild tone='description' classNames='px-4 font-medium'>
+      <Typography asChild tone='description' classNames='px-4 font-medium'>
         <h2>{title}</h2>
-      </Next.Typography>
-      <Next.Container size={size} gutter='rail' gap='md' level='base'>
+      </Typography>
+      <Container size={size} gutter='rail' gap='md' level='base'>
         {children}
-      </Next.Container>
+      </Container>
     </section>
   );
 };
 
 /** A labelled run of controls within a section. */
 const Row = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
-  <Next.Group>
+  <Group>
     {label && (
-      <Next.Typography tone='description' classNames='w-24 shrink-0'>
+      <Typography tone='description' classNames='w-24 shrink-0'>
         {label}
-      </Next.Typography>
+      </Typography>
     )}
     {children}
-  </Next.Group>
+  </Group>
 );
 
 type TocEntry = { id: string; title: string };
@@ -79,9 +135,9 @@ const Toc = ({
     aria-label='Contents'
     className='flex flex-col gap-1 w-48 shrink-0 p-4 overflow-y-auto border-s border-separator'
   >
-    <Next.Typography tone='subdued'>Contents</Next.Typography>
+    <Typography tone='subdued'>Contents</Typography>
     {entries.map(({ id, title }) => (
-      <Next.Link
+      <Link
         key={id}
         href={`#${id}`}
         target='_self'
@@ -94,7 +150,7 @@ const Toc = ({
         }}
       >
         {title}
-      </Next.Link>
+      </Link>
     ))}
   </nav>
 );
@@ -164,26 +220,26 @@ const Frame = ({ sections, hue, size }: FrameProps) => {
   };
 
   return (
-    <Next.Toast.Provider>
+    <Toast.Provider>
       <div ref={frameRef} className='flex h-dvh'>
-        <Next.Panel.Root size={size} width='document' classNames='grow min-w-0'>
-          <Next.Panel.Body asChild>
-            <Next.ScrollArea.Root>
+        <Panel.Root size={size} width='document' classNames='grow min-w-0'>
+          <Panel.Body asChild>
+            <ScrollArea.Root>
               {/* `relative` contains the controls' visually hidden native inputs, which would otherwise scroll the document. */}
-              <Next.ScrollArea.Viewport ref={scrollRef} classNames='relative'>
+              <ScrollArea.Viewport ref={scrollRef} classNames='relative'>
                 <SizeContext.Provider value={size}>
                   {sections.map(({ id, Component }) => (
                     <Component key={id} />
                   ))}
                 </SizeContext.Provider>
-              </Next.ScrollArea.Viewport>
-            </Next.ScrollArea.Root>
-          </Next.Panel.Body>
-        </Next.Panel.Root>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Body>
+        </Panel.Root>
         <Toc entries={sections} active={active} onSelect={handleSelect} />
       </div>
-      <Next.Toast.Toaster size={size} />
-    </Next.Toast.Provider>
+      <Toast.Toaster size={size} />
+    </Toast.Provider>
   );
 };
 
@@ -191,63 +247,63 @@ const Frame = ({ sections, hue, size }: FrameProps) => {
 // Sections
 //
 
-const BUTTON_VARIANTS: Next.ButtonVariant[] = ['default', 'primary', 'outline', 'ghost', 'destructive'];
+const BUTTON_VARIANTS: ButtonVariant[] = ['default', 'primary', 'outline', 'ghost', 'destructive'];
 const VALENCES: MessageValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
 const ButtonSection = () => (
   <Section id='button' title='Button'>
     {BUTTON_VARIANTS.map((variant) => (
       <Row key={variant} label={variant}>
-        <Next.Button variant={variant}>Button</Next.Button>
-        <Next.Button variant={variant} icon='ph--paper-plane-tilt--regular'>
+        <Button variant={variant}>Button</Button>
+        <Button variant={variant} icon='ph--paper-plane-tilt--regular'>
           With icon
-        </Next.Button>
-        <Next.Button variant={variant} disabled>
+        </Button>
+        <Button variant={variant} disabled>
           Disabled
-        </Next.Button>
-        <Next.Button variant={variant} icon='ph--gear--regular' label='Settings' iconOnly />
-        <Next.Button variant={variant} iconEnd='ph--caret-down--regular' label='More' />
+        </Button>
+        <Button variant={variant} icon='ph--gear--regular' label='Settings' iconOnly />
+        <Button variant={variant} iconEnd='ph--caret-down--regular' label='More' />
       </Row>
     ))}
     <Row label='valence'>
       {VALENCES.map((valence) => (
-        <Next.Button key={valence} variant='valence' valence={valence}>
+        <Button key={valence} variant='valence' valence={valence}>
           {valence}
-        </Next.Button>
+        </Button>
       ))}
     </Row>
     <Row label='toggle'>
-      <Next.Toggle icon='ph--text-b--regular' label='Bold' iconOnly />
-      <Next.Toggle icon='ph--text-italic--regular' label='Italic' iconOnly defaultPressed />
-      <Next.Toggle icon='ph--text-underline--regular' label='Underline' iconOnly disabled />
-      <Next.Toggle icon='ph--star--regular' activeIcon='ph--star--fill' label='Pin' iconOnly />
-      <Next.ToggleGroup.Root type='single' defaultValue='left' aria-label='Alignment'>
-        <Next.ToggleGroup.Item value='left' icon='ph--text-align-left--regular' label='Left' iconOnly />
-        <Next.ToggleGroup.Item value='center' icon='ph--text-align-center--regular' label='Centre' iconOnly />
-        <Next.ToggleGroup.Item value='right' icon='ph--text-align-right--regular' label='Right' iconOnly />
-      </Next.ToggleGroup.Root>
-      <Next.ToggleGroup.Root type='multiple' defaultValue={['bold']} aria-label='Marks'>
-        <Next.ToggleGroup.Item value='bold'>Bold</Next.ToggleGroup.Item>
-        <Next.ToggleGroup.Item value='italic'>Italic</Next.ToggleGroup.Item>
-        <Next.ToggleGroup.Item value='code' disabled>
+      <Toggle icon='ph--text-b--regular' label='Bold' iconOnly />
+      <Toggle icon='ph--text-italic--regular' label='Italic' iconOnly defaultPressed />
+      <Toggle icon='ph--text-underline--regular' label='Underline' iconOnly disabled />
+      <Toggle icon='ph--star--regular' activeIcon='ph--star--fill' label='Pin' iconOnly />
+      <ToggleGroup.Root type='single' defaultValue='left' aria-label='Alignment'>
+        <ToggleGroup.Item value='left' icon='ph--text-align-left--regular' label='Left' iconOnly />
+        <ToggleGroup.Item value='center' icon='ph--text-align-center--regular' label='Centre' iconOnly />
+        <ToggleGroup.Item value='right' icon='ph--text-align-right--regular' label='Right' iconOnly />
+      </ToggleGroup.Root>
+      <ToggleGroup.Root type='multiple' defaultValue={['bold']} aria-label='Marks'>
+        <ToggleGroup.Item value='bold'>Bold</ToggleGroup.Item>
+        <ToggleGroup.Item value='italic'>Italic</ToggleGroup.Item>
+        <ToggleGroup.Item value='code' disabled>
           Code
-        </Next.ToggleGroup.Item>
-      </Next.ToggleGroup.Root>
+        </ToggleGroup.Item>
+      </ToggleGroup.Root>
     </Row>
     <Row label='menu'>
       <MenuButtonDemo />
     </Row>
     <Row label='system'>
-      <Next.SystemButton.Add />
-      <Next.SystemButton.Edit />
-      <Next.SystemButton.Delete />
-      <Next.SystemButton.Star />
-      <Next.SystemButton.Bookmark />
-      <Next.SystemButton.Clipboard value='Copied from the playground' />
-      <Next.SystemButton.Ai />
-      <Next.SystemButton.Close />
-      <Next.SystemButton.Save iconOnly={false} />
-      <Next.SystemButton.Cancel iconOnly={false} />
+      <SystemButton.Add />
+      <SystemButton.Edit />
+      <SystemButton.Delete />
+      <SystemButton.Star />
+      <SystemButton.Bookmark />
+      <SystemButton.Clipboard value='Copied from the playground' />
+      <SystemButton.Ai />
+      <SystemButton.Close />
+      <SystemButton.Save iconOnly={false} />
+      <SystemButton.Cancel iconOnly={false} />
     </Row>
   </Section>
 );
@@ -255,9 +311,9 @@ const ButtonSection = () => (
 const MenuButtonDemo = () => {
   const [view, setView] = useState('List');
   const [extraction, setExtraction] = useState(false);
-  const items: Next.MenuButtonItem[] = [
+  const items: MenuButtonItem[] = [
     { type: 'group', label: 'View' },
-    ...['List', 'Grid', 'Board'].map((label): Next.MenuButtonItem => ({
+    ...['List', 'Grid', 'Board'].map((label): MenuButtonItem => ({
       type: 'option',
       label,
       selected: view === label,
@@ -268,117 +324,117 @@ const MenuButtonDemo = () => {
   ];
   return (
     <>
-      <Next.MenuButton icon='ph--sliders--regular' iconOnly caretDown label='Options' items={items} />
-      <Next.Typography tone='description'>
+      <MenuButton icon='ph--sliders--regular' iconOnly caretDown label='Options' items={items} />
+      <Typography tone='description'>
         {view} · extraction {extraction ? 'on' : 'off'}
-      </Next.Typography>
+      </Typography>
     </>
   );
 };
 
 const InputSection = () => (
   <Section id='input' title='Input'>
-    <Next.Field.Root>
-      <Next.Field.Label>Name</Next.Field.Label>
-      <Next.Input placeholder='Ada Lovelace' />
-      <Next.Field.HelperText>Shown to other members.</Next.Field.HelperText>
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Search</Next.Field.Label>
-      <Next.Input start={<Next.Icon icon='ph--magnifying-glass--regular' />} placeholder='Find…' />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Workspace</Next.Field.Label>
-      <Next.Input end='.dxos.org' placeholder='workspace' />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Subdued</Next.Field.Label>
-      <Next.Input variant='subdued' placeholder='No well' />
-    </Next.Field.Root>
-    <Next.Field.Root readOnly>
-      <Next.Field.Label>Identity</Next.Field.Label>
-      <Next.Input variant='mono' copyable defaultValue='did:key:z6Mk' />
-    </Next.Field.Root>
-    <Next.Field.Root disabled>
-      <Next.Field.Label>Disabled</Next.Field.Label>
-      <Next.Input defaultValue='Locked' />
-    </Next.Field.Root>
+    <Field.Root>
+      <Field.Label>Name</Field.Label>
+      <Input placeholder='Ada Lovelace' />
+      <Field.HelperText>Shown to other members.</Field.HelperText>
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Search</Field.Label>
+      <Input start={<Icon icon='ph--magnifying-glass--regular' />} placeholder='Find…' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Workspace</Field.Label>
+      <Input end='.dxos.org' placeholder='workspace' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Subdued</Field.Label>
+      <Input variant='subdued' placeholder='No well' />
+    </Field.Root>
+    <Field.Root readOnly>
+      <Field.Label>Identity</Field.Label>
+      <Input variant='mono' copyable defaultValue='did:key:z6Mk' />
+    </Field.Root>
+    <Field.Root disabled>
+      <Field.Label>Disabled</Field.Label>
+      <Input defaultValue='Locked' />
+    </Field.Root>
     {(['success', 'info', 'warning', 'error'] as const).map((valence) => (
-      <Next.Field.Root key={valence} validationValence={valence}>
-        <Next.Field.Label>Handle ({valence})</Next.Field.Label>
-        <Next.Input defaultValue='dxos' />
-        <Next.Field.HelperText>A {valence} message.</Next.Field.HelperText>
-      </Next.Field.Root>
+      <Field.Root key={valence} validationValence={valence}>
+        <Field.Label>Handle ({valence})</Field.Label>
+        <Input defaultValue='dxos' />
+        <Field.HelperText>A {valence} message.</Field.HelperText>
+      </Field.Root>
     ))}
-    <Next.Field.Root invalid>
-      <Next.Field.Label>Website</Next.Field.Label>
-      <Next.Input defaultValue='not a url' />
-      <Next.Field.ErrorText>Enter a valid URL.</Next.Field.ErrorText>
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Notes</Next.Field.Label>
-      <Next.Textarea autoResize placeholder='Grows as you type' />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Password</Next.Field.Label>
-      <Next.PasswordInput defaultValue='hunter2' autoComplete='current-password' />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Quantity</Next.Field.Label>
-      <Next.NumberInput min={0} max={10} defaultValue='8' />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Price</Next.Field.Label>
-      <Next.NumberInput defaultValue='1250' step={0.5} formatOptions={{ style: 'currency', currency: 'USD' }} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Code</Next.Field.Label>
-      <Next.PinInput length={4} />
-    </Next.Field.Root>
-    <Next.Field.Root invalid>
-      <Next.Field.Label>Expired</Next.Field.Label>
-      <Next.PinInput length={4} type='alphanumeric' defaultValue='AB12' />
-      <Next.Field.ErrorText>The code has expired.</Next.Field.ErrorText>
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Due</Next.Field.Label>
-      <Next.DateInput defaultValue='2026-09-29' />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Starts at</Next.Field.Label>
-      <Next.DateInput type='time' defaultValue='09:30' />
-    </Next.Field.Root>
-    <Next.Field.Root readOnly>
-      <Next.Field.Label>Meeting</Next.Field.Label>
-      <Next.DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
-    </Next.Field.Root>
+    <Field.Root invalid>
+      <Field.Label>Website</Field.Label>
+      <Input defaultValue='not a url' />
+      <Field.ErrorText>Enter a valid URL.</Field.ErrorText>
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Notes</Field.Label>
+      <Textarea autoResize placeholder='Grows as you type' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Password</Field.Label>
+      <PasswordInput defaultValue='hunter2' autoComplete='current-password' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Quantity</Field.Label>
+      <NumberInput min={0} max={10} defaultValue='8' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Price</Field.Label>
+      <NumberInput defaultValue='1250' step={0.5} formatOptions={{ style: 'currency', currency: 'USD' }} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Code</Field.Label>
+      <PinInput length={4} />
+    </Field.Root>
+    <Field.Root invalid>
+      <Field.Label>Expired</Field.Label>
+      <PinInput length={4} type='alphanumeric' defaultValue='AB12' />
+      <Field.ErrorText>The code has expired.</Field.ErrorText>
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Due</Field.Label>
+      <DateInput defaultValue='2026-09-29' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Starts at</Field.Label>
+      <DateInput type='time' defaultValue='09:30' />
+    </Field.Root>
+    <Field.Root readOnly>
+      <Field.Label>Meeting</Field.Label>
+      <DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
+    </Field.Root>
   </Section>
 );
 
 const CheckboxSection = () => (
   <Section id='checkbox' title='Checkbox, switch'>
-    <Next.Checkbox label='Subscribe' defaultChecked />
-    <Next.Checkbox label='Some selected' checked='indeterminate' />
-    <Next.Checkbox label='Disabled' disabled />
-    <Next.Switch label='Notifications' defaultChecked />
-    <Next.Switch label='Disabled' disabled />
+    <Checkbox label='Subscribe' defaultChecked />
+    <Checkbox label='Some selected' checked='indeterminate' />
+    <Checkbox label='Disabled' disabled />
+    <Switch label='Notifications' defaultChecked />
+    <Switch label='Disabled' disabled />
   </Section>
 );
 
-const COLORS: Next.SelectOption[] = [
+const COLORS: SelectOption[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
   { value: 'black', label: 'Black', disabled: true },
 ];
 
-const VIEWS: Next.SelectOption[] = [
+const VIEWS: SelectOption[] = [
   { value: 'list', label: 'List', icon: 'ph--list--regular' },
   { value: 'grid', label: 'Grid', icon: 'ph--squares-four--regular' },
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
 ];
 
-const PEOPLE: Next.ComboboxOption[] = [
+const PEOPLE: ComboboxOption[] = [
   { value: 'alice', label: 'Alice Green', icon: 'ph--user--regular' },
   { value: 'bob', label: 'Bob Grey', icon: 'ph--user--regular' },
   { value: 'carol', label: 'Carol Black', icon: 'ph--user--regular' },
@@ -387,57 +443,57 @@ const PEOPLE: Next.ComboboxOption[] = [
 
 const SelectSection = () => (
   <Section id='select' title='Select, combobox'>
-    <Next.Field.Root>
-      <Next.Select.Root items={COLORS}>
-        <Next.Select.Label>Color</Next.Select.Label>
-        <Next.Select.Trigger placeholder='Pick a color' />
-        <Next.Select.Content>
+    <Field.Root>
+      <Select.Root items={COLORS}>
+        <Select.Label>Color</Select.Label>
+        <Select.Trigger placeholder='Pick a color' />
+        <Select.Content>
           {COLORS.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Select.Root items={VIEWS} defaultValue={['grid']}>
-        <Next.Select.Label>View</Next.Select.Label>
-        <Next.Select.Trigger />
-        <Next.Select.Content>
+        </Select.Content>
+      </Select.Root>
+    </Field.Root>
+    <Field.Root>
+      <Select.Root items={VIEWS} defaultValue={['grid']}>
+        <Select.Label>View</Select.Label>
+        <Select.Trigger />
+        <Select.Content>
           {VIEWS.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Select.Root items={COLORS} multiple>
-        <Next.Select.Label>Colors</Next.Select.Label>
-        <Next.Select.Trigger placeholder='Several' />
-        <Next.Select.Content>
+        </Select.Content>
+      </Select.Root>
+    </Field.Root>
+    <Field.Root>
+      <Select.Root items={COLORS} multiple>
+        <Select.Label>Colors</Select.Label>
+        <Select.Trigger placeholder='Several' />
+        <Select.Content>
           {COLORS.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Combobox.Root items={PEOPLE}>
-        <Next.Combobox.Label>Owner</Next.Combobox.Label>
-        <Next.Combobox.Control>
-          <Next.Combobox.Input placeholder='Search people' />
-          <Next.Combobox.ClearTrigger aria-label='Clear owner' />
-          <Next.Combobox.Trigger />
-        </Next.Combobox.Control>
-        <Next.Combobox.Content />
-      </Next.Combobox.Root>
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Combobox.Root items={PEOPLE}>
-        <Next.Combobox.Label>Reviewer</Next.Combobox.Label>
-        <Next.Combobox.Trigger placeholder='Pick a person' />
-        <Next.Combobox.Content />
-      </Next.Combobox.Root>
-    </Next.Field.Root>
+        </Select.Content>
+      </Select.Root>
+    </Field.Root>
+    <Field.Root>
+      <Combobox.Root items={PEOPLE}>
+        <Combobox.Label>Owner</Combobox.Label>
+        <Combobox.Control>
+          <Combobox.Input placeholder='Search people' />
+          <Combobox.ClearTrigger aria-label='Clear owner' />
+          <Combobox.Trigger />
+        </Combobox.Control>
+        <Combobox.Content />
+      </Combobox.Root>
+    </Field.Root>
+    <Field.Root>
+      <Combobox.Root items={PEOPLE}>
+        <Combobox.Label>Reviewer</Combobox.Label>
+        <Combobox.Trigger placeholder='Pick a person' />
+        <Combobox.Content />
+      </Combobox.Root>
+    </Field.Root>
   </Section>
 );
 
@@ -445,9 +501,9 @@ const SliderSection = () => {
   const [value, setValue] = useState([40]);
   return (
     <Section id='slider' title='Slider'>
-      <Next.Slider value={value} onValueChange={setValue} max={100} label='Volume' />
-      <Next.Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
-      <Next.Slider defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
+      <Slider value={value} onValueChange={setValue} max={100} label='Volume' />
+      <Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
+      <Slider defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
     </Section>
   );
 };
@@ -456,47 +512,47 @@ const STEPS = ['Plan', 'Build', 'Verify', 'Ship'].map((label) => ({ id: label, l
 
 const ProgressSection = () => (
   <Section id='progress' title='Progress, steps'>
-    <Next.Progress value={0.35} label='Upload' />
-    <Next.Progress indeterminate label='Indexing' />
-    <Next.Progress indeterminate error label='Failed' />
-    <Next.Steps steps={STEPS} active={1} fraction={0.5} />
+    <Progress value={0.35} label='Upload' />
+    <Progress indeterminate label='Indexing' />
+    <Progress indeterminate error label='Failed' />
+    <Steps steps={STEPS} active={1} fraction={0.5} />
   </Section>
 );
 
 const TagSection = () => (
   <Section id='tag' title='Tag'>
-    <Next.Group>
+    <Group>
       {[...VALENCES, ...hues].map((hue) => (
-        <Next.Tag key={hue} hue={hue}>
+        <Tag key={hue} hue={hue}>
           {hue}
-        </Next.Tag>
+        </Tag>
       ))}
-    </Next.Group>
+    </Group>
   </Section>
 );
 
 const AvatarSection = () => (
   <Section id='avatar' title='Avatar'>
-    <Next.Group>
-      <Next.Avatar.Root fallback='Ada Lovelace' hue='blue' status='current' label='Ada Lovelace' />
-      <Next.Avatar.Root fallback='🦊' hue='amber' label='Fox' />
-      <Next.Avatar.Root fallback='Bob' hue='rose' variant='square' status='inactive' label='Bob' />
-      <Next.Avatar.Root icon='ph--robot--regular' hue='violet' hueVariant='surface' label='Agent' />
-      <Next.Avatar.Root fallback='Eve' hue='teal' hueVariant='transparent' status='error' label='Eve' />
-    </Next.Group>
+    <Group>
+      <Avatar.Root fallback='Ada Lovelace' hue='blue' status='current' label='Ada Lovelace' />
+      <Avatar.Root fallback='🦊' hue='amber' label='Fox' />
+      <Avatar.Root fallback='Bob' hue='rose' variant='square' status='inactive' label='Bob' />
+      <Avatar.Root icon='ph--robot--regular' hue='violet' hueVariant='surface' label='Agent' />
+      <Avatar.Root fallback='Eve' hue='teal' hueVariant='transparent' status='error' label='Eve' />
+    </Group>
   </Section>
 );
 
 const SkeletonSection = () => (
   <Section id='skeleton' title='Skeleton'>
     <div className='flex gap-2'>
-      <Next.Skeleton variant='circle' />
+      <Skeleton variant='circle' />
       <div className='flex flex-col grow'>
-        <Next.Skeleton variant='text' classNames='w-2/3' />
-        <Next.Skeleton variant='text' classNames='w-1/3' />
+        <Skeleton variant='text' classNames='w-2/3' />
+        <Skeleton variant='text' classNames='w-1/3' />
       </div>
     </div>
-    <Next.Skeleton />
+    <Skeleton />
   </Section>
 );
 
@@ -504,82 +560,82 @@ const TRAIL = ['Home', 'Projects', 'Composer'];
 
 const NavigationSection = () => (
   <Section id='navigation' title='Breadcrumb, link, separator'>
-    <Next.Breadcrumb.Root aria-label='Location'>
-      <Next.Breadcrumb.List>
+    <Breadcrumb.Root aria-label='Location'>
+      <Breadcrumb.List>
         {TRAIL.map((step) => (
           <Fragment key={step}>
-            <Next.Breadcrumb.Item>
-              <Next.Breadcrumb.Link href='#'>{step}</Next.Breadcrumb.Link>
-            </Next.Breadcrumb.Item>
-            <Next.Breadcrumb.Separator />
+            <Breadcrumb.Item>
+              <Breadcrumb.Link href='#'>{step}</Breadcrumb.Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Separator />
           </Fragment>
         ))}
-        <Next.Breadcrumb.Item>
-          <Next.Breadcrumb.Current>Design review</Next.Breadcrumb.Current>
-        </Next.Breadcrumb.Item>
-      </Next.Breadcrumb.List>
-    </Next.Breadcrumb.Root>
-    <Next.Typography>
-      Read the <Next.Link href='https://dxos.org'>guide</Next.Link>, or the{' '}
-      <Next.Link href='https://github.com/dxos/dxos/releases' variant='neutral'>
+        <Breadcrumb.Item>
+          <Breadcrumb.Current>Design review</Breadcrumb.Current>
+        </Breadcrumb.Item>
+      </Breadcrumb.List>
+    </Breadcrumb.Root>
+    <Typography>
+      Read the <Link href='https://dxos.org'>guide</Link>, or the{' '}
+      <Link href='https://github.com/dxos/dxos/releases' variant='neutral'>
         release notes
-      </Next.Link>
+      </Link>
       .
-    </Next.Typography>
-    <Next.Separator />
-    <Next.Group>
-      <Next.Button>Left</Next.Button>
-      <Next.Separator orientation='vertical' />
-      <Next.Button>Middle</Next.Button>
-      <Next.Separator orientation='vertical' decorative />
-      <Next.Button>Right</Next.Button>
-    </Next.Group>
+    </Typography>
+    <Separator />
+    <Group>
+      <Button>Left</Button>
+      <Separator orientation='vertical' />
+      <Button>Middle</Button>
+      <Separator orientation='vertical' decorative />
+      <Button>Right</Button>
+    </Group>
   </Section>
 );
 
 const TabsSection = () => (
   <Section id='tabs' title='Tabs'>
-    <Next.Tabs.Root defaultValue='overview' classNames='h-40'>
-      <Next.Tabs.List aria-label='Project'>
-        <Next.Tabs.Trigger value='overview' label='Overview' />
-        <Next.Tabs.Trigger value='tasks' icon='ph--check-square--regular' label='Tasks' />
-        <Next.Tabs.Trigger value='settings' icon='ph--gear--regular' label='Settings' iconOnly />
-      </Next.Tabs.List>
-      <Next.Tabs.Content value='overview'>
-        <Next.Typography>A summary of the project.</Next.Typography>
-      </Next.Tabs.Content>
-      <Next.Tabs.Content value='tasks'>
-        <Next.Typography>Three open tasks.</Next.Typography>
-      </Next.Tabs.Content>
-      <Next.Tabs.Content value='settings'>
-        <Next.Input aria-label='Name' defaultValue='Apollo' />
-      </Next.Tabs.Content>
-    </Next.Tabs.Root>
+    <Tabs.Root defaultValue='overview' classNames='h-40'>
+      <Tabs.List aria-label='Project'>
+        <Tabs.Trigger value='overview' label='Overview' />
+        <Tabs.Trigger value='tasks' icon='ph--check-square--regular' label='Tasks' />
+        <Tabs.Trigger value='settings' icon='ph--gear--regular' label='Settings' iconOnly />
+      </Tabs.List>
+      <Tabs.Content value='overview'>
+        <Typography>A summary of the project.</Typography>
+      </Tabs.Content>
+      <Tabs.Content value='tasks'>
+        <Typography>Three open tasks.</Typography>
+      </Tabs.Content>
+      <Tabs.Content value='settings'>
+        <Input aria-label='Name' defaultValue='Apollo' />
+      </Tabs.Content>
+    </Tabs.Root>
   </Section>
 );
 
 const ToolbarSection = () => (
   <Section id='toolbar' title='Toolbar'>
-    <Next.Toolbar.Root>
-      <Next.Button icon='ph--arrow-counter-clockwise--regular' label='Undo' iconOnly />
-      <Next.Button icon='ph--arrow-clockwise--regular' label='Redo' iconOnly />
-      <Next.Toolbar.Separator />
-      <Next.Toolbar.ToggleGroup type='multiple' aria-label='Marks'>
-        <Next.ToggleGroup.Item value='bold' icon='ph--text-b--regular' label='Bold' iconOnly />
-        <Next.ToggleGroup.Item value='italic' icon='ph--text-italic--regular' label='Italic' iconOnly />
-        <Next.ToggleGroup.Item value='underline' icon='ph--text-underline--regular' label='Underline' iconOnly />
-      </Next.Toolbar.ToggleGroup>
-      <Next.Toolbar.Separator />
-      <Next.Input placeholder='Search' aria-label='Search' />
-      <Next.Toolbar.Separator variant='gap' />
-      <Next.Button variant='primary'>Publish</Next.Button>
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root>
-      <Next.DragHandle label='Drag' />
-      <Next.Toolbar.Text>A document title long enough to be truncated by the toolbar</Next.Toolbar.Text>
-      <Next.Toolbar.Link href='https://dxos.org'>Docs</Next.Toolbar.Link>
-      <Next.Button>Share</Next.Button>
-    </Next.Toolbar.Root>
+    <Toolbar.Root>
+      <Button icon='ph--arrow-counter-clockwise--regular' label='Undo' iconOnly />
+      <Button icon='ph--arrow-clockwise--regular' label='Redo' iconOnly />
+      <Toolbar.Separator />
+      <Toolbar.ToggleGroup type='multiple' aria-label='Marks'>
+        <ToggleGroup.Item value='bold' icon='ph--text-b--regular' label='Bold' iconOnly />
+        <ToggleGroup.Item value='italic' icon='ph--text-italic--regular' label='Italic' iconOnly />
+        <ToggleGroup.Item value='underline' icon='ph--text-underline--regular' label='Underline' iconOnly />
+      </Toolbar.ToggleGroup>
+      <Toolbar.Separator />
+      <Input placeholder='Search' aria-label='Search' />
+      <Toolbar.Separator variant='gap' />
+      <Button variant='primary'>Publish</Button>
+    </Toolbar.Root>
+    <Toolbar.Root>
+      <DragHandle label='Drag' />
+      <Toolbar.Text>A document title long enough to be truncated by the toolbar</Toolbar.Text>
+      <Toolbar.Link href='https://dxos.org'>Docs</Toolbar.Link>
+      <Button>Share</Button>
+    </Toolbar.Root>
   </Section>
 );
 
@@ -587,10 +643,10 @@ const EditableSection = () => {
   const [value, setValue] = useState('Ship the spring release');
   return (
     <Section id='editable' title='Editable'>
-      <Next.Editable.Root value={value} onValueChange={setValue} placeholder='Untitled'>
-        <Next.Editable.Preview aria-label='Title' />
-        <Next.Editable.Input />
-      </Next.Editable.Root>
+      <Editable.Root value={value} onValueChange={setValue} placeholder='Untitled'>
+        <Editable.Preview aria-label='Title' />
+        <Editable.Input />
+      </Editable.Root>
     </Section>
   );
 };
@@ -602,74 +658,74 @@ const ACCORDION_ITEMS = [
 
 const CollapsibleSection = () => (
   <Section id='collapsible' title='Collapsible, accordion'>
-    <Next.Collapsible.Root>
-      <Next.Collapsible.Trigger>Advanced settings</Next.Collapsible.Trigger>
-      <Next.Collapsible.Content>
-        <Next.Typography>These settings change how your space syncs.</Next.Typography>
-        <Next.Switch label='Sync over cellular' />
-      </Next.Collapsible.Content>
-    </Next.Collapsible.Root>
-    <Next.Accordion.Root border multiple>
+    <Collapsible.Root>
+      <Collapsible.Trigger>Advanced settings</Collapsible.Trigger>
+      <Collapsible.Content>
+        <Typography>These settings change how your space syncs.</Typography>
+        <Switch label='Sync over cellular' />
+      </Collapsible.Content>
+    </Collapsible.Root>
+    <Accordion.Root border multiple>
       {ACCORDION_ITEMS.map(({ value, icon, label, detail }) => (
-        <Next.Accordion.Item key={value} value={value}>
-          <Next.Accordion.ItemTrigger icon={icon}>{label}</Next.Accordion.ItemTrigger>
-          <Next.Accordion.ItemContent>
-            <Next.Typography>{detail}</Next.Typography>
-          </Next.Accordion.ItemContent>
-        </Next.Accordion.Item>
+        <Accordion.Item key={value} value={value}>
+          <Accordion.ItemTrigger icon={icon}>{label}</Accordion.ItemTrigger>
+          <Accordion.ItemContent>
+            <Typography>{detail}</Typography>
+          </Accordion.ItemContent>
+        </Accordion.Item>
       ))}
-    </Next.Accordion.Root>
+    </Accordion.Root>
   </Section>
 );
 
 const CardSection = () => (
   <Section id='card' title='Card'>
     <div className='grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] items-start gap-4'>
-      <Next.Card.Root>
-        <Next.Card.Header>
-          <Next.Card.Title>Roadmap</Next.Card.Title>
-          <Next.Button icon='ph--dots-three--regular' label='More actions' iconOnly />
-        </Next.Card.Header>
-        <Next.Card.Body>
-          <Next.Card.Description>What ships next quarter and why.</Next.Card.Description>
-          <Next.Typography>Three milestones, each with an owner and a date.</Next.Typography>
-        </Next.Card.Body>
-        <Next.Card.Footer>
-          <Next.Button>Dismiss</Next.Button>
-          <Next.Button variant='primary'>Review</Next.Button>
-        </Next.Card.Footer>
-      </Next.Card.Root>
-      <Next.Card.Root grid>
-        <Next.Card.Header>
-          <Next.Card.Title>Project</Next.Card.Title>
-          <Next.Card.Action system='close' />
-        </Next.Card.Header>
-        <Next.Card.Section title='Members'>
-          <Next.Card.Row icon='ph--user--regular' trailing={<Next.Tag hue='emerald'>Owner</Next.Tag>}>
+      <Card.Root>
+        <Card.Header>
+          <Card.Title>Roadmap</Card.Title>
+          <Button icon='ph--dots-three--regular' label='More actions' iconOnly />
+        </Card.Header>
+        <Card.Body>
+          <Card.Description>What ships next quarter and why.</Card.Description>
+          <Typography>Three milestones, each with an owner and a date.</Typography>
+        </Card.Body>
+        <Card.Footer>
+          <Button>Dismiss</Button>
+          <Button variant='primary'>Review</Button>
+        </Card.Footer>
+      </Card.Root>
+      <Card.Root grid>
+        <Card.Header>
+          <Card.Title>Project</Card.Title>
+          <Card.Action system='close' />
+        </Card.Header>
+        <Card.Section title='Members'>
+          <Card.Row icon='ph--user--regular' trailing={<Tag hue='emerald'>Owner</Tag>}>
             Ada Lovelace
-          </Next.Card.Row>
-          <Next.Card.Row icon='ph--user--regular' trailing={<Next.Card.Action icon='ph--x--regular' label='Remove' />}>
+          </Card.Row>
+          <Card.Row icon='ph--user--regular' trailing={<Card.Action icon='ph--x--regular' label='Remove' />}>
             Charles Babbage
-          </Next.Card.Row>
-        </Next.Card.Section>
-        <Next.Card.Section>
-          <Next.Card.Text variant='description'>Updated today.</Next.Card.Text>
-        </Next.Card.Section>
-      </Next.Card.Root>
+          </Card.Row>
+        </Card.Section>
+        <Card.Section>
+          <Card.Text variant='description'>Updated today.</Card.Text>
+        </Card.Section>
+      </Card.Root>
     </div>
   </Section>
 );
 
 const BannerSection = () => (
   <Section id='banner' title='Banner'>
-    <Next.Container gap='md'>
+    <Container gap='md'>
       {VALENCES.map((valence) => (
-        <Next.Banner.Root key={valence} valence={valence}>
-          <Next.Banner.Title>{valence}</Next.Banner.Title>
-          <Next.Banner.Body>A banner with the {valence} valence.</Next.Banner.Body>
-        </Next.Banner.Root>
+        <Banner.Root key={valence} valence={valence}>
+          <Banner.Title>{valence}</Banner.Title>
+          <Banner.Body>A banner with the {valence} valence.</Banner.Body>
+        </Banner.Root>
       ))}
-    </Next.Container>
+    </Container>
   </Section>
 );
 
@@ -683,17 +739,17 @@ const SLIDES = SLIDE_COLORS.map(
 
 const CarouselSection = () => (
   <Section id='carousel' title='Carousel'>
-    <Next.Carousel.Root count={SLIDES.length} continuous>
-      <Next.Carousel.PrevTrigger />
-      <Next.Carousel.ItemGroup>
+    <Carousel.Root count={SLIDES.length} continuous>
+      <Carousel.PrevTrigger />
+      <Carousel.ItemGroup>
         {SLIDES.map((src, index) => (
-          <Next.Carousel.Item key={src} index={index} src={src} alt={`Slide ${index + 1}`} />
+          <Carousel.Item key={src} index={index} src={src} alt={`Slide ${index + 1}`} />
         ))}
-      </Next.Carousel.ItemGroup>
-      <Next.Carousel.NextTrigger />
-      <Next.Carousel.IndicatorGroup />
-      <Next.Carousel.Caption>{(page) => `Slide ${page + 1} of ${SLIDES.length}`}</Next.Carousel.Caption>
-    </Next.Carousel.Root>
+      </Carousel.ItemGroup>
+      <Carousel.NextTrigger />
+      <Carousel.IndicatorGroup />
+      <Carousel.Caption>{(page) => `Slide ${page + 1} of ${SLIDES.length}`}</Carousel.Caption>
+    </Carousel.Root>
   </Section>
 );
 
@@ -702,19 +758,19 @@ const SplitterSection = () => {
   return (
     <Section id='splitter' title='Splitter'>
       <div className='flex flex-col h-40 border border-separator'>
-        <Next.Splitter.Root orientation='horizontal' resizable minSize={6} size={size} onSizeChange={setSize}>
-          <Next.Splitter.Panel position='start'>
-            <Next.Typography tone='description' classNames='p-2'>
+        <Splitter.Root orientation='horizontal' resizable minSize={6} size={size} onSizeChange={setSize}>
+          <Splitter.Panel position='start'>
+            <Typography tone='description' classNames='p-2'>
               Drag the seam.
-            </Next.Typography>
-          </Next.Splitter.Panel>
-          <Next.Splitter.ResizeTrigger aria-label='Resize' />
-          <Next.Splitter.Panel position='end'>
-            <Next.Typography tone='description' classNames='p-2'>
+            </Typography>
+          </Splitter.Panel>
+          <Splitter.ResizeTrigger aria-label='Resize' />
+          <Splitter.Panel position='end'>
+            <Typography tone='description' classNames='p-2'>
               {size.toFixed(1)}rem
-            </Next.Typography>
-          </Next.Splitter.Panel>
-        </Next.Splitter.Root>
+            </Typography>
+          </Splitter.Panel>
+        </Splitter.Root>
       </div>
     </Section>
   );
@@ -725,36 +781,36 @@ const SCROLL_TAGS = Array.from({ length: 16 }, (_, index) => `Tag ${index + 1}`)
 
 const ScrollAreaSection = () => (
   <Section id='scroll-area' title='Scroll area'>
-    <div className='flex flex-col h-40 w-[26rem] border border-separator'>
-      <Next.ScrollArea.Root classNames='flex-1'>
-        <Next.ScrollArea.Viewport asChild>
-          <Next.Container gutter='rail'>
+    <div className='flex flex-col h-40 border border-separator'>
+      <ScrollArea.Root classNames='flex-1'>
+        <ScrollArea.Viewport asChild>
+          <Container gutter='rail'>
             {SCROLL_ROWS.map((row) => (
-              <Next.Typography key={row}>{row}</Next.Typography>
+              <Typography key={row}>{row}</Typography>
             ))}
-          </Next.Container>
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+          </Container>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </div>
-    <Next.ScrollArea.Root orientation='horizontal' snap autoHide classNames='w-[26rem]'>
-      <Next.ScrollArea.Viewport>
+    <ScrollArea.Root orientation='horizontal' snap autoHide>
+      <ScrollArea.Viewport>
         <div className='flex w-max gap-2 py-2'>
           {SCROLL_TAGS.map((tag) => (
-            <Next.Tag key={tag} hue='sky' classNames='snap-start'>
+            <Tag key={tag} hue='sky' classNames='snap-start'>
               {tag}
-            </Next.Tag>
+            </Tag>
           ))}
         </div>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   </Section>
 );
 
 const QrCodeSection = () => (
   <Section id='qr-code' title='QR code'>
     <div className='grid grid-cols-[repeat(2,8rem)] gap-8 text-description'>
-      <Next.QrCode value='https://dxos.org' icon='ph--planet--regular' label='DXOS' />
-      <Next.QrCode value='https://composer.space' errorCorrection='H' label='Composer' />
+      <QrCode value='https://dxos.org' icon='ph--planet--regular' label='DXOS' />
+      <QrCode value='https://composer.space' errorCorrection='H' label='Composer' />
     </div>
   </Section>
 );
@@ -765,11 +821,11 @@ const TimestampSection = () => {
   const [now] = useState(() => new Date());
   return (
     <Section id='timestamp' title='Timestamp'>
-      <Next.Group>
+      <Group>
         {MINUTES.map((minutes) => (
-          <Next.Timestamp key={minutes} date={new Date(now.getTime() - minutes * 60_000)} />
+          <Timestamp key={minutes} date={new Date(now.getTime() - minutes * 60_000)} />
         ))}
-      </Next.Group>
+      </Group>
     </Section>
   );
 };
@@ -784,75 +840,71 @@ const OverlaysSection = () => {
   const [grid, setGrid] = useState(true);
   return (
     <Section id='overlays' title='Tooltip, popover, hover card, menu'>
-      <Next.Group>
-        <Next.Tooltip.Root>
-          <Next.Tooltip.Trigger asChild>
-            <Next.Button>Tooltip</Next.Button>
-          </Next.Tooltip.Trigger>
-          <Next.Tooltip.Content>Save changes (⌘S)</Next.Tooltip.Content>
-        </Next.Tooltip.Root>
-        <Next.Popover.Root>
-          <Next.Popover.Trigger asChild>
-            <Next.Button>Popover</Next.Button>
-          </Next.Popover.Trigger>
-          <Next.Popover.Content>
-            <Next.Popover.Header>
-              <Next.Popover.Title>Share space</Next.Popover.Title>
-              <Next.Popover.CloseTrigger />
-            </Next.Popover.Header>
-            <Next.Popover.Description>Anyone with the link can view.</Next.Popover.Description>
-            <Next.Field.Root>
-              <Next.Field.Label>Link</Next.Field.Label>
-              <Next.Input defaultValue='https://composer.space/s/123' readOnly />
-            </Next.Field.Root>
-          </Next.Popover.Content>
-        </Next.Popover.Root>
-        <Next.HoverCard.Root>
-          <Next.HoverCard.Trigger asChild>
-            <Next.Button>Hover card</Next.Button>
-          </Next.HoverCard.Trigger>
-          <Next.HoverCard.Content>
-            <Next.Typography>Alice Example</Next.Typography>
-            <Next.Typography tone='description'>Joined in March · 12 spaces</Next.Typography>
-          </Next.HoverCard.Content>
-        </Next.HoverCard.Root>
-        <Next.Menu.Root>
-          <Next.Menu.Trigger asChild>
-            <Next.Button>Menu</Next.Button>
-          </Next.Menu.Trigger>
-          <Next.Menu.Content>
-            <Next.Menu.ItemGroup>
-              <Next.Menu.ItemGroupLabel>Edit</Next.Menu.ItemGroupLabel>
+      <Group>
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild>
+            <Button>Tooltip</Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content>Save changes (⌘S)</Tooltip.Content>
+        </Tooltip.Root>
+        <Popover.Root>
+          <Popover.Trigger asChild>
+            <Button>Popover</Button>
+          </Popover.Trigger>
+          <Popover.Content>
+            <Popover.Header>
+              <Popover.Title>Share space</Popover.Title>
+              <Popover.CloseTrigger />
+            </Popover.Header>
+            <Popover.Description>Anyone with the link can view.</Popover.Description>
+            <Field.Root>
+              <Field.Label>Link</Field.Label>
+              <Input defaultValue='https://composer.space/s/123' readOnly />
+            </Field.Root>
+          </Popover.Content>
+        </Popover.Root>
+        <HoverCard.Root>
+          <HoverCard.Trigger asChild>
+            <Button>Hover card</Button>
+          </HoverCard.Trigger>
+          <HoverCard.Content>
+            <Typography>Alice Example</Typography>
+            <Typography tone='description'>Joined in March · 12 spaces</Typography>
+          </HoverCard.Content>
+        </HoverCard.Root>
+        <Menu.Root>
+          <Menu.Trigger asChild>
+            <Button>Menu</Button>
+          </Menu.Trigger>
+          <Menu.Content>
+            <Menu.ItemGroup>
+              <Menu.ItemGroupLabel>Edit</Menu.ItemGroupLabel>
               {MENU_ITEMS.map((item) => (
-                <Next.Menu.Item key={item.value} item={item} />
+                <Menu.Item key={item.value} item={item} />
               ))}
-            </Next.Menu.ItemGroup>
-            <Next.Menu.Separator />
-            <Next.Menu.CheckboxItem
-              item={{ value: 'grid', label: 'Show grid' }}
-              checked={grid}
-              onCheckedChange={setGrid}
-            />
-            <Next.Menu.Sub>
-              <Next.Menu.TriggerItem item={{ label: 'Share', icon: 'ph--share--regular' }} />
-              <Next.Menu.Content>
-                <Next.Menu.Item item={{ value: 'email', label: 'Email' }} />
-                <Next.Menu.Item item={{ value: 'link', label: 'Copy link' }} />
-              </Next.Menu.Content>
-            </Next.Menu.Sub>
-          </Next.Menu.Content>
-        </Next.Menu.Root>
-        <Next.Menu.Root>
-          <Next.Menu.ContextTrigger asChild>
-            <Next.Typography tone='description' classNames='px-3 border border-dashed border-separator rounded-sm'>
+            </Menu.ItemGroup>
+            <Menu.Separator />
+            <Menu.CheckboxItem item={{ value: 'grid', label: 'Show grid' }} checked={grid} onCheckedChange={setGrid} />
+            <Menu.Sub>
+              <Menu.TriggerItem item={{ label: 'Share', icon: 'ph--share--regular' }} />
+              <Menu.Content>
+                <Menu.Item item={{ value: 'email', label: 'Email' }} />
+                <Menu.Item item={{ value: 'link', label: 'Copy link' }} />
+              </Menu.Content>
+            </Menu.Sub>
+          </Menu.Content>
+        </Menu.Root>
+        <Menu.Root>
+          <Menu.ContextTrigger asChild>
+            <Typography tone='description' classNames='px-3 border border-dashed border-separator rounded-sm'>
               Right-click here
-            </Next.Typography>
-          </Next.Menu.ContextTrigger>
-          <Next.Menu.Content>
-            <Next.Menu.Item item={{ value: 'rename', label: 'Rename' }} />
-          </Next.Menu.Content>
-        </Next.Menu.Root>
-      </Next.Group>
+            </Typography>
+          </Menu.ContextTrigger>
+          <Menu.Content>
+            <Menu.Item item={{ value: 'rename', label: 'Rename' }} />
+          </Menu.Content>
+        </Menu.Root>
+      </Group>
     </Section>
   );
 };
@@ -861,65 +913,65 @@ const DialogsSection = () => {
   const [toast, setToast] = useState(false);
   return (
     <Section id='dialogs' title='Dialog, alert dialog, toast'>
-      <Next.Group>
-        <Next.Dialog.Root>
-          <Next.Dialog.Trigger asChild>
-            <Next.Button>Dialog</Next.Button>
-          </Next.Dialog.Trigger>
-          <Next.Dialog.Content>
-            <Next.Dialog.Header>
-              <Next.Dialog.Title>Edit profile</Next.Dialog.Title>
-              <Next.Dialog.CloseTrigger />
-            </Next.Dialog.Header>
-            <Next.Dialog.Body>
-              <Next.Dialog.Description>Update how others see you.</Next.Dialog.Description>
-              <Next.Field.Root>
-                <Next.Field.Label>Name</Next.Field.Label>
-                <Next.Input placeholder='Ada Lovelace' />
-              </Next.Field.Root>
-            </Next.Dialog.Body>
-            <Next.Dialog.Footer>
-              <Next.Dialog.CloseTrigger asChild>
-                <Next.SystemButton.Cancel iconOnly={false} />
-              </Next.Dialog.CloseTrigger>
-              <Next.SystemButton.Save iconOnly={false} />
-            </Next.Dialog.Footer>
-          </Next.Dialog.Content>
-        </Next.Dialog.Root>
-        <Next.AlertDialog.Root>
-          <Next.AlertDialog.Trigger asChild>
-            <Next.Button variant='destructive'>Delete space</Next.Button>
-          </Next.AlertDialog.Trigger>
-          <Next.AlertDialog.Content>
-            <Next.AlertDialog.Header>
-              <Next.AlertDialog.Title>Delete space?</Next.AlertDialog.Title>
-            </Next.AlertDialog.Header>
-            <Next.AlertDialog.Body>
-              <Next.AlertDialog.Description>Its objects are removed for every member.</Next.AlertDialog.Description>
-            </Next.AlertDialog.Body>
-            <Next.AlertDialog.Footer>
-              <Next.AlertDialog.Cancel>Cancel</Next.AlertDialog.Cancel>
-              <Next.AlertDialog.Action variant='destructive'>Delete</Next.AlertDialog.Action>
-            </Next.AlertDialog.Footer>
-          </Next.AlertDialog.Content>
-        </Next.AlertDialog.Root>
-        <Next.Button onClick={() => setToast(true)}>Toast</Next.Button>
-      </Next.Group>
-      <Next.Toast.Root open={toast} duration={6_000} onOpenChange={setToast}>
-        <Next.Toast.Header icon='ph--sparkle--regular'>Saved</Next.Toast.Header>
-        <Next.Toast.Description>The bar counts down to when this closes.</Next.Toast.Description>
-        <Next.Toast.Footer>
-          <Next.Toast.ActionTrigger onClick={() => setToast(false)}>Undo</Next.Toast.ActionTrigger>
-        </Next.Toast.Footer>
-      </Next.Toast.Root>
+      <Group>
+        <Dialog.Root>
+          <Dialog.Trigger asChild>
+            <Button>Dialog</Button>
+          </Dialog.Trigger>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>Edit profile</Dialog.Title>
+              <Dialog.CloseTrigger />
+            </Dialog.Header>
+            <Dialog.Body>
+              <Dialog.Description>Update how others see you.</Dialog.Description>
+              <Field.Root>
+                <Field.Label>Name</Field.Label>
+                <Input placeholder='Ada Lovelace' />
+              </Field.Root>
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Dialog.CloseTrigger asChild>
+                <SystemButton.Cancel iconOnly={false} />
+              </Dialog.CloseTrigger>
+              <SystemButton.Save iconOnly={false} />
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Root>
+        <AlertDialog.Root>
+          <AlertDialog.Trigger asChild>
+            <Button variant='destructive'>Delete space</Button>
+          </AlertDialog.Trigger>
+          <AlertDialog.Content>
+            <AlertDialog.Header>
+              <AlertDialog.Title>Delete space?</AlertDialog.Title>
+            </AlertDialog.Header>
+            <AlertDialog.Body>
+              <AlertDialog.Description>Its objects are removed for every member.</AlertDialog.Description>
+            </AlertDialog.Body>
+            <AlertDialog.Footer>
+              <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+              <AlertDialog.Action variant='destructive'>Delete</AlertDialog.Action>
+            </AlertDialog.Footer>
+          </AlertDialog.Content>
+        </AlertDialog.Root>
+        <Button onClick={() => setToast(true)}>Toast</Button>
+      </Group>
+      <Toast.Root open={toast} duration={6_000} onOpenChange={setToast}>
+        <Toast.Header icon='ph--sparkle--regular'>Saved</Toast.Header>
+        <Toast.Description>The bar counts down to when this closes.</Toast.Description>
+        <Toast.Footer>
+          <Toast.ActionTrigger onClick={() => setToast(false)}>Undo</Toast.ActionTrigger>
+        </Toast.Footer>
+      </Toast.Root>
     </Section>
   );
 };
 
 const EmptySection = () => (
   <Section id='empty' title='Empty'>
-    <Next.Empty />
-    <Next.Empty icon='ph--tray--regular'>No documents yet</Next.Empty>
+    <Empty />
+    <Empty icon='ph--tray--regular'>No documents yet</Empty>
   </Section>
 );
 

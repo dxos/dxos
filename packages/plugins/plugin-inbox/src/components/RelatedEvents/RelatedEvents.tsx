@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, useTranslation } from '@dxos/react-ui';
 import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -21,36 +21,36 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
   return (
     <>
       {recent.length > 0 ? (
-        <Next.Card.Section title={t('recent-events.title')}>
+        <Card.Section title={t('recent-events.title')}>
           {recent
             .filter((event) => event.title || event.description)
             .map((event) => (
-              <Next.Card.Row
+              <Card.Row
                 key={event.id}
                 icon='ph--calendar-dot--regular'
-                trailing={<Next.Icon icon='ph--arrow-right--regular' />}
+                trailing={<Icon icon='ph--arrow-right--regular' />}
                 onClick={() => onEventClick?.(event)}
               >
-                <Next.Card.Text>{event.title ?? event.description ?? ''}</Next.Card.Text>
-              </Next.Card.Row>
+                <Card.Text>{event.title ?? event.description ?? ''}</Card.Text>
+              </Card.Row>
             ))}
-        </Next.Card.Section>
+        </Card.Section>
       ) : null}
       {upcoming.length > 0 ? (
-        <Next.Card.Section title={t('upcoming-events.title')}>
+        <Card.Section title={t('upcoming-events.title')}>
           {upcoming
             .filter((event) => event.title || event.description)
             .map((event) => (
-              <Next.Card.Row
+              <Card.Row
                 key={event.id}
                 icon='ph--calendar-dot--regular'
-                trailing={<Next.Icon icon='ph--arrow-right--regular' />}
+                trailing={<Icon icon='ph--arrow-right--regular' />}
                 onClick={() => onEventClick?.(event)}
               >
-                <Next.Card.Text>{event.title ?? event.description ?? ''}</Next.Card.Text>
-              </Next.Card.Row>
+                <Card.Text>{event.title ?? event.description ?? ''}</Card.Text>
+              </Card.Row>
             ))}
-        </Next.Card.Section>
+        </Card.Section>
       ) : null}
     </>
   );

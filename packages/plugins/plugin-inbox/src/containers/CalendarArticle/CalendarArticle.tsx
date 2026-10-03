@@ -12,7 +12,7 @@ import { type AppSurface, useAppGraph, useDetailNavigation } from '@dxos/app-too
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
@@ -195,22 +195,22 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   return (
     <div role={role} className='@container dx-expand'>
       <div className='grid grid-cols-1 @2xl:grid-cols-[min-content_1fr] h-full'>
-        <Next.Panel.Root classNames='hidden @2xl:block'>
+        <Panel.Root classNames='hidden @2xl:block'>
           <NaturalCalendar.Root ref={calendarRef}>
-            <Next.Panel.Header>
+            <Panel.Header>
               <NaturalCalendar.Toolbar />
-            </Next.Panel.Header>
-            <Next.Panel.Body asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <NaturalCalendar.Grid dates={dates} onSelect={handleDateSelect} onSelectRange={handleRangeSelect} />
-            </Next.Panel.Body>
+            </Panel.Body>
           </NaturalCalendar.Root>
-        </Next.Panel.Root>
-        <Next.Panel.Root>
-          <Next.Panel.Header>
+        </Panel.Root>
+        <Panel.Root>
+          <Panel.Header>
             <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-          </Next.Panel.Header>
+          </Panel.Header>
 
-          <Next.Panel.Body asChild>
+          <Panel.Body asChild>
             {events.length === 0 ? (
               <InitializeCalendar calendar={subject} />
             ) : (
@@ -223,8 +223,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
                 onAction={handleAction}
               />
             )}
-          </Next.Panel.Body>
-        </Next.Panel.Root>
+          </Panel.Body>
+        </Panel.Root>
       </div>
     </div>
   );

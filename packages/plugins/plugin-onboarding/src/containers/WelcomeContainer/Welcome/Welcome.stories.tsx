@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui';
+import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../../translations.ts';
@@ -21,9 +21,9 @@ const DefaultStory = ({ state: initialState = WelcomeState.INIT, ...props }: Par
   const [state, setState] = useState(initialState);
 
   return (
-    <Next.AlertDialog.Root defaultOpen>
+    <AlertDialog.Root defaultOpen>
       <Welcome identity={identity} state={state} onEmailLogin={() => setState(WelcomeState.LOGIN_SENT)} {...props} />
-    </Next.AlertDialog.Root>
+    </AlertDialog.Root>
   );
 };
 

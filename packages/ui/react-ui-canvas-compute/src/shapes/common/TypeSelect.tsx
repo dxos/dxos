@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
-import { Next } from '@dxos/react-ui';
+import { Select } from '@dxos/react-ui';
 
 // TODO(burdon): Factor out.
 export type TypeSelectProps = {
@@ -15,7 +15,7 @@ export type TypeSelectProps = {
 
 export const TypeSelect = ({ value, onValueChange }: TypeSelectProps) => {
   return (
-    <Next.Select.Root
+    <Select.Root
       value={value === undefined ? [] : [value]}
       onValueChange={({ value: [next] }) => {
         const type = ComputeValueType.literals.find((literal) => literal === next);
@@ -25,12 +25,12 @@ export const TypeSelect = ({ value, onValueChange }: TypeSelectProps) => {
       }}
       items={ComputeValueType.literals.map((type) => ({ value: type, label: type }))}
     >
-      <Next.Select.Trigger classNames='w-full px-0!' />
-      <Next.Select.Content>
+      <Select.Trigger classNames='w-full px-0!' />
+      <Select.Content>
         {ComputeValueType.literals.map((type) => (
-          <Next.Select.Item key={type} item={{ value: type, label: type }} />
+          <Select.Item key={type} item={{ value: type, label: type }} />
         ))}
-      </Next.Select.Content>
-    </Next.Select.Root>
+      </Select.Content>
+    </Select.Root>
   );
 };

@@ -15,7 +15,7 @@ import React, {
 
 import { type Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Field, Input, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -126,8 +126,8 @@ const TaskEditorTitle = ({ classNames }: TaskEditorTitleProps) => {
   );
 
   return (
-    <Next.Field.Root>
-      <Next.Input
+    <Field.Root>
+      <Input
         variant='subdued'
         // An input clips its overflow rather than wrapping it, so a long title ends mid-word with
         // nothing to say it continues; the ellipsis says so. (Shown while the field is not focused,
@@ -142,7 +142,7 @@ const TaskEditorTitle = ({ classNames }: TaskEditorTitleProps) => {
         onKeyDown={handleKeyDown}
         onBlur={commitTitle}
       />
-    </Next.Field.Root>
+    </Field.Root>
   );
 };
 

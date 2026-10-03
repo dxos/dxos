@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Video } from '@dxos/types';
 
 import { Pending, Transcript } from '#components';
@@ -90,9 +90,9 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
       return (
         <Flex column center gap='sm' classNames='w-full p-4 text-description'>
           <span>{transcribeError}</span>
-          <Next.Button variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
+          <Button variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
             {t('transcribe-retry.label')}
-          </Next.Button>
+          </Button>
         </Flex>
       );
     }

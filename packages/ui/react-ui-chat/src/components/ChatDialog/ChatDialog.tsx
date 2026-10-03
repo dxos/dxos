@@ -4,7 +4,7 @@
 
 import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useState } from 'react';
 
-import { Next, type ThemedClassName, createContext, useControlledState } from '@dxos/react-ui';
+import { Button, Dialog, Icon, type ThemedClassName, createContext, useControlledState } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
@@ -67,22 +67,22 @@ const ChatDialogRoot = ({
       size={size}
       setSize={setSize}
     >
-      <Next.Dialog.Root
+      <Dialog.Root
         modal={false}
         open={open}
         onOpenChange={({ open }) => setOpen(open)}
         onEscapeKeyDown={onEscape}
         onInteractOutside={(event) => event.preventDefault()}
       >
-        <Next.Dialog.Content
+        <Dialog.Content
           size='md'
           placement='end'
           scrim={false}
           classNames='grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content'
         >
           {children}
-        </Next.Dialog.Content>
-      </Next.Dialog.Root>
+        </Dialog.Content>
+      </Dialog.Root>
     </ChatDialogContextProvider>
   );
 };
@@ -107,18 +107,18 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
       className={mx('grid grid-cols-[var(--dx-rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}
     >
       <Endcap>
-        <Next.Dialog.CloseTrigger>
-          <Next.Icon icon='ph--x--regular' />
-        </Next.Dialog.CloseTrigger>
+        <Dialog.CloseTrigger>
+          <Icon icon='ph--x--regular' />
+        </Dialog.CloseTrigger>
       </Endcap>
-      <Next.Dialog.Title
+      <Dialog.Title
         classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}
-      </Next.Dialog.Title>
+      </Dialog.Title>
       <Endcap>
-        <Next.Button
+        <Button
           variant='ghost'
           icon='ph--caret-up--regular'
           iconOnly

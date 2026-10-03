@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Next } from '@dxos/react-ui';
+import { Card, Icon, SystemButton } from '@dxos/react-ui';
 import { RemoteSession } from '@dxos/types';
 
 export type RemoteSessionCardProps = AppSurface.ObjectCardProps<RemoteSession.RemoteSession>;
@@ -52,11 +52,11 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
   const worktreeName = worktree?.split('/').filter(Boolean).at(-1);
 
   return (
-    <Next.Card.Body>
-      <Next.Card.Row>
+    <Card.Body>
+      <Card.Row>
         <div className='flex justify-between items-center gap-2 text-sm'>
           <span className='flex items-center gap-1 text-description'>
-            {harnessIcon && <Next.Icon icon={harnessIcon} size='md' />}
+            {harnessIcon && <Icon icon={harnessIcon} size='md' />}
             {harness ?? 'Session'}
           </span>
           {option && (
@@ -65,14 +65,14 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
             </span>
           )}
         </div>
-      </Next.Card.Row>
+      </Card.Row>
       {title && (
-        <Next.Card.Row>
-          <Next.Card.Title lines={2}>{title}</Next.Card.Title>
-        </Next.Card.Row>
+        <Card.Row>
+          <Card.Title lines={2}>{title}</Card.Title>
+        </Card.Row>
       )}
       {(repo || branch || worktreeName) && (
-        <Next.Card.Row>
+        <Card.Row>
           <div className='flex items-center gap-2 text-sm text-description min-w-0'>
             {repo && <span className='truncate'>{repo}</span>}
             {branch && (
@@ -82,33 +82,33 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
             )}
             {!repo && worktreeName && <span className='truncate'>{worktreeName}</span>}
           </div>
-        </Next.Card.Row>
+        </Card.Row>
       )}
-      <Next.Card.Row>
+      <Card.Row>
         <div className='flex items-center gap-2 text-sm text-subdued'>
           <span>started {since(started)}</span>
           {/* Only meaningful while the session might still be working; a closed one has an end. */}
           {lastCheckedIn && !RemoteSession.isTerminal(subject) && <span>· seen {since(lastCheckedIn)}</span>}
         </div>
-      </Next.Card.Row>
+      </Card.Row>
       {lastMessage && (
-        <Next.Card.Row>
-          <Next.Card.Text classNames='line-clamp-3' variant='description'>
+        <Card.Row>
+          <Card.Text classNames='line-clamp-3' variant='description'>
             {lastMessage}
-          </Next.Card.Text>
-        </Next.Card.Row>
+          </Card.Text>
+        </Card.Row>
       )}
       {sessionId && (
-        <Next.Card.Row>
+        <Card.Row>
           {/* The only reliable way back into a session: `claude-cli://open` takes no session id, and
               the web URL needs the bridge id, which the harness does not put in the hook payload. */}
           <div className='flex items-center gap-1 min-w-0'>
             <code className='text-xs text-subdued select-all truncate'>{resumeCommand(sessionId)}</code>
-            <Next.SystemButton.Clipboard iconOnly variant='ghost' value={resumeCommand(sessionId)} />
+            <SystemButton.Clipboard iconOnly variant='ghost' value={resumeCommand(sessionId)} />
           </div>
-        </Next.Card.Row>
+        </Card.Row>
       )}
-    </Next.Card.Body>
+    </Card.Body>
   );
 };
 

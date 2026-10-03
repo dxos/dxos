@@ -22,7 +22,7 @@ import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
-import { ErrorBoundary, Next, type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
+import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeMode } from '@dxos/react-ui';
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollProps,
@@ -290,7 +290,7 @@ const useMarkdownStreamTextEditor = (
     setFooterRoot,
   }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
 
   // Active widgets.
   const [widgets, setWidgets] = useState<WidgetState[]>([]);

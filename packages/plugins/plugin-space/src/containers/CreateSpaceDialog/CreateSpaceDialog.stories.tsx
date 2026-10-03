@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { Next } from '@dxos/react-ui';
+import { Dialog } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -21,9 +21,9 @@ import { translations } from '#translations';
 import { CreateSpaceDialog } from './CreateSpaceDialog.tsx';
 
 const DefaultStory = () => (
-  <Next.Dialog.Root defaultOpen>
+  <Dialog.Root defaultOpen>
     <CreateSpaceDialog />
-  </Next.Dialog.Root>
+  </Dialog.Root>
 );
 
 /** Two templates through the real contribution path; one is hidden, so the picker shows one row. */

@@ -9,7 +9,7 @@ import { Config } from '@dxos/client';
 import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
@@ -80,14 +80,14 @@ const DefaultStory = () => {
 
   return (
     <div className='flex flex-col w-full'>
-      <Next.Toolbar.Root>
-        <Next.Button onClick={handleReset}>Reset</Next.Button>
-        <Next.Button onClick={handleReload}>Reload</Next.Button>
-        <Next.Button onClick={handleCreate}>Create</Next.Button>
-        <Next.Button onClick={handleCreateFactory}>Create 1000</Next.Button>
-        <Next.Button onClick={handleFlush}>Flush</Next.Button>
-        <Next.Button onClick={handleQuery}>Query</Next.Button>
-      </Next.Toolbar.Root>
+      <Toolbar.Root>
+        <Button onClick={handleReset}>Reset</Button>
+        <Button onClick={handleReload}>Reload</Button>
+        <Button onClick={handleCreate}>Create</Button>
+        <Button onClick={handleCreateFactory}>Create 1000</Button>
+        <Button onClick={handleFlush}>Flush</Button>
+        <Button onClick={handleQuery}>Query</Button>
+      </Toolbar.Root>
       <Syntax.Root data={data}>
         <Syntax.Content>
           <Syntax.Filter />

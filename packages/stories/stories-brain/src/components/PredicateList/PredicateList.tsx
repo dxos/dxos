@@ -4,7 +4,7 @@
 
 import React, { useRef } from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Empty, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { type PredicateItem } from '../types.ts';
@@ -27,24 +27,24 @@ export type PredicateListProps = ThemedClassName<{
 export const PredicateList = ({ predicates, selected, onSelect, classNames }: PredicateListProps) => {
   const pointerSelectionRef = useRef<{ itemId: string; selected: string | undefined } | undefined>(undefined);
   return (
-    <Next.Panel.Root classNames={classNames}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text classNames='grow'>
+    <Panel.Root classNames={classNames}>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Toolbar.Text classNames='grow'>
             Predicates{predicates.length > 0 ? ` (${predicates.length})` : ''}
-          </Next.Toolbar.Text>
-          <Next.Button
+          </Toolbar.Text>
+          <Button
             icon='ph--x--regular'
             iconOnly
             label='Clear'
             disabled={!selected}
             onClick={() => onSelect(undefined)}
           />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='overflow-auto'>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='overflow-auto'>
         {predicates.length === 0 ? (
-          <Next.Empty>No predicates.</Next.Empty>
+          <Empty>No predicates.</Empty>
         ) : (
           <Listbox.Root
             value={selected}
@@ -78,7 +78,7 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
             </Listbox.Content>
           </Listbox.Root>
         )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

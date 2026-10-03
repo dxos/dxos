@@ -15,7 +15,16 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import { EffectEx } from '@dxos/effect';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Container,
+  Input,
+  Panel,
+  ScrollArea,
+  Toolbar,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
@@ -138,21 +147,21 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     );
 
     return (
-      <Next.Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
-            <Next.Input
+      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+        <Panel.Header>
+          <Toolbar.Root>
+            <Input
               aria-label={t('filter.label')}
               placeholder={t('filter.placeholder')}
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
             />
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport asChild>
-              <Next.Container gutter='md' padBlock>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport asChild>
+              <Container gutter='md' padBlock>
                 {filtered.length > 0 ? (
                   <PluginList
                     plugins={filtered}
@@ -175,11 +184,11 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
                 ) : (
                   empty
                 )}
-              </Next.Container>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+              </Container>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
     );
   },
 );

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Next } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 
 import { Book } from '#types';
 
@@ -21,20 +21,20 @@ export const BookCard = ({ subject }: AppSurface.ObjectCardProps<Book.Book>) => 
   const meta = [catalog?.publicationYear, stars != null ? `★ ${stars}/10` : undefined].filter(Boolean).join(' · ');
 
   return (
-    <Next.Card.Body>
-      {cover && <Next.Card.Poster src={cover} alt={catalog?.title ?? ''} aspectRatio='auto' fit='contain' />}
+    <Card.Body>
+      {cover && <Card.Poster src={cover} alt={catalog?.title ?? ''} aspectRatio='auto' fit='contain' />}
       {authors.length > 0 && (
-        <Next.Card.Row>
-          <Next.Card.Text variant='description' truncate>
+        <Card.Row>
+          <Card.Text variant='description' truncate>
             {authors.join(', ')}
-          </Next.Card.Text>
-        </Next.Card.Row>
+          </Card.Text>
+        </Card.Row>
       )}
       {meta && (
-        <Next.Card.Row>
-          <Next.Card.Text variant='description'>{meta}</Next.Card.Text>
-        </Next.Card.Row>
+        <Card.Row>
+          <Card.Text variant='description'>{meta}</Card.Text>
+        </Card.Row>
       )}
-    </Next.Card.Body>
+    </Card.Body>
   );
 };

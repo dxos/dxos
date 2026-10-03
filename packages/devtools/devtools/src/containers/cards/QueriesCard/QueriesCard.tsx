@@ -5,7 +5,7 @@
 import React, { Fragment, useState } from 'react';
 
 import { type QueryMetrics } from '@dxos/echo-client';
-import { Grid, Next } from '@dxos/react-ui';
+import { Button, Grid, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -37,7 +37,7 @@ export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardPro
         info={`${active.toLocaleString()} active · ${queries.length.toLocaleString()}`}
         action={
           onOpen && (
-            <Next.Button
+            <Button
               iconOnly
               variant='ghost'
               icon='ph--arrow-square-out--regular'
@@ -65,9 +65,9 @@ export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardPro
           <Fragment key={query.query}>
             <StatCard.Row open={open} onToggle={(open) => setExpanded(open ? query.query : undefined)} unit='ms'>
               <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end tabular-nums'>
-                <Next.Tooltip.Trigger asChild content={query.query}>
+                <Tooltip.Trigger asChild content={query.query}>
                   <span className='truncate text-start'>{shortQueryText(query.query)}</span>
-                </Next.Tooltip.Trigger>
+                </Tooltip.Trigger>
                 <span className='text-description'>{queryFiredCount(query).toLocaleString()}</span>
                 <span className={mx(query.active > 0 ? 'text-success-text' : 'text-description')}>{query.active}</span>
                 <span>{query.lastCount.toLocaleString()}</span>

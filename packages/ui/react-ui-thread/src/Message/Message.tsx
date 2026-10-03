@@ -17,7 +17,7 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { Next, type ThemedClassName, useOnTransition, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, type ThemedClassName, useOnTransition, useThemeMode, useTranslation } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
@@ -69,7 +69,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
         ref={forwardedRef}
       >
         <div className='flex flex-col items-center gap-2 pt-1'>
-          <Next.Avatar.Root
+          <Avatar.Root
             size={avatarSize}
             hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
             fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
@@ -195,7 +195,7 @@ const TextBlock = ({
   editing?: boolean;
   onSave?: (text: string) => void;
 }) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const inMemoryContentRef = useRef(block.text);
 
   const handleDocumentChange = useCallback((next: string) => {
@@ -396,7 +396,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     showEdit || showAccept || showAcceptChange || showRejectChange || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <Next.Button
+          <Button
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -407,7 +407,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAccept && (
-          <Next.Button
+          <Button
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -418,7 +418,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAcceptChange && (
-          <Next.Button
+          <Button
             data-testid='thread.message.accept-change'
             variant='ghost'
             icon='ph--check--regular'
@@ -429,7 +429,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showRejectChange && (
-          <Next.Button
+          <Button
             data-testid='thread.message.reject-change'
             variant='ghost'
             icon='ph--x--regular'
@@ -440,7 +440,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showDelete && (
-          <Next.Button
+          <Button
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'
@@ -530,7 +530,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
     showEdit || showAccept || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <Next.Button
+          <Button
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -541,7 +541,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showAccept && (
-          <Next.Button
+          <Button
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -552,7 +552,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showDelete && (
-          <Next.Button
+          <Button
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'

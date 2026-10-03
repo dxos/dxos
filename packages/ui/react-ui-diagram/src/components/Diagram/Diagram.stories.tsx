@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Next, composable, composableProps, useComposedRefs } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, composable, composableProps, useComposedRefs, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { EditorView, createBasicExtensions, createMermaidExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -21,7 +21,7 @@ import { Diagram, type DiagramBackgroundProps } from './Diagram.tsx';
  */
 const SourceEditor = composable<HTMLDivElement, { value: string; onChange: (value: string) => void }>(
   ({ value, onChange, ...props }, forwardedRef) => {
-    const themeMode = Next.useThemeMode();
+    const themeMode = useThemeMode();
     const extensions = useMemo(
       () => [
         createBasicExtensions({ lineNumbers: true, lineWrapping: false }),
@@ -92,44 +92,44 @@ const DefaultStory = ({ source, projection, background }: StoryArgs) => {
   return (
     <div className='dx-expand grid' style={{ gridTemplateColumns: text !== undefined ? '1fr 1fr' : '1fr' }}>
       {text !== undefined && (
-        <Next.Panel.Root>
-          <Next.Panel.Header>
-            <Next.Toolbar.Root>
-              <Next.Button
+        <Panel.Root>
+          <Panel.Header>
+            <Toolbar.Root>
+              <Button
                 icon='ph--arrow-counter-clockwise--regular'
                 label='Reset'
                 disabled={text === source}
                 onClick={handleReset}
               />
-            </Next.Toolbar.Root>
-          </Next.Panel.Header>
-          <Next.Panel.Body asChild>
+            </Toolbar.Root>
+          </Panel.Header>
+          <Panel.Body asChild>
             <SourceEditor key={key} value={text} onChange={handleChange} />
-          </Next.Panel.Body>
-          <Next.Panel.Footer classNames='p-2'>
+          </Panel.Body>
+          <Panel.Footer classNames='p-2'>
             <span>mermaid ({count(text.split('\n').length, 'line')})</span>
-          </Next.Panel.Footer>
-        </Next.Panel.Root>
+          </Panel.Footer>
+        </Panel.Root>
       )}
 
       <Diagram.Root diagram={resolved} overlay={overlay} onNodeMove={handleNodeMove}>
-        <Next.Panel.Root>
-          <Next.Panel.Header>
-            <Next.Toolbar.Root>
-              <Next.Button
+        <Panel.Root>
+          <Panel.Header>
+            <Toolbar.Root>
+              <Button
                 icon='ph--arrows-clockwise--regular'
                 label='Re-layout'
                 disabled={pinned === 0}
                 onClick={handleRelayout}
               />
-            </Next.Toolbar.Root>
-          </Next.Panel.Header>
-          <Next.Panel.Body asChild>
+            </Toolbar.Root>
+          </Panel.Header>
+          <Panel.Body asChild>
             <Diagram.Canvas>
               <Diagram.Background variant={background} />
             </Diagram.Canvas>
-          </Next.Panel.Body>
-          <Next.Panel.Footer classNames='p-2'>
+          </Panel.Body>
+          <Panel.Footer classNames='p-2'>
             <span>
               {[
                 count(resolved.graph.nodes.length, 'node'),
@@ -137,8 +137,8 @@ const DefaultStory = ({ source, projection, background }: StoryArgs) => {
                 ...(pinned > 0 ? [`${pinned} pinned`] : []),
               ].join(', ')}
             </span>
-          </Next.Panel.Footer>
-        </Next.Panel.Root>
+          </Panel.Footer>
+        </Panel.Root>
       </Diagram.Root>
     </div>
   );

@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState }
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Field, Input, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
@@ -69,15 +69,15 @@ export const CreateProjectPanel = ({ onCreateObject, onCancel, templates: templa
         {/* `Form.Content` pads its bottom only, so the top is matched here to sit off the dialog's
             chrome; the gap spaces the name field from the template picker, which are otherwise flush. */}
         <CreateProjectContent>
-          <Next.Field.Root>
-            <Next.Input
+          <Field.Root>
+            <Input
               autoFocus
               data-testid='create-project-panel.name-input'
               placeholder={t('create-panel.name.placeholder')}
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
-          </Next.Field.Root>
+          </Field.Root>
           <SearchList.Root onSearch={handleSearch}>
             <SearchList.Input
               data-testid='create-project-panel.template-input'

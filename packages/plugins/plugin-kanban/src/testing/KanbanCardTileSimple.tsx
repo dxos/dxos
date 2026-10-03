@@ -5,7 +5,7 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, DragHandle, Focus, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
@@ -48,30 +48,30 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         draggable={draggable}
         dragHandle={dragHandle}
       >
-        <Next.Focus.Item asChild>
-          <Next.Card.Root ref={forwardedRef} data-testid='board-item'>
-            <Next.Card.Header>
-              <Next.DragHandle ref={dragHandleRef} />
-              <Next.Card.Title>{Obj.getLabel(data)}</Next.Card.Title>
+        <Focus.Item asChild>
+          <Card.Root ref={forwardedRef} data-testid='board-item'>
+            <Card.Header>
+              <DragHandle ref={dragHandleRef} />
+              <Card.Title>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Next.Block rail='end'>
+              <Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <Next.Button
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Next.Block>
-            </Next.Card.Header>
-            <Next.Card.Body>
-              <Next.Card.Row>
+              </Block>
+            </Card.Header>
+            <Card.Body>
+              <Card.Row>
                 <pre className='p-2 text-xs text-description whitespace-pre-wrap'>{JSON.stringify(data, null, 2)}</pre>
-              </Next.Card.Row>
-            </Next.Card.Body>
-          </Next.Card.Root>
-        </Next.Focus.Item>
+              </Card.Row>
+            </Card.Body>
+          </Card.Root>
+        </Focus.Item>
       </Mosaic.Tile>
     );
   },

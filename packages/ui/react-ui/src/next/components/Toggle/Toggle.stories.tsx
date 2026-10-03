@@ -9,36 +9,30 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { byTestId, controlSize, expectScoped, expectTooltip, realHover, realUnhover, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Toggle, Toolbar, Typography } from '../index.ts';
 
 /** Icon-only toggles (one pressed, one disabled), a labelled toggle, a controlled one, and one with an `activeIcon`. */
 const DefaultStory = ({ size }: SizeArgs) => {
   const [wrap, setWrap] = useState(false);
   return (
-    <Next.Toolbar.Root>
-      <Next.Toggle icon='ph--text-b--regular' label='Bold' iconOnly data-testid={`bold-${size}`} />
-      <Next.Toggle icon='ph--text-italic--regular' label='Italic' iconOnly defaultPressed />
-      <Next.Toggle icon='ph--text-underline--regular' label='Underline' iconOnly disabled />
-      <Next.Toggle icon='ph--eye--regular' label='Preview' data-testid={`preview-${size}`} />
-      <Next.Toggle
+    <Toolbar.Root>
+      <Toggle icon='ph--text-b--regular' label='Bold' iconOnly data-testid={`bold-${size}`} />
+      <Toggle icon='ph--text-italic--regular' label='Italic' iconOnly defaultPressed />
+      <Toggle icon='ph--text-underline--regular' label='Underline' iconOnly disabled />
+      <Toggle icon='ph--eye--regular' label='Preview' data-testid={`preview-${size}`} />
+      <Toggle
         icon='ph--arrows-in-line-horizontal--regular'
         label='Wrap lines'
         iconOnly
         pressed={wrap}
         onPressedChange={setWrap}
       />
-      <Next.Toggle
-        icon='ph--star--regular'
-        activeIcon='ph--star--fill'
-        label='Pin'
-        iconOnly
-        data-testid={`pin-${size}`}
-      />
-      <Next.Typography data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Next.Typography>
-    </Next.Toolbar.Root>
+      <Toggle icon='ph--star--regular' activeIcon='ph--star--fill' label='Pin' iconOnly data-testid={`pin-${size}`} />
+      <Typography data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Typography>
+    </Toolbar.Root>
   );
 };
 

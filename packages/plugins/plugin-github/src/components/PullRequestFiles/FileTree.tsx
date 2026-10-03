@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Checkbox, useTranslation } from '@dxos/react-ui';
 import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -74,7 +74,7 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
           <Tree.ItemIndicator />
           <Tree.ItemIcon icon={item?.file ? undefined : 'ph--folder--regular'}>
             {item?.file && (
-              <Next.Checkbox
+              <Checkbox
                 checked={reviewed.has(item.path)}
                 onCheckedChange={({ checked }) => onReviewedChange(item.path, checked === true)}
                 // Checking a file off is not a request to open it.

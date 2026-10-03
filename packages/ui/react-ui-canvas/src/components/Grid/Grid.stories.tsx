@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useViewport, useWheel } from '../../hooks/index.ts';
@@ -91,28 +91,28 @@ const DefaultStory = ({ size, showAxes }: GridProps) => {
       />
       {/* Pointer presses on the toolbar must not pan the grid underneath. */}
       <div className='absolute top-2 left-2 w-fit' onPointerDown={(event) => event.stopPropagation()}>
-        <Next.Toolbar.Root size='sm' classNames='gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'>
-          <Next.Button
+        <Toolbar.Root size='sm' classNames='gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'>
+          <Button
             variant='ghost'
             iconOnly
             icon='ph--magnifying-glass-plus--regular'
             label='Zoom in'
             onClick={() => zoomBy(ZOOM_STEP)}
           />
-          <Next.Button
+          <Button
             variant='ghost'
             iconOnly
             icon='ph--magnifying-glass-minus--regular'
             label='Zoom out'
             onClick={() => zoomBy(1 / ZOOM_STEP)}
           />
-          <Next.Button variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
-          <Next.Toolbar.Separator variant='line' />
-          <Next.Toolbar.Text classNames='text-description font-mono text-sm whitespace-nowrap'>
+          <Button variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
+          <Toolbar.Separator variant='line' />
+          <Toolbar.Text classNames='text-description font-mono text-sm whitespace-nowrap'>
             {Math.round(camera.zoom * 100)}% · [{format(topLeft.x)}, {format(topLeft.y)}] – [{format(bottomRight.x)},{' '}
             {format(bottomRight.y)}]
-          </Next.Toolbar.Text>
-        </Next.Toolbar.Root>
+          </Toolbar.Text>
+        </Toolbar.Root>
       </div>
     </div>
   );

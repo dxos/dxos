@@ -11,7 +11,7 @@ import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Diagnostics, Dsl, Mermaid as MermaidDialect, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
 import { diagram as diagramLanguage } from '@dxos/diagram/extension';
 import { BASIC } from '@dxos/diagram/testing';
-import { Next } from '@dxos/react-ui';
+import { useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions, listener, mermaidHighlightStyle } from '@dxos/ui-editor';
@@ -37,7 +37,7 @@ const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
 
 /** Theme-aware CodeMirror editor in the mermaid language mode. */
 const SourceEditor = ({ initialValue, onChange }: { initialValue: string; onChange: (text: string) => void }) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue,
@@ -64,7 +64,7 @@ const SourceEditor = ({ initialValue, onChange }: { initialValue: string; onChan
  * Remounted on `generation` so a fresh layout replaces the buffer rather than merging into edits.
  */
 const DslEditor = ({ initialValue, onChange }: { initialValue: string; onChange: (text: string) => void }) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue,
@@ -84,7 +84,7 @@ const DslEditor = ({ initialValue, onChange }: { initialValue: string; onChange:
 
 /** Reference rendering through mermaid.js; `%% ref` lines are comments to it and are ignored. */
 const MermaidDiagram = ({ source }: { source: string }) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const id = useId().replace(/:/g, '');
   const [svg, setSvg] = useState<string>();
   const [error, setError] = useState<string>();

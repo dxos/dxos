@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Flex, Next } from '@dxos/react-ui';
+import { Button, Field, Flex, Icon, Input, Panel } from '@dxos/react-ui';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { ActionToolbar, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -437,23 +437,23 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
-          <Next.Field.Root>
-            <Next.Field.Label classNames='text-xs mr-1'>BPM</Next.Field.Label>
-            <Next.Input
+          <Field.Root>
+            <Field.Label classNames='text-xs mr-1'>BPM</Field.Label>
+            <Input
               min={1}
               value={score.tempo}
               onChange={(event) => handleTempoChange(Number(event.target.value))}
               classNames='w-16'
               type='number'
             />
-          </Next.Field.Root>
+          </Field.Root>
         </ActionToolbar>
-      </Next.Panel.Header>
+      </Panel.Header>
 
-      <Next.Panel.Body>
+      <Panel.Body>
         <Flex classNames='h-full min-h-0'>
           <div className='h-full grid grid-rows-[1fr_auto] w-48 shrink-0 border-r border-separator'>
             <TrackList
@@ -507,16 +507,16 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
             ) : (
               <div className={mx('dx-fullscreen flex items-center justify-center text-neutral-500 text-sm')}>
                 <Flex column gap='sm' align='center'>
-                  <Next.Icon icon='ph--music-notes--regular' size='xl' />
+                  <Icon icon='ph--music-notes--regular' size='xl' />
                   <span>Add a track to begin.</span>
-                  <Next.Button onClick={handleAddTrack}>Add track</Next.Button>
+                  <Button onClick={handleAddTrack}>Add track</Button>
                 </Flex>
               </div>
             )}
           </div>
         </Flex>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

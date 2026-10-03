@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-import { Flex, Next } from '@dxos/react-ui';
+import { Flex, Icon } from '@dxos/react-ui';
 
 /** Minimal surface of foliate-js's `<foliate-view>` custom element we drive imperatively. */
 type FoliateView = HTMLElement & {
@@ -133,7 +133,7 @@ export const EpubReader = forwardRef<EpubReaderHandle, EpubReaderProps>(
     if (failed) {
       return (
         <Flex center gap='sm' classNames='h-full p-4 text-center text-description'>
-          <Next.Icon icon='ph--warning--regular' size='xl' />
+          <Icon icon='ph--warning--regular' size='xl' />
         </Flex>
       );
     }

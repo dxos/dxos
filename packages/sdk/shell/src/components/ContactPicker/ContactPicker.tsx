@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Contact } from '@dxos/react-client/halo';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Combobox, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../translations.ts';
 import { contactDisplayName, contactKeyHex, filterContacts } from '../ContactList/index.ts';
@@ -37,7 +37,7 @@ export const ContactPicker = ({ contacts, excludeKeys = [], value, onChange, dis
   );
 
   return (
-    <Next.Combobox.Root
+    <Combobox.Root
       items={items}
       // Candidates are filtered by name and key here (`filterContacts`), not by label alone.
       filter={null}
@@ -47,21 +47,21 @@ export const ContactPicker = ({ contacts, excludeKeys = [], value, onChange, dis
       onInputValueChange={({ inputValue }) => setQuery(inputValue)}
     >
       {/* Fills the row so the picker takes the space its siblings (role, add) don't. */}
-      <Next.Combobox.Trigger
+      <Combobox.Trigger
         classNames='grow min-w-0'
         placeholder={t('contact-picker.placeholder')}
         disabled={disabled}
         data-testid='contact-picker.trigger'
       />
-      <Next.Combobox.Content>
-        <Next.Combobox.Input placeholder={t('contact-picker-search.placeholder')} />
-        <Next.Combobox.List>
+      <Combobox.Content>
+        <Combobox.Input placeholder={t('contact-picker-search.placeholder')} />
+        <Combobox.List>
           {items.map((item) => (
-            <Next.Combobox.Item key={item.value} item={item} data-testid='contact-picker.item' />
+            <Combobox.Item key={item.value} item={item} data-testid='contact-picker.item' />
           ))}
-        </Next.Combobox.List>
-        {candidates.length === 0 && <Next.Combobox.Empty>{t('contact-picker-empty.message')}</Next.Combobox.Empty>}
-      </Next.Combobox.Content>
-    </Next.Combobox.Root>
+        </Combobox.List>
+        {candidates.length === 0 && <Combobox.Empty>{t('contact-picker-empty.message')}</Combobox.Empty>}
+      </Combobox.Content>
+    </Combobox.Root>
   );
 };

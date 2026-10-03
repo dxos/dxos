@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Next } from '@dxos/react-ui';
+import { AlertDialog, Dialog as UiDialog } from '@dxos/react-ui';
 
 import { useDeckState } from '#hooks';
 
@@ -17,7 +17,7 @@ export const Dialog = () => {
   const { invokePromise } = useOperationInvoker();
   const { state } = useDeckState();
   const { dialogOpen, dialogType, dialogBlockAlign, dialogContent } = state;
-  const Root = dialogType === 'alert' ? Next.AlertDialog.Root : Next.Dialog.Root;
+  const Root = dialogType === 'alert' ? AlertDialog.Root : UiDialog.Root;
 
   const handleOpenChange = useCallback(
     ({ open }: { open: boolean }) => {

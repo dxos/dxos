@@ -10,7 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Filter, Format, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui';
+import { Container, Icon, Panel, ScrollArea, Typography } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
 
@@ -35,11 +35,11 @@ const DefaultStory = (_: PaneArgs) => {
   const [values, setValues] = useState<NoteValues>({ title: 'Kickoff', notes: '# Agenda' });
   const [recipients, setRecipients] = useState('');
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container>
+    <Panel.Root>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container>
               <Form.Root
                 schema={NoteSchema}
                 values={values}
@@ -53,7 +53,7 @@ const DefaultStory = (_: PaneArgs) => {
                         db={space?.db}
                         type={Person.Person}
                         value={recipients}
-                        start={<Next.Icon icon='ph--users--regular' />}
+                        start={<Icon icon='ph--users--regular' />}
                         onChange={setRecipients}
                         data-testid='attendees'
                       />
@@ -61,16 +61,16 @@ const DefaultStory = (_: PaneArgs) => {
                   </FormField>
                 </Form.Content>
               </Form.Root>
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-      <Next.Panel.Footer>
-        <Next.Typography truncate data-testid='values'>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+      <Panel.Footer>
+        <Typography truncate data-testid='values'>
           {JSON.stringify({ ...values, recipients })}
-        </Next.Typography>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+        </Typography>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

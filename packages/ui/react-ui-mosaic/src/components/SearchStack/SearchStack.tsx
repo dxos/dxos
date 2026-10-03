@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Next, composable, composableProps } from '@dxos/react-ui';
+import { Block, Card, Focus, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
 
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '../../index.ts';
@@ -52,10 +52,10 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
     }, []);
 
     return (
-      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
-          <Next.ScrollArea.Root orientation='vertical'>
-            <Next.ScrollArea.Viewport ref={setViewport}>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SearchTile}
                 gap={8}
@@ -65,10 +65,10 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
                 getScrollElement={() => viewport}
                 estimateSize={() => 100}
               />
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Mosaic.Container>
-      </Next.Focus.Group>
+      </Focus.Group>
     );
   },
 );
@@ -111,21 +111,21 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
       location={location}
       current={current}
     >
-      <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Next.Card.Root ref={forwardedRef}>
-          <Next.Card.Header>
-            <Next.Block />
-            <Next.Card.Title>{result.label}</Next.Card.Title>
-          </Next.Card.Header>
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Card.Root ref={forwardedRef}>
+          <Card.Header>
+            <Block />
+            <Card.Title>{result.label}</Card.Title>
+          </Card.Header>
           {result.snippet && (
-            <Next.Card.Body>
-              <Next.Card.Row>
-                <Next.Card.Text variant='description'>{result.snippet}</Next.Card.Text>
-              </Next.Card.Row>
-            </Next.Card.Body>
+            <Card.Body>
+              <Card.Row>
+                <Card.Text variant='description'>{result.snippet}</Card.Text>
+              </Card.Row>
+            </Card.Body>
           )}
-        </Next.Card.Root>
-      </Next.Focus.Item>
+        </Card.Root>
+      </Focus.Item>
     </Mosaic.Tile>
   );
 });

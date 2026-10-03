@@ -11,7 +11,14 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions, useNode } from '@dxos/plugin-graph/hooks';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Next, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Icon,
+  type ThemedClassName,
+  Toolbar as UiToolbar,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type Channel } from '@dxos/types';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
@@ -64,7 +71,7 @@ export const Toolbar = ({
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
-      <Next.Toolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
+      <UiToolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={audioEnabled}
           state={{
@@ -99,10 +106,10 @@ export const Toolbar = ({
 
         {(participants !== undefined && (
           <div className='flex justify-center items-center gap-2 w-[5rem] text-xs text-subdued'>
-            <Next.Icon icon='ph--users--regular' />
+            <Icon icon='ph--users--regular' />
             <div>{participants}</div>
           </div>
-        )) || <Next.Toolbar.Separator variant='gap' />}
+        )) || <UiToolbar.Separator variant='gap' />}
 
         {inRoom && (
           <>
@@ -127,7 +134,7 @@ export const Toolbar = ({
             {actions
               .filter((action): action is AppGraphNode.Action => AppGraphNode.isAction(action))
               .map((action) => (
-                <Next.Button
+                <Button
                   key={action.id}
                   {...defaultButtonProps}
                   icon={action.properties.icon}
@@ -155,14 +162,9 @@ export const Toolbar = ({
           </>
         )}
         {inRoom ? (
-          <Next.Button
-            variant='destructive'
-            icon='ph--phone-x--regular'
-            label={t('leave-call.button')}
-            onClick={onLeave}
-          />
+          <Button variant='destructive' icon='ph--phone-x--regular' label={t('leave-call.button')} onClick={onLeave} />
         ) : (
-          <Next.Button
+          <Button
             variant='primary'
             icon='ph--phone-incoming--regular'
             label={t('join-call.button')}
@@ -170,14 +172,14 @@ export const Toolbar = ({
             onClick={onJoin}
           />
         )}
-      </Next.Toolbar.Root>
+      </UiToolbar.Root>
     </div>
   );
 };
 
 Toolbar.displayName = 'MeetingToolbar';
 
-type ButtonProps = ComponentPropsWithoutRef<typeof Next.Button>;
+type ButtonProps = ComponentPropsWithoutRef<typeof Button>;
 
 type ToggleButtonState = Pick<ButtonProps, 'icon' | 'label' | 'onClick'> & { classNames?: string };
 
@@ -195,7 +197,7 @@ const defaultButtonProps = {
 } as const satisfies Partial<ButtonProps>;
 
 const ToggleButton = ({ active, disabled, state }: ToolbarButtonProps) => (
-  <Next.Button
+  <Button
     {...defaultButtonProps}
     disabled={disabled}
     classNames={[active ? (state.on.classNames ?? 'bg-accent-bg') : state.off.classNames]}

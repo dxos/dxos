@@ -13,7 +13,7 @@ import { Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import React, { type PropsWithChildren, useRef } from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -44,7 +44,7 @@ type PartEditorProps = ThemedClassName<{ part: PartKey; text: string; editing: P
 const stop = (event: React.SyntheticEvent) => event.stopPropagation();
 
 const PartEditor = ({ classNames, part, text, editing }: PartEditorProps) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const multiline = isMultiline(part);
   // Commit or cancel once: the editor unmounts on either, and its focus loss must not commit again.
   const done = useRef(false);

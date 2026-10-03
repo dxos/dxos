@@ -8,7 +8,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/compute-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Container, Flex, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -69,10 +69,10 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
   }, [isEnabled, state?.invocations]);
 
   return (
-    <Next.Popover.Root positioning={{ placement: 'left' }}>
-      <Next.Popover.Trigger asChild>
+    <Popover.Root positioning={{ placement: 'left' }}>
+      <Popover.Trigger asChild>
         <StatusBar.Item>
-          <Next.Button
+          <Button
             variant='ghost'
             icon={getIcon(triggerState)}
             iconOnly
@@ -80,8 +80,8 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
             classNames={getIconClassNames(triggerState)}
           />
         </StatusBar.Item>
-      </Next.Popover.Trigger>
-      <Next.Popover.Content>
+      </Popover.Trigger>
+      <Popover.Content>
         <TriggerStatusPopover
           state={triggerState}
           currentFunctionName={
@@ -89,8 +89,8 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
           }
           lastInvocation={state?.invocations.at(-1)}
         />
-      </Next.Popover.Content>
-    </Next.Popover.Root>
+      </Popover.Content>
+    </Popover.Root>
   );
 };
 
@@ -109,12 +109,12 @@ const TriggerStatusPopover = ({
 
   return (
     <Flex column gap='sm' classNames='p-2 w-[240px]'>
-      <Next.Container gap='sm' gutter='none'>
+      <Container gap='sm' gutter='none'>
         <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (
           <div className='text-xs text-description'>{currentFunctionName}</div>
         )}
-      </Next.Container>
+      </Container>
     </Flex>
   );
 };

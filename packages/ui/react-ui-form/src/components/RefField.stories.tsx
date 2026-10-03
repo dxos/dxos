@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Entity, Obj } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { Button, Container, Panel, ScrollArea, Toolbar, Typography } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { type RefFieldDataProps, type RefOption } from '#types';
@@ -46,11 +46,11 @@ const DefaultStory = (_: PaneArgs) => {
     return organization;
   }, []);
   return (
-    <Next.Panel.Root size='sm'>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container>
+    <Panel.Root size='sm'>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container>
               <Form.Root
                 schema={RefSchema}
                 values={values}
@@ -65,16 +65,16 @@ const DefaultStory = (_: PaneArgs) => {
                   <Form.Fields />
                 </Form.Content>
               </Form.Root>
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-      <Next.Panel.Footer>
-        <Next.Typography truncate data-testid='values'>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+      <Panel.Footer>
+        <Typography truncate data-testid='values'>
           {JSON.stringify(values)}
-        </Next.Typography>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+        </Typography>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 
@@ -152,14 +152,14 @@ export const Test: Story = {
 const CustomTriggerStory = () => {
   const [picked, setPicked] = useState<string>();
   return (
-    <Next.Toolbar.Root>
+    <Toolbar.Root>
       <ObjectPicker
         options={OPTIONS}
         onSelect={setPicked}
-        trigger={<Next.Button icon='ph--plus--regular' iconOnly label='Add object' />}
+        trigger={<Button icon='ph--plus--regular' iconOnly label='Add object' />}
       />
       <span data-testid='picked'>{picked}</span>
-    </Next.Toolbar.Root>
+    </Toolbar.Root>
   );
 };
 

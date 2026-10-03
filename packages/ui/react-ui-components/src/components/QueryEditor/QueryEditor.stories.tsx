@@ -9,7 +9,7 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { type Filter, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui';
+import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
@@ -40,9 +40,9 @@ const DefaultStory = (args: QueryEditorProps) => {
 
   return (
     <div className='flex flex-col gap-2'>
-      <Next.Toolbar.Root>
+      <Toolbar.Root>
         <QueryEditor {...args} db={space?.db} tags={tags} onFilterChange={handleFilterChange} />
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
 
       <JsonHighlighter data={filter} classNames='text-xs' />
     </div>

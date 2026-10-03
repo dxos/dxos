@@ -19,7 +19,7 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Next, Trans, useTranslation } from '@dxos/react-ui';
+import { Banner, Card, Icon, Panel, ScrollArea, Tabs, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
@@ -76,14 +76,14 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
   const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{title}</span>, [title]);
 
   return (
-    <Next.Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
+    <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
       <Surface.Surface
         type={AppSurface.CardContent}
         limit={1}
         data={{ subject } satisfies AppSurface.ObjectCardData}
         fallback={Fallback}
       />
-    </Next.Card.Root>
+    </Card.Root>
   );
 };
 
@@ -491,46 +491,46 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         })}
       </div>
     ) : hasSuggestions ? null : (
-      <Next.Banner.Root>
-        <Next.Banner.Body>
+      <Banner.Root>
+        <Banner.Body>
           <span>
             <Trans
               {...{
                 t,
                 i18nKey: 'no-comments.message',
                 components: {
-                  commentIcon: <Next.Icon icon='ph--chat-text--regular' size='md' classNames='dx-icon-inline' />,
-                  versionsIcon: <Next.Icon icon='ph--git-branch--regular' size='md' classNames='dx-icon-inline' />,
+                  commentIcon: <Icon icon='ph--chat-text--regular' size='md' classNames='dx-icon-inline' />,
+                  versionsIcon: <Icon icon='ph--git-branch--regular' size='md' classNames='dx-icon-inline' />,
                 },
               }}
             />
           </span>
-        </Next.Banner.Body>
-      </Next.Banner.Root>
+        </Banner.Body>
+      </Banner.Root>
     );
 
   return (
-    <Next.Panel.Root asChild>
-      <Next.Tabs.Root
+    <Panel.Root asChild>
+      <Tabs.Root
         orientation='horizontal'
         value={showResolvedThreads ? 'all' : 'unresolved'}
         onValueChange={handleChangeViewState}
       >
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
-            <Next.Tabs.List>
-              <Next.Tabs.Trigger classNames='text-sm' value='unresolved'>
+        <Panel.Header>
+          <Toolbar.Root>
+            <Tabs.List>
+              <Tabs.Trigger classNames='text-sm' value='unresolved'>
                 {t('show-unresolved.label')}
-              </Next.Tabs.Trigger>
-              <Next.Tabs.Trigger classNames='text-sm' value='all'>
+              </Tabs.Trigger>
+              <Tabs.Trigger classNames='text-sm' value='all'>
                 {t('show-all.label')}
-              </Next.Tabs.Trigger>
-            </Next.Tabs.List>
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport>
+              </Tabs.Trigger>
+            </Tabs.List>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>
               <Suggestions
                 document={markdownDoc}
                 base={mainText}
@@ -543,13 +543,13 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 hiddenAuthors={hiddenAuthors}
                 onToggleAuthor={handleToggleAuthor}
               />
-              <Next.Tabs.Content value='all'>{showResolvedThreads && comments}</Next.Tabs.Content>
-              <Next.Tabs.Content value='unresolved'>{!showResolvedThreads && comments}</Next.Tabs.Content>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
-        </Next.Panel.Body>
-      </Next.Tabs.Root>
-    </Next.Panel.Root>
+              <Tabs.Content value='all'>{showResolvedThreads && comments}</Tabs.Content>
+              <Tabs.Content value='unresolved'>{!showResolvedThreads && comments}</Tabs.Content>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Tabs.Root>
+    </Panel.Root>
   );
 };
 

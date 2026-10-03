@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { type EditorViewProps, Editor as TextEditor } from '@dxos/react-ui-editor';
 import {
   type Extension,
@@ -45,7 +45,7 @@ export const Editor = ({
   compact,
   classNames,
 }: EditorProps) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () =>
       [

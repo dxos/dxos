@@ -6,7 +6,7 @@ import React from 'react';
 
 import { EdgeServiceName } from '@dxos/config';
 import { useEdgeServiceEndpoint } from '@dxos/react-client';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
 /**
@@ -15,11 +15,11 @@ import { ToolsExplorer } from '@dxos/react-ui-introspect';
  */
 export const ToolsExplorerContainer = ({ role }: { role?: string }) => {
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Body>
+    <Panel.Root role={role}>
+      <Panel.Body>
         <ToolsExplorer serverUrl={useEdgeServiceEndpoint(EdgeServiceName.Introspect)} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

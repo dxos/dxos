@@ -7,7 +7,7 @@ import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
-import { ErrorBoundary, Next, useTranslation } from '@dxos/react-ui';
+import { Button, ErrorBoundary, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { getConfig } from '../../config.ts';
@@ -96,11 +96,11 @@ const SidepanelContent = () => {
   const showChat = !thumbnailUrl && !!host;
 
   return (
-    <Next.Panel.Root classNames='dx-fullscreen dx-fill'>
+    <Panel.Root classNames='dx-fullscreen dx-fill'>
       {/* App controls that are not chat-specific (clip, page actions, launch) live here, not inside Chat. */}
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Button
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button
             variant='ghost'
             icon='ph--paperclip--regular'
             iconOnly
@@ -109,27 +109,25 @@ const SidepanelContent = () => {
             onClick={handleClip}
           />
           {pageActions}
-          <Next.Toolbar.Separator />
-          <Next.Button
+          <Toolbar.Separator />
+          <Button
             variant='ghost'
             icon='ph--gear--regular'
             iconOnly
             label={t('settings.button')}
             onClick={handleOpenSettings}
           />
-          <Next.Button
+          <Button
             variant='ghost'
             icon='ph--arrow-square-out--regular'
             iconOnly
             label={t('launch-composer.button')}
             onClick={handleLaunchComposer}
           />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
+        </Toolbar.Root>
+      </Panel.Header>
 
-      <Next.Panel.Body
-        classNames={mx('grid grid-rows-[minmax(0,1fr)] min-h-0', thumbnailUrl && 'grid-cols-[auto_1fr]')}
-      >
+      <Panel.Body classNames={mx('grid grid-rows-[minmax(0,1fr)] min-h-0', thumbnailUrl && 'grid-cols-[auto_1fr]')}>
         {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
         {showChat && (
           <ErrorBoundary
@@ -141,11 +139,11 @@ const SidepanelContent = () => {
             <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} />
           </ErrorBoundary>
         )}
-      </Next.Panel.Body>
+      </Panel.Body>
 
       {/* Status bar: chat-agent errors surface here (the connection state is shown by the chat input's
           status indicator), otherwise the tab URL. */}
-      <Next.Panel.Footer classNames='flex items-center px-2'>
+      <Panel.Footer classNames='flex items-center px-2'>
         {chatError ? (
           <span className='text-xs text-error-text truncate' title={chatError.message}>
             {chatError.message}
@@ -153,8 +151,8 @@ const SidepanelContent = () => {
         ) : (
           <span className='text-xs text-description truncate'>{tabUrl}</span>
         )}
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

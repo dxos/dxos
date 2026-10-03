@@ -4,7 +4,21 @@
 
 import React, { type ButtonHTMLAttributes, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Next, composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  type ButtonVariant,
+  type Size,
+  Switch,
+  Toggle,
+  ToggleGroup,
+  Toolbar,
+  type ToolbarRootProps,
+  Tooltip,
+  composable,
+  composableProps,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type ClassNameValue,
@@ -36,8 +50,8 @@ type ItemProps<T> = { menu: MenuActions } & T;
 
 type ActionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> & {
   action: MenuAction | MenuItemGroup<DropdownMenuItemGroupProperties>;
-  variant: Next.ButtonVariant;
-  iconSize?: Next.Size;
+  variant: ButtonVariant;
+  iconSize?: Size;
   caretDown?: boolean;
   classNames?: ClassNameValue;
   testId?: string;
@@ -59,11 +73,11 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
       ref: forwardedRef,
     };
     return icon && iconOnly ? (
-      <Next.Button {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
+      <Button {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
     ) : (
-      <Next.Button {...common} icon={icon}>
+      <Button {...common} icon={icon}>
         <ActionLabel action={action} />
-      </Next.Button>
+      </Button>
     );
   },
 );
@@ -139,11 +153,11 @@ const ToggleToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   };
 
   return icon && iconOnly ? (
-    <Next.Toggle {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
+    <Toggle {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
   ) : (
-    <Next.Toggle {...common} icon={icon}>
+    <Toggle {...common} icon={icon}>
       <ActionLabel action={action} />
-    </Next.Toggle>
+    </Toggle>
   );
 };
 
@@ -166,7 +180,7 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   }
 
   const control = (
-    <Next.Switch
+    <Switch
       checked={checked}
       disabled={disabled}
       onCheckedChange={handleCheckedChange}
@@ -176,10 +190,10 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   );
 
   return iconOnly ? (
-    <Next.Tooltip.Root>
-      <Next.Tooltip.Trigger asChild>{control}</Next.Tooltip.Trigger>
-      <Next.Tooltip.Content>{labelStr}</Next.Tooltip.Content>
-    </Next.Tooltip.Root>
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>{control}</Tooltip.Trigger>
+      <Tooltip.Content>{labelStr}</Tooltip.Content>
+    </Tooltip.Root>
   ) : (
     control
   );
@@ -265,11 +279,11 @@ const ToggleGroupItem = ({
   };
 
   return icon && iconOnly ? (
-    <Next.ToggleGroup.Item {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
+    <ToggleGroup.Item {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
   ) : (
-    <Next.ToggleGroup.Item {...common} icon={icon}>
+    <ToggleGroup.Item {...common} icon={icon}>
       <ActionLabel action={action} />
-    </Next.ToggleGroup.Item>
+    </ToggleGroup.Item>
   );
 };
 
@@ -288,19 +302,19 @@ const ToggleGroupToolbarItem = ({
 
   // The group is controlled by the graph: an item's action updates `value`, which flows back in.
   return group.properties.selectCardinality === 'multiple' ? (
-    <Next.Toolbar.ToggleGroup type='multiple' value={group.properties.value} aria-label={label}>
+    <Toolbar.ToggleGroup type='multiple' value={group.properties.value} aria-label={label}>
       {children}
-    </Next.Toolbar.ToggleGroup>
+    </Toolbar.ToggleGroup>
   ) : (
-    <Next.Toolbar.ToggleGroup type='single' value={group.properties.value} aria-label={label}>
+    <Toolbar.ToggleGroup type='single' value={group.properties.value} aria-label={label}>
       {children}
-    </Next.Toolbar.ToggleGroup>
+    </Toolbar.ToggleGroup>
   );
 };
 
 const ToolbarItem = ({ menu, item }: ItemProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {
-    return <Next.Toolbar.Separator variant={item.properties.variant === 'line' ? 'line' : 'gap'} />;
+    return <Toolbar.Separator variant={item.properties.variant === 'line' ? 'line' : 'gap'} />;
   }
 
   if (isMenuGroup(item)) {
@@ -341,7 +355,7 @@ const ActionToolbarItems = ({ menu }: { menu: MenuActions }) => {
 //
 
 export type ActionToolbarProps = Partial<MenuActions> &
-  Omit<Next.ToolbarRootProps, 'disabled'> & {
+  Omit<ToolbarRootProps, 'disabled'> & {
     /** The toolbar is dimmed (still operable) while this attendable lacks attention, unless `alwaysActive`. */
     attendableId?: string;
     alwaysActive?: boolean;
@@ -372,14 +386,14 @@ export const ActionToolbar = composable<HTMLDivElement, ActionToolbarProps>(
     const { hasAttention } = useAttention(attendableId);
 
     return (
-      <Next.Toolbar.Root
+      <Toolbar.Root
         {...composableProps(props, { classNames: attendableId })}
         inactive={!alwaysActive && !hasAttention}
         ref={forwardedRef}
       >
         <ActionToolbarItems menu={menu} />
         {children}
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
     );
   },
 );

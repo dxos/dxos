@@ -14,7 +14,17 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  DragHandle,
+  Focus,
+  ScrollArea,
+  type ThemedClassName,
+  Toolbar,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
@@ -58,7 +68,7 @@ const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
         draggable={draggable}
         dragHandle={dragHandle}
       >
-        <Next.Focus.Group
+        <Focus.Group
           {...rest}
           data-testid='board-column'
           border
@@ -71,7 +81,7 @@ const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
           ref={forwardedRef}
         >
           <BoardColumnProvider column={data}>{children}</BoardColumnProvider>
-        </Next.Focus.Group>
+        </Focus.Group>
       </Mosaic.Tile>
     );
   },
@@ -112,25 +122,20 @@ const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
     return (
       <>
         {/* TODO(burdon): Use Card.Header. */}
-        <Next.Toolbar.Root
+        <Toolbar.Root
           {...composableProps(props, { classNames: 'gap-0' })}
           data-testid='board-column-header'
           ref={forwardedRef}
         >
-          <Next.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.columnDragHandle' />
-          <Next.Toolbar.Text classNames='grow px-0' data-testid='mosaicBoard.columnTitle'>
+          <DragHandle ref={dragHandleRef} data-testid='mosaicBoard.columnDragHandle' />
+          <Toolbar.Text classNames='grow px-0' data-testid='mosaicBoard.columnTitle'>
             {label}
-          </Next.Toolbar.Text>
+          </Toolbar.Text>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <ActionMenu disabled={!columnMenuItems?.length} actions={columnMenuItems}>
-            <Next.Button
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label={t('action-menu.label')}
-            />
+            <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('action-menu.label')} />
           </ActionMenu>
-        </Next.Toolbar.Root>
+        </Toolbar.Root>
       </>
     );
   },
@@ -166,11 +171,11 @@ const BoardColumnBody = composable<HTMLDivElement, BoardColumnBodyProps>(
         debug={debug}
         ref={forwardedRef}
       >
-        <Next.ScrollArea.Root orientation='vertical'>
-          <Next.ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
             <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Mosaic.Container>
     );
   },
@@ -197,9 +202,9 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
     const handleAdd = onAdd ?? (model.onItemCreate && data ? () => void model.onItemCreate?.(data) : undefined);
 
     return (
-      <Next.Toolbar.Root classNames={mx('rounded-b-sm border-t border-separator', classNames)} ref={forwardedRef}>
+      <Toolbar.Root classNames={mx('rounded-b-sm border-t border-separator', classNames)} ref={forwardedRef}>
         {handleAdd && (
-          <Next.Button
+          <Button
             data-testid='board-column-add-item'
             classNames='group-hover/column:opacity-100 md:opacity-0 transition transition-opacity duration-500'
             variant='ghost'
@@ -209,7 +214,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
             onClick={handleAdd}
           />
         )}
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
     );
   },
 );

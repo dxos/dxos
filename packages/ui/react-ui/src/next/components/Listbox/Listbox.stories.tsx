@@ -11,12 +11,22 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import {
+  Button,
+  Checkbox,
+  Container,
+  Listbox,
+  type ListboxOption,
+  Panel,
+  ScrollArea,
+  SystemButton,
+  Typography,
+} from '../index.ts';
 
-const PEOPLE: Next.ListboxOption[] = [
+const PEOPLE: ListboxOption[] = [
   { value: 'alice', label: 'Alice Green', icon: 'ph--user--regular' },
   { value: 'bob', label: 'Bob Grey', icon: 'ph--user--regular', description: 'Away until Monday' },
   { value: 'carol', label: 'Carol Black', icon: 'ph--user--regular' },
@@ -24,35 +34,35 @@ const PEOPLE: Next.ListboxOption[] = [
   { value: 'erin', label: 'Erin White', icon: 'ph--user--regular' },
 ];
 
-const TAGS: Next.ListboxOption[] = [
+const TAGS: ListboxOption[] = [
   { value: 'urgent', label: 'Urgent' },
   { value: 'later', label: 'Later' },
   { value: 'idea', label: 'Idea' },
 ];
 
-const LONG: Next.ListboxOption[] = Array.from({ length: 40 }, (_, index) => ({
+const LONG: ListboxOption[] = Array.from({ length: 40 }, (_, index) => ({
   value: `item-${index + 1}`,
   label: `Item ${index + 1}`,
 }));
 
-const TASKS: Next.ListboxOption[] = [
+const TASKS: ListboxOption[] = [
   { value: 'report', label: 'Write report' },
   { value: 'review', label: 'Review budget' },
 ];
 
-const MANY: Next.ListboxOption[] = Array.from({ length: 1_000 }, (_, index) => ({
+const MANY: ListboxOption[] = Array.from({ length: 1_000 }, (_, index) => ({
   value: `row-${index + 1}`,
   label: `Row ${index + 1}`,
 }));
 
-const FILES: Next.ListboxOption[] = [
+const FILES: ListboxOption[] = [
   { value: 'a', label: 'Annual plan', icon: 'ph--file--regular', description: '12 KB' },
   { value: 'b', label: 'Budget', icon: 'ph--table--regular', description: '1.4 MB' },
 ];
 
-const NONE: Next.ListboxOption[] = [];
+const NONE: ListboxOption[] = [];
 
-const RECENT: Next.ListboxOption[] = [
+const RECENT: ListboxOption[] = [
   { value: 'notes', label: 'Notes', icon: 'ph--file--regular' },
   { value: 'tasks', label: 'Tasks', icon: 'ph--file--regular' },
 ];
@@ -69,130 +79,130 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [tasks, setTasks] = useState(TASKS);
   return (
     <>
-      <Next.Listbox.Root items={PEOPLE} value={person} onValueChange={setPerson} data-testid={`people-${size}`}>
-        <Next.Listbox.Label>People</Next.Listbox.Label>
-        <Next.Listbox.Content>
+      <Listbox.Root items={PEOPLE} value={person} onValueChange={setPerson} data-testid={`people-${size}`}>
+        <Listbox.Label>People</Listbox.Label>
+        <Listbox.Content>
           {PEOPLE.map((item) => (
-            <Next.Listbox.Item key={item.value} item={item} data-testid={`person-${item.value}-${size}`}>
+            <Listbox.Item key={item.value} item={item} data-testid={`person-${item.value}-${size}`}>
               {item.value === 'alice' ? undefined : (
                 <>
-                  <Next.Listbox.ItemIcon />
-                  <Next.Listbox.ItemText />
-                  {item.description && <Next.Listbox.ItemDescription />}
+                  <Listbox.ItemIcon />
+                  <Listbox.ItemText />
+                  {item.description && <Listbox.ItemDescription />}
                   {item.value === 'carol' && (
-                    <Next.Button icon='ph--envelope--regular' label='Message Carol' iconOnly variant='ghost' />
+                    <Button icon='ph--envelope--regular' label='Message Carol' iconOnly variant='ghost' />
                   )}
-                  <Next.Listbox.ItemIndicator />
+                  <Listbox.ItemIndicator />
                 </>
               )}
-            </Next.Listbox.Item>
+            </Listbox.Item>
           ))}
-        </Next.Listbox.Content>
-      </Next.Listbox.Root>
-      <Next.Typography data-testid={`people-${size}-value`}>{person.join(', ') || 'None'}</Next.Typography>
-      <Next.Listbox.Root items={TAGS} selectionMode='multiple' value={tags} onValueChange={setTags}>
-        <Next.Listbox.Label>Tags</Next.Listbox.Label>
-        <Next.Listbox.Content>
-          <Next.Listbox.ItemGroup>
-            <Next.Listbox.ItemGroupLabel>Status</Next.Listbox.ItemGroupLabel>
+        </Listbox.Content>
+      </Listbox.Root>
+      <Typography data-testid={`people-${size}-value`}>{person.join(', ') || 'None'}</Typography>
+      <Listbox.Root items={TAGS} selectionMode='multiple' value={tags} onValueChange={setTags}>
+        <Listbox.Label>Tags</Listbox.Label>
+        <Listbox.Content>
+          <Listbox.ItemGroup>
+            <Listbox.ItemGroupLabel>Status</Listbox.ItemGroupLabel>
             {TAGS.map((item) => (
-              <Next.Listbox.Item key={item.value} item={item}>
-                <Next.Listbox.ItemText />
-                <Next.Listbox.ItemIndicator />
-              </Next.Listbox.Item>
+              <Listbox.Item key={item.value} item={item}>
+                <Listbox.ItemText />
+                <Listbox.ItemIndicator />
+              </Listbox.Item>
             ))}
-          </Next.Listbox.ItemGroup>
-        </Next.Listbox.Content>
-      </Next.Listbox.Root>
-      <Next.Typography data-testid={`tags-${size}-value`}>{tags.join(', ') || 'None'}</Next.Typography>
+          </Listbox.ItemGroup>
+        </Listbox.Content>
+      </Listbox.Root>
+      <Typography data-testid={`tags-${size}-value`}>{tags.join(', ') || 'None'}</Typography>
       <div className='h-40'>
-        <Next.Listbox.Root items={LONG} data-testid={`long-${size}`}>
-          <Next.Listbox.Content aria-label='Long'>
+        <Listbox.Root items={LONG} data-testid={`long-${size}`}>
+          <Listbox.Content aria-label='Long'>
             {LONG.map((item) => (
-              <Next.Listbox.Item key={item.value} item={item} />
+              <Listbox.Item key={item.value} item={item} />
             ))}
-          </Next.Listbox.Content>
-        </Next.Listbox.Root>
+          </Listbox.Content>
+        </Listbox.Root>
       </div>
       <div data-place='full' className='h-40'>
-        <Next.Panel.Root size={size}>
-          <Next.Panel.Body asChild data-testid={`panel-${size}`}>
-            <Next.ScrollArea.Root>
-              <Next.ScrollArea.Viewport asChild>
-                <Next.Container gutter='rail'>
-                  <Next.Typography data-testid={`panel-heading-${size}`}>In a panel</Next.Typography>
-                  <Next.Listbox.Root items={LONG}>
-                    <Next.Listbox.Content aria-label='In panel' scroll={false}>
+        <Panel.Root size={size}>
+          <Panel.Body asChild data-testid={`panel-${size}`}>
+            <ScrollArea.Root>
+              <ScrollArea.Viewport asChild>
+                <Container gutter='rail'>
+                  <Typography data-testid={`panel-heading-${size}`}>In a panel</Typography>
+                  <Listbox.Root items={LONG}>
+                    <Listbox.Content aria-label='In panel' scroll={false}>
                       {LONG.map((item) => (
-                        <Next.Listbox.Item key={item.value} item={item} />
+                        <Listbox.Item key={item.value} item={item} />
                       ))}
-                    </Next.Listbox.Content>
-                  </Next.Listbox.Root>
-                </Next.Container>
-              </Next.ScrollArea.Viewport>
-            </Next.ScrollArea.Root>
-          </Next.Panel.Body>
-        </Next.Panel.Root>
+                    </Listbox.Content>
+                  </Listbox.Root>
+                </Container>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Body>
+        </Panel.Root>
       </div>
-      <Next.Listbox.Root items={RECENT} selectionMode='none'>
-        <Next.Listbox.Content aria-label='Recent' data-testid={`recent-${size}`}>
+      <Listbox.Root items={RECENT} selectionMode='none'>
+        <Listbox.Content aria-label='Recent' data-testid={`recent-${size}`}>
           {RECENT.map((item) => (
-            <Next.Listbox.Item key={item.value} item={item} current={item.value === 'tasks'}>
-              <Next.Listbox.ItemIcon hue='amber' />
-              <Next.Listbox.ItemText />
-            </Next.Listbox.Item>
+            <Listbox.Item key={item.value} item={item} current={item.value === 'tasks'}>
+              <Listbox.ItemIcon hue='amber' />
+              <Listbox.ItemText />
+            </Listbox.Item>
           ))}
-        </Next.Listbox.Content>
-      </Next.Listbox.Root>
-      <Next.Listbox.Root items={tasks} selectionMode='none'>
-        <Next.Listbox.Label>Tasks</Next.Listbox.Label>
-        <Next.Listbox.Content data-testid={`tasks-${size}`}>
+        </Listbox.Content>
+      </Listbox.Root>
+      <Listbox.Root items={tasks} selectionMode='none'>
+        <Listbox.Label>Tasks</Listbox.Label>
+        <Listbox.Content data-testid={`tasks-${size}`}>
           {tasks.map((item) => (
-            <Next.Listbox.Item key={item.value} item={item} data-testid={`task-${item.value}-${size}`}>
-              <Next.Checkbox aria-label={`Done ${item.label}`} />
-              <Next.Listbox.ItemText />
-              <Next.Button icon='ph--pen--regular' label={`Edit ${item.label}`} iconOnly variant='ghost' />
-              <Next.SystemButton.Remove
+            <Listbox.Item key={item.value} item={item} data-testid={`task-${item.value}-${size}`}>
+              <Checkbox aria-label={`Done ${item.label}`} />
+              <Listbox.ItemText />
+              <Button icon='ph--pen--regular' label={`Edit ${item.label}`} iconOnly variant='ghost' />
+              <SystemButton.Remove
                 onClick={() => setTasks((tasks) => tasks.filter((task) => task.value !== item.value))}
               />
-            </Next.Listbox.Item>
+            </Listbox.Item>
           ))}
-        </Next.Listbox.Content>
-        <Next.Listbox.Empty icon='ph--check-circle--regular'>All done</Next.Listbox.Empty>
-      </Next.Listbox.Root>
+        </Listbox.Content>
+        <Listbox.Empty icon='ph--check-circle--regular'>All done</Listbox.Empty>
+      </Listbox.Root>
       <div className='h-40'>
-        <Next.Listbox.Root items={MANY} virtual='fixed'>
-          <Next.Listbox.Content aria-label='Many' data-testid={`many-${size}`}>
+        <Listbox.Root items={MANY} virtual='fixed'>
+          <Listbox.Content aria-label='Many' data-testid={`many-${size}`}>
             {MANY.map((item) => (
-              <Next.Listbox.Item key={item.value} item={item} />
+              <Listbox.Item key={item.value} item={item} />
             ))}
-          </Next.Listbox.Content>
-        </Next.Listbox.Root>
+          </Listbox.Content>
+        </Listbox.Root>
       </div>
       <div className='h-40'>
-        <Next.Listbox.Root items={LONG} virtual='variable'>
-          <Next.Listbox.Content aria-label='Variable' data-testid={`variable-${size}`}>
+        <Listbox.Root items={LONG} virtual='variable'>
+          <Listbox.Content aria-label='Variable' data-testid={`variable-${size}`}>
             {LONG.map((item) => (
-              <Next.Listbox.Item key={item.value} item={item} />
+              <Listbox.Item key={item.value} item={item} />
             ))}
-          </Next.Listbox.Content>
-        </Next.Listbox.Root>
+          </Listbox.Content>
+        </Listbox.Root>
       </div>
-      <Next.Listbox.Root items={FILES} columns='var(--nx-block-size) minmax(0, 1fr) 5rem'>
-        <Next.Listbox.Content aria-label='Files'>
+      <Listbox.Root items={FILES} columns='var(--nx-block-size) minmax(0, 1fr) 5rem'>
+        <Listbox.Content aria-label='Files'>
           {FILES.map((item) => (
-            <Next.Listbox.Item key={item.value} item={item} data-testid={`file-${item.value}-${size}`}>
-              <Next.Listbox.ItemIcon />
-              <Next.Listbox.ItemText />
-              <Next.Listbox.ItemDescription />
-            </Next.Listbox.Item>
+            <Listbox.Item key={item.value} item={item} data-testid={`file-${item.value}-${size}`}>
+              <Listbox.ItemIcon />
+              <Listbox.ItemText />
+              <Listbox.ItemDescription />
+            </Listbox.Item>
           ))}
-        </Next.Listbox.Content>
-      </Next.Listbox.Root>
-      <Next.Listbox.Root items={NONE}>
-        <Next.Listbox.Content aria-label='Nothing' />
-        <Next.Listbox.Empty data-testid={`empty-${size}`} />
-      </Next.Listbox.Root>
+        </Listbox.Content>
+      </Listbox.Root>
+      <Listbox.Root items={NONE}>
+        <Listbox.Content aria-label='Nothing' />
+        <Listbox.Empty data-testid={`empty-${size}`} />
+      </Listbox.Root>
     </>
   );
 };

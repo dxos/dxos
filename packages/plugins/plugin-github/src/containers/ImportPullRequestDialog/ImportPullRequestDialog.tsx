@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -127,14 +127,14 @@ export const ImportPullRequestDialog = () => {
   );
 
   return (
-    <Next.Dialog.Content>
-      <Next.Dialog.Header>
-        <Next.Dialog.Title>{t('import-pull-request-dialog.title')}</Next.Dialog.Title>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.SystemButton.Close />
-        </Next.Dialog.CloseTrigger>
-      </Next.Dialog.Header>
-      <Next.Dialog.Body>
+    <Dialog.Content>
+      <Dialog.Header>
+        <Dialog.Title>{t('import-pull-request-dialog.title')}</Dialog.Title>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
+      </Dialog.Header>
+      <Dialog.Body>
         <Form.Root
           autoFocus
           schema={ImportPullRequestForm}
@@ -147,8 +147,8 @@ export const ImportPullRequestDialog = () => {
             <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
           </Form.Content>
         </Form.Root>
-      </Next.Dialog.Body>
-    </Next.Dialog.Content>
+      </Dialog.Body>
+    </Dialog.Content>
   );
 };
 

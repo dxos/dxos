@@ -15,7 +15,18 @@ import React, {
 
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Next, composable, composableProps, useDynamicRef, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Field,
+  Icon,
+  Input,
+  Tag,
+  Toolbar,
+  composable,
+  composableProps,
+  useDynamicRef,
+  useTranslation,
+} from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -376,12 +387,12 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             <span
               className={mx('flex items-center justify-center h-(--dx-control)', grid ? 'col-[status]' : 'col-start-1')}
             >
-              <Next.Icon icon='ph--plus--regular' tone='subdued' />
+              <Icon icon='ph--plus--regular' tone='subdued' />
             </span>
           ))}
 
-        <Next.Field.Root>
-          <Next.Input
+        <Field.Root>
+          <Input
             variant='subdued'
             // An input clips its overflow rather than wrapping it, so a long title ends mid-word
             // against the trailing controls with nothing to say it continues; the ellipsis says so.
@@ -399,7 +410,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             onKeyDown={handleTitleKeyDown}
             onBlur={handleTitleBlur}
           />
-        </Next.Field.Root>
+        </Field.Root>
 
         {hasDescription && (
           <div
@@ -454,15 +465,15 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
               )}
             >
               {files.map((file, index) => (
-                <Next.Tag
+                <Tag
                   key={`${file.name}-${index}`}
                   hue='neutral'
                   classNames='inline-flex items-center gap-1'
                   data-testid='taskList.edit.file'
                 >
-                  <Next.Icon icon='ph--paperclip--regular' size='xs' />
+                  <Icon icon='ph--paperclip--regular' size='xs' />
                   <span data-testid='taskList.edit.file.name'>{file.name}</span>
-                  <Next.Button
+                  <Button
                     variant='ghost'
                     size='sm'
                     iconOnly
@@ -472,7 +483,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                     classNames='p-0 min-h-0 h-auto'
                     onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
                   />
-                </Next.Tag>
+                </Tag>
               ))}
             </div>
           )}
@@ -482,7 +493,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             task's controls in its own toolbar (`showControls` off) has no use for a second bar of
             chrome floating over the title. */}
         {(showControls ? current || draft.trim().length > 0 : !current && draft.trim().length > 0) && (
-          <Next.Toolbar.Root
+          <Toolbar.Root
             size='sm'
             classNames={mx(
               'row-start-1 justify-end p-0 bg-transparent',
@@ -495,7 +506,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                 priority on until it is saved. */}
             {showControls && task && showEstimates && <TaskEstimateControl task={task} />}
             {showControls && task && <TaskPriorityIcon task={task} />}
-            <Next.Button
+            <Button
               variant='ghost'
               iconOnly
               icon='ph--check--regular'
@@ -504,7 +515,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
               onClick={handleSave}
               onMouseDown={(event) => event.preventDefault()}
             />
-            <Next.Button
+            <Button
               variant='ghost'
               iconOnly
               icon='ph--x--regular'
@@ -513,7 +524,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
               onClick={handleCancel}
               onMouseDown={(event) => event.preventDefault()}
             />
-          </Next.Toolbar.Root>
+          </Toolbar.Root>
         )}
       </div>
     );

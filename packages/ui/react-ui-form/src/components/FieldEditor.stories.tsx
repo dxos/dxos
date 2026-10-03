@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { Next } from '@dxos/react-ui';
+import { Container, Panel, ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
 import { Example } from '@dxos/schema/testing';
@@ -38,17 +38,17 @@ const DefaultStory = (_: PaneArgs) => {
   current.projection = projection;
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container>
+    <Panel.Root>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container>
               <FieldEditor projection={projection} field={view.projection.fields[0]} onSave={() => {}} />
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

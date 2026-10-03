@@ -15,7 +15,7 @@ import { Feed } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 
 import { NotebookArticle, ScriptArticle, ScriptSettings } from '#containers';
 import { useCompiler } from '#hooks';
@@ -95,10 +95,10 @@ export const ScriptLogsSurface = ({ role, script }: ScriptLogsSurfaceProps) => {
   const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Body asChild>
+    <Panel.Root role={role}>
+      <Panel.Body asChild>
         <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} target={script} detailAxis='block' />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

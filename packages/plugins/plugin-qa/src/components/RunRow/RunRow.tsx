@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 
 import { type TestRun } from '#types';
 
@@ -34,7 +34,7 @@ export const RunRow = ({ run, expanded, onToggle }: RunRowProps) => {
         onClick={onToggle}
         data-testid='qa.plan.run-toggle'
       >
-        <Next.Icon icon={expanded ? 'ph--caret-down--regular' : 'ph--caret-right--regular'} size='md' />
+        <Icon icon={expanded ? 'ph--caret-down--regular' : 'ph--caret-right--regular'} size='md' />
         <StatusBadge status={snapshot.status} />
         <span className='font-mono text-sm'>{snapshot.startedAt.slice(0, 19).replace('T', ' ')}</span>
         <span className='grow text-subdued text-sm'>{snapshot.target?.ref ?? snapshot.runner?.name ?? ''}</span>

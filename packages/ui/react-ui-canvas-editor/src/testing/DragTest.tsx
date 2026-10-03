@@ -9,7 +9,7 @@ import React, { type CSSProperties, forwardRef, useEffect, useRef, useState } fr
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { type Dimension, type Point, useCanvasContext } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
@@ -87,7 +87,7 @@ const DragElement = forwardRef<HTMLDivElement, DragElementProps>(({ classNames, 
         classNames,
       )}
     >
-      <Next.Icon icon={'ph--crosshair-simple--regular'} size='xl' />
+      <Icon icon={'ph--crosshair-simple--regular'} size='xl' />
     </div>
   );
 });

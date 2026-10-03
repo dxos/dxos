@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { Flex, Next, type ThemedClassName } from '@dxos/react-ui';
+import { Block, Button, Card, Flex, Icon, Menu, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { type Hue, getStyles, mx } from '@dxos/ui-theme';
 
 /** An entry of a card's header menu. */
@@ -30,9 +30,9 @@ type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string }>>;
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
 const StatCardRoot = ({ id, classNames, children }: StatCardRootProps) => (
-  <Next.Card.Root id={id} size='sm' grid classNames={classNames}>
+  <Card.Root id={id} size='sm' grid classNames={classNames}>
     {children}
-  </Next.Card.Root>
+  </Card.Root>
 );
 
 StatCardRoot.displayName = 'StatCard.Root';
@@ -54,27 +54,27 @@ type StatCardHeaderProps = {
 };
 
 const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
-  <Next.Card.Header>
-    <Next.Block>
-      <Next.Icon icon={icon} classNames={hue && getStyles(hue).text} />
-    </Next.Block>
+  <Card.Header>
+    <Block>
+      <Icon icon={icon} classNames={hue && getStyles(hue).text} />
+    </Block>
     <Flex align='center' gap='sm' classNames='min-w-0'>
-      <Next.Card.Title>{title}</Next.Card.Title>
+      <Card.Title>{title}</Card.Title>
       {info !== undefined && <span className='shrink-0 font-mono text-xs text-description'>{info}</span>}
     </Flex>
-    {action && <Next.Block rail='end'>{action}</Next.Block>}
+    {action && <Block rail='end'>{action}</Block>}
     {menu && (
-      <Next.Card.Menu label={title}>
+      <Card.Menu label={title}>
         {menu.map((item) => (
-          <Next.Menu.Item
+          <Menu.Item
             key={item.label}
             item={{ value: item.label, label: item.label, icon: item.icon }}
             onClick={item.onClick}
           />
         ))}
-      </Next.Card.Menu>
+      </Card.Menu>
     )}
-  </Next.Card.Header>
+  </Card.Header>
 );
 
 StatCardHeader.displayName = 'StatCard.Header';
@@ -145,7 +145,7 @@ const StatCardRow = ({
   const leading =
     control ??
     (onToggle ? (
-      <Next.Button
+      <Button
         variant='ghost'
         icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
         iconOnly
@@ -154,10 +154,10 @@ const StatCardRow = ({
         onClick={() => onToggle(!open)}
       />
     ) : (
-      (icon && <Next.Icon icon={icon} classNames={iconClassNames} />) || <span />
+      (icon && <Icon icon={icon} classNames={iconClassNames} />) || <span />
     ));
   return (
-    <Next.Card.Row
+    <Card.Row
       classNames={[
         classNames,
         onClick && 'cursor-pointer hover:bg-hover-surface',
@@ -173,9 +173,9 @@ const StatCardRow = ({
         {children ?? (
           <>
             {tooltip ? (
-              <Next.Tooltip.Trigger asChild content={tooltip}>
+              <Tooltip.Trigger asChild content={tooltip}>
                 <span className='truncate'>{label}</span>
-              </Next.Tooltip.Trigger>
+              </Tooltip.Trigger>
             ) : (
               <span className='truncate'>{label}</span>
             )}
@@ -185,7 +185,7 @@ const StatCardRow = ({
           </>
         )}
       </Flex>
-    </Next.Card.Row>
+    </Card.Row>
   );
 };
 
@@ -202,7 +202,7 @@ type StatCardSectionProps = PropsWithChildren<{ title: string }>;
 
 /** A titled group of rows, for a card whose rows are of more than one kind. */
 const StatCardSection = ({ title, children }: StatCardSectionProps) => (
-  <Next.Card.Section title={title}>{children}</Next.Card.Section>
+  <Card.Section title={title}>{children}</Card.Section>
 );
 
 StatCardSection.displayName = 'StatCard.Section';
@@ -215,11 +215,11 @@ type StatCardContentProps = PropsWithChildren<ThemedClassName>;
 
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, children }: StatCardContentProps) => (
-  <Next.Card.Row leading={<span />} classNames={SPAN_TRAILING}>
+  <Card.Row leading={<span />} classNames={SPAN_TRAILING}>
     <Flex column grow={false} classNames={['min-w-0 text-xs', classNames]}>
       {children}
     </Flex>
-  </Next.Card.Row>
+  </Card.Row>
 );
 
 StatCardContent.displayName = 'StatCard.Content';

@@ -8,7 +8,7 @@ import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } f
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Format } from '@dxos/echo';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -53,21 +53,21 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
   return (
     <div className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
       {onCancel && (
-        <Next.Button
+        <Button
           iconEnd='ph--x--regular'
           label={t('quick-entry-cancel.label')}
           onClick={onCancel}
           data-testid='cancel-button'
         />
       )}
-      <Next.Button
+      <Button
         disabled={!canSave}
         iconEnd='ph--plus--regular'
         label={t('quick-entry-save-and-continue.label')}
         onClick={handleSaveAndContinue}
         data-testid='save-and-continue-button'
       />
-      <Next.Button
+      <Button
         type='submit'
         variant='primary'
         disabled={!canSave}
@@ -128,14 +128,14 @@ export const QuickEntryDialog = () => {
   }, []);
 
   return (
-    <Next.Dialog.Content ref={contentRef} onKeyDownCapture={handleKeyDownCapture}>
-      <Next.Dialog.Header>
-        <Next.Dialog.Title>{t('quick-entry-dialog.title')}</Next.Dialog.Title>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.SystemButton.Close />
-        </Next.Dialog.CloseTrigger>
-      </Next.Dialog.Header>
-      <Next.Dialog.Body>
+    <Dialog.Content ref={contentRef} onKeyDownCapture={handleKeyDownCapture}>
+      <Dialog.Header>
+        <Dialog.Title>{t('quick-entry-dialog.title')}</Dialog.Title>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
+      </Dialog.Header>
+      <Dialog.Body>
         <Form.Root
           key={formKey}
           autoFocus
@@ -149,8 +149,8 @@ export const QuickEntryDialog = () => {
             <QuickEntryActions continueRef={continueRef} formSaveRef={formSaveRef} />
           </Form.Content>
         </Form.Root>
-      </Next.Dialog.Body>
-    </Next.Dialog.Content>
+      </Dialog.Body>
+    </Dialog.Content>
   );
 };
 

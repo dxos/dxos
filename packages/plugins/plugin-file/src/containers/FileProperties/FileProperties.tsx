@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Blob, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Input, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { File } from '@dxos/types';
 
@@ -71,21 +71,21 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
   return (
     <Form.FieldSet>
       {reference && (
-        <Next.Field.Root>
-          <Next.Field.Label>{t('properties.reference.label')}</Next.Field.Label>
+        <Field.Root>
+          <Field.Label>{t('properties.reference.label')}</Field.Label>
           <div className='flex w-full gap-1'>
-            <Next.Input readOnly value={reference} classNames='grow' />
-            <Next.SystemButton.Clipboard iconOnly value={reference} label={t('properties.reference.copy.label')} />
+            <Input readOnly value={reference} classNames='grow' />
+            <SystemButton.Clipboard iconOnly value={reference} label={t('properties.reference.copy.label')} />
           </div>
-        </Next.Field.Root>
+        </Field.Root>
       )}
       {url && (
-        <Next.Field.Root>
-          <Next.Field.Label>{t('properties.url.label')}</Next.Field.Label>
+        <Field.Root>
+          <Field.Label>{t('properties.url.label')}</Field.Label>
           <div className='flex w-full gap-1'>
-            <Next.Input readOnly value={url} classNames='grow' />
-            <Next.SystemButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
-            <Next.Button
+            <Input readOnly value={url} classNames='grow' />
+            <SystemButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
+            <Button
               iconOnly
               icon='ph--arrows-clockwise--regular'
               label={t('properties.url.regenerate.label')}
@@ -93,8 +93,8 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
               onClick={() => void resolve()}
             />
           </div>
-          <Next.Field.HelperText>{t('properties.url.description')}</Next.Field.HelperText>
-        </Next.Field.Root>
+          <Field.HelperText>{t('properties.url.description')}</Field.HelperText>
+        </Field.Root>
       )}
     </Form.FieldSet>
   );

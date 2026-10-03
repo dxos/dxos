@@ -9,8 +9,8 @@ import React, { Fragment, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { expectTooltip, realHover } from '../../testing.ts';
+import { Timestamp, Typography } from '../index.ts';
 
 const NOW = new Date('2026-06-15T12:00:00Z');
 
@@ -37,8 +37,8 @@ const DefaultStory = ({ live }: StoryArgs) => {
     <div className='grid grid-cols-[1fr_min-content] gap-x-4 gap-y-1'>
       {LADDER.map(({ label, minutes }) => (
         <Fragment key={label}>
-          <Next.Typography>{label}</Next.Typography>
-          <Next.Timestamp
+          <Typography>{label}</Typography>
+          <Timestamp
             date={minutesBefore(minutes, now)}
             now={live ? undefined : NOW}
             data-testid={`minutes-${minutes}`}
@@ -89,7 +89,7 @@ export const Test: Story = {
 export const TestTicks: Story = {
   render: () => {
     const [date] = useState(() => new Date(Date.now() - 58_000));
-    return <Next.Timestamp date={date} data-testid='ticking' />;
+    return <Timestamp date={date} data-testid='ticking' />;
   },
   play: async ({ canvasElement }) => {
     const time = within(canvasElement).getByTestId('ticking');

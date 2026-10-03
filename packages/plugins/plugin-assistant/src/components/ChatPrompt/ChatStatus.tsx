@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { ChatStatus as NaturalChatStatus, formatElapsed } from '@dxos/react-ui-chat';
 import { Matrix } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
@@ -146,7 +146,7 @@ export const ChatStatusView = ({
                   className='flex items-center gap-1'
                   title={alarm.message}
                 >
-                  <Next.Icon icon='ph--alarm--regular' size='md' />
+                  <Icon icon='ph--alarm--regular' size='md' />
                   {formatWakeAt(alarm.wakeAt)}
                 </span>
               </NaturalChatStatus.Text>

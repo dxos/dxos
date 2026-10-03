@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Block, Card, SystemButton } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export const JsonCard = ({ data }: { data: unknown }) => {
@@ -15,19 +15,19 @@ export const JsonCard = ({ data }: { data: unknown }) => {
     collapsedLength = JSON.stringify(data)?.length ?? 0;
   } catch {}
   return (
-    <Next.Card.Row>
-      <Next.Block classNames='self-start'>
-        <Next.SystemButton.Disclosure
+    <Card.Row>
+      <Block classNames='self-start'>
+        <SystemButton.Disclosure
           variant='ghost'
           size='sm'
           label='Toggle JSON'
           expanded={open}
           onExpandedChange={setOpen}
         />
-      </Next.Block>
+      </Block>
       {(open && <JsonHighlighter data={data} classNames='col-span-full max-h-[20lh] py-1.5 text-xs' />) || (
-        <Next.Card.Text variant='description'>{collapsedLength}</Next.Card.Text>
+        <Card.Text variant='description'>{collapsedLength}</Card.Text>
       )}
-    </Next.Card.Row>
+    </Card.Row>
   );
 };

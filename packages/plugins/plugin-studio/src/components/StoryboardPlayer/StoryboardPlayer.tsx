@@ -4,7 +4,15 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Next, type ThemedClassName, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  MediaPlayer,
+  Panel,
+  type ThemedClassName,
+  Toolbar,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -74,15 +82,15 @@ export const StoryboardPlayer = ({
   }
 
   return (
-    <Next.Panel.Root {...composableProps({ classNames }, attentionAttributes)}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
+    <Panel.Root {...composableProps({ classNames }, attentionAttributes)}>
+      <Panel.Header>
+        <Toolbar.Root>
           {/* Laid out by hand — nav + position, the title centred, close — as one grid child rather
               than a grid on the root: the root brackets its children with focus sentinels, which
               would take the first and last cells. */}
           <div className='grow grid grid-cols-[auto_1fr_auto] items-center gap-1'>
             <div className='flex items-center gap-1'>
-              <Next.Button
+              <Button
                 iconOnly
                 icon='ph--caret-left--regular'
                 size='sm'
@@ -94,7 +102,7 @@ export const StoryboardPlayer = ({
               <span className='tabular-nums whitespace-nowrap'>
                 {index + 1} / {clips.length}
               </span>
-              <Next.Button
+              <Button
                 iconOnly
                 icon='ph--caret-right--regular'
                 size='sm'
@@ -105,7 +113,7 @@ export const StoryboardPlayer = ({
             </div>
             <span className='min-w-0 truncate text-center'>{clip.name}</span>
             <div className='flex justify-end'>
-              <Next.Button
+              <Button
                 iconOnly
                 icon='ph--x--regular'
                 label={t('close.label')}
@@ -114,11 +122,11 @@ export const StoryboardPlayer = ({
               />
             </div>
           </div>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='bg-scrim-surface'>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='bg-scrim-surface'>
         {/* Keyed by clip so the element remounts and autoplays the next source. */}
-        <Next.MediaPlayer
+        <MediaPlayer
           key={clip.id}
           classNames='dx-expand bg-neutral-100 dark:bg-neutral-800'
           src={clip.src}
@@ -128,8 +136,8 @@ export const StoryboardPlayer = ({
           alt={clip.name}
           onEnded={advance}
         />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

@@ -11,7 +11,7 @@ import { Trigger } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -73,17 +73,17 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
   // TODO(burdon): Move JoinHeading into Dialog.Heading.
   return (
-    <Next.Dialog.Content>
-      <Next.Dialog.Title classNames='sr-only'>{t('join-space.label', { ns: osTranslations })}</Next.Dialog.Title>
-      <Next.Dialog.Body>
+    <Dialog.Content>
+      <Dialog.Title classNames='sr-only'>{t('join-space.label', { ns: osTranslations })}</Dialog.Title>
+      <Dialog.Body>
         <JoinPanel
           {...props}
-          exitActionParent={<Next.Dialog.CloseTrigger asChild />}
-          doneActionParent={<Next.Dialog.CloseTrigger asChild />}
+          exitActionParent={<Dialog.CloseTrigger asChild />}
+          doneActionParent={<Dialog.CloseTrigger asChild />}
           onDone={handleDone}
         />
-      </Next.Dialog.Body>
-    </Next.Dialog.Content>
+      </Dialog.Body>
+    </Dialog.Content>
   );
 };
 

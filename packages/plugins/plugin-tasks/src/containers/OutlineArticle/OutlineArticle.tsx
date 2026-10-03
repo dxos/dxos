@@ -10,7 +10,7 @@ import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Next, Show, useTranslation } from '@dxos/react-ui';
+import { Panel, Show, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
@@ -136,14 +136,14 @@ export const OutlineArticle = ({
 
   if (task) {
     return (
-      <Next.Panel.Root role={role}>
-        <Next.Panel.Header>
+      <Panel.Root role={role}>
+        <Panel.Header>
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
-        </Next.Panel.Header>
-        <Next.Panel.Body>
+        </Panel.Header>
+        <Panel.Body>
           <TaskForm task={task} />
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     );
   }
 
@@ -160,16 +160,16 @@ export const OutlineArticle = ({
           resolveLinkLabel={resolveLinkLabel}
           extensions={extensions}
         >
-          <Next.Panel.Root role={role}>
+          <Panel.Root role={role}>
             <Show when={toolbar}>
-              <Next.Panel.Header>
+              <Panel.Header>
                 <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
-              </Next.Panel.Header>
+              </Panel.Header>
             </Show>
-            <Next.Panel.Body asChild>
+            <Panel.Body asChild>
               <Outline.Content classNames='dx-document' />
-            </Next.Panel.Body>
-          </Next.Panel.Root>
+            </Panel.Body>
+          </Panel.Root>
         </Outline.Root>
       )}
     </Show>

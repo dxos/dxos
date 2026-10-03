@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { HomeSection } from './HomeSection.tsx';
@@ -20,8 +20,8 @@ const DefaultStory = () => (
 const WithActionsStory = () => (
   <HomeSection.Root>
     <HomeSection.Header title='Activity' onClose={() => {}}>
-      <Next.Button variant='ghost'>All</Next.Button>
-      <Next.Button variant='ghost'>30d</Next.Button>
+      <Button variant='ghost'>All</Button>
+      <Button variant='ghost'>30d</Button>
     </HomeSection.Header>
     <div className='rounded-sm bg-group-surface p-4 text-description'>Section content.</div>
   </HomeSection.Root>

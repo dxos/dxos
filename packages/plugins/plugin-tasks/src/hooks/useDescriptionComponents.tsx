@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { Next } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 import { MarkdownLink, type MarkdownViewProps } from '@dxos/react-ui-markdown';
 
 /**
@@ -34,11 +34,7 @@ export const useDescriptionComponents = (): MarkdownViewProps['components'] => {
         return (
           <DxAnchor eid={href} className='dx-tag--anchor'>
             {icon && (
-              <Next.Icon
-                icon={icon.icon}
-                size='md'
-                classNames={['inline-block align-[-0.125em] me-1', icon.classNames]}
-              />
+              <Icon icon={icon.icon} size='md' classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
             )}
             {/* A URL written bare autolinks with itself as its text; the resolver's short name reads better in a chip. */}
             {children === href ? (PreviewCapabilities.linkLabel(all, href) ?? children) : children}

@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type Progress } from '@dxos/progress';
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -126,20 +126,20 @@ const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
   }, []);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Button icon='ph--play--regular' label='Start' onClick={handleStart} />
-          <Next.Button icon='ph--warning--regular' label='Fail' onClick={handleFail} />
-          <Next.Button icon='ph--x--regular' label='Reset' onClick={handleCancel} />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body />
-      <Next.Panel.Footer>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button icon='ph--play--regular' label='Start' onClick={handleStart} />
+          <Button icon='ph--warning--regular' label='Fail' onClick={handleFail} />
+          <Button icon='ph--x--regular' label='Reset' onClick={handleCancel} />
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body />
+      <Panel.Footer>
         {/* The meter's own control cancels a run in flight, and clears one that failed. */}
         <ProgressMeter {...args} state={state} onCancel={handleCancel} />
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

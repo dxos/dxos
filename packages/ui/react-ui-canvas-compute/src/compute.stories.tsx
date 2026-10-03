@@ -9,7 +9,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui';
+import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
@@ -142,20 +142,20 @@ const DefaultStory = ({
 
       {sidebar && (
         <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
-          <Next.Toolbar.Root>
-            <Next.Select.Root
+          <Toolbar.Root>
+            <Select.Root
               value={[sidebar]}
               onValueChange={({ value: [value] }) => setSidebar(value as RenderProps['sidebar'])}
               items={sidebarTypes.map((type) => ({ value: type, label: type }))}
             >
-              <Next.Select.Trigger classNames='w-full' />
-              <Next.Select.Content>
+              <Select.Trigger classNames='w-full' />
+              <Select.Content>
                 {sidebarTypes.map((type) => (
-                  <Next.Select.Item key={type} item={{ value: type, label: type }} />
+                  <Select.Item key={type} item={{ value: type, label: type }} />
                 ))}
-              </Next.Select.Content>
-            </Next.Select.Root>
-          </Next.Toolbar.Root>
+              </Select.Content>
+            </Select.Root>
+          </Toolbar.Root>
 
           <div className='flex flex-col h-full overflow-hidden divide-y divider-separator'>
             {/* TODO(burdon): Provide schema. */}

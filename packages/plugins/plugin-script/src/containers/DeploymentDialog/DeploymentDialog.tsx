@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { useCreateAndDeployScriptTemplates } from '#hooks';
 import { meta } from '#meta';
@@ -67,14 +67,14 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
   }, [status, invokePromise]);
 
   return (
-    <Next.Dialog.Content>
-      <Next.Dialog.Header>
-        <Next.Dialog.Title>{t('deployment-dialog.title')}</Next.Dialog.Title>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.SystemButton.Close />
-        </Next.Dialog.CloseTrigger>
-      </Next.Dialog.Header>
-      <Next.Dialog.Body>
+    <Dialog.Content>
+      <Dialog.Header>
+        <Dialog.Title>{t('deployment-dialog.title')}</Dialog.Title>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
+      </Dialog.Header>
+      <Dialog.Body>
         <p>
           {t('deployment-dialog-scripts-found.message', {
             count: scriptTemplates.length,
@@ -85,12 +85,12 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
             return <li key={template.id}>{template.name}</li>;
           })}
         </ul>
-      </Next.Dialog.Body>
-      <Next.Dialog.Footer>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.Button disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Next.Button>
-        </Next.Dialog.CloseTrigger>
-        <Next.Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
+      </Dialog.Body>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
+          <Button disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Button>
+        </Dialog.CloseTrigger>
+        <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
           {status === 'pending'
             ? t('deployment-dialog-deploy-functions-pending-button.label', {
                 count: scriptTemplates.length,
@@ -98,9 +98,9 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
             : t('deployment-dialog-deploy-functions-button.label', {
                 count: scriptTemplates.length,
               })}
-        </Next.Button>
-      </Next.Dialog.Footer>
-    </Next.Dialog.Content>
+        </Button>
+      </Dialog.Footer>
+    </Dialog.Content>
   );
 };
 

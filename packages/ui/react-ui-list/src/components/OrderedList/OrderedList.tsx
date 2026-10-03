@@ -16,7 +16,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Collapsible, DragHandle, type DragMoveDirection, DragPreview, Listbox } from '@dxos/react-ui';
 
 import { useReorderAutoScroll, useReorderItem, useReorderList } from '../../hooks/index.ts';
 import {
@@ -26,9 +26,9 @@ import {
   useOrderedListItemContext,
 } from './OrderedListContext.ts';
 
-type NextRootProps = ComponentPropsWithoutRef<typeof Next.Listbox.Root>;
-type NextContentProps = ComponentPropsWithoutRef<typeof Next.Listbox.Content>;
-type NextItemProps = ComponentPropsWithoutRef<typeof Next.Listbox.Item>;
+type NextRootProps = ComponentPropsWithoutRef<typeof Listbox.Root>;
+type NextContentProps = ComponentPropsWithoutRef<typeof Listbox.Content>;
+type NextItemProps = ComponentPropsWithoutRef<typeof Listbox.Item>;
 
 /** A row's value with the id the list knows it by. */
 type Entry<T> = { id: string; item: T };
@@ -107,9 +107,9 @@ const OrderedListRoot = <T,>({
       return 'clone' as const;
     }
     return ({ item }: Entry<T>, source: HTMLElement) => (
-      <Next.DragPreview source={source}>
+      <DragPreview source={source}>
         {dragPreview ? dragPreview(item) : (getLabel?.(item) ?? itemText(source))}
-      </Next.DragPreview>
+      </DragPreview>
     );
   }, [dragPreview, getLabel]);
 
@@ -126,7 +126,7 @@ const OrderedListRoot = <T,>({
   entriesRef.current = entries;
   const onMoveRef = useRef(onMove);
   onMoveRef.current = onMove;
-  const move = useCallback((id: string, direction: Next.DragMoveDirection) => {
+  const move = useCallback((id: string, direction: DragMoveDirection) => {
     const from = entriesRef.current.findIndex((entry) => entry.id === id);
     const to = direction === 'up' ? from - 1 : from + 1;
     if (from < 0 || to < 0 || to >= entriesRef.current.length) {
@@ -137,7 +137,7 @@ const OrderedListRoot = <T,>({
 
   return (
     <OrderedListProvider reorder={controller} options={optionsById} readonly={readonly} move={move}>
-      <Next.Listbox.Root
+      <Listbox.Root
         items={options}
         selectionMode={selectable ? 'single' : 'none'}
         value={selectable ? (value === undefined ? [] : [value]) : undefined}
@@ -148,7 +148,7 @@ const OrderedListRoot = <T,>({
         loopFocus={loopFocus}
       >
         {children({ items })}
-      </Next.Listbox.Root>
+      </Listbox.Root>
     </OrderedListProvider>
   );
 };
@@ -179,7 +179,7 @@ const OrderedListContent: ForwardRefExoticComponent<OrderedListContentProps & Re
       },
       [scroll, autoScrollRef, forwardedRef],
     );
-    return <Next.Listbox.Content {...props} scroll={scroll} ref={ref} />;
+    return <Listbox.Content {...props} scroll={scroll} ref={ref} />;
   });
 
 OrderedListContent.displayName = 'OrderedList.Content';
@@ -188,10 +188,10 @@ OrderedListContent.displayName = 'OrderedList.Content';
 // Detail
 //
 
-type OrderedListDetailProps = ComponentPropsWithoutRef<typeof Next.Collapsible.Content>;
+type OrderedListDetailProps = ComponentPropsWithoutRef<typeof Collapsible.Content>;
 
 /** A collapsible row's detail, below the row at its full width; a direct child of a collapsible `Item`. */
-const OrderedListDetail = (props: OrderedListDetailProps) => <Next.Collapsible.Content {...props} />;
+const OrderedListDetail = (props: OrderedListDetailProps) => <Collapsible.Content {...props} />;
 
 OrderedListDetail.displayName = 'OrderedList.Detail';
 
@@ -242,9 +242,9 @@ const OrderedListItem = ({
   if (!isCollapsible) {
     return (
       <OrderedListItemProvider id={id} canDrag={canDrag} handleRef={handleRef}>
-        <Next.Listbox.Item {...props} item={option} data-dragging={dragging} ref={rowRef}>
+        <Listbox.Item {...props} item={option} data-dragging={dragging} ref={rowRef}>
           {children}
-        </Next.Listbox.Item>
+        </Listbox.Item>
       </OrderedListItemProvider>
     );
   }
@@ -252,7 +252,7 @@ const OrderedListItem = ({
   const parts = Children.toArray(children);
   return (
     <OrderedListItemProvider id={id} canDrag={canDrag} handleRef={handleRef}>
-      <Next.Collapsible.Root
+      <Collapsible.Root
         open={open}
         defaultOpen={defaultOpen}
         onOpenChange={onOpenChange && (({ open }) => onOpenChange(open))}
@@ -261,12 +261,12 @@ const OrderedListItem = ({
         data-dragging={dragging}
         ref={rowRef}
       >
-        <Next.Listbox.Item {...props} item={option}>
+        <Listbox.Item {...props} item={option}>
           {parts.filter((part) => !isDetail(part))}
-          <Next.Collapsible.Trigger />
-        </Next.Listbox.Item>
+          <Collapsible.Trigger />
+        </Listbox.Item>
         {parts.filter(isDetail)}
-      </Next.Collapsible.Root>
+      </Collapsible.Root>
     </OrderedListItemProvider>
   );
 };
@@ -302,7 +302,7 @@ const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHandleProps
     );
   }
 
-  return <Next.DragHandle disabled={disabled} onMove={(direction) => move(id, direction)} ref={handleRef} />;
+  return <DragHandle disabled={disabled} onMove={(direction) => move(id, direction)} ref={handleRef} />;
 };
 
 OrderedListDragHandle.displayName = 'OrderedList.DragHandle';
@@ -328,26 +328,26 @@ OrderedListDragHandle.displayName = 'OrderedList.DragHandle';
  */
 export const OrderedList: {
   Root: typeof OrderedListRoot;
-  Label: typeof Next.Listbox.Label;
+  Label: typeof Listbox.Label;
   Content: typeof OrderedListContent;
-  Empty: typeof Next.Listbox.Empty;
+  Empty: typeof Listbox.Empty;
   Item: typeof OrderedListItem;
   Detail: typeof OrderedListDetail;
   DragHandle: typeof OrderedListDragHandle;
-  ItemIcon: typeof Next.Listbox.ItemIcon;
-  ItemText: typeof Next.Listbox.ItemText;
-  ItemDescription: typeof Next.Listbox.ItemDescription;
+  ItemIcon: typeof Listbox.ItemIcon;
+  ItemText: typeof Listbox.ItemText;
+  ItemDescription: typeof Listbox.ItemDescription;
 } = {
   Root: OrderedListRoot,
-  Label: Next.Listbox.Label,
+  Label: Listbox.Label,
   Content: OrderedListContent,
-  Empty: Next.Listbox.Empty,
+  Empty: Listbox.Empty,
   Item: OrderedListItem,
   Detail: OrderedListDetail,
   DragHandle: OrderedListDragHandle,
-  ItemIcon: Next.Listbox.ItemIcon,
-  ItemText: Next.Listbox.ItemText,
-  ItemDescription: Next.Listbox.ItemDescription,
+  ItemIcon: Listbox.ItemIcon,
+  ItemText: Listbox.ItemText,
+  ItemDescription: Listbox.ItemDescription,
 };
 
 export type {

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Pulse, type PulseProps, type PulseSignal } from './Pulse.tsx';
@@ -16,16 +16,16 @@ const DefaultStory = (props: PulseProps) => {
   const [active, setActive] = useState(props.active ?? true);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Next.Button>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='flex items-center justify-center'>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='flex items-center justify-center'>
         <Pulse {...props} active={active} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
@@ -126,11 +126,11 @@ const PointerStory = (props: PulseProps) => {
 
 export const Pointer: Story = {
   render: (props) => (
-    <Next.Panel.Root>
-      <Next.Panel.Body classNames='flex items-center justify-center'>
+    <Panel.Root>
+      <Panel.Body classNames='flex items-center justify-center'>
         <PointerStory {...props} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   ),
   args: {
     dim: 8,
@@ -184,11 +184,11 @@ const RandomPing = (props: StoryArgs) => {
 
 export const Matrix: Story = {
   render: (props) => (
-    <Next.Panel.Root>
-      <Next.Panel.Body classNames='flex items-center justify-center'>
+    <Panel.Root>
+      <Panel.Body classNames='flex items-center justify-center'>
         <RandomPing {...props} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   ),
   args: {
     dim: 50,
@@ -203,11 +203,11 @@ export const Matrix: Story = {
 
 export const Icon: Story = {
   render: (props) => (
-    <Next.Panel.Root>
-      <Next.Panel.Body classNames='flex items-center justify-center'>
+    <Panel.Root>
+      <Panel.Body classNames='flex items-center justify-center'>
         <RandomPing {...props} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   ),
   args: {
     dim: 4,

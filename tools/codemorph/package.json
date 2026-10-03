@@ -13,7 +13,6 @@
   "author": "info@dxos.org",
   "type": "module",
   "scripts": {
-    "codemorph": "node ./src/main.ts",
     "test": "vitest run --passWithNoTests --project=node"
   },
   "dependencies": {

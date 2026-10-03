@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { type FC, type KeyboardEvent, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree, type TreeDropEvent, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list';
 import { type Task } from '@dxos/types';
 
@@ -439,7 +439,7 @@ const TaskGroupHeading = ({ group, translationKey }: { group: TaskGroupHeader; t
   const { t } = useTranslation(translationKey);
   return (
     <div className='col-[2/assignee] flex min-w-0 items-center gap-2' data-testid='taskList.group.header'>
-      {group.icon && <Next.Icon icon={group.icon} size='md' classNames={group.iconClassNames} />}
+      {group.icon && <Icon icon={group.icon} size='md' classNames={group.iconClassNames} />}
       <span className='truncate font-medium'>{toLocalizedString(group.label, t)}</span>
       <span className='text-sm text-description' data-testid='taskList.group.count'>
         {group.count}

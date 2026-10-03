@@ -11,12 +11,26 @@ import { expect, userEvent, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import {
+  Button,
+  Checkbox,
+  Container,
+  DateInput,
+  Field,
+  type FieldValence,
+  Input,
+  NumberInput,
+  PasswordInput,
+  PinInput,
+  Switch,
+  Textarea,
+  Typography,
+} from '../index.ts';
 
-const VALENCES: Next.FieldValence[] = ['success', 'info', 'warning', 'error'];
+const VALENCES: FieldValence[] = ['success', 'info', 'warning', 'error'];
 
 /**
  * Every current `Field` part as a Next field (DESIGN.md follow-up 54): text, textarea, the segmented date, time and
@@ -26,64 +40,64 @@ const VALENCES: Next.FieldValence[] = ['success', 'info', 'warning', 'error'];
  */
 const EveryField = ({ size }: SizeArgs) => (
   <>
-    <Next.Field.Root>
-      <Next.Field.Label>Name</Next.Field.Label>
-      <Next.Input data-testid={`every-input-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Bio</Next.Field.Label>
-      <Next.Textarea />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Birthday</Next.Field.Label>
-      <Next.DateInput defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Wake up</Next.Field.Label>
-      <Next.DateInput type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Meeting</Next.Field.Label>
-      <Next.DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Code</Next.Field.Label>
-      <Next.PinInput length={4} data-testid={`every-pin-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Age</Next.Field.Label>
-      <Next.NumberInput min={0} defaultValue='30' data-testid={`every-number-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Password</Next.Field.Label>
-      <Next.PasswordInput data-testid={`every-password-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Checkbox label='Subscribe' data-testid={`every-checkbox-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Switch label='Notifications' data-testid={`every-switch-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root required>
-      <Next.Field.Label data-testid={`required-label-${size}`}>Handle</Next.Field.Label>
-      <Next.Input />
-    </Next.Field.Root>
-    <Next.Field.Root required>
-      <Next.Field.Label data-testid={`placed-label-${size}`}>
-        <Next.Field.RequiredIndicator>required</Next.Field.RequiredIndicator> Alias
-      </Next.Field.Label>
-      <Next.Input />
-    </Next.Field.Root>
-    <Next.Field.Root readOnly>
-      <Next.Field.Label>Id</Next.Field.Label>
-      <Next.Input defaultValue='abc-123' />
-    </Next.Field.Root>
-    <Next.Field.Root asChild data-testid={`every-as-child-${size}`}>
+    <Field.Root>
+      <Field.Label>Name</Field.Label>
+      <Input data-testid={`every-input-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Bio</Field.Label>
+      <Textarea />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Birthday</Field.Label>
+      <DateInput defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Wake up</Field.Label>
+      <DateInput type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Meeting</Field.Label>
+      <DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Code</Field.Label>
+      <PinInput length={4} data-testid={`every-pin-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Age</Field.Label>
+      <NumberInput min={0} defaultValue='30' data-testid={`every-number-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Password</Field.Label>
+      <PasswordInput data-testid={`every-password-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Checkbox label='Subscribe' data-testid={`every-checkbox-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Switch label='Notifications' data-testid={`every-switch-${size}`} />
+    </Field.Root>
+    <Field.Root required>
+      <Field.Label data-testid={`required-label-${size}`}>Handle</Field.Label>
+      <Input />
+    </Field.Root>
+    <Field.Root required>
+      <Field.Label data-testid={`placed-label-${size}`}>
+        <Field.RequiredIndicator>required</Field.RequiredIndicator> Alias
+      </Field.Label>
+      <Input />
+    </Field.Root>
+    <Field.Root readOnly>
+      <Field.Label>Id</Field.Label>
+      <Input defaultValue='abc-123' />
+    </Field.Root>
+    <Field.Root asChild data-testid={`every-as-child-${size}`}>
       <section>
-        <Next.Field.Label>Nickname</Next.Field.Label>
-        <Next.Input />
+        <Field.Label>Nickname</Field.Label>
+        <Input />
       </section>
-    </Next.Field.Root>
+    </Field.Root>
   </>
 );
 
@@ -93,58 +107,58 @@ const EveryField = ({ size }: SizeArgs) => (
  */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Field.Root data-testid={`field-${size}`}>
-      <Next.Field.Label>Email</Next.Field.Label>
-      <Next.Input data-testid={`field-input-${size}`} />
-      <Next.Field.HelperText>We never share it.</Next.Field.HelperText>
-    </Next.Field.Root>
+    <Field.Root data-testid={`field-${size}`}>
+      <Field.Label>Email</Field.Label>
+      <Input data-testid={`field-input-${size}`} />
+      <Field.HelperText>We never share it.</Field.HelperText>
+    </Field.Root>
     {(['Website', 'Homepage'] as const).map((name) => (
-      <Next.Field.Root key={name} invalid={name === 'Homepage'} data-testid={`${name.toLowerCase()}-${size}`}>
-        <Next.Field.Header>
-          <Next.Field.Label>{name}</Next.Field.Label>
-          <Next.Button icon='ph--x--regular' label={`Clear ${name.toLowerCase()}`} iconOnly />
-        </Next.Field.Header>
-        <Next.Input defaultValue='not a url' />
-        <Next.Field.ErrorText>Enter a valid URL.</Next.Field.ErrorText>
-      </Next.Field.Root>
+      <Field.Root key={name} invalid={name === 'Homepage'} data-testid={`${name.toLowerCase()}-${size}`}>
+        <Field.Header>
+          <Field.Label>{name}</Field.Label>
+          <Button icon='ph--x--regular' label={`Clear ${name.toLowerCase()}`} iconOnly />
+        </Field.Header>
+        <Input defaultValue='not a url' />
+        <Field.ErrorText>Enter a valid URL.</Field.ErrorText>
+      </Field.Root>
     ))}
     {VALENCES.map((valence) => (
-      <Next.Field.Root key={valence} validationValence={valence} data-testid={`${valence}-${size}`}>
-        <Next.Field.Label>Handle ({valence})</Next.Field.Label>
-        <Next.Input defaultValue='dxos' data-testid={`${valence}-input-${size}`} />
-        <Next.Field.HelperText data-testid={`${valence}-helper-${size}`}>A {valence} message.</Next.Field.HelperText>
-        <Next.Field.ErrorText>The handle is taken.</Next.Field.ErrorText>
-      </Next.Field.Root>
+      <Field.Root key={valence} validationValence={valence} data-testid={`${valence}-${size}`}>
+        <Field.Label>Handle ({valence})</Field.Label>
+        <Input defaultValue='dxos' data-testid={`${valence}-input-${size}`} />
+        <Field.HelperText data-testid={`${valence}-helper-${size}`}>A {valence} message.</Field.HelperText>
+        <Field.ErrorText>The handle is taken.</Field.ErrorText>
+      </Field.Root>
     ))}
-    <Next.Field.Root>
-      <Next.Field.Label srOnly data-testid={`hidden-label-${size}`}>
+    <Field.Root>
+      <Field.Label srOnly data-testid={`hidden-label-${size}`}>
         Filter
-      </Next.Field.Label>
-      <Next.Input placeholder='Filter' />
-    </Next.Field.Root>
+      </Field.Label>
+      <Input placeholder='Filter' />
+    </Field.Root>
     <EveryField size={size} />
     {/* Row fields (Phase 4 decision 3): bordered subgrid rows of the Container's two tracks. */}
-    <Next.Container gutter='inherit' columns='minmax(0, 1fr) [control] minmax(0, 1fr)'>
+    <Container gutter='inherit' columns='minmax(0, 1fr) [control] minmax(0, 1fr)'>
       {['Theme', 'Language'].map((name) => (
-        <Next.Field.Root key={name} layout='row' level='+1' data-testid={`row-${name.toLowerCase()}-${size}`}>
-          <Next.Field.Header>
-            <Next.Field.Label>{name}</Next.Field.Label>
-          </Next.Field.Header>
-          <Next.Field.HelperText>The app's {name.toLowerCase()}.</Next.Field.HelperText>
-          <Next.Input />
-        </Next.Field.Root>
+        <Field.Root key={name} layout='row' level='+1' data-testid={`row-${name.toLowerCase()}-${size}`}>
+          <Field.Header>
+            <Field.Label>{name}</Field.Label>
+          </Field.Header>
+          <Field.HelperText>The app's {name.toLowerCase()}.</Field.HelperText>
+          <Input />
+        </Field.Root>
       ))}
-    </Next.Container>
+    </Container>
     {/* A header whose label is text (no single control to name): its action still ends the row. */}
-    <Next.Field.Header data-testid={`text-header-${size}`}>
-      <Next.Typography truncate>Tags</Next.Typography>
-      <Next.Button iconOnly variant='ghost' icon='ph--plus--regular' label='Add tag' />
-    </Next.Field.Header>
+    <Field.Header data-testid={`text-header-${size}`}>
+      <Typography truncate>Tags</Typography>
+      <Button iconOnly variant='ghost' icon='ph--plus--regular' label='Add tag' />
+    </Field.Header>
     {/* A row with its own columns spaces them by its gap. */}
-    <Next.Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
-      <Next.Input aria-label='Latitude' data-testid={`pair-first-${size}`} />
-      <Next.Input aria-label='Longitude' data-testid={`pair-second-${size}`} />
-    </Next.Container>
+    <Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+      <Input aria-label='Latitude' data-testid={`pair-first-${size}`} />
+      <Input aria-label='Longitude' data-testid={`pair-second-${size}`} />
+    </Container>
   </>
 );
 

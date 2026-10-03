@@ -7,7 +7,7 @@
 import React, { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -219,8 +219,8 @@ const Content = () => {
   );
   const hasSeparator = teamMembers.length > 0 && otherMembers.length > 0;
   return (
-    <Next.ScrollArea.Root orientation='vertical'>
-      <Next.ScrollArea.Viewport>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
         <ul className='flex flex-col p-1'>
           {teamMembers.map((member) => (
             <MemberRow key={`${member.id}-${member.username}`} member={member} />
@@ -232,8 +232,8 @@ const Content = () => {
             <MemberRow key={`${member.id}-${member.username}`} member={member} />
           ))}
         </ul>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
@@ -245,7 +245,7 @@ const StatusBar = () => {
   }
 
   return (
-    <Next.Button
+    <Button
       icon='ph--discord-logo--regular'
       label={t('join-discord.button')}
       variant='primary'

@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 
 import { PostStack, type PostStackAction } from '#components';
@@ -54,22 +54,22 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
   }, [subject, invokePromise]);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
         <FeedToolbar attendableId={attendableId} onSync={handleSync} />
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <PostStack
           id={subscription?.id ?? subject.id}
           posts={posts}
           currentId={currentPostId}
           onAction={handleAction}
         />
-      </Next.Panel.Body>
-      <Next.Panel.Footer classNames='border-t border-subdued-separator'>
+      </Panel.Body>
+      <Panel.Footer classNames='border-t border-subdued-separator'>
         <ProgressMeter state={syncProgress} />
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

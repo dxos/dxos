@@ -14,7 +14,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Combobox, type ComboboxOption, Container, Tag, Typography } from '@dxos/react-ui';
 import { hues } from '@dxos/ui-types';
 import { arrayMove } from '@dxos/util';
 
@@ -49,7 +49,7 @@ type PickerBaseProps = PickerCreateProps & {
 const usePickerState = ({ options, createSchema, onCreate }: PickerBaseProps) => {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState<string>();
-  const items = useMemo<Next.ComboboxOption[]>(
+  const items = useMemo<ComboboxOption[]>(
     () => options.map(({ id, label, description }) => ({ value: id, label, description })),
     [options],
   );
@@ -86,12 +86,12 @@ const CreateForm = ({ schema, query, createInitialValuePath, createFieldMap, onS
     onSave={onSave}
     onCancel={onCancel}
   >
-    <Next.Container gutter='inset'>
+    <Container gutter='inset'>
       <FormContent>
         <FormFields />
         <FormActions />
       </FormContent>
-    </Next.Container>
+    </Container>
   </FormRoot>
 );
 
@@ -138,7 +138,7 @@ export const ObjectPicker = ({
   );
 
   return (
-    <Next.Combobox.Root
+    <Combobox.Root
       items={items}
       loading={loading}
       open={open}
@@ -154,11 +154,11 @@ export const ObjectPicker = ({
       createIcon={createIcon}
     >
       {trigger ? (
-        <Next.Combobox.Trigger asChild>{trigger}</Next.Combobox.Trigger>
+        <Combobox.Trigger asChild>{trigger}</Combobox.Trigger>
       ) : (
-        <Next.Combobox.Trigger placeholder={placeholder} />
+        <Combobox.Trigger placeholder={placeholder} />
       )}
-      <Next.Combobox.Content>
+      <Combobox.Content>
         {creating !== undefined && createSchema ? (
           <CreateForm
             schema={createSchema}
@@ -169,8 +169,8 @@ export const ObjectPicker = ({
             onCancel={() => setCreating(undefined)}
           />
         ) : undefined}
-      </Next.Combobox.Content>
-    </Next.Combobox.Root>
+      </Combobox.Content>
+    </Combobox.Root>
   );
 };
 
@@ -226,7 +226,7 @@ export const ObjectMultiPicker = ({
   const selected = value.map((id) => options.find((option) => option.id === id) ?? { id, label: id });
   const { chipProps } = useChipOrder({ value, onValueChange });
   return (
-    <Next.Combobox.Root
+    <Combobox.Root
       items={items}
       loading={loading}
       multiple
@@ -239,21 +239,21 @@ export const ObjectMultiPicker = ({
       createLabel={createLabel}
       createIcon={createIcon}
     >
-      <Next.Combobox.Control wrap data-testid={testId}>
-        {selected.length === 0 && placeholder && <Next.Typography tone='description'>{placeholder}</Next.Typography>}
+      <Combobox.Control wrap data-testid={testId}>
+        {selected.length === 0 && placeholder && <Typography tone='description'>{placeholder}</Typography>}
         {selected.map((option) => (
-          <Next.Tag
+          <Tag
             key={option.id}
             hue={hues.find((hue) => hue === option.hue)}
             onDelete={() => onValueChange(value.filter((id) => id !== option.id))}
             {...(ordered && chipProps(option.id))}
           >
             {option.label}
-          </Next.Tag>
+          </Tag>
         ))}
-        <Next.Combobox.Trigger />
-      </Next.Combobox.Control>
-      <Next.Combobox.Content>
+        <Combobox.Trigger />
+      </Combobox.Control>
+      <Combobox.Content>
         {creating !== undefined && createSchema ? (
           <CreateForm
             schema={createSchema}
@@ -265,12 +265,12 @@ export const ObjectMultiPicker = ({
           />
         ) : (
           <>
-            <Next.Combobox.Input />
-            <Next.Combobox.List />
+            <Combobox.Input />
+            <Combobox.List />
           </>
         )}
-      </Next.Combobox.Content>
-    </Next.Combobox.Root>
+      </Combobox.Content>
+    </Combobox.Root>
   );
 };
 

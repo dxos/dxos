@@ -9,9 +9,9 @@ import React, { Fragment, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Breadcrumb } from '../index.ts';
 
 const TRAIL = ['Home', 'Projects', 'Composer', 'Design review', 'Breadcrumbs'];
 
@@ -21,25 +21,25 @@ const DefaultStory = ({ steps }: StoryArgs) => {
   const [trail, setTrail] = useState(TRAIL.slice(0, steps));
   const current = trail[trail.length - 1];
   return (
-    <Next.Breadcrumb.Root aria-label='Breadcrumbs' data-testid='breadcrumb'>
-      <Next.Breadcrumb.List>
+    <Breadcrumb.Root aria-label='Breadcrumbs' data-testid='breadcrumb'>
+      <Breadcrumb.List>
         {trail.slice(0, -1).map((step, index) => (
           <Fragment key={step}>
-            <Next.Breadcrumb.Item>
-              <Next.Breadcrumb.Link asChild>
+            <Breadcrumb.Item>
+              <Breadcrumb.Link asChild>
                 <button type='button' onClick={() => setTrail((trail) => trail.slice(0, index + 1))}>
                   {step}
                 </button>
-              </Next.Breadcrumb.Link>
-            </Next.Breadcrumb.Item>
-            <Next.Breadcrumb.Separator />
+              </Breadcrumb.Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Separator />
           </Fragment>
         ))}
-        <Next.Breadcrumb.Item>
-          <Next.Breadcrumb.Current>{current}</Next.Breadcrumb.Current>
-        </Next.Breadcrumb.Item>
-      </Next.Breadcrumb.List>
-    </Next.Breadcrumb.Root>
+        <Breadcrumb.Item>
+          <Breadcrumb.Current>{current}</Breadcrumb.Current>
+        </Breadcrumb.Item>
+      </Breadcrumb.List>
+    </Breadcrumb.Root>
   );
 };
 

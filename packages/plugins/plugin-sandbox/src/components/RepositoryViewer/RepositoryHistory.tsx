@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -34,8 +34,8 @@ export const RepositoryHistory = ({
   }
 
   return (
-    <Next.ScrollArea.Root orientation='vertical'>
-      <Next.ScrollArea.Viewport>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
         <ul className='divide-y divide-separator' aria-label={t('history.label')}>
           {commits.map((commit) => {
             const [subject] = commit.message.trim().split('\n');
@@ -62,12 +62,12 @@ export const RepositoryHistory = ({
         </ul>
         {hasMore && onLoadMore && (
           <div className='p-2 grid'>
-            <Next.Button variant='ghost' onClick={onLoadMore}>
+            <Button variant='ghost' onClick={onLoadMore}>
               {t('history-more.button')}
-            </Next.Button>
+            </Button>
           </div>
         )}
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };

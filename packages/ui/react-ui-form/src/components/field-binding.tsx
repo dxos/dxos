@@ -9,7 +9,7 @@ import React, { Component, type PropsWithChildren, useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { Next } from '@dxos/react-ui';
+import { Banner } from '@dxos/react-ui';
 
 import { type FormPresentation } from '#types';
 
@@ -144,9 +144,9 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
   override render() {
     if (this.state.error) {
       return (
-        <Next.Banner.Root valence='error'>
-          <Next.Banner.Body>{`ERROR ${String(this.props.path?.join('.'))}`}</Next.Banner.Body>
-        </Next.Banner.Root>
+        <Banner.Root valence='error'>
+          <Banner.Body>{`ERROR ${String(this.props.path?.join('.'))}`}</Banner.Body>
+        </Banner.Root>
       );
     }
 

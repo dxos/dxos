@@ -17,7 +17,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -107,16 +107,16 @@ const DefaultStory = () => {
  * snapshot to remount (re-read `defaultValues`) when the object changes externally; `object` stays
  * the live object so its own edits persist. */
 const EditableObject = ({ title, object }: { title: string; object: Obj.Unknown }) => (
-  <Next.Panel.Root>
-    <Next.Panel.Body asChild>
-      <Next.ScrollArea.Root orientation='vertical'>
-        <Next.ScrollArea.Viewport>
+  <Panel.Root>
+    <Panel.Body asChild>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport>
           <h2 className='mb-1 px-2 pt-2 text-sm font-medium text-description'>{title}</h2>
           <ObjectProperties object={object} />
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
-    </Next.Panel.Body>
-  </Next.Panel.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Panel.Body>
+  </Panel.Root>
 );
 
 /**
@@ -131,19 +131,19 @@ const JsonView = ({ data, db }: { data: unknown; db?: ReturnType<typeof Obj.getD
     defaultDepth={1}
     getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
   >
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
           <Syntax.Filter />
           <Syntax.Depth />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Syntax.Viewport>
           <Syntax.Code />
         </Syntax.Viewport>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   </Syntax.Root>
 );
 

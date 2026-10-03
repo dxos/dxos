@@ -9,30 +9,30 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button, Group, ScrollContainer, type ScrollContainerRootProps, Typography } from '../index.ts';
 
-type StoryArgs = SizeArgs & Pick<Next.ScrollContainerRootProps, 'pin'>;
+type StoryArgs = SizeArgs & Pick<ScrollContainerRootProps, 'pin'>;
 
 const DefaultStory = ({ pin }: StoryArgs) => {
   const [rows, setRows] = useState(() => Array.from({ length: 20 }, (_, index) => `Entry ${index + 1}`));
   return (
     <>
-      <Next.Group>
-        <Next.Button label='Add entry' onClick={() => setRows((rows) => [...rows, `Entry ${rows.length + 1}`])} />
-      </Next.Group>
-      <Next.ScrollContainer.Root pin={pin}>
-        <Next.ScrollContainer.Content classNames='h-[12rem]' data-testid='frame'>
-          <Next.ScrollContainer.Fade />
-          <Next.ScrollContainer.Viewport data-testid='viewport'>
+      <Group>
+        <Button label='Add entry' onClick={() => setRows((rows) => [...rows, `Entry ${rows.length + 1}`])} />
+      </Group>
+      <ScrollContainer.Root pin={pin}>
+        <ScrollContainer.Content classNames='h-[12rem]' data-testid='frame'>
+          <ScrollContainer.Fade />
+          <ScrollContainer.Viewport data-testid='viewport'>
             {rows.map((row) => (
-              <Next.Typography key={row}>{row}</Next.Typography>
+              <Typography key={row}>{row}</Typography>
             ))}
-          </Next.ScrollContainer.Viewport>
-          <Next.ScrollContainer.ScrollDownButton />
-        </Next.ScrollContainer.Content>
-      </Next.ScrollContainer.Root>
+          </ScrollContainer.Viewport>
+          <ScrollContainer.ScrollDownButton />
+        </ScrollContainer.Content>
+      </ScrollContainer.Root>
     </>
   );
 };

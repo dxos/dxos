@@ -12,13 +12,13 @@ import React, {
   useMemo,
 } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { type ListboxOption, Listbox as UiListbox } from '@dxos/react-ui';
 
-type NextRootProps = ComponentPropsWithoutRef<typeof Next.Listbox.Root>;
-type NextItemProps = ComponentPropsWithoutRef<typeof Next.Listbox.Item>;
+type NextRootProps = ComponentPropsWithoutRef<typeof UiListbox.Root>;
+type NextItemProps = ComponentPropsWithoutRef<typeof UiListbox.Item>;
 
 // Lets an Item be addressed by `id`, as the current Listbox's are, while Ark needs the option object.
-const OptionsContext = createContext<ReadonlyMap<string, Next.ListboxOption>>(new Map());
+const OptionsContext = createContext<ReadonlyMap<string, ListboxOption>>(new Map());
 
 //
 // Root
@@ -50,7 +50,7 @@ const ListboxRoot: ForwardRefExoticComponent<ListboxRootProps & RefAttributes<HT
   const options = useMemo(() => new Map(items.map((item) => [item.value, item])), [items]);
   return (
     <OptionsContext.Provider value={options}>
-      <Next.Listbox.Root
+      <UiListbox.Root
         {...props}
         items={items}
         selectionMode={selectable ? 'single' : 'none'}
@@ -68,7 +68,7 @@ const ListboxRoot: ForwardRefExoticComponent<ListboxRootProps & RefAttributes<HT
         ref={forwardedRef}
       >
         {children}
-      </Next.Listbox.Root>
+      </UiListbox.Root>
     </OptionsContext.Provider>
   );
 });
@@ -94,7 +94,7 @@ const ListboxItem: ForwardRefExoticComponent<ListboxItemProps & RefAttributes<HT
   if (!item) {
     return null;
   }
-  return <Next.Listbox.Item {...props} item={item} ref={forwardedRef} />;
+  return <UiListbox.Item {...props} item={item} ref={forwardedRef} />;
 });
 
 ListboxItem.displayName = 'Listbox.Item';
@@ -108,28 +108,28 @@ ListboxItem.displayName = 'Listbox.Item';
  */
 export const Listbox: {
   Root: typeof ListboxRoot;
-  Label: typeof Next.Listbox.Label;
-  Content: typeof Next.Listbox.Content;
-  Empty: typeof Next.Listbox.Empty;
+  Label: typeof UiListbox.Label;
+  Content: typeof UiListbox.Content;
+  Empty: typeof UiListbox.Empty;
   Item: typeof ListboxItem;
-  ItemIcon: typeof Next.Listbox.ItemIcon;
-  ItemText: typeof Next.Listbox.ItemText;
-  ItemDescription: typeof Next.Listbox.ItemDescription;
-  ItemIndicator: typeof Next.Listbox.ItemIndicator;
-  ItemGroup: typeof Next.Listbox.ItemGroup;
-  ItemGroupLabel: typeof Next.Listbox.ItemGroupLabel;
+  ItemIcon: typeof UiListbox.ItemIcon;
+  ItemText: typeof UiListbox.ItemText;
+  ItemDescription: typeof UiListbox.ItemDescription;
+  ItemIndicator: typeof UiListbox.ItemIndicator;
+  ItemGroup: typeof UiListbox.ItemGroup;
+  ItemGroupLabel: typeof UiListbox.ItemGroupLabel;
 } = {
   Root: ListboxRoot,
-  Label: Next.Listbox.Label,
-  Content: Next.Listbox.Content,
-  Empty: Next.Listbox.Empty,
+  Label: UiListbox.Label,
+  Content: UiListbox.Content,
+  Empty: UiListbox.Empty,
   Item: ListboxItem,
-  ItemIcon: Next.Listbox.ItemIcon,
-  ItemText: Next.Listbox.ItemText,
-  ItemDescription: Next.Listbox.ItemDescription,
-  ItemIndicator: Next.Listbox.ItemIndicator,
-  ItemGroup: Next.Listbox.ItemGroup,
-  ItemGroupLabel: Next.Listbox.ItemGroupLabel,
+  ItemIcon: UiListbox.ItemIcon,
+  ItemText: UiListbox.ItemText,
+  ItemDescription: UiListbox.ItemDescription,
+  ItemIndicator: UiListbox.ItemIndicator,
+  ItemGroup: UiListbox.ItemGroup,
+  ItemGroupLabel: UiListbox.ItemGroupLabel,
 };
 
 export type { ListboxItemProps, ListboxRootProps };

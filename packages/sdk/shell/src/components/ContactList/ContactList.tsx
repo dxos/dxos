@@ -8,7 +8,16 @@ import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/react-client/halo';
-import { Next, ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  Button,
+  SystemButton,
+  ThemedClassName,
+  Tooltip,
+  toAvatarHue,
+  useId,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { getHashStyles } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
@@ -92,10 +101,10 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
   return (
     <Listbox.Item classNames='p-2 rounded-sm' id={identityKey.toHex()} data-testid='contact-list.item'>
       <Listbox.ItemIcon>
-        <Next.Avatar.Root
+        <Avatar.Root
           aria-labelledby={labelId}
           size='md'
-          hue={Next.toAvatarHue(profileString(contact, 'hue') ?? fallback.hue)}
+          hue={toAvatarHue(profileString(contact, 'hue') ?? fallback.hue)}
           fallback={profileString(contact, 'emoji') ?? fallback.emoji}
         />
       </Listbox.ItemIcon>
@@ -106,10 +115,10 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
             {displayName}
           </span>
           <div className='flex items-center gap-1 text-sm text-description'>
-            <Next.Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
+            <Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
               <span className='font-mono truncate max-w-48'>{contact.did ?? identityKey.truncate()}</span>
-            </Next.Tooltip.Trigger>
-            <Next.SystemButton.Clipboard
+            </Tooltip.Trigger>
+            <SystemButton.Clipboard
               iconOnly
               size='sm'
               variant='ghost'
@@ -121,7 +130,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
         {common.length > 0 && (
           <div className='flex flex-wrap gap-1'>
             {common.map((space) => (
-              <Next.Button
+              <Button
                 key={space.id}
                 size='sm'
                 hue={getHashStyles(space.id).hue}
@@ -129,7 +138,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
                 data-testid='contact-list.space'
               >
                 {space.name ?? t('unnamed-space.label')}
-              </Next.Button>
+              </Button>
             ))}
           </div>
         )}

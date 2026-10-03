@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui';
+import { Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
@@ -37,20 +37,20 @@ export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
   // TODO(burdon): Move current up/down without losing focus.
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
+      <Panel.Root>
+        <Panel.Header>
+          <Toolbar.Root>
             <SearchList.Input
               placeholder='Search...'
               autoFocus={autoFocus}
-              end={<Next.Icon icon='ph--magnifying-glass--regular' />}
+              end={<Icon icon='ph--magnifying-glass--regular' />}
             />
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchResultStack results={allResults} query={query ?? ''} />
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SearchList.Root>
   );
 };

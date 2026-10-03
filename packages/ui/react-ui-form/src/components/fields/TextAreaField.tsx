@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Textarea } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -27,7 +27,7 @@ export const TextAreaField = ({
   }
 
   return (
-    <Next.Textarea
+    <Textarea
       autoResize
       disabled={!!readonly}
       placeholder={placeholder}

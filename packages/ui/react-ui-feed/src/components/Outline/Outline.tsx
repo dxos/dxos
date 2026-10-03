@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Popover, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // Rest tick width (px) and the wave radius (in rows) over which the hover extension falls off. The
@@ -265,7 +265,7 @@ export const Outline = ({
   const hoveredMarker = shown == null ? undefined : rows[shown]?.marker;
 
   return (
-    <Next.Popover.Root
+    <Popover.Root
       open={hoveredMarker != null}
       // Pinned to the anchor point rather than flipped into view, so it tracks the tick.
       positioning={{ placement: 'right', flip: false, slide: false }}
@@ -355,28 +355,28 @@ export const Outline = ({
             with a real pointer: `data-pointer` stayed on the tick after the pointer had gone.
             A zero-height anchor moved to the shown tick's offset keeps every tick stable; the
             popover is keyed to the marker so it still re-measures when the anchor moves. */}
-        <Next.Popover.Anchor asChild>
+        <Popover.Anchor asChild>
           <div className='absolute left-0' style={{ top: anchorOffset, width, height: 0 }} />
-        </Next.Popover.Anchor>
+        </Popover.Anchor>
       </div>
       {hoveredMarker && (
-        <Next.Popover.Content
+        <Popover.Content
           // Keyed to the tick: the popover measures its anchor when it mounts, and moving the anchor
           // to a different element does not make it measure again — the card stayed put while the
           // pointer walked the rail, drifting further from the tick with every step. Remounting per
           // tick is what makes it re-measure.
           key={hoveredMarker.id}
         >
-          <Next.Popover.Body>
+          <Popover.Body>
             <div className='px-2 py-1 max-w-[24rem] w-[24rem]'>
               <p className='truncate font-medium'>{hoveredMarker.title}</p>
               {hoveredMarker.description && (
                 <p className='mt-1 text-sm text-description line-clamp-3'>{hoveredMarker.description}</p>
               )}
             </div>
-          </Next.Popover.Body>
-        </Next.Popover.Content>
+          </Popover.Body>
+        </Popover.Content>
       )}
-    </Next.Popover.Root>
+    </Popover.Root>
   );
 };

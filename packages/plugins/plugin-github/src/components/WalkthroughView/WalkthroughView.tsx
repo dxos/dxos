@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Empty, Flex, useThemeMode, useTranslation } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
 
 import { meta } from '#meta';
@@ -22,7 +22,7 @@ export type WalkthroughViewProps = Omit<DiffDocumentOptions, 'themeMode'> & {
  * single fence. Either way the chunks are the walkthrough's own, so a file reads the same in both.
  */
 export const WalkthroughView = ({ value, sidebar, layout, onLineComment }: WalkthroughViewProps) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () => diffDocumentExtensions({ themeMode, sidebar, layout, onLineComment }),
     [themeMode, sidebar, layout, onLineComment],
@@ -48,11 +48,11 @@ export const WalkthroughPlaceholder = ({ generating, onGenerate }: WalkthroughPl
   const { t } = useTranslation(meta.profile.key);
   return (
     <Flex column center gap='md' classNames='dx-expand'>
-      <Next.Empty>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</Next.Empty>
+      <Empty>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</Empty>
       {!generating && (
-        <Next.Button variant='primary' onClick={onGenerate}>
+        <Button variant='primary' onClick={onGenerate}>
           {t('generate-walkthrough.label')}
-        </Next.Button>
+        </Button>
       )}
     </Flex>
   );

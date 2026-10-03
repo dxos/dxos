@@ -9,7 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Empty, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -140,12 +140,12 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={id} />
-      </Next.Panel.Header>
+      </Panel.Header>
 
-      <Next.Panel.Body>
+      <Panel.Body>
         {(selectedResult && (
           <ResultDetail
             result={selectedResult}
@@ -155,9 +155,9 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           />
         )) ||
           (visibleResults.length === 0 ? (
-            <Next.Empty classNames='h-full'>
+            <Empty classNames='h-full'>
               {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
-            </Next.Empty>
+            </Empty>
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
               <Masonry.Content padding>
@@ -165,8 +165,8 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
               </Masonry.Content>
             </Masonry.Root>
           ))}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { ScrollArea } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks/index.ts';
@@ -55,9 +55,9 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
     <FunctionBody
       shape={shape}
       content={
-        <Next.ScrollArea.Root orientation='vertical'>
-          <Next.ScrollArea.Viewport>{text}</Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>{text}</ScrollArea.Viewport>
+        </ScrollArea.Root>
       }
       status={`${tokens} tokens`}
       inputSchema={meta.input}

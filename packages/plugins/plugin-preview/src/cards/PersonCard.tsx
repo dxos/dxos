@@ -11,7 +11,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Next } from '@dxos/react-ui';
+import { Avatar, Block, Card, Icon } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type Person } from '@dxos/types';
 
@@ -41,10 +41,10 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
   }, [invoke, organization]);
 
   return (
-    <Next.Card.Body ref={cardRef}>
+    <Card.Body ref={cardRef}>
       {image && (
-        <Next.Card.Row>
-          <Next.Avatar.Root
+        <Card.Row>
+          <Avatar.Root
             src={image}
             icon='ph--user--regular'
             size='xl'
@@ -52,23 +52,23 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
             hue='neutral'
             variant='square'
           />
-        </Next.Card.Row>
+        </Card.Row>
       )}
       {organization?.name && (
-        <Next.Card.Action icon='ph--buildings--regular' label={organization.name} onClick={handleOrganizationClick} />
+        <Card.Action icon='ph--buildings--regular' label={organization.name} onClick={handleOrganizationClick} />
       )}
       {emails.length > 0 && (
-        <Next.Card.Row>
-          <Next.Block>
-            <Next.Icon icon='ph--at--regular' />
-          </Next.Block>
-          <Next.Card.Text truncate classNames='text-sky-text text-sm'>
+        <Card.Row>
+          <Block>
+            <Icon icon='ph--at--regular' />
+          </Block>
+          <Card.Text truncate classNames='text-sky-text text-sm'>
             {emails.map(({ value }) => (
               <div key={value}>{value}</div>
             ))}
-          </Next.Card.Text>
-        </Next.Card.Row>
+          </Card.Text>
+        </Card.Row>
       )}
-    </Next.Card.Body>
+    </Card.Body>
   );
 };

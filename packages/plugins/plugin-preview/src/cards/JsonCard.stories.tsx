@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, within } from 'storybook/test';
 
-import { Next } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -17,12 +17,12 @@ import { JsonCard } from './JsonCard.tsx';
 // it has no grid to place itself in and the toggle's column cannot be seen.
 const DefaultStory = ({ data }: { data: unknown }) => (
   <div className='p-4 dx-card-max-width'>
-    <Next.Card.Root>
-      <Next.Card.Header>
-        <Next.Card.Title>Notes</Next.Card.Title>
-      </Next.Card.Header>
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Notes</Card.Title>
+      </Card.Header>
       <JsonCard data={data} />
-    </Next.Card.Root>
+    </Card.Root>
   </div>
 );
 

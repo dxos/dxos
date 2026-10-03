@@ -11,14 +11,14 @@ import { expect, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { ErrorFallback, type ErrorFallbackProps, ErrorStack, type ErrorStackFrame } from '../index.ts';
 
-type StoryArgs = SizeArgs & Pick<Next.ErrorFallbackProps, 'title'> & { message: string };
+type StoryArgs = SizeArgs & Pick<ErrorFallbackProps, 'title'> & { message: string };
 
 /** Frames as `error-stack-parser` yields them: one served from the workspace, one from a dependency. */
-const FRAMES: Next.ErrorStackFrame[] = [
+const FRAMES: ErrorStackFrame[] = [
   {
     functionName: 'renderPlank',
     fileName: 'http://localhost:5173/@fs/Users/dev/dxos/packages/plugins/plugin-deck/src/Plank.tsx',
@@ -35,8 +35,8 @@ const FRAMES: Next.ErrorStackFrame[] = [
 
 const DefaultStory = ({ title, message }: StoryArgs) => (
   <div className='flex flex-col'>
-    <Next.ErrorFallback title={title} error={new Error(message)} data={{ plank: 'deck', attempt: 2 }} />
-    <Next.ErrorStack frames={FRAMES} />
+    <ErrorFallback title={title} error={new Error(message)} data={{ plank: 'deck', attempt: 2 }} />
+    <ErrorStack frames={FRAMES} />
   </div>
 );
 

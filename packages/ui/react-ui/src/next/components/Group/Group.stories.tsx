@@ -9,9 +9,9 @@ import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button, Group } from '../index.ts';
 
 const JUSTIFY = ['start', 'end', 'between'] as const;
 
@@ -19,28 +19,24 @@ const JUSTIFY = ['start', 'end', 'between'] as const;
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     {JUSTIFY.map((justify) => (
-      <Next.Group
-        key={justify}
-        justify={justify === 'start' ? undefined : justify}
-        data-testid={`group-${justify}-${size}`}
-      >
-        <Next.Button data-testid={`cancel-${justify}-${size}`}>Cancel</Next.Button>
-        <Next.Button variant='primary' data-testid={`save-${justify}-${size}`}>
+      <Group key={justify} justify={justify === 'start' ? undefined : justify} data-testid={`group-${justify}-${size}`}>
+        <Button data-testid={`cancel-${justify}-${size}`}>Cancel</Button>
+        <Button variant='primary' data-testid={`save-${justify}-${size}`}>
           Save
-        </Next.Button>
-      </Next.Group>
+        </Button>
+      </Group>
     ))}
-    <Next.Group fill data-testid={`fill-${size}`}>
-      <Next.Button data-testid={`fill-cancel-${size}`}>Cancel</Next.Button>
-      <Next.Button variant='primary' data-testid={`fill-save-${size}`}>
+    <Group fill data-testid={`fill-${size}`}>
+      <Button data-testid={`fill-cancel-${size}`}>Cancel</Button>
+      <Button variant='primary' data-testid={`fill-save-${size}`}>
         Save changes
-      </Next.Button>
-    </Next.Group>
-    <Next.Group fill data-testid={`stretch-${size}`}>
-      <Next.Button variant='primary' data-testid={`stretch-submit-${size}`}>
+      </Button>
+    </Group>
+    <Group fill data-testid={`stretch-${size}`}>
+      <Button variant='primary' data-testid={`stretch-submit-${size}`}>
         Submit
-      </Next.Button>
-    </Next.Group>
+      </Button>
+    </Group>
   </>
 );
 

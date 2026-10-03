@@ -22,7 +22,18 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { useNode } from '@dxos/plugin-graph/hooks';
-import { Flex, Next, type ThemedClassName, toLocalizedString, useOnTransition, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Flex,
+  Main,
+  type MainContentProps,
+  ScrollArea,
+  Splitter,
+  type ThemedClassName,
+  toLocalizedString,
+  useOnTransition,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Attention, useAttended, useAttention, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -171,7 +182,7 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
   const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
 
   return (
-    <Next.Main.Content
+    <Main.Content
       bounce
       classNames={[
         'grid top-[env(safe-area-inset-top)]!',
@@ -193,11 +204,11 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
               : complementarySidebarState === 'collapsed'
                 ? 'var(--dx-rail-size)'
                 : '0',
-        } as Next.MainContentProps['style']
+        } as MainContentProps['style']
       }
     >
       {children}
-    </Next.Main.Content>
+    </Main.Content>
   );
 };
 
@@ -394,7 +405,7 @@ const PlankSplit = ({
   });
 
   return (
-    <Next.Splitter.Root
+    <Splitter.Root
       orientation='horizontal'
       anchor='end'
       mode={companion ? 'split' : 'start'}
@@ -404,14 +415,14 @@ const PlankSplit = ({
       onSizeChange={onSizeChange}
       classNames={classNames}
     >
-      <Next.Splitter.Panel position='start'>
+      <Splitter.Panel position='start'>
         <DeckPlank id={id} part='main' active={active} classNames='size-full' />
-      </Next.Splitter.Panel>
-      <Next.Splitter.ResizeTrigger />
-      <Next.Splitter.Panel position='end'>
+      </Splitter.Panel>
+      <Splitter.ResizeTrigger />
+      <Splitter.Panel position='end'>
         {companion && <CompanionPlank id={companionId ?? id} classNames='size-full' />}
-      </Next.Splitter.Panel>
-    </Next.Splitter.Root>
+      </Splitter.Panel>
+    </Splitter.Root>
   );
 };
 
@@ -1786,8 +1797,8 @@ export const DeckPlanks = () => {
           // surviving plank on every message open/close (the mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
           // resolves against the viewport instead of a shrink-wrapped flex row.
           <Mosaic.Container orientation='horizontal' classNames='dx-fullscreen dx-main-content-padding-transitions'>
-            <Next.ScrollArea.Root orientation='horizontal' classNames='size-full'>
-              <Next.ScrollArea.Viewport
+            <ScrollArea.Root orientation='horizontal' classNames='size-full'>
+              <ScrollArea.Viewport
                 ref={viewportRef}
                 data-testid='deck.viewport'
                 // Scroll anchoring off: the deck owns its scroll position, and the browser's anchor
@@ -1824,8 +1835,8 @@ export const DeckPlanks = () => {
                   Tile={DeckPlankTile}
                   draggable={false}
                 />
-              </Next.ScrollArea.Viewport>
-            </Next.ScrollArea.Root>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           </Mosaic.Container>
         )}
       </div>
@@ -1855,7 +1866,7 @@ const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
         'transition-opacity opacity-(--controls-opacity)',
       )}
     >
-      <Next.Button
+      <Button
         label={t('exit-fullscreen.label')}
         icon='ph--corners-in--regular'
         iconOnly

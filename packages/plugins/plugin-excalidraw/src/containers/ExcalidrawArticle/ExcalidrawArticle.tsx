@@ -17,7 +17,7 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Flex, Next, composable, composableProps } from '@dxos/react-ui';
+import { Flex, Panel, composable, composableProps, useThemeMode } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';
 
@@ -54,7 +54,7 @@ export const ExcalidrawArticle = ({
 }: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const [down, setDown] = useState<boolean>(false);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>(null);
   // Last selection reported to the host, so its echo back through `selection` is a no-op.
@@ -210,12 +210,9 @@ export const ExcalidrawArticle = ({
 };
 
 const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
-  <Next.Panel.Root
-    {...composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })}
-    ref={forwardedRef}
-  >
-    <Next.Panel.Body>{props.children}</Next.Panel.Body>
-  </Next.Panel.Root>
+  <Panel.Root {...composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })} ref={forwardedRef}>
+    <Panel.Body>{props.children}</Panel.Body>
+  </Panel.Root>
 ));
 
 const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (

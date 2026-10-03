@@ -8,7 +8,7 @@ import { type Database, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { buildContactFromActor } from '@dxos/extractor-lib';
 import { EID } from '@dxos/keys';
-import { Next } from '@dxos/react-ui';
+import { Block, Card, Icon, Popover } from '@dxos/react-ui';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
 import { type Actor, type Person } from '@dxos/types';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
@@ -24,21 +24,21 @@ const ContactPreviewCard = () => {
   }
 
   return (
-    <Next.Popover.Content>
-      <Next.Popover.Body classNames='dx-card-popover-width'>
-        <Next.Card.Root border={false} data-testid='contact-preview'>
-          <Next.Card.Header>
-            <Next.Block>
-              <Next.Icon icon='ph--user--regular' />
-            </Next.Block>
-            <Next.Card.Title>{contact?.fullName ?? target.label}</Next.Card.Title>
-          </Next.Card.Header>
-          <Next.Card.Row>
-            <Next.Card.Text variant='description'>{contact?.emails?.[0]?.value}</Next.Card.Text>
-          </Next.Card.Row>
-        </Next.Card.Root>
-      </Next.Popover.Body>
-    </Next.Popover.Content>
+    <Popover.Content>
+      <Popover.Body classNames='dx-card-popover-width'>
+        <Card.Root border={false} data-testid='contact-preview'>
+          <Card.Header>
+            <Block>
+              <Icon icon='ph--user--regular' />
+            </Block>
+            <Card.Title>{contact?.fullName ?? target.label}</Card.Title>
+          </Card.Header>
+          <Card.Row>
+            <Card.Text variant='description'>{contact?.emails?.[0]?.value}</Card.Text>
+          </Card.Row>
+        </Card.Root>
+      </Popover.Body>
+    </Popover.Content>
   );
 };
 

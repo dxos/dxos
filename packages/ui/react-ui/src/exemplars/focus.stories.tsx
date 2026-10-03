@@ -10,7 +10,7 @@ import { useMergeRefs } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Next } from '../next/index.ts';
+import { Checkbox, Field, Input, ScrollArea } from '../next/components/index.ts';
 
 // TODO(burdon): Implement horizontal movement between columns when column is selected.
 // TODO(burdon): Prevent tab out of app.
@@ -52,11 +52,8 @@ const Column = ({ items }: { items: string[] }) => {
   });
 
   return (
-    <Next.ScrollArea.Root
-      orientation='vertical'
-      classNames={mx('w-[25rem]', 'rounded-xs border border-subdued-separator')}
-    >
-      <Next.ScrollArea.Viewport classNames='p-4'>
+    <ScrollArea.Root orientation='vertical' classNames={mx('w-[25rem]', 'rounded-xs border border-subdued-separator')}>
+      <ScrollArea.Viewport classNames='p-4'>
         <div
           {...focusGroupProps}
           tabIndex={0}
@@ -67,8 +64,8 @@ const Column = ({ items }: { items: string[] }) => {
             <Item key={item} value={item} />
           ))}
         </div>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
@@ -83,12 +80,12 @@ const Item = ({ value }: { value: string }) => {
       {...focusGroupProps}
       className={mx('flex shrink-0 w-full gap-4 p-4 items-center', border)}
     >
-      <Next.Field.Root>
-        <Next.Checkbox />
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Input defaultValue={value} />
-      </Next.Field.Root>
+      <Field.Root>
+        <Checkbox />
+      </Field.Root>
+      <Field.Root>
+        <Input defaultValue={value} />
+      </Field.Root>
     </div>
   );
 };

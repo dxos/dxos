@@ -31,7 +31,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { Next } from '@dxos/react-ui';
+import { Deferred, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -438,12 +438,12 @@ export const MailboxArticle = ({
   });
 
   return (
-    <Next.Panel.Root data-testid='inbox.mailbox'>
-      <Next.Panel.Header>
+    <Panel.Root data-testid='inbox.mailbox'>
+      <Panel.Header>
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-      </Next.Panel.Header>
-      <Next.Panel.Body>
-        <Next.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
+      </Panel.Header>
+      <Panel.Body>
+        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -459,16 +459,16 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        </Next.Deferred>
-      </Next.Panel.Body>
-      <Next.Panel.Footer>
+        </Deferred>
+      </Panel.Body>
+      <Panel.Footer>
         <ProgressMeter
           classNames='border-t border-subdued-separator'
           state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
           onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
         />
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

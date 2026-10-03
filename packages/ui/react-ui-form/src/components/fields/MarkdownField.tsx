@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, ControlFrame, Typography, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
@@ -53,7 +53,7 @@ export const MarkdownField = ({
 
   const text = typeof value === 'string' ? value : '';
   return isStatic ? (
-    <Next.Typography>{text}</Next.Typography>
+    <Typography>{text}</Typography>
   ) : (
     <StringMarkdownEditor
       value={text}
@@ -74,11 +74,11 @@ type StringMarkdownEditorProps = {
 const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
   const extensions = useBasicMarkdownExtensions({ placeholder, readonly });
   return (
-    <Next.ControlFrame rows={ROWS} disabled={readonly}>
+    <ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
         <Editor.View extensions={extensions} value={value} onChange={readonly ? undefined : onChange} />
       </Editor.Root>
-    </Next.ControlFrame>
+    </ControlFrame>
   );
 };
 
@@ -86,7 +86,7 @@ const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: String
 const RefStaticText = ({ reference }: { reference: Ref.Unknown }) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
   const content = Obj.instanceOf(Text.Text, target) ? target.content : undefined;
-  return content ? <Next.Typography>{content}</Next.Typography> : null;
+  return content ? <Typography>{content}</Typography> : null;
 };
 
 type RefMarkdownEditorProps = {
@@ -108,11 +108,11 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
   }
 
   return (
-    <Next.ControlFrame rows={ROWS} disabled={readonly}>
+    <ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
         <Editor.View extensions={extensions} />
       </Editor.Root>
-    </Next.ControlFrame>
+    </ControlFrame>
   );
 };
 
@@ -124,8 +124,8 @@ type CreateTextButtonProps = {
 const CreateTextButton = ({ db, onCreate }: CreateTextButtonProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Next.Button icon='ph--plus--regular' disabled={!db} onClick={() => db && onCreate(Ref.make(db.add(Text.make())))}>
+    <Button icon='ph--plus--regular' disabled={!db} onClick={() => db && onCreate(Ref.make(db.add(Text.make())))}>
       {t('create-text.label')}
-    </Next.Button>
+    </Button>
   );
 };

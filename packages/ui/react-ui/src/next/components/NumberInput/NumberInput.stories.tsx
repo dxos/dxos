@@ -11,40 +11,40 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Field, Input, NumberInput } from '../index.ts';
 
 const DefaultStory = ({ size }: SizeArgs) => {
   const [value, setValue] = useState('8');
   return (
     <>
-      <Next.Field.Root>
-        <Next.Field.Label>Quantity</Next.Field.Label>
-        <Next.NumberInput min={0} max={10} value={value} onValueChange={setValue} data-testid={`number-${size}`} />
-        <Next.Field.HelperText>
+      <Field.Root>
+        <Field.Label>Quantity</Field.Label>
+        <NumberInput min={0} max={10} value={value} onValueChange={setValue} data-testid={`number-${size}`} />
+        <Field.HelperText>
           Between 0 and 10: <output data-testid={`number-${size}-value`}>{value}</output>
-        </Next.Field.HelperText>
-      </Next.Field.Root>
-      <Next.Input aria-label='Note' data-testid={`input-${size}`} />
-      <Next.Field.Root>
-        <Next.Field.Label>Price</Next.Field.Label>
-        <Next.NumberInput
+        </Field.HelperText>
+      </Field.Root>
+      <Input aria-label='Note' data-testid={`input-${size}`} />
+      <Field.Root>
+        <Field.Label>Price</Field.Label>
+        <NumberInput
           defaultValue='1250'
           step={0.5}
           formatOptions={{ style: 'currency', currency: 'USD' }}
           data-testid={`currency-${size}`}
         />
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Field.Label>Ratio</Next.Field.Label>
-        <Next.NumberInput defaultValue='0.5' stepper={false} data-testid={`bare-${size}`} />
-      </Next.Field.Root>
-      <Next.Field.Root disabled>
-        <Next.Field.Label>Locked</Next.Field.Label>
-        <Next.NumberInput defaultValue='3' data-testid={`disabled-${size}`} />
-      </Next.Field.Root>
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Ratio</Field.Label>
+        <NumberInput defaultValue='0.5' stepper={false} data-testid={`bare-${size}`} />
+      </Field.Root>
+      <Field.Root disabled>
+        <Field.Label>Locked</Field.Label>
+        <NumberInput defaultValue='3' data-testid={`disabled-${size}`} />
+      </Field.Root>
     </>
   );
 };

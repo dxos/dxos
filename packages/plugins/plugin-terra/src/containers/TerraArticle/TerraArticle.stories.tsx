@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { Next } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TerraPlugin } from '#plugin';
@@ -77,9 +77,9 @@ const CachedStory = () => {
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <div className='flex items-center gap-2 p-2'>
-        <Next.Button data-testid='terra.story.toggle' onClick={() => setMounted((mounted) => !mounted)}>
+        <Button data-testid='terra.story.toggle' onClick={() => setMounted((mounted) => !mounted)}>
           {mounted ? 'Unmount' : 'Mount'}
-        </Next.Button>
+        </Button>
         <span data-testid='terra.story.stats'>{`hits=${cache?.hits ?? 0} misses=${cache?.misses ?? 0}`}</span>
       </div>
       {mounted && <TerraArticle subject={terra} attendableId={STORY_ATTENDABLE_ID} role='article' />}

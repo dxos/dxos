@@ -9,7 +9,7 @@ import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Filter } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Card, Panel, Toolbar } from '@dxos/react-ui';
 
 // No plugin renders a bare `Instructions` object as an Article (the routine article surface matches
 // `Routine.Routine`, which only references Instructions), so render it via the generic card surface
@@ -30,17 +30,17 @@ const RoutineModuleContainer = ({ space }: { space: Space }) => {
   }
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>{instructions.name ?? 'Routine'}</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='p-2 min-h-0'>
-        <Next.Card.Root>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Toolbar.Text>{instructions.name ?? 'Routine'}</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='p-2 min-h-0'>
+        <Card.Root>
           <Surface.Surface type={AppSurface.CardContent} limit={1} data={{ subject: instructions }} />
-        </Next.Card.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+        </Card.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

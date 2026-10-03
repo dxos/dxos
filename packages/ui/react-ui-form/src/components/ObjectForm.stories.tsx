@@ -9,7 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui';
+import { Container, Panel, ScrollArea, Typography } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
 
@@ -27,30 +27,30 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
   }
 
   const footer = (
-    <Next.Panel.Footer>
-      <Next.Typography truncate data-testid='object'>
+    <Panel.Footer>
+      <Typography truncate data-testid='object'>
         {JSON.stringify({ ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.target?.label) })}
-      </Next.Typography>
-    </Next.Panel.Footer>
+      </Typography>
+    </Panel.Footer>
   );
   return component === 'properties' ? (
-    <Next.Panel.Root size='sm'>
+    <Panel.Root size='sm'>
       <ObjectProperties object={person} />
       {footer}
-    </Next.Panel.Root>
+    </Panel.Root>
   ) : (
-    <Next.Panel.Root size='sm'>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container>
+    <Panel.Root size='sm'>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container>
               <ObjectForm object={person} type={Person.Person} />
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
       {footer}
-    </Next.Panel.Root>
+    </Panel.Root>
   );
 };
 

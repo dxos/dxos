@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { IconPicker, type IconPickerProps } from './IconPicker.tsx';
@@ -15,9 +15,9 @@ const DefaultStory = (props: IconPickerProps) => {
   console.log(icon);
 
   return (
-    <Next.Toolbar.Root>
+    <Toolbar.Root>
       <IconPicker {...props} value={icon} onChange={setIcon} onReset={() => setIcon(undefined)} />
-    </Next.Toolbar.Root>
+    </Toolbar.Root>
   );
 };
 

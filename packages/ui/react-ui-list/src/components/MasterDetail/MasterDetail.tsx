@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Container, Empty, Icon, Panel, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -72,7 +72,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   orientation = 'vertical',
   detail,
 }: MasterDetailProps<T>) => {
-  const list = (items.length === 0 && <Next.Empty>{emptyLabel}</Next.Empty>) || (
+  const list = (items.length === 0 && <Empty>{emptyLabel}</Empty>) || (
     // The list carries a selection, so a reader arrows between entries and Enter picks one.
     <OrderedList.Root<T>
       items={items}
@@ -110,12 +110,12 @@ export const MasterDetail = <T extends MasterDetailRecord>({
     // parent (`dx-grow`).
     return (
       <div className={mx('flex dx-grow gap-2 overflow-hidden', classNames)}>
-        <Next.Panel.Root classNames='shrink-0 w-max max-w-xs'>
-          <Next.Panel.Body>{list}</Next.Panel.Body>
-        </Next.Panel.Root>
-        <Next.Panel.Root classNames='flex-1 min-w-0'>
-          <Next.Panel.Body classNames='flex flex-col dx-grow'>{detail}</Next.Panel.Body>
-        </Next.Panel.Root>
+        <Panel.Root classNames='shrink-0 w-max max-w-xs'>
+          <Panel.Body>{list}</Panel.Body>
+        </Panel.Root>
+        <Panel.Root classNames='flex-1 min-w-0'>
+          <Panel.Body classNames='flex flex-col dx-grow'>{detail}</Panel.Body>
+        </Panel.Root>
       </div>
     );
   }
@@ -123,12 +123,12 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   // The gutter is owned by a Container so the list aligns to the surface's column system: rows and
   // their selection highlight sit in the content track, matching the detail's inset.
   return (
-    <Next.Container gutter='sm' classNames={classNames}>
+    <Container gutter='sm' classNames={classNames}>
       {list}
       <div data-place='full' className='pt-trim-md'>
         {detail}
       </div>
-    </Next.Container>
+    </Container>
   );
 };
 
@@ -169,18 +169,18 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
     >
       {icon && (
         <OrderedList.ItemIcon>
-          <Next.Icon icon={icon.icon} classNames={icon.hue ? getStyles(icon.hue).text : undefined} />
+          <Icon icon={icon.icon} classNames={icon.hue ? getStyles(icon.hue).text : undefined} />
         </OrderedList.ItemIcon>
       )}
       <OrderedList.ItemText>{label}</OrderedList.ItemText>
       {adornment && (
-        <Next.Tooltip.Trigger asChild side='bottom' content={adornment.label}>
-          <Next.Icon icon={adornment.icon} />
-        </Next.Tooltip.Trigger>
+        <Tooltip.Trigger asChild side='bottom' content={adornment.label}>
+          <Icon icon={adornment.icon} />
+        </Tooltip.Trigger>
       )}
       {getMenu && (
         <ActionMenu {...menu}>
-          <Next.Button
+          <Button
             iconOnly
             variant='ghost'
             size='sm'

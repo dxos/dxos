@@ -8,9 +8,9 @@ import React, { type ComponentProps, type PropsWithChildren, forwardRef, useCall
 import { createContext, useControllableState } from '@dxos/react-hooks';
 import {
   type ComposableProps,
-  Next,
   type SlottableProps,
   type ThemedClassName,
+  ToggleGroup,
   composable,
   composableProps,
   slottable,
@@ -20,7 +20,7 @@ import { type UnitFormat } from '@dxos/util';
 
 import { type ActivityDatum, buildCalendar } from './util.ts';
 
-type ToggleGroupItemProps = ComponentProps<typeof Next.ToggleGroup.Item>;
+type ToggleGroupItemProps = ComponentProps<typeof ToggleGroup.Item>;
 
 const DASHBOARD_NAME = 'Dashboard';
 
@@ -202,7 +202,7 @@ const DashboardRanges = forwardRef<HTMLDivElement, DashboardRangesProps>(
     );
 
     return (
-      <Next.ToggleGroup.Root
+      <ToggleGroup.Root
         {...props}
         type='single'
         value={range ?? ''}
@@ -211,7 +211,7 @@ const DashboardRanges = forwardRef<HTMLDivElement, DashboardRangesProps>(
         ref={forwardedRef}
       >
         {children}
-      </Next.ToggleGroup.Root>
+      </ToggleGroup.Root>
     );
   },
 );
@@ -229,7 +229,7 @@ type DashboardRangeProps = ToggleGroupItemProps;
  */
 const DashboardRange = forwardRef<HTMLButtonElement, DashboardRangeProps>(
   ({ variant = 'ghost', size = 'sm', ...props }, forwardedRef) => (
-    <Next.ToggleGroup.Item {...props} variant={variant} size={size} ref={forwardedRef} />
+    <ToggleGroup.Item {...props} variant={variant} size={size} ref={forwardedRef} />
   ),
 );
 

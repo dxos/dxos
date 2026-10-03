@@ -18,7 +18,7 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Menu, composable, composableProps, useTranslation, virtualAnchor } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -362,18 +362,18 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
         onClick={handleClick}
         ref={setDxGrid}
       />
-      <Next.Menu.Root
+      <Menu.Root
         open={!!contextMenuOpen}
         onOpenChange={({ open: nextOpen }) => setContextMenuOpen(nextOpen ? inertPosition : null)}
         positioning={{
-          ...Next.virtualAnchor(contextMenuAnchorRef),
+          ...virtualAnchor(contextMenuAnchorRef),
           placement: contextMenuAxis === 'col' ? 'bottom' : 'right',
           gutter: 4,
           overflowPadding: 8,
         }}
       >
-        <Next.Menu.Content>
-          <Next.Menu.Item
+        <Menu.Content>
+          <Menu.Item
             item={{
               value: 'insert-before',
               label: t(`add-${contextMenuAxis}-before.label`),
@@ -382,7 +382,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
             onClick={() => handleAxisMenuAction('insert-before')}
             data-testid={`grid.${contextMenuAxis}.insert-before`}
           />
-          <Next.Menu.Item
+          <Menu.Item
             item={{
               value: 'insert-after',
               label: t(`add-${contextMenuAxis}-after.label`),
@@ -391,13 +391,13 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
             onClick={() => handleAxisMenuAction('insert-after')}
             data-testid={`grid.${contextMenuAxis}.insert-after`}
           />
-          <Next.Menu.Item
+          <Menu.Item
             item={{ value: 'drop', label: t(`delete-${contextMenuAxis}.label`), icon: 'ph--backspace--regular' }}
             onClick={() => handleAxisMenuAction('drop')}
             data-testid={`grid.${contextMenuAxis}.drop`}
           />
-        </Next.Menu.Content>
-      </Next.Menu.Root>
+        </Menu.Content>
+      </Menu.Root>
     </div>
   );
 });

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Flex, Next } from '@dxos/react-ui';
+import { Button, Flex, Icon, Panel, ScrollArea, Toggle, Toolbar } from '@dxos/react-ui';
 
 const LIVE_INTERVAL = 5_000;
 
@@ -27,12 +27,12 @@ export const StatsPanel = ({ children, role, onRefresh }: StatsPanelProps) => {
   }, [live, onRefresh]);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>Stats</Next.Toolbar.Text>
-          <Next.Toolbar.Separator variant='gap' />
-          <Next.Button
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Toolbar.Text>Stats</Toolbar.Text>
+          <Toolbar.Separator variant='gap' />
+          <Button
             iconOnly
             variant='ghost'
             icon='ph--arrow-clockwise--regular'
@@ -40,21 +40,21 @@ export const StatsPanel = ({ children, role, onRefresh }: StatsPanelProps) => {
             disabled={!onRefresh}
             onClick={onRefresh}
           />
-          <Next.Toggle pressed={live} disabled={!onRefresh} onPressedChange={setLive}>
-            <Next.Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
-          </Next.Toggle>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport classNames='p-2'>
+          <Toggle pressed={live} disabled={!onRefresh} onPressedChange={setLive}>
+            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
+          </Toggle>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport classNames='p-2'>
             <Flex column gap='sm'>
               {children}
             </Flex>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

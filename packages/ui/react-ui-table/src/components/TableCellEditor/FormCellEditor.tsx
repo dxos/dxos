@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Entity, Ref, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type Label, Next } from '@dxos/react-ui';
+import { type Label, Popover, virtualAnchor } from '@dxos/react-ui';
 import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
@@ -162,13 +162,13 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   }
 
   return (
-    <Next.Popover.Root
+    <Popover.Root
       open={editing}
       onOpenChange={({ open }) => handleOpenChange(open)}
-      positioning={Next.virtualAnchor(anchorRef)}
+      positioning={virtualAnchor(anchorRef)}
     >
-      <Next.Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-md'>
-        <Next.Popover.Body>
+      <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-md'>
+        <Popover.Body>
           <Form.Root
             {...formProps}
             autoFocus
@@ -191,8 +191,8 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
-        </Next.Popover.Body>
-      </Next.Popover.Content>
-    </Next.Popover.Root>
+        </Popover.Body>
+      </Popover.Content>
+    </Popover.Root>
   );
 };

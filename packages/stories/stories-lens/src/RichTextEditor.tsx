@@ -12,7 +12,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 
 import { type Block, type Inline, type Mark, RICH_TEXT_LENS_ID, RichTextLens, blockText } from './rich-text.ts';
@@ -268,27 +268,27 @@ export const BlockList = ({ text }: { text: Text.Text }) => {
   const [snapshot] = useObject(text);
 
   return (
-    <Next.Card.Root border={false}>
-      <Next.Card.Section title='stored markdown'>
-        <Next.Card.Row>
-          <Next.Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='raw-content'>
+    <Card.Root border={false}>
+      <Card.Section title='stored markdown'>
+        <Card.Row>
+          <Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='raw-content'>
             {snapshot?.content ?? ''}
-          </Next.Card.Text>
-        </Next.Card.Row>
-      </Next.Card.Section>
-      <Next.Card.Section title='blocks'>
-        <Next.Card.Row>
-          <Next.Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='block-list'>
+          </Card.Text>
+        </Card.Row>
+      </Card.Section>
+      <Card.Section title='blocks'>
+        <Card.Row>
+          <Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='block-list'>
             {(view?.blocks ?? [])
               .map(
                 (block) =>
                   `${block.type}${block.level ? block.level : ''} [${block.range[0]},${block.range[1]}) ${blockText(block)}`,
               )
               .join('\n')}
-          </Next.Card.Text>
-        </Next.Card.Row>
-      </Next.Card.Section>
-    </Next.Card.Root>
+          </Card.Text>
+        </Card.Row>
+      </Card.Section>
+    </Card.Root>
   );
 };
 

@@ -21,7 +21,18 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { Flex, Next, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Container,
+  Field,
+  Flex,
+  Icon,
+  Input,
+  Menu,
+  Tabs,
+  ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../../meta.ts';
@@ -385,7 +396,7 @@ export const Welcome = ({
         {state === WelcomeState.INIT && !signupEnabled && loginTab}
 
         {state === WelcomeState.INIT && signupEnabled && (
-          <Next.Tabs.Root
+          <Tabs.Root
             orientation='horizontal'
             classNames='flex flex-col gap-6'
             value={tab}
@@ -398,24 +409,24 @@ export const Welcome = ({
               }
             }}
           >
-            <Next.Tabs.List classNames='p-0 gap-1 border-b border-neutral-700'>
-              <Next.Tabs.Trigger value='login' classNames={tabClassNames}>
+            <Tabs.List classNames='p-0 gap-1 border-b border-neutral-700'>
+              <Tabs.Trigger value='login' classNames={tabClassNames}>
                 {t('login-tab.label')}
-              </Next.Tabs.Trigger>
-              <Next.Tabs.Trigger value='signup' classNames={tabClassNames}>
+              </Tabs.Trigger>
+              <Tabs.Trigger value='signup' classNames={tabClassNames}>
                 {t('signup-tab.label')}
-              </Next.Tabs.Trigger>
-            </Next.Tabs.List>
+              </Tabs.Trigger>
+            </Tabs.List>
 
-            <Next.Tabs.Content value='login'>{loginTab}</Next.Tabs.Content>
+            <Tabs.Content value='login'>{loginTab}</Tabs.Content>
 
-            <Next.Tabs.Content value='signup'>
+            <Tabs.Content value='signup'>
               {signupStep === 'collect' && signupMode === 'code' && codeSignupEnabled && (
                 <Flex column gap='xl'>
-                  <Next.Container gap='md' gutter='none'>
+                  <Container gap='md' gutter='none'>
                     <h2 className='text-2xl'>{t('signup-code.title')}</h2>
                     <p className='text-description'>{t('signup-code.description')}</p>
-                  </Next.Container>
+                  </Container>
                   <InlineForm
                     inputProps={{
                       ref: codeRef,
@@ -438,10 +449,10 @@ export const Welcome = ({
 
               {signupStep === 'collect' && signupMode === 'waitlist' && waitlistEnabled && (
                 <Flex column gap='xl'>
-                  <Next.Container gap='md' gutter='none'>
+                  <Container gap='md' gutter='none'>
                     <h2 className='text-2xl'>{t('waitlist.title')}</h2>
                     <p className='text-description'>{t('waitlist.description')}</p>
-                  </Next.Container>
+                  </Container>
                   <InlineForm
                     inputProps={{
                       ref: waitlistEmailRef,
@@ -462,10 +473,10 @@ export const Welcome = ({
 
               {signupStep === 'auth' && (
                 <Flex column gap='xl'>
-                  <Next.Container gap='md' gutter='none'>
+                  <Container gap='md' gutter='none'>
                     <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
                     <p className='text-description'>{t('signup-auth.description')}</p>
-                  </Next.Container>
+                  </Container>
                   {onCreateAccount && (
                     <>
                       <InlineForm
@@ -489,7 +500,7 @@ export const Welcome = ({
                   {onCreateAccountWithOAuth && (
                     <>
                       {onCreateAccount && <OrDivider>{t('or-divider.label')}</OrDivider>}
-                      <Next.Container gap='md' gutter='none'>
+                      <Container gap='md' gutter='none'>
                         <p className='text-description'>{t('atmosphere-account-button.label')}</p>
                         <InlineForm
                           inputProps={{
@@ -518,35 +529,35 @@ export const Welcome = ({
                           }
                           validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
                         />
-                      </Next.Container>
+                      </Container>
                     </>
                   )}
                   <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
                 </Flex>
               )}
-            </Next.Tabs.Content>
-          </Next.Tabs.Root>
+            </Tabs.Content>
+          </Tabs.Root>
         )}
 
         {(state === WelcomeState.EMAIL_SENT || state === WelcomeState.LOGIN_SENT) && (
           <Flex column gap='2xl'>
-            <Next.Container gap='md' gutter='none'>
+            <Container gap='md' gutter='none'>
               <h1 className='text-2xl'>{t('check-email.title')}</h1>
               <p className='text-description'>
                 {state === WelcomeState.EMAIL_SENT
                   ? t('request-access-email.description')
                   : t('check-email.description')}
               </p>
-            </Next.Container>
+            </Container>
           </Flex>
         )}
 
         {state === WelcomeState.WAITLIST_SUBMITTED && (
           <Flex column gap='2xl'>
-            <Next.Container gap='md' gutter='none'>
+            <Container gap='md' gutter='none'>
               <h1 className='text-2xl'>{t('waitlist-submitted.title')}</h1>
               <p className='text-description'>{t('waitlist-submitted.description')}</p>
-            </Next.Container>
+            </Container>
           </Flex>
         )}
 
@@ -743,25 +754,25 @@ const LoginTab = ({
       <h2 className='text-2xl'>{identity ? t('existing-identity.title') : t('welcome-back.title')}</h2>
       {/* Primary method */}
       {primary === 'passkey' && methodAvailable.passkey && onPasskey && (
-        <Next.Container gap='md' gutter='none'>
-          <Next.Button
+        <Container gap='md' gutter='none'>
+          <Button
             variant='primary'
             classNames='w-full justify-center gap-2 disabled:bg-neutral-800'
             disabled={pending}
             onClick={onPasskey}
           >
-            <Next.Icon icon='ph--key--regular' size='lg' />
+            <Icon icon='ph--key--regular' size='lg' />
             <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
-          </Next.Button>
+          </Button>
           {error?.startsWith('passkey-') && (
-            <Next.Field.Root>
+            <Field.Root>
               <ValidationMessage>{t(passkeyErrorKey(error, moreOptions.length === 0))}</ValidationMessage>
-            </Next.Field.Root>
+            </Field.Root>
           )}
-        </Next.Container>
+        </Container>
       )}
       {primary === 'email' && onSendSignInLink && (
-        <Next.Container gap='md' gutter='none'>
+        <Container gap='md' gutter='none'>
           <p className='text-sm text-description'>{t('login-email.description')}</p>
           <InlineForm
             inputProps={{
@@ -776,10 +787,10 @@ const LoginTab = ({
             onSubmit={onSendSignInLink}
             validation={error === 'email' ? t(errorMessageKeys.email) : null}
           />
-        </Next.Container>
+        </Container>
       )}
       {primary === 'atproto' && onRecoverWithOAuth && (
-        <Next.Container gap='md' gutter='none'>
+        <Container gap='md' gutter='none'>
           <p className='text-sm text-description'>{t('login-atmosphere.description')}</p>
           <InlineForm
             inputProps={{
@@ -799,44 +810,44 @@ const LoginTab = ({
             onSubmit={() => onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle)}
             validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
           />
-        </Next.Container>
+        </Container>
       )}
       {!methodAvailable[primary] && moreOptions.length === 0 && (
-        <Next.Field.Root>
+        <Field.Root>
           <ValidationMessage>{t('login-unavailable.message')}</ValidationMessage>
-        </Next.Field.Root>
+        </Field.Root>
       )}
       {moreOptions.length > 0 && (
-        <Next.Menu.Root
+        <Menu.Root
           positioning={{ placement: 'bottom', gutter: 8, overflowPadding: 16 }}
           onOpenChange={({ open }) => !open && handleMoreMenuCloseAutoFocus()}
         >
-          <Next.Menu.Trigger asChild>
+          <Menu.Trigger asChild>
             <button
               type='button'
               className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4 outline-none'
             >
               <span>{t('more-ways-to-sign-in.label')}</span>
-              <Next.Icon icon='ph--caret-down--regular' size='md' />
+              <Icon icon='ph--caret-down--regular' size='md' />
             </button>
-          </Next.Menu.Trigger>
-          <Next.Menu.Content classNames='!w-80'>
+          </Menu.Trigger>
+          <Menu.Content classNames='!w-80'>
             {moreOptions.map((opt) => (
-              <Next.Menu.Item
+              <Menu.Item
                 key={opt.key}
                 item={{ value: opt.key, label: opt.label, icon: opt.icon }}
                 onSelect={opt.onClick}
                 classNames='gap-3 h-auto'
               >
-                <Next.Menu.ItemIcon size='xl' classNames={mx(opt.classNames)} />
-                <Next.Container gap='sm' gutter='none'>
-                  <Next.Menu.ItemText />
+                <Menu.ItemIcon size='xl' classNames={mx(opt.classNames)} />
+                <Container gap='sm' gutter='none'>
+                  <Menu.ItemText />
                   <span className='text-xs text-description font-normal'>{opt.description}</span>
-                </Next.Container>
-              </Next.Menu.Item>
+                </Container>
+              </Menu.Item>
             ))}
-          </Next.Menu.Content>
-        </Next.Menu.Root>
+          </Menu.Content>
+        </Menu.Root>
       )}
     </Flex>
   );
@@ -858,7 +869,7 @@ const InlineForm = ({
   validation,
   onSubmit,
 }: {
-  inputProps: Omit<ComponentProps<typeof Next.Input>, 'classNames' | 'ref'> & {
+  inputProps: Omit<ComponentProps<typeof Input>, 'classNames' | 'ref'> & {
     classNames?: string;
     ref?: Ref<HTMLInputElement>;
   };
@@ -871,25 +882,25 @@ const InlineForm = ({
 }) => {
   const { classNames: inputClasses, ref, ...rest } = inputProps;
   return (
-    <Next.Field.Root>
+    <Field.Root>
       <div className='flex flex-col md:gap-1 flex-row gap-0 sm:items-stretch'>
-        <Next.Input
+        <Input
           {...rest}
           disabled={pending || rest.disabled}
           classNames={mx('bg-deck-surface flex-1 sm:rounded-r-none', inputClasses)}
           ref={ref}
         />
-        <Next.Button
+        <Button
           variant='primary'
           classNames='disabled:bg-neutral-800 sm:rounded-l-none'
           disabled={submitDisabled}
           onClick={onSubmit}
         >
           {submitLabel}
-        </Next.Button>
+        </Button>
       </div>
       {validation && <ValidationMessage>{validation}</ValidationMessage>}
-    </Next.Field.Root>
+    </Field.Root>
   );
 };
 
@@ -899,7 +910,7 @@ const InlineForm = ({
  * `InlineForm` must supply their own `Field.Root` — it is context only and renders no markup.
  */
 const ValidationMessage = ({ children }: PropsWithChildren) => (
-  <Next.Field.ErrorText classNames='flex px-2 pt-2 text-error-text'>{children}</Next.Field.ErrorText>
+  <Field.ErrorText classNames='flex px-2 pt-2 text-error-text'>{children}</Field.ErrorText>
 );
 
 /** Horizontal "or" separator between alternative auth methods. */

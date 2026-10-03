@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Next, type ThemedClassName, useTimeout } from '@dxos/react-ui';
+import { type ThemedClassName, Tooltip, useTimeout } from '@dxos/react-ui';
 // Leaf import (not the package barrel): the barrel re-exports QueryEditor/QueryForm, which pull the
 // heavy @dxos/ai + @dxos/echo-query stack (tiktoken wasm, etc.) — inappropriate for lean consumers
 // like the browser extension. Importing the Spinner leaf keeps that graph out.
@@ -36,9 +36,9 @@ export const ChatStatusIndicator = ({ classNames, preset, processing, error, ...
     <div className={mx('relative flex', classNames)}>
       <Spinner duration={period} state={!init ? 'flash' : error ? 'error' : processing ? 'spin' : 'pulse'} {...props} />
       {error && (
-        <Next.Tooltip.Trigger asChild content={error.message}>
+        <Tooltip.Trigger asChild content={error.message}>
           <div className='dx-fullscreen' />
-        </Next.Tooltip.Trigger>
+        </Tooltip.Trigger>
       )}
     </div>
   );

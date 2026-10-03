@@ -11,7 +11,7 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Focus, Icon, Menu, Tag, useTranslation } from '@dxos/react-ui';
 import { CardAnnotation } from '@dxos/schema';
 import { getStyles, osTranslations } from '@dxos/ui-theme';
 
@@ -104,35 +104,35 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
   );
 
   return (
-    <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-      <Next.Card.Root grid classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
-        <Next.Card.Header>
-          <Next.Block>
+    <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+      <Card.Root grid classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
+        <Card.Header>
+          <Block>
             <CardIconSlot subject={live}>
-              <Next.Icon icon={icon} classNames={iconStyles?.text} />
+              <Icon icon={icon} classNames={iconStyles?.text} />
             </CardIconSlot>
-          </Next.Block>
-          <Next.Card.Title>{label}</Next.Card.Title>
+          </Block>
+          <Card.Title>{label}</Card.Title>
           {menuItems.length > 0 && (
-            <Next.Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
+            <Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
               {menuItems.map((menuItem) => (
-                <Next.Menu.Item
+                <Menu.Item
                   key={menuItem.label}
                   item={{ value: menuItem.label, label: menuItem.label, icon: menuItem.icon }}
                   onClick={menuItem.onClick}
                 />
               ))}
-            </Next.Card.Menu>
+            </Card.Menu>
           )}
-        </Next.Card.Header>
+        </Card.Header>
         {archived && (
-          <Next.Card.Row>
-            <Next.Tag classNames='justify-self-start'>{t('archived.label')}</Next.Tag>
-          </Next.Card.Row>
+          <Card.Row>
+            <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
+          </Card.Row>
         )}
         {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
-      </Next.Card.Root>
-    </Next.Focus.Item>
+      </Card.Root>
+    </Focus.Item>
   );
 };
 

@@ -9,16 +9,16 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
+import { Splitter, type SplitterRootProps, Typography } from '../index.ts';
 
 type StoryArgs = Pick<
-  Next.SplitterRootProps,
+  SplitterRootProps,
   'orientation' | 'anchor' | 'mode' | 'resizable' | 'defaultSize' | 'minSize' | 'transition'
 >;
 
 const Pane = ({ label }: { label: string }) => (
   <div className='grid place-items-center' data-testid={`pane-${label}`}>
-    <Next.Typography>{label}</Next.Typography>
+    <Typography>{label}</Typography>
   </div>
 );
 
@@ -27,16 +27,16 @@ const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
   const [size, setSize] = useState(defaultSize);
   return (
     <div className='flex flex-col w-[40rem] h-[24rem] border border-separator'>
-      <Next.Splitter.Root {...args} size={size} onSizeChange={setSize}>
-        <Next.Splitter.Panel position='start'>
+      <Splitter.Root {...args} size={size} onSizeChange={setSize}>
+        <Splitter.Panel position='start'>
           <Pane label='Start' />
-        </Next.Splitter.Panel>
-        <Next.Splitter.ResizeTrigger aria-label='Resize' />
-        <Next.Splitter.Panel position='end'>
+        </Splitter.Panel>
+        <Splitter.ResizeTrigger aria-label='Resize' />
+        <Splitter.Panel position='end'>
           <Pane label='End' />
-        </Next.Splitter.Panel>
-      </Next.Splitter.Root>
-      <Next.Typography data-testid='size'>{size.toFixed(2)}rem</Next.Typography>
+        </Splitter.Panel>
+      </Splitter.Root>
+      <Typography data-testid='size'>{size.toFixed(2)}rem</Typography>
     </div>
   );
 };

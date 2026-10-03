@@ -11,9 +11,9 @@ import { expect, waitFor } from 'storybook/test';
 import { random } from '@dxos/random';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { byTestId, expectScoped, realHover } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Block, Container, Icon, Input, ScrollArea, Tag, Typography } from '../index.ts';
 import { type ScrollAreaRootProps } from './ScrollArea.tsx';
 
 random.seed(123);
@@ -21,17 +21,17 @@ random.seed(123);
 const PARAGRAPHS = Array.from({ length: 12 }, () => random.lorem.paragraph());
 
 const Header = ({ testId, children }: { testId: string; children: string }) => (
-  <Next.Container gutter='rail' layout='row' data-testid={testId}>
-    <Next.Block rail='start' data-testid={`${testId}-rail-start`}>
-      <Next.Icon icon='ph--list--regular' />
-    </Next.Block>
+  <Container gutter='rail' layout='row' data-testid={testId}>
+    <Block rail='start' data-testid={`${testId}-rail-start`}>
+      <Icon icon='ph--list--regular' />
+    </Block>
     <div className='truncate' data-testid={`${testId}-content`}>
       {children}
     </div>
-    <Next.Block rail='end' data-testid={`${testId}-rail-end`}>
-      <Next.Icon icon='ph--dots-three-vertical--regular' />
-    </Next.Block>
-  </Next.Container>
+    <Block rail='end' data-testid={`${testId}-rail-end`}>
+      <Icon icon='ph--dots-three-vertical--regular' />
+    </Block>
+  </Container>
 );
 
 type PaneProps = Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> & { prefix: string };
@@ -40,26 +40,26 @@ type PaneProps = Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> & { pref
 const Pane = ({ prefix, mode, width, native }: PaneProps) => (
   <div className='@container flex flex-col h-[14rem] w-[26rem] border border-separator bg-base-surface'>
     <Header testId={`${prefix}-header`}>Header</Header>
-    <Next.ScrollArea.Root mode={mode} width={width} native={native} classNames='flex-1' data-testid={`${prefix}-root`}>
-      <Next.ScrollArea.Viewport asChild>
-        <Next.Container gutter='rail' data-testid={`${prefix}-viewport`}>
-          <Next.Container layout='row'>
-            <Next.Block rail='start' data-testid={`${prefix}-row-rail-start`}>
-              <Next.Icon icon='ph--user--regular' />
-            </Next.Block>
-            <Next.Input aria-label='Name' />
-            <Next.Block rail='end' data-testid={`${prefix}-row-rail-end`}>
-              <Next.Icon icon='ph--x--regular' />
-            </Next.Block>
-          </Next.Container>
+    <ScrollArea.Root mode={mode} width={width} native={native} classNames='flex-1' data-testid={`${prefix}-root`}>
+      <ScrollArea.Viewport asChild>
+        <Container gutter='rail' data-testid={`${prefix}-viewport`}>
+          <Container layout='row'>
+            <Block rail='start' data-testid={`${prefix}-row-rail-start`}>
+              <Icon icon='ph--user--regular' />
+            </Block>
+            <Input aria-label='Name' />
+            <Block rail='end' data-testid={`${prefix}-row-rail-end`}>
+              <Icon icon='ph--x--regular' />
+            </Block>
+          </Container>
           {PARAGRAPHS.map((paragraph, index) => (
-            <Next.Typography key={index} data-testid={index === 0 ? `${prefix}-paragraph` : undefined}>
+            <Typography key={index} data-testid={index === 0 ? `${prefix}-paragraph` : undefined}>
               {paragraph}
-            </Next.Typography>
+            </Typography>
           ))}
-        </Next.Container>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+        </Container>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   </div>
 );
 
@@ -71,17 +71,17 @@ type StripProps = Pick<ScrollAreaRootProps, 'autoHide' | 'snap' | 'scrollbars'> 
 
 /** A horizontal strip of Tags wider than its pane. */
 const Strip = ({ prefix, ...props }: StripProps) => (
-  <Next.ScrollArea.Root {...props} orientation='horizontal' classNames='w-[26rem]' data-testid={`${prefix}-root`}>
-    <Next.ScrollArea.Viewport data-testid={`${prefix}-viewport`}>
+  <ScrollArea.Root {...props} orientation='horizontal' classNames='w-[26rem]' data-testid={`${prefix}-root`}>
+    <ScrollArea.Viewport data-testid={`${prefix}-viewport`}>
       <div className='flex w-max gap-2 py-2'>
         {TAGS.map((tag) => (
-          <Next.Tag key={tag} hue='sky' classNames='snap-start'>
+          <Tag key={tag} hue='sky' classNames='snap-start'>
             {tag}
-          </Next.Tag>
+          </Tag>
         ))}
       </div>
-    </Next.ScrollArea.Viewport>
-  </Next.ScrollArea.Root>
+    </ScrollArea.Viewport>
+  </ScrollArea.Root>
 );
 
 /**

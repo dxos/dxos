@@ -13,7 +13,7 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useAtomState } from '@dxos/react-hooks';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -147,14 +147,14 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
   useArticleKeyboardNavigation({ articleId: id, items: sorted, currentId, onSelect: handleNavigate });
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-      </Next.Panel.Header>
+      </Panel.Header>
 
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root orientation='vertical'>
-          <Next.ScrollArea.Viewport>
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
             <Listbox.Root
               value={currentId}
               onValueChange={handleNavigate}
@@ -173,10 +173,10 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
                 ))}
               </Listbox.Content>
             </Listbox.Root>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

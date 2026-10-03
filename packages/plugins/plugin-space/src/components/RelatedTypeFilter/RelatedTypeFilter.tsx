@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { ToggleGroup, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type RelatedType } from '#hooks';
@@ -30,7 +30,7 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
   }
 
   return (
-    <Next.ToggleGroup.Root
+    <ToggleGroup.Root
       type='multiple'
       aria-label={t('type-filter.label')}
       // Gapped, so each type reads as its own control rather than one segmented bar; grouped
@@ -39,7 +39,7 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
       value={types.filter(({ visible }) => visible).map(({ typename }) => typename)}
     >
       {types.map(({ typename, label, icon, count }) => (
-        <Next.ToggleGroup.Item
+        <ToggleGroup.Item
           key={typename}
           iconOnly
           value={typename}
@@ -52,7 +52,7 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
           onClick={() => onToggle(typename)}
         />
       ))}
-    </Next.ToggleGroup.Root>
+    </ToggleGroup.Root>
   );
 };
 

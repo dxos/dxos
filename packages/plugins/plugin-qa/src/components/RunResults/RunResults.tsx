@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 
 import { QaOperation, type TestCase, TestRun } from '#types';
 
@@ -64,7 +64,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
           <span className='grow text-subdued text-sm'>{result.note ?? ''}</span>
           {result.artifacts && result.artifacts.length > 0 && (
             <span className='flex items-center gap-1 text-subdued text-sm'>
-              <Next.Icon icon='ph--paperclip--regular' size='md' />
+              <Icon icon='ph--paperclip--regular' size='md' />
               {result.artifacts.length}
             </span>
           )}
@@ -77,7 +77,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
           {/* `skipped` is a terminal outcome, and a case can still report while the run is open. */}
           {snapshot.status === 'running' ? (
             <span className='flex items-center gap-1 text-subdued'>
-              <Next.Icon icon='ph--circle-dashed--regular' size='md' />
+              <Icon icon='ph--circle-dashed--regular' size='md' />
               <span className='text-sm'>pending</span>
             </span>
           ) : (
@@ -100,7 +100,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
       {snapshot.status === 'running' && (
         <div className='flex justify-end pt-1'>
           <button className='dx-button' disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
-            <Next.Icon icon='ph--flag-checkered--regular' size='md' />
+            <Icon icon='ph--flag-checkered--regular' size='md' />
             <span>Finish run</span>
           </button>
         </div>

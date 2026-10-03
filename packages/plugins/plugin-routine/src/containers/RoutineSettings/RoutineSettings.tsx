@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Switch, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -40,7 +40,7 @@ export const RoutineSettings = () => {
         <Form.Content>
           <Form.FieldSet label={t('routine-verbose.label')} description={t('routine.description')}>
             <Form.Field label={t('runtime.label')} description={t('runtime.description')}>
-              <Next.Switch checked={enabled} onCheckedChange={({ checked }) => handleToggle(checked)} />
+              <Switch checked={enabled} onCheckedChange={({ checked }) => handleToggle(checked)} />
             </Form.Field>
           </Form.FieldSet>
         </Form.Content>

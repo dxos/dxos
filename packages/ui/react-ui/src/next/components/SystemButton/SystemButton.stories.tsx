@@ -11,7 +11,6 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
 import {
   byTestId,
@@ -23,42 +22,43 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Group, SystemButton } from '../index.ts';
 
 type PresetProps = { 'iconOnly': boolean; 'data-testid': string };
 
 /** Each preset once per form, keyed for the Test: `<preset>-<size>` icon-only, `<preset>-labelled-<size>` labelled. */
 const PRESETS: { id: string; render: (props: PresetProps, size?: Size) => ReactNode }[] = [
-  { id: 'disclosure', render: (props) => <Next.SystemButton.Disclosure {...props} /> },
-  { id: 'star', render: (props) => <Next.SystemButton.Star {...props} /> },
-  { id: 'bookmark', render: (props) => <Next.SystemButton.Bookmark {...props} /> },
-  { id: 'clipboard', render: (props, size) => <Next.SystemButton.Clipboard {...props} value={`Copied at ${size}`} /> },
+  { id: 'disclosure', render: (props) => <SystemButton.Disclosure {...props} /> },
+  { id: 'star', render: (props) => <SystemButton.Star {...props} /> },
+  { id: 'bookmark', render: (props) => <SystemButton.Bookmark {...props} /> },
+  { id: 'clipboard', render: (props, size) => <SystemButton.Clipboard {...props} value={`Copied at ${size}`} /> },
   { id: 'mic', render: (props) => <MicPreset {...props} /> },
-  { id: 'upload', render: (props) => <Next.SystemButton.Upload {...props} accept='*/*' /> },
+  { id: 'upload', render: (props) => <SystemButton.Upload {...props} accept='*/*' /> },
   {
     id: 'download',
     render: (props) => (
-      <Next.SystemButton.Download
+      <SystemButton.Download
         {...props}
         filename='example.txt'
         onDownload={() => new Blob(['Hello from SystemButton'])}
       />
     ),
   },
-  { id: 'ai', render: (props) => <Next.SystemButton.Ai {...props} /> },
-  { id: 'add', render: (props) => <Next.SystemButton.Add {...props} /> },
-  { id: 'edit', render: (props) => <Next.SystemButton.Edit {...props} /> },
-  { id: 'delete', render: (props) => <Next.SystemButton.Delete {...props} /> },
-  { id: 'remove', render: (props) => <Next.SystemButton.Remove {...props} /> },
-  { id: 'close', render: (props) => <Next.SystemButton.Close {...props} /> },
-  { id: 'save', render: (props) => <Next.SystemButton.Save {...props} /> },
-  { id: 'cancel', render: (props) => <Next.SystemButton.Cancel {...props} /> },
+  { id: 'ai', render: (props) => <SystemButton.Ai {...props} /> },
+  { id: 'add', render: (props) => <SystemButton.Add {...props} /> },
+  { id: 'edit', render: (props) => <SystemButton.Edit {...props} /> },
+  { id: 'delete', render: (props) => <SystemButton.Delete {...props} /> },
+  { id: 'remove', render: (props) => <SystemButton.Remove {...props} /> },
+  { id: 'close', render: (props) => <SystemButton.Close {...props} /> },
+  { id: 'save', render: (props) => <SystemButton.Save {...props} /> },
+  { id: 'cancel', render: (props) => <SystemButton.Cancel {...props} /> },
 ];
 
 /** Mic has no translated label: the caller's recording state names it. */
 const MicPreset = (props: PresetProps) => {
   const [recording, setRecording] = useState(false);
   return (
-    <Next.SystemButton.Mic
+    <SystemButton.Mic
       {...props}
       label={recording ? 'Stop recording' : 'Start recording'}
       recording={recording}
@@ -71,10 +71,10 @@ const MicPreset = (props: PresetProps) => {
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     {PRESETS.map(({ id, render }) => (
-      <Next.Group key={id} data-testid={`row-${id}-${size}`}>
+      <Group key={id} data-testid={`row-${id}-${size}`}>
         {render({ 'iconOnly': true, 'data-testid': `${id}-${size}` }, size)}
         {render({ 'iconOnly': false, 'data-testid': `${id}-labelled-${size}` }, size)}
-      </Next.Group>
+      </Group>
     ))}
   </>
 );

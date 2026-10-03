@@ -5,14 +5,14 @@
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { SettingsOperation } from '../../operations/index.ts';
 import { usePluginRegistryAvailable } from '../hooks/index.ts';
 
 export type PluginRegistryButtonProps = Pick<
-  ComponentPropsWithoutRef<typeof Next.Button>,
+  ComponentPropsWithoutRef<typeof Button>,
   'onClick' | 'variant' | 'size' | 'disabled' | 'classNames'
 >;
 
@@ -33,7 +33,7 @@ export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistry
     }
 
     return (
-      <Next.Button
+      <Button
         {...props}
         ref={forwardedRef}
         icon='ph--squares-four--regular'

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, ToggleGroup, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useSettingsScope } from '../hooks/index.ts';
@@ -50,46 +50,46 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
 
   return (
     <>
-      <Next.ToggleGroup.Root type='single' value={synced ? 'synced' : 'local'} onValueChange={handleValueChange}>
-        <Next.ToggleGroup.Item
+      <ToggleGroup.Root type='single' value={synced ? 'synced' : 'local'} onValueChange={handleValueChange}>
+        <ToggleGroup.Item
           value='synced'
           data-testid='settingsScope.synced'
           icon='ph--cloud-check--regular'
           label={t('settings-scope.synced.label')}
           iconOnly
         />
-        <Next.ToggleGroup.Item
+        <ToggleGroup.Item
           value='local'
           data-testid='settingsScope.local'
           icon='ph--monitor--regular'
           label={t('settings-scope.local.label')}
           iconOnly
         />
-      </Next.ToggleGroup.Root>
-      <Next.AlertDialog.Root open={conflicts.length > 0} onOpenChange={({ open }) => !open && setConflicts([])}>
-        <Next.AlertDialog.Content>
-          <Next.AlertDialog.Body>
-            <Next.AlertDialog.Title>{t('settings-scope.conflict-dialog.title')}</Next.AlertDialog.Title>
-            <Next.AlertDialog.Description>
+      </ToggleGroup.Root>
+      <AlertDialog.Root open={conflicts.length > 0} onOpenChange={({ open }) => !open && setConflicts([])}>
+        <AlertDialog.Content>
+          <AlertDialog.Body>
+            <AlertDialog.Title>{t('settings-scope.conflict-dialog.title')}</AlertDialog.Title>
+            <AlertDialog.Description>
               {t('settings-scope.conflict-dialog.description', { count: conflicts.length })}
-            </Next.AlertDialog.Description>
-          </Next.AlertDialog.Body>
-          <Next.AlertDialog.Footer>
+            </AlertDialog.Description>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
             <div className='grow' />
-            <Next.AlertDialog.Cancel>{t('settings-scope.conflict-dialog.cancel.label')}</Next.AlertDialog.Cancel>
-            <Next.AlertDialog.Action data-testid='settingsScope.keepLocal' onClick={() => handleResolve('local')}>
+            <AlertDialog.Cancel>{t('settings-scope.conflict-dialog.cancel.label')}</AlertDialog.Cancel>
+            <AlertDialog.Action data-testid='settingsScope.keepLocal' onClick={() => handleResolve('local')}>
               {t('settings-scope.conflict-dialog.keep-local.label')}
-            </Next.AlertDialog.Action>
-            <Next.AlertDialog.Action
+            </AlertDialog.Action>
+            <AlertDialog.Action
               data-testid='settingsScope.keepShared'
               variant='primary'
               onClick={() => handleResolve('shared')}
             >
               {t('settings-scope.conflict-dialog.keep-shared.label')}
-            </Next.AlertDialog.Action>
-          </Next.AlertDialog.Footer>
-        </Next.AlertDialog.Content>
-      </Next.AlertDialog.Root>
+            </AlertDialog.Action>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </>
   );
 };

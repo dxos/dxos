@@ -8,7 +8,7 @@ import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { Next, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Focus, Icon, Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
 import { Board, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
@@ -77,7 +77,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
   }
 
   return (
-    <Next.Panel.Root asChild>
+    <Panel.Root asChild>
       <Board.Column.Root
         debug={debug}
         data={column}
@@ -85,18 +85,18 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
         classNames={classNames}
         dragHandle={dragHandle}
       >
-        <Next.Panel.Header>
+        <Panel.Header>
           <Board.Column.Header
             classNames='_opacity-10'
             label={column.name || t('untitled-column.title')}
             dragHandleRef={setDragHandle}
           />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Board.Column.Body data={column} Tile={PipelineTile} />
-        </Next.Panel.Body>
+        </Panel.Body>
       </Board.Column.Root>
-    </Next.Panel.Root>
+    </Panel.Root>
   );
 };
 
@@ -123,25 +123,25 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
 
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Next.Focus.Item asChild>
-          <Next.Card.Root classNames={classNames} ref={composedRef}>
-            <Next.Card.Header>
-              <Next.Block>
-                <Next.Icon icon={icon} />
-              </Next.Block>
-              <Next.Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Next.Card.Title>
+        <Focus.Item asChild>
+          <Card.Root classNames={classNames} ref={composedRef}>
+            <Card.Header>
+              <Block>
+                <Icon icon={icon} />
+              </Block>
+              <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Next.Block rail='end'>
+              <Block rail='end'>
                 <ActionMenu>
-                  <Next.Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                  <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                 </ActionMenu>
-              </Next.Block>
-            </Next.Card.Header>
-            <Next.Card.Body>
+              </Block>
+            </Card.Header>
+            <Card.Body>
               <Item {...itemProps} menu={menu} />
-            </Next.Card.Body>
-          </Next.Card.Root>
-        </Next.Focus.Item>
+            </Card.Body>
+          </Card.Root>
+        </Focus.Item>
       </Mosaic.Tile>
     );
   },

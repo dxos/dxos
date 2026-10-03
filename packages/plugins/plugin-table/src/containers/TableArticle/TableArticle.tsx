@@ -16,7 +16,7 @@ import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {
   Table as TableComponent,
@@ -197,8 +197,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     return (
       <TableComponent.Root ref={tableRef}>
-        <Next.Panel.Root role={role} ref={forwardedRef}>
-          <Next.Panel.Header>
+        <Panel.Root role={role} ref={forwardedRef}>
+          <Panel.Header>
             <TableComponent.Toolbar
               attendableId={attendableId}
               customActions={customActions}
@@ -207,8 +207,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onExport={handleExport}
               onSave={handleSave}
             />
-          </Next.Panel.Header>
-          <Next.Panel.Body asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <TableComponent.Content
               classNames='border-t border-subdued-separator'
               key={attendableId}
@@ -219,8 +219,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onCreate={handleCreate}
               onRowClick={handleRowClick}
             />
-          </Next.Panel.Body>
-        </Next.Panel.Root>
+          </Panel.Body>
+        </Panel.Root>
       </TableComponent.Root>
     );
   },

@@ -13,7 +13,19 @@
 
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Banner,
+  Empty,
+  Field,
+  Input,
+  Panel,
+  ScrollArea,
+  type ThemedClassName,
+  Toolbar,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
@@ -45,12 +57,12 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
       <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
         {state === 'loading' && <p className='p-3 text-sm text-description'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
-          <Next.Banner.Root valence='error'>
-            {error instanceof Error && <Next.Banner.Title>{error.name}</Next.Banner.Title>}
-            <Next.Banner.Body>{error instanceof Error ? error.message : String(error)}</Next.Banner.Body>
-          </Next.Banner.Root>
+          <Banner.Root valence='error'>
+            {error instanceof Error && <Banner.Title>{error.name}</Banner.Title>}
+            <Banner.Body>{error instanceof Error ? error.message : String(error)}</Banner.Body>
+          </Banner.Root>
         )}
-        {state === 'empty' && <Next.Empty>{t('no-result.message')}</Next.Empty>}
+        {state === 'empty' && <Empty>{t('no-result.message')}</Empty>}
         {state === 'result' &&
           (debug ? (
             <Syntax.Root data={tryParseMcpEnvelope(result)}>
@@ -108,26 +120,26 @@ const ResultTable = ({ data }: { data: unknown }) => {
   // `KeyValueTable` can emit plain `<div>` cells as direct grid items.
   return (
     <Listbox.Root items={filtered.map((item) => ({ value: item.id, label: item.id }))}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
-            <Next.Field.Root>
-              <Next.Field.Label srOnly>{t('filter-results.placeholder')}</Next.Field.Label>
-              <Next.Input
+      <Panel.Root>
+        <Panel.Header>
+          <Toolbar.Root>
+            <Field.Root>
+              <Field.Label srOnly>{t('filter-results.placeholder')}</Field.Label>
+              <Input
                 ref={filterInputRef}
                 autoFocus
                 placeholder={t('filter-results.placeholder')}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
               />
-            </Next.Field.Root>
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport>
+            </Field.Root>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>
               {filtered.length === 0 ? (
-                <Next.Empty>{t('no-matching-rows.message')}</Next.Empty>
+                <Empty>{t('no-matching-rows.message')}</Empty>
               ) : (
                 <Listbox.Content
                   aria-label={t('tool-result.label')}
@@ -140,10 +152,10 @@ const ResultTable = ({ data }: { data: unknown }) => {
                   ))}
                 </Listbox.Content>
               )}
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
     </Listbox.Root>
   );
 };

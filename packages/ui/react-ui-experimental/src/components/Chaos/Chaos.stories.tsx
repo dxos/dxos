@@ -7,7 +7,7 @@ import { useControls } from 'leva';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { useAudioStream } from '@dxos/react-ui-audio';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -56,7 +56,7 @@ const DefaultStory = (props: ChaosProps) => {
   return (
     <div className='flex grow items-center justify-center'>
       <div className='z-[10] absolute right-2 bottom-2'>
-        <Next.Button onClick={() => console.log(JSON.stringify(options, null, 2))}>Snapshot</Next.Button>
+        <Button onClick={() => console.log(JSON.stringify(options, null, 2))}>Snapshot</Button>
       </div>
       <Chaos {...props} options={options} getValue={getAverage} />
     </div>

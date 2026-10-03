@@ -14,7 +14,7 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Panel, useTranslation } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -196,11 +196,11 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
 
   return (
     <>
-      <Next.Panel.Root role={role}>
-        <Next.Panel.Header>
+      <Panel.Root role={role}>
+        <Panel.Header>
           <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
-        </Next.Panel.Header>
-        <Next.Panel.Body>
+        </Panel.Header>
+        <Panel.Body>
           <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
             <ObjectForm object={subject} type={Blog.Publication} showTags={false} />
             <div className='dx-expand'>
@@ -215,23 +215,23 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
               )}
             </div>
           </div>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
 
-      <Next.AlertDialog.Root open={confirmDeleteOpen} onOpenChange={({ open }) => setConfirmDeleteOpen(open)}>
-        <Next.AlertDialog.Content>
-          <Next.AlertDialog.Body>
-            <Next.AlertDialog.Title>{t('delete-publication-dialog.title')}</Next.AlertDialog.Title>
-            <Next.AlertDialog.Description>{t('delete-publication-dialog.description')}</Next.AlertDialog.Description>
-          </Next.AlertDialog.Body>
-          <Next.AlertDialog.Footer>
-            <Next.AlertDialog.Cancel>{t('cancel.label')}</Next.AlertDialog.Cancel>
-            <Next.AlertDialog.Action variant='destructive' onClick={handleDelete}>
+      <AlertDialog.Root open={confirmDeleteOpen} onOpenChange={({ open }) => setConfirmDeleteOpen(open)}>
+        <AlertDialog.Content>
+          <AlertDialog.Body>
+            <AlertDialog.Title>{t('delete-publication-dialog.title')}</AlertDialog.Title>
+            <AlertDialog.Description>{t('delete-publication-dialog.description')}</AlertDialog.Description>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <AlertDialog.Cancel>{t('cancel.label')}</AlertDialog.Cancel>
+            <AlertDialog.Action variant='destructive' onClick={handleDelete}>
               {t('delete-publication-dialog.confirm.label')}
-            </Next.AlertDialog.Action>
-          </Next.AlertDialog.Footer>
-        </Next.AlertDialog.Content>
-      </Next.AlertDialog.Root>
+            </AlertDialog.Action>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </>
   );
 };

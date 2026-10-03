@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
-import { Next, useId, useTranslation } from '@dxos/react-ui';
+import { Icon, QrCode, SystemButton, useId, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -66,7 +66,7 @@ export const InvitationManager = ({
               {t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
             </p>
             <div className={mx('text-description', 'w-full max-w-[14rem] relative')}>
-              <Next.QrCode
+              <QrCode
                 classNames={['p-2', showAuthCode && 'invisible']}
                 aria-labelledby={qrLabel}
                 errorCorrection='Q'
@@ -79,7 +79,7 @@ export const InvitationManager = ({
             <span id={qrLabel} className='sr-only'>
               {t('qr.label')}
             </span>
-            <Next.SystemButton.Clipboard variant='ghost' value={invitationUrl ?? 'never'} />
+            <SystemButton.Clipboard variant='ghost' value={invitationUrl ?? 'never'} />
           </InvitationManagerView>
           <InvitationManagerView id='showing-auth-code'>
             <Label>{t('auth-code.message')}</Label>
@@ -89,9 +89,9 @@ export const InvitationManager = ({
           </InvitationManagerView>
           <InvitationManagerView id='showing-final'>
             {statusValue > 0 ? (
-              <Next.Icon icon='ph--check--regular' classNames={['m-1.5', getSize(6)]} />
+              <Icon icon='ph--check--regular' classNames={['m-1.5', getSize(6)]} />
             ) : (
-              <Next.Icon icon='ph--x--regular' classNames={['m-1.5', getSize(6)]} />
+              <Icon icon='ph--x--regular' classNames={['m-1.5', getSize(6)]} />
             )}
           </InvitationManagerView>
         </Viewport.Views>

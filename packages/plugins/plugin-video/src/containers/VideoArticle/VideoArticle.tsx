@@ -8,7 +8,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Video } from '@dxos/types';
@@ -95,11 +95,11 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='grid grid-rows-[auto_1fr]'>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-rows-[auto_1fr]'>
         <Surface.Surface
           type={AppSurface.Section}
           data={{
@@ -119,8 +119,8 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           isRegenerateDisabled={!hasTranscript || summarizing}
           isSummarizing={summarizing}
         />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
@@ -161,10 +161,10 @@ const TranscriptTabs = ({
   // The tablist only needs the `Tabs.Root` context, which wraps the whole panel.
   const tabs = useMemo(
     () => (
-      <Next.Tabs.List>
-        <Next.Tabs.Trigger value='transcript'>{t('transcript.tab.label')}</Next.Tabs.Trigger>
-        <Next.Tabs.Trigger value='summary'>{t('summary.tab.label')}</Next.Tabs.Trigger>
-      </Next.Tabs.List>
+      <Tabs.List>
+        <Tabs.Trigger value='transcript'>{t('transcript.tab.label')}</Tabs.Trigger>
+        <Tabs.Trigger value='summary'>{t('summary.tab.label')}</Tabs.Trigger>
+      </Tabs.List>
     ),
     [t],
   );
@@ -201,32 +201,32 @@ const TranscriptTabs = ({
   );
 
   return (
-    <Next.Panel.Root asChild role={role}>
-      <Next.Tabs.Root
+    <Panel.Root asChild role={role}>
+      <Tabs.Root
         orientation='horizontal'
         value={tab}
         selectedVariant={hasAttention ? 'primary' : 'default'}
         onValueChange={onTabChange}
       >
-        <Next.Panel.Header>
+        <Panel.Header>
           {/* `alwaysActive`: the tablist is navigation, not an attention-gated action, and `disabled`
               would otherwise cascade `*:opacity-20` onto it as a direct child of the toolbar root. */}
           <ActionToolbar {...regenerateActions} attendableId={attendableId} alwaysActive />
-        </Next.Panel.Header>
-        <Next.Panel.Body>
-          <Next.Tabs.Content value='transcript' tabIndex={-1} classNames='overflow-hidden'>
+        </Panel.Header>
+        <Panel.Body>
+          <Tabs.Content value='transcript' tabIndex={-1} classNames='overflow-hidden'>
             <Surface.Surface
               type={AppSurface.Tabpanel}
               data={{ subject, attendableId, part: 'transcript' }}
               limit={1}
             />
-          </Next.Tabs.Content>
-          <Next.Tabs.Content value='summary' tabIndex={-1} classNames='overflow-hidden'>
+          </Tabs.Content>
+          <Tabs.Content value='summary' tabIndex={-1} classNames='overflow-hidden'>
             <Surface.Surface type={AppSurface.Tabpanel} data={{ subject, attendableId, part: 'summary' }} limit={1} />
-          </Next.Tabs.Content>
-        </Next.Panel.Body>
-      </Next.Tabs.Root>
-    </Next.Panel.Root>
+          </Tabs.Content>
+        </Panel.Body>
+      </Tabs.Root>
+    </Panel.Root>
   );
 };
 

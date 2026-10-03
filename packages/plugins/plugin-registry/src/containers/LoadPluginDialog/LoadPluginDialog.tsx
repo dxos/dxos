@@ -5,7 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Field, Flex, Input, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { RegistryOperation, describeLoadError } from '#operations';
@@ -37,19 +37,19 @@ export const LoadPluginDialog = () => {
   }, [url, invokePromise]);
 
   return (
-    <Next.Dialog.Content>
-      <Next.Dialog.Header>
-        <Next.Dialog.Title>{t('load-by-url-dialog.title')}</Next.Dialog.Title>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.SystemButton.Close ref={closeRef} />
-        </Next.Dialog.CloseTrigger>
-      </Next.Dialog.Header>
-      <Next.Dialog.Body>
+    <Dialog.Content>
+      <Dialog.Header>
+        <Dialog.Title>{t('load-by-url-dialog.title')}</Dialog.Title>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close ref={closeRef} />
+        </Dialog.CloseTrigger>
+      </Dialog.Header>
+      <Dialog.Body>
         {/* TODO(burdon): Form section. */}
         <Flex column gap='lg'>
-          <Next.Field.Root validationValence={error ? 'error' : undefined}>
-            <Next.Field.Label>{t('plugin-url.label')}</Next.Field.Label>
-            <Next.Input
+          <Field.Root validationValence={error ? 'error' : undefined}>
+            <Field.Label>{t('plugin-url.label')}</Field.Label>
+            <Input
               placeholder='https://example.com/manifest.json'
               value={url}
               onChange={(event) => {
@@ -64,16 +64,16 @@ export const LoadPluginDialog = () => {
               disabled={loading}
               autoFocus
             />
-            {error && <Next.Field.HelperText>{error}</Next.Field.HelperText>}
-          </Next.Field.Root>
+            {error && <Field.HelperText>{error}</Field.HelperText>}
+          </Field.Root>
           <Flex justify='end'>
-            <Next.Button variant='primary' disabled={!url.trim() || loading} onClick={() => void handleLoad()}>
+            <Button variant='primary' disabled={!url.trim() || loading} onClick={() => void handleLoad()}>
               {loading ? t('loading.label') : t('load-plugin.label')}
-            </Next.Button>
+            </Button>
           </Flex>
         </Flex>
-      </Next.Dialog.Body>
-    </Next.Dialog.Content>
+      </Dialog.Body>
+    </Dialog.Content>
   );
 };
 

@@ -11,7 +11,6 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import {
   GEOMETRY,
@@ -26,8 +25,19 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import {
+  Button,
+  Combobox,
+  type ComboboxFilter,
+  type ComboboxOption,
+  Field,
+  Group,
+  Input,
+  Tag,
+  Typography,
+} from '../index.ts';
 
-const OPTIONS: Next.ComboboxOption[] = [
+const OPTIONS: ComboboxOption[] = [
   { value: 'alice', label: 'Alice Green', icon: 'ph--user--regular' },
   { value: 'bob', label: 'Bob Grey', icon: 'ph--user--regular' },
   { value: 'carol', label: 'Carol Black', icon: 'ph--user--regular' },
@@ -35,45 +45,45 @@ const OPTIONS: Next.ComboboxOption[] = [
 ];
 
 /** Enough options to overflow the popup's 20rem cap at every size. */
-const LONG: Next.ComboboxOption[] = Array.from({ length: 30 }, (_, index) => ({
+const LONG: ComboboxOption[] = Array.from({ length: 30 }, (_, index) => ({
   value: `person-${index + 1}`,
   label: `Person ${index + 1}`,
 }));
 
-const DESCRIBED: Next.ComboboxOption[] = [
+const DESCRIBED: ComboboxOption[] = [
   { value: 'draft', label: 'Draft', description: 'Only you can see it', icon: 'ph--pencil-simple--regular' },
   { value: 'review', label: 'In review', description: 'Reviewers can comment', icon: 'ph--eye--regular' },
   { value: 'published', label: 'Published', description: 'Everyone in the space can read it' },
 ];
 
-const startsWith: Next.ComboboxFilter = (option, query) => option.label.toLowerCase().startsWith(query.toLowerCase());
+const startsWith: ComboboxFilter = (option, query) => option.label.toLowerCase().startsWith(query.toLowerCase());
 
 /** Items that arrive after mount, with a value already selected, as a lookup or query would deliver them. */
 const AsyncCombobox = ({ size = 'md' }: SizeArgs) => {
-  const [items, setItems] = useState<Next.ComboboxOption[]>([]);
+  const [items, setItems] = useState<ComboboxOption[]>([]);
   useEffect(() => {
     const timeout = setTimeout(() => setItems(OPTIONS), 100);
     return () => clearTimeout(timeout);
   }, []);
   return (
-    <Next.Field.Root>
-      <Next.Combobox.Root items={items} defaultValue={[OPTIONS[1].value]}>
-        <Next.Combobox.Label>Lead</Next.Combobox.Label>
-        <Next.Combobox.Control />
-        <Next.Combobox.Content />
-      </Next.Combobox.Root>
-    </Next.Field.Root>
+    <Field.Root>
+      <Combobox.Root items={items} defaultValue={[OPTIONS[1].value]}>
+        <Combobox.Label>Lead</Combobox.Label>
+        <Combobox.Control />
+        <Combobox.Content />
+      </Combobox.Root>
+    </Field.Root>
   );
 };
 
 /** A button trigger whose popup offers a create row while the query matches no label exactly. */
 const CreatableCombobox = ({ size = 'md' }: SizeArgs) => {
-  const [items, setItems] = useState<Next.ComboboxOption[]>(OPTIONS);
+  const [items, setItems] = useState<ComboboxOption[]>(OPTIONS);
   const [value, setValue] = useState<string[]>([]);
   const [created, setCreated] = useState<string>();
   return (
-    <Next.Field.Root>
-      <Next.Combobox.Root
+    <Field.Root>
+      <Combobox.Root
         items={items}
         value={value}
         onValueChange={({ value }) => setValue(value)}
@@ -84,21 +94,19 @@ const CreatableCombobox = ({ size = 'md' }: SizeArgs) => {
           setCreated(query);
         }}
       >
-        <Next.Combobox.Label>Tag</Next.Combobox.Label>
-        <Next.Combobox.Trigger placeholder='Pick or create' data-testid={`create-${size}`} />
-        <Next.Combobox.Content data-testid={`create-popup-${size}`} />
-      </Next.Combobox.Root>
-      <Next.Typography data-testid={`created-${size}`}>
-        {created ? `Created: ${created}` : 'Nothing created'}
-      </Next.Typography>
-    </Next.Field.Root>
+        <Combobox.Label>Tag</Combobox.Label>
+        <Combobox.Trigger placeholder='Pick or create' data-testid={`create-${size}`} />
+        <Combobox.Content data-testid={`create-popup-${size}`} />
+      </Combobox.Root>
+      <Typography data-testid={`created-${size}`}>{created ? `Created: ${created}` : 'Nothing created'}</Typography>
+    </Field.Root>
   );
 };
 
 /** Results the caller loads for the query (no client-side filter), with a loading row meanwhile. */
 const SearchCombobox = ({ size = 'md' }: SizeArgs) => {
   const [query, setQuery] = useState<string>();
-  const [items, setItems] = useState<Next.ComboboxOption[]>([]);
+  const [items, setItems] = useState<ComboboxOption[]>([]);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (query === undefined) {
@@ -113,19 +121,19 @@ const SearchCombobox = ({ size = 'md' }: SizeArgs) => {
     return () => clearTimeout(timeout);
   }, [query]);
   return (
-    <Next.Field.Root>
-      <Next.Combobox.Root
+    <Field.Root>
+      <Combobox.Root
         items={items}
         filter={null}
         loading={loading}
         onOpenChange={({ open }) => open && setQuery((query) => query ?? '')}
         onInputValueChange={({ inputValue, reason }) => reason === 'input-change' && setQuery(inputValue)}
       >
-        <Next.Combobox.Label>Search</Next.Combobox.Label>
-        <Next.Combobox.Trigger placeholder='Find a person' data-testid={`search-${size}`} />
-        <Next.Combobox.Content data-testid={`search-popup-${size}`} />
-      </Next.Combobox.Root>
-    </Next.Field.Root>
+        <Combobox.Label>Search</Combobox.Label>
+        <Combobox.Trigger placeholder='Find a person' data-testid={`search-${size}`} />
+        <Combobox.Content data-testid={`search-popup-${size}`} />
+      </Combobox.Root>
+    </Field.Root>
   );
 };
 
@@ -136,18 +144,18 @@ const AnchoredCombobox = ({ size = 'md' }: SizeArgs) => {
   const anchor = useRef<HTMLSpanElement>(null);
   return (
     <>
-      <Next.Group>
-        <Next.Button onClick={() => setOpen(true)} data-testid={`open-anchored-${size}`}>
+      <Group>
+        <Button onClick={() => setOpen(true)} data-testid={`open-anchored-${size}`}>
           Mention
-        </Next.Button>
-        <Next.Typography>
+        </Button>
+        <Typography>
           Hello{' '}
           <span ref={anchor} data-testid={`anchor-${size}`}>
             @{OPTIONS.find((option) => option.value === value[0])?.label ?? '…'}
           </span>
-        </Next.Typography>
-      </Next.Group>
-      <Next.Combobox.Root
+        </Typography>
+      </Group>
+      <Combobox.Root
         items={OPTIONS}
         open={open}
         onOpenChange={({ open }) => setOpen(open)}
@@ -155,11 +163,11 @@ const AnchoredCombobox = ({ size = 'md' }: SizeArgs) => {
         onValueChange={({ value }) => setValue(value)}
         positioning={{ getAnchorRect: () => anchor.current?.getBoundingClientRect() ?? null }}
       >
-        <Next.Combobox.Content data-testid={`anchored-${size}`}>
-          <Next.Combobox.Input aria-label='Mention' />
-          <Next.Combobox.List />
-        </Next.Combobox.Content>
-      </Next.Combobox.Root>
+        <Combobox.Content data-testid={`anchored-${size}`}>
+          <Combobox.Input aria-label='Mention' />
+          <Combobox.List />
+        </Combobox.Content>
+      </Combobox.Root>
     </>
   );
 };
@@ -172,53 +180,53 @@ const AnchoredCombobox = ({ size = 'md' }: SizeArgs) => {
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
-    <Next.Field.Root>
-      <Next.Combobox.Root items={OPTIONS}>
-        <Next.Combobox.Label>Owner</Next.Combobox.Label>
-        <Next.Combobox.Control data-testid={`combobox-${size}`}>
-          <Next.Combobox.Input placeholder='Search people' />
-          <Next.Combobox.ClearTrigger aria-label='Clear owner' />
-          <Next.Combobox.Trigger />
-        </Next.Combobox.Control>
-        <Next.Combobox.Content data-testid={`listbox-${size}`} />
-      </Next.Combobox.Root>
-    </Next.Field.Root>
-    <Next.Input aria-label='Note' data-testid={`input-${size}`} />
-    <Next.Field.Root>
-      <Next.Combobox.Root items={OPTIONS} filter={startsWith}>
-        <Next.Combobox.Label>Reviewer</Next.Combobox.Label>
-        <Next.Combobox.Control>
-          <Next.Combobox.Input placeholder='Starts with' />
-          <Next.Combobox.Trigger />
-        </Next.Combobox.Control>
-        <Next.Combobox.Content size='lg' />
-      </Next.Combobox.Root>
-    </Next.Field.Root>
+    <Field.Root>
+      <Combobox.Root items={OPTIONS}>
+        <Combobox.Label>Owner</Combobox.Label>
+        <Combobox.Control data-testid={`combobox-${size}`}>
+          <Combobox.Input placeholder='Search people' />
+          <Combobox.ClearTrigger aria-label='Clear owner' />
+          <Combobox.Trigger />
+        </Combobox.Control>
+        <Combobox.Content data-testid={`listbox-${size}`} />
+      </Combobox.Root>
+    </Field.Root>
+    <Input aria-label='Note' data-testid={`input-${size}`} />
+    <Field.Root>
+      <Combobox.Root items={OPTIONS} filter={startsWith}>
+        <Combobox.Label>Reviewer</Combobox.Label>
+        <Combobox.Control>
+          <Combobox.Input placeholder='Starts with' />
+          <Combobox.Trigger />
+        </Combobox.Control>
+        <Combobox.Content size='lg' />
+      </Combobox.Root>
+    </Field.Root>
     <AsyncCombobox size={size} />
-    <Next.Field.Root>
-      <Next.Combobox.Root items={LONG}>
-        <Next.Combobox.Label>Assignee</Next.Combobox.Label>
-        <Next.Combobox.Control data-testid={`long-${size}`}>
-          <Next.Combobox.Input placeholder='Many people' />
-          <Next.Combobox.Trigger />
-        </Next.Combobox.Control>
-        <Next.Combobox.Content />
-      </Next.Combobox.Root>
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Combobox.Root items={OPTIONS}>
-        <Next.Combobox.Label>Owner (picker)</Next.Combobox.Label>
-        <Next.Combobox.Trigger placeholder='Pick a person' data-testid={`picker-${size}`} />
-        <Next.Combobox.Content data-testid={`picker-popup-${size}`} />
-      </Next.Combobox.Root>
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Combobox.Root items={DESCRIBED} defaultValue={['review']}>
-        <Next.Combobox.Label>Status</Next.Combobox.Label>
-        <Next.Combobox.Trigger data-testid={`status-${size}`} />
-        <Next.Combobox.Content data-testid={`status-popup-${size}`} />
-      </Next.Combobox.Root>
-    </Next.Field.Root>
+    <Field.Root>
+      <Combobox.Root items={LONG}>
+        <Combobox.Label>Assignee</Combobox.Label>
+        <Combobox.Control data-testid={`long-${size}`}>
+          <Combobox.Input placeholder='Many people' />
+          <Combobox.Trigger />
+        </Combobox.Control>
+        <Combobox.Content />
+      </Combobox.Root>
+    </Field.Root>
+    <Field.Root>
+      <Combobox.Root items={OPTIONS}>
+        <Combobox.Label>Owner (picker)</Combobox.Label>
+        <Combobox.Trigger placeholder='Pick a person' data-testid={`picker-${size}`} />
+        <Combobox.Content data-testid={`picker-popup-${size}`} />
+      </Combobox.Root>
+    </Field.Root>
+    <Field.Root>
+      <Combobox.Root items={DESCRIBED} defaultValue={['review']}>
+        <Combobox.Label>Status</Combobox.Label>
+        <Combobox.Trigger data-testid={`status-${size}`} />
+        <Combobox.Content data-testid={`status-popup-${size}`} />
+      </Combobox.Root>
+    </Field.Root>
     <CreatableCombobox size={size} />
     <SearchCombobox size={size} />
     <AnchoredCombobox size={size} />
@@ -484,7 +492,7 @@ export const Test: Story = {
   },
 };
 
-const TAGS: Next.ComboboxOption[] = [
+const TAGS: ComboboxOption[] = [
   { value: 'urgent', label: 'Urgent' },
   { value: 'later', label: 'Later' },
   { value: 'idea', label: 'Idea' },
@@ -499,8 +507,8 @@ const MultipleStory = () => {
   const [value, setValue] = useState<string[]>(['urgent']);
   const labelOf = (id: string) => items.find((item) => item.value === id)?.label ?? id;
   return (
-    <Next.Field.Root>
-      <Next.Combobox.Root
+    <Field.Root>
+      <Combobox.Root
         items={items}
         multiple
         closeOnSelect={false}
@@ -514,21 +522,21 @@ const MultipleStory = () => {
         createLabel={(query) => `Add tag “${query}”`}
         createIcon='ph--tag--regular'
       >
-        <Next.Combobox.Label>Tags</Next.Combobox.Label>
-        <Next.Combobox.Control wrap data-testid='tags'>
+        <Combobox.Label>Tags</Combobox.Label>
+        <Combobox.Control wrap data-testid='tags'>
           {value.map((id) => (
-            <Next.Tag key={id} onDelete={() => setValue((value) => value.filter((other) => other !== id))}>
+            <Tag key={id} onDelete={() => setValue((value) => value.filter((other) => other !== id))}>
               {labelOf(id)}
-            </Next.Tag>
+            </Tag>
           ))}
-          <Next.Combobox.Trigger />
-        </Next.Combobox.Control>
-        <Next.Combobox.Content data-testid='tags-popup'>
-          <Next.Combobox.Input />
-          <Next.Combobox.List />
-        </Next.Combobox.Content>
-      </Next.Combobox.Root>
-    </Next.Field.Root>
+          <Combobox.Trigger />
+        </Combobox.Control>
+        <Combobox.Content data-testid='tags-popup'>
+          <Combobox.Input />
+          <Combobox.List />
+        </Combobox.Content>
+      </Combobox.Root>
+    </Field.Root>
   );
 };
 

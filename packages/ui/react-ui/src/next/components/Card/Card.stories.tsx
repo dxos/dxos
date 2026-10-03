@@ -11,10 +11,10 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreX, controlSize, expectTooltip, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Avatar, Block, Button, Card, Container, DragHandle, Icon, Menu, Switch, Tag, Typography } from '../index.ts';
 import { type CardRootProps } from './Card.tsx';
 
 /** Inline SVG, so the story never fetches from the network. */
@@ -42,40 +42,40 @@ type RowsCardProps = {
 const RowsCard = ({ size, grid, prefix = '', rows, onInvite }: RowsCardProps) => {
   const name = prefix ? 'Inline ' : '';
   return (
-    <Next.Card.Root grid={grid} data-testid={`${prefix}rows-card-${size}`}>
-      <Next.Card.Header>
-        <Next.DragHandle label={`${name}Drag`} data-testid={`${prefix}drag-${size}`} />
-        <Next.Card.Title>{name}Project</Next.Card.Title>
-        <Next.Card.Menu label={`${name}Project actions`}>
-          <Next.Menu.Item item={{ value: 'archive', label: 'Archive' }} />
-        </Next.Card.Menu>
-      </Next.Card.Header>
-      <Next.Card.Section title={`${name}Members`} data-testid={`${prefix}section-${size}`}>
-        <Next.Card.Row
+    <Card.Root grid={grid} data-testid={`${prefix}rows-card-${size}`}>
+      <Card.Header>
+        <DragHandle label={`${name}Drag`} data-testid={`${prefix}drag-${size}`} />
+        <Card.Title>{name}Project</Card.Title>
+        <Card.Menu label={`${name}Project actions`}>
+          <Menu.Item item={{ value: 'archive', label: 'Archive' }} />
+        </Card.Menu>
+      </Card.Header>
+      <Card.Section title={`${name}Members`} data-testid={`${prefix}section-${size}`}>
+        <Card.Row
           icon='ph--user--regular'
-          trailing={<Next.Tag hue='emerald'>Owner</Next.Tag>}
+          trailing={<Tag hue='emerald'>Owner</Tag>}
           data-testid={`${prefix}row-${size}`}
         >
           Ada Lovelace
-        </Next.Card.Row>
-        <Next.Card.Row
+        </Card.Row>
+        <Card.Row
           icon='ph--user--regular'
-          trailing={<Next.Card.Action icon='ph--x--regular' label={`${name}Remove`} />}
+          trailing={<Card.Action icon='ph--x--regular' label={`${name}Remove`} />}
           data-testid={`${prefix}long-row-${size}`}
         >
           Charles Babbage, Lucasian Professor of Mathematics at Cambridge
-        </Next.Card.Row>
-        <Next.Card.Row icon='ph--plus--regular' onClick={onInvite} data-testid={`${prefix}add-row-${size}`}>
+        </Card.Row>
+        <Card.Row icon='ph--plus--regular' onClick={onInvite} data-testid={`${prefix}add-row-${size}`}>
           {name}Invite ({rows})
-        </Next.Card.Row>
-      </Next.Card.Section>
-      <Next.Card.Section>
-        <Next.Card.Link label={`${name}Project site`} href='https://dxos.org' data-testid={`${prefix}link-${size}`} />
-        <Next.Card.Text variant='description' data-testid={`${prefix}text-${size}`}>
+        </Card.Row>
+      </Card.Section>
+      <Card.Section>
+        <Card.Link label={`${name}Project site`} href='https://dxos.org' data-testid={`${prefix}link-${size}`} />
+        <Card.Text variant='description' data-testid={`${prefix}text-${size}`}>
           Updated today.
-        </Next.Card.Text>
-      </Next.Card.Section>
-    </Next.Card.Root>
+        </Card.Text>
+      </Card.Section>
+    </Card.Root>
   );
 };
 
@@ -90,72 +90,72 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [rows, setRows] = useState(0);
   return (
     <div className='grid grid-cols-3 items-start gap-4 py-4'>
-      <Next.Card.Root data-testid={`poster-card-${size}`}>
-        <Next.Card.Poster src={POSTER} alt='Launch artwork' data-testid={`poster-${size}`} />
-        <Next.Card.Header>
-          <Next.Card.Title>Launch</Next.Card.Title>
-        </Next.Card.Header>
-        <Next.Card.Body>
-          <Next.Card.Description>The first public release, with sharing and sync.</Next.Card.Description>
-        </Next.Card.Body>
-        <Next.Card.Footer>
-          <Next.Button variant='primary'>Open</Next.Button>
-        </Next.Card.Footer>
-      </Next.Card.Root>
+      <Card.Root data-testid={`poster-card-${size}`}>
+        <Card.Poster src={POSTER} alt='Launch artwork' data-testid={`poster-${size}`} />
+        <Card.Header>
+          <Card.Title>Launch</Card.Title>
+        </Card.Header>
+        <Card.Body>
+          <Card.Description>The first public release, with sharing and sync.</Card.Description>
+        </Card.Body>
+        <Card.Footer>
+          <Button variant='primary'>Open</Button>
+        </Card.Footer>
+      </Card.Root>
 
-      <Next.Card.Root data-testid={`card-${size}`}>
-        <Next.Card.Header>
-          <Next.Card.Title>Roadmap</Next.Card.Title>
-          <Next.Button icon='ph--dots-three--regular' label='More actions' iconOnly />
-        </Next.Card.Header>
-        <Next.Card.Body>
-          <Next.Card.Description>What ships next quarter and why.</Next.Card.Description>
-          <Next.Typography>Three milestones, each with an owner and a date.</Next.Typography>
-        </Next.Card.Body>
-        <Next.Card.Footer data-testid={`footer-${size}`}>
-          <Next.Button>Dismiss</Next.Button>
-          <Next.Button variant='primary'>Review</Next.Button>
-        </Next.Card.Footer>
-      </Next.Card.Root>
+      <Card.Root data-testid={`card-${size}`}>
+        <Card.Header>
+          <Card.Title>Roadmap</Card.Title>
+          <Button icon='ph--dots-three--regular' label='More actions' iconOnly />
+        </Card.Header>
+        <Card.Body>
+          <Card.Description>What ships next quarter and why.</Card.Description>
+          <Typography>Three milestones, each with an owner and a date.</Typography>
+        </Card.Body>
+        <Card.Footer data-testid={`footer-${size}`}>
+          <Button>Dismiss</Button>
+          <Button variant='primary'>Review</Button>
+        </Card.Footer>
+      </Card.Root>
 
-      <Next.Card.Root>
-        <Next.Card.Poster src={BROKEN} alt='Missing artwork' data-testid={`broken-${size}`} />
-        <Next.Card.Header>
-          <Next.Card.Title>Notes</Next.Card.Title>
-          <Next.Block>
-            <Next.Icon icon='ph--note--regular' />
-          </Next.Block>
-        </Next.Card.Header>
-        <Next.Card.Body>
-          <Next.Typography>A card with a broken poster and no footer.</Next.Typography>
-        </Next.Card.Body>
-      </Next.Card.Root>
+      <Card.Root>
+        <Card.Poster src={BROKEN} alt='Missing artwork' data-testid={`broken-${size}`} />
+        <Card.Header>
+          <Card.Title>Notes</Card.Title>
+          <Block>
+            <Icon icon='ph--note--regular' />
+          </Block>
+        </Card.Header>
+        <Card.Body>
+          <Typography>A card with a broken poster and no footer.</Typography>
+        </Card.Body>
+      </Card.Root>
 
       <RowsCard size={size} grid rows={rows} onInvite={() => setRows((count) => count + 1)} />
       <RowsCard size={size} prefix='inline-' rows={rows} onInvite={() => setRows((count) => count + 1)} />
 
-      <Next.Card.Root selected onClick={() => setOpened((count) => count + 1)} data-testid={`clickable-${size}`}>
-        <Next.Card.Header>
-          <Next.Card.Title>Opened {opened}</Next.Card.Title>
-          <Next.Card.Action
+      <Card.Root selected onClick={() => setOpened((count) => count + 1)} data-testid={`clickable-${size}`}>
+        <Card.Header>
+          <Card.Title>Opened {opened}</Card.Title>
+          <Card.Action
             icon='ph--star--regular'
             label='Star'
             onClick={() => setStarred((count) => count + 1)}
             data-testid={`star-${size}`}
           />
-        </Next.Card.Header>
-        <Next.Card.Body>
-          <Next.Card.Text data-testid={`starred-${size}`}>Starred {starred}</Next.Card.Text>
-        </Next.Card.Body>
-      </Next.Card.Root>
+        </Card.Header>
+        <Card.Body>
+          <Card.Text data-testid={`starred-${size}`}>Starred {starred}</Card.Text>
+        </Card.Body>
+      </Card.Root>
 
-      <Next.Card.Root border={false} data-testid={`borderless-${size}`}>
-        <Next.Card.Header>
-          <Next.Card.Title>Borderless</Next.Card.Title>
-          <Next.Card.Action system='delete' data-testid={`delete-${size}`} />
-          <Next.Card.Action system='close' data-testid={`close-${size}`} />
-        </Next.Card.Header>
-      </Next.Card.Root>
+      <Card.Root border={false} data-testid={`borderless-${size}`}>
+        <Card.Header>
+          <Card.Title>Borderless</Card.Title>
+          <Card.Action system='delete' data-testid={`delete-${size}`} />
+          <Card.Action system='close' data-testid={`close-${size}`} />
+        </Card.Header>
+      </Card.Root>
     </div>
   );
 };
@@ -197,14 +197,14 @@ export const Default: Story = {};
 /** `size` scopes a card's own metrics: its blocks and controls take that size whatever the host's. */
 export const Sized: Story = {
   render: () => (
-    <Next.Card.Root size='sm' data-testid='sized-card'>
-      <Next.Card.Header>
-        <Next.Block data-testid='sized-block'>
-          <Next.Icon icon='ph--cube--regular' />
-        </Next.Block>
-        <Next.Card.Title>Small card</Next.Card.Title>
-      </Next.Card.Header>
-    </Next.Card.Root>
+    <Card.Root size='sm' data-testid='sized-card'>
+      <Card.Header>
+        <Block data-testid='sized-block'>
+          <Icon icon='ph--cube--regular' />
+        </Block>
+        <Card.Title>Small card</Card.Title>
+      </Card.Header>
+    </Card.Root>
   ),
   play: async ({ canvasElement }) => {
     // A header Block is one control at the card's size.
@@ -229,8 +229,8 @@ const TILES = [
 const TileGridStory = () => {
   const [opened, setOpened] = useState('');
   return (
-    <Next.Container gutter='md' padBlock data-testid='tile-root'>
-      <Next.Container
+    <Container gutter='md' padBlock data-testid='tile-root'>
+      <Container
         layout='row'
         columns='repeat(auto-fill, minmax(14rem, 1fr))'
         gap='lg'
@@ -238,25 +238,25 @@ const TileGridStory = () => {
         data-testid='tile-grid'
       >
         {TILES.map(({ icon, hue, title, text }) => (
-          <Next.Card.Root key={title} data-testid={`tile-card-${title}`}>
-            <Next.Card.Tile icon={icon} hue={hue} onClick={() => setOpened(title)} data-testid={`tile-${title}`} />
-            <Next.Card.Body>
-              <Next.Card.Header>
-                <Next.Card.Title truncate>{title}</Next.Card.Title>
-              </Next.Card.Header>
-              <Next.Typography tone='description' lines={3}>
+          <Card.Root key={title} data-testid={`tile-card-${title}`}>
+            <Card.Tile icon={icon} hue={hue} onClick={() => setOpened(title)} data-testid={`tile-${title}`} />
+            <Card.Body>
+              <Card.Header>
+                <Card.Title truncate>{title}</Card.Title>
+              </Card.Header>
+              <Typography tone='description' lines={3}>
                 {text}
-              </Next.Typography>
-              <Next.Card.Footer justify='between' data-testid={`tile-footer-${title}`}>
-                <Next.Tag hue='purple'>labs</Next.Tag>
-                <Next.Switch aria-label={title} />
-              </Next.Card.Footer>
-            </Next.Card.Body>
-          </Next.Card.Root>
+              </Typography>
+              <Card.Footer justify='between' data-testid={`tile-footer-${title}`}>
+                <Tag hue='purple'>labs</Tag>
+                <Switch aria-label={title} />
+              </Card.Footer>
+            </Card.Body>
+          </Card.Root>
         ))}
-      </Next.Container>
-      <Next.Typography data-testid='tile-opened'>{opened}</Next.Typography>
-    </Next.Container>
+      </Container>
+      <Typography data-testid='tile-opened'>{opened}</Typography>
+    </Container>
   );
 };
 
@@ -292,18 +292,18 @@ export const TileGrid: Story = {
 /** A Row's `leading` content (here an avatar) takes the icon's Block in the start rail. */
 export const LeadingRow: Story = {
   render: () => (
-    <Next.Card.Root grid>
-      <Next.Card.Row
-        leading={<Next.Avatar.Root fallback='Ada Lovelace' label='Ada Lovelace' data-testid='leading-avatar' />}
-        trailing={<Next.Icon icon='ph--arrow-right--regular' />}
+    <Card.Root grid>
+      <Card.Row
+        leading={<Avatar.Root fallback='Ada Lovelace' label='Ada Lovelace' data-testid='leading-avatar' />}
+        trailing={<Icon icon='ph--arrow-right--regular' />}
         onClick={() => {}}
       >
-        <Next.Card.Text>Ada Lovelace</Next.Card.Text>
-      </Next.Card.Row>
-      <Next.Card.Row icon='ph--calendar--regular'>
-        <Next.Card.Text>Standup</Next.Card.Text>
-      </Next.Card.Row>
-    </Next.Card.Root>
+        <Card.Text>Ada Lovelace</Card.Text>
+      </Card.Row>
+      <Card.Row icon='ph--calendar--regular'>
+        <Card.Text>Standup</Card.Text>
+      </Card.Row>
+    </Card.Root>
   ),
   play: async ({ canvasElement }) => {
     const avatar = byTestId(canvasElement, 'leading-avatar');

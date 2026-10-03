@@ -6,7 +6,16 @@ import React, { type ChangeEvent, useEffect, useState } from 'react';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { SpaceId } from '@dxos/keys';
-import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Field,
+  Input,
+  ScrollArea,
+  Switch,
+  Textarea,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 
 import {
   DEFAULT_COMPOSER_URLS,
@@ -84,8 +93,8 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
   };
 
   return (
-    <Next.ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
-      <Next.ScrollArea.Viewport>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+      <ScrollArea.Viewport>
         <div className='grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden'>
           <a href='https://dxos.org/composer' target='_blank' rel='noreferrer'>
             <Composer className='w-[8rem] h-[8rem]' />
@@ -111,40 +120,37 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
         <div className='grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden'>
           <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
             <div />
-            <Next.Field.Root>
-              <Next.Field.Label>{t('settings.dev-mode.label')}</Next.Field.Label>
+            <Field.Root>
+              <Field.Label>{t('settings.dev-mode.label')}</Field.Label>
               <div className='text-end'>
-                <Next.Switch
-                  checked={developerMode}
-                  onCheckedChange={({ checked }) => handleDeveloperModeChange(checked)}
-                />
+                <Switch checked={developerMode} onCheckedChange={({ checked }) => handleDeveloperModeChange(checked)} />
               </div>
-            </Next.Field.Root>
+            </Field.Root>
           </div>
           <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
             <div />
-            <Next.Field.Root>
-              <Next.Field.Label>{t('settings.space-mode.label')}</Next.Field.Label>
+            <Field.Root>
+              <Field.Label>{t('settings.space-mode.label')}</Field.Label>
               <div className='text-end'>
-                <Next.Switch checked={spaceMode} onCheckedChange={({ checked }) => handleSpaceModeChange(checked)} />
+                <Switch checked={spaceMode} onCheckedChange={({ checked }) => handleSpaceModeChange(checked)} />
               </div>
-            </Next.Field.Root>
+            </Field.Root>
           </div>
           <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
             <div />
-            <Next.Field.Root>
-              <Next.Field.Label>{t('settings.space-id.label')}</Next.Field.Label>
+            <Field.Root>
+              <Field.Label>{t('settings.space-id.label')}</Field.Label>
               <div className='text-end'>
-                <Next.Input value={spaceId ?? ''} onChange={handleSpaceIdChange} />
+                <Input value={spaceId ?? ''} onChange={handleSpaceIdChange} />
               </div>
-            </Next.Field.Root>
+            </Field.Root>
           </div>
           <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
             <div />
-            <Next.Field.Root>
-              <Next.Field.Label classNames='self-start'>{t('settings.composer-urls.label')}</Next.Field.Label>
+            <Field.Root>
+              <Field.Label classNames='self-start'>{t('settings.composer-urls.label')}</Field.Label>
               <div className='text-end'>
-                <Next.Textarea
+                <Textarea
                   rows={4}
                   placeholder={DEFAULT_COMPOSER_URLS.join('\n')}
                   value={composerUrls}
@@ -152,11 +158,11 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
                   classNames='font-mono text-sm'
                 />
               </div>
-            </Next.Field.Root>
+            </Field.Root>
           </div>
         </div>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 });
 

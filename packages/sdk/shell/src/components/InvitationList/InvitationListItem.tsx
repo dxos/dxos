@@ -11,7 +11,15 @@ import {
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
-import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  type AvatarRootProps,
+  Button,
+  SystemButton,
+  type ThemedClassName,
+  Tooltip,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
@@ -43,13 +51,13 @@ const AvatarStackEffect = ({
   animation,
   status,
   reverseEffects,
-}: Pick<Next.AvatarRootProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => (
+}: Pick<AvatarRootProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => (
   <>
     {[
       { offset: reverseEffects ? 'left-3' : 'left-1', opacity: 'opacity-20', delay: '400ms' },
       { offset: 'left-2', opacity: 'opacity-50', delay: '200ms' },
     ].map(({ offset, opacity, delay }) => (
-      <Next.Avatar.Root
+      <Avatar.Root
         key={delay}
         aria-hidden
         size={AVATAR_SIZE}
@@ -130,8 +138,8 @@ export const InvitationListItemImpl = ({
       {multiUse && (
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
-      <Next.Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
-        <Next.Avatar.Root
+      <Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
+        <Avatar.Root
           size={AVATAR_SIZE}
           animation={avatarAnimation}
           status={avatarStatus}
@@ -140,25 +148,25 @@ export const InvitationListItemImpl = ({
           tabIndex={0}
           classNames={['dx-focus-ring', 'relative rounded-full place-self-center']}
         />
-      </Next.Tooltip.Trigger>
+      </Tooltip.Trigger>
       {showShare && invitationUrl ? (
         <>
-          <Next.Tooltip.Trigger
+          <Tooltip.Trigger
             asChild
             content={
               invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
             }
           >
-            <Next.Button
+            <Button
               variant='ghost'
               classNames='grow justify-start font-medium'
               data-testid='show-qrcode'
               onClick={() => send({ type: 'selectInvitation', invitation })}
             >
               <span>{t('open-share-panel.label')}</span>
-            </Next.Button>
-          </Next.Tooltip.Trigger>
-          <Next.SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
+            </Button>
+          </Tooltip.Trigger>
+          <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />
@@ -178,7 +186,7 @@ export const InvitationListItemImpl = ({
         <span className='grow'> </span>
       )}
       {isCancellable ? (
-        <Next.Button
+        <Button
           icon='ph--x--regular'
           iconSize='md'
           label={t('cancel-invitation.label')}
@@ -189,7 +197,7 @@ export const InvitationListItemImpl = ({
           data-testid='cancel-invitation'
         />
       ) : (
-        <Next.Button
+        <Button
           icon='ph--x--regular'
           iconSize='md'
           label={t('remove-invitation.label')}

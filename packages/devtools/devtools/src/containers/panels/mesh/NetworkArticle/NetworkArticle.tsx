@@ -8,7 +8,7 @@ import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Next } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
@@ -76,15 +76,15 @@ export const NetworkArticle = ({ role, ...props }: ArticleProps & { space?: Spac
   // TODO(dmaretskyi): Visualize data flowing: line thickness, running ticks, text stats.
   // TODO(dmaretskyi): Show connections that are forming.
   return (
-    <Next.Panel.Root role={role}>
+    <Panel.Root role={role}>
       {!props.space && (
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
+        <Panel.Header>
+          <Toolbar.Root>
             <DataSpaceSelector />
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
+          </Toolbar.Root>
+        </Panel.Header>
       )}
-      <Next.Panel.Body>
+      <Panel.Body>
         <SVG.Root ref={context}>
           <SVG.Markers />
           <SVG.Graph
@@ -115,7 +115,7 @@ export const NetworkArticle = ({ role, ...props }: ArticleProps & { space?: Spac
             // }}
           />
         </SVG.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

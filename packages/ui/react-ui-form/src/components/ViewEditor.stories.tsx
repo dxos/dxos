@@ -11,7 +11,7 @@ import { DXN, Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Next, useAsyncEffect } from '@dxos/react-ui';
+import { Container, Panel, ScrollArea, Typography, useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Organization } from '@dxos/types';
@@ -57,11 +57,11 @@ const DefaultStory = ({ system }: StoryArgs) => {
   }
 
   return (
-    <Next.Panel.Root size='sm'>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container>
+    <Panel.Root size='sm'>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container>
               <ViewEditor
                 ref={projectionRef}
                 type={type}
@@ -70,18 +70,18 @@ const DefaultStory = ({ system }: StoryArgs) => {
                 db={space?.db}
                 onDelete={(fieldId) => projectionRef.current?.deleteFieldProjection(fieldId)}
               />
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-      <Next.Panel.Footer>
-        <Next.Typography truncate data-testid='fields'>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+      <Panel.Footer>
+        <Typography truncate data-testid='fields'>
           {JSON.stringify(
             snapshot?.projection.fields.map((field) => (field.visible === false ? `-${field.path}` : field.path)),
           )}
-        </Next.Typography>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+        </Typography>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

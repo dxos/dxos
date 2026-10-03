@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/theme.css';
-import { Next } from '@dxos/react-ui';
+import { Checkbox, SystemButton, Typography } from '@dxos/react-ui';
 import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withSizes, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
 import { arrayMove } from '@dxos/util';
@@ -66,11 +66,11 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                 >
                   <OrderedList.DragHandle />
                   <OrderedList.ItemText />
-                  <Next.SystemButton.Remove
+                  <SystemButton.Remove
                     onClick={() => setItems((items) => items.filter((entry) => entry.id !== item.id))}
                   />
                   <OrderedList.Detail>
-                    <Next.Typography data-testid={`panel-${item.id}-${size}`}>Details for {item.label}</Next.Typography>
+                    <Typography data-testid={`panel-${item.id}-${size}`}>Details for {item.label}</Typography>
                   </OrderedList.Detail>
                 </OrderedList.Item>
               ))}
@@ -78,7 +78,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           </>
         )}
       </OrderedList.Root>
-      <Next.Typography data-testid={`order-${size}`}>{items.map((item) => item.id).join(' ')}</Next.Typography>
+      <Typography data-testid={`order-${size}`}>{items.map((item) => item.id).join(' ')}</Typography>
     </>
   );
 };
@@ -180,7 +180,7 @@ const VirtualStory = () => {
           )}
         </OrderedList.Root>
       </div>
-      <Next.Typography data-testid='many-first'>{items[0].label}</Next.Typography>
+      <Typography data-testid='many-first'>{items[0].label}</Typography>
     </>
   );
 };
@@ -197,7 +197,7 @@ const CheckboxWithRemoveStory = () => {
           <OrderedList.Content aria-label='Todos'>
             {items.map((item) => (
               <OrderedList.Item key={item.id} id={item.id}>
-                <Next.Checkbox
+                <Checkbox
                   aria-label={`Done ${item.label}`}
                   checked={item.done}
                   onCheckedChange={({ checked }) =>
@@ -207,9 +207,7 @@ const CheckboxWithRemoveStory = () => {
                   }
                 />
                 <OrderedList.ItemText tone={item.done ? 'description' : undefined} />
-                <Next.SystemButton.Remove
-                  onClick={() => setItems((items) => items.filter((todo) => todo.id !== item.id))}
-                />
+                <SystemButton.Remove onClick={() => setItems((items) => items.filter((todo) => todo.id !== item.id))} />
               </OrderedList.Item>
             ))}
           </OrderedList.Content>
@@ -239,14 +237,14 @@ const StableIdsStory = () => {
                 <OrderedList.DragHandle />
                 <OrderedList.ItemText />
                 <OrderedList.Detail>
-                  <Next.Typography>Heading {value}</Next.Typography>
+                  <Typography>Heading {value}</Typography>
                 </OrderedList.Detail>
               </OrderedList.Item>
             ))}
           </OrderedList.Content>
         )}
       </OrderedList.Root>
-      <Next.Typography data-testid='directions'>{values.join(' ')}</Next.Typography>
+      <Typography data-testid='directions'>{values.join(' ')}</Typography>
     </>
   );
 };
@@ -260,9 +258,9 @@ const ColumnsStory = () => (
           <OrderedList.Item key={item.id} id={item.id} data-testid={`column-row-${item.id}`}>
             <OrderedList.DragHandle />
             <OrderedList.ItemText />
-            <Next.Typography tone='description' data-testid={`column-${item.id}`}>
+            <Typography tone='description' data-testid={`column-${item.id}`}>
               {item.label.length} letters
-            </Next.Typography>
+            </Typography>
           </OrderedList.Item>
         ))}
       </OrderedList.Content>

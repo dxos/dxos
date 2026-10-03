@@ -4,11 +4,11 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Dialog, type Size } from '@dxos/react-ui';
 
 export type StorybookDialogProps = PropsWithChildren & {
   /** Passed to `Dialog.Content` (default `md`). */
-  size?: Next.Size;
+  size?: Size;
   /** Passed to `Dialog.Overlay` (default `center`). */
   blockAlign?: 'center' | 'start' | 'end';
 };
@@ -19,13 +19,13 @@ export type StorybookDialogProps = PropsWithChildren & {
  */
 export const StorybookDialog = ({ children, size = 'md', blockAlign = 'center' }: StorybookDialogProps) => {
   return (
-    <Next.Dialog.Root defaultOpen modal>
-      <Next.Dialog.Content size={size}>
-        <Next.Dialog.Header>
-          <Next.Dialog.Title classNames='sr-only'>Storybook Dialog</Next.Dialog.Title>
-        </Next.Dialog.Header>
-        <Next.Dialog.Body>{children}</Next.Dialog.Body>
-      </Next.Dialog.Content>
-    </Next.Dialog.Root>
+    <Dialog.Root defaultOpen modal>
+      <Dialog.Content size={size}>
+        <Dialog.Header>
+          <Dialog.Title classNames='sr-only'>Storybook Dialog</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>{children}</Dialog.Body>
+      </Dialog.Content>
+    </Dialog.Root>
   );
 };

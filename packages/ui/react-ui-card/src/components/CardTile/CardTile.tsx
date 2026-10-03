@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent, PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Focus, Menu, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -42,11 +42,11 @@ const CardTileRoot = forwardRef<HTMLDivElement, CardTileRootProps>(
       location={location}
       classNames={classNames ?? 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator'}
     >
-      <Next.Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
-        <Next.Card.Root border={false} onClick={onClick} ref={forwardedRef} data-testid={testId}>
+      <Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
+        <Card.Root border={false} onClick={onClick} ref={forwardedRef} data-testid={testId}>
           {children}
-        </Next.Card.Root>
-      </Next.Focus.Item>
+        </Card.Root>
+      </Focus.Item>
     </Mosaic.Tile>
   ),
 );
@@ -83,23 +83,23 @@ type CardTileHeaderProps = {
 const CardTileHeader = ({ title, starred, menu = false, menuItems, onToggleStar }: CardTileHeaderProps) => {
   const { t } = useTranslation(osTranslations);
   return (
-    <Next.Card.Header>
-      <Next.Block>
+    <Card.Header>
+      <Block>
         <Row.Star starred={starred} onToggle={onToggleStar} />
-      </Next.Block>
-      <Next.Card.Title classNames='flex items-center gap-3'>{title}</Next.Card.Title>
+      </Block>
+      <Card.Title classNames='flex items-center gap-3'>{title}</Card.Title>
       {menu && (
-        <Next.Card.Menu label={t('toolbar-menu.label')}>
+        <Card.Menu label={t('toolbar-menu.label')}>
           {menuItems?.map((item) => (
-            <Next.Menu.Item
+            <Menu.Item
               key={item.label}
               item={{ value: item.label, label: item.label, icon: item.icon }}
               onClick={item.onClick}
             />
           ))}
-        </Next.Card.Menu>
+        </Card.Menu>
       )}
-    </Next.Card.Header>
+    </Card.Header>
   );
 };
 

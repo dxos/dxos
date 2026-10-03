@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { Block, Card, Focus, SystemButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';
@@ -41,43 +41,37 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
   );
 
   return (
-    <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-      <Next.Card.Root
+    <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+      <Card.Root
         classNames={mx('dx-hover dx-current cursor-pointer transition-opacity', read && !current && 'opacity-60')}
       >
         {imageUrl && (
-          <Next.Card.Poster alt={snapshot.title ?? 'Article'} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
+          <Card.Poster alt={snapshot.title ?? 'Article'} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
-        <Next.Card.Header>
-          <Next.Block>
-            <Next.SystemButton.Star
-              variant='ghost'
-              iconOnly
-              iconSize='md'
-              pressed={starred}
-              onClick={handleToggleStar}
-            />
-          </Next.Block>
-          {snapshot.title ? <Next.Card.Title lines={2}>{snapshot.title}</Next.Card.Title> : <div />}
-          <Next.Block rail='end' />
-        </Next.Card.Header>
-        <Next.Card.Body>
+        <Card.Header>
+          <Block>
+            <SystemButton.Star variant='ghost' iconOnly iconSize='md' pressed={starred} onClick={handleToggleStar} />
+          </Block>
+          {snapshot.title ? <Card.Title lines={2}>{snapshot.title}</Card.Title> : <div />}
+          <Block rail='end' />
+        </Card.Header>
+        <Card.Body>
           {snippet && (
-            <Next.Card.Row>
-              <Next.Card.Text variant='description' classNames='line-clamp-3'>
+            <Card.Row>
+              <Card.Text variant='description' classNames='line-clamp-3'>
                 {snippet}
-              </Next.Card.Text>
-            </Next.Card.Row>
+              </Card.Text>
+            </Card.Row>
           )}
-          <Next.Card.Row>
+          <Card.Row>
             <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-trim-sm py-trim-xs text-sm text-description overflow-hidden'>
               <span className='truncate'>{feedName ?? ''}</span>
               <span className='text-end shrink-0'>{formatPublished(snapshot) ?? ''}</span>
             </div>
-          </Next.Card.Row>
-        </Next.Card.Body>
-      </Next.Card.Root>
-    </Next.Focus.Item>
+          </Card.Row>
+        </Card.Body>
+      </Card.Root>
+    </Focus.Item>
   );
 };
 

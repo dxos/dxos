@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Next, useFileDownload } from '@dxos/react-ui';
+import { Button, Checkbox, Panel, SystemButton, Toolbar, useFileDownload } from '@dxos/react-ui';
 
 import { JsonView } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -54,32 +54,32 @@ export const DiagnosticsArticle = ({ role }: ArticleProps) => {
   }, []);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Checkbox
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Checkbox
             checked={recording}
             onCheckedChange={({ checked: recording }) => handleSetRecording(!!recording)}
             label='Record metrics'
           />
           <div className='grow' />
-          <Next.Button onClick={handleRefresh}>Run Diagnostics</Next.Button>
-          <Next.Button icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
-          <Next.Button onClick={handleResetMetrics}>Reset metrics</Next.Button>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+          <Button onClick={handleRefresh}>Run Diagnostics</Button>
+          <Button icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
+          <Button onClick={handleResetMetrics}>Reset metrics</Button>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         <JsonView data={data} />
-      </Next.Panel.Body>
+      </Panel.Body>
       {info && (
-        <Next.Panel.Footer>
+        <Panel.Footer>
           <div className='flex p-2 items-center text-sm font-mono gap-2'>
             {info.map((text) => (
-              <Next.SystemButton.Clipboard key={text} variant='ghost' label={text} value={text} />
+              <SystemButton.Clipboard key={text} variant='ghost' label={text} value={text} />
             ))}
           </div>
-        </Next.Panel.Footer>
+        </Panel.Footer>
       )}
-    </Next.Panel.Root>
+    </Panel.Root>
   );
 };

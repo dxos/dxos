@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Block, Card, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type GalleryImageProps = {
@@ -24,7 +24,7 @@ export type GalleryImageProps = {
 export const GalleryImage = ({ src, contentType, alt, classNames }: GalleryImageProps) => {
   const isVideo = contentType?.startsWith('video/') ?? false;
   return (
-    <Next.Card.Root classNames={mx('group relative', classNames)}>
+    <Card.Root classNames={mx('group relative', classNames)}>
       {/* col-span-full so the poster spans Card.Root's grid (icon|title|menu); fixed ratio reserves height. */}
       <div className='col-span-full overflow-hidden bg-modal-surface' style={{ aspectRatio: 16 / 9 }}>
         {src && isVideo ? (
@@ -36,13 +36,13 @@ export const GalleryImage = ({ src, contentType, alt, classNames }: GalleryImage
         )}
       </div>
       {alt ? (
-        <Next.Card.Header>
-          <Next.Block>
-            <Next.Icon icon={isVideo ? 'ph--video--regular' : 'ph--image--regular'} size='lg' />
-          </Next.Block>
-          <Next.Card.Title tone='description'>{alt}</Next.Card.Title>
-        </Next.Card.Header>
+        <Card.Header>
+          <Block>
+            <Icon icon={isVideo ? 'ph--video--regular' : 'ph--image--regular'} size='lg' />
+          </Block>
+          <Card.Title tone='description'>{alt}</Card.Title>
+        </Card.Header>
       ) : null}
-    </Next.Card.Root>
+    </Card.Root>
   );
 };

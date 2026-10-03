@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Grid, Next } from '@dxos/react-ui';
+import { Grid, Tooltip } from '@dxos/react-ui';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type DatabaseInfo } from '../../../hooks/index.ts';
@@ -49,9 +49,9 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
       {rows.map((row) => (
         <StatCard.Row key={row.type}>
           <Grid cols={ROW_TRACKS} gap='sm' classNames='font-mono tabular-nums text-end'>
-            <Next.Tooltip.Trigger asChild content={row.type}>
+            <Tooltip.Trigger asChild content={row.type}>
               <span className='truncate text-start'>{row.type}</span>
-            </Next.Tooltip.Trigger>
+            </Tooltip.Trigger>
             <span className='text-description'>{row.size !== undefined ? Unit.KB(row.size) : '–'}</span>
             <span>{row.received.toLocaleString()}</span>
             <span>{row.sent.toLocaleString()}</span>

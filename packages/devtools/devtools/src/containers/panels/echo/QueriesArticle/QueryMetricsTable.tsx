@@ -5,7 +5,7 @@
 import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type QueryMetrics } from '@dxos/echo-client';
-import { Grid, Next } from '@dxos/react-ui';
+import { Button, Grid, Icon, ScrollArea, Toggle, Toolbar, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -123,16 +123,16 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
 
   return (
     <div className='flex flex-col h-full min-h-0'>
-      <Next.Toolbar.Root>
+      <Toolbar.Root>
         <Searchbar placeholder='Filter queries' value={filter} onChange={setFilter} />
-        <Next.Toggle pressed={liveOnly} onPressedChange={setLiveOnly}>
+        <Toggle pressed={liveOnly} onPressedChange={setLiveOnly}>
           Live only
-        </Next.Toggle>
-        <Next.Toolbar.Text classNames='shrink-0 font-mono text-xs text-description'>
+        </Toggle>
+        <Toolbar.Text classNames='shrink-0 font-mono text-xs text-description'>
           {live} live · {queries.length} queries
-        </Next.Toolbar.Text>
+        </Toolbar.Text>
         {onReset && (
-          <Next.Button
+          <Button
             variant='ghost'
             icon='ph--arrow-counter-clockwise--regular'
             iconOnly
@@ -140,7 +140,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
             onClick={onReset}
           />
         )}
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
       <Grid
         cols={TRACKS}
         gap='sm'
@@ -148,7 +148,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
         classNames='px-2 py-1 border-b border-subdued-separator text-xs text-description'
       >
         {COLUMNS.map((column, index) => (
-          <Next.Tooltip.Trigger key={column.id} asChild content={column.title}>
+          <Tooltip.Trigger key={column.id} asChild content={column.title}>
             <button
               type='button'
               className={mx('flex items-center gap-1 whitespace-nowrap', index > 0 && 'justify-end')}
@@ -156,14 +156,14 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
             >
               {column.label}
               {sort.column === column.id && (
-                <Next.Icon size='xs' icon={sort.descending ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} />
+                <Icon size='xs' icon={sort.descending ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} />
               )}
             </button>
-          </Next.Tooltip.Trigger>
+          </Tooltip.Trigger>
         ))}
       </Grid>
-      <Next.ScrollArea.Root orientation='vertical' classNames='dx-grow'>
-        <Next.ScrollArea.Viewport>
+      <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
+        <ScrollArea.Viewport>
           {rows.length === 0 && <p className='p-2 text-xs text-description'>No queries.</p>}
           {rows.map((query) => {
             const open = expanded === query.query;
@@ -185,9 +185,9 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
                     aria-expanded={open}
                     onClick={() => setExpanded(open ? undefined : query.query)}
                   >
-                    <Next.Tooltip.Trigger asChild content={query.query}>
+                    <Tooltip.Trigger asChild content={query.query}>
                       <span className='truncate text-start'>{shortQueryText(query.query)}</span>
-                    </Next.Tooltip.Trigger>
+                    </Tooltip.Trigger>
                     {COLUMNS.slice(1).map((column) => (
                       <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
                     ))}
@@ -201,8 +201,8 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
               </Fragment>
             );
           })}
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </div>
   );
 };

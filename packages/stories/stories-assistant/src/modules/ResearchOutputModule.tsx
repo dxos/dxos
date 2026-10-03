@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
 import { ResearchInputQueue } from '../testing/schema.ts';
 
@@ -30,23 +30,23 @@ const ResearchOutputModuleContainer = ({ space }: { space: Space }) => {
   );
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>Research Output</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root orientation='vertical'>
-          <Next.ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Toolbar.Text>Research Output</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
             {objects.map((object) => (
-              <Next.Card.Root key={object.id}>
+              <Card.Root key={object.id}>
                 <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
-              </Next.Card.Root>
+              </Card.Root>
             ))}
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

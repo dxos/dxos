@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Field, Input, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 /** `Select` values must be non-empty strings, so "no type filter" needs a sentinel. */
@@ -56,10 +56,10 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
   }, [objects, text, type]);
 
   return (
-    <Next.Panel.Root classNames='relative'>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root classNames='grid grid-cols-2'>
-          <Next.Select.Root
+    <Panel.Root classNames='relative'>
+      <Panel.Header>
+        <Toolbar.Root classNames='grid grid-cols-2'>
+          <Select.Root
             items={[
               { value: ALL_TYPES, label: 'All types' },
               ...typenames.map((typename) => ({ value: typename, label: typename })),
@@ -67,25 +67,25 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
             value={[type]}
             onValueChange={({ value: [value] }) => setType(value)}
           >
-            <Next.Select.Trigger placeholder='Type' />
-            <Next.Select.Content>
-              <Next.Select.Item item={{ value: ALL_TYPES, label: 'All types' }} />
+            <Select.Trigger placeholder='Type' />
+            <Select.Content>
+              <Select.Item item={{ value: ALL_TYPES, label: 'All types' }} />
               {typenames.map((typename) => (
-                <Next.Select.Item key={typename} item={{ value: typename, label: typename }} />
+                <Select.Item key={typename} item={{ value: typename, label: typename }} />
               ))}
-            </Next.Select.Content>
-          </Next.Select.Root>
-          <Next.Field.Root>
-            <Next.Input
+            </Select.Content>
+          </Select.Root>
+          <Field.Root>
+            <Input
               classNames='grow'
               placeholder='Filter objects…'
               value={text}
               onChange={(event) => setText(event.target.value)}
             />
-          </Next.Field.Root>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+          </Field.Root>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         <Listbox.Root items={filtered.map((object) => ({ value: object.id, label: object.id }))}>
           <Listbox.Content aria-label='Objects'>
             {filtered.map((object) => (
@@ -98,10 +98,10 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
             ))}
           </Listbox.Content>
         </Listbox.Root>
-      </Next.Panel.Body>
-      <Next.Panel.Footer>
+      </Panel.Body>
+      <Panel.Footer>
         <div className='p-1 text-description text-sm'>{filtered.length}</div>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };

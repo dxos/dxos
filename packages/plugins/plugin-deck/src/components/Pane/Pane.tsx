@@ -6,7 +6,7 @@ import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
-import { Next, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
+import { Button, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { iconSize, mx } from '@dxos/ui-theme';
 import type { Merge } from '@dxos/util';
@@ -148,7 +148,7 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
         ref={forwardedRef}
       >
         {tabs.map(({ id, icon, label, testId }) => (
-          <Next.Button
+          <Button
             key={id}
             role='tab'
             aria-selected={value === id}

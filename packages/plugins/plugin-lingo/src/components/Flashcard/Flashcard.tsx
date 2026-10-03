@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -39,22 +39,22 @@ export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: Fl
           {word.examples?.[0] && <span className='text-sm text-description italic'>{word.examples[0]}</span>}
         </div>
       ) : (
-        <Next.Button onClick={onReveal} data-testid='lingo.flashcard.reveal'>
-          <Next.Icon icon='ph--eye--regular' size='md' />
+        <Button onClick={onReveal} data-testid='lingo.flashcard.reveal'>
+          <Icon icon='ph--eye--regular' size='md' />
           <span className='pl-2'>{t('reveal.button')}</span>
-        </Next.Button>
+        </Button>
       )}
 
       {revealed && (
         <div className='flex gap-2'>
-          <Next.Button onClick={() => onAnswer(false)} data-testid='lingo.flashcard.incorrect'>
-            <Next.Icon icon='ph--x--regular' size='md' />
+          <Button onClick={() => onAnswer(false)} data-testid='lingo.flashcard.incorrect'>
+            <Icon icon='ph--x--regular' size='md' />
             <span className='pl-2'>{t('incorrect.button')}</span>
-          </Next.Button>
-          <Next.Button variant='primary' onClick={() => onAnswer(true)} data-testid='lingo.flashcard.correct'>
-            <Next.Icon icon='ph--check--regular' size='md' />
+          </Button>
+          <Button variant='primary' onClick={() => onAnswer(true)} data-testid='lingo.flashcard.correct'>
+            <Icon icon='ph--check--regular' size='md' />
             <span className='pl-2'>{t('correct.button')}</span>
-          </Next.Button>
+          </Button>
         </div>
       )}
     </div>

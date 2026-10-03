@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type Axis, Next } from '@dxos/react-ui';
+import { type Axis, ScrollArea } from '@dxos/react-ui';
 import { Dnd, type Size } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -77,8 +77,8 @@ const DefaultStory = ({ orientation = 'vertical' }: { orientation?: Axis }) => {
         autoScroll={viewport}
         eventHandler={{ id: 'resize-demo', canDrop: () => false }}
       >
-        <Next.ScrollArea.Root orientation={orientation}>
-          <Next.ScrollArea.Viewport ref={setViewport}>
+        <ScrollArea.Root orientation={orientation}>
+          <ScrollArea.Viewport ref={setViewport}>
             <Mosaic.Stack
               orientation={orientation}
               getId={(item) => item.id}
@@ -86,8 +86,8 @@ const DefaultStory = ({ orientation = 'vertical' }: { orientation?: Axis }) => {
               draggable={false}
               Tile={Tile}
             />
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Mosaic.Container>
     </Dnd.Root>
   );

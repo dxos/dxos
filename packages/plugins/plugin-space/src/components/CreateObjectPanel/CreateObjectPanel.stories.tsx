@@ -11,7 +11,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Database, DXN, Obj, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -33,9 +33,9 @@ const DefaultStory = () => {
   const [typename, setTypename] = useState<string | undefined>(undefined);
 
   return (
-    <Next.Dialog.Root open>
-      <Next.Dialog.Content>
-        <Next.Dialog.Body>
+    <Dialog.Root open>
+      <Dialog.Content>
+        <Dialog.Body>
           <CreateObjectPanel
             options={mockOptions}
             spaces={mockSpaces}
@@ -45,9 +45,9 @@ const DefaultStory = () => {
             onTypenameChange={setTypename}
             onCreateObject={async () => {}}
           />
-        </Next.Dialog.Body>
-      </Next.Dialog.Content>
-    </Next.Dialog.Root>
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog.Root>
   );
 };
 

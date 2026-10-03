@@ -7,7 +7,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Block, Card, DateInput, Field, Icon, Input, Select, Switch, useTranslation } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
@@ -184,9 +184,9 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
   return (
     <>
-      <Next.Card.Row>
-        <Next.Field.Root>
-          <Next.Input
+      <Card.Row>
+        <Field.Root>
+          <Input
             placeholder={t('event-untitled.label')}
             value={data.title ?? ''}
             onChange={(ev) =>
@@ -195,48 +195,48 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
               })
             }
           />
-        </Next.Field.Root>
-      </Next.Card.Row>
+        </Field.Root>
+      </Card.Row>
 
-      <Next.Field.Root>
-        <Next.Card.Row>
-          <Next.Block>
-            <Next.Block>
-              <Next.Icon icon='ph--calendar--regular' />
-            </Next.Block>
-          </Next.Block>
+      <Field.Root>
+        <Card.Row>
+          <Block>
+            <Block>
+              <Icon icon='ph--calendar--regular' />
+            </Block>
+          </Block>
           <div className={fieldClasses}>
             <div className='grow'>
               {allDay ? (
-                <Next.DateInput type='date' value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
+                <DateInput type='date' value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
               ) : (
-                <Next.DateInput
+                <DateInput
                   type='datetime-local'
                   value={toDateTimeInput(data.startDate)}
                   onValueChange={handleStartDateTimeChange}
                 />
               )}
             </div>
-            <Next.Switch
+            <Switch
               checked={allDay}
               onCheckedChange={({ checked }) => handleAllDayChange(checked)}
               label={t('event-all-day.label')}
             />
           </div>
-        </Next.Card.Row>
-      </Next.Field.Root>
+        </Card.Row>
+      </Field.Root>
 
       {!allDay && (
-        <Next.Field.Root>
-          <Next.Card.Row>
-            <Next.Block>
-              <Next.Block>
-                <Next.Icon icon='ph--calendar--regular' />
-              </Next.Block>
-            </Next.Block>
+        <Field.Root>
+          <Card.Row>
+            <Block>
+              <Block>
+                <Icon icon='ph--calendar--regular' />
+              </Block>
+            </Block>
             <div className={fieldClasses}>
               <div className='grow'>
-                <Next.DateInput
+                <DateInput
                   type='datetime-local'
                   value={toDateTimeInput(data.endDate)}
                   onValueChange={handleEndDateTimeChange}
@@ -246,8 +246,8 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
                 <SelectDuration value={presetValue} onValueChange={handleDurationChange} />
               </div>
             </div>
-          </Next.Card.Row>
-        </Next.Field.Root>
+          </Card.Row>
+        </Field.Root>
       )}
 
       {data.attendees.map((attendee, index) => (
@@ -262,10 +262,10 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       ))}
 
       {/* Always-blank row for adding the next attendee. */}
-      <Next.Card.Row classNames='items-center'>
-        <Next.Block>
-          <Next.Icon icon='ph--user-plus--regular' />
-        </Next.Block>
+      <Card.Row classNames='items-center'>
+        <Block>
+          <Icon icon='ph--user-plus--regular' />
+        </Block>
         <RefEditor
           db={db}
           type={Person.Person}
@@ -278,7 +278,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
           onChange={handleAttendeesChange}
           ref={actorListRef}
         />
-      </Next.Card.Row>
+      </Card.Row>
     </>
   );
 };
@@ -292,18 +292,18 @@ type SelectDurationProps = {
 const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Next.Select.Root
+    <Select.Root
       value={[value ?? '']}
       onValueChange={({ value: [value] }) => onValueChange(value)}
       items={DURATION_PRESETS.map((preset) => ({ value: preset.value, label: preset.label }))}
     >
-      <Next.Select.Trigger placeholder={t('event-duration.placeholder')} />
-      <Next.Select.Content>
+      <Select.Trigger placeholder={t('event-duration.placeholder')} />
+      <Select.Content>
         {DURATION_PRESETS.map((preset) => (
-          <Next.Select.Item key={preset.value} item={{ value: preset.value, label: preset.label }} />
+          <Select.Item key={preset.value} item={{ value: preset.value, label: preset.label }} />
         ))}
-      </Next.Select.Content>
-    </Next.Select.Root>
+      </Select.Content>
+    </Select.Root>
   );
 };
 

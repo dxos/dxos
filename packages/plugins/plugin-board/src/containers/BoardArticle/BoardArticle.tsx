@@ -13,7 +13,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board as BoardComponent,
@@ -162,18 +162,18 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
       onAdd={handleAdd}
       onDelete={handleDelete}
     >
-      <Next.Panel.Root role={role}>
+      <Panel.Root role={role}>
         {/* TODO(burdon): Migrate to Menu.Root + useMenuActions (threading attendableId). */}
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
-            <Next.Button
+        <Panel.Header>
+          <Toolbar.Root>
+            <Button
               icon='ph--crosshair--regular'
               iconOnly
               label={t('move-to-center.button')}
               disabled={!hasAttention}
               onClick={() => controller.current?.center()}
             />
-            <Next.Button
+            <Button
               icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
               iconOnly
               label={t('toggle-zoom.button')}
@@ -184,17 +184,12 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
               options={options}
               onSelect={handleSelect}
               trigger={
-                <Next.Button
-                  icon='ph--plus--regular'
-                  iconOnly
-                  label={t('add-object.button')}
-                  disabled={!hasAttention}
-                />
+                <Button icon='ph--plus--regular' iconOnly label={t('add-object.button')} disabled={!hasAttention} />
               }
             />
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
           <BoardComponent.Container classNames='dx-fullscreen'>
             <BoardComponent.Viewport>
               <BoardComponent.Backdrop />
@@ -216,8 +211,8 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
             {/* Overview map (outlines the visible region), pinned to the corner over the board. */}
             <BoardComponent.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
           </BoardComponent.Container>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </BoardComponent.Root>
   );
 };

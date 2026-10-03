@@ -7,7 +7,23 @@ import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useLayout } from '@dxos/app-toolkit/ui';
-import { Grid, Next, ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Carousel,
+  Field,
+  Grid,
+  Icon,
+  Link,
+  ScrollArea,
+  Select,
+  Switch,
+  Tag,
+  ThemedClassName,
+  composable,
+  composableProps,
+  useThemeMode,
+  useTranslation,
+} from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -123,7 +139,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.profile.key);
-    const themeMode = Next.useThemeMode();
+    const themeMode = useThemeMode();
     const layout = useLayout();
     // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
     // 4rem floor on both left it with less width for the center content than the gutters themselves.
@@ -147,8 +163,8 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       .filter((url): url is string => typeof url === 'string' && url.length > 0);
 
     return (
-      <Next.ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
-        <Next.ScrollArea.Viewport>
+      <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+        <ScrollArea.Viewport>
           {/*
            * 3-column grid: [icon/prev | content/viewport | next].
            * Most sections occupy `col-start-2 col-span-2` so they stretch from
@@ -164,7 +180,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             align='start'
             classNames='dx-document gap-x-4 p-4'
           >
-            <Next.Icon
+            <Icon
               classNames={mx('row-start-1 p-1 rounded-md', isMobile ? 'size-8' : 'size-14', styles.bg, styles.fg)}
               icon={iconKey}
             />
@@ -179,17 +195,17 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 {failure && <PluginFailureBadge failure={failure} size='lg' />}
               </div>
               {onInstall ? (
-                <Next.Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
+                <Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
                   {installing ? t('installing.label') : t('install.label')}
-                </Next.Button>
+                </Button>
               ) : (
-                <Next.Field.Root>
-                  <Next.Switch
+                <Field.Root>
+                  <Switch
                     classNames='self-center'
                     checked={enabled}
                     onCheckedChange={({ checked }) => onEnabledChange?.(checked)}
                   />
-                </Next.Field.Root>
+                </Field.Root>
               )}
               <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
                 {slug}
@@ -217,14 +233,14 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('preview.label')} />
                 <Section.Body>
-                  <Next.Carousel.Root count={resolvedScreenshots.length}>
-                    <Next.Carousel.ItemGroup>
+                  <Carousel.Root count={resolvedScreenshots.length}>
+                    <Carousel.ItemGroup>
                       {resolvedScreenshots.map((src, index) => (
-                        <Next.Carousel.Item key={src} index={index} src={src} alt={name} />
+                        <Carousel.Item key={src} index={index} src={src} alt={name} />
                       ))}
-                    </Next.Carousel.ItemGroup>
-                    <Next.Carousel.IndicatorGroup />
-                  </Next.Carousel.Root>
+                    </Carousel.ItemGroup>
+                    <Carousel.IndicatorGroup />
+                  </Carousel.Root>
                 </Section.Body>
               </Section.Root>
             )}
@@ -234,17 +250,17 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Body>
                 <div className='flex gap-3 items-center'>
                   {homePage && (
-                    <Next.Link href={homePage} classNames='text-sm text-description'>
+                    <Link href={homePage} classNames='text-sm text-description'>
                       {t('home-page.label')}
-                      <Next.Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
-                    </Next.Link>
+                      <Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
+                    </Link>
                   )}
 
                   {source && (
-                    <Next.Link href={source} classNames='text-sm text-description'>
+                    <Link href={source} classNames='text-sm text-description'>
                       {t('source.label')}
-                      <Next.Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
-                    </Next.Link>
+                      <Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
+                    </Link>
                   )}
 
                   {onOpenSpec && <Chip id={slug} name={t('open-spec.label')} onClick={onOpenSpec} />}
@@ -293,27 +309,27 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Heading title={t('versions.label')} />
                 <Section.Body>
                   <div className='flex gap-2 items-center'>
-                    <Next.Select.Root
+                    <Select.Root
                       items={versionItems}
                       value={selectedVersionTag ? [selectedVersionTag] : []}
                       onValueChange={({ value: [value] }) => value && onVersionChange?.(value)}
                     >
-                      <Next.Select.Trigger classNames='min-w-32' />
-                      <Next.Select.Content>
+                      <Select.Trigger classNames='min-w-32' />
+                      <Select.Content>
                         {versionItems.map((item) => (
-                          <Next.Select.Item key={item.value} item={item} />
+                          <Select.Item key={item.value} item={item} />
                         ))}
-                      </Next.Select.Content>
-                    </Next.Select.Root>
+                      </Select.Content>
+                    </Select.Root>
                     {onInstallVersion && (
-                      <Next.Button
+                      <Button
                         size='md'
                         variant='primary'
                         disabled={installing || selectedVersionTag === installedVersionTag}
                         onClick={onInstallVersion}
                       >
                         {installing ? t('installing.label') : t('install-version.label')}
-                      </Next.Button>
+                      </Button>
                     )}
                   </div>
                 </Section.Body>
@@ -323,20 +339,20 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             {(onUninstall || (hasUpdate && onUpdate) || updating) && (
               <div className='col-start-2 col-span-2 flex gap-2'>
                 {updating ? (
-                  <Next.Button variant='primary' disabled>
+                  <Button variant='primary' disabled>
                     {t('updating.label')}
-                  </Next.Button>
+                  </Button>
                 ) : hasUpdate && onUpdate ? (
-                  <Next.Button variant='primary' onClick={onUpdate}>
+                  <Button variant='primary' onClick={onUpdate}>
                     {t('update.label')}
-                  </Next.Button>
+                  </Button>
                 ) : null}
-                {onUninstall && <Next.Button onClick={onUninstall}>{t('uninstall.label')}</Next.Button>}
+                {onUninstall && <Button onClick={onUninstall}>{t('uninstall.label')}</Button>}
               </div>
             )}
           </Grid>
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   },
 );
@@ -360,7 +376,7 @@ const Section = {
 };
 
 const Chip = ({ id, name, onClick }: { id: string; name: string; onClick?: (pluginId: string) => void }) => (
-  <Next.Tag title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
+  <Tag title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
     {name}
-  </Next.Tag>
+  </Tag>
 );

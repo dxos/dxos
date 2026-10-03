@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
 import { CardMasonry } from '@dxos/plugin-space/components';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Container, Typography, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -29,13 +29,13 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
   }
 
   return (
-    <Next.Container asChild gutter='inherit' gap='md'>
+    <Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.artifacts'>
-        <Next.Typography asChild tone='subdued'>
+        <Typography asChild tone='subdued'>
           <h2>{t('task-artifacts.label')}</h2>
-        </Next.Typography>
+        </Typography>
         <CardMasonry objects={artifacts} size='compact' inline />
       </section>
-    </Next.Container>
+    </Container>
   );
 };

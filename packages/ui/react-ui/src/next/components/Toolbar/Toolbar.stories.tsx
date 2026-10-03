@@ -9,12 +9,25 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import {
+  Block,
+  Button,
+  Checkbox,
+  DragHandle,
+  Icon,
+  Input,
+  Panel,
+  Select,
+  type SelectOption,
+  Switch,
+  ToggleGroup,
+  Toolbar,
+} from '../index.ts';
 
-const OPTIONS: Next.SelectOption[] = [
+const OPTIONS: SelectOption[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
@@ -26,62 +39,56 @@ const OPTIONS: Next.SelectOption[] = [
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
-    <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Next.Block>
-        <Next.Icon icon='ph--circle--regular' />
-      </Next.Block>
-      <Next.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
-      <Next.Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
-      <Next.Toolbar.Separator data-testid={`separator-${size}`} />
-      <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
-      <Next.Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
-      <Next.Select.Root items={OPTIONS}>
-        <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
-        <Next.Select.Content>
+    <Toolbar.Root data-testid={`toolbar-${size}`}>
+      <Block>
+        <Icon icon='ph--circle--regular' />
+      </Block>
+      <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+      <Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
+      <Toolbar.Separator data-testid={`separator-${size}`} />
+      <Button data-testid={`button-${size}`}>Save</Button>
+      <Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
+      <Select.Root items={OPTIONS}>
+        <Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
+        <Select.Content>
           {OPTIONS.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-      <Next.Toolbar.ToggleGroup type='single' defaultValue='list' aria-label='View'>
-        <Next.ToggleGroup.Item
-          value='list'
-          icon='ph--list--regular'
-          label='List'
-          iconOnly
-          data-testid={`list-${size}`}
-        />
-        <Next.ToggleGroup.Item
+        </Select.Content>
+      </Select.Root>
+      <Toolbar.ToggleGroup type='single' defaultValue='list' aria-label='View'>
+        <ToggleGroup.Item value='list' icon='ph--list--regular' label='List' iconOnly data-testid={`list-${size}`} />
+        <ToggleGroup.Item
           value='grid'
           icon='ph--squares-four--regular'
           label='Grid'
           iconOnly
           data-testid={`grid-${size}`}
         />
-      </Next.Toolbar.ToggleGroup>
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root loop={false} data-testid={`document-${size}`}>
-      <Next.DragHandle label='Drag' data-testid={`drag-${size}`} />
-      <Next.Toolbar.Text data-testid={`text-${size}`}>
+      </Toolbar.ToggleGroup>
+    </Toolbar.Root>
+    <Toolbar.Root loop={false} data-testid={`document-${size}`}>
+      <DragHandle label='Drag' data-testid={`drag-${size}`} />
+      <Toolbar.Text data-testid={`text-${size}`}>
         A document title long enough to be truncated by the toolbar at every size
-      </Next.Toolbar.Text>
-      <Next.Toolbar.Link href='https://dxos.org' data-testid={`link-${size}`}>
+      </Toolbar.Text>
+      <Toolbar.Link href='https://dxos.org' data-testid={`link-${size}`}>
         Docs
-      </Next.Toolbar.Link>
-      <Next.Button data-testid={`share-${size}`}>Share</Next.Button>
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root disabled data-testid={`disabled-${size}`}>
-      <Next.Button icon='ph--plus--regular' label='Add disabled' iconOnly />
-      <Next.Button>Save</Next.Button>
-      <Next.Input aria-label='Disabled search' />
-      <Next.Toolbar.Link href='https://dxos.org'>Docs</Next.Toolbar.Link>
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root data-testid={`settings-${size}`}>
-      <Next.Button data-testid={`bold-${size}`}>Bold</Next.Button>
-      <Next.Switch label='Wrap' data-testid={`wrap-${size}`} />
-      <Next.Toolbar.Separator variant='gap' data-testid={`gap-${size}`} />
-      <Next.Button data-testid={`done-${size}`}>Done</Next.Button>
-    </Next.Toolbar.Root>
+      </Toolbar.Link>
+      <Button data-testid={`share-${size}`}>Share</Button>
+    </Toolbar.Root>
+    <Toolbar.Root disabled data-testid={`disabled-${size}`}>
+      <Button icon='ph--plus--regular' label='Add disabled' iconOnly />
+      <Button>Save</Button>
+      <Input aria-label='Disabled search' />
+      <Toolbar.Link href='https://dxos.org'>Docs</Toolbar.Link>
+    </Toolbar.Root>
+    <Toolbar.Root data-testid={`settings-${size}`}>
+      <Button data-testid={`bold-${size}`}>Bold</Button>
+      <Switch label='Wrap' data-testid={`wrap-${size}`} />
+      <Toolbar.Separator variant='gap' data-testid={`gap-${size}`} />
+      <Button data-testid={`done-${size}`}>Done</Button>
+    </Toolbar.Root>
   </>
 );
 
@@ -105,30 +112,30 @@ export const InputAndButton: Story = {
   args: { allSizes: true },
   parameters: { sizes: { gutter: 'none' } },
   render: ({ size = 'md' }) => (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root data-testid={`input-toolbar-${size}`}>
-          <Next.Checkbox />
-          <Next.Select.Root items={OPTIONS}>
-            <Next.Select.Trigger placeholder='Color' aria-label='Color' />
-            <Next.Select.Content>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root data-testid={`input-toolbar-${size}`}>
+          <Checkbox />
+          <Select.Root items={OPTIONS}>
+            <Select.Trigger placeholder='Color' aria-label='Color' />
+            <Select.Content>
               {OPTIONS.map((item) => (
-                <Next.Select.Item key={item.value} item={item} />
+                <Select.Item key={item.value} item={item} />
               ))}
-            </Next.Select.Content>
-          </Next.Select.Root>
-          <Next.Input
+            </Select.Content>
+          </Select.Root>
+          <Input
             placeholder={`Search (${size})`}
             aria-label='Search'
-            end={<Next.Icon icon='ph--magnifying-glass--regular' />}
+            end={<Icon icon='ph--magnifying-glass--regular' />}
           />
-          <Next.Button>Go</Next.Button>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+          <Button>Go</Button>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         <br />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   ),
 };
 
@@ -289,10 +296,10 @@ export const Test: Story = {
 /** A toolbar that is also a landmark (an app bar) keeps the `role` it is given; arrows still move between its items. */
 export const Banner: Story = {
   render: () => (
-    <Next.Toolbar.Root role='banner'>
-      <Next.Button label='Back' />
-      <Next.Button label='Menu' />
-    </Next.Toolbar.Root>
+    <Toolbar.Root role='banner'>
+      <Button label='Back' />
+      <Button label='Menu' />
+    </Toolbar.Root>
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -308,9 +315,9 @@ export const Banner: Story = {
 const InactiveStory = () => {
   const [count, setCount] = useState(0);
   return (
-    <Next.Toolbar.Root inactive>
-      <Next.Button label={`Pressed ${count}`} onClick={() => setCount((count) => count + 1)} />
-    </Next.Toolbar.Root>
+    <Toolbar.Root inactive>
+      <Button label={`Pressed ${count}`} onClick={() => setCount((count) => count + 1)} />
+    </Toolbar.Root>
   );
 };
 

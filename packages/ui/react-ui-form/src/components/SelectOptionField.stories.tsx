@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Format } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { Container, Panel, ScrollArea, Typography } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { type FormFieldMap } from '#types';
@@ -41,11 +41,11 @@ const DefaultStory = (_: PaneArgs) => {
     ],
   });
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container>
+    <Panel.Root>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container>
               <Form.Root
                 schema={OptionsSchema}
                 values={values}
@@ -56,16 +56,16 @@ const DefaultStory = (_: PaneArgs) => {
                   <Form.Fields />
                 </Form.Content>
               </Form.Root>
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-      <Next.Panel.Footer>
-        <Next.Typography truncate data-testid='values'>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+      <Panel.Footer>
+        <Typography truncate data-testid='values'>
           {JSON.stringify(values)}
-        </Next.Typography>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+        </Typography>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

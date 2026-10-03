@@ -8,7 +8,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
-import { Next } from '@dxos/react-ui';
+import { Tabs } from '@dxos/react-ui';
 import type { MenuItem } from '@dxos/react-ui-menu';
 import { Position } from '@dxos/util';
 
@@ -37,7 +37,7 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
     //  it uses RovingFocus and doesn't support moving focus to an item that is not a tab. Assess whether this situation
     //  should change including whether it should motivate a change in the design/taxonomy, or if this means this should
     //  not use `Tabs` at all.
-    <Next.Tabs.Root value={tab} orientation='vertical' classNames='relative' ref={forwardedRef}>
+    <Tabs.Root value={tab} orientation='vertical' classNames='relative' ref={forwardedRef}>
       <L0Menu
         menuActions={topLevelActions as MenuItem[]}
         topLevelItems={l0Items}
@@ -48,7 +48,7 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
         onItemHover={onItemHover}
       />
       <L1Tabs topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
-    </Next.Tabs.Root>
+    </Tabs.Root>
   );
 });
 

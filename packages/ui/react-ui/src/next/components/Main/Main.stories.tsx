@@ -11,28 +11,32 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
+import {
+  Button,
+  Main,
+  MAIN_DRAWER_DEFAULT_HEIGHT,
+  type MainDrawerState,
+  type MainRootProps,
+  Toolbar,
+  Typography,
+  useMainSidebars,
+} from '../index.ts';
 
-type StoryArgs = Pick<Next.MainRootProps, 'defaultNavigationSidebarState' | 'defaultComplementarySidebarState'> & {
-  defaultDrawerState?: Next.MainDrawerState;
+type StoryArgs = Pick<MainRootProps, 'defaultNavigationSidebarState' | 'defaultComplementarySidebarState'> & {
+  defaultDrawerState?: MainDrawerState;
 };
 
 const NavigationToggle = () => {
-  const { toggleNavigationSidebar } = Next.useMainSidebars('Story.NavigationToggle');
+  const { toggleNavigationSidebar } = useMainSidebars('Story.NavigationToggle');
   return (
-    <Next.Button
-      icon='ph--sidebar-simple--regular'
-      iconOnly
-      label='Toggle navigation'
-      onClick={toggleNavigationSidebar}
-    />
+    <Button icon='ph--sidebar-simple--regular' iconOnly label='Toggle navigation' onClick={toggleNavigationSidebar} />
   );
 };
 
 const ComplementaryToggle = () => {
-  const { toggleComplementarySidebar } = Next.useMainSidebars('Story.ComplementaryToggle');
+  const { toggleComplementarySidebar } = useMainSidebars('Story.ComplementaryToggle');
   return (
-    <Next.Button
+    <Button
       icon='ph--sidebar-simple--regular'
       iconOnly
       label='Toggle complementary'
@@ -45,7 +49,7 @@ const ComplementaryToggle = () => {
 const AreaItems = ({ label }: { label: string }) => (
   <>
     {['One', 'Two', 'Three'].map((item) => (
-      <Next.Button key={item} variant='ghost' align='start'>{`${label} ${item}`}</Next.Button>
+      <Button key={item} variant='ghost' align='start'>{`${label} ${item}`}</Button>
     ))}
   </>
 );
@@ -55,41 +59,41 @@ const DefaultStory = ({
   defaultComplementarySidebarState = 'closed',
   defaultDrawerState = 'closed',
 }: StoryArgs) => {
-  const [drawerState, setDrawerState] = useState<Next.MainDrawerState>(defaultDrawerState);
+  const [drawerState, setDrawerState] = useState<MainDrawerState>(defaultDrawerState);
   return (
-    <Next.Main.Root
+    <Main.Root
       defaultNavigationSidebarState={defaultNavigationSidebarState}
       defaultComplementarySidebarState={defaultComplementarySidebarState}
       drawerState={drawerState}
       onDrawerStateChange={setDrawerState}
     >
-      <Next.Main.Overlay />
-      <Next.Main.NavigationSidebar label='Navigation'>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>Navigation</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
+      <Main.Overlay />
+      <Main.NavigationSidebar label='Navigation'>
+        <Toolbar.Root>
+          <Toolbar.Text>Navigation</Toolbar.Text>
+        </Toolbar.Root>
         <AreaItems label='Navigation' />
-      </Next.Main.NavigationSidebar>
-      <Next.Main.Content handlesFocus data-testid='content'>
-        <Next.Toolbar.Root>
+      </Main.NavigationSidebar>
+      <Main.Content handlesFocus data-testid='content'>
+        <Toolbar.Root>
           <NavigationToggle />
-          <Next.Toolbar.Text>Main</Next.Toolbar.Text>
-          <Next.Button onClick={() => setDrawerState(drawerState === 'open' ? 'closed' : 'open')}>Drawer</Next.Button>
+          <Toolbar.Text>Main</Toolbar.Text>
+          <Button onClick={() => setDrawerState(drawerState === 'open' ? 'closed' : 'open')}>Drawer</Button>
           <ComplementaryToggle />
-        </Next.Toolbar.Root>
+        </Toolbar.Root>
         <AreaItems label='Main' />
         <div className='h-[150dvh] p-4'>Tall content</div>
-      </Next.Main.Content>
-      <Next.Main.Drawer label='Drawer'>
-        <Next.Typography>Drawer content</Next.Typography>
-      </Next.Main.Drawer>
-      <Next.Main.ComplementarySidebar label='Complementary'>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>Complementary</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
+      </Main.Content>
+      <Main.Drawer label='Drawer'>
+        <Typography>Drawer content</Typography>
+      </Main.Drawer>
+      <Main.ComplementarySidebar label='Complementary'>
+        <Toolbar.Root>
+          <Toolbar.Text>Complementary</Toolbar.Text>
+        </Toolbar.Root>
         <AreaItems label='Complementary' />
-      </Next.Main.ComplementarySidebar>
-    </Next.Main.Root>
+      </Main.ComplementarySidebar>
+    </Main.Root>
   );
 };
 
@@ -151,7 +155,7 @@ export const Drawer: Story = {
     const region = canvas.getByRole('region', { name: 'Drawer' });
     const content = canvas.getByTestId('content');
     const height = region.getBoundingClientRect().height;
-    await expect(height).toBeCloseTo(Next.MAIN_DRAWER_DEFAULT_HEIGHT * 16, 0);
+    await expect(height).toBeCloseTo(MAIN_DRAWER_DEFAULT_HEIGHT * 16, 0);
     await expect(parseFloat(getComputedStyle(content).paddingBlockEnd)).toBeCloseTo(height, 0);
 
     // The resize handle is a separator that steps a rem per arrow key.

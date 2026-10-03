@@ -9,7 +9,7 @@ import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Flex, Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionMenu } from '@dxos/react-ui-menu';
 
@@ -51,10 +51,10 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
   const empty = sortedGames.length === 0;
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Button icon='ph--arrows-clockwise--regular' label={t('sync-games.button')} onClick={handleSync} />
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button icon='ph--arrows-clockwise--regular' label={t('sync-games.button')} onClick={handleSync} />
           {account?.username && (
             <span className='text-subdued text-sm px-2'>
               {account.username}
@@ -62,9 +62,9 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
             </span>
           )}
           <div className='grow' />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         {empty ? (
           <Flex center classNames='h-full text-subdued text-sm'>
             {t('empty-games.message')}
@@ -77,8 +77,8 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
@@ -90,31 +90,26 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
   const icon = Obj.getIcon(game)?.icon ?? 'ph--sword--regular';
 
   return (
-    <Next.Card.Root grid ref={cardRef}>
-      <Next.Card.Header>
-        <Next.Block>
-          <Next.Icon icon={icon} />
-        </Next.Block>
-        <Next.Card.Title>{Obj.getLabel(game, { fallback: 'typename' })}</Next.Card.Title>
-        <Next.Block rail='end'>
+    <Card.Root grid ref={cardRef}>
+      <Card.Header>
+        <Block>
+          <Icon icon={icon} />
+        </Block>
+        <Card.Title>{Obj.getLabel(game, { fallback: 'typename' })}</Card.Title>
+        <Block rail='end'>
           <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
-            <Next.Button
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label={t('game-actions.label')}
-            />
+            <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('game-actions.label')} />
           </ActionMenu>
-        </Next.Block>
-      </Next.Card.Header>
-      <Next.Card.Body>
+        </Block>
+      </Card.Header>
+      <Card.Body>
         <Surface.Surface
           type={AppSurface.CardContent}
           limit={1}
           data={{ subject: game } satisfies AppSurface.ObjectCardData}
         />
-      </Next.Card.Body>
-    </Next.Card.Root>
+      </Card.Body>
+    </Card.Root>
   );
 };
 

@@ -9,23 +9,23 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button, Focus, type FocusGroupProps, Group, Typography, useFocus } from '../index.ts';
 
-type StoryArgs = SizeArgs & Pick<Next.FocusGroupProps, 'orientation' | 'border'>;
+type StoryArgs = SizeArgs & Pick<FocusGroupProps, 'orientation' | 'border'>;
 
 const ITEMS = ['Inbox', 'Drafts', 'Sent', 'Archive'];
 
 /** A member that colours its group's ring, as a drop target does while dragged over. */
 const Reporter = () => {
-  const { setFocus } = Next.useFocus();
+  const { setFocus } = useFocus();
   return (
-    <Next.Group>
-      <Next.Button label='Active' onClick={() => setFocus?.('active')} />
-      <Next.Button label='Error' onClick={() => setFocus?.('error')} />
-      <Next.Button label='Clear' onClick={() => setFocus?.(undefined)} />
-    </Next.Group>
+    <Group>
+      <Button label='Active' onClick={() => setFocus?.('active')} />
+      <Button label='Error' onClick={() => setFocus?.('error')} />
+      <Button label='Clear' onClick={() => setFocus?.(undefined)} />
+    </Group>
   );
 };
 
@@ -33,14 +33,14 @@ const DefaultStory = ({ orientation, border }: StoryArgs) => {
   const [current, setCurrent] = useState<string>();
   return (
     <>
-      <Next.Focus.Group
+      <Focus.Group
         orientation={orientation}
         border={border}
         classNames={orientation === 'horizontal' ? 'flex' : 'flex flex-col'}
         data-testid='group'
       >
         {ITEMS.map((item) => (
-          <Next.Focus.Item
+          <Focus.Item
             key={item}
             current={current === item}
             onCurrentChange={() => setCurrent(item)}
@@ -48,11 +48,11 @@ const DefaultStory = ({ orientation, border }: StoryArgs) => {
             data-testid={`item-${item}`}
           >
             {item}
-          </Next.Focus.Item>
+          </Focus.Item>
         ))}
         <Reporter />
-      </Next.Focus.Group>
-      <Next.Typography data-testid='current'>Current: {current ?? 'none'}</Next.Typography>
+      </Focus.Group>
+      <Typography data-testid='current'>Current: {current ?? 'none'}</Typography>
     </>
   );
 };

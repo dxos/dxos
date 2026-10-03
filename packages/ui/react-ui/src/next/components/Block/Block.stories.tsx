@@ -9,28 +9,28 @@ import React from 'react';
 import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Block, Container, Icon, Typography } from '../index.ts';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Container gutter='rail' layout='row' data-testid={`row-${size}`}>
-      <Next.Block rail='start' data-testid={`start-${size}`}>
-        <Next.Icon icon='ph--circle--regular' />
-      </Next.Block>
-      <Next.Typography>Block</Next.Typography>
-      <Next.Block rail='end' data-testid={`end-${size}`}>
-        <Next.Icon icon='ph--dots-three--regular' />
-      </Next.Block>
-    </Next.Container>
-    <Next.Container gutter='rail' layout='row'>
-      <Next.Block rail='start' compact data-testid={`compact-${size}`}>
-        <Next.Icon icon='ph--star--regular' />
-      </Next.Block>
-      <Next.Typography>Compact</Next.Typography>
-    </Next.Container>
+    <Container gutter='rail' layout='row' data-testid={`row-${size}`}>
+      <Block rail='start' data-testid={`start-${size}`}>
+        <Icon icon='ph--circle--regular' />
+      </Block>
+      <Typography>Block</Typography>
+      <Block rail='end' data-testid={`end-${size}`}>
+        <Icon icon='ph--dots-three--regular' />
+      </Block>
+    </Container>
+    <Container gutter='rail' layout='row'>
+      <Block rail='start' compact data-testid={`compact-${size}`}>
+        <Icon icon='ph--star--regular' />
+      </Block>
+      <Typography>Compact</Typography>
+    </Container>
   </>
 );
 

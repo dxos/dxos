@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Card, useTranslation } from '@dxos/react-ui';
 import { TaskQuestion } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
 
@@ -81,16 +81,16 @@ export const QuestionCard = ({ task, questionId }: QuestionCardProps) => {
   }
 
   return (
-    <Next.Card.Body data-testid='question-card'>
-      <Next.Card.Row>
+    <Card.Body data-testid='question-card'>
+      <Card.Row>
         <TaskQuestion
           thread={thread}
           busy={busy}
           message={failed ? t('question-failed.message') : stranded ? t('question-stranded.message') : undefined}
           onAnswer={(answer) => void handleAnswer(answer)}
         />
-      </Next.Card.Row>
-    </Next.Card.Body>
+      </Card.Row>
+    </Card.Body>
   );
 };
 

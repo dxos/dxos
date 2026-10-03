@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Flex, Grid, Next, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Checkbox, Flex, Grid, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -20,32 +20,30 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
   const handleConfirmation = useCallback((checked: boolean) => setConfirmation(checked), []);
 
   return (
-    <Next.AlertDialog.Content size='md' classNames='min-h-[15rem]'>
-      <Next.AlertDialog.Body>
-        <Next.AlertDialog.Title>{t('recovery-code-dialog.title')}</Next.AlertDialog.Title>
-        <Next.AlertDialog.Description classNames='py-4'>
-          {t('recovery-code-dialog.description')}
-        </Next.AlertDialog.Description>
+    <AlertDialog.Content size='md' classNames='min-h-[15rem]'>
+      <AlertDialog.Body>
+        <AlertDialog.Title>{t('recovery-code-dialog.title')}</AlertDialog.Title>
+        <AlertDialog.Description classNames='py-4'>{t('recovery-code-dialog.description')}</AlertDialog.Description>
         <Code code={code} />
         <Flex column gap='sm' classNames='py-4'>
           <p>{t('recovery-code-dialog-warning-1.message')}</p>
           <p>{t('recovery-code-dialog-warning-2.message')}</p>
         </Flex>
         <Flex gap='sm' align='center' classNames='pb-4'>
-          <Next.Checkbox
+          <Checkbox
             data-testid='recoveryCode.confirm'
             checked={confirmation}
             onCheckedChange={({ checked }) => handleConfirmation(checked === true)}
             label={t('recovery-code-confirmation.label')}
           />
         </Flex>
-      </Next.AlertDialog.Body>
-      <Next.AlertDialog.Footer>
-        <Next.AlertDialog.Action data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
+      </AlertDialog.Body>
+      <AlertDialog.Footer>
+        <AlertDialog.Action data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
           {t('continue.label')}
-        </Next.AlertDialog.Action>
-      </Next.AlertDialog.Footer>
-    </Next.AlertDialog.Content>
+        </AlertDialog.Action>
+      </AlertDialog.Footer>
+    </AlertDialog.Content>
   );
 };
 
@@ -53,11 +51,7 @@ const Code = ({ code }: { code: string }) => {
   const words = code.split(' ');
   return (
     <div className='relative p-2 border border-separator rounded-sm group'>
-      <Next.SystemButton.Clipboard
-        iconOnly
-        value={code}
-        classNames='absolute top-2 right-2 invisible group-hover:visible'
-      />
+      <SystemButton.Clipboard iconOnly value={code} classNames='absolute top-2 right-2 invisible group-hover:visible' />
       <Grid cols={4} grow={false} data-testid='recoveryCode.code' data-code={code}>
         {words.map((word, i) => (
           <Flex key={i} gap='sm' align='center' classNames='p-2'>

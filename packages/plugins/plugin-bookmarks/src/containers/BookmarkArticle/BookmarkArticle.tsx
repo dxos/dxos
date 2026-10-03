@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Flex, Next } from '@dxos/react-ui';
+import { Block, Card, Flex, Image, Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Summary } from '#components';
@@ -80,37 +80,37 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header classNames='dx-expand'>
+    <Panel.Root role={role}>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='flex flex-col'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col'>
         <Flex justify='center'>
           <div className='dx-document py-3'>
-            <Next.Card.Root border={false}>
-              <Next.Card.Header>
-                <Next.Block>
+            <Card.Root border={false}>
+              <Card.Header>
+                <Block>
                   <img src={bookmark.favicon} alt={bookmark.title} />
-                </Next.Block>
-                <Next.Card.Title>{bookmark.title}</Next.Card.Title>
-              </Next.Card.Header>
-              <Next.Card.Body>
-                <Next.Card.Section>
-                  <Next.Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
+                </Block>
+                <Card.Title>{bookmark.title}</Card.Title>
+              </Card.Header>
+              <Card.Body>
+                <Card.Section>
+                  <Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
                     {bookmark.url}
-                  </Next.Card.Text>
-                  <Next.Card.Text>{bookmark.excerpt}</Next.Card.Text>
+                  </Card.Text>
+                  <Card.Text>{bookmark.excerpt}</Card.Text>
                   {bookmark.image && imageLoads && (
-                    <Next.Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
+                    <Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
                   )}
-                </Next.Card.Section>
-              </Next.Card.Body>
-            </Next.Card.Root>
+                </Card.Section>
+              </Card.Body>
+            </Card.Root>
           </div>
         </Flex>
         {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

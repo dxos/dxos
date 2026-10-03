@@ -25,7 +25,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Next, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
+import { Field, Input, type ThemedClassName, composableProps, slottable, useIosKeyboard } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme.ts';
@@ -190,7 +190,7 @@ type PickerInputProps = ThemedClassName<
 
 const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
   ({ value, onValueChange, onChange, onKeyDown, autoFocus, escapeBehavior = 'clear', ...props }, forwardedRef) => {
-    const hasIosKeyboard = Next.useIosKeyboard();
+    const hasIosKeyboard = useIosKeyboard();
     const { selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       usePickerInputContext('Picker.Input');
     const inputRef = useRef<HTMLInputElement>(null);
@@ -312,8 +312,8 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
     // Only force-control when `value` is provided; otherwise leave the
     // input uncontrolled so it accepts keystrokes without `onValueChange`.
     return (
-      <Next.Field.Root>
-        <Next.Input
+      <Field.Root>
+        <Input
           {...props}
           autoFocus={shouldAutoFocus}
           {...(value !== undefined && { value })}
@@ -328,7 +328,7 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
             }
           }}
         />
-      </Next.Field.Root>
+      </Field.Root>
     );
   },
 );

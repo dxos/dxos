@@ -6,7 +6,7 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { Next, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, Menu, Tag, type ThemedClassName, toAvatarHue, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { hexToFallback } from '@dxos/util';
 
@@ -61,7 +61,7 @@ export const DeviceListItem = forwardRef<
         data-testid={`device-list-item${isCurrent ? '-current' : ''}`}
         ref={forwardedRef}
       >
-        <Next.Avatar.Root
+        <Avatar.Root
           aria-labelledby={labelId}
           status={
             isCurrent && connectionState === ConnectionState.OFFLINE
@@ -70,7 +70,7 @@ export const DeviceListItem = forwardRef<
                 ? 'active'
                 : 'inactive'
           }
-          hue={Next.toAvatarHue(fallbackValue.hue)}
+          hue={toAvatarHue(fallbackValue.hue)}
           variant='square'
           classNames='place-self-center'
           {...(device.kind ? { icon: KIND_ICONS[device.kind] } : { fallback: fallbackValue.emoji })}
@@ -78,7 +78,7 @@ export const DeviceListItem = forwardRef<
         <span id={labelId} className='flex-1 text-sm truncate'>
           {displayName}
         </span>
-        {isCurrent && <Next.Tag color='primary'>{t('current-device-tag.label')}</Next.Tag>}
+        {isCurrent && <Tag color='primary'>{t('current-device-tag.label')}</Tag>}
         {/* TODO(wittjosiah): EDGE agents cannot current be turned off. */}
         {/* {device.profile?.type === DeviceType.AGENT_MANAGED && (
             <Tooltip.Root>
@@ -101,23 +101,23 @@ export const DeviceListItem = forwardRef<
             </Tooltip.Root>
           )} */}
         {isCurrent && (onClickJoinExisting || onClickRecover || onClickReset) && (
-          <Next.Menu.Root>
-            <Next.Menu.Trigger asChild>
-              <Next.Button
+          <Menu.Root>
+            <Menu.Trigger asChild>
+              <Button
                 variant='ghost'
                 icon='ph--dots-three--regular'
                 iconOnly
                 label={t('more-options.label')}
                 data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
               />
-            </Next.Menu.Trigger>
-            <Next.Menu.Content>
+            </Menu.Trigger>
+            <Menu.Content>
               {/* <Menu.Item disabled onClick={onClickEdit}> */}
               {/*  <PencilSimpleLine className={getSize(5)} /> */}
               {/*  {t('edit-device.label')} */}
               {/* </Menu.Item> */}
               {onClickJoinExisting && (
-                <Next.Menu.Item
+                <Menu.Item
                   data-testid='device-list-item-current.join-existing'
                   onClick={onClickJoinExisting}
                   item={{
@@ -128,7 +128,7 @@ export const DeviceListItem = forwardRef<
                 />
               )}
               {onClickRecover && (
-                <Next.Menu.Item
+                <Menu.Item
                   data-testid='device-list-item-current.recover'
                   onClick={onClickRecover}
                   item={{
@@ -139,7 +139,7 @@ export const DeviceListItem = forwardRef<
                 />
               )}
               {onClickReset && (
-                <Next.Menu.Item
+                <Menu.Item
                   data-testid='device-list-item-current.reset'
                   onClick={onClickReset}
                   item={{
@@ -149,8 +149,8 @@ export const DeviceListItem = forwardRef<
                   }}
                 />
               )}
-            </Next.Menu.Content>
-          </Next.Menu.Root>
+            </Menu.Content>
+          </Menu.Root>
         )}
       </Listbox.Item>
     );

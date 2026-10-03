@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import '@dxos/react-ui/theme.css';
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Banner, SystemButton, Typography, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -50,11 +50,11 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
 
   return (
     <>
-      <Next.Label>{t('range-list.heading')}</Next.Label>
+      <Typography>{t('range-list.heading')}</Typography>
       {sheet.ranges.length === 0 ? (
-        <Next.Banner.Root>
-          <Next.Banner.Title>{t('no-ranges.message')}</Next.Banner.Title>
-        </Next.Banner.Root>
+        <Banner.Root>
+          <Banner.Title>{t('no-ranges.message')}</Banner.Title>
+        </Banner.Root>
       ) : (
         <OrderedList.Root<Sheet.Range> items={sheet.ranges} getId={getRangeId} getLabel={getLabel}>
           {({ items: ranges }) => (
@@ -64,7 +64,7 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
                 return (
                   <OrderedList.Item key={id} id={id}>
                     <OrderedList.ItemText />
-                    <Next.SystemButton.Remove onClick={() => handleDelete(id)} />
+                    <SystemButton.Remove onClick={() => handleDelete(id)} />
                   </OrderedList.Item>
                 );
               })}

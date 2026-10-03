@@ -5,7 +5,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { Block, Button, Card, DragHandle, Focus } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -33,24 +33,24 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
        * fire here. See `ui-theme/src/css/components/selected.md`.
        */}
       <Mosaic.Tile {...props} asChild>
-        <Next.Focus.Item asChild>
-          <Next.Card.Root classNames='dx-current dx-hover'>
-            <Next.Card.Header>
-              <Next.DragHandle ref={dragHandleRef} />
-              <Next.Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Next.Card.Title>
-              <Next.Block rail='end'>
+        <Focus.Item asChild>
+          <Card.Root classNames='dx-current dx-hover'>
+            <Card.Header>
+              <DragHandle ref={dragHandleRef} />
+              <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
+              <Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <Next.Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
+                  <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
                 </ActionMenu>
-              </Next.Block>
-            </Next.Card.Header>
+              </Block>
+            </Card.Header>
             {open && (
-              <Next.Card.Row>
+              <Card.Row>
                 <JsonHighlighter data={props.data} classNames='text-xs' />
-              </Next.Card.Row>
+              </Card.Row>
             )}
-          </Next.Card.Root>
-        </Next.Focus.Item>
+          </Card.Root>
+        </Focus.Item>
       </Mosaic.Tile>
     </>
   );

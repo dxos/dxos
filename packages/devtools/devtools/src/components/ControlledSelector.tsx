@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Select } from '@dxos/react-ui';
 
 export type ControlledSelectorProps<T> = {
   values: T[];
@@ -21,7 +21,7 @@ export const ControlledSelector = <T extends string>({
 }: ControlledSelectorProps<T>) => {
   const items = values.map((mode) => ({ value: mode, label: mode }));
   return (
-    <Next.Select.Root
+    <Select.Root
       items={items}
       value={[value]}
       onValueChange={({ value: [next] }) => {
@@ -31,12 +31,12 @@ export const ControlledSelector = <T extends string>({
         }
       }}
     >
-      <Next.Select.Trigger placeholder={placeholder ?? 'Select space'} />
-      <Next.Select.Content>
+      <Select.Trigger placeholder={placeholder ?? 'Select space'} />
+      <Select.Content>
         {items.map((item) => (
-          <Next.Select.Item key={item.value} item={item} classNames='font-mono' />
+          <Select.Item key={item.value} item={item} classNames='font-mono' />
         ))}
-      </Next.Select.Content>
-    </Next.Select.Root>
+      </Select.Content>
+    </Select.Root>
   );
 };

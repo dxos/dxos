@@ -16,7 +16,7 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { ScrollArea } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { withLayout } from '@dxos/react-ui/testing';
 
@@ -29,8 +29,8 @@ const ObjectList = ({ space }: { space: Parameters<typeof SpaceGenerator>[0]['sp
   const objects = useQuery(space.db, Query.select(Filter.everything()));
 
   return (
-    <Next.ScrollArea.Root orientation='vertical'>
-      <Next.ScrollArea.Viewport>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
         <Listbox.Root items={objects.map((object) => ({ value: object.id, label: object.id }))}>
           <Listbox.Content>
             {objects.map((object) => (
@@ -43,8 +43,8 @@ const ObjectList = ({ space }: { space: Parameters<typeof SpaceGenerator>[0]['sp
             ))}
           </Listbox.Content>
         </Listbox.Root>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

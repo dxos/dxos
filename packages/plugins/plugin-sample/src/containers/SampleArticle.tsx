@@ -15,7 +15,7 @@ import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -62,19 +62,19 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
+    <Panel.Root role={role}>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+      </Panel.Header>
+      <Panel.Body>
         <SampleItemView
           name={snapshot.name}
           description={snapshot.description}
           status={snapshot.status}
           onValuesChanged={handleValuesChanged}
         />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

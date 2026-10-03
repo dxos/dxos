@@ -12,7 +12,7 @@ import { Space_PipelineStateSchema } from '@dxos/protocols/buf/dxos/client/servi
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
-import { Next } from '@dxos/react-ui';
+import { Button, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
 import { useDevtoolsState, useSpacesInfo } from '../../../../hooks/index.ts';
@@ -59,30 +59,28 @@ export const SpaceInfoArticle: FC<SpaceInfoArticleProps> = ({ role, ...props }) 
 
   const toolbar = useMemo(
     () => (
-      <Next.Toolbar.Root>
+      <Toolbar.Root>
         {!props.space && <DataSpaceSelector />}
-        <Next.Button icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={() => forceUpdate({})} />
+        <Button icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={() => forceUpdate({})} />
         <div className='grow' />
-        <Next.Button onClick={toggleActive}>
-          {space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}
-        </Next.Button>
-        <Next.Button onClick={toggleEdgeReplication}>
+        <Button onClick={toggleActive}>{space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}</Button>
+        <Button onClick={toggleEdgeReplication}>
           {space?.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED
             ? 'Disable backup to EDGE'
             : 'Enable backup to EDGE'}
-        </Next.Button>
-      </Next.Toolbar.Root>
+        </Button>
+      </Toolbar.Root>
     ),
     [props.space, space?.state, space?.internal.data.edgeReplication],
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>{toolbar}</Next.Panel.Header>
-      <Next.Panel.Body>
+    <Panel.Root role={role}>
+      <Panel.Header>{toolbar}</Panel.Header>
+      <Panel.Body>
         {space && metadata && (
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>
               <SpaceProperties space={space} metadata={metadata} />
               <div className='h-24'>
                 <PipelineTable
@@ -100,10 +98,10 @@ export const SpaceInfoArticle: FC<SpaceInfoArticleProps> = ({ role, ...props }) 
               <div className='border-t border-separator'>
                 <DatabaseStatsInfo space={space} />
               </div>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

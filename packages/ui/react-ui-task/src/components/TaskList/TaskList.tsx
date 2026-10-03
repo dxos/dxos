@@ -6,7 +6,17 @@ import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState }
 
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Next, composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Block,
+  Button,
+  Icon,
+  Tag,
+  Tooltip,
+  composable,
+  composableProps,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import { type Actor, PullRequest, Task } from '@dxos/types';
@@ -529,8 +539,8 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   if (actions.length === 1 && isMenuAction(only)) {
     return (
       <Tree.ItemActions>
-        <Next.Block>
-          <Next.Button
+        <Block>
+          <Button
             variant='ghost'
             iconOnly
             icon={only.properties?.icon ?? fallbackIcon}
@@ -542,18 +552,18 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
               void executeMenuAction(only);
             }}
           />
-        </Next.Block>
+        </Block>
       </Tree.ItemActions>
     );
   }
 
   return (
     <Tree.ItemActions>
-      <Next.Block>
+      <Block>
         {/* The button is the trigger, not the block: the button stops the click so the row is not
             selected too, and a trigger above it would never receive it. */}
         <ActionMenu deferUntilOpen actions={actions}>
-          <Next.Button
+          <Button
             variant='ghost'
             iconOnly
             icon='ph--dots-three-vertical--regular'
@@ -562,7 +572,7 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
             onClick={(event) => event.stopPropagation()}
           />
         </ActionMenu>
-      </Next.Block>
+      </Block>
     </Tree.ItemActions>
   );
 };
@@ -638,9 +648,9 @@ const TaskListItemTags = ({ task, tags }: { task: Task.Task; tags: readonly Ref.
   return (
     <>
       {labelled.map((tag) => (
-        <Next.Tag key={tag.id} hue={toHue(tag.hue)} data-testid='taskList.item.tag'>
+        <Tag key={tag.id} hue={toHue(tag.hue)} data-testid='taskList.item.tag'>
           {tag.label}
-        </Next.Tag>
+        </Tag>
       ))}
     </>
   );
@@ -662,7 +672,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
 
   if (PullRequest.instanceOf(artifact)) {
     return (
-      <Next.Button
+      <Button
         {...anchor}
         hue='neutral'
         size='sm'
@@ -677,9 +687,9 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   }
 
   return (
-    <Next.Tag {...anchor} hue='amber' classNames='cursor-pointer'>
+    <Tag {...anchor} hue='amber' classNames='cursor-pointer'>
       {label}
-    </Next.Tag>
+    </Tag>
   );
 };
 
@@ -720,23 +730,23 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
   }
 
   const tag = (
-    <Next.Tag
+    <Tag
       hue={agent ? 'purple' : 'indigo'}
       data-testid='taskList.item.assignee'
       // A button when there is a session to open, so the keyboard reaches it as the pointer does.
       {...(session && { ...anchor, role: 'button', tabIndex: 0 })}
       classNames={session && 'cursor-pointer'}
     >
-      {(agent || iconOnly) && <Next.Icon icon={icon} size='xs' classNames={mx('inline-block', !iconOnly && 'me-1')} />}
+      {(agent || iconOnly) && <Icon icon={icon} size='xs' classNames={mx('inline-block', !iconOnly && 'me-1')} />}
       {iconOnly ? <span className='sr-only'>{label}</span> : label}
-    </Next.Tag>
+    </Tag>
   );
 
   // A session shows its card on hover, which already names the run; a tooltip would stack on it.
   return iconOnly && !session && label ? (
-    <Next.Tooltip.Trigger asChild content={label}>
+    <Tooltip.Trigger asChild content={label}>
       {tag}
-    </Next.Tooltip.Trigger>
+    </Tooltip.Trigger>
   ) : (
     tag
   );

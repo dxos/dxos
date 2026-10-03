@@ -6,7 +6,7 @@ import React, { forwardRef, useId, useMemo, useState } from 'react';
 
 import { type Database, Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Banner, Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { ObjectForm } from '@dxos/react-ui-form';
@@ -42,19 +42,19 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
     );
 
     return (
-      <Next.Panel.Root ref={forwardedRef}>
-        <Next.Panel.Header>
-          <Next.Toolbar.Root />
-        </Next.Panel.Header>
-        <Next.Panel.Body>
+      <Panel.Root ref={forwardedRef}>
+        <Panel.Header>
+          <Toolbar.Root />
+        </Panel.Header>
+        <Panel.Body>
           {selectedObjects.length === 0 ? (
-            <Next.Banner.Root>
-              <Next.Banner.Title>{t('row-details-no-selection.label')}</Next.Banner.Title>
-            </Next.Banner.Root>
+            <Banner.Root>
+              <Banner.Title>{t('row-details-no-selection.label')}</Banner.Title>
+            </Banner.Root>
           ) : (
             <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-              <Next.ScrollArea.Root orientation='vertical'>
-                <Next.ScrollArea.Viewport ref={setViewport}>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport ref={setViewport}>
                   <Mosaic.Stack
                     classNames='py-trim-md gap-trim-md'
                     draggable={false}
@@ -63,18 +63,18 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
                         {/* A grid card, so the form's rows (which inherit their parent's tracks) take its content track. */}
-                        <Next.Card.Root grid>
+                        <Card.Root grid>
                           <ObjectForm object={props.data} type={type} />
-                        </Next.Card.Root>
+                        </Card.Root>
                       </Mosaic.Tile>
                     )}
                   />
-                </Next.ScrollArea.Viewport>
-              </Next.ScrollArea.Root>
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
             </Mosaic.Container>
           )}
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     );
   },
 );

@@ -11,7 +11,7 @@ import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -56,22 +56,22 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
   );
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Toolbar.Text>
             Context Objects ({objects.length}); Artifacts ({artifacts.length})
-          </Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
+          </Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Header>
       <Masonry.Root Tile={Tile}>
-        <Next.Panel.Body asChild>
+        <Panel.Body asChild>
           <Masonry.Content padding classNames='p-1'>
             <Masonry.Viewport items={items} getId={(item) => item.id} />
           </Masonry.Content>
-        </Next.Panel.Body>
+        </Panel.Body>
       </Masonry.Root>
-    </Next.Panel.Root>
+    </Panel.Root>
   );
 };
 
@@ -117,20 +117,20 @@ const Tile = ({ data }: { data: ContextItem }) => {
 
   // Render via a card Surface (PreviewPlugin provides the generic `card--content` fallback).
   return (
-    <Next.Card.Root>
+    <Card.Root>
       <Surface.Surface type={AppSurface.CardContent} limit={1} data={{ subject }} />
-    </Next.Card.Root>
+    </Card.Root>
   );
 };
 
 const DebugTile = ({ data }: { data: ContextItem }) => {
   return (
-    <Next.Card.Root>
-      <Next.Card.Body>
-        <Next.Card.Row classNames='max-h-50'>
+    <Card.Root>
+      <Card.Body>
+        <Card.Row classNames='max-h-50'>
           <JsonHighlighter data={data} classNames='text-xs' />
-        </Next.Card.Row>
-      </Next.Card.Body>
-    </Next.Card.Root>
+        </Card.Row>
+      </Card.Body>
+    </Card.Root>
   );
 };

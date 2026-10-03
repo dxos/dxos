@@ -15,7 +15,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Next, composable, composableProps, createContext, setRef } from '@dxos/react-ui';
+import { Button, Container, ScrollArea, composable, composableProps, createContext, setRef } from '@dxos/react-ui';
 import { type WindowController, type WindowState, useFollow, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
@@ -38,7 +38,7 @@ import { useJumpDetector, usePositionLog } from './position-log.ts';
 // Context
 //
 
-type ScrollAreaRootProps = ComponentProps<typeof Next.ScrollArea.Root>;
+type ScrollAreaRootProps = ComponentProps<typeof ScrollArea.Root>;
 
 const MESSAGE_LIST_NAME = 'MessageList';
 
@@ -606,7 +606,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
         <div key={message.id} data-object-id={message.id} {...windowRowProps(index, message.id)}>
           {!empty && (
-            <Next.Container gutter={gutter}>
+            <Container gutter={gutter}>
               {/* The widgets' query container: it must be an element whose width is definite, since
                   containment stops a descendant's content sizing it (a prompt's bubble collapses). */}
               <div className='dx-container-type-inline-size'>
@@ -619,21 +619,21 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
                   <MessageListItem message={message} />
                 </Chrome>
               </div>
-            </Next.Container>
+            </Container>
           )}
         </div>,
       );
     }
 
     return (
-      <Next.ScrollArea.Root
+      <ScrollArea.Root
         {...composableProps(props)}
         orientation='vertical'
         autoHide={autoHide}
         native={native}
         scrollbars={scrollbars}
       >
-        <Next.ScrollArea.Viewport
+        <ScrollArea.Viewport
           data-testid='feed.viewport'
           // Off deliberately: the browser adjusting the scroll as well would be a second party
           // anchoring the same thing, and the defect this design exists to remove is exactly that.
@@ -651,9 +651,9 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
           >
             {rows}
           </div>
-        </Next.ScrollArea.Viewport>
+        </ScrollArea.Viewport>
         {overlay}
-      </Next.ScrollArea.Root>
+      </ScrollArea.Root>
     );
   },
 );
@@ -773,7 +773,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
   return (
     <div role='group' {...composableProps(props)} onKeyDown={onKeyDown} ref={forwardedRef}>
       {ends && (
-        <Next.Button
+        <Button
           icon='ph--arrow-line-up--regular'
           iconOnly
           label='First message'
@@ -782,7 +782,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
           onClick={() => navigation.first()}
         />
       )}
-      <Next.Button
+      <Button
         icon='ph--caret-up--regular'
         iconOnly
         label='Previous message'
@@ -790,7 +790,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
         data-testid='feed.nav.back'
         onClick={() => navigation.step(-1)}
       />
-      <Next.Button
+      <Button
         icon='ph--caret-down--regular'
         iconOnly
         label='Next message'
@@ -799,7 +799,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
         onClick={() => navigation.step(1)}
       />
       {ends && (
-        <Next.Button
+        <Button
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Last message'

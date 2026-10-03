@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -32,14 +32,14 @@ const DefaultStory = () => {
 
   return (
     <SpacetimeEditor.Root ref={controller} scene={scene}>
-      <Next.Panel.Root>
-        <Next.Panel.Header>
+      <Panel.Root>
+        <Panel.Header>
           <SpacetimeEditor.Toolbar alwaysActive />
-        </Next.Panel.Header>
-        <Next.Panel.Body asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SpacetimeEditor.Canvas />
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Body>
+      </Panel.Root>
     </SpacetimeEditor.Root>
   );
 };

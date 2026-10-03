@@ -13,7 +13,7 @@ import { Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -69,7 +69,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
         <Form.Content>
           <Form.FieldSet label={t('connections.label')} description={t('connections.description')}>
             <Form.Field standalone label={t('add-connection.label')} description={t('connect-service.description')}>
-              <Next.Button onClick={handleAdd}>{t('connect.label')}</Next.Button>
+              <Button onClick={handleAdd}>{t('connect.label')}</Button>
             </Form.Field>
           </Form.FieldSet>
 

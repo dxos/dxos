@@ -6,7 +6,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui';
+import { useThemeMode } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   blocks,
@@ -27,7 +27,7 @@ random.seed(123);
 type StoryArgs = Pick<EditorViewProps, 'value'>;
 
 const DefaultStory = (props: StoryArgs) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: 'Type here...' }),

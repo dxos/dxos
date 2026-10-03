@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/hooks';
 import { useNode } from '@dxos/plugin-graph/hooks';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Empty, ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 
 import { Loading } from '#components';
@@ -53,25 +53,25 @@ export const MobileDrawer = () => {
   const menuActions = useMenuActions(actions);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
+    <Panel.Root>
+      <Panel.Header>
         <ActionToolbar {...menuActions} alwaysActive onAction={onAction} />
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+      </Panel.Header>
+      <Panel.Body>
         {/* A drawer opened on a plank that contributes no companion would otherwise read as broken. */}
         {data ? (
           <Surface.Surface
             type={AppSurface.Article}
             data={data}
             limit={1}
-            fallback={Next.ErrorFallback}
+            fallback={ErrorFallback}
             placeholder={placeholder}
           />
         ) : (
-          <Next.Empty>{t('empty-drawer.message')}</Next.Empty>
+          <Empty>{t('empty-drawer.message')}</Empty>
         )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

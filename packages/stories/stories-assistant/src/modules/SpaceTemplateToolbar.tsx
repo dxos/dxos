@@ -16,7 +16,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Next, useAsyncEffect } from '@dxos/react-ui';
+import { Button, Checkbox, Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 
 import { isPersistent, setPersistent } from '../testing/persistence.ts';
 import { VOYAGE_SPACE_ID } from '../testing/voyage-space.ts';
@@ -39,11 +39,11 @@ import { exportProfileArchive, pickProfileArchive, stageProfileImport } from './
  * checkbox decides whether the next boot is persistent at all (see `persistence.ts`).
  */
 export const SpaceTemplateToolbar = () => (
-  <Next.Toolbar.Root>
+  <Toolbar.Root>
     <TemplateSelect />
-    <Next.Toolbar.Separator variant='gap' />
+    <Toolbar.Separator variant='gap' />
     <ProfileControls />
-  </Next.Toolbar.Root>
+  </Toolbar.Root>
 );
 
 const TemplateSelect = () => {
@@ -144,18 +144,18 @@ const TemplateSelect = () => {
 
   return (
     <>
-      <Next.Select.Root
+      <Select.Root
         value={[templateId]}
         onValueChange={({ value: [id] }) => void handleSelect(id)}
         items={sorted.map(({ id, label }) => ({ value: id, label: label }))}
       >
-        <Next.Select.Trigger placeholder='Template' />
-        <Next.Select.Content>
+        <Select.Trigger placeholder='Template' />
+        <Select.Content>
           {sorted.map(({ id, label }) => (
-            <Next.Select.Item key={id} item={{ value: id, label: label }} />
+            <Select.Item key={id} item={{ value: id, label: label }} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
+        </Select.Content>
+      </Select.Root>
     </>
   );
 };
@@ -207,26 +207,26 @@ const ProfileControls = () => {
 
   return (
     <>
-      <Next.Button
+      <Button
         icon='ph--download-simple--regular'
         iconOnly
         label='Export profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleExport()}
       />
-      <Next.Button
+      <Button
         icon='ph--upload-simple--regular'
         iconOnly
         label='Import profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleImport()}
       />
-      <Next.Checkbox
+      <Checkbox
         checked={persistent}
         onCheckedChange={({ checked }) => handlePersistentChange(checked === true)}
         label='Persistent'
       />
-      <Next.Button icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
+      <Button icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </>
   );
 };

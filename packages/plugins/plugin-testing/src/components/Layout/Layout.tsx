@@ -17,7 +17,18 @@ import React, {
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  AlertDialog,
+  Card,
+  Dialog,
+  DragHandle,
+  Main,
+  Popover,
+  Toast,
+  toLocalizedString,
+  useTranslation,
+  virtualAnchor,
+} from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
@@ -26,12 +37,12 @@ import { StorybookCapabilities } from '#types';
 
 const debounce_delay = 100;
 
-type FocusOutsideEvent = Parameters<NonNullable<ComponentProps<typeof Next.Popover.Root>['onFocusOutside']>>[0];
+type FocusOutsideEvent = Parameters<NonNullable<ComponentProps<typeof Popover.Root>['onFocusOutside']>>[0];
 
 const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDismiss: (id: string) => void }) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Next.Toast.Root
+    <Toast.Root
       data-testid={toast.id}
       defaultOpen
       duration={toast.duration}
@@ -41,18 +52,18 @@ const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDism
         }
       }}
     >
-      <Next.Toast.Header icon={toast.icon} closable={!!toast.closeLabel}>
+      <Toast.Header icon={toast.icon} closable={!!toast.closeLabel}>
         {toast.title && toLocalizedString(toast.title, t)}
-      </Next.Toast.Header>
-      {toast.description && <Next.Toast.Description>{toLocalizedString(toast.description, t)}</Next.Toast.Description>}
+      </Toast.Header>
+      {toast.description && <Toast.Description>{toLocalizedString(toast.description, t)}</Toast.Description>}
       {toast.onAction && toast.actionAlt && toast.actionLabel && (
-        <Next.Toast.Footer>
-          <Next.Toast.ActionTrigger variant='primary' onClick={() => toast.onAction?.()}>
+        <Toast.Footer>
+          <Toast.ActionTrigger variant='primary' onClick={() => toast.onAction?.()}>
             {toLocalizedString(toast.actionLabel, t)}
-          </Next.Toast.ActionTrigger>
-        </Next.Toast.Footer>
+          </Toast.ActionTrigger>
+        </Toast.Footer>
       )}
-    </Next.Toast.Root>
+    </Toast.Root>
   );
 };
 
@@ -117,32 +128,32 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
     [updateState, layout.toasts],
   );
 
-  const DialogRoot = layout.dialogType === 'alert' ? Next.AlertDialog.Root : Next.Dialog.Root;
+  const DialogRoot = layout.dialogType === 'alert' ? AlertDialog.Root : Dialog.Root;
 
   return (
-    <Next.Toast.Provider>
+    <Toast.Provider>
       {/* The plugin `ReactContext` capabilities — the theme plugin's `Tooltip.Provider` among them —
           wrap `children` only, so the dialog and popover portals rendered as its siblings below sit
           outside them. Any `IconButton` there renders a `Tooltip.Trigger`, which throws rather than
           degrades when it finds no provider, taking the whole surface down with it. */}
       <div className='fixed inset-0 flex overflow-hidden'>
         <Dnd.Root>
-          <Next.Popover.Root
+          <Popover.Root
             open={open}
-            positioning={{ ...Next.virtualAnchor(trigger), placement: layout.popoverSide, hideWhenDetached: true }}
+            positioning={{ ...virtualAnchor(trigger), placement: layout.popoverSide, hideWhenDetached: true }}
             autoFocus={false}
             onFocusOutside={handleFocusOutside}
             onPointerDownOutside={handleClose}
             onEscapeKeyDown={handleClose}
           >
-            <Next.Main.Root
+            <Main.Root
               navigationSidebarState={layout.sidebarState}
               complementarySidebarState={layout.complementarySidebarState}
               onNavigationSidebarStateChange={(next) => updateState({ sidebarState: next })}
               onComplementarySidebarStateChange={(next) => updateState({ complementarySidebarState: next })}
             >
               {children}
-            </Next.Main.Root>
+            </Main.Root>
 
             <DialogRoot
               modal={layout.dialogBlockAlign !== 'end'}
@@ -159,47 +170,47 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
               />
             </DialogRoot>
 
-            <Next.Popover.Content>
-              <Next.Popover.Body>
+            <Popover.Content>
+              <Popover.Body>
                 {/* `border={false}`: the popover content already draws the surface and its border,
                         so a bordered card inside it reads as a second frame. Matches the deck's popover. */}
                 {layout.popoverKind === 'card' && (
-                  <Next.Card.Root grid border={false} classNames='dx-card-popover rounded-md'>
-                    <Next.Card.Header>
+                  <Card.Root grid border={false} classNames='dx-card-popover rounded-md'>
+                    <Card.Header>
                       {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
-                      <Next.DragHandle />
+                      <DragHandle />
                       {layout.popoverTitle ? (
-                        <Next.Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Next.Card.Title>
+                        <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
                       ) : (
                         <span />
                       )}
-                      <Next.Card.Action system='close' onClick={handleClose} />
-                    </Next.Card.Header>
+                      <Card.Action system='close' onClick={handleClose} />
+                    </Card.Header>
                     {layout.popoverContent ? (
                       <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
                     ) : (
                       // Matches the deck's popover, which opens a card with no subject for a link that did not resolve.
-                      <Next.Card.Body classNames='min-h-8'>
-                        <Next.Card.Row>
-                          <Next.Card.Text variant='description'>No preview available.</Next.Card.Text>
-                        </Next.Card.Row>
-                      </Next.Card.Body>
+                      <Card.Body classNames='min-h-8'>
+                        <Card.Row>
+                          <Card.Text variant='description'>No preview available.</Card.Text>
+                        </Card.Row>
+                      </Card.Body>
                     )}
-                  </Next.Card.Root>
+                  </Card.Root>
                 )}
                 {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
                   <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
                 )}
-              </Next.Popover.Body>
-            </Next.Popover.Content>
-          </Next.Popover.Root>
+              </Popover.Body>
+            </Popover.Content>
+          </Popover.Root>
         </Dnd.Root>
         {layout.toasts.map((toast) => (
           <StoryToast key={toast.id} toast={toast} onDismiss={handleDismissToast} />
         ))}
-        <Next.Toast.Toaster />
+        <Toast.Toaster />
       </div>
-    </Next.Toast.Provider>
+    </Toast.Provider>
   );
 };
 

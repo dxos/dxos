@@ -11,7 +11,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
-import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Icon, Menu, ScrollArea, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles, osTranslations } from '@dxos/ui-theme';
@@ -29,8 +29,8 @@ export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectAr
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='gap-1'
               draggable={false}
@@ -38,8 +38,8 @@ export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectAr
               getId={(item) => item.id}
               Tile={ObjectTile}
             />
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Mosaic.Container>
     </SearchPanel>
   );
@@ -70,27 +70,27 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const { archived, item: archiveItem } = useArchiveMenuItem(item.object);
 
   return (
-    <Next.Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
-      <Next.Card.Header>
-        <Next.Block>
-          <Next.Icon icon={item.icon} classNames={styles?.fg} />
-        </Next.Block>
-        <Next.Card.Title>{label}</Next.Card.Title>
+    <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
+      <Card.Header>
+        <Block>
+          <Icon icon={item.icon} classNames={styles?.fg} />
+        </Block>
+        <Card.Title>{label}</Card.Title>
         {archiveItem && (
-          <Next.Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
-            <Next.Menu.Item
+          <Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
+            <Menu.Item
               item={{ value: archiveItem.label, label: archiveItem.label, icon: archiveItem.icon }}
               onClick={archiveItem.onClick}
             />
-          </Next.Card.Menu>
+          </Card.Menu>
         )}
-      </Next.Card.Header>
+      </Card.Header>
       {archived && (
-        <Next.Card.Row>
-          <Next.Tag classNames='justify-self-start'>{t('archived.label')}</Next.Tag>
-        </Next.Card.Row>
+        <Card.Row>
+          <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
+        </Card.Row>
       )}
-    </Next.Card.Root>
+    </Card.Root>
   );
 };
 

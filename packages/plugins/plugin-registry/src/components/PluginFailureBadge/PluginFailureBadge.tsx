@@ -5,14 +5,14 @@
 import React, { type ComponentPropsWithoutRef } from 'react';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
 export type PluginFailureBadgeProps = {
   failure: PluginManager.PluginFailure;
   /** Size of the warning icon. */
-  size?: ComponentPropsWithoutRef<typeof Next.Button>['iconSize'];
+  size?: ComponentPropsWithoutRef<typeof Button>['iconSize'];
 };
 
 /**
@@ -26,9 +26,9 @@ export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) =
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Next.Popover.Root>
-      <Next.Popover.Trigger asChild>
-        <Next.Button
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <Button
           variant='destructive'
           icon='ph--warning--bold'
           iconOnly
@@ -38,9 +38,9 @@ export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) =
           data-testid={`pluginFailureBadge.${failure.id}`}
           onClick={(event) => event.stopPropagation()}
         />
-      </Next.Popover.Trigger>
-      <Next.Popover.Content>
-        <Next.Popover.Body>
+      </Popover.Trigger>
+      <Popover.Content>
+        <Popover.Body>
           <div className='px-3 py-2 min-w-[18rem] max-w-[28rem] flex flex-col gap-1'>
             <p className='font-medium text-sm'>
               {t('failure-title.label', {
@@ -51,8 +51,8 @@ export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) =
             </p>
             <p className='text-description text-sm break-words'>{failure.error.message}</p>
           </div>
-        </Next.Popover.Body>
-      </Next.Popover.Content>
-    </Next.Popover.Root>
+        </Popover.Body>
+      </Popover.Content>
+    </Popover.Root>
   );
 };

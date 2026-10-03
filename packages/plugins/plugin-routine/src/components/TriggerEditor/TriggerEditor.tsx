@@ -10,7 +10,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, Field, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -315,11 +315,11 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
       {kind ? (
         <>
           <div className='flex items-center'>
-            <Next.Field.Root>
-              <Next.Field.Label classNames='grow truncate'>{t(`trigger-kind.${kind}.label`)}</Next.Field.Label>
-            </Next.Field.Root>
+            <Field.Root>
+              <Field.Label classNames='grow truncate'>{t(`trigger-kind.${kind}.label`)}</Field.Label>
+            </Field.Root>
             {!readonly && (
-              <Next.Button
+              <Button
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly

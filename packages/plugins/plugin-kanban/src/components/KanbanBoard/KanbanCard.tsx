@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, DragHandle, Focus, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
@@ -60,24 +60,24 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         draggable={draggable}
         dragHandle={dragHandle}
       >
-        <Next.Focus.Item asChild>
-          <Next.Card.Root grid ref={forwardedRef} data-testid='board-item'>
-            <Next.Card.Header ref={cardRef}>
-              <Next.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
-              <Next.Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Next.Card.Title>
+        <Focus.Item asChild>
+          <Card.Root grid ref={forwardedRef} data-testid='board-item'>
+            <Card.Header ref={cardRef}>
+              <DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
+              <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Next.Block rail='end'>
+              <Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <Next.Button
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Next.Block>
-            </Next.Card.Header>
-            <Next.Card.Body>
+              </Block>
+            </Card.Header>
+            <Card.Body>
               {projection && (
                 <Surface.Surface
                   type={AppSurface.CardContent}
@@ -91,9 +91,9 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
                   }}
                 />
               )}
-            </Next.Card.Body>
-          </Next.Card.Root>
-        </Next.Focus.Item>
+            </Card.Body>
+          </Card.Root>
+        </Focus.Item>
       </Mosaic.Tile>
     );
   },

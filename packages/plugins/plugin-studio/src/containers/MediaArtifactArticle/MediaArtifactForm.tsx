@@ -15,7 +15,7 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Flex, Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, Input, Panel, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -226,18 +226,18 @@ export const MediaArtifactForm = ({
             variant: 'custom',
             label: ['generator.placeholder', { ns: meta.profile.key }],
             render: () => (
-              <Next.Select.Root
+              <Select.Root
                 value={[provider?.id]}
                 onValueChange={({ value: [value] }) => handleGeneratorChange(value)}
                 items={providers.map((candidate) => ({ value: candidate.id, label: candidate.label }))}
               >
-                <Next.Select.Trigger placeholder={t('generator.placeholder')} />
-                <Next.Select.Content>
+                <Select.Trigger placeholder={t('generator.placeholder')} />
+                <Select.Content>
                   {providers.map((candidate) => (
-                    <Next.Select.Item key={candidate.id} item={{ value: candidate.id, label: candidate.label }} />
+                    <Select.Item key={candidate.id} item={{ value: candidate.id, label: candidate.label }} />
                   ))}
-                </Next.Select.Content>
-              </Next.Select.Root>
+                </Select.Content>
+              </Select.Root>
             ),
           },
           () => {},
@@ -295,20 +295,20 @@ export const MediaArtifactForm = ({
   );
 
   return (
-    <Next.Panel.Root classNames={classNames}>
-      <Next.Panel.Header>
+    <Panel.Root classNames={classNames}>
+      <Panel.Header>
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
         {/* MediaArtifact-level name (independent of any variant). */}
         <Flex column gap='xs' classNames='pt-3 px-2'>
-          <Next.Field.Root>
-            <Next.Input
+          <Field.Root>
+            <Input
               placeholder={t('name.placeholder')}
               value={artifactSnapshot?.name ?? ''}
               onChange={handleNameChange}
             />
-          </Next.Field.Root>
+          </Field.Root>
         </Flex>
         {/* Schema-driven request form (prompt + kind-specific knobs, from the generator's
             requestSchema); read-only while a generation is in flight. */}
@@ -329,8 +329,8 @@ export const MediaArtifactForm = ({
             </Form.Viewport>
           </Form.Root>
         )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

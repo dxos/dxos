@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute-hyperformula';
-import { Next, composable, composableProps } from '@dxos/react-ui';
+import { Icon, composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { SheetUtil } from '#types';
@@ -44,7 +44,7 @@ export const SheetStatusbar = composable<HTMLDivElement, SheetStatusbarProps>((p
           {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}
         </div>
         <div className='flex gap-2 items-center'>
-          <Next.Icon icon='ph--function--regular' classNames={['text-green-text', formula ? 'visible' : 'invisible']} />
+          <Icon icon='ph--function--regular' classNames={['text-green-text', formula ? 'visible' : 'invisible']} />
           <span className='font-mono'>{value}</span>
         </div>
       </div>

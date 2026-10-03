@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Button, Panel, SystemButton, Toolbar } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TagIndex } from '@dxos/schema';
@@ -190,24 +190,24 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
   }, [mailbox, space.db]);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.SystemButton.Upload
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <SystemButton.Upload
             iconOnly
             label='Import messages (appends)'
             accept='application/json,.json'
             disabled={!mailbox || busy}
             onFileChange={handleUpload}
           />
-          <Next.SystemButton.Download
+          <SystemButton.Download
             iconOnly
             label={`Download starred (${starredIds.length})`}
             filename={archiveFilename()}
             disabled={!feed || busy || starredIds.length === 0}
             onDownload={handleDownload}
           />
-          <Next.Button
+          <Button
             iconOnly
             icon='ph--tray-arrow-down--regular'
             label={`Download all (${messages.length})`}
@@ -216,26 +216,26 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
           />
           {/* Not `SystemIconButton.Download`: it fixes its own glyph, which would make this visually
               identical to the feed export beside it. */}
-          <Next.Button
+          <Button
             iconOnly
             icon='ph--envelope-simple--regular'
             label={selected ? `Save message (${selectedHtml ? 'html' : 'json'})` : 'Save message — select one first'}
             disabled={!selected || busy}
             onClick={handleDownloadMessage}
           />
-          <Next.Toolbar.Separator />
-          <Next.Button
+          <Toolbar.Separator />
+          <Button
             iconOnly
             icon='ph--trash--regular'
             label='Reset'
             disabled={!mailbox || busy}
             onClick={() => void handleReset()}
           />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body classNames='flex flex-col gap-2 p-2 text-sm'>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col gap-2 p-2 text-sm'>
         <JsonHighlighter data={{ feed: feed?.id, ...status }} />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

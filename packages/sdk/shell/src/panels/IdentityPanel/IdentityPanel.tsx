@@ -15,7 +15,17 @@ import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import { Next, useId, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  Button,
+  Field,
+  Input,
+  SystemButton,
+  Toolbar,
+  toAvatarHue,
+  useId,
+  useTranslation,
+} from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
@@ -101,11 +111,11 @@ const IdentityHeading = ({
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
       <div className='flex justify-center'>
         {/* Four rem across: larger than any block size, so the avatar fills a sized host. */}
-        <Next.Avatar.Root
+        <Avatar.Root
           fill
           variant='circle'
           status={isConnected ? 'active' : 'error'}
-          hue={Next.toAvatarHue(hue || fallbackValue.hue)}
+          hue={toAvatarHue(hue || fallbackValue.hue)}
           fallback={emoji || fallbackValue.emoji}
           aria-labelledby={displayNameId}
           classNames='w-16 relative z-[2] chromatic-ignore'
@@ -116,9 +126,9 @@ const IdentityHeading = ({
         {identity.profile?.displayName ?? generateName(requirePublicKey(identity.identityKey).toHex())}
       </span>
 
-      <Next.Field.Root>
-        <Next.Field.Label srOnly>{t('display-name-input.label')}</Next.Field.Label>
-        <Next.Input
+      <Field.Root>
+        <Field.Label srOnly>{t('display-name-input.label')}</Field.Label>
+        <Input
           variant='subdued'
           data-testid='display-name-input'
           placeholder={t('display-name-input.placeholder')}
@@ -126,13 +136,13 @@ const IdentityHeading = ({
           value={displayName}
           onChange={({ target: { value } }) => setDisplayName(value)}
         />
-      </Next.Field.Root>
+      </Field.Root>
 
       <div className='flex justify-center pt-3'>
-        <Next.Toolbar.Root classNames='w-fit'>
+        <Toolbar.Root classNames='w-fit'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} />
           <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} rootVariant='toolbar-button' />
-          <Next.SystemButton.Clipboard
+          <SystemButton.Clipboard
             iconSize='lg'
             iconOnly
             label={t('copy-self-did.label')}
@@ -140,7 +150,7 @@ const IdentityHeading = ({
             value={identity.did}
           />
           {onManageCredentials && (
-            <Next.Button
+            <Button
               iconSize='lg'
               icon='ph--identification-card--regular'
               iconOnly
@@ -149,7 +159,7 @@ const IdentityHeading = ({
               onClick={onManageCredentials}
             />
           )}
-          <Next.Button
+          <Button
             iconSize='lg'
             icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
             iconOnly
@@ -158,7 +168,7 @@ const IdentityHeading = ({
             classNames={!isConnected && 'text-error-text'}
             onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
           />
-        </Next.Toolbar.Root>
+        </Toolbar.Root>
       </div>
     </Heading>
   );

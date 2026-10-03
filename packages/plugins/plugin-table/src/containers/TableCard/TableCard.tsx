@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { Next } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import {
   Table as TableComponent,
   type TableController,
@@ -56,8 +56,8 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
   const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
   return (
-    <Next.Card.Body>
-      <Next.Card.Row>
+    <Card.Body>
+      <Card.Row>
         <TableComponent.Root ref={tableRef}>
           <TableComponent.Content
             key={Obj.getURI(object)}
@@ -67,8 +67,8 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
             classNames='scale-75'
           />
         </TableComponent.Root>
-      </Next.Card.Row>
-    </Next.Card.Body>
+      </Card.Row>
+    </Card.Body>
   );
 };
 

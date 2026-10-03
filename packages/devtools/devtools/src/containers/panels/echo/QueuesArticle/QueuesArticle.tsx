@@ -5,7 +5,7 @@
 import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
-import { Next } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
@@ -60,14 +60,14 @@ export const QueuesArticle = ({ role }: ArticleProps) => {
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root>
           {/* <DataSpaceSelector /> */}
           <Searchbar onChange={setQueueInput} />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         {/* TODO(burdon): Convert to MasterDetailTable. */}
         <div className='flex grow flex-col overflow-hidden divide-y divide-subdued-separator'>
           <DynamicTable rows={rows} properties={properties} features={features} onRowClick={handleRowClicked} />
@@ -75,8 +75,8 @@ export const QueuesArticle = ({ role }: ArticleProps) => {
             {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}
           </div>
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

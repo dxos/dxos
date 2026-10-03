@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui';
+import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import {
@@ -122,20 +122,20 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
       </ComputeContext.Provider>
       {sidebar && (
         <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
-          <Next.Toolbar.Root>
-            <Next.Select.Root
+          <Toolbar.Root>
+            <Select.Root
               value={[sidebar]}
               onValueChange={({ value: [value] }) => setSidebar(value as Sidebar)}
               items={sidebarTypes.map((type) => ({ value: type, label: type }))}
             >
-              <Next.Select.Trigger classNames='w-full' />
-              <Next.Select.Content>
+              <Select.Trigger classNames='w-full' />
+              <Select.Content>
                 {sidebarTypes.map((type) => (
-                  <Next.Select.Item key={type} item={{ value: type, label: type }} />
+                  <Select.Item key={type} item={{ value: type, label: type }} />
                 ))}
-              </Next.Select.Content>
-            </Next.Select.Root>
-          </Next.Toolbar.Root>
+              </Select.Content>
+            </Select.Root>
+          </Toolbar.Root>
           <SidebarJson sidebar={sidebar} controller={controller} projection={projection} atoms={atoms} />
         </div>
       )}

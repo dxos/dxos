@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
 import { createObject } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createDataExtensions } from '@dxos/ui-editor';
@@ -65,19 +65,19 @@ const DefaultStory = (props: TypescriptEditorProps) => {
   }, [object]);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Button onClick={handleRun}>Run</Next.Button>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button onClick={handleRun}>Run</Button>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         <div className='grid grid-rows-[1fr_min-content] h-full overflow-hidden text-sm'>
           <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
           <JsonHighlighter data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

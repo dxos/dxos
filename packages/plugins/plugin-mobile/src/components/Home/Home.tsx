@@ -10,7 +10,17 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections } from '@dxos/plugin-graph/hooks';
-import { Next, toLocalizedString, useId, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  Block,
+  Card,
+  Icon,
+  ScrollArea,
+  toAvatarHue,
+  toLocalizedString,
+  useId,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
@@ -38,8 +48,8 @@ export const Home = (_: HomeProps) => {
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='py-2 gap-1'
               draggable={false}
@@ -47,8 +57,8 @@ export const Home = (_: HomeProps) => {
               getId={(item) => item.id}
               Tile={WorkspaceTile}
             />
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Mosaic.Container>
     </SearchPanel>
   );
@@ -89,7 +99,7 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   }, [isSelected]);
 
   return (
-    <Next.Card.Root
+    <Card.Root
       role='button'
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
@@ -101,25 +111,25 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       onClick={handleSelect}
       ref={cardRef}
     >
-      <Next.Card.Header>
+      <Card.Header>
         {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
             `Card.Title` are what keep the icon, label, and caret on one row. */}
-        <Next.Block>
-          <Next.Avatar.Root
+        <Block>
+          <Avatar.Root
             icon={data.properties.icon}
-            hue={Next.toAvatarHue(data.properties.hue)}
+            hue={toAvatarHue(data.properties.hue)}
             hueVariant='transparent'
             variant='square'
             fallback={name}
             aria-labelledby={titleId}
           />
-        </Next.Block>
-        <Next.Card.Title id={titleId} classNames='cursor-pointer'>
+        </Block>
+        <Card.Title id={titleId} classNames='cursor-pointer'>
           {name}
-        </Next.Card.Title>
-        <Next.Block rail='end'>{!pending && <Next.Icon icon='ph--caret-right--regular' />}</Next.Block>
-      </Next.Card.Header>
-    </Next.Card.Root>
+        </Card.Title>
+        <Block rail='end'>{!pending && <Icon icon='ph--caret-right--regular' />}</Block>
+      </Card.Header>
+    </Card.Root>
   );
 };
 

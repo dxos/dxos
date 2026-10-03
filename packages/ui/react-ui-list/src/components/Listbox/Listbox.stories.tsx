@@ -7,14 +7,14 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/theme.css';
-import { Next } from '@dxos/react-ui';
+import { Input, type ListboxOption, Panel, Toolbar, Typography, Listbox as UiListbox } from '@dxos/react-ui';
 import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withSizes, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
 
 import { Listbox } from './Listbox.tsx';
 import { listboxSelection } from './selection.ts';
 
-const ITEMS: Next.ListboxOption[] = [
+const ITEMS: ListboxOption[] = [
   { value: 'alpha', label: 'Alpha', description: 'The first letter' },
   { value: 'bravo', label: 'Bravo' },
   { value: 'charlie', label: 'Charlie', disabled: true },
@@ -22,7 +22,7 @@ const ITEMS: Next.ListboxOption[] = [
   { value: 'echo', label: 'Echo' },
 ];
 
-const LONG: Next.ListboxOption[] = Array.from({ length: 40 }, (_, index) => ({
+const LONG: ListboxOption[] = Array.from({ length: 40 }, (_, index) => ({
   value: `item-${index + 1}`,
   label: `Item ${index + 1}`,
 }));
@@ -56,7 +56,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           ))}
         </Listbox.Content>
       </Listbox.Root>
-      <Next.Typography data-testid={`selected-${size}`}>{selected ?? 'None'}</Next.Typography>
+      <Typography data-testid={`selected-${size}`}>{selected ?? 'None'}</Typography>
       <Listbox.Root items={ITEMS}>
         <Listbox.Content aria-label='Plain'>
           {ITEMS.map((item) => (
@@ -64,33 +64,30 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           ))}
         </Listbox.Content>
       </Listbox.Root>
-      <Next.Listbox.Root
-        items={ITEMS}
-        {...listboxSelection({ mode: 'multi', value: picked, onValueChange: setPicked })}
-      >
-        <Next.Listbox.Content aria-label='Picked'>
+      <UiListbox.Root items={ITEMS} {...listboxSelection({ mode: 'multi', value: picked, onValueChange: setPicked })}>
+        <UiListbox.Content aria-label='Picked'>
           {ITEMS.map((item) => (
-            <Next.Listbox.Item key={item.value} item={item}>
-              <Next.Listbox.ItemText />
-              <Next.Listbox.ItemIndicator />
-            </Next.Listbox.Item>
+            <UiListbox.Item key={item.value} item={item}>
+              <UiListbox.ItemText />
+              <UiListbox.ItemIndicator />
+            </UiListbox.Item>
           ))}
-        </Next.Listbox.Content>
-      </Next.Listbox.Root>
-      <Next.Typography data-testid={`picked-${size}`}>{Array.from(picked).join(' ')}</Next.Typography>
+        </UiListbox.Content>
+      </UiListbox.Root>
+      <Typography data-testid={`picked-${size}`}>{Array.from(picked).join(' ')}</Typography>
       <div className='h-48'>
-        <Next.Panel.Root>
-          <Next.Panel.Header>
-            <Next.Toolbar.Root>
-              <Next.Input
+        <Panel.Root>
+          <Panel.Header>
+            <Toolbar.Root>
+              <Input
                 aria-label='Filter'
                 placeholder='Filter…'
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
               />
-            </Next.Toolbar.Root>
-          </Next.Panel.Header>
-          <Next.Panel.Body>
+            </Toolbar.Root>
+          </Panel.Header>
+          <Panel.Body>
             <Listbox.Root items={filtered} value={undefined} onValueChange={() => {}}>
               <Listbox.Content aria-label='Long'>
                 {filtered.map((item) => (
@@ -99,8 +96,8 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
               </Listbox.Content>
               <Listbox.Empty>No matches</Listbox.Empty>
             </Listbox.Root>
-          </Next.Panel.Body>
-        </Next.Panel.Root>
+          </Panel.Body>
+        </Panel.Root>
       </div>
     </>
   );

@@ -9,7 +9,7 @@ import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Contact } from '@dxos/react-client/halo';
-import { Next, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, type ThemedClassName, toAvatarHue, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { keyToFallback } from '@dxos/util';
 
@@ -102,10 +102,10 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
   return (
     <Listbox.Item classNames='p-2 rounded-sm' id={invitation.id} data-testid='space-invitation-list.item'>
       <Listbox.ItemIcon>
-        <Next.Avatar.Root
+        <Avatar.Root
           aria-labelledby={labelId}
           size='md'
-          hue={Next.toAvatarHue(profileString(invitation.sender, 'hue') ?? fallback.hue)}
+          hue={toAvatarHue(profileString(invitation.sender, 'hue') ?? fallback.hue)}
           fallback={profileString(invitation.sender, 'emoji') ?? fallback.emoji}
         />
       </Listbox.ItemIcon>
@@ -116,7 +116,7 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
             {contactDisplayName(invitation.sender)}
           </span>
           <div className='flex items-center gap-1'>
-            <Next.Button
+            <Button
               size='sm'
               variant='primary'
               disabled={disabled}
@@ -124,8 +124,8 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
               data-testid='space-invitation-list.join'
             >
               {t('join-space-invitation.label')}
-            </Next.Button>
-            <Next.Button
+            </Button>
+            <Button
               iconOnly
               size='sm'
               variant='ghost'

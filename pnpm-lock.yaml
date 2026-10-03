@@ -21893,6 +21893,9 @@ importers:
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../ui-types
       '@lezer/common':
         specifier: ^1.5.2
         version: 1.5.2

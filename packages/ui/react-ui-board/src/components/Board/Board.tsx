@@ -18,7 +18,8 @@ import React, {
 
 import { invariant } from '@dxos/invariant';
 import {
-  Next,
+  Button,
+  ScrollArea,
   type ThemedClassName,
   composable,
   composableProps,
@@ -800,14 +801,14 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
   return (
     // Forward the composable props + ref to ScrollArea.Root so this can be the `asChild` target of a
     // parent slot (e.g. `<Panel.Content asChild><Board.Container/></Panel.Content>`).
-    <Next.ScrollArea.Root orientation='all' {...composableProps(props)} ref={forwardedRef}>
+    <ScrollArea.Root orientation='all' {...composableProps(props)} ref={forwardedRef}>
       {/* `flex` so the viewport's `m-auto` centers the board; overflow scrolls both axes. (Scroll-snap
           was removed: proximity snapping re-snapped the viewport after programmatic scrolls, fighting
           the zoom-anchor / auto-scroll compensation.) */}
-      <Next.ScrollArea.Viewport ref={ref} classNames='flex'>
+      <ScrollArea.Viewport ref={ref} classNames='flex'>
         {children}
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 });
 
@@ -908,7 +909,7 @@ const BoardDropTarget = ({ position, rect, containerId, debug, onAddClick }: Boa
         </span>
       )}
       {onAddClick && (
-        <Next.Button
+        <Button
           icon='ph--plus--regular'
           iconOnly
           label={t('add-object.button')}
@@ -934,20 +935,14 @@ const BoardZoom = ({ classNames }: BoardZoomProps) => {
   const { zoom, minZoom, zoomIn, zoomOut } = useBoardContext(BOARD_ZOOM_NAME);
   return (
     <div role='group' className={mx('flex items-center rounded-sm dx-modal-surface', classNames)}>
-      <Next.Button
+      <Button
         icon='ph--minus--regular'
         iconOnly
         label={t('zoom-out.button')}
         disabled={zoom <= minZoom}
         onClick={zoomOut}
       />
-      <Next.Button
-        icon='ph--plus--regular'
-        iconOnly
-        label={t('zoom-in.button')}
-        disabled={zoom >= 1}
-        onClick={zoomIn}
-      />
+      <Button icon='ph--plus--regular' iconOnly label={t('zoom-in.button')} disabled={zoom >= 1} onClick={zoomIn} />
     </div>
   );
 };

@@ -9,7 +9,7 @@ import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
 import { checkoutVersion, getEditHistory } from '@dxos/echo-client';
 import { EID, type URI } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
@@ -178,14 +178,14 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar placeholder='Filter...' onChange={setFilter} />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
         <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
           <div className='flex flex-col w-full overflow-hidden'>
             <DynamicTable
@@ -226,7 +226,7 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
             </div>
           </div>
         </div>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

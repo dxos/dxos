@@ -11,7 +11,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Empty, Flex, Listbox, ScrollArea, SystemButton, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -95,65 +95,65 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
   }, [availableTargets, selected, connection, db, existingTarget, manager, invokePromise]);
 
   return (
-    <Next.Dialog.Content>
-      <Next.Dialog.Header>
-        <Next.Dialog.Title>{t('sync-targets-dialog.title')}</Next.Dialog.Title>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.SystemButton.Close />
-        </Next.Dialog.CloseTrigger>
-      </Next.Dialog.Header>
-      <Next.Dialog.Body>
-        <Next.Dialog.Description>{t('sync-targets-dialog.description')}</Next.Dialog.Description>
+    <Dialog.Content>
+      <Dialog.Header>
+        <Dialog.Title>{t('sync-targets-dialog.title')}</Dialog.Title>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
+      </Dialog.Header>
+      <Dialog.Body>
+        <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
           <Flex gap='sm' classNames='py-form-gap'>
-            <Next.Button onClick={handleSelectAll} disabled={submitting}>
+            <Button onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
-            </Next.Button>
-            <Next.Button onClick={handleSelectNone} disabled={submitting}>
+            </Button>
+            <Button onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
-            </Next.Button>
+            </Button>
           </Flex>
         )}
 
         {availableTargets.length === 0 ? (
-          <Next.Empty>{t('no-available-targets.message')}</Next.Empty>
+          <Empty>{t('no-available-targets.message')}</Empty>
         ) : (
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>
               {/* A multiple-selection listbox: each row toggles its target and shows a check while selected. */}
-              <Next.Listbox.Root
+              <Listbox.Root
                 items={targetItems}
                 selectionMode='multiple'
                 value={[...selected]}
                 onValueChange={(value) => setSelected(new Set(value))}
                 disabled={submitting}
               >
-                <Next.Listbox.Content aria-label={t('sync-targets-dialog.title')}>
+                <Listbox.Content aria-label={t('sync-targets-dialog.title')}>
                   {targetItems.map((item) => (
-                    <Next.Listbox.Item key={item.value} item={item}>
-                      <Next.Listbox.ItemIndicator />
-                      <Next.Listbox.ItemText />
-                      {item.description && <Next.Listbox.ItemDescription />}
-                    </Next.Listbox.Item>
+                    <Listbox.Item key={item.value} item={item}>
+                      <Listbox.ItemIndicator />
+                      <Listbox.ItemText />
+                      {item.description && <Listbox.ItemDescription />}
+                    </Listbox.Item>
                   ))}
-                </Next.Listbox.Content>
-              </Next.Listbox.Root>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+                </Listbox.Content>
+              </Listbox.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         )}
 
         {error && <p className='mt-form-gap text-error-text'>{error}</p>}
-      </Next.Dialog.Body>
-      <Next.Dialog.Footer>
-        <Next.Dialog.CloseTrigger asChild>
-          <Next.Button disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Next.Button>
-        </Next.Dialog.CloseTrigger>
-        <Next.Button variant='primary' onClick={handleSubmit} disabled={submitting}>
+      </Dialog.Body>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
+          <Button disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button>
+        </Dialog.CloseTrigger>
+        <Button variant='primary' onClick={handleSubmit} disabled={submitting}>
           {submitting ? t('saving.label', { ns: osTranslations }) : t('save.label', { ns: osTranslations })}
-        </Next.Button>
-      </Next.Dialog.Footer>
-    </Next.Dialog.Content>
+        </Button>
+      </Dialog.Footer>
+    </Dialog.Content>
   );
 };
 

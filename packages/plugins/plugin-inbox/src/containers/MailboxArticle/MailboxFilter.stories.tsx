@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui';
+import { Toolbar } from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -38,7 +38,7 @@ const DefaultStory = ({ value: valueProp = '' }: StoryArgs) => {
 
   return (
     <div>
-      <Next.Toolbar.Root>
+      <Toolbar.Root>
         <MailboxFilter
           db={space?.db}
           tags={tags}
@@ -54,7 +54,7 @@ const DefaultStory = ({ value: valueProp = '' }: StoryArgs) => {
           editorRef={editorRef}
           saveButtonRef={saveButtonRef}
         />
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
       <pre className='p-2' data-testid='filter-value'>
         {JSON.stringify({ value, parses: !!filter }, null, 2)}
       </pre>

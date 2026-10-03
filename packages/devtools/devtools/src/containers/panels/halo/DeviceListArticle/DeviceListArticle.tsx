@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Format } from '@dxos/echo/Format';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { Device_PresenceState, DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable } from '../../../../components/index.ts';
@@ -60,15 +60,15 @@ export const DeviceListArticle = ({ role }: ArticleProps) => {
   );
 
   return (
-    <Next.Panel.Root role={role}>
-      <Next.Panel.Body>
+    <Panel.Root role={role}>
+      <Panel.Body>
         <MasterDetailTable
           properties={properties}
           data={data}
           detailsTransform={(d) => d._original}
           detailsPosition='bottom'
         />
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

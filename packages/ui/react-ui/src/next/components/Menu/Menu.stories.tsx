@@ -9,7 +9,6 @@ import React, { useRef, useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import {
   byTestId,
@@ -21,6 +20,7 @@ import {
   popupFrame,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button, Group, Menu, Typography, useVirtualAnchor } from '../index.ts';
 
 /** A menu tree three levels deep, rendered recursively as nested `Menu.Sub`s. */
 type MenuNode = { value: string; label: string; icon?: string; children?: MenuNode[] };
@@ -61,14 +61,14 @@ const MenuNodes = ({ nodes }: { nodes: MenuNode[] }) => (
   <>
     {nodes.map(({ children, ...item }) =>
       children ? (
-        <Next.Menu.Sub key={item.value}>
-          <Next.Menu.TriggerItem item={item} data-testid={`sub-${item.value}`} />
-          <Next.Menu.Content>
+        <Menu.Sub key={item.value}>
+          <Menu.TriggerItem item={item} data-testid={`sub-${item.value}`} />
+          <Menu.Content>
             <MenuNodes nodes={children} />
-          </Next.Menu.Content>
-        </Next.Menu.Sub>
+          </Menu.Content>
+        </Menu.Sub>
       ) : (
-        <Next.Menu.Item key={item.value} item={item} />
+        <Menu.Item key={item.value} item={item} />
       ),
     )}
   </>
@@ -91,103 +91,103 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const anchor = useRef<HTMLSpanElement>(null);
   return (
     <>
-      <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
-        <Next.Menu.Trigger asChild>
-          <Next.Button data-testid={`trigger-${size}`}>Actions</Next.Button>
-        </Next.Menu.Trigger>
-        <Next.Menu.Content>
-          <Next.Menu.ItemGroup>
-            <Next.Menu.ItemGroupLabel>Edit</Next.Menu.ItemGroupLabel>
-            <Next.Menu.Item item={{ value: 'cut', label: 'Cut', icon: 'ph--scissors--regular', shortcut: '⌘X' }} />
-            <Next.Menu.Item item={{ value: 'copy', label: 'Copy', icon: 'ph--copy--regular', shortcut: '⌘C' }} />
-            <Next.Menu.Item item={{ value: 'paste', label: 'Paste', icon: 'ph--clipboard--regular', shortcut: '⌘V' }} />
-          </Next.Menu.ItemGroup>
-          <Next.Menu.Separator />
-          <Next.Menu.Item item={{ value: 'archive', label: 'Archive', disabled: true }} />
-          <Next.Menu.Item item={{ value: 'delete', label: 'Delete', icon: 'ph--trash--regular' }} data-testid='delete'>
-            <Next.Menu.ItemIcon />
-            <Next.Menu.ItemText />
-            <Next.Menu.ItemShortcut>⌫</Next.Menu.ItemShortcut>
-          </Next.Menu.Item>
-          <Next.Menu.Separator />
-          <Next.Menu.CheckboxItem
+      <Menu.Root onSelect={({ value }) => setSelected(value)}>
+        <Menu.Trigger asChild>
+          <Button data-testid={`trigger-${size}`}>Actions</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.ItemGroup>
+            <Menu.ItemGroupLabel>Edit</Menu.ItemGroupLabel>
+            <Menu.Item item={{ value: 'cut', label: 'Cut', icon: 'ph--scissors--regular', shortcut: '⌘X' }} />
+            <Menu.Item item={{ value: 'copy', label: 'Copy', icon: 'ph--copy--regular', shortcut: '⌘C' }} />
+            <Menu.Item item={{ value: 'paste', label: 'Paste', icon: 'ph--clipboard--regular', shortcut: '⌘V' }} />
+          </Menu.ItemGroup>
+          <Menu.Separator />
+          <Menu.Item item={{ value: 'archive', label: 'Archive', disabled: true }} />
+          <Menu.Item item={{ value: 'delete', label: 'Delete', icon: 'ph--trash--regular' }} data-testid='delete'>
+            <Menu.ItemIcon />
+            <Menu.ItemText />
+            <Menu.ItemShortcut>⌫</Menu.ItemShortcut>
+          </Menu.Item>
+          <Menu.Separator />
+          <Menu.CheckboxItem
             item={{ value: 'grid', label: 'Show grid', shortcut: '⌘G' }}
             checked={grid}
             onCheckedChange={setGrid}
           />
-          <Next.Menu.RadioItemGroup value={sort} onValueChange={({ value }) => setSort(value)}>
-            <Next.Menu.ItemGroupLabel>Sort</Next.Menu.ItemGroupLabel>
-            <Next.Menu.RadioItem item={{ value: 'name', label: 'Name' }} />
-            <Next.Menu.RadioItem item={{ value: 'date', label: 'Date' }} />
-          </Next.Menu.RadioItemGroup>
-          <Next.Menu.Separator />
-          <Next.Menu.Sub>
-            <Next.Menu.TriggerItem item={{ label: 'Share', icon: 'ph--share--regular' }} />
-            <Next.Menu.Content>
-              <Next.Menu.Item item={{ value: 'email', label: 'Email' }} />
-              <Next.Menu.Item item={{ value: 'link', label: 'Copy link' }} />
-            </Next.Menu.Content>
-          </Next.Menu.Sub>
-          <Next.Menu.Sub>
-            <Next.Menu.TriggerItem item={{ label: 'Export', icon: 'ph--export--regular' }} disabled />
-            <Next.Menu.Content>
-              <Next.Menu.Item item={{ value: 'pdf', label: 'PDF' }} />
-            </Next.Menu.Content>
-          </Next.Menu.Sub>
-        </Next.Menu.Content>
-      </Next.Menu.Root>
-      <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
-        <Next.Menu.Trigger asChild>
-          <Next.Button data-testid={`file-${size}`}>File</Next.Button>
-        </Next.Menu.Trigger>
-        <Next.Menu.Content>
+          <Menu.RadioItemGroup value={sort} onValueChange={({ value }) => setSort(value)}>
+            <Menu.ItemGroupLabel>Sort</Menu.ItemGroupLabel>
+            <Menu.RadioItem item={{ value: 'name', label: 'Name' }} />
+            <Menu.RadioItem item={{ value: 'date', label: 'Date' }} />
+          </Menu.RadioItemGroup>
+          <Menu.Separator />
+          <Menu.Sub>
+            <Menu.TriggerItem item={{ label: 'Share', icon: 'ph--share--regular' }} />
+            <Menu.Content>
+              <Menu.Item item={{ value: 'email', label: 'Email' }} />
+              <Menu.Item item={{ value: 'link', label: 'Copy link' }} />
+            </Menu.Content>
+          </Menu.Sub>
+          <Menu.Sub>
+            <Menu.TriggerItem item={{ label: 'Export', icon: 'ph--export--regular' }} disabled />
+            <Menu.Content>
+              <Menu.Item item={{ value: 'pdf', label: 'PDF' }} />
+            </Menu.Content>
+          </Menu.Sub>
+        </Menu.Content>
+      </Menu.Root>
+      <Menu.Root onSelect={({ value }) => setSelected(value)}>
+        <Menu.Trigger asChild>
+          <Button data-testid={`file-${size}`}>File</Button>
+        </Menu.Trigger>
+        <Menu.Content>
           <MenuNodes nodes={HIERARCHY} />
-        </Next.Menu.Content>
-      </Next.Menu.Root>
-      <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
-        <Next.Menu.Trigger asChild>
-          <Next.Button data-testid={`long-${size}`}>Long</Next.Button>
-        </Next.Menu.Trigger>
-        <Next.Menu.Content size='lg'>
+        </Menu.Content>
+      </Menu.Root>
+      <Menu.Root onSelect={({ value }) => setSelected(value)}>
+        <Menu.Trigger asChild>
+          <Button data-testid={`long-${size}`}>Long</Button>
+        </Menu.Trigger>
+        <Menu.Content size='lg'>
           {LONG.map((label) => (
-            <Next.Menu.Item key={label} item={{ value: label, label }} />
+            <Menu.Item key={label} item={{ value: label, label }} />
           ))}
-        </Next.Menu.Content>
-      </Next.Menu.Root>
-      <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
-        <Next.Menu.ContextTrigger asChild>
-          <Next.Typography data-testid={`context-${size}`}>Right-click here</Next.Typography>
-        </Next.Menu.ContextTrigger>
-        <Next.Menu.Content>
-          <Next.Menu.Item item={{ value: 'rename', label: 'Rename' }} />
-        </Next.Menu.Content>
-      </Next.Menu.Root>
-      <Next.Group>
-        <Next.Button onClick={() => setAnchored(true)} data-testid={`open-anchored-${size}`}>
+        </Menu.Content>
+      </Menu.Root>
+      <Menu.Root onSelect={({ value }) => setSelected(value)}>
+        <Menu.ContextTrigger asChild>
+          <Typography data-testid={`context-${size}`}>Right-click here</Typography>
+        </Menu.ContextTrigger>
+        <Menu.Content>
+          <Menu.Item item={{ value: 'rename', label: 'Rename' }} />
+        </Menu.Content>
+      </Menu.Root>
+      <Group>
+        <Button onClick={() => setAnchored(true)} data-testid={`open-anchored-${size}`}>
           Open at anchor
-        </Next.Button>
-        <Next.Typography asChild>
+        </Button>
+        <Typography asChild>
           <span ref={anchor} data-testid={`anchor-${size}`}>
             Anchor
           </span>
-        </Next.Typography>
-      </Next.Group>
-      <Next.Menu.Root
+        </Typography>
+      </Group>
+      <Menu.Root
         open={anchored}
         onOpenChange={({ open }) => setAnchored(open)}
         onSelect={({ value }) => setSelected(value)}
-        positioning={Next.useVirtualAnchor(anchor)}
+        positioning={useVirtualAnchor(anchor)}
       >
-        <Next.Menu.Content arrow data-testid={`anchored-${size}`}>
-          <Next.Menu.Item item={{ value: 'pin', label: 'Pin' }} />
-        </Next.Menu.Content>
-      </Next.Menu.Root>
-      <Next.Typography data-testid={`selected-${size}`}>
+        <Menu.Content arrow data-testid={`anchored-${size}`}>
+          <Menu.Item item={{ value: 'pin', label: 'Pin' }} />
+        </Menu.Content>
+      </Menu.Root>
+      <Typography data-testid={`selected-${size}`}>
         {selected ? `Selected: ${selected}` : 'Nothing selected'}
-      </Next.Typography>
-      <Next.Typography data-testid={`options-${size}`}>
+      </Typography>
+      <Typography data-testid={`options-${size}`}>
         grid {grid ? 'on' : 'off'}, sort by {sort}
-      </Next.Typography>
+      </Typography>
     </>
   );
 };

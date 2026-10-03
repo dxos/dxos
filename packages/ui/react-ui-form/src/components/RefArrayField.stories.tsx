@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Annotation, DXN, Entity, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { Next } from '@dxos/react-ui';
+import { Container, Panel, ScrollArea, Typography } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, hues } from '@dxos/ui-types';
 
@@ -97,11 +97,11 @@ const DefaultStory = ({ display, ordered }: StoryArgs) => {
     return object ? (Obj.instanceOf(Project, object) ? object.name : Obj.getLabel(object)) : ref.uri.toString();
   });
   return (
-    <Next.Panel.Root size='sm'>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container>
+    <Panel.Root size='sm'>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container>
               <Form.Root
                 schema={schema}
                 values={values}
@@ -115,19 +115,19 @@ const DefaultStory = ({ display, ordered }: StoryArgs) => {
                   <Form.Fields />
                 </Form.Content>
               </Form.Root>
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-      <Next.Panel.Footer>
-        <Next.Typography truncate data-testid='values'>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+      <Panel.Footer>
+        <Typography truncate data-testid='values'>
           {JSON.stringify(labels)}
-        </Next.Typography>
-        <Next.Typography truncate data-testid='activated'>
+        </Typography>
+        <Typography truncate data-testid='activated'>
           {activated ?? ''}
-        </Next.Typography>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+        </Typography>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

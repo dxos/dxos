@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter, Obj, type View } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { DxAnchorActivate, Next } from '@dxos/react-ui';
+import { DxAnchorActivate, Panel, ToggleGroup, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { type TreeNode } from '@dxos/react-ui-graph';
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -85,20 +85,20 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
   }
 
   return (
-    <Next.Panel.Root role={role}>
+    <Panel.Root role={role}>
       {showToolbar && (
-        <Next.Panel.Header>
-          <Next.Toolbar.Root>
+        <Panel.Header>
+          <Toolbar.Root>
             <QueryEditor db={db} onFilterChange={handleFilterChange} />
-            <Next.Toolbar.ToggleGroup type='single' value={selected} onValueChange={handleVariantChange}>
+            <Toolbar.ToggleGroup type='single' value={selected} onValueChange={handleVariantChange}>
               {VARIANTS.map(({ value, icon, label }) => (
-                <Next.ToggleGroup.Item key={value} value={value} icon={icon} iconOnly label={label} />
+                <ToggleGroup.Item key={value} value={value} icon={icon} iconOnly label={label} />
               ))}
-            </Next.Toolbar.ToggleGroup>
-          </Next.Toolbar.Root>
-        </Next.Panel.Header>
+            </Toolbar.ToggleGroup>
+          </Toolbar.Root>
+        </Panel.Header>
       )}
-      <Next.Panel.Body asChild>
+      <Panel.Body asChild>
         <Visualization.Root
           classNames='dx-base-surface'
           variant={selected}
@@ -107,8 +107,8 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
         >
           <Visualization.Graph onNodeHover={handleHover} />
         </Visualization.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

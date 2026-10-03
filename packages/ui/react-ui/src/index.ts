@@ -13,6 +13,8 @@ export * from './hooks/index.ts';
 export * from './flow/index.ts';
 export * from './layout/index.ts';
 export * from './next/index.ts';
+// Explicit, so the component size scale wins over `@dxos/ui-types`' spacing `Size` re-exported above.
+export { type Size } from './next/sizes.ts';
 export * from './providers/index.ts';
 export * from './theme/index.ts';
 export * from './util/index.ts';

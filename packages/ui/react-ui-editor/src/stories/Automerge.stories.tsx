@@ -16,7 +16,7 @@ import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
@@ -41,7 +41,7 @@ type EditorProps = ThemedClassName<{
 }>;
 
 const Editor = ({ classNames, source, messenger, identity, autoFocus }: EditorProps) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const { parentRef } = useTextEditor(
     () => ({
       autoFocus,

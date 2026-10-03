@@ -19,14 +19,14 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
-import { Next, ThemedClassName, composable, composableProps, useMergeRefs, usePx } from '@dxos/react-ui';
+import { ScrollArea, ThemedClassName, composable, composableProps, useMergeRefs, usePx } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 import { prefersReducedMotion, useFlip } from './useFlip.ts';
 import { useMasonryLayout } from './useMasonryLayout.ts';
 
 /** Reveal the grid once the layout has been stable for this long (the initial reflow has settled). */
-type ScrollAreaRootProps = ComponentProps<typeof Next.ScrollArea.Root>;
+type ScrollAreaRootProps = ComponentProps<typeof ScrollArea.Root>;
 
 const REVEAL_SETTLE_MS = 80;
 
@@ -122,14 +122,14 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
     const { gap } = useMasonryContext('Masonry.Content');
     const style: CSSProperties & Record<'--gutter', string> = { '--gutter': padding ? `${gap}rem` : '0px' };
     return (
-      <Next.ScrollArea.Root
+      <ScrollArea.Root
         // `size-full`: the grid is a pane of its own and fills its host, as a Panel does, whatever the host's display.
         {...composableProps(props, { classNames: 'size-full', style })}
         scrollbars={scrollbars}
         ref={forwardedRef}
       >
         {children}
-      </Next.ScrollArea.Root>
+      </ScrollArea.Root>
     );
   },
 );
@@ -336,9 +336,9 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // (`w-full min-w-0`) without claiming the block axis, which would fight the surrounding flow —
     // the grid's height comes from the computed layout.
     return scroll ? (
-      <Next.ScrollArea.Viewport classNames='px-(--gutter)' ref={viewportRef}>
+      <ScrollArea.Viewport classNames='px-(--gutter)' ref={viewportRef}>
         {grid}
-      </Next.ScrollArea.Viewport>
+      </ScrollArea.Viewport>
     ) : (
       <div className='flex-1 w-full min-w-0' ref={viewportRef}>
         {grid}

@@ -11,7 +11,7 @@ import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-routine/components';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { useThemeMode, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
 import {
@@ -191,7 +191,7 @@ const NotebookTextEditor = ({
   ...props
 }: EditorViewProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
   const { t } = useTranslation(meta.profile.key);
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const extensions = useMemo(() => {
     return [
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),

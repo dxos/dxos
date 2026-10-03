@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -29,9 +29,9 @@ const DefaultStory = () => {
   );
 
   return (
-    <Next.Card.Root border={false} classNames='w-80'>
+    <Card.Root border={false} classNames='w-80'>
       <InstrumentCard subject={subject} />
-    </Next.Card.Root>
+    </Card.Root>
   );
 };
 

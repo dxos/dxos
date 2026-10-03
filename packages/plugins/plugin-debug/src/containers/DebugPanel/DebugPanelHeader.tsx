@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Button, type ButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
 import { type DebugPanelMode } from './view-state.ts';
 
-export type DebugPanelHeaderProps = Pick<Next.ButtonProps, 'size'> & {
+export type DebugPanelHeaderProps = Pick<ButtonProps, 'size'> & {
   mode: DebugPanelMode;
   onModeChange: (mode: DebugPanelMode) => void;
   /** Omitted where the host brings its own close (the floating window's `CloseTrigger`). */
@@ -26,7 +26,7 @@ export const DebugPanelHeader = ({ mode, onModeChange, onClose, size }: DebugPan
   const floating = mode === 'floating';
   return (
     <>
-      <Next.Button
+      <Button
         variant='ghost'
         size={size}
         iconOnly
@@ -36,7 +36,7 @@ export const DebugPanelHeader = ({ mode, onModeChange, onClose, size }: DebugPan
         onClick={() => onModeChange(floating ? 'docked' : 'floating')}
       />
       {onClose && (
-        <Next.Button
+        <Button
           variant='ghost'
           size={size}
           iconOnly

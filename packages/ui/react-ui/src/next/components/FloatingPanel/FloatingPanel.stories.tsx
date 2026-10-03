@@ -13,52 +13,52 @@ import { random } from '@dxos/random';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { GEOMETRY, byTestId } from '../../testing.ts';
+import { Button, Container, FloatingPanel, type FloatingPanelRootProps, ScrollArea, Typography } from '../index.ts';
 
 random.seed(7);
 
 const LINES = Array.from({ length: 40 }, () => random.lorem.sentence());
 
-type StoryArgs = Pick<Next.FloatingPanelRootProps, 'resizable' | 'draggable'>;
+type StoryArgs = Pick<FloatingPanelRootProps, 'resizable' | 'draggable'>;
 
 /** A button opening a log window that folds, maximizes, restores and closes; its body scrolls in a ScrollArea. */
 const DefaultStory = (args: StoryArgs) => (
-  <Next.FloatingPanel.Root
+  <FloatingPanel.Root
     {...args}
     defaultSize={{ width: 384, height: 256 }}
     defaultPosition={{ x: 32, y: 96 }}
     minSize={{ width: 240, height: 160 }}
     closeOnEscape
   >
-    <Next.FloatingPanel.Trigger asChild>
-      <Next.Button data-testid='panel.trigger'>Open log</Next.Button>
-    </Next.FloatingPanel.Trigger>
-    <Next.FloatingPanel.Content data-testid='panel'>
-      <Next.FloatingPanel.Header data-testid='panel.header'>
-        <Next.FloatingPanel.DragTrigger>
-          <Next.FloatingPanel.Title>Log</Next.FloatingPanel.Title>
-        </Next.FloatingPanel.DragTrigger>
-        <Next.FloatingPanel.Control>
-          <Next.FloatingPanel.StageTrigger stage='minimized' />
-          <Next.FloatingPanel.StageTrigger stage='maximized' />
-          <Next.FloatingPanel.StageTrigger stage='default' />
-          <Next.FloatingPanel.CloseTrigger />
-        </Next.FloatingPanel.Control>
-      </Next.FloatingPanel.Header>
-      <Next.FloatingPanel.Body data-testid='panel.body'>
-        <Next.ScrollArea.Root classNames='h-full'>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container gutter='inset'>
+    <FloatingPanel.Trigger asChild>
+      <Button data-testid='panel.trigger'>Open log</Button>
+    </FloatingPanel.Trigger>
+    <FloatingPanel.Content data-testid='panel'>
+      <FloatingPanel.Header data-testid='panel.header'>
+        <FloatingPanel.DragTrigger>
+          <FloatingPanel.Title>Log</FloatingPanel.Title>
+        </FloatingPanel.DragTrigger>
+        <FloatingPanel.Control>
+          <FloatingPanel.StageTrigger stage='minimized' />
+          <FloatingPanel.StageTrigger stage='maximized' />
+          <FloatingPanel.StageTrigger stage='default' />
+          <FloatingPanel.CloseTrigger />
+        </FloatingPanel.Control>
+      </FloatingPanel.Header>
+      <FloatingPanel.Body data-testid='panel.body'>
+        <ScrollArea.Root classNames='h-full'>
+          <ScrollArea.Viewport asChild>
+            <Container gutter='inset'>
               {LINES.map((line, index) => (
-                <Next.Typography key={index}>{line}</Next.Typography>
+                <Typography key={index}>{line}</Typography>
               ))}
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.FloatingPanel.Body>
-    </Next.FloatingPanel.Content>
-  </Next.FloatingPanel.Root>
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </FloatingPanel.Body>
+    </FloatingPanel.Content>
+  </FloatingPanel.Root>
 );
 
 const meta = {

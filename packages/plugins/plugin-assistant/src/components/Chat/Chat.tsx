@@ -18,7 +18,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
   type ChatThreadController,
   type ChatThreadEvent,
@@ -601,27 +601,27 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
       </NaturalChatThread.Root>
 
       {/* TODO(burdon): Why is this required? */}
-      <Next.Toast.Root
+      <Toast.Root
         data-testid='assistant.error'
         open={!!toastError}
         duration={20_000}
         onOpenChange={(open) => !open && setToastError(undefined)}
       >
-        <Next.Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Next.Toast.Header>
-        <Next.Toast.Description>{toastError?.message}</Next.Toast.Description>
+        <Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Toast.Header>
+        <Toast.Description>{toastError?.message}</Toast.Description>
         {toastAction && onViewUsage && (
-          <Next.Toast.Footer>
-            <Next.Toast.ActionTrigger
+          <Toast.Footer>
+            <Toast.ActionTrigger
               onClick={() => {
                 setToastError(undefined);
                 onViewUsage();
               }}
             >
               {t(toastAction.labelKey)}
-            </Next.Toast.ActionTrigger>
-          </Next.Toast.Footer>
+            </Toast.ActionTrigger>
+          </Toast.Footer>
         )}
-      </Next.Toast.Root>
+      </Toast.Root>
     </>
   );
 };

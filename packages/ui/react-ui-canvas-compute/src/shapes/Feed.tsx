@@ -5,7 +5,7 @@
 import React, { Fragment } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -19,13 +19,13 @@ export const FeedComponent = ({ shape }: ShapeComponentProps<FeedShape>) => {
 
   return (
     <Box shape={shape} status={`${items.length} items`}>
-      <Next.ScrollArea.Root orientation='vertical'>
-        <Next.ScrollArea.Viewport classNames='divide-y divide-subdued-separator'>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport classNames='divide-y divide-subdued-separator'>
           {[...items].map((item, i) => (
             <FeedItem key={i} classNames='p-1 px-2' item={item} />
           ))}
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </Box>
   );
 };

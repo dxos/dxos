@@ -10,7 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 import '@dxos/react-ui/theme.css';
-import { Next } from '@dxos/react-ui';
+import { Button, Container, Input, Toolbar, Typography } from '@dxos/react-ui';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -50,7 +50,7 @@ export const DropdownMenu: Story = {
 
     return (
       <ActionMenu {...menu}>
-        <Next.Button icon='ph--list-checks--regular' label='Options' iconOnly />
+        <Button icon='ph--list-checks--regular' label='Options' iconOnly />
       </ActionMenu>
     );
   },
@@ -118,7 +118,7 @@ export const TrailingChildren: Story = {
 
     return (
       <ActionToolbar {...menu} alwaysActive>
-        <Next.Input placeholder='Filter…' aria-label='Filter' />
+        <Input placeholder='Filter…' aria-label='Filter' />
       </ActionToolbar>
     );
   },
@@ -131,13 +131,13 @@ export const EmbeddedMenu: Story = {
     const menu = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
 
     return (
-      <Next.Toolbar.Root>
-        <Next.Button>Foo</Next.Button>
-        <Next.Toolbar.Separator />
+      <Toolbar.Root>
+        <Button>Foo</Button>
+        <Toolbar.Separator />
         <ActionMenu {...menu}>
-          <Next.Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
+          <Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
         </ActionMenu>
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
     );
   },
   play: async ({ canvasElement }) => {
@@ -250,10 +250,10 @@ export const Builder: Story = {
     );
 
     return (
-      <Next.Container gap='md'>
+      <Container gap='md'>
         <ActionToolbar {...menu} alwaysActive />
-        <Next.Typography data-testid='log'>{log.join(',')}</Next.Typography>
-      </Next.Container>
+        <Typography data-testid='log'>{log.join(',')}</Typography>
+      </Container>
     );
   },
   play: async ({ canvasElement }) => {

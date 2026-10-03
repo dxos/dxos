@@ -31,7 +31,6 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import {
-  Next,
   type ThemedClassName,
   type ThemeMode,
   composable,
@@ -39,6 +38,7 @@ import {
   useComposedRefs,
   useControlledState,
   useDynamicRef,
+  useThemeMode,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -263,7 +263,7 @@ type GlobeCanvasProps = {
  * https://github.com/topojson/world-atlas
  */
 const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styles: stylesProp }: GlobeCanvasProps) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
   const { size, center, zoom, translation, rotation, setZoom, setTranslation, setRotation, registerController } =
     useGlobeContext();

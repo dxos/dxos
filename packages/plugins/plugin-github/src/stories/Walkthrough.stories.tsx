@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
-import { Next } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type DiffLayout, type DiffLineTarget } from '@dxos/ui-editor';
 
@@ -44,15 +44,15 @@ const DefaultStory = ({ text, layout, sidebar = 'full', comments }: StoryArgs) =
   }, []);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Body>
+    <Panel.Root>
+      <Panel.Body>
         <WalkthroughView
           value={text}
           layout={layout}
           sidebar={sidebar}
           onLineComment={comments ? handleLineComment : undefined}
         />
-      </Next.Panel.Body>
+      </Panel.Body>
       <LineCommentPopover
         open={!!target}
         anchorRef={anchorRef}
@@ -62,7 +62,7 @@ const DefaultStory = ({ text, layout, sidebar = 'full', comments }: StoryArgs) =
         onSubmit={handleCancel}
         onCancel={handleCancel}
       />
-    </Next.Panel.Root>
+    </Panel.Root>
   );
 };
 

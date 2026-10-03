@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Progress, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../translations.ts';
 
@@ -15,7 +15,7 @@ export const StatusPanel = ({ titleId }: { titleId?: string }) => {
       <p id={titleId} className='font-medium text-center'>
         {t('resetting.message')}
       </p>
-      <Next.Progress indeterminate label={t('resetting.message')} />
+      <Progress indeterminate label={t('resetting.message')} />
     </div>
   );
 };

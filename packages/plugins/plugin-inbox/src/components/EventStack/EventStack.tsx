@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Card, Focus, ScrollArea, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { CardTile } from '@dxos/react-ui-card';
 import { Mosaic, type MosaicScrollController, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
@@ -69,7 +69,7 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
     }, []);
 
     return (
-      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -79,8 +79,8 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport classNames='py-2' ref={setViewport}>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={EventTile}
                 items={items}
@@ -90,10 +90,10 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
                 estimateSize={() => 100}
                 gap={4}
               />
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Mosaic.Container>
-      </Next.Focus.Group>
+      </Focus.Group>
     );
   },
 );
@@ -139,9 +139,9 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
         onToggleStar={onAction ? handleToggleStar : undefined}
         title={<span className='grow truncate font-medium'>{event.title ?? t('event-untitled.label')}</span>}
       />
-      <Next.Card.Body>
+      <Card.Body>
         <EventDetails event={event} title={false} maxAttendees={8} />
-      </Next.Card.Body>
+      </Card.Body>
     </CardTile.Root>
   );
 });

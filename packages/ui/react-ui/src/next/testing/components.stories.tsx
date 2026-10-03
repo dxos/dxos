@@ -9,76 +9,95 @@ import React from 'react';
 import { expect, userEvent } from 'storybook/test';
 
 import { withTheme } from '../../testing/index.ts';
-import { Next } from '../Next.tsx';
+import {
+  Block,
+  Button,
+  Checkbox,
+  Collapsible,
+  Combobox,
+  Container,
+  DateInput,
+  Field,
+  Icon,
+  Input,
+  Select,
+  type SelectOption,
+  Switch,
+  Textarea,
+  Toggle,
+  Toolbar,
+  Typography,
+} from '../components/index.ts';
+import { Label } from '../components/Label/Label.tsx';
 import { type Size, SIZES } from '../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs } from './stories.tsx';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
-const OPTIONS: Next.SelectOption[] = [
+const OPTIONS: SelectOption[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
 ];
 
 const SizeSection = ({ size }: { size: Size }) => (
-  <Next.Container size={size} gutter='rail' columns={LABEL_COLUMNS} data-testid={`section-${size}`}>
-    <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Next.Block>
-        <Next.Icon icon='ph--circle--regular' />
-      </Next.Block>
-      <Next.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
-      <Next.Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
-      <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
-      <Next.Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
-      <Next.Select.Root items={OPTIONS}>
-        <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
-        <Next.Select.Content data-testid={`listbox-${size}`}>
+  <Container size={size} gutter='rail' columns={LABEL_COLUMNS} data-testid={`section-${size}`}>
+    <Toolbar.Root data-testid={`toolbar-${size}`}>
+      <Block>
+        <Icon icon='ph--circle--regular' />
+      </Block>
+      <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+      <Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
+      <Button data-testid={`button-${size}`}>Save</Button>
+      <Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
+      <Select.Root items={OPTIONS}>
+        <Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
+        <Select.Content data-testid={`listbox-${size}`}>
           {OPTIONS.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-    </Next.Toolbar.Root>
+        </Select.Content>
+      </Select.Root>
+    </Toolbar.Root>
 
-    <Next.Container layout='row' data-testid={`row-${size}`}>
-      <Next.Block rail='start' data-testid={`row-${size}-rail-start`}>
-        <Next.Icon icon='ph--user--regular' />
-      </Next.Block>
-      <Next.Label htmlFor={`name-${size}`} classNames='pe-(--nx-gap-size)'>
+    <Container layout='row' data-testid={`row-${size}`}>
+      <Block rail='start' data-testid={`row-${size}-rail-start`}>
+        <Icon icon='ph--user--regular' />
+      </Block>
+      <Label htmlFor={`name-${size}`} classNames='pe-(--nx-gap-size)'>
         Name
-      </Next.Label>
-      <Next.Input id={`name-${size}`} data-testid={`row-input-${size}`} />
-      <Next.Block rail='end'>
-        <Next.Icon icon='ph--x--regular' label='Clear' />
-      </Next.Block>
-    </Next.Container>
+      </Label>
+      <Input id={`name-${size}`} data-testid={`row-input-${size}`} />
+      <Block rail='end'>
+        <Icon icon='ph--x--regular' label='Clear' />
+      </Block>
+    </Container>
 
-    <Next.Container>
-      <Next.Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
-    </Next.Container>
+    <Container>
+      <Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
+    </Container>
 
-    <Next.Field.Root data-testid={`field-${size}`}>
-      <Next.Field.Label>Email</Next.Field.Label>
-      <Next.Input data-testid={`field-input-${size}`} />
-      <Next.Field.HelperText>We never share it.</Next.Field.HelperText>
-    </Next.Field.Root>
+    <Field.Root data-testid={`field-${size}`}>
+      <Field.Label>Email</Field.Label>
+      <Input data-testid={`field-input-${size}`} />
+      <Field.HelperText>We never share it.</Field.HelperText>
+    </Field.Root>
 
-    <Next.Field.Root invalid>
-      <Next.Field.Label>Website</Next.Field.Label>
-      <Next.Input defaultValue='not a url' />
-      <Next.Field.ErrorText>Enter a valid URL.</Next.Field.ErrorText>
-    </Next.Field.Root>
+    <Field.Root invalid>
+      <Field.Label>Website</Field.Label>
+      <Input defaultValue='not a url' />
+      <Field.ErrorText>Enter a valid URL.</Field.ErrorText>
+    </Field.Root>
 
-    <Next.Container>
-      <Next.Block rail='start'>
-        <Next.Icon icon='ph--chat-circle--regular' />
-      </Next.Block>
-      <Next.Typography>
+    <Container>
+      <Block rail='start'>
+        <Icon icon='ph--chat-circle--regular' />
+      </Block>
+      <Typography>
         Typography centres its first line in the block, so the icon beside it lines up however far it wraps.
-      </Next.Typography>
-    </Next.Container>
-  </Next.Container>
+      </Typography>
+    </Container>
+  </Container>
 );
 
 /** Every size by default; pick one in the properties panel by turning `allSizes` off. */
@@ -115,58 +134,58 @@ const FOREIGN_RING = 'rgb(37, 99, 235)';
 /** Every focusable Next control, themed with the audit ring colour. */
 const FocusRingsStory = () => (
   <div className='nx-scope' data-size='md' style={{ ['--nx-focus-ring-color' as string]: AUDIT_RING }}>
-    <Next.Container gutter='rail' level='base'>
-      <Next.Field.Root>
-        <Next.Field.Label>Input</Next.Field.Label>
-        <Next.Input />
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Field.Label>Textarea</Next.Field.Label>
-        <Next.Textarea />
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Field.Label>Date</Next.Field.Label>
-        <Next.DateInput defaultValue='2026-09-29' />
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Field.Label>Time</Next.Field.Label>
-        <Next.DateInput type='time' defaultValue='09:30' />
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Select.Root items={OPTIONS}>
-          <Next.Select.Label>Select</Next.Select.Label>
-          <Next.Select.Trigger placeholder='Pick one' />
-          <Next.Select.Content size='md'>
+    <Container gutter='rail' level='base'>
+      <Field.Root>
+        <Field.Label>Input</Field.Label>
+        <Input />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Textarea</Field.Label>
+        <Textarea />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Date</Field.Label>
+        <DateInput defaultValue='2026-09-29' />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Time</Field.Label>
+        <DateInput type='time' defaultValue='09:30' />
+      </Field.Root>
+      <Field.Root>
+        <Select.Root items={OPTIONS}>
+          <Select.Label>Select</Select.Label>
+          <Select.Trigger placeholder='Pick one' />
+          <Select.Content size='md'>
             {OPTIONS.map((item) => (
-              <Next.Select.Item key={item.value} item={item} />
+              <Select.Item key={item.value} item={item} />
             ))}
-          </Next.Select.Content>
-        </Next.Select.Root>
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Combobox.Root items={OPTIONS}>
-          <Next.Combobox.Label>Combobox</Next.Combobox.Label>
-          <Next.Combobox.Control>
-            <Next.Combobox.Input placeholder='Search' />
-            <Next.Combobox.Trigger />
-          </Next.Combobox.Control>
-          <Next.Combobox.Content size='md' />
-        </Next.Combobox.Root>
-      </Next.Field.Root>
-      <Next.Checkbox label='Checkbox' />
-      <Next.Switch label='Switch' />
-      <Next.Collapsible.Root>
-        <Next.Collapsible.Trigger>Collapsible</Next.Collapsible.Trigger>
-        <Next.Collapsible.Content>
-          <Next.Typography>Hidden content.</Next.Typography>
-        </Next.Collapsible.Content>
-      </Next.Collapsible.Root>
-      <Next.Toolbar.Root>
-        <Next.Button>Button</Next.Button>
-        <Next.Button icon='ph--plus--regular' label='Add' iconOnly showTooltip={false} />
-        <Next.Toggle icon='ph--text-b--regular' label='Bold' iconOnly showTooltip={false} />
-      </Next.Toolbar.Root>
-    </Next.Container>
+          </Select.Content>
+        </Select.Root>
+      </Field.Root>
+      <Field.Root>
+        <Combobox.Root items={OPTIONS}>
+          <Combobox.Label>Combobox</Combobox.Label>
+          <Combobox.Control>
+            <Combobox.Input placeholder='Search' />
+            <Combobox.Trigger />
+          </Combobox.Control>
+          <Combobox.Content size='md' />
+        </Combobox.Root>
+      </Field.Root>
+      <Checkbox label='Checkbox' />
+      <Switch label='Switch' />
+      <Collapsible.Root>
+        <Collapsible.Trigger>Collapsible</Collapsible.Trigger>
+        <Collapsible.Content>
+          <Typography>Hidden content.</Typography>
+        </Collapsible.Content>
+      </Collapsible.Root>
+      <Toolbar.Root>
+        <Button>Button</Button>
+        <Button icon='ph--plus--regular' label='Add' iconOnly showTooltip={false} />
+        <Toggle icon='ph--text-b--regular' label='Bold' iconOnly showTooltip={false} />
+      </Toolbar.Root>
+    </Container>
   </div>
 );
 

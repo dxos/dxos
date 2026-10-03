@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { PublicKey } from '@dxos/react-client';
-import { Next } from '@dxos/react-ui';
+import { Select } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 export type PublicKeySelectorProps = {
@@ -28,20 +28,20 @@ export const PublicKeySelector = ({
     label: `${key.truncate()} ${getLabel(key)}`,
   }));
   return (
-    <Next.Select.Root
+    <Select.Root
       items={items}
       value={value ? [value.toHex()] : []}
       onValueChange={({ value: [id] }) => {
         id && onChange?.(PublicKey.fromHex(id));
       }}
     >
-      <Next.Select.Trigger placeholder={placeholder} />
-      <Next.Select.Content>
+      <Select.Trigger placeholder={placeholder} />
+      <Select.Content>
         {items.map((item) => (
-          <Next.Select.Item key={item.value} item={item} />
+          <Select.Item key={item.value} item={item} />
         ))}
-      </Next.Select.Content>
-    </Next.Select.Root>
+      </Select.Content>
+    </Select.Root>
   );
 };
 

@@ -9,7 +9,7 @@ import { ExecutionGraph } from '@dxos/assistant/ExecutionGraph';
 import { InvocationTraceStartEvent } from '@dxos/compute-runtime';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui';
+import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-trace';
 
 export const ExecutionGraphModule = () => {
@@ -46,19 +46,19 @@ const ExecutionGraphContainer = ({ space }: { space: Space }) => {
   }, [objects]);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>Execution Graph</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
-        <Next.ScrollArea.Root orientation='vertical' classNames='h-full'>
-          <Next.ScrollArea.Viewport ref={setViewport}>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Toolbar.Text>Execution Graph</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
+        <ScrollArea.Root orientation='vertical' classNames='h-full'>
+          <ScrollArea.Viewport ref={setViewport}>
             <Timeline branches={branches} commits={commits} scroller={viewport} />
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

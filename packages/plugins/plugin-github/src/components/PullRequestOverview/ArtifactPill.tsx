@@ -4,7 +4,7 @@
 
 import React, { type ReactNode } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Button, Popover } from '@dxos/react-ui';
 
 import { type ArtifactKind, type ArtifactLink } from '../../pull-request-body.ts';
 
@@ -59,9 +59,9 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
   }
 
   return (
-    <Next.Popover.Root autoFocus={false}>
-      <Next.Popover.Trigger asChild>
-        <Next.Button
+    <Popover.Root autoFocus={false}>
+      <Popover.Trigger asChild>
+        <Button
           hue='neutral'
           size='sm'
           classNames='bg-input-surface text-base-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border align-baseline'
@@ -70,12 +70,12 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
           label={label}
           data-testid='pull-request.artifact.pill'
         />
-      </Next.Popover.Trigger>
-      <Next.Popover.Content classNames='w-[min(40rem,90vw)]'>
-        <Next.Popover.Body classNames='p-1'>
+      </Popover.Trigger>
+      <Popover.Content classNames='w-[min(40rem,90vw)]'>
+        <Popover.Body classNames='p-1'>
           <ArtifactMedia artifact={artifact} />
-        </Next.Popover.Body>
-      </Next.Popover.Content>
-    </Next.Popover.Root>
+        </Popover.Body>
+      </Popover.Content>
+    </Popover.Root>
   );
 };

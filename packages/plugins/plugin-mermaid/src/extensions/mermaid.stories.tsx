@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -22,7 +22,7 @@ type StoryArgs = MermaidOptions & {
 };
 
 const DefaultStory = ({ text, ...options }: StoryArgs) => {
-  const themeMode = Next.useThemeMode();
+  const themeMode = useThemeMode();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue: text,

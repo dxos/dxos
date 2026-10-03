@@ -9,9 +9,9 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { GEOMETRY, byTestId, expectArrow, expectNoTooltip, expectTooltip } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button, Group, Input, TextTooltip, Tooltip } from '../index.ts';
 
 const LONG =
   'Publishing makes this space readable by anyone with the link. Members keep their roles, and you can unpublish at any time.';
@@ -22,28 +22,28 @@ const LONG =
  */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Group>
-      <Next.Tooltip.Root>
-        <Next.Tooltip.Trigger asChild>
-          <Next.Button data-testid={`save-${size}`}>Save</Next.Button>
-        </Next.Tooltip.Trigger>
-        <Next.Tooltip.Content data-testid={`save-tooltip-${size}`}>Save changes (⌘S)</Next.Tooltip.Content>
-      </Next.Tooltip.Root>
-      <Next.Tooltip.Root>
-        <Next.Tooltip.Trigger asChild>
-          <Next.Button data-testid={`publish-${size}`}>Publish</Next.Button>
-        </Next.Tooltip.Trigger>
-        <Next.Tooltip.Content size='lg'>{LONG}</Next.Tooltip.Content>
-      </Next.Tooltip.Root>
-      <Next.Input aria-label='Note' data-testid={`note-${size}`} />
-    </Next.Group>
-    <Next.Group>
-      <Next.Tooltip.Trigger asChild content='Opens on the right' side='right'>
-        <Next.Button data-testid={`side-${size}`}>Details</Next.Button>
-      </Next.Tooltip.Trigger>
-    </Next.Group>
-    <Next.TextTooltip text={LONG} classNames='w-48' data-testid={`truncated-${size}`} />
-    <Next.TextTooltip text='Short' classNames='w-48' data-testid={`fits-${size}`} />
+    <Group>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <Button data-testid={`save-${size}`}>Save</Button>
+        </Tooltip.Trigger>
+        <Tooltip.Content data-testid={`save-tooltip-${size}`}>Save changes (⌘S)</Tooltip.Content>
+      </Tooltip.Root>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <Button data-testid={`publish-${size}`}>Publish</Button>
+        </Tooltip.Trigger>
+        <Tooltip.Content size='lg'>{LONG}</Tooltip.Content>
+      </Tooltip.Root>
+      <Input aria-label='Note' data-testid={`note-${size}`} />
+    </Group>
+    <Group>
+      <Tooltip.Trigger asChild content='Opens on the right' side='right'>
+        <Button data-testid={`side-${size}`}>Details</Button>
+      </Tooltip.Trigger>
+    </Group>
+    <TextTooltip text={LONG} classNames='w-48' data-testid={`truncated-${size}`} />
+    <TextTooltip text='Short' classNames='w-48' data-testid={`fits-${size}`} />
   </>
 );
 

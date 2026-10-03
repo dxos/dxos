@@ -51,7 +51,7 @@ import * as Trip from '@dxos/plugin-trip/Trip';
 import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Next } from '@dxos/react-ui';
+import { Button, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -462,10 +462,10 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   }, [actions, actionId]);
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <Next.Button
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button
             icon='ph--play--regular'
             iconOnly
             label='Execute'
@@ -473,26 +473,26 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             disabled={!invoker || !mailbox}
             onClick={() => void handleExecute()}
           />
-          <Next.Select.Root
+          <Select.Root
             value={[actionId]}
             onValueChange={({ value: [value] }) => setActionId(value)}
             items={actions.map((action) => ({ value: action.id, label: action.label }))}
           >
-            <Next.Select.Trigger classNames='truncate' data-testid='action-select' placeholder='Action' />
-            <Next.Select.Content>
+            <Select.Trigger classNames='truncate' data-testid='action-select' placeholder='Action' />
+            <Select.Content>
               {actions.map((action) => (
                 // Testid selection (`action-<id>`): the play tests must survive label edits.
-                <Next.Select.Item
+                <Select.Item
                   key={action.id}
                   data-testid={`action-${action.id}`}
                   item={{ value: action.id, label: action.label }}
                 />
               ))}
-            </Next.Select.Content>
-          </Next.Select.Root>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body data-testid='counts' classNames='grid grid-cols-2'>
+            </Select.Content>
+          </Select.Root>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body data-testid='counts' classNames='grid grid-cols-2'>
         <JsonHighlighter
           classNames='text-xs'
           data={{
@@ -522,8 +522,8 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             tasks: tasks.length,
           }}
         />
-      </Next.Panel.Body>
-      <Next.Panel.Footer classNames='flex flex-col'>
+      </Panel.Body>
+      <Panel.Footer classNames='flex flex-col'>
         {monitors.map((monitor) => (
           <ProgressMeter
             key={monitor.name}
@@ -532,9 +532,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             onCancel={progressRegistry ? () => progressRegistry.cancel(monitor.name) : undefined}
           />
         ))}
-        <Next.Toolbar.Root>
+        <Toolbar.Root>
           {resets.map((reset) => (
-            <Next.Button
+            <Button
               key={reset.id}
               icon='ph--trash--regular'
               label={reset.label}
@@ -543,9 +543,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
               onClick={() => void handleReset(reset)}
             />
           ))}
-        </Next.Toolbar.Root>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+        </Toolbar.Root>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
 

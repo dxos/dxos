@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 
 import { type TestCase } from '#types';
 
@@ -23,7 +23,7 @@ export const StatusBadge = ({ status, label = true }: StatusBadgeProps) => {
   const { icon, classNames } = presentation[status];
   return (
     <span className={`flex items-center gap-1 ${classNames}`} data-testid='qa.status' data-status={status}>
-      <Next.Icon icon={icon} size='md' />
+      <Icon icon={icon} size='md' />
       {label && <span className='text-sm'>{status}</span>}
     </span>
   );

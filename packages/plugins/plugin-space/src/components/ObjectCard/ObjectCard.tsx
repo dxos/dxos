@@ -15,7 +15,7 @@ import {
 } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
@@ -63,7 +63,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
 
   return (
-    <Next.Card.Root
+    <Card.Root
       grid
       ref={cardRef}
       classNames={[classNames, handleOpen && 'dx-hover']}
@@ -72,20 +72,20 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
       role={handleOpen ? 'button' : undefined}
       tabIndex={handleOpen ? 0 : undefined}
     >
-      <Next.Card.Header>
-        <Next.Block>
+      <Card.Header>
+        <Block>
           <CardIconSlot subject={subject}>
-            <Next.Icon icon={icon} />
+            <Icon icon={icon} />
           </CardIconSlot>
-        </Next.Block>
-        <Next.Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Next.Card.Title>
-        <Next.Block rail='end'>
+        </Block>
+        <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
+        <Block rail='end'>
           {/* React portals bubble through the component tree, so the menu's clicks would reach the card. */}
           <div role='none' className='contents' onClick={stopPropagation}>
             <CardMenuSlot subject={subject} menu={menu} />
             {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
             <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-              <Next.Button
+              <Button
                 iconOnly
                 variant='ghost'
                 icon='ph--dots-three-vertical--regular'
@@ -93,12 +93,12 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
               />
             </ActionMenu>
           </div>
-        </Next.Block>
-      </Next.Card.Header>
-      <Next.Card.Body>
+        </Block>
+      </Card.Header>
+      <Card.Body>
         <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-      </Next.Card.Body>
-    </Next.Card.Root>
+      </Card.Body>
+    </Card.Root>
   );
 };
 

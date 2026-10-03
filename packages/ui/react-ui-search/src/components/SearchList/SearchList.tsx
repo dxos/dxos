@@ -29,11 +29,14 @@ import React, {
 } from 'react';
 
 import {
-  Next,
+  Container,
+  Icon,
+  ScrollArea,
   type ThemedClassName,
   composable,
   composableProps,
   useControllableState,
+  useInGrid,
   useTranslation,
 } from '@dxos/react-ui';
 import { type EscapeBehavior, Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
@@ -233,17 +236,17 @@ const SearchListViewport = composable<HTMLDivElement, SearchListViewportProps>(
   ({ padding = true, children, ...props }, forwardedRef) => {
     // Inside a grid (a dialog or panel body) the list joins its host's gutters, so its rows share the content track
     // and the thumb lands in the host's end gutter; standalone it keeps its own inset.
-    const inGrid = Next.useInGrid();
+    const inGrid = useInGrid();
     return (
-      <Next.ScrollArea.Root {...composableProps<HTMLDivElement>(props)} role='listbox' ref={forwardedRef}>
+      <ScrollArea.Root {...composableProps<HTMLDivElement>(props)} role='listbox' ref={forwardedRef}>
         {inGrid ? (
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container gutter='inherit'>{children}</Next.Container>
-          </Next.ScrollArea.Viewport>
+          <ScrollArea.Viewport asChild>
+            <Container gutter='inherit'>{children}</Container>
+          </ScrollArea.Viewport>
         ) : (
-          <Next.ScrollArea.Viewport classNames={padding ? 'px-1' : undefined}>{children}</Next.ScrollArea.Viewport>
+          <ScrollArea.Viewport classNames={padding ? 'px-1' : undefined}>{children}</ScrollArea.Viewport>
         )}
-      </Next.ScrollArea.Root>
+      </ScrollArea.Root>
     );
   },
 );
@@ -283,10 +286,10 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         classNames={mx('flex gap-2 items-center px-2 rounded-xs', classNames)}
         ref={forwardedRef}
       >
-        {icon && <Next.Icon icon={icon} classNames={iconClassNames} />}
+        {icon && <Icon icon={icon} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>
         {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
-        {checked && <Next.Icon icon='ph--check--regular' />}
+        {checked && <Icon icon='ph--check--regular' />}
       </Picker.Item>
     );
   },

@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { RegistryOperation, describeLoadError } from '@dxos/plugin-registry/operations';
-import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -77,7 +77,7 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
       data-testid='assistant.pluginUrlPrompt'
     >
       <Flex gap='sm' align='center'>
-        <Next.Icon icon='ph--cloud-arrow-down--regular' size='lg' tone='subdued' />
+        <Icon icon='ph--cloud-arrow-down--regular' size='lg' tone='subdued' />
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-url-prompt.title', { plugin: label })}</p>
           <p className='text-sm text-subdued'>
@@ -91,14 +91,14 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
       {error && <p className='text-sm text-error-text'>{t('plugin-url-prompt.failed', { error })}</p>}
       {!isLoaded && (
         <Flex justify='end'>
-          <Next.Button
+          <Button
             variant='primary'
             disabled={pending}
             onClick={() => void handleLoad()}
             data-testid='assistant.pluginUrlPrompt.load'
           >
             {t('plugin-url-prompt.button')}
-          </Next.Button>
+          </Button>
         </Flex>
       )}
     </Flex>

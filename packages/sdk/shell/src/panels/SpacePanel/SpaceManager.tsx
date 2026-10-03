@@ -15,7 +15,7 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -142,8 +142,8 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
 
   return (
     <>
-      <Next.ScrollArea.Root orientation='vertical' classNames='grow shrink basis-28 -mx-2'>
-        <Next.ScrollArea.Viewport>
+      <ScrollArea.Root orientation='vertical' classNames='grow shrink basis-28 -mx-2'>
+        <ScrollArea.Viewport>
           {!!visibleInvitations?.length && (
             <>
               <h3 className={mx(headingFragment, 'text-description')}>{t('invitation-list.heading')}</h3>
@@ -158,8 +158,8 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
             </>
           )}
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
       <ActionBar>
         <BifurcatedAction
           disabled={!active}

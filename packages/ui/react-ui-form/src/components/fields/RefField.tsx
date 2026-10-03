@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Ref } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import { Next, useTranslation } from '@dxos/react-ui';
+import { Typography, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps } from '#types';
@@ -44,9 +44,9 @@ export const RefField = ({
   }
   if (readonly || presentationFor(presentation).isStatic) {
     return (
-      <Next.Typography truncate tone={selected ? 'default' : 'description'}>
+      <Typography truncate tone={selected ? 'default' : 'description'}>
         {selected?.label ?? t('empty-readonly-ref-field.label')}
-      </Next.Typography>
+      </Typography>
     );
   }
 

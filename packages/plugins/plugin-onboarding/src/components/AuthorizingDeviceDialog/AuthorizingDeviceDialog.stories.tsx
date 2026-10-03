@@ -7,16 +7,16 @@ import '@fontsource/poiret-one';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations.ts';
 import { AuthorizingDeviceDialog } from './AuthorizingDeviceDialog.tsx';
 
 const DefaultStory = () => (
-  <Next.AlertDialog.Root defaultOpen>
+  <AlertDialog.Root defaultOpen>
     <AuthorizingDeviceDialog />
-  </Next.AlertDialog.Root>
+  </AlertDialog.Root>
 );
 
 const meta = {
