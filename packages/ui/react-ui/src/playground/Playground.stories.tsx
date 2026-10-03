@@ -31,13 +31,6 @@ import { withTheme } from '../testing/index.ts';
 
 const SizeContext = createContext<Size>('md');
 
-const HUE_OPTIONS: Next.SelectOption[] = ACCENT_HUES.map((hue) => ({
-  value: hue,
-  label: hue,
-  icon: 'ph--circle--fill',
-  iconHue: hue,
-}));
-
 type SectionProps = PropsWithChildren<{
   id: string;
   title: string;
@@ -49,12 +42,12 @@ type SectionProps = PropsWithChildren<{
 const Section = ({ id, title, narrow, children }: SectionProps) => {
   const size = useContext(SizeContext);
   return (
-    <section id={id} data-section={id} className='flex flex-col gap-2 py-4 border-b border-separator'>
+    <section id={id} data-section={id} className='flex flex-col gap-2 m-4 py-4 border border-separator rounded-md'>
       <Next.Typography asChild tone='description' classNames='px-4 font-medium'>
         <h2>{title}</h2>
       </Next.Typography>
       <div className={narrow ? 'max-w-[32rem]' : undefined}>
-        <Next.Container size={size} gutter='rail' level='base'>
+        <Next.Container size={size} gutter='rail' gap='md' level='base'>
           {children}
         </Next.Container>
       </div>
@@ -112,10 +105,14 @@ const Toc = ({
 
 type SectionDef = TocEntry & { Component: ComponentType };
 
-/** The page: a control bar, the sections in a scrolling column, and a table of contents on the right. */
-const Frame = ({ sections }: { sections: SectionDef[] }) => {
-  const [hue, setHue] = useState<AccentHue>('blue');
-  const [size, setSize] = useState<Size>('md');
+type FrameProps = {
+  sections: SectionDef[];
+  hue: AccentHue;
+  size: Size;
+};
+
+/** The page: a document-width Panel scrolling the sections, with a table of contents beside it. */
+const Frame = ({ sections, hue, size }: FrameProps) => {
   const [active, setActive] = useState<string | undefined>(sections[0]?.id);
   const scrollRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -172,61 +169,22 @@ const Frame = ({ sections }: { sections: SectionDef[] }) => {
 
   return (
     <Next.Toast.Provider>
-      <div ref={frameRef} className='flex flex-col h-dvh bg-base-surface'>
-        <div className='nx-scope shrink-0 border-b border-separator' data-size='md'>
-          <Next.Container gutter='rail' level='base'>
-            <Next.Toolbar.Root>
-              <Next.Toolbar.Text>Accent</Next.Toolbar.Text>
-              <Next.Select.Root
-                items={HUE_OPTIONS}
-                value={[hue]}
-                onValueChange={({ value }) => {
-                  const next = ACCENT_HUES.find((option) => option === value[0]);
-                  if (next) {
-                    setHue(next);
-                  }
-                }}
-              >
-                <Next.Select.Trigger fit='options' aria-label='Accent hue' />
-                <Next.Select.Content>
-                  {HUE_OPTIONS.map((item) => (
-                    <Next.Select.Item key={item.value} item={item} />
+      <div ref={frameRef} className='flex h-dvh'>
+        <Next.Panel.Root size={size} width='document' classNames='grow min-w-0'>
+          <Next.Panel.Body asChild>
+            <Next.ScrollArea.Root>
+              {/* `relative` contains the controls' visually hidden native inputs, which would otherwise scroll the document. */}
+              <Next.ScrollArea.Viewport ref={scrollRef} classNames='relative'>
+                <SizeContext.Provider value={size}>
+                  {sections.map(({ id, Component }) => (
+                    <Component key={id} />
                   ))}
-                </Next.Select.Content>
-              </Next.Select.Root>
-              <Next.Toolbar.Separator />
-              <Next.Toolbar.Text>Size</Next.Toolbar.Text>
-              <Next.Toolbar.ToggleGroup
-                type='single'
-                value={size}
-                onValueChange={(next) => {
-                  const selected = SIZES.find((option) => option === next);
-                  if (selected) {
-                    setSize(selected);
-                  }
-                }}
-                aria-label='Size'
-              >
-                {SIZES.map((option) => (
-                  <Next.ToggleGroup.Item key={option} value={option}>
-                    {option}
-                  </Next.ToggleGroup.Item>
-                ))}
-              </Next.Toolbar.ToggleGroup>
-            </Next.Toolbar.Root>
-          </Next.Container>
-        </div>
-        <div className='flex dx-grow'>
-          {/* `relative` contains the controls' visually hidden native inputs, which would otherwise scroll the document. */}
-          <div ref={scrollRef} className='nx-scope @container relative grow overflow-y-auto' data-size={size}>
-            <SizeContext.Provider value={size}>
-              {sections.map(({ id, Component }) => (
-                <Component key={id} />
-              ))}
-            </SizeContext.Provider>
-          </div>
-          <Toc entries={sections} active={active} onSelect={handleSelect} />
-        </div>
+                </SizeContext.Provider>
+              </Next.ScrollArea.Viewport>
+            </Next.ScrollArea.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
+        <Toc entries={sections} active={active} onSelect={handleSelect} />
       </div>
       <Next.Toast.Toaster size={size} />
     </Next.Toast.Provider>
@@ -1000,16 +958,23 @@ const SECTIONS: SectionDef[] = [
   { id: 'empty', title: 'Empty', Component: EmptySection },
 ];
 
+type PlaygroundArgs = { hue: AccentHue; size: Size };
+
 const meta = {
   title: 'ui/react-ui-core/playground/Playground',
   decorators: [withTheme()],
   parameters: { layout: 'fullscreen', translations },
-} satisfies Meta;
+  args: { hue: 'blue', size: 'md' },
+  argTypes: {
+    hue: { control: 'select', options: ACCENT_HUES },
+    size: { control: 'select', options: SIZES },
+  },
+} satisfies Meta<PlaygroundArgs>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<PlaygroundArgs>;
 
 export const All: Story = {
-  render: () => <Frame sections={SECTIONS} />,
+  render: ({ hue, size }) => <Frame sections={SECTIONS} hue={hue} size={size} />,
 };
