@@ -119,7 +119,7 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
       }
     });
 
-    const pass = Indexer.run({ root: options.root, reasoners: options.reasoners }).pipe(
+    const pass = Indexer.run({ root: options.root, reasoners: options.reasoners, summarize: false }).pipe(
       Effect.scoped,
       Effect.flatMap((result) =>
         result.indexed + result.removed > 0 || result.reasoned

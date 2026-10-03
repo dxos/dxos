@@ -15,6 +15,7 @@ import { availableParallelism } from 'node:os';
 import * as Crawler from './Crawler.ts';
 import * as Reasoner from './Reasoner.ts';
 import * as Store from './Store.ts';
+import * as Summary from './Summary.ts';
 import * as Pool from './worker/Pool.ts';
 import type * as Protocol from './worker/Protocol.ts';
 
@@ -37,6 +38,11 @@ export type Options = {
   readonly extensions?: readonly string[];
   /** Reasoners run once the pass has committed; omitted or empty, the reasoning phase is skipped. */
   readonly reasoners?: readonly Reasoner.Reasoner[];
+  /**
+   * Record the whole-graph counts `vocabulary` and `stats` read (default true). A watcher's passes
+   * opt out: each costs a scan of the whole store, which would dwarf a one-file reindex.
+   */
+  readonly summarize?: boolean;
 };
 
 /**
@@ -51,6 +57,8 @@ export type Timings = {
   readonly encodeMs: number;
   readonly commitMs: number;
   readonly reasonMs: number;
+  /** Recording the summary; zero when it was skipped or already current. */
+  readonly summarizeMs: number;
   readonly totalMs: number;
 };
 
@@ -190,6 +198,8 @@ export const run = (
       ? outcomes.reduce((total, outcome) => total + outcome.derived, 0)
       : (current ?? (yield* store.derivedCount()));
 
+    const [summarizeMs] = yield* millis(options.summarize === false ? Effect.void : Summary.refresh(store));
+
     return {
       root,
       scanned: entries.length,
@@ -200,6 +210,15 @@ export const run = (
       derived,
       reasoned: willReason,
       reasoners: outcomes,
-      timings: { scanMs, parseMs, analyzeMs, encodeMs, commitMs, reasonMs, totalMs: Date.now() - started },
+      timings: {
+        scanMs,
+        parseMs,
+        analyzeMs,
+        encodeMs,
+        commitMs,
+        reasonMs,
+        summarizeMs,
+        totalMs: Date.now() - started,
+      },
     };
   });

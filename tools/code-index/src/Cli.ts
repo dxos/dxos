@@ -95,8 +95,10 @@ const index = Command.make(
           `${result.root}: ${result.indexed} indexed, ${result.unchanged} unchanged, ${result.removed} removed` +
             (result.skipped.length > 0 ? `, ${result.skipped.length} skipped` : '') +
             (noReason ? '' : `, ${result.derived} derived`),
-          `scan ${seconds(timings.scanMs)} · parse ${seconds(timings.parseMs)} · commit ${seconds(timings.commitMs)}` +
-            ` · reason ${result.reasoned ? seconds(timings.reasonMs) : 'skipped'} · total ${seconds(timings.totalMs)}`,
+          // parse and commit are summed across concurrent batches, so on a wide pool they exceed total.
+          `scan ${seconds(timings.scanMs)} · parse ${seconds(timings.parseMs)} (all workers) · commit ${seconds(timings.commitMs)}` +
+            ` · reason ${result.reasoned ? seconds(timings.reasonMs) : 'skipped'} · summary ${seconds(timings.summarizeMs)}` +
+            ` · total ${seconds(timings.totalMs)}`,
           ...(result.reasoners.length > 0
             ? [
                 result.reasoners

@@ -12,6 +12,7 @@ use napi::bindgen_prelude::AsyncTask;
 use napi::{Env, Error, Result, Task};
 use napi_derive::napi;
 use oxigraph::model::{GraphName, NamedNode, NamedOrBlankNode, Quad, Term};
+use oxigraph::sparql::CancellationToken;
 
 use crate::store;
 
@@ -80,6 +81,53 @@ impl Task for PutDocuments {
 
     fn resolve(&mut self, _env: Env, output: usize) -> Result<u32> {
         Ok(count(output))
+    }
+}
+
+/// A query on a libuv thread, so a slow one neither blocks the event loop nor other queries.
+pub struct Query {
+    store: Arc<store::NativeStore>,
+    sparql: String,
+    token: CancellationToken,
+}
+
+impl Task for Query {
+    type Output = (&'static str, String);
+    type JsValue = QueryResult;
+
+    fn compute(&mut self) -> Result<Self::Output> {
+        self.store
+            .query_cancellable(&self.sparql, self.token.clone())
+            .map_err(error)
+    }
+
+    fn resolve(&mut self, _env: Env, (kind, body): Self::Output) -> Result<QueryResult> {
+        Ok(QueryResult {
+            kind: kind.to_owned(),
+            body,
+        })
+    }
+}
+
+/// Cancels the queries it was passed to; each stops at the next quad it reads.
+#[napi]
+pub struct QueryCancel {
+    token: CancellationToken,
+}
+
+#[napi]
+impl QueryCancel {
+    #[napi(constructor)]
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        Self {
+            token: CancellationToken::new(),
+        }
+    }
+
+    #[napi]
+    pub fn cancel(&self) {
+        self.token.cancel();
     }
 }
 
@@ -179,13 +227,14 @@ impl NativeStore {
         Ok(rows(&quads))
     }
 
-    #[napi]
-    pub fn query(&self, sparql: String) -> Result<QueryResult> {
-        let (kind, body) = self.inner()?.query(&sparql).map_err(error)?;
-        Ok(QueryResult {
-            kind: kind.to_owned(),
-            body,
-        })
+    /// Runs off the event loop; `cancel` aborts it, after which it rejects with a `cancelled` error.
+    #[napi(ts_return_type = "Promise<QueryResult>")]
+    pub fn query(&self, sparql: String, cancel: &QueryCancel) -> Result<AsyncTask<Query>> {
+        Ok(AsyncTask::new(Query {
+            store: Arc::clone(self.inner()?),
+            sparql,
+            token: cancel.token.clone(),
+        }))
     }
 
     /// One rule file evaluated from nothing; returns its conclusions as N-Quads in `graph`.

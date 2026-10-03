@@ -71,6 +71,11 @@ export type Stats = {
   readonly quads: number;
 };
 
+export type DerivedGraphCount = {
+  readonly graph: string;
+  readonly quads: number;
+};
+
 export type Binding = Graph.Binding;
 
 export type ReasonOutcome = Graph.ReasonOutcome;
@@ -153,6 +158,8 @@ export interface Api {
   readonly derived: (reasoner?: string) => Effect.Effect<Quad[], StoreError>;
   /** How many quads the reasoners' graphs hold, counted where they live rather than materialised. */
   readonly derivedCount: () => Effect.Effect<number, StoreError>;
+  /** Each non-empty derived or pass graph with its quad count, in IRI order. */
+  readonly derivedGraphCounts: () => Effect.Effect<DerivedGraphCount[], StoreError>;
   /** Advanced by every write to the facts; what a reasoning pass records it ran over. */
   readonly generation: () => Effect.Effect<number, StoreError>;
   /** Records that the reasoners `signature` names ran over the facts as of `generation`, deriving `derived` quads. */
@@ -172,7 +179,14 @@ export class Store extends Context.Service<Store, Api>()('code-index/Store') {}
 
 const SQLITE_FILE = 'index.sqlite';
 
-const fail = (message: string) => (cause: unknown) => new StoreError({ message, cause });
+/** The engine's own words, so a caller sees why a query or write failed and not only that it did. */
+const detail = (cause: unknown): string | undefined =>
+  cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : undefined;
+
+const fail = (message: string) => (cause: unknown) => {
+  const reason = detail(cause);
+  return new StoreError({ message: reason ? `${message}: ${reason}` : message, cause });
+};
 
 const FILE_COLUMNS = 'path, language, size, hash, mtime';
 
@@ -460,13 +474,18 @@ const make = (
         }),
       );
 
-    const derivedCount: Api['derivedCount'] = () =>
+    const derivedGraphCounts: Api['derivedGraphCounts'] = () =>
       Effect.flatMap(derivedGraphs(), (names) =>
         Effect.map(
-          Effect.forEach(names, (name) => graphs.countGraph(name)),
-          (counts) => counts.reduce((total, count) => total + count, 0),
+          Effect.forEach([...names].sort(), (graph) =>
+            Effect.map(graphs.countGraph(graph), (quads) => ({ graph, quads })),
+          ),
+          (counts) => counts.filter((count) => count.quads > 0),
         ),
       );
+
+    const derivedCount: Api['derivedCount'] = () =>
+      Effect.map(derivedGraphCounts(), (counts) => counts.reduce((total, count) => total + count.quads, 0));
 
     return {
       dir,
@@ -574,6 +593,7 @@ const make = (
           : match(undefined, undefined, undefined, Ontology.derivedGraphIri(reasoner)),
 
       derivedCount,
+      derivedGraphCounts,
 
       generation,
 
