@@ -49,7 +49,10 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
         title: 'DID',
         description: "The agent's identity DID; attributes content the agent authors.",
       }),
-    ),
+    ).annotate({
+      title: 'DID',
+      description: "The agent's DID.",
+    }),
 
     /**
      * Master switch for the agent's automation (propagated onto its compiled routine triggers).
@@ -65,6 +68,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      */
     instructions: Ref.Ref(Instructions.Instructions).pipe(
       Annotation.SetParent.set(),
+      Annotation.FormInlineAnnotation.set(true),
       Schema.annotate({ title: 'Instructions' }),
     ),
   }).pipe(
