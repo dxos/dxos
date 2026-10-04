@@ -67,7 +67,7 @@ export const FileTree = ({ classNames, files, selectedPath, onSelect, emptyMessa
   const tree = useMemo(() => buildTree(files), [files]);
 
   if (files.length === 0) {
-    return <div className={mx('p-2 text-description text-sm', classNames)}>{emptyMessage ?? 'No files yet.'}</div>;
+    return <div className={mx('p-2 text-fg-muted text-sm', classNames)}>{emptyMessage ?? 'No files yet.'}</div>;
   }
 
   return (
@@ -102,8 +102,8 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
           style={indent}
           onClick={() => setExpanded((current) => !current)}
         >
-          <Icon icon={expanded ? 'ph--caret-down--regular' : 'ph--caret-right--regular'} size={3} />
-          <Icon icon={expanded ? 'ph--folder-open--regular' : 'ph--folder--regular'} size={4} />
+          <Icon icon={expanded ? 'ph--caret-down--regular' : 'ph--caret-right--regular'} size='xs' />
+          <Icon icon={expanded ? 'ph--folder-open--regular' : 'ph--folder--regular'} size='md' />
           <span className='truncate'>{node.name}</span>
         </button>
         {expanded && (
@@ -136,7 +136,7 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
         onClick={() => onSelect?.(node.path)}
       >
         <span className='inline-block w-3' aria-hidden />
-        <Icon icon='ph--file-code--regular' size={4} />
+        <Icon icon='ph--file-code--regular' size='md' />
         <span className='truncate'>{node.name}</span>
       </button>
     </li>

@@ -198,7 +198,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     return (
       <TableComponent.Root ref={tableRef}>
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <TableComponent.Toolbar
               attendableId={attendableId}
               customActions={customActions}
@@ -207,10 +207,10 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onExport={handleExport}
               onSave={handleSave}
             />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <TableComponent.Content
-              classNames='border-t border-subdued-separator'
+              classNames='border-t border-separator-subtle'
               key={attendableId}
               attendableId={attendableId}
               model={model}
@@ -219,7 +219,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onCreate={handleCreate}
               onRowClick={handleRowClick}
             />
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </TableComponent.Root>
     );

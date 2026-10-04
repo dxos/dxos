@@ -17,7 +17,7 @@ import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Toolbar } from '@dxos/react-ui';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../../components/index.ts';
@@ -201,10 +201,10 @@ const ToggleConnection: FC<{
   connection: ConnectionState;
   onToggleConnection: () => void;
 }> = ({ connection, onToggleConnection }) => (
-  <Toolbar.IconButton
+  <Button
     icon={connection === ConnectionState.ONLINE ? 'ph--wifi-high--regular' : 'ph--wifi-slash--regular'}
     iconOnly
-    size={6}
+    iconSize='xl'
     label='Toggle connection'
     classNames='mx-2 p-0 px-2 items-center'
     onClick={onToggleConnection}

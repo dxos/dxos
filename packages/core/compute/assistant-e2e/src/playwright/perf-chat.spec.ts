@@ -12,10 +12,13 @@ import {
   StageRunner,
   appendRows,
   attachAll,
+  countersLabel,
   detachAll,
   installProbes,
+  installReactProbe,
   launchInstrumentedBrowser,
   listTargets,
+  parseCounters,
   publishPosthogBatch,
   readProcessFootprint,
   startProfiling,
@@ -47,6 +50,9 @@ const SCALES = new Set((process.env.DX_PERF_SCALES ?? FIXTURES.map(({ scale }) =
 
 /** Repeats of the whole flow per fixture (`DX_PERF_ITERATIONS`); the nightly scores their median. */
 const ITERATIONS = Math.max(1, Number.parseInt(process.env.DX_PERF_ITERATIONS ?? '1', 10) || 1);
+
+/** The costed work counters (`DX_PERF_COUNTERS`: `all`, `none`, or e.g. `trace,react`). */
+const COUNTERS = parseCounters(process.env.DX_PERF_COUNTERS);
 
 const storyUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
 
@@ -97,6 +103,7 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
       profileState: 'returning',
       settleMs: SETTLE_MS,
       instruments: 'profiler',
+      counters: countersLabel(COUNTERS),
     };
 
     const runner = new StageRunner({
@@ -110,9 +117,14 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
       network,
       comparability,
       screenshotDir: path.join(artifactDir, 'stages'),
+      counters: COUNTERS,
+      counterDir: path.join(artifactDir, 'counters'),
     });
 
     await installProbes(page);
+    if (COUNTERS.react) {
+      await installReactProbe(page);
+    }
 
     await runner.stage('seed', async () => {
       await page.goto(storyUrl(storyId), { timeout: BUDGET_MS });

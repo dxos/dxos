@@ -16,7 +16,7 @@ import React, { useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
-import { Column, ScrollArea } from '@dxos/react-ui';
+import { Container, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type EscapeBehavior, Picker } from './Picker.tsx';
@@ -68,17 +68,15 @@ const DefaultStory = ({
   );
 
   return (
-    <Column.Root gutter='sm' classNames='border border-separator rounded-md py-form-gap'>
+    <Container gutter='sm' classNames='border border-separator rounded-md py-form-gap'>
       <Picker.Root>
-        <Column.Center>
-          <Picker.Input
-            autoFocus
-            escapeBehavior={escapeBehavior}
-            placeholder={controlled ? 'Filter…' : '↑/↓ to navigate, Enter to pick'}
-            {...(controlled && { value: query, onValueChange: setQuery })}
-          />
-        </Column.Center>
-        <ScrollArea.Root classNames='max-h-[20rem] py-form-gap' thin>
+        <Picker.Input
+          autoFocus
+          escapeBehavior={escapeBehavior}
+          placeholder={controlled ? 'Filter…' : '↑/↓ to navigate, Enter to pick'}
+          {...(controlled && { value: query, onValueChange: setQuery })}
+        />
+        <ScrollArea.Root classNames='max-h-[20rem] py-form-gap'>
           <ScrollArea.Viewport>
             <ul role='listbox' className='flex flex-col'>
               {visible.map(({ item, originalIndex }) => {
@@ -96,7 +94,7 @@ const DefaultStory = ({
                 );
               })}
               {controlled && visible.length === 0 && (
-                <li role='status' className='px-2 py-1 text-description italic'>
+                <li role='status' className='px-2 py-1 text-fg-muted italic'>
                   No matches
                 </li>
               )}
@@ -104,10 +102,10 @@ const DefaultStory = ({
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Picker.Root>
-      <Column.Center classNames='text-sm text-description'>
+      <div className='text-sm text-fg-muted'>
         Picked: <span className='font-mono'>{picked ?? '—'}</span>
-      </Column.Center>
-    </Column.Root>
+      </div>
+    </Container>
   );
 };
 

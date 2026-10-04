@@ -19,7 +19,7 @@ import {
 } from '@xyflow/react';
 import React, { type FC, type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
-import { composable, composableProps, createContext, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps, createContext, useThemeMode } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { GRID, layout } from '../../model/index.ts';
@@ -145,7 +145,7 @@ export type DiagramCanvasProps = ComposableProps<PropsWithChildren>;
 
 /** The pannable, zoomable surface. Controlled — every node and edge comes from the projection. */
 const DiagramCanvas = composable<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const { fitView } = useReactFlow();
   const { nodes, edges, grid, onNodesChange, onEdgesChange, onNodeMove, shape } = useDiagramContext('Diagram.Canvas');
 

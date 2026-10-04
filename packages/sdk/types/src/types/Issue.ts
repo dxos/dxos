@@ -46,7 +46,7 @@ export class Issue extends Type.makeObject<Issue>(DXN.make('org.dxos.type.issue'
     /** Login of the account that opened it. */
     author: Schema.String.pipe(Schema.annotate({ title: 'Author' }), Schema.optional),
 
-    description: Schema.String.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
+    description: Format.Text.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
 
     labels: Schema.Array(Schema.String).pipe(Schema.annotate({ title: 'Labels' }), Schema.optional),
   }).pipe(

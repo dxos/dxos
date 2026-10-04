@@ -20,8 +20,8 @@
     "unit": "ms"
   },
   "cpu > assistant-turns": {
-    "target": 22900,
-    "limit": 34350,
+    "target": 18400,
+    "limit": 27600,
     "unit": "ms"
   },
   "cpu > scroll-thread": {
@@ -35,8 +35,8 @@
     "unit": "ms"
   },
   "run > total tab CPU": {
-    "target": 11100,
-    "limit": 16650,
+    "target": 7700,
+    "limit": 11550,
     "unit": "ms",
     "weight": 0.5
   },
@@ -52,8 +52,8 @@
     "unit": "bytes"
   },
   "run > SQLite write bytes": {
-    "target": 37600000,
-    "limit": 56400000,
+    "target": 27000000,
+    "limit": 40500000,
     "unit": "bytes"
   },
   "run > worst tab lag p95": {
@@ -97,8 +97,8 @@
     "unit": "ms"
   },
   "busy > cpu > assistant-turns": {
-    "target": 22500,
-    "limit": 33750,
+    "target": 18100,
+    "limit": 27150,
     "unit": "ms"
   },
   "busy > cpu > scroll-thread": {
@@ -112,8 +112,8 @@
     "unit": "ms"
   },
   "busy > run > total tab CPU": {
-    "target": 11000,
-    "limit": 16500,
+    "target": 7600,
+    "limit": 11400,
     "unit": "ms",
     "weight": 0.5
   },
@@ -129,8 +129,8 @@
     "unit": "bytes"
   },
   "busy > run > SQLite write bytes": {
-    "target": 82600000,
-    "limit": 123900000,
+    "target": 67000000,
+    "limit": 100500000,
     "unit": "bytes"
   },
   "busy > run > worst tab lag p95": {

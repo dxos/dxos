@@ -19,27 +19,29 @@ export type NotebookMenuProps = {
 export const NotebookMenu = ({ cell, onCellInsert, onCellDelete }: NotebookMenuProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Menu.Portal>
-      <Menu.Content>
-        <Menu.Viewport>
-          <Menu.Item onClick={() => onCellInsert?.('script', cell?.id)}>
-            {t('notebook-cell-insert-script.label')}
-          </Menu.Item>
-          <Menu.Item onClick={() => onCellInsert?.('prompt', cell?.id)}>
-            {t('notebook-cell-insert-prompt.label')}
-          </Menu.Item>
-          <Menu.Item onClick={() => onCellInsert?.('query', cell?.id)}>
-            {t('notebook-cell-insert-query.label')}
-          </Menu.Item>
-          <Menu.Item onClick={() => onCellInsert?.('markdown', cell?.id)}>
-            {t('notebook-cell-insert-markdown.label')}
-          </Menu.Item>
-          {cell && onCellDelete && (
-            <Menu.Item onClick={() => onCellDelete?.(cell.id)}>{t('notebook-cell-delete.label')}</Menu.Item>
-          )}
-        </Menu.Viewport>
-        <Menu.Arrow />
-      </Menu.Content>
-    </Menu.Portal>
+    <Menu.Content>
+      <Menu.Item
+        onClick={() => onCellInsert?.('script', cell?.id)}
+        item={{ value: t('notebook-cell-insert-script.label'), label: t('notebook-cell-insert-script.label') }}
+      />
+      <Menu.Item
+        onClick={() => onCellInsert?.('prompt', cell?.id)}
+        item={{ value: t('notebook-cell-insert-prompt.label'), label: t('notebook-cell-insert-prompt.label') }}
+      />
+      <Menu.Item
+        onClick={() => onCellInsert?.('query', cell?.id)}
+        item={{ value: t('notebook-cell-insert-query.label'), label: t('notebook-cell-insert-query.label') }}
+      />
+      <Menu.Item
+        onClick={() => onCellInsert?.('markdown', cell?.id)}
+        item={{ value: t('notebook-cell-insert-markdown.label'), label: t('notebook-cell-insert-markdown.label') }}
+      />
+      {cell && onCellDelete && (
+        <Menu.Item
+          onClick={() => onCellDelete?.(cell.id)}
+          item={{ value: t('notebook-cell-delete.label'), label: t('notebook-cell-delete.label') }}
+        />
+      )}
+    </Menu.Content>
   );
 };

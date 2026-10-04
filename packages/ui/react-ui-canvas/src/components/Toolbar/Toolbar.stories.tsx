@@ -51,7 +51,7 @@ const DefaultStory = () => {
       <DebugToolbar>
         {Math.round(zoom * 100)}% · snap {snap ? 'on' : 'off'} · debug {debug ? 'on' : 'off'}
       </DebugToolbar>
-      <pre className='text-xs text-description'>{log.join('\n')}</pre>
+      <pre className='text-xs text-fg-muted'>{log.join('\n')}</pre>
     </div>
   );
 };

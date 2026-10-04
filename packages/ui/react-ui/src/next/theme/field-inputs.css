@@ -1,34 +1,34 @@
 /*
  * PinInput, NumberInput and PasswordInput: Ark roots that only carry context, around a control row (number, password)
- * or a run of control-sized cells (pin); the rows reuse Input's `.nx-input-row` (ring, adornments, disabled).
+ * or a run of control-sized cells (pin); the rows reuse Input's `.dx-input-row` (ring, adornments, disabled).
  */
 
 @layer dx-components {
-  .nx-control-root {
+  .dx-control-root {
     display: contents;
   }
-  :is(.nx-field, .nx-grid[data-layout='stack']) > .nx-control-root > :is(.nx-control, .nx-pin-input) {
-    margin-block: var(--nx-control-inset);
+  :is(.dx-field, .dx-container[data-layout='stack']) > .dx-control-root > :is(.dx-control, .dx-pin-input) {
+    margin-block: var(--dx-control-inset);
   }
 
   /* Cells are control-sized squares a gap apart, so a code reads at the same scale as any control of its size. */
-  .nx-pin-input {
+  .dx-pin-input {
     display: flex;
     align-items: center;
-    gap: var(--nx-gap-size);
-    height: var(--nx-control-size);
+    gap: var(--dx-gap-size);
+    height: var(--dx-control-size);
   }
-  .nx-pin-input-cell {
-    width: var(--nx-control-size);
+  .dx-pin-input-cell {
+    width: var(--dx-control-size);
     padding-inline: 0;
     text-align: center;
     font-variant-numeric: tabular-nums;
   }
   /* Tabular figures, like PinInput's cells and DateInput's segments, so the digits keep their width as the value steps. */
-  .nx-number-input > .nx-input-field {
+  .dx-number-input > .dx-input-field {
     font-variant-numeric: tabular-nums;
   }
-  .nx-pin-input-cell:disabled {
+  .dx-pin-input-cell:disabled {
     opacity: 0.5;
   }
 }

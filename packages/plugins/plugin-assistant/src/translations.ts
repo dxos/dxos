@@ -142,9 +142,7 @@ export const translations: Resource[] = [
 
         'no-results.message': 'No results',
 
-        'cancel.button': 'Cancel',
         'cancel-queued.button': 'Remove from queue',
-        'save.button': 'Save',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',
         'chat-history.label': 'Chat History',
@@ -278,8 +276,6 @@ export const translations: Resource[] = [
         // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
         'space-home.suggestions.heading': 'Get started',
         'space-home.suggestion-magazine.label': 'Create feeds for tracking the latest AI news and build a magazine',
-        'space-home.suggestion-spreadsheet.label':
-          "Look up and create a spreadsheet of MLB's top starters by month for {{year}}",
         'space-home.suggestion-kanban.label': 'Create a kanban view for tracking tasks',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
 

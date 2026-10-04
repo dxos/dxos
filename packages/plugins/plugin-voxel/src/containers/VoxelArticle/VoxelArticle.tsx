@@ -119,7 +119,7 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <VoxelToolbar
           toolMode={toolMode}
           selectedHue={selectedHue}
@@ -133,8 +133,8 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
           onToggleLife={handleToggleLife}
           onSeedLife={handleSeedLife}
         />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className='relative grow'>
           <VoxelEditor
             voxels={voxels}
@@ -152,14 +152,14 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
             <Hint toolMode={toolMode} />
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
 
 const Hint = ({ toolMode }: { toolMode: ToolMode }) => {
   return (
-    <div className='px-trim-md py-trim-xs text-xs text-description bg-base-surface backdrop-blur-sm rounded-full shadow-md border border-separator'>
+    <div className='px-trim-md py-trim-xs text-xs text-fg-muted bg-base-surface backdrop-blur-sm rounded-full shadow-md border border-separator'>
       {TOOL_HINTS[toolMode]}
     </div>
   );

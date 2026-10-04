@@ -78,8 +78,8 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
       <Dialog.Body>
         <JoinPanel
           {...props}
-          exitActionParent={<Dialog.Close asChild />}
-          doneActionParent={<Dialog.Close asChild />}
+          exitActionParent={<Dialog.CloseTrigger asChild />}
+          doneActionParent={<Dialog.CloseTrigger asChild />}
           onDone={handleDone}
         />
       </Dialog.Body>

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Field, Icon, Select, Toolbar } from '@dxos/react-ui';
+import { Button, Field, Icon, Input, Select, ToggleGroup, Toolbar } from '@dxos/react-ui';
 import { safeParseInt } from '@dxos/util';
 
 export type DataView = 'table' | 'list' | 'debug';
@@ -28,35 +28,31 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
 
   return (
     <Toolbar.Root>
-      <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
+      <Button icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
       <Field.Root>
-        <Field.Input
+        <Input
           classNames='max-w-16 text-right'
           value={count}
           onChange={(event) => setCount(safeParseInt(event.target.value) ?? count)}
         />
       </Field.Root>
       {!!types?.length && (
-        <Select.Root value={type} onValueChange={(type) => setType(type)}>
-          <Toolbar.Button asChild>
-            <Select.TriggerButton />
-          </Toolbar.Button>
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {types.map((type) => (
-                  <Select.Option key={type} value={type}>
-                    <span className='font-mono'>{type}</span>
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
+        <Select.Root
+          items={types.map((type) => ({ value: type, label: type }))}
+          value={type ? [type] : []}
+          onValueChange={({ value: [type] }) => type && setType(type)}
+        >
+          <Select.Trigger />
+          <Select.Content>
+            {types.map((type) => (
+              <Select.Item key={type} classNames='font-mono' item={{ value: type, label: type }} />
+            ))}
+          </Select.Content>
         </Select.Root>
       )}
       {onFilterChange && (
         <Field.Root>
-          <Field.Input
+          <Input
             placeholder='Filter objects...'
             value={filter ?? ''}
             onChange={(event) => setFilter(event.target.value)}
@@ -65,15 +61,15 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       )}
       {onViewChange && (
         <Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>
-          <Toolbar.ToggleGroupItem value='table'>
+          <ToggleGroup.Item value='table'>
             <Icon icon='ph--table--regular' />
-          </Toolbar.ToggleGroupItem>
-          <Toolbar.ToggleGroupItem value='list'>
+          </ToggleGroup.Item>
+          <ToggleGroup.Item value='list'>
             <Icon icon='ph--list--regular' />
-          </Toolbar.ToggleGroupItem>
-          <Toolbar.ToggleGroupItem value='debug'>
+          </ToggleGroup.Item>
+          <ToggleGroup.Item value='debug'>
             <Icon icon='ph--list-magnifying-glass--regular' />
-          </Toolbar.ToggleGroupItem>
+          </ToggleGroup.Item>
         </Toolbar.ToggleGroup>
       )}
     </Toolbar.Root>

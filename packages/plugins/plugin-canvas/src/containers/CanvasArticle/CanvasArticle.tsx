@@ -33,7 +33,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         {bound && (
           // An unset preference leaves the engine's own default in place.
           <SceneView.Root key={bound.root} store={bound.store} root={bound.root}>
@@ -49,7 +49,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
             {(settings.showPalette ?? true) && <SceneView.Palette />}
           </SceneView.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -43,19 +43,21 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   return (
     <Card.Body>
       {snippet && (
-        // The container the snippet's cap is measured against, so it scales with the card.
-        <Card.Section classNames='dx-container-type-inline-size'>
+        <Card.Section>
           {/* The clipped snippet dissolves into whatever the card sits on: a mask on the content,
               not a colour painted over it, since the card surface differs per host (grid, popover,
               board) and a fade to the wrong surface reads as a grey band across the last line. */}
-          <Card.Row fullWidth classNames='mask-b-from-[calc(100%-8rem)] mask-b-to-100%'>
+          {/* The snippet runs across the card's rails as well as its content track: it has no icon or trailing cell. */}
+          <Card.Row span='full' classNames='mask-b-from-[calc(100%-8rem)] mask-b-to-100%'>
             {/* Re-seed the readonly snippet when the content changes (the editor takes `initialValue`
                 at mount only). Keyed on the snippet so agent/remote edits are reflected. */}
             <MarkdownEditorProvider key={snippet} id={subject.id} viewMode='readonly' extensions={extensions}>
               {(editorRootProps) => (
                 <Editor.Root {...editorRootProps}>
+                  {/* The editor is the container the snippet's cap is measured against, so it scales with the card; not the
+                      Section, whose inline-size containment would stop it being a subgrid of the card's tracks. */}
                   <MarkdownEditor.Content
-                    classNames='bg-transparent'
+                    classNames='dx-container-type-inline-size bg-transparent'
                     initialValue={snippet}
                     slots={compactSlots}
                     compact
@@ -67,8 +69,9 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
         </Card.Section>
       )}
       <Card.Section>
-        <Card.Row fullWidth>
-          <Card.Text classNames='px-2 text-xs text-description'>
+        {/* Across the rails, as the snippet is, so the count starts at the snippet's text edge rather than indented. */}
+        <Card.Row span='full'>
+          <Card.Text classNames='px-2 text-xs' variant='muted' data-testid='markdown.card.words'>
             {info.words} {t('words.label', { count: info.words })}
           </Card.Text>
         </Card.Row>

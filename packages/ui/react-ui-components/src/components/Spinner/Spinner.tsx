@@ -2,86 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AnimatePresence, motion } from 'motion/react';
-import React, { forwardRef } from 'react';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { type Size } from '@dxos/ui-types';
 
-import { type Size, type ThemedClassName } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/ui-theme';
+/**
+ * What a spinner shows, by meaning rather than by animation, so each implementation picks its own motion for it:
+ * idle and ready, working, needs attention, failed.
+ */
+export type ActivityState = 'ready' | 'thinking' | 'alert' | 'error';
 
-export type SpinnerState = 'pulse' | 'spin' | 'flash' | 'error';
-
-const stateClassNames: Record<SpinnerState, string> = {
-  pulse: 'bg-primary-500',
-  spin: 'bg-emerald-500',
-  flash: 'bg-primary-500',
-  error: 'bg-rose-700 border-2 border-rose-bg',
-};
-
+/** The interface every spinner implements, so a host can swap one for another. */
 export type SpinnerProps = ThemedClassName<{
-  state?: SpinnerState;
-  duration?: number;
+  state?: ActivityState;
+  /** The spinner's square, on the theme's size scale. */
   size?: Size;
+  /** One animation cycle in milliseconds, for an implementation with a fixed cycle. */
+  duration?: number;
   onClick?: () => void;
 }>;
-
-export const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
-  ({ classNames, state = 'pulse', duration = 3_000, size = 5, onClick }: SpinnerProps, forwardedRef) => {
-    return (
-      <AnimatePresence>
-        <motion.div
-          ref={forwardedRef}
-          className={mx('flex shrink-0 cursor-pointer', getSize(size), stateClassNames[state], classNames)}
-          transition={{
-            ease: 'linear',
-            duration: duration / 1_000,
-            repeat: Infinity,
-          }}
-          initial={{
-            scale: 0.9,
-            rotate: 0,
-            borderRadius: '10%',
-          }}
-          animate={state}
-          variants={{
-            pulse: {
-              scale: [0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.9],
-              rotate: [0],
-              borderRadius: ['10%'],
-            },
-            spin: {
-              scale: [0.9, 1, 0.5, 1, 0.9],
-              rotate: spinRotatation,
-              borderRadius: ['10%', '20%', '10%'],
-            },
-            flash: {
-              scale: [0.9, 0.6, 0.2, 0.6, 0.2, 0.6, 0.2, 0.6, 0.2, 0.6, 0.9],
-              rotate: [0],
-              borderRadius: ['100%'],
-            },
-            error: {
-              scale: [0.9, 0.7, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
-              rotate: [0],
-              borderRadius: ['10%', '20%', '10%'],
-            },
-          }}
-          exit={{
-            opacity: 0,
-            rotate: 0,
-            scale: 0,
-          }}
-          onClick={onClick}
-        />
-      </AnimatePresence>
-    );
-  },
-);
-
-const n = 36;
-const a = 40;
-const spinRotatation = Array.from({ length: n }).reduce<number[]>(
-  (acc, _, i) => {
-    acc.push((acc.at(-1) ?? 0) + a * (1 - Math.cos(i * ((Math.PI * 2) / n))));
-    return acc;
-  },
-  [0],
-);

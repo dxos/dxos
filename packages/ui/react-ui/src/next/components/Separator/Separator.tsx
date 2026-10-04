@@ -36,4 +36,4 @@ export const Separator = composable<HTMLDivElement, SeparatorProps>(
   },
 );
 
-Separator.displayName = 'Next.Separator';
+Separator.displayName = 'Separator';

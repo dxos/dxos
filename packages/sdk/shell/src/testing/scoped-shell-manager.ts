@@ -76,14 +76,18 @@ export class ScopedShellManager {
     if (await deadEnd.first().isVisible()) {
       throw new Error(`${type} invitation stopped at the rescuer screen rather than the auth-code step`);
     }
-    await input.fill(authCode);
+    // A pin input: one field per digit, focus advancing as each is typed, so the code is typed from the first field.
+    await input.locator('input').first().pressSequentially(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
   }
 
   async clearAuthCode(type: 'device' | 'space', scope?: Scope): Promise<void> {
     const peer = scope || this.page;
-    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).fill('');
-    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).focus();
+    const fields = peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).locator('input');
+    for (const field of await fields.all()) {
+      await field.fill('');
+    }
+    await fields.first().focus();
   }
 
   async resetInvitation(scope?: Scope): Promise<void> {

@@ -1,0 +1,36 @@
+# A Rust crate with no package.json; CI's setup action installs the toolchain `rust-toolchain.toml` pins.
+layer: tool
+language: rust
+
+tasks:
+  cargo-build:
+    command: bash scripts/build.sh
+    inputs:
+      - src/**/*.rs
+      - build.rs
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+    outputs:
+      - code-index-native.node
+  cargo-test:
+    command: cargo test
+    inputs:
+      - src/**/*.rs
+      - tests/**/*.rs
+      - tests/fixtures/*.n3
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - /tools/code-index/rules/*.n3
+  # What CI's `:test` sweep selects; the crate's tests are `cargo-test`.
+  test:
+    command: noop
+    deps:
+      - cargo-test
+  # The synthetic engine benchmark; CODE_INDEX_BENCH_FILES scales it.
+  cargo-bench:
+    command: cargo bench
+    options:
+      cache: false
+      runInCI: false

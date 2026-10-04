@@ -12,7 +12,7 @@
 
 import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, useState } from 'react';
 
-import { Field } from '@dxos/react-ui';
+import { Field, Input } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer } from '@dxos/react-ui-form';
 
 import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '../../model/types.ts';
@@ -118,7 +118,7 @@ export const createGeometryField =
             <div key={key}>
               <Field.Root>
                 <Field.Label>{LABELS[key] ?? key}</Field.Label>
-                <Field.Input
+                <Input
                   type='number'
                   step={grid}
                   disabled={!!readonly}
