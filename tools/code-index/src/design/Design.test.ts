@@ -10,6 +10,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Cache from './Cache.ts';
 import * as Compact from './Compact.ts';
+import * as Design from './Design.ts';
 import * as Graph from './Graph.ts';
 import * as SystemOne from './SystemOne.ts';
 import * as Text from './Text.ts';
@@ -192,6 +193,35 @@ describe('Zoom', () => {
     expect(Zoom.keptEdges(scored).some((edge) => edge.kind === 'imports')).toBe(true);
   });
 
+  test('when the relevant kinds leave the kept nodes unconnected, the dependency kinds become the floor', async () => {
+    const servicesOnly = SystemOne.scripted(({ state, decisions }): Record<string, DecisionModel.ProviderAnswer> => {
+      const text = JSON.stringify(state);
+      if (!('matters' in decisions)) {
+        return {};
+      }
+      if (text.includes('"relation"')) {
+        return { matters: { _tag: 'Probability', probability: text.includes('provides') ? 0.9 : 0.1 } };
+      }
+      return { matters: { _tag: 'Probability', probability: /"name":"(util|log)"/.test(text) ? 0.1 : 0.9 } };
+    });
+    const { scored } = await EffectEx.runPromise(
+      Zoom.zoom({
+        prompt: candidates.prompt,
+        candidates,
+        scorer: 'system-one',
+        model: 'test',
+        cache: Cache.memory(),
+        threshold: 0.5,
+        budget: 10,
+      }).pipe(Effect.provide(servicesOnly)),
+    );
+    expect(scored.relations.providesService).toBe(0.9);
+    expect(scored.relations.imports).toBe(0.5);
+    expect(Zoom.keptEdges(scored)).toContainEqual(
+      expect.objectContaining({ to: `${FILE}packages/model/src/Model.ts`, kind: Graph.RELAY }),
+    );
+  });
+
   test('a refused call falls back to the baseline instead of scoring zero', async () => {
     const result = await EffectEx.runPromise(
       Zoom.zoom({
@@ -207,6 +237,32 @@ describe('Zoom', () => {
     const agent = result.scored.nodes.find((node) => node.label === 'AgentService');
     expect(agent?.score).toBeGreaterThan(0);
     expect(result.usage.calls).toBe(0);
+  });
+});
+
+describe('Design.toGraphData', () => {
+  test('hidden nodes travel without doc or snippet, and edges only join nodes that travel', async () => {
+    const { scored } = await EffectEx.runPromise(
+      Zoom.zoom({
+        prompt: candidates.prompt,
+        candidates: {
+          ...candidates,
+          nodes: candidates.nodes.map((node) => ({ ...node, doc: 'doc', snippet: 'const x = 1;' })),
+        },
+        scorer: 'system-one',
+        model: 'test',
+        cache: Cache.memory(),
+        threshold: 0.5,
+        budget: 10,
+      }).pipe(Effect.provide(scripted)),
+    );
+    const data = Design.toGraphData(scored);
+    const util = data.nodes.find((node) => node.label === 'util');
+    expect(util?.kept).toBe(false);
+    expect(util?.card).not.toHaveProperty('snippet');
+    expect(data.nodes.find((node) => node.label === 'AgentService')?.card.snippet).toBe('const x = 1;');
+    const ids = new Set(data.nodes.map((node) => node.id));
+    expect(data.edges.every((edge) => ids.has(edge.from) && ids.has(edge.to))).toBe(true);
   });
 });
 

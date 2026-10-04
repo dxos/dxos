@@ -176,7 +176,6 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
            */}
           <Grid
             cols={isMobile ? ['2.5rem', 'minmax(0, 1fr)', '2.5rem'] : ['4rem', 'minmax(0, 1fr)', '4rem']}
-            grow={false}
             align='start'
             classNames='dx-document gap-x-4 p-4'
           >
@@ -185,11 +184,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               icon={iconKey}
             />
 
-            <Grid
-              cols={['1fr', 'min-content']}
-              grow={false}
-              classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'
-            >
+            <Grid cols={['1fr', 'min-content']} classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'>
               <div className='flex items-center gap-2'>
                 <h2 className='text-xl'>{name}</h2>
                 {failure && <PluginFailureBadge failure={failure} size='lg' />}

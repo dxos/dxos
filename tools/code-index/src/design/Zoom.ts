@@ -137,6 +137,9 @@ export const FOCUS_PACKAGES = 8;
 /** The weight a card keeps when its package is not the focus: low enough to rank below, never zero. */
 export const FOCUS_FLOOR = 0.4;
 
+/** The kinds that become drawable, in order, when the relevant ones leave the kept nodes unconnected. */
+export const FLOOR_KINDS: readonly Graph.EdgeKind[] = ['implDependsOn', 'imports'];
+
 /**
  * `hybrid` blends System One's probability with the baseline normalised to the candidate set: the
  * model separates relevant from irrelevant poorly on its own (most cards land at 0.6–0.8), while the
@@ -360,13 +363,23 @@ export const zoom = ({
     );
 
     const relevantKinds = new Set(kinds.filter((kind) => (relationScores[kind] ?? 0) >= 0.5));
-    // A question whose relation kinds all fall below 0.5 still needs arrows; imports are the floor.
-    if (relevantKinds.size === 0) {
-      relevantKinds.add('imports');
-      // Downstream edge filters read the scores, not this set, so the floor has to show in them too.
-      relationScores.imports = Math.max(relationScores.imports ?? 0, 0.5);
-    }
     const scoredNodes = candidates.nodes.map((card, index) => ({ ...card, score: nodeScores[index] }));
+    // A diagram whose relevant kinds leave the kept nodes unconnected says nothing about how they fit,
+    // so the dependency kinds become the floor. The kept set depends on scores alone, so it is known here.
+    const likely = Graph.prune(scoredNodes, [], { threshold, budget }).kept;
+    const connecting = () =>
+      candidates.edges.filter((edge) => relevantKinds.has(edge.kind) && likely.has(edge.from) && likely.has(edge.to))
+        .length;
+    for (const kind of FLOOR_KINDS) {
+      if (connecting() >= likely.size / 2) {
+        break;
+      }
+      if (kinds.includes(kind) && !relevantKinds.has(kind)) {
+        relevantKinds.add(kind);
+        // Downstream edge filters read the scores, not this set, so the floor has to show in them too.
+        relationScores[kind] = Math.max(relationScores[kind] ?? 0, 0.5);
+      }
+    }
     const { kept, edges: keptEdges } = Graph.prune(scoredNodes, candidates.edges, {
       threshold,
       budget,

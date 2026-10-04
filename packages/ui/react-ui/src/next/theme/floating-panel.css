@@ -9,6 +9,7 @@
   .dx-floating-panel {
     /* Publishes its rung like the other absolute levels, so a `+1` Card inside resolves from it. */
     --dx-level: 3;
+    position: relative;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -21,6 +22,23 @@
   }
   .dx-floating-panel[data-behind] {
     opacity: 0.95;
+  }
+  /* An overlay ring, not an outline: the window's positioned panes paint over its own outline. */
+  .dx-floating-panel:focus-visible {
+    outline: none;
+  }
+  .dx-floating-panel:focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
+    pointer-events: none;
+  }
+  /* Each part is its own stacking context (a flex item with a z-index), so no layer inside one can rise above the ring. */
+  .dx-floating-panel > * {
+    z-index: 0;
   }
 
   /* A block row plus its separator; the trailing Control's inset cells end at the panel edge. */

@@ -348,8 +348,8 @@ MenuItemShortcut.displayName = 'Menu.ItemShortcut';
 type MenuItemIndicatorProps = ThemedClassName<MenuPrimitive.ItemIndicatorProps>;
 
 /**
- * The leading cell of a checkbox or radio item: icon-sized whether or not the item is checked, so labels align, and
- * showing a check by default while it is.
+ * The trailing cell of a checkbox or radio item: icon-sized whether or not the item is checked, so rows keep one shape,
+ * and showing a check by default while it is.
  */
 const MenuItemIndicator = forwardRef<HTMLDivElement, MenuItemIndicatorProps>(
   ({ classNames, children, ...props }, forwardedRef) => (
@@ -378,7 +378,7 @@ type MenuCheckboxItemProps = ThemedClassName<Omit<MenuPrimitive.CheckboxItemProp
   children?: ReactNode;
 };
 
-/** A `menuitemcheckbox` row: without children, a check cell, the label and the shortcut; selecting it toggles `checked`. */
+/** A `menuitemcheckbox` row: without children, the icon, the label, the shortcut and a trailing check; selecting it toggles `checked`. */
 const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
   ({ classNames, item, disabled, children, ...props }, forwardedRef) => {
     assertItem('CheckboxItem', item);
@@ -393,9 +393,10 @@ const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
         >
           {children ?? (
             <>
-              <MenuItemIndicator />
+              {item.icon && <MenuItemIcon />}
               <MenuItemText />
               {item.shortcut && <MenuItemShortcut />}
+              <MenuItemIndicator />
             </>
           )}
         </MenuPrimitive.CheckboxItem>
@@ -431,7 +432,7 @@ type MenuRadioItemProps = ThemedClassName<Omit<MenuPrimitive.RadioItemProps, 'va
   children?: ReactNode;
 };
 
-/** A `menuitemradio` row: without children, a dot in the indicator cell while it holds its group's value, and the label. */
+/** A `menuitemradio` row: without children, the icon, the label and a trailing check while it holds its group's value. */
 const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
   ({ classNames, item, disabled, children, ...props }, forwardedRef) => {
     assertItem('RadioItem', item);
@@ -446,10 +447,9 @@ const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
         >
           {children ?? (
             <>
-              <MenuItemIndicator>
-                <Icon icon='ph--dot-outline--fill' />
-              </MenuItemIndicator>
+              {item.icon && <MenuItemIcon />}
               <MenuItemText />
+              <MenuItemIndicator />
             </>
           )}
         </MenuPrimitive.RadioItem>

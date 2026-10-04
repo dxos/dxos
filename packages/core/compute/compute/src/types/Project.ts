@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SessionConfig } from '@dxos/ai';
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { ArchivableAnnotation } from '@dxos/schema';
 import { Outline, Repo, TaskSet } from '@dxos/types';
 
@@ -29,7 +29,7 @@ export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
 export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.6.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Format.Text),
 
     /** Work-stream lifecycle state. */
     status: Schema.optional(ProjectStatus),

@@ -8,6 +8,7 @@
 pub mod eval;
 pub mod facts;
 pub mod rules;
+mod snapshot;
 pub mod store;
 
 #[cfg(feature = "napi")]

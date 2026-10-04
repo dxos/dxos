@@ -22,7 +22,9 @@ bun tools/code-index/bin/code-index.ts query 'PREFIX deus: <https://dxos.org/voc
 
 The store defaults to `<git root>/node_modules/.code-index`, so every command finds the same index
 from anywhere in the repository. Each pass prints a phase breakdown
-(`scan · parse · commit · reason · total`).
+(`scan · parse · commit · reason · summary · total`). `parse` and `commit` are summed across the
+concurrent worker batches, so on a wide pool `parse` exceeds `total`; `summary` records the counts
+`mcp`'s `vocabulary` and `stats` read (see below).
 
 Indexing ends by rerunning the N3 rules — every `.n3` in the bundled `rules/` directory, in filename
 order, or whatever `--rules <file|dir>` names — over the whole graph, replacing each reasoner's
@@ -63,6 +65,10 @@ snippet.
 live session saw and there is no second copy to keep in step. The project id is in the URL
 (`/p/<id>`); a bare load adopts the last one that browser opened.
 
+**The index stays current.** The server holds the store, so it indexes on its own: an incremental
+pass at startup, then one after every burst of changes to a directory the index covers
+(`src/Watch.ts`). `--no-watch` serves the store as it is.
+
 **No build step.** Vite runs inside the server process in middleware mode and resolves `@dxos/*`
 through the `source` condition, so the UI — Solid, with `@dxos/react-ui-thread` mounted as a React
 island — is transformed from the working tree with nothing to rebuild first.
@@ -71,7 +77,8 @@ island — is transformed from the working tree with nothing to rebuild first.
 
 `code-index mcp` serves the index to an MCP client (Claude Code, Claude Desktop) over stdio. It is
 read-only: it opens an existing store, never indexes or writes, and takes the same `--root` /
-`--store` flags and `CODE_INDEX_BACKEND` as every other command. Index first, then register it:
+`--store` flags as every other command. A store records the backend that wrote it, which the server
+adopts; a `CODE_INDEX_BACKEND` naming the other one is refused. Index first, then register it:
 
 ```bash
 bun tools/code-index/bin/code-index.ts index
@@ -92,20 +99,37 @@ one — add it locally):
 }
 ```
 
-| Tool         | What it answers |
-| ------------ | --------------- |
-| `vocabulary` | The `deus:` classes and predicates in the graph, asserted and derived, with quad counts, plus the namespace prefixes. Start here. |
-| `describe`   | A resource's outgoing and incoming triples (bounded), from an IRI or a file path, package name or symbol name; an ambiguous name returns candidates. |
-| `query`      | A SPARQL SELECT as `{ vars, rows }`, capped at `limit` (default 200, at most 2000) with `truncated` reported. |
-| `ask`        | A SPARQL ASK, as a boolean. |
-| `files`      | Indexed files, filtered by path prefix and language. |
-| `stats`      | Files, quads and per-reasoner derived counts, and the backend in use. |
+| Tool         | Parameters | What it answers |
+| ------------ | ---------- | --------------- |
+| `vocabulary` | — | Every documented `deus:` class and predicate with its meaning, subject class, range and quad count (0 when this graph never states it), plus undocumented terms the graph contains and the namespace prefixes. Start here. |
+| `describe`   | `target`, `limit` | One resource's outgoing triples and incoming triples (spread across predicates, with `incomingCounts` per predicate). `target` is an IRI, a file path or its tail, a package name, a symbol or canonical name (`Operation.make`), an operation key, an ECHO typename, a plugin id, a spec id, or a module member as imported (`effect/Layer#effect`). Exact matches outrank partial ones and package-public symbols rank first; ties return up to 20 `candidates` with `candidatesTotal`, and a miss returns a `hint`. |
+| `usages`     | `symbol`, `kind`, `includeTests`, `limit` | Every symbol using a declaration, through `export *` barrels, named re-exports, namespaces (`Order.natural`) and bare specifiers, grouped by package: each file with its role (`impl`, `test`, `story`), the symbols using it and `via` (`direct` or `barrel`), plus `reexportedBy` and `total` counts that the file `limit` (default 500, at most 5000) never hides. `kind` narrows to `api` or `impl` uses; `includeTests: false` drops test files. An alias resolves to its declaration; several declarations return `candidates`. |
+| `query`      | `sparql`, `limit`, `timeoutMs` | A SPARQL SELECT as `{ vars, rows }`, capped at `limit` (default 200, at most 2000) with `truncated` reported. |
+| `ask`        | `sparql`, `timeoutMs` | A SPARQL ASK, as a boolean. |
+| `files`      | `prefix`, `language`, `limit` | Indexed files, filtered by path prefix and language. |
+| `stats`      | — | Files, quads and per-reasoner derived counts, and the backend in use. |
+| `design`     | `prompt`, `budget`, `threshold` | The files that answer a design question and how they connect, with a mermaid draft (see Design questions). Scored by System One when the server has `TYPESAFE_API_KEY`, by a text/degree baseline otherwise. |
+
+`query` and `ask` declare any known prefix (`deus:`, `file:`, `pkg:`, `module:`, `graph:`, `rdf:`,
+`rdfs:`, `xsd:`, …) a query uses without declaring, and say so in `prefixesInjected`; name a `deus:`
+term the vocabulary lacks in `warnings`, with the closest known terms; and pass the engine's parse
+or evaluation message through on failure. Each query is cancelled after `timeoutMs` (default 30 s,
+at most 120 s) with an error suggesting how to narrow it. On the native backend the query runs on a
+libuv thread and cancellation reaches the evaluator, which stops at its next quad read; on the JS
+backend Comunica cannot be interrupted mid-join, so the abandoned evaluation runs to completion in
+the background while the server keeps answering (and closing the store waits for it).
+
+`vocabulary` and `stats` read counts the last `code-index index` pass recorded in SQLite `meta`;
+counting the graph itself is a scan of every quad (10–15 s on this repository). When the store has
+changed since — a `serve` watcher's passes skip the summary — the first call counts live and the
+result is kept for the life of the process.
 
 stdout belongs to the protocol; the startup line and every log go to stderr. The store is
 single-writer and neither backend can be read beside a live writer — LevelDB has no read-only mode,
 and oxigraph documents a read-only RocksDB open next to a writer as undefined behaviour — so `mcp`
-cannot run while `serve` or `index` holds the store. It fails at startup naming the process that
-does; stop it, or point `--store` at a copy of the store directory.
+cannot run while `serve`, `index` or another `mcp` holds the store. It fails at startup naming the
+process that does (its PID and which command it is); stop it, or point `--store` at a copy of the
+store directory.
 
 ## Design questions
 

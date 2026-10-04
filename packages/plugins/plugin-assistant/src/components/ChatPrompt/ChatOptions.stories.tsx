@@ -4,8 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useState } from 'react';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
@@ -23,6 +25,7 @@ import { Organization, Person } from '@dxos/types';
 
 import { useContextBinder } from '#hooks';
 import { translations } from '#translations';
+import { type Assistant, AssistantCapabilities } from '#types';
 
 import { ChatOptions, type ChatOptionsProps, ObjectsPanel } from './ChatOptions.tsx';
 
@@ -100,7 +103,11 @@ const meta = {
         MapPlugin(),
         TablePlugin(),
       ],
-      capabilities,
+      capabilities: [
+        ...capabilities,
+        // The Models tab's online switch reads the assistant settings; without them it would suspend forever.
+        Capability.contribute(AssistantCapabilities.Settings, Atom.make<Assistant.Settings>({}).pipe(Atom.keepAlive)),
+      ],
     }),
   ],
   parameters: {
@@ -129,7 +136,7 @@ export const _ObjectsPanel: Story = {
     }
 
     return (
-      <div className='grid w-[300px] h-[300px] border border-separator'>
+      <div className='border border-separator'>
         <ObjectsPanel db={space.db} context={binder} />
       </div>
     );

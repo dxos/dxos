@@ -140,7 +140,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
       }}
     >
       {moves.map(([a, b], index) => (
-        <Grid key={index} cols={['3rem', '1fr', '1fr', '1rem']} grow={false} gap='sm' classNames='ps-4'>
+        <Grid key={index} cols={['3rem', '1fr', '1fr', '1rem']} gap='sm' classNames='ps-4'>
           <div className='content-center text-xs text-fg-subtle'>{index + 1}</div>
           {a && (
             <div
@@ -182,7 +182,6 @@ const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps
   return (
     <Grid
       cols={['var(--dx-rail-item)', '1fr', 'var(--dx-rail-item)']}
-      grow={false}
       gap='sm'
       align='center'
       classNames='h-(--dx-rail-size) px-1 overflow-hidden'

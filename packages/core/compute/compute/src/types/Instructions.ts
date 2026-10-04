@@ -14,7 +14,7 @@ import * as Skill from './Skill.ts';
 /** A sentinel command the model recognizes in chat (e.g. `$track <text>`). */
 export const Command = Schema.Struct({
   sentinel: Schema.String.annotate({ description: 'Token that invokes the command (e.g. "$track").' }),
-  description: Schema.optional(Schema.String),
+  description: Schema.optional(Format.Text),
   prompt: Schema.String.annotate({ description: 'What the model should do when the sentinel appears.' }),
 });
 export type Command = Schema.Schema.Type<typeof Command>;
@@ -27,7 +27,7 @@ export type Command = Schema.Schema.Type<typeof Command>;
 export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dxos.type.instructions', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Format.Text),
     input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotate({
       description: 'Input schema',
     }),

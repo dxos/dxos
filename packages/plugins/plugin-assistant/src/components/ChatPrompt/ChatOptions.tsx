@@ -22,6 +22,7 @@ import {
   Popover,
   Select,
   Switch,
+  SystemButton,
   Tabs,
   Toolbar,
   useTranslation,
@@ -48,7 +49,6 @@ import { resolveProvider } from '../../processor/index.ts';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
-  toolbar: 'p-0 gap-0 border-t border-separator',
 };
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
@@ -65,7 +65,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <div className='flex'>
+    <Flex>
       <Popover.Root positioning={{ placement: 'top' }}>
         <Popover.Trigger asChild>
           <Button
@@ -77,7 +77,8 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
           />
         </Popover.Trigger>
         <Popover.Content classNames={styles.panel}>
-          <Popover.Body>{context && <ObjectsPanel db={db} context={context} />}</Popover.Body>
+          {/* No Body: the list scrolls itself above its filter controls, in the popover's column. */}
+          {context && <ObjectsPanel db={db} context={context} />}
         </Popover.Content>
       </Popover.Root>
 
@@ -93,44 +94,43 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
           />
         </Popover.Trigger>
         <Popover.Content classNames={styles.panel}>
-          <Popover.Body>
-            <Tabs.Root orientation='horizontal' defaultValue='view' classNames='grid grid-rows-[1fr_40px] w-full'>
-              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
-                <ViewPanel chat={chat} />
-              </Tabs.Content>
-              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
-                {context && <SkillsPanel registry={registry} db={db} context={context} />}
-              </Tabs.Content>
-              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
-                <McpServersPanel db={db} />
-              </Tabs.Content>
-              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
-                <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-              </Tabs.Content>
-              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
-                <EnvironmentPanel chat={chat} />
-              </Tabs.Content>
-              <Tabs.List classNames={[styles.toolbar]}>
-                <Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                <Tabs.Trigger value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
-                <Tabs.Trigger value='mcp-servers' icon='ph--plugs-connected--regular' label={t('options.mcp.title')} />
-                <Tabs.Trigger
-                  value='model'
-                  icon='ph--cpu--regular'
-                  label={t('options.chat-model.title')}
-                  data-testid='assistant.options.model'
-                />
-                <Tabs.Trigger
-                  value='environment'
-                  icon='ph--hard-drives--regular'
-                  label={t('options.environment.title')}
-                />
-              </Tabs.List>
-            </Tabs.Root>
-          </Popover.Body>
+          {/* No Body: each tab's list and the tab bar share the popover's own padding. */}
+          <Tabs.Root orientation='horizontal' defaultValue='view' classNames='grid grid-rows-[1fr_40px] w-full'>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
+              <ViewPanel chat={chat} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
+              {context && <SkillsPanel registry={registry} db={db} context={context} />}
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
+              <McpServersPanel db={db} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
+              <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
+              <EnvironmentPanel chat={chat} />
+            </Tabs.Content>
+            <Tabs.List classNames='p-1 gap-1 border-t border-separator'>
+              <Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
+              <Tabs.Trigger value='skills' icon='ph--student--regular' label={t('options.skills.title')} />
+              <Tabs.Trigger value='mcp-servers' icon='ph--plugs-connected--regular' label={t('options.mcp.title')} />
+              <Tabs.Trigger
+                value='model'
+                icon='ph--cpu--regular'
+                label={t('options.chat-model.title')}
+                data-testid='assistant.options.model'
+              />
+              <Tabs.Trigger
+                value='environment'
+                icon='ph--hard-drives--regular'
+                label={t('options.environment.title')}
+              />
+            </Tabs.List>
+          </Tabs.Root>
         </Popover.Content>
       </Popover.Root>
-    </div>
+    </Flex>
   );
 };
 
@@ -166,7 +166,9 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
             );
           })}
         </SearchList.Viewport>
-        <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
+        </Toolbar.Root>
       </SearchList.Content>
     </SearchList.Root>
   );
@@ -187,9 +189,10 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
         label: t(`chat-view.${view}.label`, { defaultValue: view }),
       }))}
     >
-      <Listbox.Content aria-label={t('chat-view.title')}>
+      {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
+      <Listbox.Content gutter='none' aria-label={t('chat-view.title')}>
         {Assistant.ChatViews.map((view) => (
-          <Listbox.Item key={view} id={view} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+          <Listbox.Item key={view} id={view} classNames='dx-focus-ring rounded-xs'>
             <Listbox.ItemText>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemText>
             <Listbox.ItemIndicator />
           </Listbox.Item>
@@ -228,9 +231,10 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
         label: t(`chat-environment.${environment}.label`),
       }))}
     >
-      <Listbox.Content aria-label={t('options.environment.title')}>
+      {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
+      <Listbox.Content gutter='none' aria-label={t('options.environment.title')}>
         {environments.map((environment) => (
-          <Listbox.Item key={environment} id={environment} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+          <Listbox.Item key={environment} id={environment} classNames='dx-focus-ring rounded-xs'>
             <Listbox.ItemText>{t(`chat-environment.${environment}.label`)}</Listbox.ItemText>
             <Listbox.ItemIndicator />
           </Listbox.Item>
@@ -240,9 +244,9 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   );
 };
 
-type ChatEnvironment = (typeof CHAT_ENVIRONMENTS)[number];
-
 const CHAT_ENVIRONMENTS = ['local', 'remote'] as const;
+
+type ChatEnvironment = (typeof CHAT_ENVIRONMENTS)[number];
 
 const ModelsPanel = ({
   presets,
@@ -250,22 +254,18 @@ const ModelsPanel = ({
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   const { t } = useTranslation(meta.profile.key);
+
   return (
-    <div className='dx-expand flex flex-col'>
+    <Flex column classNames='dx-expand'>
       <Listbox.Root
         value={preset}
         onValueChange={onPresetChange}
         autoFocus
         items={(presets ?? []).map(({ id, label }) => ({ value: id, label: label }))}
       >
-        <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
+        <Listbox.Content gutter='none' aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
-            <Listbox.Item
-              key={id}
-              id={id}
-              classNames='px-2 py-1 dx-focus-ring rounded-xs'
-              data-testid={`assistant.models.${id}`}
-            >
+            <Listbox.Item key={id} id={id} classNames='dx-focus-ring rounded-xs' data-testid={`assistant.models.${id}`}>
               <Listbox.ItemText>{label}</Listbox.ItemText>
               <Listbox.ItemIndicator />
             </Listbox.Item>
@@ -275,7 +275,7 @@ const ModelsPanel = ({
       <Toolbar.Root>
         <OnlineSwitch />
       </Toolbar.Root>
-    </div>
+    </Flex>
   );
 };
 
@@ -302,19 +302,13 @@ const OnlineSwitch = () => {
   );
 
   return (
-    <div className='px-1 flex items-center gap-2'>
-      <Switch
-        checked={online}
-        onCheckedChange={({ checked }) => handleChange(checked)}
-        data-testid='assistant.online'
-        label={t('online-switch.label')}
-      />
-    </div>
+    <Switch
+      checked={online}
+      onCheckedChange={({ checked }) => handleChange(checked)}
+      data-testid='assistant.online'
+      label={t('online-switch.label')}
+    />
   );
-};
-
-type McpServersPanelProps = {
-  db: Database.Database;
 };
 
 type McpServerDraft = {
@@ -322,6 +316,10 @@ type McpServerDraft = {
   url: string;
   protocol: McpServer.Spec['protocol'];
   apiKey?: string;
+};
+
+type McpServersPanelProps = {
+  db: Database.Database;
 };
 
 const McpServersPanel = ({ db }: McpServersPanelProps) => {
@@ -362,7 +360,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   return (
-    <Flex column gap='xs' classNames='p-form-chrome' data-testid='assistant.mcp-servers'>
+    <Flex column data-testid='assistant.mcp-servers'>
       <Listbox.Root items={servers.map((server) => ({ value: server.id, label: server.name ?? server.id }))}>
         <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
           {servers.map((server) => (
@@ -371,15 +369,17 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
         </Listbox.Content>
       </Listbox.Root>
       {adding ? (
-        <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
+        <McpForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <Button
-          variant='ghost'
-          icon='ph--plus--regular'
-          label={t('mcp-server-add.label')}
-          onClick={() => setAdding(true)}
-          data-testid='assistant.mcp-server.add'
-        />
+        <Flex classNames='p-1'>
+          <Button
+            variant='ghost'
+            icon='ph--plus--regular'
+            label={t('mcp-server-add.label')}
+            onClick={() => setAdding(true)}
+            data-testid='assistant.mcp-server.add'
+          />
+        </Flex>
       )}
     </Flex>
   );
@@ -470,12 +470,12 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
   );
 };
 
-type McpServerFormProps = {
+type McpFormProps = {
   onSubmit: (draft: McpServerDraft) => void;
   onCancel: () => void;
 };
 
-const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
+const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
@@ -543,25 +543,15 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           data-testid='assistant.mcp-server.api-key'
         />
       </Field.Root>
-      <div className='flex gap-2'>
-        <Button
+      <Flex justify='end'>
+        <SystemButton.Save
           type='submit'
           variant='ghost'
-          icon='ph--check--regular'
-          iconOnly
-          label={t('save.button')}
           disabled={!canSubmit}
           data-testid='assistant.mcp-server.save'
         />
-        <Button
-          type='button'
-          variant='ghost'
-          icon='ph--x--regular'
-          iconOnly
-          label={t('cancel.button')}
-          onClick={onCancel}
-        />
-      </div>
+        <SystemButton.Cancel type='button' variant='ghost' onClick={onCancel} />
+      </Flex>
     </form>
   );
 };
@@ -608,52 +598,55 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
-      {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
+    <Flex column classNames='min-h-0 divide-y divide-separator'>
+      {/* Shrinks to the popover's height, so the list scrolls rather than pushing the filter out of it. */}
+      <SearchList.Root onSearch={handleSearch}>
+        {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
           `Content` and so sits flush against the panel edge. */}
-      <SearchList.Content>
-        <SearchList.Viewport padding={false}>
-          {results.length ? (
-            results.map((object) => {
-              const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
-              const { icon, hue } = Obj.getIcon(object) ?? { icon: 'ph--cube--regular', hue: undefined };
-              const styles = hue ? getStyles(hue) : undefined;
-              return (
-                <SearchList.Item
-                  classNames='flex items-center overflow-hidden'
-                  key={object.id}
-                  value={object.id}
-                  icon={icon}
-                  iconClassNames={styles?.text}
-                  label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
-                  checked={isActive}
-                  onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
-                />
-              );
-            })
-          ) : (
-            <SearchList.Item value='__empty__' label={t('no-results.message')} />
-          )}
-        </SearchList.Viewport>
-      </SearchList.Content>
+        <SearchList.Content classNames='flex flex-col'>
+          <SearchList.Viewport padding={false} classNames='min-h-0 flex-auto'>
+            {results.length ? (
+              results.map((object) => {
+                const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
+                const { icon, hue } = Obj.getIcon(object) ?? { icon: 'ph--cube--regular', hue: undefined };
+                const styles = hue ? getStyles(hue) : undefined;
+                return (
+                  <SearchList.Item
+                    classNames='flex items-center overflow-hidden'
+                    key={object.id}
+                    value={object.id}
+                    icon={icon}
+                    iconClassNames={styles?.text}
+                    label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
+                    checked={isActive}
+                    onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
+                  />
+                );
+              })
+            ) : (
+              <SearchList.Item value='__empty__' label={t('no-results.message')} />
+            )}
+          </SearchList.Viewport>
+        </SearchList.Content>
 
-      <div className={mx('flex flex-col', styles.toolbar)}>
-        <Select.Root
-          items={typeItems}
-          value={selectedUri === ANY ? [] : [selectedUri]}
-          onValueChange={({ value: [value] }) =>
-            setSelectedUri(typeOptions.find(({ uri }) => uri === value)?.uri ?? ANY)
-          }
-        >
-          <Select.Trigger placeholder={t('type-filter.placeholder')} />
-          <Select.Content>
-            {typeItems.map((item) => (
-              <Select.Item key={item.value} item={item} />
-            ))}
-          </Select.Content>
-        </Select.Root>
-        <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
-      </div>
-    </SearchList.Root>
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
+          <Select.Root
+            items={typeItems}
+            value={selectedUri === ANY ? [] : [selectedUri]}
+            onValueChange={({ value: [value] }) =>
+              setSelectedUri(typeOptions.find(({ uri }) => uri === value)?.uri ?? ANY)
+            }
+          >
+            <Select.Trigger fixed placeholder={t('type-filter.placeholder')} />
+            <Select.Content>
+              {typeItems.map((item) => (
+                <Select.Item key={item.value} item={item} />
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </Toolbar.Root>
+      </SearchList.Root>
+    </Flex>
   );
 };

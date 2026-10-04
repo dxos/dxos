@@ -14,6 +14,12 @@ import { useDeckState } from '#hooks';
 
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 
+const overlayClasses = [
+  'dx-fill max-w-none max-h-none grid place-items-center rounded-none border-0 shadow-none',
+  'py-[env(safe-area-inset-top)] sm:p-[calc(env(safe-area-inset-top)+.6rem)]',
+  'md:p-[calc(env(safe-area-inset-top)+1.2rem)] lg:p-[calc(env(safe-area-inset-top)+2.4rem)]',
+];
+
 /** The surface's suspense placeholder: reports while the dialog's lazily loaded content is still loading. */
 const Pending = ({ onPendingChange }: { onPendingChange: (pending: boolean) => void }) => {
   useLayoutEffect(() => {
@@ -26,7 +32,7 @@ const Pending = ({ onPendingChange }: { onPendingChange: (pending: boolean) => v
 export const Dialog = () => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { state } = useDeckState();
-  const { dialogOpen, dialogType, dialogBlockAlign, dialogContent } = state;
+  const { dialogOpen, dialogType, dialogBlockAlign, dialogOverlayClasses, dialogOverlayStyle, dialogContent } = state;
   const Root = dialogType === 'alert' ? AlertDialog.Root : UiDialog.Root;
   // zag's dismiss layer looks for the content once on open, so the Root opens only after a lazily loaded content mounts.
   const [pending, setPending] = useState(false);
@@ -40,8 +46,18 @@ export const Dialog = () => {
     [invokePromise],
   );
 
+  const hostRendersOverlay = dialogOverlayClasses !== undefined || dialogOverlayStyle !== undefined;
+  const surface = (
+    <Surface.Surface
+      type={AppSurface.Dialog}
+      data={dialogContent ?? undefined}
+      limit={1}
+      fallback={PlankErrorFallback}
+      placeholder={hostRendersOverlay ? <div /> : <Pending onPendingChange={setPending} />}
+    />
+  );
+
   // TODO(thure): End block alignment affecting `modal` is tailored to the needs of the ambient chat dialog. As the feature matures, consider separating concerns.
-  // The surface renders the dialog's Content, which takes its placement from the Root unless it sets its own.
   return (
     <Root
       modal={dialogBlockAlign !== 'end'}
@@ -49,13 +65,13 @@ export const Dialog = () => {
       open={dialogOpen && !pending}
       onOpenChange={handleOpenChange}
     >
-      <Surface.Surface
-        type={AppSurface.Dialog}
-        data={dialogContent ?? undefined}
-        limit={1}
-        fallback={PlankErrorFallback}
-        placeholder={<Pending onPendingChange={setPending} />}
-      />
+      {hostRendersOverlay ? (
+        <UiDialog.Content scrim={false} classNames={[overlayClasses, dialogOverlayClasses]} style={dialogOverlayStyle}>
+          {surface}
+        </UiDialog.Content>
+      ) : (
+        surface
+      )}
     </Root>
   );
 };

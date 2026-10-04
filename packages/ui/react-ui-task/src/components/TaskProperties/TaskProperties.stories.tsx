@@ -12,7 +12,6 @@ import { type Actor, RemoteSession, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { TaskList } from './TaskList.tsx';
 import { type TaskMember, TaskProperties } from './TaskProperties.tsx';
 
 const SESSION_TITLE = 'Show agent assignees by session name';
@@ -44,18 +43,7 @@ const DefaultStory = ({ seed, members }: { seed: () => Task.Task; members?: Task
     setVersion((version) => version + 1);
   }, []);
 
-  return (
-    <div className='flex flex-col gap-4 p-2 w-[32rem]'>
-      <div data-testid='story.list'>
-        <TaskList.Root tasks={[task]} showGroupLabels={false} onTaskUpdate={handleUpdate}>
-          <TaskList.Viewport>
-            <TaskList.Content />
-          </TaskList.Viewport>
-        </TaskList.Root>
-      </div>
-      <TaskProperties task={task} members={members} onTaskUpdate={handleUpdate} />
-    </div>
-  );
+  return <TaskProperties task={task} members={members} onTaskUpdate={handleUpdate} />;
 };
 
 const meta = {
@@ -91,9 +79,6 @@ export const TestAgentAssignee: Story = {
     await expect(property()).not.toHaveTextContent('Agent');
     // Awaited: the icon's `href` is set once the registry has fetched the glyph.
     await waitFor(() => expect(property()?.querySelector('svg use')?.getAttribute('href')).toContain('anthropic'));
-
-    const chip = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item.assignee"]');
-    await waitFor(() => expect(chip()).toHaveTextContent(SESSION_TITLE), { timeout: 10_000 });
 
     const trigger = property();
     if (!trigger) {

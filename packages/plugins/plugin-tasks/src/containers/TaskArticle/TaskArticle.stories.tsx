@@ -276,7 +276,7 @@ export const UntitledTaskFocus: Story = {
   play: async ({ canvasElement }) => {
     const title = await waitFor(
       () => {
-        const found = canvasElement.querySelector<HTMLInputElement>('[data-testid="taskEditor.title"]');
+        const found = canvasElement.querySelector<HTMLInputElement>('[data-testid="tasksPlugin.fields"] input');
         if (!found) {
           throw new Error('Title field not rendered.');
         }

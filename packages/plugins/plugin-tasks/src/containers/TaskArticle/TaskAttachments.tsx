@@ -273,7 +273,8 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
     // A section of the pane's column, headed like the questions and artifacts around it.
     <Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.attachments'>
-        <Typography asChild tone='subtle'>
+        {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
+        <Typography asChild tone='subtle' classNames='dx-label py-0'>
           <h2>{t('task-attachments.label')}</h2>
         </Typography>
         <div

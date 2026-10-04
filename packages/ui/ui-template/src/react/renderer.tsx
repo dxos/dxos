@@ -156,7 +156,7 @@ export const createReactRenderer = ({
     }
     if (cols || rows) {
       return (
-        <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} grow={false} classNames='dx-expand'>
+        <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} classNames='dx-expand'>
           {children}
         </Grid>
       );
