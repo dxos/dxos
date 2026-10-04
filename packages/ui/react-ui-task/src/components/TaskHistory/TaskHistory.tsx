@@ -125,7 +125,8 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
       classNames={mx('text-sm text-fg-muted', classNames)}
     >
       <section>
-        <Typography asChild tone='subtle' classNames='text-sm'>
+        {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
+        <Typography asChild tone='subtle' classNames='dx-label py-0'>
           <h2>{t('task-history.label')}</h2>
         </Typography>
         {items.map((item) => (

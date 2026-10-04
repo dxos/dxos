@@ -71,7 +71,8 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
     // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
     <Container asChild gutter='inherit' gap='sm' classNames={classNames} data-testid='taskList.properties'>
       <section>
-        <Typography asChild tone='subtle' classNames='text-sm'>
+        {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
+        <Typography asChild tone='subtle' classNames='dx-label py-0'>
           <h2>{t('task-properties.label')}</h2>
         </Typography>
         {/* The task's reference first: what names it, and the button that copies it, in the glyph column. */}
