@@ -312,11 +312,10 @@ fn kept_premises_match_recomputation() {
     assert!(dir.path().join("1").join("premises.bin").exists());
 }
 
-fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
-    let strata = shipped();
-    // Every IRI the rules name (prefixed or not) as the parser resolves it, plus the classes the
-    // rules conclude, so random premises hit the rules' constants.
-    let constants: Vec<String> = strata
+/// Every IRI the rules name (prefixed or not) as the parser resolves it, plus the classes the rules
+/// conclude, so random premises hit the rules' constants.
+fn constants(strata: &[Stratum]) -> Vec<String> {
+    strata
         .iter()
         .flat_map(|stratum| named_nodes(&stratum.rules))
         .filter(|iri| iri.starts_with("https://dxos.org/deus/"))
@@ -334,7 +333,12 @@ fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
             .iter()
             .map(|name| format!("{DEUS}{name}")),
         )
-        .collect();
+        .collect()
+}
+
+fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
+    let strata = shipped();
+    let constants = constants(&strata);
     let graphs: Vec<String> = (0..4).map(|index| format!("urn:graph:{index}")).collect();
 
     for seed in 1..=40u64 {
@@ -398,6 +402,59 @@ fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
                 );
             }
         }
+    }
+}
+
+/// The binding runs writes and reasoning on separate libuv threads: a write landing while a pass
+/// runs must stay journalled for the next one, or incremental maintenance would miss it.
+#[test]
+fn writes_racing_reasoning_stay_journalled() {
+    let strata = shipped();
+    let constants = constants(&strata);
+    let graphs: Vec<String> = (0..4).map(|index| format!("urn:graph:{index}")).collect();
+    let store = std::sync::Arc::new(NativeStore::in_memory(100_000).unwrap());
+    let mut rng = Rng(7);
+    let initial: Vec<Quad> = (0..120)
+        .map(|_| random_quad(&mut rng, &constants, &graphs))
+        .collect();
+    store
+        .insert_quads(&NativeStore::to_nquads(&initial).unwrap())
+        .unwrap();
+    store.reason_all(&strata).unwrap();
+
+    let writer = {
+        let store = std::sync::Arc::clone(&store);
+        let constants = constants.clone();
+        let graphs = graphs.clone();
+        std::thread::spawn(move || {
+            let mut rng = Rng(11);
+            for _ in 0..60 {
+                let quad = random_quad(&mut rng, &constants, &graphs);
+                store
+                    .insert_quads(&NativeStore::to_nquads(&[quad]).unwrap())
+                    .unwrap();
+            }
+        })
+    };
+    while !writer.is_finished() {
+        store.reason_all(&strata).unwrap();
+    }
+    writer.join().unwrap();
+
+    store.reason_all(&strata).unwrap();
+    let incremental: Vec<Vec<String>> = strata
+        .iter()
+        .map(|stratum| derived(&store, &stratum.graph))
+        .collect();
+    store.invalidate().unwrap();
+    store.reason_all(&strata).unwrap();
+    for (stratum, incremental) in strata.iter().zip(&incremental) {
+        assert_eq!(
+            incremental,
+            &derived(&store, &stratum.graph),
+            "{} diverged",
+            stratum.graph
+        );
     }
 }
 

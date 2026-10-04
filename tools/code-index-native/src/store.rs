@@ -6,7 +6,7 @@
 //! keeps each rule file's derived graph up to date from the journal.
 
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
 
@@ -160,6 +160,9 @@ pub struct NativeStore {
     /// transaction shared with the main store.
     meta: Store,
     journal: Mutex<JournalState>,
+    /// Held by every write for its whole duration: the binding runs writes on libuv threads, and
+    /// `reason_all` must not reset a journal that a concurrent swap has just added to.
+    writer: Mutex<()>,
     journal_limit: usize,
     /// Where the premises of the last reasoning run are kept (`snapshot.rs`); none in memory.
     snapshot_path: Option<PathBuf>,
@@ -325,11 +328,18 @@ impl NativeStore {
             store,
             meta,
             journal: Mutex::new(JournalState::default()),
+            writer: Mutex::new(()),
             journal_limit,
             snapshot_path,
         };
         native.reload_journal_state()?;
         Ok(native)
+    }
+
+    fn write_lock(&self) -> Result<MutexGuard<'_, ()>> {
+        self.writer
+            .lock()
+            .map_err(|_| Error("writer lock poisoned".into()))
     }
 
     fn reload_journal_state(&self) -> Result<()> {
@@ -480,6 +490,7 @@ impl NativeStore {
             .map(|name| NamedNode::new_unchecked(name.as_str()).into())
             .collect();
         graphs.push(graph.into());
+        let _writer = self.write_lock()?;
         self.swap(&graphs, quads)?;
         Ok(count)
     }
@@ -515,6 +526,7 @@ impl NativeStore {
             graphs.push(graph.into());
         }
         let count = quads.len();
+        let _writer = self.write_lock()?;
         self.swap(&graphs, quads)?;
         Ok(count)
     }
@@ -524,6 +536,7 @@ impl NativeStore {
             .iter()
             .map(|name| NamedNode::new_unchecked(name.as_str()).into())
             .collect();
+        let _writer = self.write_lock()?;
         self.swap(&graphs, Vec::new())
     }
 
@@ -537,11 +550,15 @@ impl NativeStore {
 
     /// Raw writes. Base writes are journalled; writes into a derived graph invalidate the engine state.
     pub fn insert_quads(&self, nquads: &str) -> Result<()> {
-        self.raw(Self::parse_nquads(nquads)?, true)
+        let quads = Self::parse_nquads(nquads)?;
+        let _writer = self.write_lock()?;
+        self.raw(quads, true)
     }
 
     pub fn remove_quads(&self, nquads: &str) -> Result<()> {
-        self.raw(Self::parse_nquads(nquads)?, false)
+        let quads = Self::parse_nquads(nquads)?;
+        let _writer = self.write_lock()?;
+        self.raw(quads, false)
     }
 
     fn raw(&self, quads: Vec<Quad>, insert: bool) -> Result<()> {
@@ -550,7 +567,7 @@ impl NativeStore {
             .partition(|quad| is_base_graph(quad.graph_name.as_ref()));
         if !derived.is_empty() {
             // Invalidated first: a crash after the write must not leave a signature vouching for it.
-            self.invalidate()?;
+            self.forget_engine_state()?;
             let mut transaction = self.store.start_transaction()?;
             for quad in &derived {
                 if insert {
@@ -591,6 +608,11 @@ impl NativeStore {
 
     /// Forgets the engine state: the next `reason_all` recomputes from nothing.
     pub fn invalidate(&self) -> Result<()> {
+        let _writer = self.write_lock()?;
+        self.forget_engine_state()
+    }
+
+    fn forget_engine_state(&self) -> Result<()> {
         self.meta.clear()?;
         self.reload_journal_state()
     }
@@ -633,6 +655,7 @@ impl NativeStore {
     }
 
     pub fn clear(&self) -> Result<()> {
+        let _writer = self.write_lock()?;
         self.store.clear()?;
         self.meta.clear()?;
         self.reload_journal_state()
@@ -788,6 +811,8 @@ impl NativeStore {
     /// One rule file over the base and every *other* derived graph, from nothing — the contract of
     /// the JS backend's `reason`. Returns the conclusions not already among the premises.
     pub fn reason(&self, graph: &str, rules_text: &str, materialize: bool) -> Result<Vec<Quad>> {
+        // Held from the first read, so what is materialized is concluded from the facts it replaces.
+        let _writer = materialize.then(|| self.write_lock()).transpose()?;
         let dict = Dict::default();
         let rules = rules::compile(rules_text, &dict)?;
         let base = BaseFacts {
@@ -817,7 +842,7 @@ impl NativeStore {
             .filter_map(|triple| Self::quad_of(&dict, triple, &graph_node))
             .collect();
         if materialize {
-            self.invalidate()?;
+            self.forget_engine_state()?;
             let mut transaction = self.store.start_transaction()?;
             let stale: Vec<Quad> = transaction
                 .quads_for_pattern(None, None, None, Some(graph_node.as_ref().into()))
@@ -837,6 +862,7 @@ impl NativeStore {
     /// this exact rule set, else recomputed. All derived-graph writes, the journal reset and the new
     /// signature land in one transaction.
     pub fn reason_all(&self, strata: &[Stratum]) -> Result<Vec<Outcome>> {
+        let _writer = self.write_lock()?;
         let dict = Dict::default();
         let compiled: Vec<RuleSet> = strata
             .iter()

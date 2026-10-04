@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import { DataFactory } from 'n3';
 import { existsSync } from 'node:fs';
@@ -525,5 +526,73 @@ describe('Store backend stamp', () => {
     );
     expect(file).toBeDefined();
     expect(reasoned).toEqual(3);
+  });
+});
+
+describe('Store responsiveness', () => {
+  let dir: string;
+
+  beforeAll(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'code-index-responsive-'));
+  });
+
+  afterAll(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  // A transitive closure over a long chain is quadratic, so the pass runs long enough to observe.
+  const CHAIN = 200;
+  const CLOSURE = `
+    @prefix deus: <${Ontology.PREFIX}>.
+    { ?a deus:extends ?b . ?b deus:extends ?c } => { ?a deus:extends ?c }.
+  `;
+
+  test('a reasoning pass leaves the event loop free to answer queries', async () => {
+    const graph = Ontology.graphIri('src/chain.ts', 1);
+    const node = (index: number) => Ontology.symbolIri('src/chain.ts', `n${index}`);
+    const chain = Array.from({ length: CHAIN }, (_, index) =>
+      DataFactory.quad(node(index), Ontology.extends_, node(index + 1), graph),
+    );
+    const ask = `ASK { <${node(0).value}> <${Ontology.extends_.value}> ?next }`;
+
+    const { answered, derived, slowestMs } = await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.provide(
+          Effect.flatMap(Store.Store, (store) =>
+            Effect.gen(function* () {
+              yield* store.putQuads(chain);
+              let reasoning = true;
+              let answered = 0;
+              let slowestMs = 0;
+              const [outcomes] = yield* Effect.all(
+                [
+                  store
+                    .reasonAll([{ name: 'closure', rules: CLOSURE }])
+                    .pipe(Effect.ensuring(Effect.sync(() => (reasoning = false)))),
+                  Effect.whileLoop({
+                    while: () => reasoning,
+                    body: () => Effect.timed(store.ask(ask)),
+                    step: ([duration]) => {
+                      if (reasoning) {
+                        answered++;
+                        slowestMs = Math.max(slowestMs, Duration.toMillis(duration));
+                      }
+                    },
+                  }),
+                ],
+                { concurrency: 'unbounded' },
+              );
+              return { answered, derived: outcomes[0].derived, slowestMs };
+            }),
+          ),
+          Store.layer(dir),
+        ),
+      ),
+    );
+
+    expect(derived).toBe((CHAIN * (CHAIN + 1)) / 2 - CHAIN);
+    // Run on the event loop, the pass would let no query through until it finished.
+    expect(answered).toBeGreaterThan(3);
+    expect(slowestMs).toBeLessThan(1_000);
   });
 });
