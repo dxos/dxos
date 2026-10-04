@@ -50,7 +50,7 @@ export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardPro
       {slowest.length === 0 && <StatCard.Row span label='No queries.' />}
       {slowest.length > 0 && (
         <StatCard.Row unit='ms'>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
+          <Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>query</span>
             <span>fired</span>
             <span>live</span>
@@ -64,7 +64,7 @@ export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardPro
         return (
           <Fragment key={query.query}>
             <StatCard.Row open={open} onToggle={(open) => setExpanded(open ? query.query : undefined)} unit='ms'>
-              <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end tabular-nums'>
+              <Grid grow cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end tabular-nums'>
                 <Tooltip.Trigger asChild content={query.query}>
                   <span className='truncate text-start'>{shortQueryText(query.query)}</span>
                 </Tooltip.Trigger>

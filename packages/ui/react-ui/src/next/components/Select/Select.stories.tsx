@@ -66,7 +66,7 @@ const VEGETABLES: SelectOption[] = [
 
 /**
  * A plain select, one whose options have leading icons, then a grouped select with hued icons and custom item content,
- * a `multiple` select and a loading one, then a `fixed` trigger as wide as its widest option; `Select.Content` inherits its trigger row's size, except the grouped one, `lg` at every size.
+ * a `multiple` select and a loading one, then a `fixed` trigger as wide as its widest option; `Select.Content` inherits its trigger row's size, except the grouped one, `sm` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
@@ -94,7 +94,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
     <Toolbar.Root>
       <Select.Root items={[...FRUIT, ...VEGETABLES]}>
         <Select.Trigger placeholder='Produce' aria-label='Produce' />
-        <Select.Content size='lg'>
+        <Select.Content size='sm'>
           {[
             { label: 'Fruit', items: FRUIT },
             { label: 'Vegetables', items: VEGETABLES },
@@ -155,7 +155,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
 const meta = {
   title: 'ui/react-ui-core/components/Select',
   render: DefaultStory,
-  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[24rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ layout: 'column' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
@@ -216,7 +216,12 @@ export const Test: Story = {
     const separator = listbox.querySelector<HTMLElement>('[data-scope="separator"]');
     await expect(separator).toHaveAttribute('aria-hidden', 'true');
     await expect(within(listbox).queryByRole('separator')).toBeNull();
-    await expect(separator?.getBoundingClientRect().width).toBeCloseTo(listbox.clientWidth, 0);
+    // It spans the listbox's content box, inside the popup's uniform inset.
+    const { paddingLeft, paddingRight } = getComputedStyle(listbox);
+    await expect(separator?.getBoundingClientRect().width).toBeCloseTo(
+      listbox.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
+      0,
+    );
 
     await userEvent.click(within(listbox).getByRole('option', { name: 'Green' }));
     await waitFor(() => expect(trigger).toHaveTextContent('Green'));
@@ -261,7 +266,7 @@ export const Test: Story = {
     await userEvent.click(produce);
     const produceList = await body.findByRole('listbox');
     // An explicit size wins over the inherited one.
-    await expectPopupSize(produceList, 'lg');
+    await expectPopupSize(produceList, 'sm');
     await expect(within(produceList).getByRole('group', { name: 'Fruit' })).toBeInTheDocument();
     const vegetables = within(produceList).getByRole('group', { name: 'Vegetables' });
     await expect(within(vegetables).getAllByRole('option')).toHaveLength(2);
@@ -320,6 +325,10 @@ export const Test: Story = {
     await expect(lookup).toHaveAttribute('aria-busy', 'true');
     const spinner = lookup.querySelector<SVGElement>('[data-spin]');
     await expect(spinner && getComputedStyle(spinner).animationName).toBe('dx-spin');
+    // With no options yet, opening it shows no empty popup.
+    await userEvent.click(lookup);
+    await expect(body.queryByRole('listbox')).toBeNull();
+    await userEvent.keyboard('{Escape}');
 
     // `fixed`: as wide as the widest option, whichever is chosen.
     for (const size of SIZES) {
