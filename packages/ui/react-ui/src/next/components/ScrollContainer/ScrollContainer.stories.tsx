@@ -10,7 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZE_ARG_TYPES, type SizeArgs } from '../../testing/stories.tsx';
-import { Button, Group, Panel, ScrollContainer, type ScrollContainerRootProps, Toolbar, Typography } from '../index.ts';
+import { Button, Panel, ScrollContainer, type ScrollContainerRootProps, Toolbar, Typography } from '../index.ts';
 
 type StoryArgs = SizeArgs & Pick<ScrollContainerRootProps, 'pin'>;
 
