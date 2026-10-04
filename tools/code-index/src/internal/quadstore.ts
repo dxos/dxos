@@ -25,10 +25,24 @@ import type { Graph, ReasonOutcome } from './graph.ts';
 /** The LevelDB directory inside a store. */
 export const DIR = 'graph';
 
+/**
+ * Whether an asynciterator stream has already finished. Comunica resolves `queryBindings` only after
+ * building the stream, so an empty result can emit its one `end` before a caller attaches listeners.
+ */
+const finished = (stream: ResultStream<unknown>): { destroyed: boolean } | undefined =>
+  'done' in stream && stream.done === true
+    ? { destroyed: 'destroyed' in stream && stream.destroyed === true }
+    : undefined;
+
 // Comunica result streams are typed as bare EventEmitters, so they are drained by event rather than
 // through the `toArray` the concrete implementation happens to have.
 const collect = <T>(stream: ResultStream<T>): Promise<T[]> =>
   new Promise((resolve, reject) => {
+    const state = finished(stream);
+    if (state !== undefined) {
+      // Data flows only to a `data` listener, so a stream that ended before one attached was empty.
+      return state.destroyed ? reject(new Error('Result stream was destroyed before it was read')) : resolve([]);
+    }
     const items: T[] = [];
     stream.on('data', (item: T) => items.push(item));
     stream.on('error', reject);
