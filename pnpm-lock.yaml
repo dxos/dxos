@@ -202,8 +202,8 @@ catalogs:
       specifier: 4.0.0
       version: 4.0.0
     '@effect/wa-sqlite':
-      specifier: ^0.2.1
-      version: 0.2.1
+      specifier: ^0.1.2
+      version: 0.1.2
     '@elgato/streamdeck':
       specifier: ^2.1.2
       version: 2.1.2
@@ -3873,10 +3873,10 @@ importers:
     devDependencies:
       '@effect/sql-sqlite-wasm':
         specifier: 'catalog:'
-        version: 4.0.0(@effect/wa-sqlite@0.2.1)(effect@4.0.0)
+        version: 4.0.0(@effect/wa-sqlite@0.1.2)(effect@4.0.0)
       '@effect/wa-sqlite':
         specifier: 'catalog:'
-        version: 0.2.1
+        version: 0.1.2
 
   packages/common/storybook-addon-logger:
     dependencies:
@@ -27452,8 +27452,8 @@ packages:
       effect: 4.0.0
       vitest: '>=5.0.0 <6.0.0'
 
-  '@effect/wa-sqlite@0.2.1':
-    resolution: {integrity: sha512-vMnGIHKWSIFnDf7+n7lP2vyXPzORJotkaRI8LKyJw3eNjsvFopHYVaaGSeMSSVTm/w45pC5T4JdLrD6nxSR4oQ==}
+  '@effect/wa-sqlite@0.1.2':
+    resolution: {integrity: sha512-2JvJ9BDkBOwfeY/gXsC0XwEKC0AwisP2W5ABJ6mx14QyXTK12MGDIybDlHieuZt1TEFSMiKfpg7yyqyRWRooJQ==}
 
   '@elgato/schemas@0.4.16':
     resolution: {integrity: sha512-PFEi6F36ImO5KCSNHui9o/uXkwjca3hk5b95Df7LgNBdQYREXT3B+P3tYoz6avRuOPlArkKFSkOOvH6RRpjvLQ==}
@@ -49114,9 +49114,9 @@ snapshots:
     dependencies:
       effect: 4.0.0
 
-  '@effect/sql-sqlite-wasm@4.0.0(@effect/wa-sqlite@0.2.1)(effect@4.0.0)':
+  '@effect/sql-sqlite-wasm@4.0.0(@effect/wa-sqlite@0.1.2)(effect@4.0.0)':
     dependencies:
-      '@effect/wa-sqlite': 0.2.1
+      '@effect/wa-sqlite': 0.1.2
       effect: 4.0.0
 
   '@effect/tsgo-darwin-arm64@0.36.5':
@@ -49155,7 +49155,7 @@ snapshots:
       effect: 4.0.0
       vitest: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
-  '@effect/wa-sqlite@0.2.1': {}
+  '@effect/wa-sqlite@0.1.2': {}
 
   '@elgato/schemas@0.4.16': {}
 

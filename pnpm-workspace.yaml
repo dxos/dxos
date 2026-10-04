@@ -105,7 +105,7 @@ catalog:
   '@effect/sql-sqlite-wasm': 4.0.0
   '@effect/tsgo': ^0.36.5
   '@effect/vitest': 4.0.0
-  '@effect/wa-sqlite': ^0.2.1
+  '@effect/wa-sqlite': ^0.1.2
   '@elgato/streamdeck': ^2.1.2
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
