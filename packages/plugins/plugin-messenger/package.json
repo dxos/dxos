@@ -156,6 +156,8 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

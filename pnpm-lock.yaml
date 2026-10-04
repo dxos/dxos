@@ -13464,6 +13464,12 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client

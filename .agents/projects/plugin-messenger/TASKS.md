@@ -57,6 +57,10 @@ Decisions taken while building (beyond the spec):
   by two devices share a key, so read state needs no remapping, and merging is an append rather than an
   array replacement (concurrent replacements lost read state under test). A second copy of one message
   in the winning feed is dropped by the next convergence and hidden by `Notifications.view` meanwhile.
+- The `Messenger/Invitation` story runs the real plugins per client (`withMultiClientProvider({ wrapper })`
+  - plugin-client's `ClientPluginManager`): `SpaceOperation.AddMembers`, the `spaceInvitation` surface and
+    `JoinBySpaceKey`. `TwoUsers` stays on story-local wiring because its link assertion needs an
+    observable open, and the storybook layout's `LayoutOperation.Open` is a no-op.
 - Links in inbox messages are encoded absolute (`Message.encodeJson`); `loadLink` opens the linked
   space if it is inactive before loading the ref.
 - The panel's per-space filter is deferred (all / unread / invitations only).
