@@ -51,6 +51,29 @@ const heartbeat =
     return Math.max(pulse(0.1), 0.7 * pulse(0.1 + HEARTBEAT_GAP));
   };
 
+/** Seconds per lap of the orbit. */
+const ORBIT_PERIOD = 1.2;
+
+/**
+ * A light chasing round the grid's outer ring with a fading tail, the inner dots dark: a circling beacon that keeps
+ * moving without filling the grid, unlike the ready wave or the error sweep.
+ */
+const orbit =
+  (dim: number): DotSignal =>
+  (i, j, time) => {
+    const last = dim - 1;
+    if (i > 0 && i < last && j > 0 && j < last) {
+      return 0;
+    }
+
+    // Position along the ring, clockwise from the top-left corner.
+    const ring = 4 * last;
+    const position = j === 0 ? i : i === last ? last + j : j === last ? 3 * last - i : ring - j;
+    const head = ((time / ORBIT_PERIOD) % 1) * ring;
+    const behind = (head - position + ring) % ring;
+    return Math.exp(-behind / 2.5);
+  };
+
 /** Randomly pings dots every `interval` milliseconds; each decays back to zero (half-life ≈ 0.46s). */
 const useRandomPing = (dim: number, interval: number): DotSignal => {
   const valuesRef = useRef<Float32Array>(new Float32Array(dim * dim));
@@ -198,10 +221,22 @@ const pixels = (size: Size): number => (size === 'px' ? 1 : size * 4);
 
 // Smaller peaks than thinking's pings, in the same footprint: the signal is scaled rather than the radius, so every
 // state keeps the spinner's size and dot positions.
-const SIGNALS: Record<Exclude<ActivityState, 'thinking'>, DotSignal> = {
+const SIGNALS: Record<Exclude<ActivityState, 'thinking' | 'alert'>, DotSignal> = {
   ready: scaled(radialWave(DIM), 0.6),
-  alert: scaled(heartbeat(DIM), 0.8),
   error: scaled(ripple, 0.6),
+};
+
+/** The candidate alert patterns, so they can be compared side by side. */
+const ALERTS = {
+  heartbeat: scaled(heartbeat(DIM), 0.8),
+  orbit: scaled(orbit(DIM), 0.8),
+} satisfies Record<string, DotSignal>;
+
+export type PulseAlert = keyof typeof ALERTS;
+
+export type PulseSpinnerProps = SpinnerProps & {
+  /** The pattern for the alert state. */
+  alert?: PulseAlert;
 };
 
 const COLORS: Record<ActivityState, string> = {
@@ -211,8 +246,14 @@ const COLORS: Record<ActivityState, string> = {
   error: 'text-rose-500',
 };
 
-/** A dot matrix: a wave when ready, random pings while thinking, an amber heartbeat on alert, a sweep on error. */
-export const PulseSpinner = ({ classNames, state = 'ready', size = 5, onClick }: SpinnerProps) => {
+/** A dot matrix: a wave when ready, random pings while thinking, an amber heartbeat or orbit on alert, a sweep on error. */
+export const PulseSpinner = ({
+  classNames,
+  state = 'ready',
+  size = 5,
+  alert = 'heartbeat',
+  onClick,
+}: PulseSpinnerProps) => {
   const thinking = useRandomPing(DIM, 100);
   const maxRadius = pixels(size) / DIM / 2;
 
@@ -226,7 +267,7 @@ export const PulseSpinner = ({ classNames, state = 'ready', size = 5, onClick }:
         gap={0}
         smoothing={0.3}
         classNames={COLORS[state]}
-        getSignal={state === 'thinking' ? thinking : SIGNALS[state]}
+        getSignal={state === 'thinking' ? thinking : state === 'alert' ? ALERTS[alert] : SIGNALS[state]}
       />
     </div>
   );
