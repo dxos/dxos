@@ -7,6 +7,7 @@
 import * as AiError from 'effect/ai/AiError';
 import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Prompt from 'effect/ai/Prompt';
+import type * as Response from 'effect/ai/Response';
 import * as Tool from 'effect/ai/Tool';
 import * as Toolkit from 'effect/ai/Toolkit';
 import * as Context from 'effect/Context';
@@ -14,6 +15,7 @@ import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 import * as Docs from './Docs.ts';
 import * as Events from './Events.ts';
@@ -156,7 +158,7 @@ const make = Effect.gen(function* () {
    * The tool handler is where the log is written from: the call is appended before the run and the
    * result after it, so the transcript records the attempt even when the run dies.
    */
-  const handlerLayer = (projectId: string) =>
+  const handlerLayer = (projectId: string, turnId: string) =>
     ExecToolkit.toLayer({
       exec: Effect.fn(function* ({ code }) {
         // The id is minted here, before the call is appended, because it has to travel *on* the
@@ -165,7 +167,7 @@ const make = Effect.gen(function* () {
         // with no output forever. It is ours rather than the provider's so a replay does not depend
         // on the provider being consistent about its own ids.
         const callId = Events.newCallId();
-        yield* log.append(projectId, new Events.ToolCall({ callId, code })).pipe(Effect.orDie);
+        yield* log.append(projectId, new Events.ToolCall({ callId, code, turnId })).pipe(Effect.orDie);
         const result = yield* sandbox
           .run({ projectId, code })
           .pipe(Effect.catch((cause) => Effect.succeed({ ok: false, output: cause.message, presented: [] as const })));
@@ -179,31 +181,88 @@ const make = Effect.gen(function* () {
       }),
     });
 
+  /**
+   * One model round-trip, streamed. Each text delta is appended as it arrives so a tailing client
+   * renders the answer while it is generated; the deltas are settled into one `AssistantMessage` at
+   * the end of each text block, which is also where a tool call starts — so prose and the runs it
+   * introduces land in the log in the order the model produced them. Returns every part, which is
+   * what the next round-trip's prompt is built from.
+   */
+  const streamStep = ({ projectId, turnId, prompt }: { projectId: string; turnId: string; prompt: Prompt.Prompt }) =>
+    Effect.gen(function* () {
+      const parts: Response.StreamPart<typeof ExecToolkit.tools, 'opaque'>[] = [];
+      let open: { messageId: string; text: string } | undefined;
+
+      const settle = Effect.suspend(() => {
+        const message = open;
+        open = undefined;
+        if (message === undefined) {
+          return Effect.void;
+        }
+        const { messageId } = message;
+        return log
+          .append(projectId, new Events.AssistantMessage({ text: message.text.trim(), messageId, turnId }))
+          .pipe(Effect.andThen(log.compact(projectId, messageId)), Effect.mapError(fail('Cannot record reply')));
+      });
+
+      yield* LanguageModel.streamText({ prompt, toolkit: ExecToolkit }).pipe(
+        Stream.runForEach((part) =>
+          Effect.gen(function* () {
+            parts.push(part);
+            switch (part.type) {
+              case 'text-delta': {
+                // Leading whitespace opens no message: a block that is only whitespace has nothing to show.
+                if (open === undefined && part.delta.trim().length === 0) {
+                  return;
+                }
+                open ??= { messageId: Events.newMessageId(), text: '' };
+                open.text += part.delta;
+                yield* log
+                  .append(
+                    projectId,
+                    new Events.AssistantDelta({ messageId: open.messageId, delta: part.delta, turnId }),
+                  )
+                  .pipe(Effect.mapError(fail('Cannot record reply')));
+                return;
+              }
+              case 'text-end':
+              case 'tool-params-start':
+              case 'tool-call':
+                return yield* settle;
+            }
+          }),
+        ),
+        // A step that fails mid-message still settles what streamed, so the partial prose stays one row.
+        Effect.ensuring(settle.pipe(Effect.ignore)),
+      );
+      return parts;
+    });
+
   const turn: Api['turn'] = ({ projectId, text, system, turnId = Events.newTurnId() }) =>
     Effect.gen(function* () {
       yield* log
         .append(projectId, new Events.UserMessage({ text, turnId }))
         .pipe(Effect.mapError(fail('Cannot record turn')));
       const entries = yield* log.read(projectId).pipe(Effect.mapError(fail('Cannot read project log')));
-      const handlers = handlerLayer(projectId);
+      const handlers = handlerLayer(projectId, turnId);
 
       let prompt = promptOf(Fold.fold(entries), system);
       let malformed = 0;
-      // The loop is explicit: `generateText` resolves the calls of one round-trip but does not go
+      // The loop is explicit: `streamText` resolves the calls of one round-trip but does not go
       // back to the model with their results, and going back is what makes this agentic.
       for (let step = 0; step < MAX_STEPS; step++) {
-        const attempt = yield* LanguageModel.generateText({ prompt, toolkit: ExecToolkit }).pipe(
+        const attempt = yield* streamStep({ projectId, turnId, prompt }).pipe(
           Effect.provide(handlers),
           Effect.provideContext(models),
-          Effect.map((response) => ({ response, problem: undefined })),
+          Effect.map((parts) => ({ parts, problem: undefined })),
           Effect.catch((cause) => {
             const problem = malformedToolCall(cause);
             return problem !== undefined && malformed < MAX_MALFORMED
-              ? Effect.succeed({ response: undefined, problem })
+              ? Effect.succeed({ parts: undefined, problem })
               : Effect.fail(new AgentError({ message: problem ?? describe(cause), cause }));
           }),
         );
-        if (attempt.response === undefined) {
+        if (attempt.parts === undefined) {
           malformed++;
           yield* log
             .append(projectId, new Events.StepRetried({ message: attempt.problem, turnId }))
@@ -215,21 +274,15 @@ const make = Effect.gen(function* () {
           continue;
         }
         malformed = 0;
-        const response = attempt.response;
+        const parts = attempt.parts;
 
-        const prose = response.text.trim();
-        if (prose.length > 0) {
-          yield* log
-            .append(projectId, new Events.AssistantMessage({ text: prose }))
-            .pipe(Effect.mapError(fail('Cannot record reply')));
-        }
-        if (response.toolCalls.length === 0) {
+        if (!parts.some((part) => part.type === 'tool-call')) {
           return yield* log
             .append(projectId, new Events.TurnEnded({ steps: step + 1, turnId }))
             .pipe(Effect.asVoid, Effect.mapError(fail('Cannot close turn')));
         }
         // The calls and their results go back verbatim; the tool events are already in the log.
-        prompt = Prompt.concat(prompt, Prompt.fromResponseParts(response.content));
+        prompt = Prompt.concat(prompt, Prompt.fromResponseParts(parts));
 
         const remaining = MAX_STEPS - step - 1;
         if (remaining <= WARN_AT_REMAINING) {
