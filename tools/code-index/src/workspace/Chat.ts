@@ -51,6 +51,8 @@ export const render = (event: Events.Event): string | undefined => {
       ].join('\n');
     case 'CanvasCleared':
       return `${DIM}(canvas cleared)${RESET}`;
+    case 'StepRetried':
+      return `${RED}⚠ ${event.message} Retrying.${RESET}`;
     case 'TurnFailed':
       return `${RED}⚠ ${event.message}${RESET}`;
     // Boundaries and metadata: real events, but nothing a reader of the transcript needs to see.
