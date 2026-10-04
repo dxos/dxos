@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as UiToast from '@dxos/react-ui/Toast';
 
 import { meta } from '#meta';
@@ -34,12 +34,12 @@ export const Toast = ({
 
   return (
     <UiToast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
-      <UiToast.Header icon={icon}>{title && ThemeProvider.toLocalizedString(title, t)}</UiToast.Header>
-      {description && <UiToast.Description>{ThemeProvider.toLocalizedString(description, t)}</UiToast.Description>}
+      <UiToast.Header icon={icon}>{title && Theme.toLocalizedString(title, t)}</UiToast.Header>
+      {description && <UiToast.Description>{Theme.toLocalizedString(description, t)}</UiToast.Description>}
       {onAction && actionAlt && actionLabel && (
         <UiToast.Footer>
           <UiToast.ActionTrigger data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
-            {ThemeProvider.toLocalizedString(actionLabel, t)}
+            {Theme.toLocalizedString(actionLabel, t)}
           </UiToast.ActionTrigger>
         </UiToast.Footer>
       )}

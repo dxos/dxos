@@ -33,7 +33,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Main from '@dxos/react-ui/Main';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Splitter from '@dxos/react-ui/Splitter';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import type * as Util from '@dxos/react-ui/Util';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
@@ -467,7 +467,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   // Resolve the node's (possibly localized) label the same way the plank heading does, falling back to
   // the id only when there is no label at all.
   const { t } = UiHooks.useTranslation(meta.profile.key);
-  const spineLabel = ThemeProvider.toLocalizedString(node?.properties?.label ?? '', t) || id;
+  const spineLabel = Theme.toLocalizedString(node?.properties?.label ?? '', t) || id;
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.

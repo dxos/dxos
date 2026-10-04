@@ -7,7 +7,7 @@ import React, { Fragment, memo, useMemo } from 'react';
 import { Tree } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { getListActions, useActions } from '#hooks';
 import { meta } from '#meta';
@@ -36,7 +36,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
         <ActionRoot>
           {allActions.length === 1 ? (
             <NavTreeItemMonolithicAction
-              baseLabel={ThemeProvider.toLocalizedString(allActions[0].properties?.label, t)}
+              baseLabel={Theme.toLocalizedString(allActions[0].properties?.label, t)}
               parent={item}
               path={path}
               {...allActions[0]}

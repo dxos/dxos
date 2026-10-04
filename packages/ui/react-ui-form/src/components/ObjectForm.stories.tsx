@@ -31,9 +31,9 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
 
   const footer = (
     <Panel.Footer>
-      <Typography.Typography truncate data-testid='object'>
+      <Typography.Text truncate data-testid='object'>
         {JSON.stringify({ ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.target?.label) })}
-      </Typography.Typography>
+      </Typography.Text>
     </Panel.Footer>
   );
   return component === 'properties' ? (

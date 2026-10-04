@@ -101,7 +101,7 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
   return (
     <>
       <Field.Header>
-        <Typography.Typography truncate>{label}</Typography.Typography>
+        <Typography.Text truncate>{label}</Typography.Text>
         {editable && (
           <Button.Button
             iconOnly

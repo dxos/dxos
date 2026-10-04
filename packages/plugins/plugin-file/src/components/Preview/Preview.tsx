@@ -11,7 +11,7 @@ import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
-import * as MediaPlayer from '@dxos/react-ui/MediaPlayer';
+import * as Media from '@dxos/react-ui/Media';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -265,7 +265,7 @@ const PreviewContent = Util.composable<HTMLDivElement>((props, forwardedRef) => 
   if (type.startsWith('image/') || type.startsWith('video/') || type.startsWith('audio/')) {
     return (
       <div {...Util.composableProps(props, { classNames: 'grid dx-fill min-h-0' })} ref={forwardedRef}>
-        <MediaPlayer.MediaPlayer
+        <Media.Player
           classNames='dx-fill'
           src={url}
           // `kind` is set explicitly for audio and video because the URL is a `data:`/`blob:`/

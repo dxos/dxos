@@ -83,3 +83,5 @@ export const Progress = forwardRef<HTMLDivElement, ProgressProps>(
 );
 
 Progress.displayName = 'Progress';
+
+export * from '../Steps/Steps.tsx';

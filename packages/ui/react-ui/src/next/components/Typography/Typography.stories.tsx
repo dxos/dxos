@@ -29,33 +29,33 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Block.Block rail='start' data-testid={`icon-${size}`}>
         <Icon.Icon icon='ph--chat-circle--regular' />
       </Block.Block>
-      <Typography.Typography data-testid={`text-${size}`}>{TEXT}</Typography.Typography>
+      <Typography.Text data-testid={`text-${size}`}>{TEXT}</Typography.Text>
     </Container.Container>
     <Container.Container layout='row' columns='minmax(0, 1fr) auto'>
-      <Typography.Typography truncate data-testid={`truncate-${size}`}>
+      <Typography.Text truncate data-testid={`truncate-${size}`}>
         {TEXT}
-      </Typography.Typography>
-      <Typography.Typography tone='muted' data-testid={`description-${size}`}>
+      </Typography.Text>
+      <Typography.Text tone='muted' data-testid={`description-${size}`}>
         Description
-      </Typography.Typography>
+      </Typography.Text>
     </Container.Container>
     <Container.Container>
-      <Typography.Typography lines={2} data-testid={`lines-${size}`}>
+      <Typography.Text lines={2} data-testid={`lines-${size}`}>
         {TEXT} {TEXT}
-      </Typography.Typography>
-      <Typography.Typography tone='subtle' data-testid={`subdued-${size}`}>
+      </Typography.Text>
+      <Typography.Text tone='subtle' data-testid={`subdued-${size}`}>
         Subdued interface text
-      </Typography.Typography>
-      <Typography.Typography mono data-testid={`mono-${size}`}>
+      </Typography.Text>
+      <Typography.Text mono data-testid={`mono-${size}`}>
         did:key:z6Mk
-      </Typography.Typography>
+      </Typography.Text>
     </Container.Container>
     <Container.Container>
-      <Typography.Typography asChild>
+      <Typography.Text asChild>
         <h2 className='font-medium' data-testid={`heading-${size}`}>
           Typography as a heading
         </h2>
-      </Typography.Typography>
+      </Typography.Text>
     </Container.Container>
   </>
 );

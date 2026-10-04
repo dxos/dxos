@@ -29,7 +29,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tabs from '@dxos/react-ui/Tabs';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
@@ -503,7 +503,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       <Banner.Root>
         <Banner.Body>
           <span>
-            <ThemeProvider.Trans
+            <Theme.Trans
               {...{
                 t,
                 i18nKey: 'no-comments.message',

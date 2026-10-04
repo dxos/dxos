@@ -141,7 +141,7 @@ export const RefArrayField = ({
   if (isStatic) {
     const selected = ids.flatMap((id) => options.find((option) => option.id === id) ?? []);
     return selected.length === 0 ? (
-      <Typography.Typography tone='muted'>{t('empty-readonly-ref-field.label')}</Typography.Typography>
+      <Typography.Text tone='muted'>{t('empty-readonly-ref-field.label')}</Typography.Text>
     ) : (
       <Group.Group>
         {selected.map((option) => (
@@ -245,7 +245,7 @@ const TitleRows = ({
   return (
     <>
       <Field.Header>
-        <Typography.Typography truncate>{label}</Typography.Typography>
+        <Typography.Text truncate>{label}</Typography.Text>
       </Field.Header>
       {rows.length > 0 && (
         <OrderedList.Root

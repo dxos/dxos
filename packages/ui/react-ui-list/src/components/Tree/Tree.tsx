@@ -48,7 +48,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Listbox from '@dxos/react-ui/Listbox';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Typography from '@dxos/react-ui/Typography';
 import * as Util from '@dxos/react-ui/Util';
 import { hues } from '@dxos/ui-types';
@@ -218,7 +218,7 @@ const TreeRoot = <T extends { id: string }>({
   const walkRef = useRef<TreeWalk<T>>(walk);
   walkRef.current = walk;
   const collection = useMemo(
-    () => createCollection(walk.root, (node) => ThemeProvider.toLocalizedString(node.props.label, t)),
+    () => createCollection(walk.root, (node) => Theme.toLocalizedString(node.props.label, t)),
     [walk.root, t],
   );
   const scrollToIndexRef = useRef<((index: number) => void) | null>(null);
@@ -891,7 +891,7 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
   const { id, value, path, item, depth, branch, open, last, current, props } = node;
   const canDrag = draggable && props.draggable !== false;
   const canBeTarget = draggable && props.droppable !== false;
-  const label = ThemeProvider.toLocalizedString(props.label, t);
+  const label = Theme.toLocalizedString(props.label, t);
   // `expanded` drops the reorder-below zone, because below an open branch and its first child are the same place;
   // `last-in-group` offers the `reparent` bands that move a row out to a shallower level.
   const mode: ItemMode = branch && open && !dropBelowExpanded ? 'expanded' : last ? 'last-in-group' : 'standard';
@@ -1178,9 +1178,9 @@ const TreeItemGroupLabel = ({ children }: TreeItemGroupLabelProps) => {
   const { node } = useTreeItemContext('Tree.ItemGroupLabel');
   const { t } = Hooks.useTranslation();
   return (
-    <Typography.Typography truncate classNames='dx-tree-group-label'>
-      {children ?? ThemeProvider.toLocalizedString(node.props.label, t)}
-    </Typography.Typography>
+    <Typography.Text truncate classNames='dx-tree-group-label'>
+      {children ?? Theme.toLocalizedString(node.props.label, t)}
+    </Typography.Text>
   );
 };
 
@@ -1265,9 +1265,9 @@ const TreeItemText = ({ children, 'data-testid': testId }: TreeItemTextProps) =>
   const { node } = useTreeItemContext('Tree.ItemText');
   const { t } = Hooks.useTranslation();
   return (
-    <Typography.Typography truncate classNames='dx-tree-item-text' data-testid={testId}>
-      {children ?? ThemeProvider.toLocalizedString(node.props.label, t)}
-    </Typography.Typography>
+    <Typography.Text truncate classNames='dx-tree-item-text' data-testid={testId}>
+      {children ?? Theme.toLocalizedString(node.props.label, t)}
+    </Typography.Text>
   );
 };
 

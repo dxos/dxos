@@ -53,9 +53,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
                   <Block.Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
                     <Icon.Icon icon='ph--envelope--regular' />
                   </Block.Block>
-                  <Typography.Typography data-testid={index === 0 ? `text-${size}` : undefined}>
-                    {label}
-                  </Typography.Typography>
+                  <Typography.Text data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Typography.Text>
                 </Container.Container>
               ))}
             </Container.Container>
@@ -83,7 +81,7 @@ const TestStory = (args: SizeArgs) => (
       <Panel.Root size={args.size}>
         <Panel.Header data-testid={`empty-header-${args.size}`} />
         <Panel.Body data-testid={`bare-body-${args.size}`}>
-          <Typography.Typography>Body</Typography.Typography>
+          <Typography.Text>Body</Typography.Text>
         </Panel.Body>
       </Panel.Root>
     </div>
@@ -93,7 +91,7 @@ const TestStory = (args: SizeArgs) => (
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
               <Container.Container>
-                <Typography.Typography data-testid={`reading-text-${args.size}`}>Reading width</Typography.Typography>
+                <Typography.Text data-testid={`reading-text-${args.size}`}>Reading width</Typography.Text>
               </Container.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -107,9 +105,7 @@ const TestStory = (args: SizeArgs) => (
             <ScrollArea.Viewport asChild>
               <Container.Container data-testid={`default-gutter-body-${args.size}`}>
                 <Container.Container data-testid={`default-gutter-nested-${args.size}`}>
-                  <Typography.Typography data-testid={`default-gutter-text-${args.size}`}>
-                    Default gutter
-                  </Typography.Typography>
+                  <Typography.Text data-testid={`default-gutter-text-${args.size}`}>Default gutter</Typography.Text>
                 </Container.Container>
               </Container.Container>
             </ScrollArea.Viewport>
@@ -121,7 +117,7 @@ const TestStory = (args: SizeArgs) => (
       <Panel.Root size={args.size} gutter='md' data-testid={`md-gutter-${args.size}`}>
         <Panel.Body>
           <Container.Container>
-            <Typography.Typography data-testid={`md-gutter-text-${args.size}`}>Panel gutter</Typography.Typography>
+            <Typography.Text data-testid={`md-gutter-text-${args.size}`}>Panel gutter</Typography.Text>
           </Container.Container>
         </Panel.Body>
       </Panel.Root>

@@ -94,9 +94,9 @@ const CreatableCombobox = ({ size = 'md' }: SizeArgs) => {
         <Combobox.Trigger placeholder='Pick or create' data-testid={`create-${size}`} />
         <Combobox.Content data-testid={`create-popup-${size}`} />
       </Combobox.Root>
-      <Typography.Typography data-testid={`created-${size}`}>
+      <Typography.Text data-testid={`created-${size}`}>
         {created ? `Created: ${created}` : 'Nothing created'}
-      </Typography.Typography>
+      </Typography.Text>
     </Field.Root>
   );
 };
@@ -146,12 +146,12 @@ const AnchoredCombobox = ({ size = 'md' }: SizeArgs) => {
         <Button.Button onClick={() => setOpen(true)} data-testid={`open-anchored-${size}`}>
           Mention
         </Button.Button>
-        <Typography.Typography>
+        <Typography.Text>
           Hello{' '}
           <span ref={anchor} data-testid={`anchor-${size}`}>
             @{OPTIONS.find((option) => option.value === value[0])?.label ?? '…'}
           </span>
-        </Typography.Typography>
+        </Typography.Text>
       </Group.Group>
       <Combobox.Root
         items={OPTIONS}

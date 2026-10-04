@@ -9,7 +9,7 @@ import { useObject } from '@dxos/echo-react';
 import { Tree, type TreeDropEvent, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { type Task } from '@dxos/types';
 
 import {
@@ -442,7 +442,7 @@ const TaskGroupHeading = ({ group, translationKey }: { group: TaskGroupHeader; t
   return (
     <div className='col-[2/assignee] flex min-w-0 items-center gap-2' data-testid='taskList.group.header'>
       {group.icon && <Icon.Icon icon={group.icon} size='md' classNames={group.iconClassNames} />}
-      <span className='truncate font-medium'>{ThemeProvider.toLocalizedString(group.label, t)}</span>
+      <span className='truncate font-medium'>{Theme.toLocalizedString(group.label, t)}</span>
       <span className='text-sm text-fg-muted' data-testid='taskList.group.count'>
         {group.count}
       </span>

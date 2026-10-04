@@ -37,10 +37,10 @@ const DefaultStory = ({ size, orientation, selectedVariant, keepMounted }: Story
       <Tabs.Trigger value='settings' icon='ph--gear--regular' label='Settings' iconOnly />
     </Tabs.List>
     <Tabs.Content value='overview'>
-      <Typography.Typography>A summary of the project.</Typography.Typography>
+      <Typography.Text>A summary of the project.</Typography.Text>
     </Tabs.Content>
     <Tabs.Content value='tasks'>
-      <Typography.Typography>Three open tasks.</Typography.Typography>
+      <Typography.Text>Three open tasks.</Typography.Text>
     </Tabs.Content>
     <Tabs.Content value='settings'>
       <Input.Input aria-label='Name' defaultValue='Apollo' />

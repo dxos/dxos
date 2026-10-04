@@ -22,7 +22,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Separator from '@dxos/react-ui/Separator';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Typography from '@dxos/react-ui/Typography';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/ui-types';
@@ -267,9 +267,9 @@ const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
   return (
     <>
       {group.label && (
-        <Typography.Typography tone='muted' classNames='px-2'>
-          {ThemeProvider.toLocalizedString(group.label, t)}
-        </Typography.Typography>
+        <Typography.Text tone='muted' classNames='px-2'>
+          {Theme.toLocalizedString(group.label, t)}
+        </Typography.Text>
       )}
 
       {group.items.map((item) => (
@@ -307,7 +307,7 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
     // Menu row metrics without a Menu machine: the popover keeps focus in the editor, so `current` is the highlight.
     <li ref={listRef} className='dx-menu-item' data-highlighted={current ? '' : undefined} onClick={handleSelect}>
       {item.icon && <Icon.Icon icon={item.icon} />}
-      <span className='dx-menu-item-text'>{ThemeProvider.toLocalizedString(item.label, t)}</span>
+      <span className='dx-menu-item-text'>{Theme.toLocalizedString(item.label, t)}</span>
     </li>
   );
 };

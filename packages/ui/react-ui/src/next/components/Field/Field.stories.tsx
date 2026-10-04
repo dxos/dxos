@@ -19,7 +19,7 @@ import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.
 import * as Button from '../Button/Button.tsx';
 import * as Checkbox from '../Checkbox/Checkbox.tsx';
 import * as Container from '../Container/Container.tsx';
-import * as DateInput from '../DateInput/DateInput.tsx';
+import * as DatePicker from '../DatePicker/DatePicker.tsx';
 import * as Input from '../Input/Input.tsx';
 import * as NumberInput from '../NumberInput/NumberInput.tsx';
 import * as PasswordInput from '../PasswordInput/PasswordInput.tsx';
@@ -49,15 +49,15 @@ const EveryField = ({ size }: SizeArgs) => (
     </Field.Root>
     <Field.Root>
       <Field.Label>Birthday</Field.Label>
-      <DateInput.DateInput defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
+      <DatePicker.Input defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Wake up</Field.Label>
-      <DateInput.DateInput type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
+      <DatePicker.Input type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Meeting</Field.Label>
-      <DateInput.DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
+      <DatePicker.Input type='datetime-local' defaultValue='2026-09-29T14:00' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Code</Field.Label>
@@ -150,7 +150,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
     </Container.Container>
     {/* A header whose label is text (no single control to name): its action still ends the row. */}
     <Field.Header data-testid={`text-header-${size}`}>
-      <Typography.Typography truncate>Tags</Typography.Typography>
+      <Typography.Text truncate>Tags</Typography.Text>
       <Button.Button iconOnly variant='ghost' icon='ph--plus--regular' label='Add tag' />
     </Field.Header>
     {/* A row with its own columns spaces them by its gap. */}

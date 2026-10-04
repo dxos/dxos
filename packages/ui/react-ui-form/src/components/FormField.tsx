@@ -23,7 +23,7 @@ const FORM_FIELD_NAME = 'Form.Field';
 
 /** A bound value rendered as text: what a `static` presentation shows in place of the control. */
 export const FormStaticValue = ({ value, format }: { value: unknown; format?: Format.TypeFormat }) => (
-  <Typography.Typography truncate>{formatStaticValue(value, format)}</Typography.Typography>
+  <Typography.Text truncate>{formatStaticValue(value, format)}</Typography.Text>
 );
 
 export type FormFieldProps<T = any> = PropsWithChildren<{
@@ -162,7 +162,7 @@ export const FormFieldRow = <T,>({
       {showHeader && (
         <Field.Header>
           {standalone || readonly ? (
-            <Typography.Typography truncate>{label}</Typography.Typography>
+            <Typography.Text truncate>{label}</Typography.Text>
           ) : (
             <Field.Label>{label}</Field.Label>
           )}

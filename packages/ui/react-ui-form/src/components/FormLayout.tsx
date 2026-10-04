@@ -128,7 +128,7 @@ const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
 
   return (
     <FormFieldRow label={label} readonly standalone presentation={layout}>
-      <Typography.Typography truncate>{text}</Typography.Typography>
+      <Typography.Text truncate>{text}</Typography.Text>
     </FormFieldRow>
   );
 };

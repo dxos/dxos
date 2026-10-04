@@ -79,11 +79,11 @@ const DefaultStory = ({ system }: StoryArgs) => {
         </ScrollArea.Root>
       </Panel.Body>
       <Panel.Footer>
-        <Typography.Typography truncate data-testid='fields'>
+        <Typography.Text truncate data-testid='fields'>
           {JSON.stringify(
             snapshot?.projection.fields.map((field) => (field.visible === false ? `-${field.path}` : field.path)),
           )}
-        </Typography.Typography>
+        </Typography.Text>
       </Panel.Footer>
     </Panel.Root>
   );

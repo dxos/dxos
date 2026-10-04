@@ -15,7 +15,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
@@ -282,8 +282,8 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
   const sortedSpaces = useMemo(
     () =>
       [...spaces].sort((a, b) => {
-        const labelA = ThemeProvider.toLocalizedString(getSpaceDisplayName(a), t);
-        const labelB = ThemeProvider.toLocalizedString(getSpaceDisplayName(b), t);
+        const labelA = Theme.toLocalizedString(getSpaceDisplayName(a), t);
+        const labelB = Theme.toLocalizedString(getSpaceDisplayName(b), t);
         return labelA.localeCompare(labelB);
       }),
     [spaces, t],
@@ -291,7 +291,7 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items: sortedSpaces,
-    extract: (space) => ThemeProvider.toLocalizedString(getSpaceDisplayName(space), t),
+    extract: (space) => Theme.toLocalizedString(getSpaceDisplayName(space), t),
   });
 
   // TODO(burdon): Change to Masonry.
@@ -309,7 +309,7 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
           <SearchList.Item
             key={space.id}
             value={space.id}
-            label={ThemeProvider.toLocalizedString(getSpaceDisplayName(space), t)}
+            label={Theme.toLocalizedString(getSpaceDisplayName(space), t)}
             onSelect={() => onChange?.(space.db)}
           />
         ))}

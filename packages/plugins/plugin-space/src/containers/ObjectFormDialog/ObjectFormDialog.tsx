@@ -27,7 +27,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
@@ -98,7 +98,7 @@ const ObjectFormDialogBody = ({
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   const allTypes = useQuery(db, TypeOptions.allTypesQuery);
   const space = useMemo(() => spaces.find((s) => s.db === db), [spaces, db]);
-  const spaceLabel = useMemo(() => space && ThemeProvider.toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
+  const spaceLabel = useMemo(() => space && Theme.toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
 
   // Index all types by typename for label/icon lookups.
   const typeByTypename = useMemo(() => {

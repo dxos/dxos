@@ -56,7 +56,7 @@ export const MarkdownField = ({
 
   const text = typeof value === 'string' ? value : '';
   return isStatic ? (
-    <Typography.Typography>{text}</Typography.Typography>
+    <Typography.Text>{text}</Typography.Text>
   ) : (
     <StringMarkdownEditor
       value={text}
@@ -89,7 +89,7 @@ const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: String
 const RefStaticText = ({ reference }: { reference: Ref.Unknown }) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
   const content = Obj.instanceOf(Text.Text, target) ? target.content : undefined;
-  return content ? <Typography.Typography>{content}</Typography.Typography> : null;
+  return content ? <Typography.Text>{content}</Typography.Text> : null;
 };
 
 type RefMarkdownEditorProps = {

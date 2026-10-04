@@ -86,7 +86,7 @@ const DefaultStory = ({
         <div className='h-[150dvh] p-4'>Tall content</div>
       </Main.Content>
       <Main.Drawer label='Drawer'>
-        <Typography.Typography>Drawer content</Typography.Typography>
+        <Typography.Text>Drawer content</Typography.Text>
       </Main.Drawer>
       <Main.ComplementarySidebar label='Complementary'>
         <Toolbar.Root>

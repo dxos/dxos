@@ -12,7 +12,7 @@ import { AgentHostingProvider, ClientProvider, ClientServicesProxy, Config, Shel
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { translationKey, translations } from '../../translations.ts';
@@ -35,24 +35,24 @@ export const runShell = async (config: Config = new Config()) => {
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <ThemeProvider.ThemeProvider tx={ThemeProvider.defaultTx} resourceExtensions={translations}>
+        <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations}>
           <ClientProvider config={config} services={services} noBanner>
             <AgentHostingProvider>
               <Shell runtime={runtime} />
             </AgentHostingProvider>
           </ClientProvider>
-        </ThemeProvider.ThemeProvider>
+        </Theme.Provider>
       </StrictMode>,
     );
   } catch {
     // If shell's client fails to initialize, ensure that the shell is still closeable.
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <ThemeProvider.ThemeProvider tx={ThemeProvider.defaultTx} resourceExtensions={translations}>
+        <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations}>
           <Fallback
             onClose={() => runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }))}
           />
-        </ThemeProvider.ThemeProvider>
+        </Theme.Provider>
       </StrictMode>,
     );
   }

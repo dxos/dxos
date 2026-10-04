@@ -45,9 +45,9 @@ export const RefField = ({
   }
   if (readonly || presentationFor(presentation).isStatic) {
     return (
-      <Typography.Typography truncate tone={selected ? 'default' : 'muted'}>
+      <Typography.Text truncate tone={selected ? 'default' : 'muted'}>
         {selected?.label ?? t('empty-readonly-ref-field.label')}
-      </Typography.Typography>
+      </Typography.Text>
     );
   }
 

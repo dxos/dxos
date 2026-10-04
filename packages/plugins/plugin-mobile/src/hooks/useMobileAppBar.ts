@@ -14,7 +14,7 @@ import * as DeckHooks from '@dxos/plugin-deck/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/react-ui-menu';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -52,7 +52,7 @@ export const useMobileAppBar = (): MobileAppBar => {
   const runAction = GraphHooks.useActionRunner();
 
   const node = GraphHooks.useNode(graph, topId);
-  const title = node ? ThemeProvider.toLocalizedString(node.properties.label, t) : undefined;
+  const title = node ? Theme.toLocalizedString(node.properties.label, t) : undefined;
 
   // Derives activeId from the state atom (rather than `useMobileStack`) so this atom does not need
   // to be recreated on every stack change; an atom body cannot call a hook, so the root fallback is

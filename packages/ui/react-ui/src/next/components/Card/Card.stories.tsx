@@ -119,7 +119,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         </Card.Header>
         <Card.Body>
           <Card.Description>What ships next quarter and why.</Card.Description>
-          <Typography.Typography>Three milestones, each with an owner and a date.</Typography.Typography>
+          <Typography.Text>Three milestones, each with an owner and a date.</Typography.Text>
         </Card.Body>
         <Card.Footer data-testid={`footer-${size}`}>
           <Button.Button>Dismiss</Button.Button>
@@ -136,7 +136,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           </Block.Block>
         </Card.Header>
         <Card.Body>
-          <Typography.Typography>A card with a broken poster and no footer.</Typography.Typography>
+          <Typography.Text>A card with a broken poster and no footer.</Typography.Text>
         </Card.Body>
       </Card.Root>
 
@@ -253,9 +253,9 @@ const TileGridStory = () => {
               <Card.Header>
                 <Card.Title truncate>{title}</Card.Title>
               </Card.Header>
-              <Typography.Typography tone='muted' lines={3}>
+              <Typography.Text tone='muted' lines={3}>
                 {text}
-              </Typography.Typography>
+              </Typography.Text>
               <Card.Footer justify='between' data-testid={`tile-footer-${title}`}>
                 <Tag.Tag hue='purple'>labs</Tag.Tag>
                 <Switch.Switch aria-label={title} />
@@ -264,7 +264,7 @@ const TileGridStory = () => {
           </Card.Root>
         ))}
       </Container.Container>
-      <Typography.Typography data-testid='tile-opened'>{opened}</Typography.Typography>
+      <Typography.Text data-testid='tile-opened'>{opened}</Typography.Text>
     </Container.Container>
   );
 };

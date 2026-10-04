@@ -15,13 +15,13 @@ import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import * as Button from '../Button/Button.tsx';
-import * as Steps from './Steps.tsx';
+import { Steps, type StepsProps } from './Steps.tsx';
 
 const TICK_MS = 200;
 /** Items in a counted stage; the line leaving it fills as they are worked through. */
 const ITEMS = 10;
 
-type StoryArgs = SizeArgs & Pick<Steps.StepsProps, 'indeterminate' | 'error'> & { stages?: number };
+type StoryArgs = SizeArgs & Pick<StepsProps, 'indeterminate' | 'error'> & { stages?: number };
 
 /** Drives a plan from the first stage to the last, so it is watched advancing rather than sampled at rest. */
 const DefaultStory = ({ stages = 5, indeterminate, error }: StoryArgs) => {
@@ -33,7 +33,7 @@ const DefaultStory = ({ stages = 5, indeterminate, error }: StoryArgs) => {
   }, [stages]);
 
   return (
-    <Steps.Steps
+    <Steps
       steps={['Plan', 'Build', 'Verify', 'Ship', 'Launch'].slice(0, stages).map((label) => ({ id: label, label }))}
       active={Math.floor(tick / ITEMS)}
       fraction={(tick % ITEMS) / ITEMS}
@@ -94,8 +94,8 @@ const TestStory = ({ size }: StoryArgs) => {
           Reset
         </Button.Button>
       </div>
-      <Steps.Steps steps={4} active={active} fraction={fraction} error={error} data-testid={testId('steps')} />
-      <Steps.Steps
+      <Steps steps={4} active={active} fraction={fraction} error={error} data-testid={testId('steps')} />
+      <Steps
         steps={[
           { id: 'plan', label: 'Plan' },
           { id: 'build', label: 'Build' },

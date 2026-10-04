@@ -16,7 +16,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Progress from '@dxos/react-ui/Progress';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
@@ -84,7 +84,7 @@ export const DiagnosticsPanel = () => {
             status: 'running',
             current: index,
             total,
-            providerLabel: ThemeProvider.toLocalizedString(provider.label, t),
+            providerLabel: Theme.toLocalizedString(provider.label, t),
           });
         },
         onProviderComplete: (_, index, total) => {
@@ -145,7 +145,7 @@ const RunProgress = ({
   t,
 }: {
   state: { readonly current: number; readonly total: number; readonly providerLabel?: string };
-  t: ThemeProvider.TFunction;
+  t: Theme.TFunction;
 }) => {
   const progress = state.total === 0 ? 0 : state.current / state.total;
   return (
@@ -162,7 +162,7 @@ const RunProgress = ({
   );
 };
 
-const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t: ThemeProvider.TFunction }) => {
+const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t: Theme.TFunction }) => {
   const totalIssues = results.reduce((sum, result) => sum + result.issues.length, 0);
   const failedProviders = results.filter((result) => result.error != null).length;
   return (
@@ -178,9 +178,9 @@ const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t
   );
 };
 
-const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: ThemeProvider.TFunction }) => {
+const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: Theme.TFunction }) => {
   const status = result.error ? 'error' : result.issues.length === 0 ? 'pass' : 'issues';
-  const label = ThemeProvider.toLocalizedString(result.label, t);
+  const label = Theme.toLocalizedString(result.label, t);
   return (
     <section className='rounded border border-separator dx-base-surface'>
       <header className='flex items-center justify-between gap-2 p-2'>

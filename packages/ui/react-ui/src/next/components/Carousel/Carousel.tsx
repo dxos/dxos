@@ -21,7 +21,7 @@ import { translationKey } from '#translations';
 import { animationsDisabled, useReducedMotion } from '../../../util/animation.ts';
 import { recipes } from '../../recipes.ts';
 import * as Button from '../Button/Button.tsx';
-import * as MediaPlayer from '../MediaPlayer/MediaPlayer.tsx';
+import { MediaPlayer, type MediaPlayerProps } from '../MediaPlayer/MediaPlayer.tsx';
 
 //
 // Root
@@ -113,10 +113,7 @@ CarouselItemGroup.displayName = 'Carousel.ItemGroup';
 
 type CarouselItemProps = ThemedClassName<Omit<CarouselPrimitive.ItemProps, 'children'>> &
   Partial<
-    Pick<
-      MediaPlayer.MediaPlayerProps,
-      'src' | 'kind' | 'alt' | 'controls' | 'autoPlay' | 'loop' | 'muted' | 'crossOrigin'
-    >
+    Pick<MediaPlayerProps, 'src' | 'kind' | 'alt' | 'controls' | 'autoPlay' | 'loop' | 'muted' | 'crossOrigin'>
   > & {
     /** Replaces the default MediaPlayer of `src`. */
     children?: ReactNode;
@@ -138,7 +135,7 @@ const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
       >
         {children ??
           (src && (
-            <MediaPlayer.MediaPlayer
+            <MediaPlayer
               src={src}
               kind={kind}
               alt={alt}

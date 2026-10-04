@@ -32,7 +32,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Block.Block rail='start' data-testid={`rail-${size}`}>
         <Icon.Icon icon='ph--user--regular' />
       </Block.Block>
-      <Typography.Typography>Icon</Typography.Typography>
+      <Typography.Text>Icon</Typography.Text>
       <Block.Block rail='end'>
         <Icon.Icon icon='ph--x--regular' label='Clear' />
       </Block.Block>

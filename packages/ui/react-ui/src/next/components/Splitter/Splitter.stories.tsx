@@ -19,7 +19,7 @@ type StoryArgs = Pick<
 
 const Pane = ({ label }: { label: string }) => (
   <div className='grid place-items-center' data-testid={`pane-${label}`}>
-    <Typography.Typography>{label}</Typography.Typography>
+    <Typography.Text>{label}</Typography.Text>
   </div>
 );
 
@@ -37,7 +37,7 @@ const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
           <Pane label='End' />
         </Splitter.Panel>
       </Splitter.Root>
-      <Typography.Typography data-testid='size'>{size.toFixed(2)}rem</Typography.Typography>
+      <Typography.Text data-testid='size'>{size.toFixed(2)}rem</Typography.Text>
     </div>
   );
 };

@@ -8,7 +8,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -30,7 +30,7 @@ export type LayoutStateProps = {
   popoverAnchor?: HTMLButtonElement;
   popoverAnchorId?: string;
   popoverKind?: 'base' | 'card' | 'rename';
-  popoverTitle?: ThemeProvider.Label;
+  popoverTitle?: Theme.Label;
   popoverContent?: any;
 
   toasts: LayoutOperation.Toast[];

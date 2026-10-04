@@ -11,9 +11,8 @@ import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
-import { useAttention } from '@dxos/react-ui-attention';
+import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
-import * as AttentionGlyph from '@dxos/react-ui/AttentionGlyph';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
@@ -251,14 +250,14 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
 
 export type SmallPresenceProps = {
   count?: number;
-} & Pick<AttentionGlyph.AttentionGlyphProps, 'attended' | 'containsAttended'>;
+} & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
 
   return (
     <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>
-      <AttentionGlyph.AttentionGlyph
+      <AttentionGlyph
         attended={attended}
         containsAttended={containsAttended}
         presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}

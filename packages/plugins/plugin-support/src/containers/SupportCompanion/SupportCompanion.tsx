@@ -25,7 +25,7 @@ import * as Carousel from '@dxos/react-ui/Carousel';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { useTours } from '#hooks';
@@ -100,7 +100,7 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
             <Button.Button
               key={tour.id}
               icon='ph--path--regular'
-              label={ThemeProvider.toLocalizedString(tour.label, t)}
+              label={Theme.toLocalizedString(tour.label, t)}
               onClick={() => invokePromise(HelpOperation.StartTour, { tourId: tour.id, subjectId: attendableId })}
               data-testid='supportPlugin.startCompanionTour'
             />

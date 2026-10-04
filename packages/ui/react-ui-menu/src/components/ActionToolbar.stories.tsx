@@ -256,7 +256,7 @@ export const Builder: Story = {
     return (
       <Container.Container gap='md'>
         <ActionToolbar {...menu} alwaysActive />
-        <Typography.Typography data-testid='log'>{log.join(',')}</Typography.Typography>
+        <Typography.Text data-testid='log'>{log.join(',')}</Typography.Text>
       </Container.Container>
     );
   },

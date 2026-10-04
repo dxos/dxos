@@ -56,7 +56,7 @@ const DefaultStory = ({ orientation, border }: StoryArgs) => {
         ))}
         <Reporter />
       </Focus.Group>
-      <Typography.Typography data-testid='current'>Current: {current ?? 'none'}</Typography.Typography>
+      <Typography.Text data-testid='current'>Current: {current ?? 'none'}</Typography.Text>
     </>
   );
 };

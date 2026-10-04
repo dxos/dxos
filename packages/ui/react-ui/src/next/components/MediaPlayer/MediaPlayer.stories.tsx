@@ -9,25 +9,25 @@ import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import * as MediaPlayer from './MediaPlayer.tsx';
+import { MediaPlayer, type MediaPlayerProps } from './MediaPlayer.tsx';
 
 /** An inline 16:9 picture, so the story needs no network. */
 const IMAGE = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns='http://www.w3.org/2000/svg' width='640' height='360'><rect width='640' height='360' fill='#3b82f6'/><text x='320' y='190' font-size='48' text-anchor='middle' fill='white'>Media</text></svg>`,
 )}`;
 
-type StoryArgs = Pick<MediaPlayer.MediaPlayerProps, 'fit' | 'controls' | 'muted' | 'loop'>;
+type StoryArgs = Pick<MediaPlayerProps, 'fit' | 'controls' | 'muted' | 'loop'>;
 
 const DefaultStory = ({ fit, controls, muted, loop }: StoryArgs) => (
   <div className='grid grid-cols-2 gap-4'>
     <div className='h-48 border border-separator'>
-      <MediaPlayer.MediaPlayer src={IMAGE} alt='Blue card' fit={fit} data-testid='image' />
+      <MediaPlayer src={IMAGE} alt='Blue card' fit={fit} data-testid='image' />
     </div>
     <div className='h-48 border border-separator'>
-      <MediaPlayer.MediaPlayer src={IMAGE} alt='Contained card' fit='contain' data-testid='contained' />
+      <MediaPlayer src={IMAGE} alt='Contained card' fit='contain' data-testid='contained' />
     </div>
     <div className='h-48 border border-separator'>
-      <MediaPlayer.MediaPlayer
+      <MediaPlayer
         src='data:video/mp4;base64,'
         kind='video'
         alt='Demo video'
@@ -36,10 +36,10 @@ const DefaultStory = ({ fit, controls, muted, loop }: StoryArgs) => (
       />
     </div>
     <div className='h-48 border border-separator'>
-      <MediaPlayer.MediaPlayer src='data:image/png;base64,broken' alt='Broken' data-testid='broken' />
+      <MediaPlayer src='data:image/png;base64,broken' alt='Broken' data-testid='broken' />
     </div>
     <div className='col-span-2'>
-      <MediaPlayer.MediaPlayer src='/podcast/episode.mp3?token=1' alt='Episode' data-testid='audio' />
+      <MediaPlayer src='/podcast/episode.mp3?token=1' alt='Episode' data-testid='audio' />
     </div>
   </div>
 );

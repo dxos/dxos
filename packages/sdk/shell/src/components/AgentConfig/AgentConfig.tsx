@@ -8,9 +8,9 @@ import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Link from '@dxos/react-ui/Link';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Typography from '@dxos/react-ui/Typography';
 import { getSize, mx, textValence } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -105,12 +105,12 @@ export const AgentConfig = ({
           {agentStatus === 'creatable' && (
             <div className='space-y-2' id='devices-panel.create-agent.description'>
               <p className='text-fg-muted'>
-                <ThemeProvider.Trans
+                <Theme.Trans
                   {...{
                     t,
                     i18nKey: 'create-agent-clickwrap',
                     components: {
-                      tosLink: <Link.Link />,
+                      tosLink: <Typography.Link />,
                     },
                   }}
                 />

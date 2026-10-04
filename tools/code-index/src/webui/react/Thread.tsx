@@ -10,7 +10,7 @@ import { translations as assistantTranslations } from '@dxos/react-ui-assistant/
 import { ChatEditor, ChatStatusIndicator } from '@dxos/react-ui-chat';
 import { translations as chatTranslations } from '@dxos/react-ui-chat/translations';
 import { useFeedModel } from '@dxos/react-ui-feed';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { Message } from '@dxos/types';
 
 import type * as Fold from '../../workspace/Fold.ts';
@@ -88,12 +88,12 @@ const Transcript = ({ turns, busy, onSend }: ThreadIslandProps) => {
  */
 export const ThreadIsland = (props: ThreadIslandProps) => (
   <I18nProvider locale='en-US'>
-    <ThemeProvider.ThemeProvider
-      tx={ThemeProvider.defaultTx}
+    <Theme.Provider
+      tx={Theme.defaultTx}
       themeMode='dark'
       resourceExtensions={[...assistantTranslations, ...chatTranslations]}
     >
       <Transcript {...props} />
-    </ThemeProvider.ThemeProvider>
+    </Theme.Provider>
   </I18nProvider>
 );

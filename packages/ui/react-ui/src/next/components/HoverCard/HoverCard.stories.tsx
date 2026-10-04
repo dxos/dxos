@@ -24,8 +24,8 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         <Button.Button data-testid={`profile-${size}-trigger`}>Alice</Button.Button>
       </HoverCard.Trigger>
       <HoverCard.Content data-testid={`profile-${size}`}>
-        <Typography.Typography>Alice Example</Typography.Typography>
-        <Typography.Typography tone='muted'>Joined in March · 12 spaces</Typography.Typography>
+        <Typography.Text>Alice Example</Typography.Text>
+        <Typography.Text tone='muted'>Joined in March · 12 spaces</Typography.Text>
       </HoverCard.Content>
     </HoverCard.Root>
     <HoverCard.Root positioning={{ placement: 'bottom' }}>
@@ -35,7 +35,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         </a>
       </HoverCard.Trigger>
       <HoverCard.Content size='lg' arrow={false} data-testid={`link-${size}`}>
-        <Typography.Typography>A local-first workspace.</Typography.Typography>
+        <Typography.Text>A local-first workspace.</Typography.Text>
       </HoverCard.Content>
     </HoverCard.Root>
   </Group.Group>

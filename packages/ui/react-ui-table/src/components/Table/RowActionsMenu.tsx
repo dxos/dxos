@@ -7,7 +7,7 @@ import React from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Menu from '@dxos/react-ui/Menu';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import { translationKey } from '#translations';
@@ -42,7 +42,7 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
                     modals.close();
                     model.handleRowAction(action.id, state.rowIndex);
                   }}
-                  item={{ value: action.id, label: ThemeProvider.toLocalizedString(action.label, t) }}
+                  item={{ value: action.id, label: Theme.toLocalizedString(action.label, t) }}
                 />
               ))}
             </Menu.ItemGroup>

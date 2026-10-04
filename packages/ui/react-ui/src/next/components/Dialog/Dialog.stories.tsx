@@ -93,9 +93,7 @@ const ProfileDialog = ({ contentSize, title, testId, paragraphs }: ProfileDialog
       <Dialog.Body data-testid='body'>
         <Dialog.Description>{DESCRIPTION}</Dialog.Description>
         {paragraphs ? (
-          PARAGRAPHS.slice(0, paragraphs).map((text, index) => (
-            <Typography.Typography key={index}>{text}</Typography.Typography>
-          ))
+          PARAGRAPHS.slice(0, paragraphs).map((text, index) => <Typography.Text key={index}>{text}</Typography.Text>)
         ) : (
           <ProfileForm />
         )}
@@ -211,7 +209,7 @@ export const RootPlacement: Story = {
           <Dialog.Title>Move to</Dialog.Title>
         </Dialog.Header>
         <Dialog.Body>
-          <Typography.Typography>{DESCRIPTION}</Typography.Typography>
+          <Typography.Text>{DESCRIPTION}</Typography.Text>
         </Dialog.Body>
       </Dialog.Content>
     </Dialog.Root>
@@ -234,7 +232,7 @@ export const Docked: Story = {
           <Dialog.Title>Chat</Dialog.Title>
         </Dialog.Header>
         <Dialog.Body>
-          <Typography.Typography>{DESCRIPTION}</Typography.Typography>
+          <Typography.Text>{DESCRIPTION}</Typography.Text>
         </Dialog.Body>
       </Dialog.Content>
     </Dialog.Root>

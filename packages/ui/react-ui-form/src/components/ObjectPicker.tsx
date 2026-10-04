@@ -243,9 +243,7 @@ export const ObjectMultiPicker = ({
       createIcon={createIcon}
     >
       <Combobox.Control wrap data-testid={testId}>
-        {selected.length === 0 && placeholder && (
-          <Typography.Typography tone='muted'>{placeholder}</Typography.Typography>
-        )}
+        {selected.length === 0 && placeholder && <Typography.Text tone='muted'>{placeholder}</Typography.Text>}
         {selected.map((option) => (
           <Tag.Tag
             key={option.id}

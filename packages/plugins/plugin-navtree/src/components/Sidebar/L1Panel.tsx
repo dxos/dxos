@@ -18,7 +18,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Main from '@dxos/react-ui/Main';
 import * as Tabs from '@dxos/react-ui/Tabs';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
@@ -60,7 +60,7 @@ export type L1PanelProps = {
 const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: L1PanelProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const pending = item?.properties.pending === true;
-  const title = item ? ThemeProvider.toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
+  const title = item ? Theme.toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
   // The panel is a focus area of its own, after the rail.
@@ -188,7 +188,7 @@ const renderRow = (node: TreeNode<NavTreeNode.NavTreeItemGraphNode>) => (
 const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBack'> & { item: AppGraphNode.Node }) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
-  const title = ThemeProvider.toLocalizedString(item.properties.label, t);
+  const title = Theme.toLocalizedString(item.properties.label, t);
   const backCapableWorkspace = AppNode.isPinnedWorkspace(item);
 
   const { menuActions, onAction } = useL1MenuActions({ item, path });
@@ -255,7 +255,7 @@ const MenuActions = ({
         icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
         iconOnly
         iconSize='md'
-        label={ThemeProvider.toLocalizedString(menuActions[0].properties?.label, t)}
+        label={Theme.toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}
         onClick={() => onAction(menuActions[0] as AppGraphNode.Action)}
       />

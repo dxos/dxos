@@ -15,7 +15,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -55,9 +55,9 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       });
 
       actions.sort((a, b) => {
-        return ThemeProvider.toLocalizedString(a.properties.label, t)
+        return Theme.toLocalizedString(a.properties.label, t)
           ?.toLowerCase()
-          .localeCompare(ThemeProvider.toLocalizedString(b.properties.label, t)?.toLowerCase());
+          .localeCompare(Theme.toLocalizedString(b.properties.label, t)?.toLowerCase());
       });
 
       return actions;
@@ -69,7 +69,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
     const { results, handleSearch } = useSearchListResults({
       items: actions,
-      extract: (action) => ThemeProvider.toLocalizedString(action.properties.label, t),
+      extract: (action) => Theme.toLocalizedString(action.properties.label, t),
     });
 
     return (
@@ -94,7 +94,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                   <SearchList.Item
                     value={action.id}
                     key={action.id}
-                    label={ThemeProvider.toLocalizedString(action.properties.label, t)}
+                    label={Theme.toLocalizedString(action.properties.label, t)}
                     icon={action.properties.icon}
                     suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
                     onSelect={() => {

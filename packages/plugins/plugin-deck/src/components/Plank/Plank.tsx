@@ -22,7 +22,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Main from '@dxos/react-ui/Main';
 import * as Popover from '@dxos/react-ui/Popover';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
@@ -116,7 +116,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, landmark.ref);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
-    const label = ThemeProvider.toLocalizedString(
+    const label = Theme.toLocalizedString(
       node.properties?.label ?? (pending ? (['pending.heading', { ns: meta.profile.key }] as const) : ''),
       t,
     );

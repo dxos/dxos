@@ -30,7 +30,7 @@ const DefaultStory = ({ pin }: StoryArgs) => {
           <ScrollContainer.Fade />
           <ScrollContainer.Viewport data-testid='viewport'>
             {rows.map((row) => (
-              <Typography.Typography key={row}>{row}</Typography.Typography>
+              <Typography.Text key={row}>{row}</Typography.Text>
             ))}
           </ScrollContainer.Viewport>
           <ScrollContainer.ScrollDownButton />

@@ -13,7 +13,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Link from '@dxos/react-ui/Link';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
 import { Book } from '#types';
@@ -205,9 +205,9 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
     }
     return (
       <Flex.Flex center classNames='h-full p-4'>
-        <Link.Link href={resolved.url} target='_self' download>
+        <Typography.Link href={resolved.url} target='_self' download>
           {t('download-file.label')}
-        </Link.Link>
+        </Typography.Link>
       </Flex.Flex>
     );
   }

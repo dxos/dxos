@@ -276,9 +276,9 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
     // A section of the pane's column, headed like the questions and artifacts around it.
     <Container.Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.attachments'>
-        <Typography.Typography asChild tone='subtle'>
+        <Typography.Text asChild tone='subtle'>
           <h2>{t('task-attachments.label')}</h2>
-        </Typography.Typography>
+        </Typography.Text>
         <div
           className={mx(
             'rounded-md border border-dashed',

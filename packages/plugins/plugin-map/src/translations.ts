@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { translations as geoTranslations } from '@dxos/react-ui-geo/translations';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Map } from '#types';
@@ -31,4 +31,4 @@ export const translations = [
     },
   },
   ...geoTranslations,
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Theme.Resource[];

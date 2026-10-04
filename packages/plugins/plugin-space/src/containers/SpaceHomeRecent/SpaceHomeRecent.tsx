@@ -18,7 +18,7 @@ import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -80,7 +80,7 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
-  const label = ThemeProvider.toLocalizedString(
+  const label = Theme.toLocalizedString(
     Obj.getLabel(data) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
     t,
   );

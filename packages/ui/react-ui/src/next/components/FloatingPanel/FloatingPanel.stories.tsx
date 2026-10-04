@@ -55,7 +55,7 @@ const DefaultStory = (args: StoryArgs) => (
           <ScrollArea.Viewport asChild>
             <Container.Container gutter='inset'>
               {LINES.map((line, index) => (
-                <Typography.Typography key={index}>{line}</Typography.Typography>
+                <Typography.Text key={index}>{line}</Typography.Text>
               ))}
             </Container.Container>
           </ScrollArea.Viewport>

@@ -32,13 +32,13 @@ const DefaultStory = ({ border, multiple }: StoryArgs) => {
             <Accordion.ItemTrigger icon={icon}>{label}</Accordion.ItemTrigger>
             {detail && (
               <Accordion.ItemContent>
-                <Typography.Typography>{detail}</Typography.Typography>
+                <Typography.Text>{detail}</Typography.Text>
               </Accordion.ItemContent>
             )}
           </Accordion.Item>
         ))}
       </Accordion.Root>
-      <Typography.Typography data-testid='open'>Open: {open.join(', ') || 'none'}</Typography.Typography>
+      <Typography.Text data-testid='open'>Open: {open.join(', ') || 'none'}</Typography.Text>
     </>
   );
 };

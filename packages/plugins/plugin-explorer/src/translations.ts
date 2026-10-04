@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Graph } from '#types';
@@ -33,4 +33,4 @@ export const translations = [
     },
   },
   ...componentsTranslations,
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Theme.Resource[];

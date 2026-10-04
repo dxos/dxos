@@ -34,9 +34,7 @@ import {
 } from './date-value.ts';
 import { DateCalendar } from './DateCalendar.tsx';
 
-export type { DateInputGranularity, DateInputType };
-
-export type DateInputProps = ThemedClassName<{
+type DateInputProps = ThemedClassName<{
   'type'?: DateInputType;
   /** `YYYY-MM-DD`, `HH:mm` or `YYYY-MM-DDTHH:mm` (with `:ss` at `second` granularity); empty when unset. */
   'value'?: string;
@@ -77,7 +75,7 @@ export type DateInputProps = ThemedClassName<{
  * a trailing trigger, sharing the value. Inside a `Field.Root` the segments take the field's label, description and
  * invalid/disabled/read-only state. `data-testid` and the ref go to the control row.
  */
-export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
+const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
   (
     {
       classNames,
@@ -241,3 +239,6 @@ export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
 );
 
 DateInput.displayName = 'DateInput';
+
+export { DateInput as Input };
+export type { DateInputGranularity as InputGranularity, DateInputProps as InputProps, DateInputType as InputType };

@@ -13,7 +13,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
 import { type Obj } from '@dxos/echo';
 import { type ViewModeItem } from '@dxos/react-ui-editor';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { type Text } from '@dxos/schema';
 import { type EditorStateStore } from '@dxos/ui-editor';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
@@ -92,13 +92,13 @@ export const ViewModeExtension = Capability.make<ViewModeExtension>()(
 export type MenuExtension = {
   /** Stable id, unique across contributions. */
   id: string;
-  label: ThemeProvider.Label;
+  label: Theme.Label;
   icon?: string;
   /**
    * Group heading. One group per contributing plugin: pass the plugin's own key and name, and
    * several commands from one plugin merge under a single heading rather than each growing its own.
    */
-  group: { id: string; label: ThemeProvider.Label };
+  group: { id: string; label: Theme.Label };
   /** Sort order within the group. */
   order?: number;
   /** Invoked on select, with {@link MarkdownOperation.EditorCommandInput}. */

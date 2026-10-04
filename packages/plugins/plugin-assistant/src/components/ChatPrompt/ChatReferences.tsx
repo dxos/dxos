@@ -9,7 +9,7 @@ import { type Database, Obj } from '@dxos/echo';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import type * as Util from '@dxos/react-ui/Util';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -30,14 +30,14 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
       {objects.map((obj) => {
         const uri = Obj.getURI(obj);
         const typename = Obj.getTypename(obj);
-        const label: ThemeProvider.Label =
+        const label: Theme.Label =
           Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
         const { icon, hue } = Obj.getIcon(obj) ?? { icon: DEFAULT_OBJECT_ICON, hue: undefined };
         const styles = hue ? getStyles(hue) : undefined;
         return (
           <li key={uri.toString()} className='dx-tag dx-tag-inline py-0 flex items-center gap-1' data-hue='neutral'>
             <Icon.Icon icon={icon} size='md' />
-            {ThemeProvider.toLocalizedString(label, t)}
+            {Theme.toLocalizedString(label, t)}
             <Button.Button
               icon='ph--x--bold'
               iconOnly

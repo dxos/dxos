@@ -26,9 +26,9 @@ const DefaultStory = ({ delay, minDuration }: StoryArgs) => {
         pending={pending}
         delay={delay}
         minDuration={minDuration}
-        fallback={() => <Typography.Typography data-testid='fallback'>No messages yet.</Typography.Typography>}
+        fallback={() => <Typography.Text data-testid='fallback'>No messages yet.</Typography.Text>}
       >
-        <Typography.Typography data-testid='content'>3 messages</Typography.Typography>
+        <Typography.Text data-testid='content'>3 messages</Typography.Text>
       </Deferred.Deferred>
     </>
   );

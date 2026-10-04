@@ -4,19 +4,19 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { insertAtCursor } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
 
 export type EditorMenuGroup = {
   id: string;
-  label?: ThemeProvider.Label;
+  label?: Theme.Label;
   items: EditorMenuItem[];
 };
 
 export type EditorMenuItem = {
   id: string;
-  label: ThemeProvider.Label;
+  label: Theme.Label;
   icon?: string;
   onSelect?: (event: { view: EditorView; head: number }) => MaybePromise<void>;
 };
@@ -46,7 +46,7 @@ export const createMenuGroup = ({
   items,
 }: {
   id?: string;
-  label?: ThemeProvider.Label;
+  label?: Theme.Label;
   filter?: string;
   items: string[];
 }): EditorMenuGroup => ({

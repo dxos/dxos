@@ -9,7 +9,7 @@ import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
@@ -42,7 +42,7 @@ export const NavTreeItemActionDropdownMenu = Util.composable<HTMLButtonElement, 
           variant='ghost'
           icon={icon ?? fallbackIcon}
           iconOnly
-          label={ThemeProvider.toLocalizedString(label, t)}
+          label={Theme.toLocalizedString(label, t)}
           data-testid={testId}
           // The tree selects a row on any click inside it, and selecting navigates away from the
           // menu just opened. The trigger has handled the click by the time this runs.
@@ -103,10 +103,7 @@ export const NavTreeItemAction = ({
   const { t } = Hooks.useTranslation(meta.profile.key);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
-  const baseLabel = ThemeProvider.toLocalizedString(
-    monolithicAction ? monolithicAction.properties!.label : props.label,
-    t,
-  );
+  const baseLabel = Theme.toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);
   return monolithic && menuActions?.length === 1 ? (
     <NavTreeItemMonolithicAction baseLabel={baseLabel} parent={parent} path={path} {...menuActions[0]} />
   ) : (

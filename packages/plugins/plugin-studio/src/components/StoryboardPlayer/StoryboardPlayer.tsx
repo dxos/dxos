@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as MediaPlayer from '@dxos/react-ui/MediaPlayer';
+import * as Media from '@dxos/react-ui/Media';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
@@ -123,7 +123,7 @@ export const StoryboardPlayer = ({
       </Panel.Header>
       <Panel.Body classNames='bg-scrim-surface'>
         {/* Keyed by clip so the element remounts and autoplays the next source. */}
-        <MediaPlayer.MediaPlayer
+        <Media.Player
           key={clip.id}
           classNames='dx-expand bg-neutral-100 dark:bg-neutral-800'
           src={clip.src}

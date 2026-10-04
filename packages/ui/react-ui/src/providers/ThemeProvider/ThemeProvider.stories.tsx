@@ -7,11 +7,11 @@ import React from 'react';
 
 import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import * as ThemeProvider from './ThemeProvider.tsx';
+import * as Theme from './Theme.tsx';
 
 const meta = {
   title: 'ui/react-ui-core/providers/ThemeProvider',
-  component: ThemeProvider.ThemeProvider,
+  component: Theme.Provider,
   render: () => {
     const { themeMode, platform } = useThemeContext();
     return (
@@ -22,7 +22,7 @@ const meta = {
     );
   },
   decorators: [withTheme(), withLayout()],
-} satisfies Meta<typeof ThemeProvider.ThemeProvider>;
+} satisfies Meta<typeof Theme.Provider>;
 
 export default meta;
 

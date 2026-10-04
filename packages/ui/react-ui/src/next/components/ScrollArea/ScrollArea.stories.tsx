@@ -58,9 +58,9 @@ const Pane = ({ prefix, mode, width, native }: PaneProps) => (
             </Block.Block>
           </Container.Container>
           {PARAGRAPHS.map((paragraph, index) => (
-            <Typography.Typography key={index} data-testid={index === 0 ? `${prefix}-paragraph` : undefined}>
+            <Typography.Text key={index} data-testid={index === 0 ? `${prefix}-paragraph` : undefined}>
               {paragraph}
-            </Typography.Typography>
+            </Typography.Text>
           ))}
         </Container.Container>
       </ScrollArea.Viewport>

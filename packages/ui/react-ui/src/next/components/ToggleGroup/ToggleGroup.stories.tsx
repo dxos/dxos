@@ -48,9 +48,9 @@ const DefaultStory = ({ size }: SizeArgs) => {
           </ToggleGroup.Item>
         </ToggleGroup.Root>
       </Group.Group>
-      <Typography.Typography data-testid={`state-${size}`}>
+      <Typography.Text data-testid={`state-${size}`}>
         {align} / {marks.join(', ') || 'none'}
-      </Typography.Typography>
+      </Typography.Text>
     </>
   );
 };

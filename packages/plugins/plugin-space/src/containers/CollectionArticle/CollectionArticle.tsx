@@ -20,7 +20,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles, osTranslations } from '@dxos/ui-theme';
 
 import { useArchiveMenuItem } from '#hooks';
@@ -67,7 +67,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const typename = Obj.getTypename(item.object) ?? '';
   const label =
     Obj.getLabel(item.object) ??
-    ThemeProvider.toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
+    Theme.toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
   const handleClick = useCallback(

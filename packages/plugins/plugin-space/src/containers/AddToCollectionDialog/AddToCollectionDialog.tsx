@@ -18,7 +18,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
@@ -56,9 +56,9 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
     const excluded = Collection.isCollection(object) ? getSubtree(object, collections) : new Set<string>();
     const getLabel = (collection: Collection.Collection) =>
       collection.id === rootId
-        ? ThemeProvider.toLocalizedString(['collections-section.label', { ns: meta.profile.key }], t)
+        ? Theme.toLocalizedString(['collections-section.label', { ns: meta.profile.key }], t)
         : (Obj.getLabel(collection) ??
-          ThemeProvider.toLocalizedString(
+          Theme.toLocalizedString(
             ['object-name.placeholder', { ns: Type.getTypename(Collection.Collection), defaultValue: collection.id }],
             t,
           ));

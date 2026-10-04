@@ -60,7 +60,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           ))}
         </Listbox.Content>
       </Listbox.Root>
-      <Typography.Typography data-testid={`selected-${size}`}>{selected ?? 'None'}</Typography.Typography>
+      <Typography.Text data-testid={`selected-${size}`}>{selected ?? 'None'}</Typography.Text>
       <Listbox.Root items={ITEMS}>
         <Listbox.Content aria-label='Plain'>
           {ITEMS.map((item) => (
@@ -78,7 +78,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           ))}
         </UiListbox.Content>
       </UiListbox.Root>
-      <Typography.Typography data-testid={`picked-${size}`}>{Array.from(picked).join(' ')}</Typography.Typography>
+      <Typography.Text data-testid={`picked-${size}`}>{Array.from(picked).join(' ')}</Typography.Text>
       <div className='h-48'>
         <Panel.Root>
           <Panel.Header>

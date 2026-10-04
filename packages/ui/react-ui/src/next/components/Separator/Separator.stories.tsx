@@ -20,9 +20,9 @@ import * as Separator from './Separator.tsx';
 /** A horizontal rule between two paragraphs, then a vertical rule and a decorative one between buttons. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Typography.Typography data-testid={`above-${size}`}>Above</Typography.Typography>
+    <Typography.Text data-testid={`above-${size}`}>Above</Typography.Text>
     <Separator.Separator data-testid={`horizontal-${size}`} />
-    <Typography.Typography>Below</Typography.Typography>
+    <Typography.Text>Below</Typography.Text>
     <Group.Group data-testid={`group-${size}`}>
       <Button.Button data-testid={`left-${size}`}>Left</Button.Button>
       <Separator.Separator orientation='vertical' data-testid={`vertical-${size}`} />

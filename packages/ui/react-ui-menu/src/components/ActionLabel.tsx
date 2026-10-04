@@ -7,7 +7,7 @@ import React from 'react';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { keySymbols } from '@dxos/react-focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 import { type MenuActionProperties, type MenuItemChrome } from '@dxos/ui-types';
 
@@ -22,7 +22,7 @@ export const ActionLabel = ({ action }: { action: Action }) => {
   const shortcut = getShortcut(action);
   return (
     <>
-      <span className='grow truncate'>{ThemeProvider.toLocalizedString(action.properties!.label, t)}</span>
+      <span className='grow truncate'>{Theme.toLocalizedString(action.properties!.label, t)}</span>
       {shortcut && <span className={mx('shrink-0', 'text-fg-muted')}>{keySymbols(shortcut).join('')}</span>}
     </>
   );

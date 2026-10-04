@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 // Next components style through `.dx-*` rules that ship separately from the theme.
 import '@dxos/react-ui/theme.css';
 import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { translations } from '../../translations.ts';
 
@@ -30,8 +30,8 @@ export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorFallback.Er
   }, []);
 
   return (
-    <ThemeProvider.ThemeProvider tx={ThemeProvider.defaultTx} resourceExtensions={translations} themeMode='dark'>
+    <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations} themeMode='dark'>
       <ErrorFallback.ErrorBoundary name={name}>{children}</ErrorFallback.ErrorBoundary>
-    </ThemeProvider.ThemeProvider>
+    </Theme.Provider>
   );
 };

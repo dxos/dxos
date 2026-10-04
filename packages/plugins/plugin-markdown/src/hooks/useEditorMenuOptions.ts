@@ -14,7 +14,7 @@ import {
   linkSlashCommands,
 } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { Domino } from '@dxos/ui';
 
 import { meta } from '#meta';
@@ -44,7 +44,7 @@ export const useEditorMenuOptions = ({
         case '/':
         default: {
           return filterMenuGroups([linkSlashCommands, formattingCommands, ...(slashCommandGroups ?? [])], (item) =>
-            text ? ThemeProvider.toLocalizedString(item.label, t).toLowerCase().includes(text.toLowerCase()) : true,
+            text ? Theme.toLocalizedString(item.label, t).toLowerCase().includes(text.toLowerCase()) : true,
           );
         }
       }

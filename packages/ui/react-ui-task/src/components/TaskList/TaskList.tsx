@@ -13,7 +13,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Tag from '@dxos/react-ui/Tag';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import * as Util from '@dxos/react-ui/Util';
 import { type Actor, PullRequest, Task } from '@dxos/types';
@@ -541,7 +541,7 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
             variant='ghost'
             iconOnly
             icon={only.properties?.icon ?? fallbackIcon}
-            label={ThemeProvider.toLocalizedString(only.properties?.label, t)}
+            label={Theme.toLocalizedString(only.properties?.label, t)}
             data-testid={only.properties?.testId}
             onClick={(event) => {
               // The row is the selection target; running its action must not also select it.

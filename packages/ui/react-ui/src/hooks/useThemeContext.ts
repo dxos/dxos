@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 import { log } from '@dxos/log';
 
-import * as ThemeProvider from '../providers/ThemeProvider/ThemeProvider.tsx';
+import * as Theme from '../providers/ThemeProvider/Theme.tsx';
 import { defaultTx } from '../theme/defaultTheme.ts';
 import { initialSafeArea } from './useSafeArea.ts';
 
@@ -15,7 +15,7 @@ import { initialSafeArea } from './useSafeArea.ts';
 // the vite dev dual-module split, where the mounted ThemeProvider holds a
 // different ThemeContext identity than this consumer — would otherwise crash the
 // dialog meant to report the original error.
-const fallbackContextValue: ThemeProvider.ThemeContextValue = {
+const fallbackContextValue: Theme.ThemeContextValue = {
   tx: defaultTx,
   themeMode: 'dark',
   hasIosKeyboard: false,
@@ -26,8 +26,8 @@ const fallbackContextValue: ThemeProvider.ThemeContextValue = {
 
 let warned = false;
 
-export const useThemeContext = (): ThemeProvider.ThemeContextValue => {
-  const contextValue = useContext(ThemeProvider.ThemeContext);
+export const useThemeContext = (): Theme.ThemeContextValue => {
+  const contextValue = useContext(Theme.ThemeContext);
   if (!contextValue) {
     if (!warned) {
       warned = true;

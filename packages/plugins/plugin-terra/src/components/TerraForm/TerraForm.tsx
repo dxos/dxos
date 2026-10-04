@@ -80,7 +80,7 @@ const createSliderField = (key: SliderKey): FormFieldMap[string] => {
         labelEnd={<span className='text-sm text-fg-muted tabular-nums'>{current.toFixed(spec.decimals)}</span>}
         renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}
       >
-        <Slider.Slider
+        <Slider.Input
           value={[current]}
           min={spec.min}
           max={spec.max}

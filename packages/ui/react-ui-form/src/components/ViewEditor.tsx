@@ -273,7 +273,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
   return (
     <>
       <Field.Header>
-        <Typography.Typography truncate>{t('fields.label')}</Typography.Typography>
+        <Typography.Text truncate>{t('fields.label')}</Typography.Text>
         {!readonly && (
           <Button.Button
             iconOnly

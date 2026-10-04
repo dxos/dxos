@@ -79,9 +79,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         }))}
         data-testid={`view-${size}`}
       />
-      <Typography.Typography
+      <Typography.Text
         data-testid={`state-${size}`}
-      >{`${mode} · ${device || 'default'} · ${extraction}`}</Typography.Typography>
+      >{`${mode} · ${device || 'default'} · ${extraction}`}</Typography.Text>
     </Group.Group>
   );
 };

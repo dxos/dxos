@@ -5,8 +5,8 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 
 createRoot(document.getElementById('root')!).render(
-  <ThemeProvider.ThemeProvider>{/* your components using react-ui here */}</ThemeProvider.ThemeProvider>,
+  <Theme.Provider>{/* your components using react-ui here */}</Theme.Provider>,
 );

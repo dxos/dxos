@@ -10,7 +10,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Attention } from '@dxos/react-ui-attention';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Main from '@dxos/react-ui/Main';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -65,7 +65,7 @@ export const Companion = ({
       companions.map((node) => ({
         id: node.id,
         icon: node.properties?.icon ?? 'ph--circle-dashed--regular',
-        label: ThemeProvider.toLocalizedString(node.properties?.label ?? '', t),
+        label: Theme.toLocalizedString(node.properties?.label ?? '', t),
         testId: `deck.companion.tab.${Attention.getLinkedVariant(node.id)}`,
       })),
     [companions, t],

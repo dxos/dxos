@@ -18,7 +18,7 @@ import * as Button from '../Button/Button.tsx';
 import * as Container from '../Container/Container.tsx';
 import * as Group from '../Group/Group.tsx';
 import * as Icon from '../Icon/Icon.tsx';
-import * as Image from '../Image/Image.tsx';
+import { Image, type ImageProps } from '../Image/Image.tsx';
 import * as Menu from '../Menu/Menu.tsx';
 import * as SystemButton from '../SystemButton/SystemButton.tsx';
 import * as Typography from '../Typography/Typography.tsx';
@@ -89,11 +89,11 @@ CardRoot.displayName = 'Card.Root';
 // Poster
 //
 
-type CardPosterProps = Image.ImageProps;
+type CardPosterProps = ImageProps;
 
 /** A full-bleed Image across the card's gutters; first in the card, it takes the card's top corners. */
 const CardPoster = forwardRef<HTMLDivElement, CardPosterProps>(({ classNames, ...props }, forwardedRef) => (
-  <Image.Image {...props} data-place='full' classNames={mx(recipes.cardPoster(), classNames)} ref={forwardedRef} />
+  <Image {...props} data-place='full' classNames={mx(recipes.cardPoster(), classNames)} ref={forwardedRef} />
 ));
 
 CardPoster.displayName = 'Card.Poster';
@@ -158,12 +158,12 @@ CardHeader.displayName = 'Card.Header';
 //
 
 type CardTitleProps = ThemedClassName<ComponentPropsWithoutRef<'h3'>> &
-  Pick<Typography.TypographyProps, 'truncate' | 'lines' | 'tone'>;
+  Pick<Typography.TextProps, 'truncate' | 'lines' | 'tone'>;
 
 /** An `h3` on Typography, so it clamps (`lines`), truncates and takes a tone like any text. */
 const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
   ({ classNames, truncate, lines, tone, ...props }, forwardedRef) => (
-    <Typography.Typography
+    <Typography.Text
       asChild
       truncate={truncate}
       lines={lines}
@@ -171,7 +171,7 @@ const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
       classNames={mx(recipes.cardTitle(), classNames)}
     >
       <h3 {...props} data-scope='card' data-part='title' ref={forwardedRef} />
-    </Typography.Typography>
+    </Typography.Text>
   ),
 );
 
@@ -348,7 +348,7 @@ type CardTextProps = ThemedClassName<ComponentPropsWithoutRef<'p'>> & {
 /** Card text on Typography, with the current `Card.Text` variants. */
 const CardText = forwardRef<HTMLParagraphElement, CardTextProps>(
   ({ classNames, truncate, variant = 'default', ...props }, forwardedRef) => (
-    <Typography.Typography {...props} classNames={classNames} truncate={truncate} tone={variant} ref={forwardedRef} />
+    <Typography.Text {...props} classNames={classNames} truncate={truncate} tone={variant} ref={forwardedRef} />
   ),
 );
 

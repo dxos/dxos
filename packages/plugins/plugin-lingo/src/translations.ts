@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Language, Vocabulary, Word } from '#types';
@@ -89,4 +89,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Theme.Resource[];

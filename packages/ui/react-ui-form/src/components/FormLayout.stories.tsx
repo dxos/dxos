@@ -71,9 +71,9 @@ const DefaultStory = ({ layoutName }: StoryArgs) => {
         </ScrollArea.Root>
       </Panel.Body>
       <Panel.Footer>
-        <Typography.Typography truncate data-testid='values'>
+        <Typography.Text truncate data-testid='values'>
           {JSON.stringify(values)}
-        </Typography.Typography>
+        </Typography.Text>
       </Panel.Footer>
     </Panel.Root>
   );

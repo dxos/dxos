@@ -35,7 +35,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Main from '@dxos/react-ui/Main';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tabs from '@dxos/react-ui/Tabs';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -123,7 +123,7 @@ const L0ItemRoot = memo(
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
       const { id, testId } = useAtomValue(model.itemProps(itemPath));
-      const localizedString = ThemeProvider.toLocalizedString(item.properties.label, t);
+      const localizedString = Theme.toLocalizedString(item.properties.label, t);
 
       const type = l0ItemType(item);
       const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
@@ -170,7 +170,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
-  const localizedString = ThemeProvider.toLocalizedString(item.properties.label, t);
+  const localizedString = Theme.toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
   const pending = item.properties.pending === true;
 
@@ -272,7 +272,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const type = l0ItemType(item);
   if (type === 'tab' && item.properties.disposition !== 'pin-end') {
     const hue = item.properties.hue ?? null;
-    const localizedString = ThemeProvider.toLocalizedString(item.properties.label, t);
+    const localizedString = Theme.toLocalizedString(item.properties.label, t);
     return <DxAvatar hue={hue} hueVariant='surface' variant='square' size={12} fallback={localizedString} />;
   }
 

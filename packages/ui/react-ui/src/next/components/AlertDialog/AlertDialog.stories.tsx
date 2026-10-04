@@ -68,7 +68,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         autofocusAction
         onAction={() => setDeleted((count) => count + 1)}
       />
-      <Typography.Typography data-testid={`deleted-${size}`}>Deleted {deleted}</Typography.Typography>
+      <Typography.Text data-testid={`deleted-${size}`}>Deleted {deleted}</Typography.Text>
     </Group.Group>
   );
 };

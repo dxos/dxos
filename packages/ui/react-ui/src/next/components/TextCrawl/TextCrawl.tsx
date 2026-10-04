@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-// @import-as-namespace
-
 import React, {
   type ComponentPropsWithRef,
   type CSSProperties,

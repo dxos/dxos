@@ -7,7 +7,6 @@ import React, { useMemo } from 'react';
 import * as Container from '@dxos/react-ui/Container';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Timestamp from '@dxos/react-ui/Timestamp';
 import * as Typography from '@dxos/react-ui/Typography';
 import type * as Util from '@dxos/react-ui/Util';
 import { Task } from '@dxos/types';
@@ -130,9 +129,9 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
       classNames={mx('text-sm text-fg-muted', classNames)}
     >
       <section>
-        <Typography.Typography asChild tone='subtle' classNames='text-sm'>
+        <Typography.Text asChild tone='subtle' classNames='text-sm'>
           <h2>{t('task-history.label')}</h2>
-        </Typography.Typography>
+        </Typography.Text>
         {items.map((item) => (
           // The section's geometry, a grid rather than a flex row: the glyph column is a fixed 24px,
           // so a history glyph sits on the same axis as a property's however wide each section's text runs.
@@ -157,7 +156,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
               </span>
               {/* Compact and live, because the log is read as "what has been happening" rather than
                 as a record to cite — and the record is a hover away, in the tooltip. */}
-              <Timestamp.Timestamp date={item.date} classNames='shrink-0 text-right' />
+              <Typography.Timestamp date={item.date} classNames='shrink-0 text-right' />
             </div>
           </div>
         ))}

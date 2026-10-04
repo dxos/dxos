@@ -8,8 +8,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space, useSpaceSyncState } from '@dxos/react-client/echo';
-import { useAttention } from '@dxos/react-ui-attention';
-import * as AttentionGlyph from '@dxos/react-ui/AttentionGlyph';
+import { AttentionGlyph, useAttention } from '@dxos/react-ui-attention';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 
@@ -30,7 +29,7 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
 
   return (
     <Tooltip.Trigger asChild content={t('syncing.label')} side='bottom'>
-      <AttentionGlyph.AttentionGlyph
+      <AttentionGlyph
         syncing={syncing}
         attended={attended}
         containsAttended={containsAttended}

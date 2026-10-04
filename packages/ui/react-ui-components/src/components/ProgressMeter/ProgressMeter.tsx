@@ -8,8 +8,7 @@ import { Progress as ProgressModel } from '@dxos/progress';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Progress from '@dxos/react-ui/Progress';
-import * as Steps from '@dxos/react-ui/Steps';
-import * as TextCrawl from '@dxos/react-ui/TextCrawl';
+import * as Typography from '@dxos/react-ui/Typography';
 import * as Util from '@dxos/react-ui/Util';
 
 import { translationKey } from '#translations';
@@ -187,7 +186,7 @@ export const InnerProgressMeter = Util.composable<HTMLDivElement, InnerProgressM
             <div className='min-w-0 flex-1 text-error-text truncate'>{error}</div>
           ) : (
             /* What the run is and what it is doing, in its own words, crawling as it moves through its phases. */
-            <TextCrawl.TextCrawl classNames='min-w-0 flex-1 text-xs text-fg-muted' lines={lines} greedy />
+            <Typography.Crawl classNames='min-w-0 flex-1 text-xs text-fg-muted' lines={lines} greedy />
           )}
           <div className='flex items-center gap-1 shrink-0 text-fg-muted'>
             <span className='tabular-nums'>
@@ -218,7 +217,7 @@ export const InnerProgressMeter = Util.composable<HTMLDivElement, InnerProgressM
         {/* A declared plan is drawn as its stages, which carry the fraction on the line leaving the
             one in flight; with no plan there is only the fraction, so a bare bar says it. */}
         {stages > 0 ? (
-          <Steps.Steps
+          <Progress.Steps
             classNames='self-center'
             steps={state.phases ?? 0}
             active={state.phase}

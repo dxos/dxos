@@ -16,7 +16,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import { useDeckState } from '#hooks';
@@ -117,7 +117,7 @@ export const PopoverContent = () => {
   const objectMenuItems = Hooks.useObjectMenuItems(popoverSubject, pivotId);
   const menu = useMenuActions();
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
-  const title = state.popoverTitle ? ThemeProvider.toLocalizedString(state.popoverTitle, t) : 'Unknown';
+  const title = state.popoverTitle ? Theme.toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const content = state.popoverContent;
   // Base and rename popovers render a plugin-provided component; everything else falls through to the card.
   const isComponentPopover =

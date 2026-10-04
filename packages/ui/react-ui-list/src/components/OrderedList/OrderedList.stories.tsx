@@ -72,9 +72,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                     onClick={() => setItems((items) => items.filter((entry) => entry.id !== item.id))}
                   />
                   <OrderedList.Detail>
-                    <Typography.Typography data-testid={`panel-${item.id}-${size}`}>
-                      Details for {item.label}
-                    </Typography.Typography>
+                    <Typography.Text data-testid={`panel-${item.id}-${size}`}>Details for {item.label}</Typography.Text>
                   </OrderedList.Detail>
                 </OrderedList.Item>
               ))}
@@ -82,9 +80,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           </>
         )}
       </OrderedList.Root>
-      <Typography.Typography data-testid={`order-${size}`}>
-        {items.map((item) => item.id).join(' ')}
-      </Typography.Typography>
+      <Typography.Text data-testid={`order-${size}`}>{items.map((item) => item.id).join(' ')}</Typography.Text>
     </>
   );
 };
@@ -186,7 +182,7 @@ const VirtualStory = () => {
           )}
         </OrderedList.Root>
       </div>
-      <Typography.Typography data-testid='many-first'>{items[0].label}</Typography.Typography>
+      <Typography.Text data-testid='many-first'>{items[0].label}</Typography.Text>
     </>
   );
 };
@@ -243,14 +239,14 @@ const StableIdsStory = () => {
                 <OrderedList.DragHandle />
                 <OrderedList.ItemText />
                 <OrderedList.Detail>
-                  <Typography.Typography>Heading {value}</Typography.Typography>
+                  <Typography.Text>Heading {value}</Typography.Text>
                 </OrderedList.Detail>
               </OrderedList.Item>
             ))}
           </OrderedList.Content>
         )}
       </OrderedList.Root>
-      <Typography.Typography data-testid='directions'>{values.join(' ')}</Typography.Typography>
+      <Typography.Text data-testid='directions'>{values.join(' ')}</Typography.Text>
     </>
   );
 };
@@ -264,9 +260,9 @@ const ColumnsStory = () => (
           <OrderedList.Item key={item.id} id={item.id} data-testid={`column-row-${item.id}`}>
             <OrderedList.DragHandle />
             <OrderedList.ItemText />
-            <Typography.Typography tone='muted' data-testid={`column-${item.id}`}>
+            <Typography.Text tone='muted' data-testid={`column-${item.id}`}>
               {item.label.length} letters
-            </Typography.Typography>
+            </Typography.Text>
           </OrderedList.Item>
         ))}
       </OrderedList.Content>

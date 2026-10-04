@@ -29,8 +29,8 @@ const DefaultStory = ({ size, duration, title, description }: StoryArgs) => {
     <Toast.Provider>
       <div className='flex flex-col gap-2'>
         <Button.Button onClick={() => setOpen(true)}>Show toast</Button.Button>
-        <Typography.Typography data-testid='log'>{log.join(',')}</Typography.Typography>
-        <Typography.Typography data-testid='retries'>{retries}</Typography.Typography>
+        <Typography.Text data-testid='log'>{log.join(',')}</Typography.Text>
+        <Typography.Text data-testid='retries'>{retries}</Typography.Text>
       </div>
       <Toast.Root
         open={open}

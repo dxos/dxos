@@ -15,15 +15,15 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
-const getLabel = (object: Obj.Unknown): ThemeProvider.Label => {
+const getLabel = (object: Obj.Unknown): Theme.Label => {
   const typename = Obj.getTypename(object);
   // A typeless object cannot key a translation namespace, so it falls back to the literal.
-  const placeholder: ThemeProvider.Label = typename
+  const placeholder: Theme.Label = typename
     ? ['object-name.placeholder', { ns: typename, defaultValue: 'New object' }]
     : 'New object';
   return Obj.getLabel(object) ?? placeholder;
@@ -83,7 +83,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
         const items = results
           // Exclude the current document; it cannot link to itself.
           .filter((object) => object.id !== current?.id)
-          .map((object: Obj.Unknown) => ({ object, label: ThemeProvider.toLocalizedString(getLabel(object), t) }))
+          .map((object: Obj.Unknown) => ({ object, label: Theme.toLocalizedString(getLabel(object), t) }))
           .filter(({ label }) => label.toLowerCase().includes(name))
           .sort((a, b) => a.label.localeCompare(b.label))
           .map(({ object, label }): EditorMenuItem => {
@@ -117,7 +117,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
             }).then(({ data }) => {
               const object = data?.target;
               if (object) {
-                insertLink(view, head, ThemeProvider.toLocalizedString(getLabel(object), t), Obj.getURI(object), block);
+                insertLink(view, head, Theme.toLocalizedString(getLabel(object), t), Obj.getURI(object), block);
                 view.focus();
               }
             });

@@ -39,9 +39,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
         iconOnly
         data-testid={`pin-${size}`}
       />
-      <Typography.Typography data-testid={`wrap-state-${size}`}>
-        {wrap ? 'Wrapping' : 'Not wrapping'}
-      </Typography.Typography>
+      <Typography.Text data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Typography.Text>
     </Toolbar.Root>
   );
 };

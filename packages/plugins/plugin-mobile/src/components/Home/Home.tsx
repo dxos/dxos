@@ -18,7 +18,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -38,7 +38,7 @@ export const Home = (_: HomeProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items,
-    extract: (node) => ThemeProvider.toLocalizedString(node.properties.label, t),
+    extract: (node) => Theme.toLocalizedString(node.properties.label, t),
   });
 
   return (
@@ -65,7 +65,7 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
-  const name = ThemeProvider.toLocalizedString(data.properties.label, t);
+  const name = Theme.toLocalizedString(data.properties.label, t);
   const titleId = UiHooks.useId('mobile-tile');
   const pending = data.properties.pending === true;
   const isSelected = selectedValue === data.id;

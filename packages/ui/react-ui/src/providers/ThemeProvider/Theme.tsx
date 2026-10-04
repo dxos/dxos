@@ -27,14 +27,14 @@ export type ThemeContextValue<P extends Record<string, any> = Record<string, any
  */
 export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-export type ThemeProviderProps<P extends Record<string, any> = Record<string, any>> = Omit<
+type ThemeProviderProps<P extends Record<string, any> = Record<string, any>> = Omit<
   TranslationsProviderProps,
   'children'
 > &
   Partial<Omit<ThemeContextValue<P>, 'safeAreaPadding'>> &
   PropsWithChildren;
 
-export const ThemeProvider = ({
+const ThemeProvider = ({
   children,
   fallback = null,
   resourceExtensions,
@@ -89,3 +89,6 @@ export * from '../../theme/defaultTheme.ts';
 export * from '../../util/mobile.ts';
 export { type Resource, type TFunction } from '@dxos/i18n';
 export { Trans } from 'react-i18next';
+
+export { ThemeProvider as Provider };
+export type { ThemeProviderProps as ProviderProps };

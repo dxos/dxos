@@ -12,7 +12,7 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
 import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
-import * as DateInput from '@dxos/react-ui/DateInput';
+import * as DatePicker from '@dxos/react-ui/DatePicker';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -216,13 +216,13 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
           <div className={fieldClasses}>
             <div className='grow'>
               {allDay ? (
-                <DateInput.DateInput
+                <DatePicker.Input
                   type='date'
                   value={toDateInput(data.startDate)}
                   onValueChange={handleStartDateChange}
                 />
               ) : (
-                <DateInput.DateInput
+                <DatePicker.Input
                   type='datetime-local'
                   value={toDateTimeInput(data.startDate)}
                   onValueChange={handleStartDateTimeChange}
@@ -248,7 +248,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
             </Block.Block>
             <div className={fieldClasses}>
               <div className='grow'>
-                <DateInput.DateInput
+                <DatePicker.Input
                   type='datetime-local'
                   value={toDateTimeInput(data.endDate)}
                   onValueChange={handleEndDateTimeChange}

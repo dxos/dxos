@@ -17,7 +17,7 @@ import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { joinWaitlist, login } from '../../credentials/index.ts';
@@ -289,7 +289,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
 
   return (
-    <ThemeProvider.ThemeProvider tx={ThemeProvider.defaultTx} themeMode='dark' resourceExtensions={translations}>
+    <Theme.Provider tx={Theme.defaultTx} themeMode='dark' resourceExtensions={translations}>
       <Welcome
         state={state}
         error={error}
@@ -304,6 +304,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         onCreateAccountWithOAuth={!identity && !passkeyOnly ? handleCreateAccountWithOAuth : undefined}
         onJoinWaitlist={!passkeyOnly ? handleJoinWaitlist : undefined}
       />
-    </ThemeProvider.ThemeProvider>
+    </Theme.Provider>
   );
 };

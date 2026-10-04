@@ -17,7 +17,7 @@ import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Progress from '@dxos/react-ui/Progress';
 import * as Switch from '@dxos/react-ui/Switch';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { Text } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -83,7 +83,7 @@ const main = async () => {
     const [batching, setBatching] = useState(false);
 
     return (
-      <ThemeProvider.ThemeProvider tx={ThemeProvider.defaultTx} themeMode='light'>
+      <Theme.Provider tx={Theme.defaultTx} themeMode='light'>
         <div className='demo'>
           <div className='buttons'>
             <Tooltip.Trigger content='Offline mode' className='flex'>
@@ -117,7 +117,7 @@ const main = async () => {
             </ClientProvider>
           ))}
         </div>
-      </ThemeProvider.ThemeProvider>
+      </Theme.Provider>
     );
   };
 
@@ -126,11 +126,11 @@ const main = async () => {
 
 const fallback = () => {
   root.render(
-    <ThemeProvider.ThemeProvider tx={ThemeProvider.defaultTx}>
+    <Theme.Provider tx={Theme.defaultTx}>
       <div className='flex h-[100dvh] justify-center items-center'>
         <Progress.Progress indeterminate label='Initializing' />
       </div>
-    </ThemeProvider.ThemeProvider>,
+    </Theme.Provider>,
   );
 };
 

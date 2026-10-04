@@ -77,7 +77,7 @@ const SideBySide = ({ size }: { size: Size }) => (
   <Container.Container layout='row' columns='repeat(3, minmax(0, 1fr))' gap='md' data-testid={`split-${size}`}>
     {(['left', 'right'] as const).map((side) => (
       <Container.Container key={side} span={side === 'left' ? 1 : 2} data-testid={`split-${side}-${size}`}>
-        <Typography.Typography>{side === 'left' ? 'Shipping' : 'Billing'}</Typography.Typography>
+        <Typography.Text>{side === 'left' ? 'Shipping' : 'Billing'}</Typography.Text>
         <Container.Container data-testid={`split-${side}-group-${size}`}>
           <Input.Input aria-label={`${side} street`} data-testid={`split-${side}-input-${size}`} />
           <Container.Container layout='row' columns='auto minmax(0, 1fr)' data-testid={`split-${side}-row-${size}`}>
@@ -99,12 +99,12 @@ const DefaultStory = ({ size = 'md', narrow }: StoryArgs) => (
   <>
     <Section size={size} />
     <Container.Container gap='lg' data-testid={`gap-${size}`}>
-      <Typography.Typography data-testid={`gap-first-${size}`}>A stack with a large row gap</Typography.Typography>
-      <Typography.Typography data-testid={`gap-second-${size}`}>between its children</Typography.Typography>
+      <Typography.Text data-testid={`gap-first-${size}`}>A stack with a large row gap</Typography.Text>
+      <Typography.Text data-testid={`gap-second-${size}`}>between its children</Typography.Text>
     </Container.Container>
     <Spans size={size} />
     <Container.Container gutter='rail' width='document' style={READING_WIDTH} data-testid={`reading-${size}`}>
-      <Typography.Typography>At the document width</Typography.Typography>
+      <Typography.Text>At the document width</Typography.Text>
     </Container.Container>
     <SideBySide size={size} />
     {narrow && (

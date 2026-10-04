@@ -36,7 +36,7 @@ import { translations as observabilityTranslations } from '@dxos/plugin-observab
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
@@ -693,8 +693,8 @@ const main = async () => {
             (`react-ui-card`, `-form`, …) which a plugin re-exports — so without this the primitives'
             keys (`system-button.*`, `toolbar-*`) render raw as the accessible name of every
             icon-only button. */}
-        <ThemeProvider.ThemeProvider
-          tx={ThemeProvider.defaultTx}
+        <Theme.Provider
+          tx={Theme.defaultTx}
           resourceExtensions={[...reactUiTranslations, ...translations, ...observabilityTranslations]}
         >
           {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
@@ -709,7 +709,7 @@ const main = async () => {
               onReset={import.meta.env.DEV ? handleReset : undefined}
             />
           </Suspense>
-        </ThemeProvider.ThemeProvider>
+        </Theme.Provider>
       </ErrorBoundary>
     );
   };

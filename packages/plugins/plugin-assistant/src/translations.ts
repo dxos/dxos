@@ -14,11 +14,11 @@ import { translations as componentsTranslations } from '@dxos/react-ui-component
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { translations as traceTranslations } from '@dxos/react-ui-trace/translations';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
-export const translations: ThemeProvider.Resource[] = [
+export const translations: Theme.Resource[] = [
   ...assistantTranslations,
   ...componentsTranslations,
   ...formTranslations,

@@ -9,9 +9,9 @@ import { useConfig } from '@dxos/react-client';
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Link from '@dxos/react-ui/Link';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '../../meta.ts';
 
@@ -76,21 +76,21 @@ export const AboutDialog = () => {
         <div className='flex flex-col gap-3'>
           {timestamp && (
             <div className='flex items-center gap-1'>
-              <Link.Link href={releaseUrl} variant='neutral'>
+              <Typography.Link href={releaseUrl} variant='neutral'>
                 {t('published.label', {
                   timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
                 })}
-              </Link.Link>
+              </Typography.Link>
             </div>
           )}
           {showEnv && <div className='flex items-center'>{t('environment.label', { environment: edgeEnv })}</div>}
           <p>
-            <ThemeProvider.Trans
+            <Theme.Trans
               {...{
                 t,
                 i18nKey: 'powered-by-dxos.message',
                 components: {
-                  dxos: <Link.Link href='https://dxos.org' variant='neutral' />,
+                  dxos: <Typography.Link href='https://dxos.org' variant='neutral' />,
                 },
               }}
             />

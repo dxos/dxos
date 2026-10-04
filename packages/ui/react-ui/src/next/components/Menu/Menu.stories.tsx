@@ -160,7 +160,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       </Menu.Root>
       <Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Menu.ContextTrigger asChild>
-          <Typography.Typography data-testid={`context-${size}`}>Right-click here</Typography.Typography>
+          <Typography.Text data-testid={`context-${size}`}>Right-click here</Typography.Text>
         </Menu.ContextTrigger>
         <Menu.Content>
           <Menu.Item item={{ value: 'rename', label: 'Rename' }} />
@@ -170,11 +170,11 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Button.Button onClick={() => setAnchored(true)} data-testid={`open-anchored-${size}`}>
           Open at anchor
         </Button.Button>
-        <Typography.Typography asChild>
+        <Typography.Text asChild>
           <span ref={anchor} data-testid={`anchor-${size}`}>
             Anchor
           </span>
-        </Typography.Typography>
+        </Typography.Text>
       </Group.Group>
       <Menu.Root
         open={anchored}
@@ -186,12 +186,12 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           <Menu.Item item={{ value: 'pin', label: 'Pin' }} />
         </Menu.Content>
       </Menu.Root>
-      <Typography.Typography data-testid={`selected-${size}`}>
+      <Typography.Text data-testid={`selected-${size}`}>
         {selected ? `Selected: ${selected}` : 'Nothing selected'}
-      </Typography.Typography>
-      <Typography.Typography data-testid={`options-${size}`}>
+      </Typography.Text>
+      <Typography.Text data-testid={`options-${size}`}>
         grid {grid ? 'on' : 'off'}, sort by {sort}
-      </Typography.Typography>
+      </Typography.Text>
     </>
   );
 };

@@ -15,7 +15,7 @@ import * as Checkbox from '../components/Checkbox/Checkbox.tsx';
 import * as Collapsible from '../components/Collapsible/Collapsible.tsx';
 import * as Combobox from '../components/Combobox/Combobox.tsx';
 import * as Container from '../components/Container/Container.tsx';
-import * as DateInput from '../components/DateInput/DateInput.tsx';
+import * as DatePicker from '../components/DatePicker/DatePicker.tsx';
 import * as Field from '../components/Field/Field.tsx';
 import * as Icon from '../components/Icon/Icon.tsx';
 import * as Input from '../components/Input/Input.tsx';
@@ -90,9 +90,9 @@ const SizeSection = ({ size }: { size: Size }) => (
       <Block.Block rail='start'>
         <Icon.Icon icon='ph--chat-circle--regular' />
       </Block.Block>
-      <Typography.Typography>
+      <Typography.Text>
         Typography centres its first line in the block, so the icon beside it lines up however far it wraps.
-      </Typography.Typography>
+      </Typography.Text>
     </Container.Container>
   </Container.Container>
 );
@@ -142,11 +142,11 @@ const FocusRingsStory = () => (
       </Field.Root>
       <Field.Root>
         <Field.Label>Date</Field.Label>
-        <DateInput.DateInput defaultValue='2026-09-29' />
+        <DatePicker.Input defaultValue='2026-09-29' />
       </Field.Root>
       <Field.Root>
         <Field.Label>Time</Field.Label>
-        <DateInput.DateInput type='time' defaultValue='09:30' />
+        <DatePicker.Input type='time' defaultValue='09:30' />
       </Field.Root>
       <Field.Root>
         <Select.Root items={OPTIONS}>
@@ -174,7 +174,7 @@ const FocusRingsStory = () => (
       <Collapsible.Root>
         <Collapsible.Trigger>Collapsible</Collapsible.Trigger>
         <Collapsible.Content>
-          <Typography.Typography>Hidden content.</Typography.Typography>
+          <Typography.Text>Hidden content.</Typography.Text>
         </Collapsible.Content>
       </Collapsible.Root>
       <Toolbar.Root>

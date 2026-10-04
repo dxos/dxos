@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Magazine, Subscription } from '#types';
@@ -78,4 +78,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Theme.Resource[];

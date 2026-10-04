@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { Steps as StepsPrimitive, useStepsContext } from '@ark-ui/react/steps';
 import React, { type CSSProperties, forwardRef, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';

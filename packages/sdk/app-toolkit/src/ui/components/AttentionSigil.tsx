@@ -18,7 +18,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Menu from '@dxos/react-ui/Menu';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -144,7 +144,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
                   const shortcut = resolveKeyBinding(action.properties.keyBinding);
                   const item: Menu.Option = {
                     value: action.id,
-                    label: ThemeProvider.toLocalizedString(action.properties.label ?? '', t),
+                    label: Theme.toLocalizedString(action.properties.label ?? '', t),
                     icon: action.properties.icon ?? 'ph--circle-dashed--regular',
                     shortcut: shortcut ? keySymbols(shortcut).join('') : undefined,
                     disabled: action.properties.disabled,

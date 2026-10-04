@@ -3,7 +3,7 @@
 //
 
 import { translations as transcriptionTranslations } from '@dxos/react-ui-transcription/translations';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -28,4 +28,4 @@ export const translations = [
   // The mic's option labels belong to the component that renders them; re-exported here so a host
   // loading this plugin still gets them, the way plugin-tasks re-exports react-ui-task's.
   ...transcriptionTranslations,
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Theme.Resource[];

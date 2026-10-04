@@ -6,7 +6,7 @@ import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type TreeData } from '@dxos/react-ui-list';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { type MaybePromise } from '@dxos/util';
 import type * as Position from '@dxos/util/Position';
 
@@ -43,7 +43,7 @@ type SharedProperties = {
   testId?: string;
   disabled?: boolean;
   position?: Position.Position;
-  label: ThemeProvider.Label;
+  label: Theme.Label;
   className?: string;
   headingClassName?: string;
   icon?: string;

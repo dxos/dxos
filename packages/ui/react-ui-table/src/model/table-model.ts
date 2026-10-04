@@ -20,7 +20,7 @@ import {
   type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 import {
   type ProjectionModel,
   type PropertyType,
@@ -88,7 +88,7 @@ export type TableRow = Record<SchemaEx.JsonProp, any> & { id: string };
 
 export type TableRowAction = {
   id: string;
-  label: ThemeProvider.Label;
+  label: Theme.Label;
 };
 
 export type TableFeatures = {

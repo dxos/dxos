@@ -96,7 +96,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           ))}
         </Listbox.Content>
       </Listbox.Root>
-      <Typography.Typography data-testid={`people-${size}-value`}>{person.join(', ') || 'None'}</Typography.Typography>
+      <Typography.Text data-testid={`people-${size}-value`}>{person.join(', ') || 'None'}</Typography.Text>
       <Listbox.Root items={TAGS} selectionMode='multiple' value={tags} onValueChange={setTags}>
         <Listbox.Label>Tags</Listbox.Label>
         <Listbox.Content>
@@ -111,7 +111,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           </Listbox.ItemGroup>
         </Listbox.Content>
       </Listbox.Root>
-      <Typography.Typography data-testid={`tags-${size}-value`}>{tags.join(', ') || 'None'}</Typography.Typography>
+      <Typography.Text data-testid={`tags-${size}-value`}>{tags.join(', ') || 'None'}</Typography.Text>
       <div className='h-40'>
         <Listbox.Root items={LONG} data-testid={`long-${size}`}>
           <Listbox.Content aria-label='Long'>
@@ -127,7 +127,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
             <ScrollArea.Root>
               <ScrollArea.Viewport asChild>
                 <Container.Container gutter='rail'>
-                  <Typography.Typography data-testid={`panel-heading-${size}`}>In a panel</Typography.Typography>
+                  <Typography.Text data-testid={`panel-heading-${size}`}>In a panel</Typography.Text>
                   <Listbox.Root items={LONG}>
                     <Listbox.Content aria-label='In panel' scroll={false}>
                       {LONG.map((item) => (

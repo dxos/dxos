@@ -21,7 +21,7 @@ const DefaultStory = () => (
   <Collapsible.Root>
     <Collapsible.Trigger>Advanced settings</Collapsible.Trigger>
     <Collapsible.Content data-testid='content'>
-      <Typography.Typography>These settings change how your space syncs.</Typography.Typography>
+      <Typography.Text>These settings change how your space syncs.</Typography.Text>
       <Field.Root>
         <Field.Header>
           <Field.Label>Sync interval</Field.Label>

@@ -26,7 +26,7 @@ import * as DragHandle from '@dxos/react-ui/DragHandle';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Main from '@dxos/react-ui/Main';
 import * as Popover from '@dxos/react-ui/Popover';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
@@ -52,15 +52,13 @@ const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDism
       }}
     >
       <Toast.Header icon={toast.icon} closable={!!toast.closeLabel}>
-        {toast.title && ThemeProvider.toLocalizedString(toast.title, t)}
+        {toast.title && Theme.toLocalizedString(toast.title, t)}
       </Toast.Header>
-      {toast.description && (
-        <Toast.Description>{ThemeProvider.toLocalizedString(toast.description, t)}</Toast.Description>
-      )}
+      {toast.description && <Toast.Description>{Theme.toLocalizedString(toast.description, t)}</Toast.Description>}
       {toast.onAction && toast.actionAlt && toast.actionLabel && (
         <Toast.Footer>
           <Toast.ActionTrigger variant='primary' onClick={() => toast.onAction?.()}>
-            {ThemeProvider.toLocalizedString(toast.actionLabel, t)}
+            {Theme.toLocalizedString(toast.actionLabel, t)}
           </Toast.ActionTrigger>
         </Toast.Footer>
       )}
@@ -185,7 +183,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                       {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
                       <DragHandle.DragHandle />
                       {layout.popoverTitle ? (
-                        <Card.Title>{ThemeProvider.toLocalizedString(layout.popoverTitle, t)}</Card.Title>
+                        <Card.Title>{Theme.toLocalizedString(layout.popoverTitle, t)}</Card.Title>
                       ) : (
                         <span />
                       )}

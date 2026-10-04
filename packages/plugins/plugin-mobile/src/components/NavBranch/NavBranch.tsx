@@ -21,7 +21,7 @@ import * as Empty from '@dxos/react-ui/Empty';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -111,7 +111,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items: visibleChildren,
-    extract: (child) => ThemeProvider.toLocalizedString(child.properties.label, t),
+    extract: (child) => Theme.toLocalizedString(child.properties.label, t),
   });
 
   return (
@@ -149,7 +149,7 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const isSelected = selectedValue === data.id;
 
-  const name = ThemeProvider.toLocalizedString(data.properties.label, t);
+  const name = Theme.toLocalizedString(data.properties.label, t);
   const titleId = UiHooks.useId('mobile-tile');
 
   const handleSelect = useCallback(

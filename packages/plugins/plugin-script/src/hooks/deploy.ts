@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { messageValence } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -37,7 +37,7 @@ export type CreateDeployOptions = {
   db?: Database.Database;
   existingFunctionId?: string;
   client: Client;
-  t: ThemeProvider.TFunction;
+  t: Theme.TFunction;
 };
 
 export const createDeploy = ({

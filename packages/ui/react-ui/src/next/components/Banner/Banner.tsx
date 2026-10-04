@@ -125,9 +125,9 @@ const BannerTitle = composable<HTMLDivElement, BannerTitleProps>(
         <Block.Block rail='start'>
           <Icon.Icon icon={icon} />
         </Block.Block>
-        <Typography.Typography asChild>
+        <Typography.Text asChild>
           <h2 id={titleId}>{children}</h2>
-        </Typography.Typography>
+        </Typography.Text>
         {onClose && (
           <Block.Block rail='end'>
             <Button.Button

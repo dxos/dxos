@@ -33,7 +33,7 @@ import * as Checkbox from '../next/components/Checkbox/Checkbox.tsx';
 import * as Collapsible from '../next/components/Collapsible/Collapsible.tsx';
 import * as Combobox from '../next/components/Combobox/Combobox.tsx';
 import * as Container from '../next/components/Container/Container.tsx';
-import * as DateInput from '../next/components/DateInput/DateInput.tsx';
+import * as DatePicker from '../next/components/DatePicker/DatePicker.tsx';
 import * as Dialog from '../next/components/Dialog/Dialog.tsx';
 import * as DragHandle from '../next/components/DragHandle/DragHandle.tsx';
 import * as Editable from '../next/components/Editable/Editable.tsx';
@@ -43,7 +43,7 @@ import * as Group from '../next/components/Group/Group.tsx';
 import * as HoverCard from '../next/components/HoverCard/HoverCard.tsx';
 import * as Icon from '../next/components/Icon/Icon.tsx';
 import * as Input from '../next/components/Input/Input.tsx';
-import * as Link from '../next/components/Link/Link.tsx';
+import { Link } from '../next/components/Link/Link.tsx';
 import * as Menu from '../next/components/Menu/Menu.tsx';
 import * as MenuButton from '../next/components/MenuButton/MenuButton.tsx';
 import * as NumberInput from '../next/components/NumberInput/NumberInput.tsx';
@@ -59,13 +59,13 @@ import * as Separator from '../next/components/Separator/Separator.tsx';
 import * as Skeleton from '../next/components/Skeleton/Skeleton.tsx';
 import * as Slider from '../next/components/Slider/Slider.tsx';
 import * as Splitter from '../next/components/Splitter/Splitter.tsx';
-import * as Steps from '../next/components/Steps/Steps.tsx';
+import { Steps } from '../next/components/Steps/Steps.tsx';
 import * as Switch from '../next/components/Switch/Switch.tsx';
 import * as SystemButton from '../next/components/SystemButton/SystemButton.tsx';
 import * as Tabs from '../next/components/Tabs/Tabs.tsx';
 import * as Tag from '../next/components/Tag/Tag.tsx';
 import * as Textarea from '../next/components/Textarea/Textarea.tsx';
-import * as Timestamp from '../next/components/Timestamp/Timestamp.tsx';
+import { Timestamp } from '../next/components/Timestamp/Timestamp.tsx';
 import * as Toast from '../next/components/Toast/Toast.tsx';
 import * as Toggle from '../next/components/Toggle/Toggle.tsx';
 import * as ToggleGroup from '../next/components/ToggleGroup/ToggleGroup.tsx';
@@ -91,9 +91,9 @@ const Section = ({ id, title, children }: SectionProps) => {
   const size = useContext(SizeContext);
   return (
     <section id={id} data-section={id} className='flex flex-col gap-2 m-4 py-4 border border-separator rounded-md'>
-      <Typography.Typography asChild tone='muted' classNames='px-4 font-medium'>
+      <Typography.Text asChild tone='muted' classNames='px-4 font-medium'>
         <h2>{title}</h2>
-      </Typography.Typography>
+      </Typography.Text>
       <Container.Container size={size} gutter='rail' gap='md' level='base'>
         {children}
       </Container.Container>
@@ -105,9 +105,9 @@ const Section = ({ id, title, children }: SectionProps) => {
 const Row = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
   <Group.Group>
     {label && (
-      <Typography.Typography tone='muted' classNames='w-24 shrink-0'>
+      <Typography.Text tone='muted' classNames='w-24 shrink-0'>
         {label}
-      </Typography.Typography>
+      </Typography.Text>
     )}
     {children}
   </Group.Group>
@@ -129,9 +129,9 @@ const Toc = ({
     aria-label='Contents'
     className='flex flex-col gap-1 w-48 shrink-0 p-4 overflow-y-auto border-s border-separator'
   >
-    <Typography.Typography tone='subtle'>Contents</Typography.Typography>
+    <Typography.Text tone='subtle'>Contents</Typography.Text>
     {entries.map(({ id, title }) => (
-      <Link.Link
+      <Link
         key={id}
         href={`#${id}`}
         target='_self'
@@ -144,7 +144,7 @@ const Toc = ({
         }}
       >
         {title}
-      </Link.Link>
+      </Link>
     ))}
   </nav>
 );
@@ -319,9 +319,9 @@ const MenuButtonDemo = () => {
   return (
     <>
       <MenuButton.MenuButton icon='ph--sliders--regular' iconOnly caretDown label='Options' items={items} />
-      <Typography.Typography tone='muted'>
+      <Typography.Text tone='muted'>
         {view} · extraction {extraction ? 'on' : 'off'}
-      </Typography.Typography>
+      </Typography.Text>
     </>
   );
 };
@@ -392,15 +392,15 @@ const InputSection = () => (
     </Field.Root>
     <Field.Root>
       <Field.Label>Due</Field.Label>
-      <DateInput.DateInput defaultValue='2026-09-29' />
+      <DatePicker.Input defaultValue='2026-09-29' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Starts at</Field.Label>
-      <DateInput.DateInput type='time' defaultValue='09:30' />
+      <DatePicker.Input type='time' defaultValue='09:30' />
     </Field.Root>
     <Field.Root readOnly>
       <Field.Label>Meeting</Field.Label>
-      <DateInput.DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
+      <DatePicker.Input type='datetime-local' defaultValue='2026-09-29T14:00' />
     </Field.Root>
   </Section>
 );
@@ -495,9 +495,9 @@ const SliderSection = () => {
   const [value, setValue] = useState([40]);
   return (
     <Section id='slider' title='Slider'>
-      <Slider.Slider value={value} onValueChange={setValue} max={100} label='Volume' />
-      <Slider.Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
-      <Slider.Slider defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
+      <Slider.Input value={value} onValueChange={setValue} max={100} label='Volume' />
+      <Slider.Input defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
+      <Slider.Input defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
     </Section>
   );
 };
@@ -509,7 +509,7 @@ const ProgressSection = () => (
     <Progress.Progress value={0.35} label='Upload' />
     <Progress.Progress indeterminate label='Indexing' />
     <Progress.Progress indeterminate error label='Failed' />
-    <Steps.Steps steps={STEPS} active={1} fraction={0.5} />
+    <Steps steps={STEPS} active={1} fraction={0.5} />
   </Section>
 );
 
@@ -569,13 +569,13 @@ const NavigationSection = () => (
         </Breadcrumb.Item>
       </Breadcrumb.List>
     </Breadcrumb.Root>
-    <Typography.Typography>
-      Read the <Link.Link href='https://dxos.org'>guide</Link.Link>, or the{' '}
-      <Link.Link href='https://github.com/dxos/dxos/releases' variant='neutral'>
+    <Typography.Text>
+      Read the <Link href='https://dxos.org'>guide</Link>, or the{' '}
+      <Link href='https://github.com/dxos/dxos/releases' variant='neutral'>
         release notes
-      </Link.Link>
+      </Link>
       .
-    </Typography.Typography>
+    </Typography.Text>
     <Separator.Separator />
     <Group.Group>
       <Button.Button>Left</Button.Button>
@@ -596,10 +596,10 @@ const TabsSection = () => (
         <Tabs.Trigger value='settings' icon='ph--gear--regular' label='Settings' iconOnly />
       </Tabs.List>
       <Tabs.Content value='overview'>
-        <Typography.Typography>A summary of the project.</Typography.Typography>
+        <Typography.Text>A summary of the project.</Typography.Text>
       </Tabs.Content>
       <Tabs.Content value='tasks'>
-        <Typography.Typography>Three open tasks.</Typography.Typography>
+        <Typography.Text>Three open tasks.</Typography.Text>
       </Tabs.Content>
       <Tabs.Content value='settings'>
         <Input.Input aria-label='Name' defaultValue='Apollo' />
@@ -655,7 +655,7 @@ const CollapsibleSection = () => (
     <Collapsible.Root>
       <Collapsible.Trigger>Advanced settings</Collapsible.Trigger>
       <Collapsible.Content>
-        <Typography.Typography>These settings change how your space syncs.</Typography.Typography>
+        <Typography.Text>These settings change how your space syncs.</Typography.Text>
         <Switch.Switch label='Sync over cellular' />
       </Collapsible.Content>
     </Collapsible.Root>
@@ -664,7 +664,7 @@ const CollapsibleSection = () => (
         <Accordion.Item key={value} value={value}>
           <Accordion.ItemTrigger icon={icon}>{label}</Accordion.ItemTrigger>
           <Accordion.ItemContent>
-            <Typography.Typography>{detail}</Typography.Typography>
+            <Typography.Text>{detail}</Typography.Text>
           </Accordion.ItemContent>
         </Accordion.Item>
       ))}
@@ -682,7 +682,7 @@ const CardSection = () => (
         </Card.Header>
         <Card.Body>
           <Card.Description>What ships next quarter and why.</Card.Description>
-          <Typography.Typography>Three milestones, each with an owner and a date.</Typography.Typography>
+          <Typography.Text>Three milestones, each with an owner and a date.</Typography.Text>
         </Card.Body>
         <Card.Footer>
           <Button.Button>Dismiss</Button.Button>
@@ -754,15 +754,15 @@ const SplitterSection = () => {
       <div className='flex flex-col h-40 border border-separator'>
         <Splitter.Root orientation='horizontal' resizable minSize={6} size={size} onSizeChange={setSize}>
           <Splitter.Panel position='start'>
-            <Typography.Typography tone='muted' classNames='p-2'>
+            <Typography.Text tone='muted' classNames='p-2'>
               Drag the seam.
-            </Typography.Typography>
+            </Typography.Text>
           </Splitter.Panel>
           <Splitter.ResizeTrigger aria-label='Resize' />
           <Splitter.Panel position='end'>
-            <Typography.Typography tone='muted' classNames='p-2'>
+            <Typography.Text tone='muted' classNames='p-2'>
               {size.toFixed(1)}rem
-            </Typography.Typography>
+            </Typography.Text>
           </Splitter.Panel>
         </Splitter.Root>
       </div>
@@ -780,7 +780,7 @@ const ScrollAreaSection = () => (
         <ScrollArea.Viewport asChild>
           <Container.Container gutter='rail'>
             {SCROLL_ROWS.map((row) => (
-              <Typography.Typography key={row}>{row}</Typography.Typography>
+              <Typography.Text key={row}>{row}</Typography.Text>
             ))}
           </Container.Container>
         </ScrollArea.Viewport>
@@ -817,7 +817,7 @@ const TimestampSection = () => {
     <Section id='timestamp' title='Timestamp'>
       <Group.Group>
         {MINUTES.map((minutes) => (
-          <Timestamp.Timestamp key={minutes} date={new Date(now.getTime() - minutes * 60_000)} />
+          <Timestamp key={minutes} date={new Date(now.getTime() - minutes * 60_000)} />
         ))}
       </Group.Group>
     </Section>
@@ -862,8 +862,8 @@ const OverlaysSection = () => {
             <Button.Button>Hover card</Button.Button>
           </HoverCard.Trigger>
           <HoverCard.Content>
-            <Typography.Typography>Alice Example</Typography.Typography>
-            <Typography.Typography tone='muted'>Joined in March · 12 spaces</Typography.Typography>
+            <Typography.Text>Alice Example</Typography.Text>
+            <Typography.Text tone='muted'>Joined in March · 12 spaces</Typography.Text>
           </HoverCard.Content>
         </HoverCard.Root>
         <Menu.Root>
@@ -890,9 +890,9 @@ const OverlaysSection = () => {
         </Menu.Root>
         <Menu.Root>
           <Menu.ContextTrigger asChild>
-            <Typography.Typography tone='muted' classNames='px-3 border border-dashed border-separator rounded-sm'>
+            <Typography.Text tone='muted' classNames='px-3 border border-dashed border-separator rounded-sm'>
               Right-click here
-            </Typography.Typography>
+            </Typography.Text>
           </Menu.ContextTrigger>
           <Menu.Content>
             <Menu.Item item={{ value: 'rename', label: 'Rename' }} />

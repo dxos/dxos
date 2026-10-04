@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import * as Typography from '../Typography/Typography.tsx';
-import * as Image from './Image.tsx';
+import { Image } from './Image.tsx';
 
 /** Inline SVG, so the stories never fetch from the network. */
 const LANDSCAPE = `data:image/svg+xml,${encodeURIComponent(
@@ -45,24 +45,18 @@ const DefaultStory = ({ size }: SizeArgs) => {
   const [clicks, setClicks] = useState(0);
   return (
     <div className='grid grid-cols-4 gap-2'>
-      <Image.Image src={LANDSCAPE} alt='Mountains at dusk' data-testid={`cover-${size}`} />
-      <Image.Image
-        src={LANDSCAPE}
-        alt='Mountains, contained'
-        aspectRatio='1'
-        fit='contain'
-        data-testid={`contain-${size}`}
-      />
-      <Image.Image src={BROKEN} alt='Missing photo' data-testid={`broken-${size}`} />
-      <Image.Image src={LANDSCAPE} alt='Mountains, square' aspectRatio='1' data-testid={`square-${size}`} />
-      <Image.Image
+      <Image src={LANDSCAPE} alt='Mountains at dusk' data-testid={`cover-${size}`} />
+      <Image src={LANDSCAPE} alt='Mountains, contained' aspectRatio='1' fit='contain' data-testid={`contain-${size}`} />
+      <Image src={BROKEN} alt='Missing photo' data-testid={`broken-${size}`} />
+      <Image src={LANDSCAPE} alt='Mountains, square' aspectRatio='1' data-testid={`square-${size}`} />
+      <Image
         src={LANDSCAPE}
         alt='Open mountains'
         onClick={() => setClicks((count) => count + 1)}
         data-testid={`clickable-${size}`}
       />
-      <Typography.Typography data-testid={`clicks-${size}`}>Opened {clicks}</Typography.Typography>
-      <Image.Image
+      <Typography.Text data-testid={`clicks-${size}`}>Opened {clicks}</Typography.Text>
+      <Image
         src={STRIP}
         alt='Red strip'
         aspectRatio='1'
@@ -70,7 +64,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
         backdrop='dominant'
         data-testid={`backdrop-${size}`}
       />
-      <Image.Image
+      <Image
         src={CUTOUT}
         alt='Cut-out'
         aspectRatio='1'

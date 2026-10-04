@@ -65,9 +65,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           ))}
         </Listbox.Content>
       </Listbox.Root>
-      <Typography.Typography data-testid={`order-${size}`}>
-        {items.map((item) => item.value).join(' ')}
-      </Typography.Typography>
+      <Typography.Text data-testid={`order-${size}`}>{items.map((item) => item.value).join(' ')}</Typography.Text>
       <DragHandle.DragPreview source={source}>
         <span data-testid={`preview-${size}`}>{items[0].label}</span>
       </DragHandle.DragPreview>

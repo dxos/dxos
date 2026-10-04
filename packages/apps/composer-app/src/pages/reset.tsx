@@ -12,7 +12,7 @@ import '@dxos/react-ui/theme.css';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { ResetDialog } from '../components/index.ts';
 import { resetComposerStorage } from '../recovery/index.ts';
@@ -44,8 +44,8 @@ const root = document.getElementById('root');
 invariant(root);
 createRoot(root).render(
   <StrictMode>
-    <ThemeProvider.ThemeProvider tx={ThemeProvider.defaultTx} resourceExtensions={translations}>
+    <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations}>
       <ResetDialog logStore={logStore} onReset={handleReset} onRefresh={() => (window.location.href = '/')} />
-    </ThemeProvider.ThemeProvider>
+    </Theme.Provider>
   </StrictMode>,
 );

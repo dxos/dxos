@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import * as Popover from '@dxos/react-ui/Popover';
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
@@ -21,7 +21,7 @@ import { translationKey } from '#translations';
 import { type ModalController, type TableModel, type TableRow } from '../../model/index.ts';
 import { narrowSchema } from '../../util/index.ts';
 
-const createOptionLabel: ThemeProvider.Label = ['create-new-object.label', { ns: translationKey }];
+const createOptionLabel: Theme.Label = ['create-new-object.label', { ns: translationKey }];
 
 export type OnCreateHandler = (schema: Type.AnyEntity, values: any) => Parameters<typeof Ref.make>[0];
 

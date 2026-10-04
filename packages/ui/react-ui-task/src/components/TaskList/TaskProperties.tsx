@@ -11,7 +11,6 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Container from '@dxos/react-ui/Container';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Timestamp from '@dxos/react-ui/Timestamp';
 import * as Typography from '@dxos/react-ui/Typography';
 import type * as Util from '@dxos/react-ui/Util';
 import { Person, Task } from '@dxos/types';
@@ -76,13 +75,13 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
     // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
     <Container.Container asChild gutter='inherit' gap='sm' classNames={classNames} data-testid='taskList.properties'>
       <section>
-        <Typography.Typography asChild tone='subtle' classNames='text-sm'>
+        <Typography.Text asChild tone='subtle' classNames='text-sm'>
           <h2>{t('task-properties.label')}</h2>
-        </Typography.Typography>
+        </Typography.Text>
         {createdAt !== undefined && (
           <TaskProperty
             icon='ph--calendar-plus--regular'
-            label={<Timestamp.Timestamp date={createdAt} />}
+            label={<Typography.Timestamp date={createdAt} />}
             unset
             testId='taskList.property.created'
           />

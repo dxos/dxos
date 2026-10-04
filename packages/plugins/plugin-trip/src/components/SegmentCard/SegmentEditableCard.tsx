@@ -8,7 +8,7 @@ import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 import { Obj } from '@dxos/echo';
 import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
-import * as DateInput from '@dxos/react-ui/DateInput';
+import * as DatePicker from '@dxos/react-ui/DatePicker';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -98,7 +98,7 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
               <Icon.Icon icon='ph--calendar--regular' />
             </Block.Block>
             <Field.Root>
-              <DateInput.DateInput
+              <DatePicker.Input
                 type='datetime-local'
                 aria-label={t('segment.depart.placeholder')}
                 value={isoToLocalDateTime(departAt)}

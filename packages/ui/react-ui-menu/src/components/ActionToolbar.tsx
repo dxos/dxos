@@ -8,7 +8,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Switch from '@dxos/react-ui/Switch';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Toggle from '@dxos/react-ui/Toggle';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -159,7 +159,7 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   const { onAction, caller } = menu;
   const { t } = Hooks.useTranslation(translationKey);
   const { label, iconOnly, disabled, testId, hidden, checked } = action.properties;
-  const labelStr = ThemeProvider.toLocalizedString(label, t);
+  const labelStr = Theme.toLocalizedString(label, t);
 
   const handleCheckedChange = useCallback(() => {
     if (onAction) {
@@ -287,7 +287,7 @@ const ToggleGroupToolbarItem = ({
 }: ItemProps<{ group: MenuItemGroup<ToggleGroupMenuItemGroupProperties> }>) => {
   const { t } = Hooks.useTranslation(translationKey);
   const items = useMenuItems(menu, group);
-  const label = ThemeProvider.toLocalizedString(group.properties.label, t);
+  const label = Theme.toLocalizedString(group.properties.label, t);
 
   // Only actions render as toggle group items.
   const children = items

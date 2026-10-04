@@ -12,7 +12,7 @@ import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu'
 import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Flex from '@dxos/react-ui/Flex';
-import * as Image from '@dxos/react-ui/Image';
+import * as Media from '@dxos/react-ui/Media';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { Summary } from '#components';
@@ -105,7 +105,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
                   </Card.Text>
                   <Card.Text>{bookmark.excerpt}</Card.Text>
                   {bookmark.image && imageLoads && (
-                    <Image.Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
+                    <Media.Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
                   )}
                 </Card.Section>
               </Card.Body>

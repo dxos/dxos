@@ -8,7 +8,7 @@ import { useContext, useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -39,7 +39,7 @@ export const useBreadcrumbs = (ids: string[]): Breadcrumb[] => {
       setCrumbs(
         idList.map((id, index) => {
           const node = Option.getOrUndefined(registry.get(atoms[index]));
-          const label = ThemeProvider.toLocalizedString(node?.properties?.label ?? '', t) || id;
+          const label = Theme.toLocalizedString(node?.properties?.label ?? '', t) || id;
           return { id, label };
         }),
       );

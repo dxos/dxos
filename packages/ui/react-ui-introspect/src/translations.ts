@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translationKey = '@dxos/react-ui-introspect';
 
@@ -31,4 +31,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies ThemeProvider.Resource[];
+] as const satisfies Theme.Resource[];

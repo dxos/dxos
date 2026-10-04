@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * as ThemeProvider from './ThemeProvider.tsx';
+export * as Theme from './Theme.tsx';

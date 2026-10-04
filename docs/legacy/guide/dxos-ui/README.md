@@ -101,16 +101,16 @@ This package uses icons from `phosphor-icons`, but lists them as a peer dependen
 
 ## Using DXOS UI
 
-To use DXOS UI components, wrap your app with a `<ThemeProvider />` component:
+To use DXOS UI components, wrap your app with a `<Theme.Provider />` component:
 
 ```tsx file=./snippets/theme-provider.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 
 createRoot(document.getElementById('root')!).render(
-  <ThemeProvider.ThemeProvider>{/* your components using react-ui here */}</ThemeProvider.ThemeProvider>,
+  <Theme.Provider>{/* your components using react-ui here */}</Theme.Provider>,
 );
 ```
 

@@ -70,9 +70,9 @@ const DefaultStory = (_: PaneArgs) => {
         </ScrollArea.Root>
       </Panel.Body>
       <Panel.Footer>
-        <Typography.Typography truncate data-testid='values'>
+        <Typography.Text truncate data-testid='values'>
           {JSON.stringify({ ...values, recipients })}
-        </Typography.Typography>
+        </Typography.Text>
       </Panel.Footer>
     </Panel.Root>
   );

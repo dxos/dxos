@@ -53,7 +53,7 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
 
   return (
     <>
-      <Typography.Typography>{t('range-list.heading')}</Typography.Typography>
+      <Typography.Text>{t('range-list.heading')}</Typography.Text>
       {sheet.ranges.length === 0 ? (
         <Banner.Root>
           <Banner.Title>{t('no-ranges.message')}</Banner.Title>

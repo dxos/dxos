@@ -14,7 +14,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Main from '@dxos/react-ui/Main';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Tabs from '@dxos/react-ui/Tabs';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { iconSize, mx } from '@dxos/ui-theme';
 
@@ -26,7 +26,7 @@ import { isDeckCompanionMounted, layoutAppliesTopbar } from '../../util/index.ts
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 import { ToggleComplementarySidebarButton } from './SidebarButton.tsx';
 
-const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies ThemeProvider.Label;
+const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Theme.Label;
 
 export type ComplementarySidebarProps = {
   current?: string;
@@ -100,7 +100,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 key={Attention.getLinkedVariant(companion.id)}
                 value={Attention.getLinkedVariant(companion.id)}
                 classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-                label={ThemeProvider.toLocalizedString(companion.properties.label, t)}
+                label={Theme.toLocalizedString(companion.properties.label, t)}
                 icon={companion.properties.icon}
                 iconOnly
                 tooltipSide='left'
@@ -173,14 +173,14 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
         <Toolbar.Root size='lg' style={iconSize(5)} classNames='h-(--dx-rail-content) dx-header-surface'>
           <Button.Button
             classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-            label={ThemeProvider.toLocalizedString(companion.properties.label, t)}
+            label={Theme.toLocalizedString(companion.properties.label, t)}
             icon={companion.properties.icon}
             iconOnly
             tooltipSide='left'
             data-value={Attention.getLinkedVariant(companion.id)}
             variant='default'
           />
-          <div className='px-1'>{ThemeProvider.toLocalizedString(companion.properties.label, t)}</div>
+          <div className='px-1'>{Theme.toLocalizedString(companion.properties.label, t)}</div>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='dx-r1-surface'>

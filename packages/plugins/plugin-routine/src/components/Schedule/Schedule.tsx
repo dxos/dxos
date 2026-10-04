@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, createContext, forwardRef, useCallback, 
 
 import { invariant } from '@dxos/invariant';
 import * as Checkbox from '@dxos/react-ui/Checkbox';
-import * as DateInput from '@dxos/react-ui/DateInput';
+import * as DatePicker from '@dxos/react-ui/DatePicker';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
@@ -364,7 +364,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.at.label')}>
           <Field.Root>
-            <DateInput.DateInput
+            <DatePicker.Input
               type='time'
               hourCycle={12}
               value={value.time}
@@ -379,7 +379,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <div className='@container dx-container-type-inline-size flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
           <LabelledRow label={t('schedule.at.label')}>
             <Field.Root>
-              <DateInput.DateInput
+              <DatePicker.Input
                 type='time'
                 hourCycle={12}
                 value={value.time}
@@ -439,7 +439,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
           </LabelledRow>
           <LabelledRow label={t('schedule.at.label')}>
             <Field.Root>
-              <DateInput.DateInput
+              <DatePicker.Input
                 type='time'
                 hourCycle={12}
                 value={value.time}

@@ -21,7 +21,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
 import { SettingsPlugin } from '@dxos/plugin-settings/testing';
 import { ThemePlugin } from '@dxos/plugin-theme/testing';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 
 /**
  * Core plugins for testing/storybook environments.
@@ -33,5 +33,5 @@ export const corePlugins = (): Plugin.Plugin[] => [
   GraphPlugin.make(),
   ProcessManagerPlugin.make(),
   SettingsPlugin.make(),
-  ThemePlugin.make({ tx: ThemeProvider.defaultTx }),
+  ThemePlugin.make({ tx: Theme.defaultTx }),
 ];

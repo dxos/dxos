@@ -23,7 +23,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Block.Block rail='start' data-testid={`start-${size}`}>
         <Icon.Icon icon='ph--circle--regular' />
       </Block.Block>
-      <Typography.Typography>Block</Typography.Typography>
+      <Typography.Text>Block</Typography.Text>
       <Block.Block rail='end' data-testid={`end-${size}`}>
         <Icon.Icon icon='ph--dots-three--regular' />
       </Block.Block>
@@ -32,7 +32,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Block.Block rail='start' compact data-testid={`compact-${size}`}>
         <Icon.Icon icon='ph--star--regular' />
       </Block.Block>
-      <Typography.Typography>Compact</Typography.Typography>
+      <Typography.Text>Compact</Typography.Text>
     </Container.Container>
   </>
 );

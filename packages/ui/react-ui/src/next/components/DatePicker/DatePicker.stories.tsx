@@ -24,9 +24,9 @@ import {
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import * as Field from '../Field/Field.tsx';
 import * as Input from '../Input/Input.tsx';
-import * as DateInput from './DateInput.tsx';
+import * as DatePicker from './DatePicker.tsx';
 
-type ValueFieldProps = DateInput.DateInputProps & { label: string; testId: string; fieldProps?: Field.RootProps };
+type ValueFieldProps = DatePicker.InputProps & { label: string; testId: string; fieldProps?: Field.RootProps };
 
 /** A labelled DateInput whose value string is shown beside it, so a test can read what the field reports. */
 const ValueField = ({ label, testId, fieldProps, defaultValue = '', ...props }: ValueFieldProps) => {
@@ -34,7 +34,7 @@ const ValueField = ({ label, testId, fieldProps, defaultValue = '', ...props }: 
   return (
     <Field.Root {...fieldProps}>
       <Field.Label>{label}</Field.Label>
-      <DateInput.DateInput {...props} value={value} onValueChange={setValue} data-testid={testId} />
+      <DatePicker.Input {...props} value={value} onValueChange={setValue} data-testid={testId} />
       <Field.HelperText>
         Value: <output data-testid={`${testId}-value`}>{value}</output>
       </Field.HelperText>

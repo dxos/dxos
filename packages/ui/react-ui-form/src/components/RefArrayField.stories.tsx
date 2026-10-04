@@ -123,12 +123,12 @@ const DefaultStory = ({ display, ordered }: StoryArgs) => {
         </ScrollArea.Root>
       </Panel.Body>
       <Panel.Footer>
-        <Typography.Typography truncate data-testid='values'>
+        <Typography.Text truncate data-testid='values'>
           {JSON.stringify(labels)}
-        </Typography.Typography>
-        <Typography.Typography truncate data-testid='activated'>
+        </Typography.Text>
+        <Typography.Text truncate data-testid='activated'>
           {activated ?? ''}
-        </Typography.Typography>
+        </Typography.Text>
       </Panel.Footer>
     </Panel.Root>
   );

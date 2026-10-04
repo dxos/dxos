@@ -37,11 +37,6 @@
       "types": "./dist/types/src/next/components/AlertDialog/AlertDialog.d.ts",
       "import": "./dist/lib/AlertDialog.mjs"
     },
-    "./AttentionGlyph": {
-      "source": "./src/next/components/AttentionGlyph/AttentionGlyph.tsx",
-      "types": "./dist/types/src/next/components/AttentionGlyph/AttentionGlyph.d.ts",
-      "import": "./dist/lib/AttentionGlyph.mjs"
-    },
     "./Avatar": {
       "source": "./src/next/components/Avatar/Avatar.tsx",
       "types": "./dist/types/src/next/components/Avatar/Avatar.d.ts",
@@ -102,10 +97,10 @@
       "types": "./dist/types/src/next/components/ControlFrame/ControlFrame.d.ts",
       "import": "./dist/lib/ControlFrame.mjs"
     },
-    "./DateInput": {
-      "source": "./src/next/components/DateInput/DateInput.tsx",
-      "types": "./dist/types/src/next/components/DateInput/DateInput.d.ts",
-      "import": "./dist/lib/DateInput.mjs"
+    "./DatePicker": {
+      "source": "./src/next/components/DatePicker/DatePicker.tsx",
+      "types": "./dist/types/src/next/components/DatePicker/DatePicker.d.ts",
+      "import": "./dist/lib/DatePicker.mjs"
     },
     "./Deferred": {
       "source": "./src/next/components/Deferred/Deferred.tsx",
@@ -187,20 +182,10 @@
       "types": "./dist/types/src/next/components/Icon/Icon.d.ts",
       "import": "./dist/lib/Icon.mjs"
     },
-    "./Image": {
-      "source": "./src/next/components/Image/Image.tsx",
-      "types": "./dist/types/src/next/components/Image/Image.d.ts",
-      "import": "./dist/lib/Image.mjs"
-    },
     "./Input": {
       "source": "./src/next/components/Input/Input.tsx",
       "types": "./dist/types/src/next/components/Input/Input.d.ts",
       "import": "./dist/lib/Input.mjs"
-    },
-    "./Link": {
-      "source": "./src/next/components/Link/Link.tsx",
-      "types": "./dist/types/src/next/components/Link/Link.d.ts",
-      "import": "./dist/lib/Link.mjs"
     },
     "./Listbox": {
       "source": "./src/next/components/Listbox/Listbox.tsx",
@@ -217,10 +202,10 @@
       "types": "./dist/types/src/flow/Match.d.ts",
       "import": "./dist/lib/Match.mjs"
     },
-    "./MediaPlayer": {
-      "source": "./src/next/components/MediaPlayer/MediaPlayer.tsx",
-      "types": "./dist/types/src/next/components/MediaPlayer/MediaPlayer.d.ts",
-      "import": "./dist/lib/MediaPlayer.mjs"
+    "./Media": {
+      "source": "./src/next/components/Media/Media.ts",
+      "types": "./dist/types/src/next/components/Media/Media.d.ts",
+      "import": "./dist/lib/Media.mjs"
     },
     "./Menu": {
       "source": "./src/next/components/Menu/Menu.tsx",
@@ -307,11 +292,6 @@
       "types": "./dist/types/src/next/components/Splitter/Splitter.d.ts",
       "import": "./dist/lib/Splitter.mjs"
     },
-    "./Steps": {
-      "source": "./src/next/components/Steps/Steps.tsx",
-      "types": "./dist/types/src/next/components/Steps/Steps.d.ts",
-      "import": "./dist/lib/Steps.mjs"
-    },
     "./Switch": {
       "source": "./src/next/components/Switch/Switch.tsx",
       "types": "./dist/types/src/next/components/Switch/Switch.d.ts",
@@ -337,20 +317,10 @@
       "types": "./dist/types/src/next/components/Textarea/Textarea.d.ts",
       "import": "./dist/lib/Textarea.mjs"
     },
-    "./TextCrawl": {
-      "source": "./src/next/components/TextCrawl/TextCrawl.tsx",
-      "types": "./dist/types/src/next/components/TextCrawl/TextCrawl.d.ts",
-      "import": "./dist/lib/TextCrawl.mjs"
-    },
-    "./ThemeProvider": {
-      "source": "./src/providers/ThemeProvider/ThemeProvider.tsx",
-      "types": "./dist/types/src/providers/ThemeProvider/ThemeProvider.d.ts",
-      "import": "./dist/lib/ThemeProvider.mjs"
-    },
-    "./Timestamp": {
-      "source": "./src/next/components/Timestamp/Timestamp.tsx",
-      "types": "./dist/types/src/next/components/Timestamp/Timestamp.d.ts",
-      "import": "./dist/lib/Timestamp.mjs"
+    "./Theme": {
+      "source": "./src/providers/ThemeProvider/Theme.tsx",
+      "types": "./dist/types/src/providers/ThemeProvider/Theme.d.ts",
+      "import": "./dist/lib/Theme.mjs"
     },
     "./Toast": {
       "source": "./src/next/components/Toast/Toast.tsx",

@@ -14,7 +14,7 @@ import { Blob, Database, Filter, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
 import * as Progress from '@dxos/react-ui/Progress';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import { File } from '@dxos/types';
 import { focusField } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
@@ -221,9 +221,9 @@ class DxnImageWidget extends WidgetType {
     const timeout = setTimeout(() => {
       const root = createRoot(loader);
       root.render(
-        <ThemeProvider.ThemeProvider tx={ThemeProvider.defaultTx}>
+        <Theme.Provider tx={Theme.defaultTx}>
           <Progress.Progress indeterminate />
-        </ThemeProvider.ThemeProvider>,
+        </Theme.Provider>,
       );
       widget.appendChild(loader);
       loaderAdded = true;

@@ -11,7 +11,6 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Group from '@dxos/react-ui/Group';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Link from '@dxos/react-ui/Link';
 import * as Switch from '@dxos/react-ui/Switch';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
@@ -122,9 +121,9 @@ export const PluginItem = ({
           )}
         </Card.Header>
         {description && (
-          <Typography.Typography tone='muted' lines={4}>
+          <Typography.Text tone='muted' lines={4}>
             {description}
-          </Typography.Typography>
+          </Typography.Text>
         )}
         {displayTags.length > 0 && (
           <Group.Group>
@@ -145,11 +144,11 @@ export const PluginItem = ({
               disabled={!hasSettings}
               onClick={handleSettings}
             />
-            <Link.Link asChild variant='neutral'>
+            <Typography.Link asChild variant='neutral'>
               <button type='button' onClick={handleClick}>
                 {t('details.label')}
               </button>
-            </Link.Link>
+            </Typography.Link>
           </Group.Group>
           {isUpdating ? (
             <Button.Button variant='primary' disabled label={t('updating.label')} />

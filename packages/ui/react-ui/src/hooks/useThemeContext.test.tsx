@@ -6,7 +6,7 @@ import { renderHook } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
-import * as ThemeProvider from '../providers/ThemeProvider/ThemeProvider.tsx';
+import * as Theme from '../providers/ThemeProvider/Theme.tsx';
 import { defaultTx } from '../theme/defaultTheme.ts';
 import { useThemeContext } from './useThemeContext.ts';
 
@@ -22,9 +22,9 @@ describe('useThemeContext', () => {
 
   test('returns the provider value when present', () => {
     const wrapper = ({ children }: PropsWithChildren) => (
-      <ThemeProvider.ThemeProvider tx={defaultTx} themeMode='light'>
+      <Theme.Provider tx={defaultTx} themeMode='light'>
         {children}
-      </ThemeProvider.ThemeProvider>
+      </Theme.Provider>
     );
     const { result } = renderHook(() => useThemeContext(), { wrapper });
     expect(result.current.tx).toBe(defaultTx);

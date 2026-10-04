@@ -41,10 +41,10 @@ export const GeoPointField = ({
   const resolved = presentationFor(presentation);
   if (resolved.isStatic) {
     return !location.latitude && !location.longitude ? null : (
-      <Typography.Typography truncate>
+      <Typography.Text truncate>
         {Math.abs(location.latitude ?? 0).toFixed(5)}°{(location.latitude ?? 0) >= 0 ? 'N' : 'S'}{' '}
         {Math.abs(location.longitude ?? 0).toFixed(5)}°{(location.longitude ?? 0) >= 0 ? 'E' : 'W'}
-      </Typography.Typography>
+      </Typography.Text>
     );
   }
 

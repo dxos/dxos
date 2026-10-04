@@ -13,7 +13,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 
-export type SliderProps = ThemedClassName<
+type SliderProps = ThemedClassName<
   Omit<
     SliderPrimitive.RootProps,
     | 'children'
@@ -48,7 +48,7 @@ export type SliderProps = ThemedClassName<
  * Ark's slider as a leaf control: an optional label above a block-tall row holding the track, its range and one thumb
  * per value. Every thumb must be named, so a missing name throws rather than rendering an unlabelled control.
  */
-export const Slider = forwardRef<HTMLDivElement, SliderProps>(
+const Slider = forwardRef<HTMLDivElement, SliderProps>(
   (
     {
       classNames,
@@ -115,3 +115,6 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(
 );
 
 Slider.displayName = 'Slider';
+
+export { Slider as Input };
+export type { SliderProps as InputProps };

@@ -17,7 +17,7 @@ import { keySymbols } from '@dxos/react-focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Menu from '@dxos/react-ui/Menu';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type MenuItemChrome } from '@dxos/ui-types';
 import { resolveKeyBinding } from '@dxos/util';
@@ -55,7 +55,7 @@ const useItemData = (
   const shortcut = resolveKeyBinding(properties.keyBinding);
   return {
     value: id,
-    label: ThemeProvider.toLocalizedString(properties.label, t),
+    label: Theme.toLocalizedString(properties.label, t),
     icon: properties.icon,
     shortcut: shortcut ? keySymbols(shortcut).join('') : undefined,
     disabled: properties.disabled,

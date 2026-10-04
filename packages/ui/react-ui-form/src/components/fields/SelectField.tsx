@@ -41,9 +41,9 @@ export const SelectField = ({
   const value = getValue();
   if (presentationFor(presentation).isStatic) {
     return (
-      <Typography.Typography truncate>
+      <Typography.Text truncate>
         {options.find((option) => option.value === value)?.label ?? String(value ?? '')}
-      </Typography.Typography>
+      </Typography.Text>
     );
   }
 

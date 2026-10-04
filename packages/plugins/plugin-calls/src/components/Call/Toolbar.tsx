@@ -13,7 +13,7 @@ import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as UiToolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Channel } from '@dxos/types';
@@ -137,7 +137,7 @@ export const Toolbar = ({
                   key={action.id}
                   {...defaultButtonProps}
                   icon={action.properties.icon}
-                  label={ThemeProvider.toLocalizedString(action.properties.label, t)}
+                  label={Theme.toLocalizedString(action.properties.label, t)}
                   classNames={action.properties.classNames}
                   onClick={() => node && void runAction(action, { parent: node })}
                 />

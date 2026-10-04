@@ -14,11 +14,11 @@ import * as Field from '@dxos/react-ui/Field';
 import * as Grid from '@dxos/react-ui/Grid';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Link from '@dxos/react-ui/Link';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Select from '@dxos/react-ui/Select';
 import * as Switch from '@dxos/react-ui/Switch';
 import * as Tag from '@dxos/react-ui/Tag';
+import * as Typography from '@dxos/react-ui/Typography';
 import * as Util from '@dxos/react-ui/Util';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -249,25 +249,25 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
               <Section.Body>
                 <div className='flex gap-3 items-center'>
                   {homePage && (
-                    <Link.Link href={homePage} classNames='text-sm text-fg-muted'>
+                    <Typography.Link href={homePage} classNames='text-sm text-fg-muted'>
                       {t('home-page.label')}
                       <Icon.Icon
                         icon='ph--arrow-square-out--regular'
                         size='xs'
                         classNames='ml-1 inline-block align-[-0.125em]'
                       />
-                    </Link.Link>
+                    </Typography.Link>
                   )}
 
                   {source && (
-                    <Link.Link href={source} classNames='text-sm text-fg-muted'>
+                    <Typography.Link href={source} classNames='text-sm text-fg-muted'>
                       {t('source.label')}
                       <Icon.Icon
                         icon='ph--arrow-square-out--regular'
                         size='xs'
                         classNames='ml-1 inline-block align-[-0.125em]'
                       />
-                    </Link.Link>
+                    </Typography.Link>
                   )}
 
                   {onOpenSpec && <Chip id={slug} name={t('open-spec.label')} onClick={onOpenSpec} />}

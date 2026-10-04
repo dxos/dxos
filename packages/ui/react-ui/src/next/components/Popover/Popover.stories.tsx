@@ -74,7 +74,7 @@ const NotesPopover = ({ size }: SizeArgs) => {
           </Popover.Header>
           <Popover.Body data-testid={`notes-${size}-body`}>
             {NOTES.map((note, index) => (
-              <Typography.Typography key={index}>{note}</Typography.Typography>
+              <Typography.Text key={index}>{note}</Typography.Text>
             ))}
           </Popover.Body>
           <Group.Group justify='end'>
@@ -98,11 +98,11 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
       <Button.Button onClick={() => setOpen(true)} data-testid={`anchored-${size}-trigger`}>
         Open at anchor
       </Button.Button>
-      <Typography.Typography asChild>
+      <Typography.Text asChild>
         <span ref={anchor} data-testid={`anchor-${size}`}>
           Anchor
         </span>
-      </Typography.Typography>
+      </Typography.Text>
       <Popover.Root
         open={open}
         onOpenChange={({ open }) => setOpen(open)}
