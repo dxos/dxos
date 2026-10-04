@@ -33,9 +33,6 @@ const fieldTheme = EditorView.theme({
   '& .cm-content .cm-code-inline': { whiteSpace: 'break-spaces', height: 'auto', overflow: 'visible' },
 });
 
-/** The view stretches to the frame's height; the frame aligns its content to the first line for its adornments. */
-const VIEW_CLASSNAMES = 'self-stretch min-w-0';
-
 /**
  * A markdown value in a CodeMirror editor framed by a multi-line `ControlFrame`. The value is either a string
  * (`Format.TypeFormat.Markdown`), edited as plain text, or a `Ref<Text>`, edited in place through its document; an empty
@@ -95,12 +92,7 @@ const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: String
   return (
     <ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
-        <Editor.View
-          classNames={VIEW_CLASSNAMES}
-          extensions={extensions}
-          value={value}
-          onChange={readonly ? undefined : onChange}
-        />
+        <Editor.View extensions={extensions} value={value} onChange={readonly ? undefined : onChange} />
       </Editor.Root>
     </ControlFrame>
   );
@@ -139,7 +131,7 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
   return (
     <ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
-        <Editor.View classNames={VIEW_CLASSNAMES} extensions={extensions} />
+        <Editor.View extensions={extensions} />
       </Editor.Root>
     </ControlFrame>
   );

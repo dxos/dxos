@@ -179,14 +179,16 @@
     min-width: 0;
   }
   /* A multi-line frame: `--dx-rows` lines tall at least, growing with its content; the first line and the adornments
-     sit where a single-line control's do, like a Textarea's. */
+     sit where a single-line control's do, like a Textarea's. The content stretches (through any `display: contents`
+     wrapper, which a child selector would miss) so a scrolling editor's scroller ends at the frame's foot. */
   .dx-control-frame[data-rows] {
     height: auto;
     min-height: calc(var(--dx-rows) * var(--dx-line-height) + var(--dx-control-size) - var(--dx-line-height));
-    align-items: start;
+    align-items: stretch;
     padding-block: calc((var(--dx-control-size) - var(--dx-line-height)) / 2);
   }
   .dx-control-frame[data-rows] > .dx-input-adornment {
+    align-self: start;
     height: var(--dx-line-height);
   }
   /* `:has()` cannot nest, so focus deeper in the content (an editor's own element) is a descendant selector instead. */
