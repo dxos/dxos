@@ -17,8 +17,10 @@ import { homedir, tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import * as Declarations from '../Declarations.ts';
 import * as Cache from '../design/Cache.ts';
 import * as Design from '../design/Design.ts';
+import * as Server from '../mcp/Server.ts';
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
 import * as Summary from '../Summary.ts';
@@ -111,6 +113,8 @@ const make = Effect.gen(function* () {
   const explorer = yield* Effect.serviceOption(LanguageModel.LanguageModel);
   // Opened on first use: most sessions never ask a design question.
   const designCache = yield* Effect.cached(Cache.open(join(store.dir, 'design-cache.jsonl')));
+  // The MCP handlers, so `symbols.usages` resolves a name exactly as the `usages` tool does.
+  const mcp = yield* Effect.cached(Server.handlers(store));
 
   /** One host call. A failure here is the snippet's failure, not the run's: it sees the message. */
   const handle = (
@@ -170,6 +174,22 @@ const make = Effect.gen(function* () {
               },
               explorer,
             ),
+          ),
+          Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
+        );
+      case 'symbols.declarations':
+        return Declarations.find(store, String(params.name)).pipe(
+          Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
+        );
+      case 'symbols.usages':
+        return mcp.pipe(
+          Effect.flatMap((handlers) =>
+            handlers.usages({
+              symbol: String(params.symbol),
+              kind: params.kind === 'api' || params.kind === 'impl' || params.kind === 'all' ? params.kind : undefined,
+              includeTests: typeof params.includeTests === 'boolean' ? params.includeTests : undefined,
+              limit: typeof params.limit === 'number' ? params.limit : undefined,
+            }),
           ),
           Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
         );

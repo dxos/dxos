@@ -27,7 +27,6 @@ export type Command = Schema.Schema.Type<typeof Command>;
 export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dxos.type.instructions', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    description: Schema.optional(Format.Text),
     input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotate({
       description: 'Input schema',
     }),
@@ -58,7 +57,6 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
 export type MakeProps = {
   [Obj.Parent]?: Obj.Unknown;
   name?: string;
-  description?: string;
   input?: Schema.Codec<any, any>;
   output?: Schema.Codec<any, any>;
   text?: string;
@@ -71,7 +69,6 @@ export type MakeProps = {
 export const make = ({
   [Obj.Parent]: parent,
   name,
-  description,
   input,
   output,
   text,
@@ -83,7 +80,6 @@ export const make = ({
   return Obj.make(Instructions, {
     [Obj.Parent]: parent,
     name,
-    description,
     input: JsonSchema.toJsonSchema(input ?? Schema.Void),
     output: JsonSchema.toJsonSchema(output ?? Schema.Void),
     text: Ref.make(body),

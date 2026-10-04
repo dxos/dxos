@@ -157,16 +157,9 @@ export const PopoverContent = () => {
          * height "no preview" row when no subject resolves a card Surface (e.g. system-type
          * objects like a raw Feed that have no registered card and no renderable fields). The card is the popover's
          * content, regular-size and edge to edge as the current card popover; it scrolls itself (`dx-card-popover`) and
-         * keeps a card's minimum width and height within the space available.
+         * keeps a card's minimum width, but is only as tall as its rows, so a short card leaves no empty space.
          */
-        <ObjectCard.Root
-          border={false}
-          classNames={[
-            'dx-card-popover dx-card-min-width',
-            'min-h-[min(var(--available-height),var(--spacing-card-min-height))]',
-            roundedClassNames,
-          ]}
-        >
+        <ObjectCard.Root border={false} classNames={['dx-card-popover dx-card-min-width', roundedClassNames]}>
           <ObjectCard.Header
             subject={popoverSubject}
             menu={
