@@ -89,7 +89,7 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
               gateFor(projectId).pipe(
                 Effect.flatMap((gate) =>
                   agent
-                    .turn({ projectId, text: event.text })
+                    .turn({ projectId, text: event.text, turnId: event.turnId })
                     .pipe(Semaphore.withPermits(gate, 1), Effect.forkIn(scope), Effect.asVoid),
                 ),
               )
