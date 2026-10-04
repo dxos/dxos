@@ -76,7 +76,7 @@ const EditorStory = ({ columnWidth, ...props }: RevealProps & { columnWidth?: st
   );
 
   return (
-    <Grid cols={[columnWidth ?? 'minmax(0, 1fr)', columnWidth ?? 'minmax(0, 1fr)']}>
+    <Grid grow cols={[columnWidth ?? 'minmax(0, 1fr)', columnWidth ?? 'minmax(0, 1fr)']}>
       <div className='overflow-y-auto border-e border-separator'>
         <Editor.Root extensions={extensions}>
           <Editor.View classNames='p-4' value={content} onChange={setContent} />

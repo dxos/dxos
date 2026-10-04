@@ -68,8 +68,10 @@
 #
 # Resolving a reference to its declaration. A reference names a symbol as its importer addressed
 # it: `file:<barrel>#Store` through an `export *` barrel, `module:@dxos/x#Store` under a bare
-# specifier. `deus:resolvesTo` links such a reference to the declaration it denotes, for the
-# references the service facts below need — not repo-wide.
+# specifier. `deus:resolvesTo` links such a reference to the declaration it denotes. The
+# `resolve-refs` pass states it for every reference; this file states it again for the service keys
+# below, because only it resolves a member under an ambiguous `#imports` specifier (through the
+# import's `file:` twin in the same symbol). The duplicates are harmless.
 #
 
 # `file:<path>#<name>` → the file it is addressed in, and the local name. `log:uri` cannot build an

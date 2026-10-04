@@ -38,7 +38,7 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
       {rows.length === 0 && <StatCard.Row span label='No messages.' />}
       {rows.length > 0 && (
         <StatCard.Row>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
+          <Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>type</span>
             <span>KB</span>
             <span>↓</span>
@@ -48,7 +48,7 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
       )}
       {rows.map((row) => (
         <StatCard.Row key={row.type}>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='font-mono tabular-nums text-end'>
+          <Grid grow cols={ROW_TRACKS} gap='sm' classNames='font-mono tabular-nums text-end'>
             <Tooltip.Trigger asChild content={row.type}>
               <span className='truncate text-start'>{row.type}</span>
             </Tooltip.Trigger>

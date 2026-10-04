@@ -15,6 +15,7 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
+import { useFormContext } from '../../hooks/index.ts';
 import { presentationFor } from '../presentation.tsx';
 
 /** The editor's minimum height in lines, as the current field's `min-h-[6lh]`. */
@@ -72,7 +73,8 @@ type StringMarkdownEditorProps = {
 };
 
 const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
-  const extensions = useBasicMarkdownExtensions({ placeholder, readonly });
+  const { markdownExtensions } = useFormContext('MarkdownField');
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: markdownExtensions });
   return (
     <ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
@@ -102,7 +104,12 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
     () => (text ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) })] : []),
     [text, reference],
   );
-  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: dataExtensions });
+  const { markdownExtensions } = useFormContext('MarkdownField');
+  const extensions = useBasicMarkdownExtensions({
+    placeholder,
+    readonly,
+    extensions: [...dataExtensions, ...(markdownExtensions ?? [])],
+  });
   if (!text) {
     return null;
   }

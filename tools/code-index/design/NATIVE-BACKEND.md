@@ -3,6 +3,8 @@
 Status: design + first vertical slice (`tools/code-index-native`). The JS backend
 (Quadstore/LevelDB + `eyereasoner`) stays the default until the native one has
 run in anger; `CODE_INDEX_BACKEND=native` selects it (`Store.layer(dir, 'native')` in code).
+A store records the backend that wrote it beside the ontology version: opened without one it keeps
+that backend, and naming the other resets a writer's store and fails a reader.
 
 ## Why
 
@@ -69,6 +71,12 @@ recomputation cheap:
 - **One snapshot of the premises.** Every base fact with a predicate some rule reads is loaded into
   an in-memory, position-indexed set once per `reasonAll`; joins probe it instead of seeking RocksDB
   and re-interning each result. (A rule that leaves a body predicate unbound falls back to the store.)
+  Decoding a quad out of oxigraph costs a RocksDB read per non-inline term — about 10 µs a quad,
+  17 s for this repository's 1.4M premises — so the snapshot is decoded on every core, and each
+  run keeps it on disk (`premises.bin`, `src/snapshot.rs`): the next run reads it back (≈1 s) and
+  applies the journal's net change, which is exactly the base's change since that run. The file is
+  trusted only under a token the engine state records once the run commits, so anything that
+  resets the engine state (`invalidate`, `clear`, an overflowing journal) also retires the file.
 - **Dependency order.** The file's forward rules are grouped into strongly connected components of
   "reads what the other concludes" (through the backward rules each calls), run dependencies first;
   only a cyclic group repeats until nothing is new. This is also what makes an aggregate see the
@@ -95,9 +103,13 @@ these strata do the same within a cyclic group, and DRed-maintained strata keep 
   "before it"; both backends now implement what it says in `reasonAll` (the JS one hides later
   reasoners' graphs from each pass), covered by `Reasoner.test.ts` § ordered reasoners.
 - A derived graph holds every fact the stratum's rule heads produce (its
-  materialisation `M_i`), including the rare head that restates a premise. EYE's
-  `derivations` mode drops those. Keeping them makes the stored graph exactly the
-  maintenance state, so no side table is needed.
+  materialisation `M_i`), including a head that restates a premise — a fact of a file
+  graph **or of an earlier stratum's graph**. EYE's `derivations` mode drops those. Keeping
+  them makes the stored graph exactly the maintenance state, so no side table is needed.
+  The raw counts therefore differ by design: `15-types` restates what `10-effect` already
+  concluded (`rdf:type deus:EffectLayer`, `deus:providesService`), `90-aliases` restates
+  each alias's own `rdf:type deus:Symbol`. Compare backends with every premise set aside —
+  file graphs and earlier strata alike (`Reasoner.test.ts` § type rules).
 - The legacy `Store.reason(name, rules)` call keeps its contract (premises = file
   graphs + every other derived graph; returns conclusions; `materialize` replaces
   the graph) and is evaluated natively in full. `Reasoner.run` uses the new
@@ -212,3 +224,6 @@ Two, both rerunnable, both local-only (no Rust in CI):
 Conclusions were checked against EYE on this repository: every rule file's count matches except
 `60-canonical` (files added since the baseline) and `90-aliases`, where 1,310 of 1,373 native
 conclusions restate a premise (the documented difference above) and the remaining 63 are EYE's 63.
+Since the type rules landed, `15-types` differs the same way: on a subset of four packages
+(`echo`, `effect`, `compute-runtime`, `ai`) native stores 91 and EYE 34, and all 57 extra are
+`10-effect` conclusions restated; with premises set aside every rule file matches.

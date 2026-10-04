@@ -16,6 +16,7 @@ import { extname, relative, resolve } from 'node:path';
 import * as Crawler from './Crawler.ts';
 import * as DesignCli from './design/DesignCli.ts';
 import * as Indexer from './Indexer.ts';
+import * as Lock from './mcp/Lock.ts';
 import * as Ontology from './Ontology.ts';
 import * as Reasoner from './Reasoner.ts';
 import * as Store from './Store.ts';
@@ -48,8 +49,10 @@ const jsonFlag = Flag.Boolean('json').pipe(Flag.withDefault(false), Flag.withDes
 const resolveRoot = (root: Option.Option<string>): Effect.Effect<string, Crawler.CrawlError> =>
   Option.match(root, { onNone: () => Crawler.gitRoot(), onSome: (value) => Effect.succeed(resolve(value)) });
 
-const storeLayer = (root: string, dir: Option.Option<string>) =>
-  Store.layer(Option.match(dir, { onNone: () => Crawler.storeDir(root), onSome: resolve }));
+const storeLayer = (root: string, dir: Option.Option<string>) => {
+  const path = Option.match(dir, { onNone: () => Crawler.storeDir(root), onSome: resolve });
+  return Lock.layer(path, () => Store.layer(path));
+};
 
 const emit = (json: boolean, value: unknown, text: () => string): Effect.Effect<void> =>
   Console.log(json ? JSON.stringify(value, null, 2) : text());
@@ -92,11 +95,15 @@ const index = Command.make(
       const { timings } = result;
       yield* emit(json, result, () =>
         [
-          `${result.root}: ${result.indexed} indexed, ${result.unchanged} unchanged, ${result.removed} removed` +
+          `${result.root}: ${result.indexed} indexed, ` +
+            (result.touched > 0 ? `${result.touched} touched, ` : '') +
+            `${result.unchanged} unchanged, ${result.removed} removed` +
             (result.skipped.length > 0 ? `, ${result.skipped.length} skipped` : '') +
             (noReason ? '' : `, ${result.derived} derived`),
-          `scan ${seconds(timings.scanMs)} · parse ${seconds(timings.parseMs)} · commit ${seconds(timings.commitMs)}` +
-            ` · reason ${result.reasoned ? seconds(timings.reasonMs) : 'skipped'} · total ${seconds(timings.totalMs)}`,
+          // parse and commit are summed across concurrent batches, so on a wide pool they exceed total.
+          `scan ${seconds(timings.scanMs)} · parse ${seconds(timings.parseMs)} (all workers) · commit ${seconds(timings.commitMs)}` +
+            ` · reason ${result.reasoned ? seconds(timings.reasonMs) : 'skipped'} · summary ${seconds(timings.summarizeMs)}` +
+            ` · total ${seconds(timings.totalMs)}`,
           ...(result.reasoners.length > 0
             ? [
                 result.reasoners
@@ -337,6 +344,27 @@ const openProject = (requested: Option.Option<string>) =>
     return last ?? (yield* log.createProject());
   });
 
+/**
+ * Resolves the flags to a model and checks a local one is actually running, so a missing Ollama is
+ * reported (or replaced by Anthropic) at startup instead of by every turn.
+ */
+const selectModel = (provider: Option.Option<string>, model: Option.Option<string>, endpoint: Option.Option<string>) =>
+  Effect.flatMap(
+    Models.select({
+      provider: Option.getOrUndefined(provider),
+      model: Option.getOrUndefined(model),
+      endpoint: Option.getOrUndefined(endpoint),
+    }),
+    (selection) =>
+      Models.ensureAvailable(selection, {
+        chosen:
+          Option.isSome(provider) ||
+          Option.isSome(model) ||
+          Option.isSome(endpoint) ||
+          process.env.CODE_INDEX_MODEL !== undefined,
+      }),
+  );
+
 const workspaceLayer = (root: string, store: Option.Option<string>, model: Models.Selection) =>
   Workspace.layer({
     storeDir: Option.match(store, { onNone: () => Crawler.storeDir(root), onSome: resolve }),
@@ -360,11 +388,7 @@ const chat = Command.make(
   ({ root, store, project, provider, model, endpoint, prompt }) =>
     Effect.gen(function* () {
       const repo = yield* resolveRoot(root);
-      const selection = yield* Models.select({
-        provider: Option.getOrUndefined(provider),
-        model: Option.getOrUndefined(model),
-        endpoint: Option.getOrUndefined(endpoint),
-      });
+      const selection = yield* selectModel(provider, model, endpoint);
       yield* Effect.gen(function* () {
         const opened = yield* openProject(project);
         yield* Chat.run({ projectId: opened.id, prompt: Option.getOrUndefined(prompt) });
@@ -380,6 +404,10 @@ const serveFlags = {
   endpoint: endpointFlag,
   port: Flag.Int('port').pipe(Flag.withDescription('Listen port (default: 5599).'), Flag.optional),
   host: Flag.String('host').pipe(Flag.withDescription('Bind address (default: 127.0.0.1).'), Flag.optional),
+  noWatch: Flag.Boolean('no-watch').pipe(
+    Flag.withDefault(false),
+    Flag.withDescription('Serve the index as it is, without reindexing as files change.'),
+  ),
 };
 
 type ServeFlags = {
@@ -390,16 +418,13 @@ type ServeFlags = {
   readonly endpoint: Option.Option<string>;
   readonly port: Option.Option<number>;
   readonly host: Option.Option<string>;
+  readonly noWatch: boolean;
 };
 
-const serveHandler = ({ root, store, provider, model, endpoint, port, host }: ServeFlags) =>
+const serveHandler = ({ root, store, provider, model, endpoint, port, host, noWatch }: ServeFlags) =>
   Effect.gen(function* () {
     const repo = yield* resolveRoot(root);
-    const selection = yield* Models.select({
-      provider: Option.getOrUndefined(provider),
-      model: Option.getOrUndefined(model),
-      endpoint: Option.getOrUndefined(endpoint),
-    });
+    const selection = yield* selectModel(provider, model, endpoint);
     // Imported here rather than at the top: `serve` pulls Vite and the whole dev-server
     // machinery in, and none of the other commands should pay for it.
     const Server = yield* Effect.promise(() => import('./workspace/Server.ts'));
@@ -408,6 +433,7 @@ const serveHandler = ({ root, store, provider, model, endpoint, port, host }: Se
       port: Option.getOrUndefined(port),
       host: Option.getOrUndefined(host),
       model: selection,
+      reasoners: noWatch ? undefined : yield* Reasoner.load(DEFAULT_RULES),
     }).pipe(Effect.provide(workspaceLayer(repo, store, selection)));
   });
 

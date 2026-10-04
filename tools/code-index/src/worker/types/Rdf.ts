@@ -108,8 +108,10 @@ export const collector = () => {
             '@type': 'TypeProperty',
             'name': property.name,
             ...(propertyType ? { hasType: propertyType } : {}),
-            'optional': property.optional,
-            'readonly': property.readonly,
+            // Stated only when true, as `typePartial` is: the false case was most of these quads,
+            // and no rule or reader distinguishes false from absent.
+            ...(property.optional ? { optional: true } : {}),
+            ...(property.readonly ? { readonly: true } : {}),
           });
           return propertyIri;
         });
