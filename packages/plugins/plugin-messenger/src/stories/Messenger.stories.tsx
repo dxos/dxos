@@ -208,7 +208,7 @@ const ReceiverColumn = () => {
           </Block>
           <span>Bob</span>
           {containers.length > 0 && <UnreadBadge containers={containers} />}
-          {opened && <span className='text-sm text-fg-muted'>{`Opened “${opened}”`}</span>}
+          {opened && <div className='flex items-center text-sm text-fg-muted'>{`Opened “${opened}”`}</div>}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
