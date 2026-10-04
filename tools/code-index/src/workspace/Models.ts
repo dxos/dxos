@@ -36,6 +36,9 @@ export const DEFAULT_OLLAMA_MODEL = 'gpt-oss:20b';
 
 export const DEFAULT_ANTHROPIC_MODEL = 'claude-sonnet-4-5-20250929';
 
+/** The small model that explores the index for a design question: cheap, fast, and good at SPARQL. */
+export const DEFAULT_EXPLORER_MODEL = 'claude-haiku-4-5-20251001';
+
 export type Provider = 'ollama' | 'anthropic';
 
 export const PROVIDERS: readonly Provider[] = ['ollama', 'anthropic'];
@@ -165,10 +168,10 @@ export const settle = (
 /** How long the startup probe waits; a local server answers in milliseconds or not at all. */
 export const PROBE_TIMEOUT = Duration.seconds(2);
 
-/** Whether an Ollama server answers at `endpoint`; any failure, timeout included, is "no". */
+/** Whether an Ollama server answers under `endpoint`, which may carry a path prefix; any failure is "no". */
 export const probe = (endpoint: string, timeout: Duration.Input = PROBE_TIMEOUT): Effect.Effect<boolean> =>
   Effect.tryPromise(() =>
-    fetch(new URL('/api/version', endpoint), { signal: AbortSignal.timeout(Duration.toMillis(timeout)) }),
+    fetch(`${endpoint.replace(/\/+$/, '')}/api/version`, { signal: AbortSignal.timeout(Duration.toMillis(timeout)) }),
   ).pipe(
     Effect.map((response) => response.ok),
     Effect.orElseSucceed(() => false),
@@ -208,3 +211,12 @@ export const explainFailure = (cause: unknown): string | undefined => {
     ? `Cannot reach Ollama at ${url.slice(0, -OLLAMA_CHAT_PATH.length)}: start it with \`ollama serve\`, or restart with --provider anthropic and DX_ANTHROPIC_API_KEY set.`
     : `Cannot reach the model at ${url || 'its endpoint'}: ${cause.reason.description ?? cause.reason.reason}.`;
 };
+
+/**
+ * The model a design exploration runs on: Haiku in place of Anthropic's chat default, since the job
+ * is a few short queries; a local Ollama model is used as it is, being the small option already.
+ */
+export const explorer = (selection: Selection): Selection =>
+  selection.provider === 'anthropic' && selection.model === DEFAULT_ANTHROPIC_MODEL
+    ? { ...selection, model: DEFAULT_EXPLORER_MODEL }
+    : selection;

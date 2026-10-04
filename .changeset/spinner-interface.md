@@ -12,3 +12,5 @@ Spinners share one interface: `SpinnerProps` with an `ActivityState` of `'ready'
 The `dx-fullscreen` utility is renamed `dx-cover` (`absolute inset-0`): it covers the nearest positioned ancestor, not the screen.
 
 `ScrollArea.Root` hides its overlay thumbs until the pointer is over the frame by default (`autoHide` now defaults to `true`; pass `autoHide={false}` for always-visible thumbs).
+
+An agent may wake itself with alarms at most `Alarm.MAX_SELF_WAKES` (10) times in a row without a user prompt; each wake-up prompt states how many remain, a later alarm is dropped without a turn, and the chat status shows the count beside the next wake time.
