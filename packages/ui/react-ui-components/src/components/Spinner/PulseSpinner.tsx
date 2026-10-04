@@ -30,13 +30,13 @@ const radialWave =
     return 0.5 + 0.5 * Math.sin(time * 2 - distance * 0.9);
   };
 
-/** Plays `signal` from the first frame it is asked for, for `duration` seconds, then rests at zero. */
-const once = (signal: DotSignal, duration: number): DotSignal => {
+/** Plays `signal` once from the first frame it is asked for, for `duration` seconds, never dropping below `rest`. */
+const once = (signal: DotSignal, duration: number, rest = 0): DotSignal => {
   let start: number | undefined;
   return (i, j, time) => {
     start ??= time;
     const elapsed = time - start;
-    return elapsed < duration ? signal(i, j, elapsed) : 0;
+    return elapsed < duration ? Math.max(rest, signal(i, j, elapsed)) : rest;
   };
 };
 
@@ -231,6 +231,9 @@ const pixels = (size: Size): number => (size === 'px' ? 1 : size * 4);
 const READY = scaled(radialWave(DIM), 0.6);
 const ALERT = scaled(orbit(DIM), 0.8);
 
+/** Where the error beat settles: the grid stays lit at about half size, so the state reads after the beat has passed. */
+const ERROR_REST = 0.4;
+
 const COLORS: Record<ActivityState, string> = {
   ready: 'text-primary-500',
   thinking: 'text-primary-500',
@@ -243,7 +246,10 @@ export const PulseSpinner = ({ classNames, state = 'ready', size = 5, onClick }:
   const thinking = useRandomPing(DIM, 100);
   // A single beat each time the spinner enters the error state: an error is news once, not an alarm that keeps ringing.
   const failing = state === 'error';
-  const error = useMemo(() => (failing ? once(scaled(heartbeat(DIM), 0.8), HEARTBEAT_PERIOD) : undefined), [failing]);
+  const error = useMemo(
+    () => (failing ? once(scaled(heartbeat(DIM), 0.8), HEARTBEAT_PERIOD, ERROR_REST) : undefined),
+    [failing],
+  );
   const maxRadius = pixels(size) / DIM / 2;
 
   return (
