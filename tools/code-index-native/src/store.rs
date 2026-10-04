@@ -5,8 +5,9 @@
 //! The quad store (oxigraph over RocksDB) with journalled graph swaps, and the reasoning driver that
 //! keeps each rule file's derived graph up to date from the journal.
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
 
@@ -302,7 +303,33 @@ fn signature(strata: &[Stratum]) -> String {
     format!("{hash:016x}")
 }
 
+/// Every store this process has open, by canonical directory: RocksDB admits one opener per
+/// directory per process, and `serve` reads on its main thread while its indexer thread writes.
+fn registry() -> &'static Mutex<HashMap<PathBuf, Weak<NativeStore>>> {
+    static REGISTRY: OnceLock<Mutex<HashMap<PathBuf, Weak<NativeStore>>>> = OnceLock::new();
+    REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
 impl NativeStore {
+    /// Opens the store at `path`, or returns the one already open there in this process (on any
+    /// thread or JS isolate); it closes when the last handle drops. The registry lock is held across
+    /// the open, so two threads opening one directory at once share one store.
+    pub fn open_shared(path: impl AsRef<Path>) -> Result<Arc<Self>> {
+        let path = path.as_ref();
+        std::fs::create_dir_all(path)?;
+        let key = path.canonicalize()?;
+        let mut open = registry()
+            .lock()
+            .map_err(|_| Error("store registry poisoned".into()))?;
+        if let Some(store) = open.get(&key).and_then(Weak::upgrade) {
+            return Ok(store);
+        }
+        open.retain(|_, store| store.strong_count() > 0);
+        let store = Arc::new(Self::open(&key)?);
+        open.insert(key, Arc::downgrade(&store));
+        Ok(store)
+    }
+
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let path = path.as_ref();
         std::fs::create_dir_all(path)?;

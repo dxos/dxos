@@ -83,7 +83,8 @@ through the assistant thread's collapsible tool panel.
 
 **The index stays current.** The server holds the store, so it indexes on its own: an incremental
 pass at startup, then one after every burst of changes to a directory the index covers
-(`src/Watch.ts`). `--no-watch` serves the store as it is.
+(`src/Watch.ts`). The passes run on a worker thread (`src/IndexThread.ts`) that shares the store
+with the server, so a reindex never stalls the web UI. `--no-watch` serves the store as it is.
 
 **No build step.** Vite runs inside the server process in middleware mode and resolves `@dxos/*`
 through the `source` condition, so the UI — Solid, with `@dxos/react-ui-assistant` mounted as a React

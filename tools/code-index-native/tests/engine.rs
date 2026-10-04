@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use code_index_native::facts::Dict;
 use code_index_native::rules;
-use code_index_native::store::{NativeStore, Stratum};
+use code_index_native::store::{DocumentWrite, NativeStore, Stratum};
 use oxigraph::model::{GraphName, NamedNode, Quad};
 
 /// The IRIs a rule file names, as the N3 parser resolves its prefixes.
@@ -773,4 +773,36 @@ fn constructs_maintain_like_recomputation() {
             }
         }
     }
+}
+
+#[test]
+fn shared_open_returns_one_store_per_directory() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("native");
+    let first = NativeStore::open_shared(&path).unwrap();
+    // A second opener on another thread, as `serve`'s indexer worker is, gets the same store rather
+    // than RocksDB's lock error.
+    let second = std::thread::spawn({
+        let path = path.clone();
+        move || NativeStore::open_shared(path).unwrap()
+    })
+    .join()
+    .unwrap();
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+
+    second
+        .put_documents(&[DocumentWrite {
+            graph: "https://example.com/file/a".into(),
+            drop: Vec::new(),
+            triples: "<https://example.com/a> <https://example.com/p> <https://example.com/b> .\n".into(),
+        }])
+        .unwrap();
+    assert_eq!(first.quad_count().unwrap(), 1);
+
+    // Once every handle is gone the directory is released, so a fresh open succeeds and sees the data.
+    drop(first);
+    drop(second);
+    let reopened = NativeStore::open_shared(&path).unwrap();
+    assert_eq!(reopened.quad_count().unwrap(), 1);
+    assert!(NativeStore::open(&path).is_err());
 }
