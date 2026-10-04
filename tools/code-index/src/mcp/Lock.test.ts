@@ -56,6 +56,7 @@ describe('Lock', () => {
           });
           child.stdout.once('data', () => resume(Effect.succeed(child)));
           child.once('error', (cause) => resume(Effect.die(cause)));
+          child.once('exit', (code) => resume(Effect.die(new Error(`holder exited with code ${code}`))));
         }),
         (child) =>
           Effect.callback<void>((resume) => {

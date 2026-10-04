@@ -7,8 +7,8 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, MutexGuard, OnceLock, Weak};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock, Weak};
 use std::time::Instant;
 
 use oxigraph::io::{RdfFormat, RdfParser, RdfSerializer};
@@ -164,6 +164,9 @@ pub struct NativeStore {
     /// Held by every write for its whole duration: the binding runs writes on libuv threads, and
     /// `reason_all` must not reset a journal that a concurrent swap has just added to.
     writer: Mutex<()>,
+    /// Quads in `store`, scanned on first request and then kept by every write because `Store::len`
+    /// is a full scan; `None` until then, so a store opened only to query never pays for one.
+    quads: Mutex<Option<usize>>,
     journal_limit: usize,
     /// Where the premises of the last reasoning run are kept (`snapshot.rs`); none in memory.
     snapshot_path: Option<PathBuf>,
@@ -356,6 +359,7 @@ impl NativeStore {
             meta,
             journal: Mutex::new(JournalState::default()),
             writer: Mutex::new(()),
+            quads: Mutex::new(None),
             journal_limit,
             snapshot_path,
         };
@@ -367,6 +371,43 @@ impl NativeStore {
         self.writer
             .lock()
             .map_err(|_| Error("writer lock poisoned".into()))
+    }
+
+    fn quads(&self) -> Result<MutexGuard<'_, Option<usize>>> {
+        self.quads
+            .lock()
+            .map_err(|_| Error("quad count lock poisoned".into()))
+    }
+
+    /// Records a write's net change in quads, under the writer lock. A write that failed partway may
+    /// have committed some of its steps, so its count is dropped and scanned again on next request.
+    fn settle(&self, write: Result<isize>) -> Result<()> {
+        let mut quads = self.quads()?;
+        match write {
+            Ok(delta) => {
+                *quads = quads.and_then(|count| count.checked_add_signed(delta));
+                Ok(())
+            }
+            Err(error) => {
+                *quads = None;
+                Err(error)
+            }
+        }
+    }
+
+    /// The net change in quads from applying `writes` (quad, insert) in order to the committed store.
+    fn net_change<'a>(&self, writes: impl IntoIterator<Item = (&'a Quad, bool)>) -> Result<isize> {
+        let mut last: FxHashMap<&Quad, bool> = FxHashMap::default();
+        for (quad, insert) in writes {
+            last.insert(quad, insert);
+        }
+        let mut delta = 0;
+        for (quad, insert) in last {
+            if self.store.contains(quad)? != insert {
+                delta += if insert { 1 } else { -1 };
+            }
+        }
+        Ok(delta)
     }
 
     fn reload_journal_state(&self) -> Result<()> {
@@ -430,7 +471,7 @@ impl NativeStore {
     /// and only then are the stale ones removed, in one transaction: a reader may see both revisions
     /// for a moment, never neither. Atomicity is the ledger's job (`pending_graph`): a swap cut
     /// short leaves graphs that `reconcile` drops.
-    fn swap(&self, drop: &[GraphName], quads: Vec<Quad>) -> Result<()> {
+    fn swap(&self, drop: &[GraphName], quads: Vec<Quad>) -> Result<isize> {
         let mut journal = self
             .journal
             .lock()
@@ -501,7 +542,8 @@ impl NativeStore {
             }
             transaction.commit()?;
         }
-        Ok(())
+        // Every graph `quads` names is in `touched`, so those graphs now hold exactly `kept`.
+        Ok(kept.len() as isize - old.len() as isize)
     }
 
     /// Replaces `drop` with quads in N-Quads form, homed in `graph` (their own graph is ignored).
@@ -518,7 +560,7 @@ impl NativeStore {
             .collect();
         graphs.push(graph.into());
         let _writer = self.write_lock()?;
-        self.swap(&graphs, quads)?;
+        self.settle(self.swap(&graphs, quads))?;
         Ok(count)
     }
 
@@ -554,7 +596,7 @@ impl NativeStore {
         }
         let count = quads.len();
         let _writer = self.write_lock()?;
-        self.swap(&graphs, quads)?;
+        self.settle(self.swap(&graphs, quads))?;
         Ok(count)
     }
 
@@ -564,7 +606,7 @@ impl NativeStore {
             .map(|name| NamedNode::new_unchecked(name.as_str()).into())
             .collect();
         let _writer = self.write_lock()?;
-        self.swap(&graphs, Vec::new())
+        self.settle(self.swap(&graphs, Vec::new()))
     }
 
     fn parse_nquads(nquads: &str) -> Result<Vec<Quad>> {
@@ -579,22 +621,24 @@ impl NativeStore {
     pub fn insert_quads(&self, nquads: &str) -> Result<()> {
         let quads = Self::parse_nquads(nquads)?;
         let _writer = self.write_lock()?;
-        self.raw(quads, true)
+        self.settle(self.raw(quads, true))
     }
 
     pub fn remove_quads(&self, nquads: &str) -> Result<()> {
         let quads = Self::parse_nquads(nquads)?;
         let _writer = self.write_lock()?;
-        self.raw(quads, false)
+        self.settle(self.raw(quads, false))
     }
 
-    fn raw(&self, quads: Vec<Quad>, insert: bool) -> Result<()> {
+    fn raw(&self, quads: Vec<Quad>, insert: bool) -> Result<isize> {
         let (base, derived): (Vec<Quad>, Vec<Quad>) = quads
             .into_iter()
             .partition(|quad| is_base_graph(quad.graph_name.as_ref()));
+        let mut delta = 0;
         if !derived.is_empty() {
             // Invalidated first: a crash after the write must not leave a signature vouching for it.
             self.forget_engine_state()?;
+            delta = self.net_change(derived.iter().map(|quad| (quad, insert)))?;
             let mut transaction = self.store.start_transaction()?;
             for quad in &derived {
                 if insert {
@@ -606,7 +650,7 @@ impl NativeStore {
             transaction.commit()?;
         }
         if base.is_empty() {
-            return Ok(());
+            return Ok(delta);
         }
         let graphs: Vec<GraphName> = base
             .iter()
@@ -630,7 +674,7 @@ impl NativeStore {
                 next.remove(&quad);
             }
         }
-        self.swap(&graphs, next.into_iter().collect())
+        Ok(delta + self.swap(&graphs, next.into_iter().collect())?)
     }
 
     /// Forgets the engine state: the next `reason_all` recomputes from nothing.
@@ -664,6 +708,18 @@ impl NativeStore {
     }
 
     pub fn quad_count(&self) -> Result<usize> {
+        if let Some(count) = *self.quads()? {
+            return Ok(count);
+        }
+        // Under the writer lock, so no write lands between the scan and recording its result.
+        let _writer = self.write_lock()?;
+        let count = self.store.len()?;
+        *self.quads()? = Some(count);
+        Ok(count)
+    }
+
+    /// The quad count by full scan, which [`Self::quad_count`] must always equal.
+    pub fn scanned_quad_count(&self) -> Result<usize> {
         Ok(self.store.len()?)
     }
 
@@ -683,7 +739,9 @@ impl NativeStore {
 
     pub fn clear(&self) -> Result<()> {
         let _writer = self.write_lock()?;
-        self.store.clear()?;
+        let cleared = self.store.clear();
+        *self.quads()? = cleared.is_ok().then_some(0);
+        cleared?;
         self.meta.clear()?;
         self.reload_journal_state()
     }
@@ -881,7 +939,9 @@ impl NativeStore {
             for quad in &quads {
                 transaction.insert(quad);
             }
-            transaction.commit()?;
+            let fresh: FxHashSet<&Quad> = quads.iter().collect();
+            let delta = fresh.len() as isize - stale.len() as isize;
+            self.settle(transaction.commit().map_err(Error::from).map(|()| delta))?;
         }
         Ok(quads)
     }
@@ -1071,21 +1131,28 @@ impl NativeStore {
         // its journal, or no signature (and so a full recomputation next time) — never new derived
         // graphs paired with a journal that would be replayed against them.
         self.set_engine_value(SIGNATURE, None)?;
-        let mut transaction = self.store.start_transaction()?;
+        let mut writes: Vec<(Quad, bool)> = Vec::new();
         for (stratum, change) in strata.iter().zip(&changes) {
             let graph = NamedNode::new_unchecked(stratum.graph.as_str());
-            for triple in &change.removed {
-                if let Some(quad) = Self::quad_of(&dict, triple, &graph) {
-                    transaction.remove(&quad);
-                }
-            }
-            for triple in &change.added {
-                if let Some(quad) = Self::quad_of(&dict, triple, &graph) {
-                    transaction.insert(&quad);
-                }
+            for (triples, insert) in [(&change.removed, false), (&change.added, true)] {
+                writes.extend(
+                    triples
+                        .iter()
+                        .filter_map(|triple| Self::quad_of(&dict, triple, &graph))
+                        .map(|quad| (quad, insert)),
+                );
             }
         }
-        transaction.commit()?;
+        let delta = self.net_change(writes.iter().map(|(quad, insert)| (quad, *insert)))?;
+        let mut transaction = self.store.start_transaction()?;
+        for (quad, insert) in &writes {
+            if *insert {
+                transaction.insert(quad);
+            } else {
+                transaction.remove(quad);
+            }
+        }
+        self.settle(transaction.commit().map_err(Error::from).map(|()| delta))?;
         let kept = snapshot
             .as_ref()
             .and_then(|snapshot| self.keep_premises(snapshot, &signature, &dict));
