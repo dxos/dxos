@@ -643,7 +643,7 @@ catalogs:
       specifier: ^0.8.3
       version: 0.8.3
     '@typescript-eslint/parser':
-      specifier: ^8.69.0
+      specifier: ^8.71.0
       version: 8.71.0
     '@typescript/typescript6':
       specifier: ^6.0.2
@@ -32986,10 +32986,6 @@ packages:
     resolution: {integrity: sha512-Fd3/QjmFV2sKmvv3Mrj8r6N8CryYiCS8Wdb/6/rgOXAWGcFuc+VkQuG28uk/4kVNVZBQuuDHEDUpo/pQ32zsIQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript-eslint/tsconfig-utils@8.64.0':
-    resolution: {integrity: sha512-2yo8rRNKuzbVWQp5kslhANqZ2uDAeROQHBRZNPu8JDsHmeFNj/XJJhX/FhNUWmkHHvoNsKa6+tHJiig87EzsQw==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
   '@typescript-eslint/tsconfig-utils@8.71.0':
     resolution: {integrity: sha512-Z1UlWHADEK2Mlb9NpWfDeSjqoZ5EyrOv4R3eQpbkzqn/EwaIdOpXXupEA1+0ZIOSJSZZDBHG0BrQyN8zUG6Pwg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -33000,10 +32996,6 @@ packages:
 
   '@typescript-eslint/types@8.62.0':
     resolution: {integrity: sha512-KvAclkktORPvM54TgLgA4z9HIV1M8zOgw9ZVNXl9f/8dLYfXYX1wkMXP7qmabpijQRV5bHJLOmoyGQbLMaUYeg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-eslint/types@8.64.0':
-    resolution: {integrity: sha512-qjhfuTfLXjA4IOzXvz0rTjT01BqEiIgPoUeMwiEjnaHKJMTNo8rH5pYW1a2L/0Dnux2fPC85AeyJoWaGa8WxTA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@typescript-eslint/types@8.71.0':
@@ -54461,8 +54453,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.39.0':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.64.0
-      '@typescript-eslint/types': 8.64.0
+      '@typescript-eslint/tsconfig-utils': 8.71.0
+      '@typescript-eslint/types': 8.71.0
       debug: 4.4.3(supports-color@5.5.0)
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -54486,10 +54478,6 @@ snapshots:
     dependencies:
       typescript: 6.0.3
 
-  '@typescript-eslint/tsconfig-utils@8.64.0':
-    dependencies:
-      typescript: 6.0.3
-
   '@typescript-eslint/tsconfig-utils@8.71.0':
     dependencies:
       typescript: 6.0.3
@@ -54497,8 +54485,6 @@ snapshots:
   '@typescript-eslint/types@8.39.0': {}
 
   '@typescript-eslint/types@8.62.0': {}
-
-  '@typescript-eslint/types@8.64.0': {}
 
   '@typescript-eslint/types@8.71.0': {}
 
