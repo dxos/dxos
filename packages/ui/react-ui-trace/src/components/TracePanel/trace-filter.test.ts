@@ -99,7 +99,7 @@ describe('parseProcessEnvironments', () => {
   });
 });
 
-const makeInfo = (name: string, environment: Process.Environment): Process.Info =>
+const makeInfo = (name: string, environment: Process.Environment): Process.Process =>
   makeProcess({ pid: Process.ID.make(name), name, state: Process.State.RUNNING, environment });
 
 describe('filterTraceMessages', () => {
@@ -137,7 +137,7 @@ describe('filterTraceMessages', () => {
 });
 
 describe('filterProcessesBySelection', () => {
-  const process = (pid: string, parentPid?: string): Process.Info =>
+  const process = (pid: string, parentPid?: string): Process.Process =>
     makeProcess({
       pid: Process.ID.make(pid),
       parentPid: parentPid === undefined ? null : Process.ID.make(parentPid),

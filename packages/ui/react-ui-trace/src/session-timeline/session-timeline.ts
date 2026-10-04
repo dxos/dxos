@@ -25,7 +25,7 @@ import {
 
 export interface BuildSessionTimelineInput {
   traceMessages: readonly Trace.Message[];
-  processes?: readonly Process.Info[];
+  processes?: readonly Process.Process[];
   /** The sessions to draw; each contributes a lane and its checklist's task lanes. */
   sessions?: readonly Session[];
   tasks?: readonly Task.Task[];
@@ -386,7 +386,7 @@ export const buildSessionTimeline = ({
     sources.push(...byKey.values());
   }
 
-  const processByPid = new Map<string, Process.Info>(processes.map((process) => [process.pid, process]));
+  const processByPid = new Map<string, Process.Process>(processes.map((process) => [process.pid, process]));
   const taskById = new Map(tasks.map((task) => [task.id, task]));
   const laneByPid = new Map<string, string>();
   const lanes: MutableLane[] = [];
@@ -856,7 +856,7 @@ const taskLaneStatus = (task: Task.Task, tasks: readonly Task.Task[]): LaneStatu
   return (task.status && TASK_STATUS[task.status]) ?? 'pending';
 };
 
-const subSessionStatus = (endEvent: Trace.FlatEvent | undefined, process: Process.Info | undefined): LaneStatus => {
+const subSessionStatus = (endEvent: Trace.FlatEvent | undefined, process: Process.Process | undefined): LaneStatus => {
   if (endEvent) {
     return decode(Trace.OperationEnd.schema, endEvent.data)?.outcome === 'failure' ? 'failed' : 'done';
   }
