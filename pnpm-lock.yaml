@@ -16980,6 +16980,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/display-name':
+        specifier: workspace:*
+        version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo

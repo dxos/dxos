@@ -9,10 +9,10 @@ tasks:
     options:
       mergeOutputs: replace
     outputs: []
-  # The Store, Reasoner and Indexer suites again, against the native backend. Needs a Rust toolchain,
-  # which CI does not install (design/NATIVE-BACKEND.md § CI).
+  # The Store, Reasoner, Indexer, Summary and MCP server suites again, against the native backend.
+  # Needs a Rust toolchain, which CI does not install (design/NATIVE-BACKEND.md § CI).
   native-test:
-    command: vitest run --project=node src/Store.test.ts src/Reasoner.test.ts src/Indexer.test.ts
+    command: vitest run --project=node src/Store.test.ts src/Reasoner.test.ts src/Indexer.test.ts src/Summary.test.ts src/mcp/Server.test.ts
     env:
       CODE_INDEX_BACKEND: native
     deps:

@@ -7,7 +7,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type ReactNode, type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -17,7 +17,7 @@ import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { Flex, Match, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
@@ -274,27 +274,10 @@ export const TaskSetArticle = ({
     </TaskFilter>
   );
 
-  // Grows to fill a host that gives it height (the panel body, a section in a full-height tab), so the editor below it
-  // sits at the bottom; in a host sized to its content it stays as tall as its rows.
-  const viewport = (
-    <TaskList.Viewport classNames='dx-grow'>
-      <TaskList.Content />
-    </TaskList.Viewport>
-  );
-
-  const editor = (
-    <TaskList.Editor
-      createOnly
-      showDescription
-      acceptFiles={!!attachFile}
-      descriptionExtensions={descriptionExtensions}
-      classNames='bg-input-surface px-2 pb-2'
-      placeholder={t('task-create.placeholder')}
-    />
-  );
-
-  // `TaskList.Root` renders no element, so it can wrap the whole panel and the editor can sit in its footer.
-  const withRoot = (children: ReactNode) => (
+  return (
+    // One layout whether the set is its own plank or a host's section (the project's Tasks tab): the filter in the
+    // header, the list filling the body, and the editor in the footer so it stays below the list. `TaskList.Root`
+    // renders no element, so it can wrap the whole panel.
     <TaskList.Root
       tasks={tasks}
       groups={groups}
@@ -314,37 +297,29 @@ export const TaskSetArticle = ({
       onTaskMove={arranged ? undefined : handleMove}
       onTaskSelect={handleOpen}
     >
-      {children}
+      <Panel.Root role={role}>
+        <Panel.Header>
+          <Toolbar.Root inactive={!hasAttention}>{filterRow}</Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body>
+          {/* Fills the body (no flex container, so growing alone would not bound it): rows scroll inside it. */}
+          <TaskList.Viewport classNames='dx-expand'>
+            <TaskList.Content />
+          </TaskList.Viewport>
+        </Panel.Body>
+        {/* Framed as the chat prompt is: inset from the panel's edges, in a bordered box of its own surface. */}
+        <Panel.Footer classNames='p-2 dx-grow bg-base-surface'>
+          <TaskList.Editor
+            createOnly
+            showDescription
+            acceptFiles={!!attachFile}
+            descriptionExtensions={descriptionExtensions}
+            classNames='py-2 dx-group-surface border border-separator-subtle rounded-sm'
+            placeholder={t('task-create.placeholder')}
+          />
+        </Panel.Footer>
+      </Panel.Root>
     </TaskList.Root>
-  );
-
-  return (
-    <Match.Root
-      on={role}
-      fallback={withRoot(
-        // The editor is the panel's footer, so it stays at the bottom while the list fills the body above it.
-        <Panel.Root role={role}>
-          <Panel.Header>
-            <Toolbar.Root inactive={!hasAttention}>{filterRow}</Toolbar.Root>
-          </Panel.Header>
-          <Panel.Body>{viewport}</Panel.Body>
-          <Panel.Footer>{editor}</Panel.Footer>
-        </Panel.Root>,
-      )}
-    >
-      {/* Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
-          chrome, so render the bare list under its own filter row — a nested Panel/scroll root would
-          collapse width, but the filter has to come along or the host's copy of the list has none. */}
-      <Match.Case when={AppSurface.Section.role}>
-        {withRoot(
-          <Flex column classNames='dx-grow'>
-            <Toolbar.Root>{filterRow}</Toolbar.Root>
-            {viewport}
-            {editor}
-          </Flex>,
-        )}
-      </Match.Case>
-    </Match.Root>
   );
 };
 

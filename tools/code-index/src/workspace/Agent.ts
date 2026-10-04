@@ -18,6 +18,7 @@ import * as Docs from './Docs.ts';
 import * as Events from './Events.ts';
 import * as Fold from './Fold.ts';
 import * as Log from './Log.ts';
+import * as Models from './Models.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /**
@@ -93,7 +94,8 @@ const promptOf = (state: Fold.State, system: string = Docs.systemPrompt()): Prom
 const fail = (message: string) => (cause: unknown) => new AgentError({ message, cause });
 
 const describe = (cause: unknown): string =>
-  cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : JSON.stringify(cause);
+  Models.explainFailure(cause) ??
+  (cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : JSON.stringify(cause));
 
 const make = Effect.gen(function* () {
   const log = yield* Log.Log;

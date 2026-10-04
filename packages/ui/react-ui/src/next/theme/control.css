@@ -840,8 +840,9 @@
   .dx-scroll-root.dx-popup:has(> .dx-scroll-viewport[hidden]) {
     display: none;
   }
+  /* Inset equally on every side, so a highlighted item reads as a row inside the popup rather than a band across it. */
   .dx-popup > .dx-scroll-viewport {
-    padding-block: var(--dx-control-inset);
+    padding: var(--dx-control-inset);
     scroll-padding-block: var(--dx-control-inset);
     border-radius: inherit;
   }
@@ -877,6 +878,7 @@
   }
   .dx-select-item[data-highlighted] {
     background: var(--color-hover-surface);
+    border-radius: var(--radius-xs, 0.125rem);
   }
   .dx-select-item[data-disabled] {
     opacity: 0.5;

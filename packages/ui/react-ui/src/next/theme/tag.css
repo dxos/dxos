@@ -76,7 +76,13 @@
    * Clickable: the root (`onClick` alone) or a trigger filling the pill up to the delete trigger (with `onDelete`) is a
    * button that keeps the pill's look, shifting brightness on hover like a hued Button, with the shared inset ring.
    */
-  .dx-tag-clickable,
+  /* The root is the pill itself, so it resets only the button's own face and keeps the pill's hue and label font. */
+  .dx-tag-clickable {
+    margin: 0;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
   .dx-tag-trigger {
     margin: 0;
     border: none;

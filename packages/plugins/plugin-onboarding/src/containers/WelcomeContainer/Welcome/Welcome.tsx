@@ -766,7 +766,7 @@ const LoginTab = ({
             <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
           </Button>
           {error?.startsWith('passkey-') && (
-            <Field.Root>
+            <Field.Root invalid>
               <ValidationMessage>{t(passkeyErrorKey(error, moreOptions.length === 0))}</ValidationMessage>
             </Field.Root>
           )}
@@ -814,7 +814,7 @@ const LoginTab = ({
         </Container>
       )}
       {!methodAvailable[primary] && moreOptions.length === 0 && (
-        <Field.Root>
+        <Field.Root invalid>
           <ValidationMessage>{t('login-unavailable.message')}</ValidationMessage>
         </Field.Root>
       )}
@@ -883,7 +883,7 @@ const InlineForm = ({
 }) => {
   const { classNames: inputClasses, ref, ...rest } = inputProps;
   return (
-    <Field.Root>
+    <Field.Root invalid={!!validation}>
       <div className='flex flex-col md:gap-1 flex-row gap-0 sm:items-stretch'>
         <Input
           {...rest}

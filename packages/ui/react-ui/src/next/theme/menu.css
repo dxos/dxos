@@ -40,6 +40,7 @@
   }
   .dx-menu-item[data-highlighted] {
     background: var(--color-hover-surface);
+    border-radius: var(--radius-xs, 0.125rem);
   }
   .dx-menu-item[data-disabled] {
     opacity: 0.5;

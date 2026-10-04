@@ -66,6 +66,19 @@ describe('resource IRIs', () => {
     expect(relative(Ontology.specBlockIri('a.mdl', 'x:y', 'k:v'))).toEqual('deus/file/a.mdl#x%3Ay:k:v');
   });
 
+  test('a call site is keyed by its enclosing symbol or file, callee and ordinal', () => {
+    const symbol = Ontology.symbolIri('src/react-surface.ts', 'default').value;
+    expect(relative(Ontology.callSiteIri(symbol, 'Surface.create', 0))).toEqual(
+      'deus/file/src/react-surface.ts#default/call/Surface.create/0',
+    );
+    expect(relative(Ontology.callSiteIri(Ontology.fileIri('src/a.test.ts').value, 'describe', 2))).toEqual(
+      'deus/file/src/a.test.ts#/call/describe/2',
+    );
+    expect(relative(Ontology.callSiteIri(symbol, 'a#b', 0))).toEqual(
+      'deus/file/src/react-surface.ts#default/call/a%23b/0',
+    );
+  });
+
   test('no file path names a derived graph', () => {
     const graph = Ontology.graphIri('derived/10-effect', 1).value;
     expect(Ontology.isDerivedGraph(graph)).toBe(false);

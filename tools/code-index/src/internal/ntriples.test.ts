@@ -83,6 +83,18 @@ describe('documentTriples', () => {
           'deprecated': true,
         },
       ],
+      '@included': [
+        {
+          '@id': Ontology.callSiteIri(Ontology.symbolIri(path, 'x').value, 'make', 0).value,
+          '@type': 'CallSite',
+          'callee': [Ontology.memberIri('lib', 'make').value],
+          'enclosedBy': Ontology.symbolIri(path, 'x').value,
+          'line': 3,
+          'argOf': Ontology.callSiteIri(Ontology.fileIri(path).value, 'outer', 0).value,
+          'argKey': 'meta.key',
+          'literal': ['0=quote " backslash \\', 'flag=true', 'n=-1'],
+        },
+      ],
     });
   });
 });

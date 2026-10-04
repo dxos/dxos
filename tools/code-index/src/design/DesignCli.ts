@@ -18,6 +18,7 @@ import { delimiter, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as Crawler from '../Crawler.ts';
+import * as Lock from '../mcp/Lock.ts';
 import * as Store from '../Store.ts';
 import * as Models from '../workspace/Models.ts';
 import * as Workspace from '../workspace/Workspace.ts';
@@ -130,7 +131,14 @@ export const command = Command.make(
           : yield* Design.run(
               Effect.flatMap(Store.Store, (api) => Explore.bfs({ prompt, maxNodes })(api)),
               options,
-            ).pipe(Effect.provide(Layer.merge(Store.layer(storeDir), decisionModel)));
+            ).pipe(
+              Effect.provide(
+                Layer.merge(
+                  Lock.layer(storeDir, () => Store.layer(storeDir)),
+                  decisionModel,
+                ),
+              ),
+            );
 
       yield* Design.write(dir, result);
       const kept = result.scored.nodes.filter((node) => node.kept).length;

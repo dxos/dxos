@@ -52,7 +52,7 @@ export const IndexerCard = ({ spaces = [], onRefresh, onCopy }: IndexerCardProps
         const { icon, className } = rowIcon(row);
         return (
           <StatCard.Row key={row.spaceId} icon={icon} iconClassNames={className}>
-            <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
+            <Grid grow cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
               <Tooltip.Trigger asChild content={row.error ?? row.name}>
                 <SystemButton.Clipboard
                   size='sm'
