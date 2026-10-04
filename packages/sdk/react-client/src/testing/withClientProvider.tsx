@@ -99,8 +99,14 @@ export const withClientProvider = ({
 // TODO(burdon): Implement context per client for context.
 // TODO(burdon): Callback once all invitations have completed.
 // TODO(burdon): Delay/jitter for creation of other clients.
+type LocalServicesOptions = NonNullable<Parameters<TestBuilder['createLocalClientServices']>[0]>;
+
 export type WithMultiClientProviderProps = InitializeProps &
-  Omit<ClientProviderProps, 'onInitialized'> & { numClients?: number };
+  Omit<ClientProviderProps, 'onInitialized'> & {
+    numClients?: number;
+    /** One relay (e.g. `MemoryEdgeInbox`) shared by every client, so they can message each other without EDGE. */
+    inboxRelay?: LocalServicesOptions['inboxRelay'];
+  };
 
 /**
  * Decorator that creates a scaffold for multiple clients.
@@ -113,6 +119,7 @@ export const withMultiClientProvider = ({
   onCreateSpace,
   onCreateIdentity,
   onInitialized,
+  inboxRelay,
   ...props
 }: WithMultiClientProviderProps): Decorator => {
   return (Story, context) => {
@@ -123,7 +130,7 @@ export const withMultiClientProvider = ({
       const buidler = new TestBuilder();
       return Array.from({ length: numClients }).map(() => {
         return {
-          services: buidler.createLocalClientServices(),
+          services: buidler.createLocalClientServices({ inboxRelay }),
         };
       });
     }, [numClients]);
