@@ -238,6 +238,9 @@ export const hint = (sparql: string, error: string): string => {
   return fixes.length > 0 ? `${error} (${fixes.join(' ')})` : error;
 };
 
+const byIndex = (records: readonly QueryRecord[]): QueryRecord[] =>
+  [...records].sort((left, right) => left.index - right.index);
+
 /** Runs one model-written query, bounded in rows and time; a failure is a record, never an error. */
 export const runQuery = (
   store: Store.Api,
@@ -286,15 +289,18 @@ export const gather = (
 ): Effect.Effect<{ queries: QueryRecord[]; error?: string }, never, LanguageModel.LanguageModel> =>
   Effect.gen(function* () {
     const queries: QueryRecord[] = [];
+    // Calls of one round-trip may run concurrently, so each takes its index before it awaits anything.
+    let issued = 0;
     const deadline = (yield* Clock.currentTimeMillis) + Duration.toMillis(timeBudget);
     const handlers = ExploreToolkit.toLayer({
       sparql: Effect.fn(function* ({ purpose, query }) {
-        if (queries.length >= maxQueries) {
+        if (issued >= maxQueries) {
           return { ok: false, rows: 0, output: `Query budget of ${maxQueries} spent; reply with one sentence now.` };
         }
+        const index = ++issued;
         const { record, rows } = yield* runQuery(
           store,
-          { index: queries.length + 1, purpose, sparql: query },
+          { index, purpose, sparql: query },
           { maxRows, timeout: queryTimeout },
         );
         queries.push(record);
@@ -310,7 +316,7 @@ export const gather = (
     ]);
     // Each round-trip may call the tool several times; a step cap of its own guards a model that
     // keeps replying with refused calls once the query budget is spent.
-    for (let step = 0; step < maxQueries + 2 && queries.length < maxQueries; step++) {
+    for (let step = 0; step < maxQueries + 2 && issued < maxQueries; step++) {
       const remaining = deadline - (yield* Clock.currentTimeMillis);
       if (remaining <= 0) {
         break;
@@ -325,14 +331,14 @@ export const gather = (
         break;
       }
       if (typeof response === 'string') {
-        return { queries, error: response };
+        return { queries: byIndex(queries), error: response };
       }
       if (response.toolCalls.length === 0) {
         break;
       }
       conversation = Prompt.concat(conversation, Prompt.fromResponseParts(response.content));
     }
-    return { queries };
+    return { queries: byIndex(queries) };
   });
 
 /**

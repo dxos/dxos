@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
@@ -99,21 +100,24 @@ describe('Lock', () => {
 
   test('an open interrupted mid-build releases what it acquired', async () => {
     let released = false;
-    const stalled = Layer.effect(
-      Store.Store,
-      Effect.flatMap(
-        Effect.addFinalizer(() =>
-          Effect.sync(() => {
-            released = true;
-          }),
-        ),
-        () => Effect.never,
-      ),
-    );
     await EffectEx.runPromise(
       Effect.gen(function* () {
+        // Completed once the finalizer is registered, so the interrupt lands mid-build and not before it.
+        const acquired = yield* Deferred.make<void>();
+        const stalled = Layer.effect(
+          Store.Store,
+          Effect.gen(function* () {
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                released = true;
+              }),
+            );
+            yield* Deferred.succeed(acquired, undefined);
+            return yield* Effect.never;
+          }),
+        );
         const opening = yield* Effect.forkChild(Effect.scoped(Layer.build(Lock.layer(dir, () => stalled))));
-        yield* Effect.sleep('100 millis');
+        yield* Deferred.await(acquired);
         yield* Fiber.interrupt(opening);
       }),
     );
