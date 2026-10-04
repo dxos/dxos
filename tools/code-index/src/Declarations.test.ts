@@ -61,12 +61,12 @@ describe('Declarations', () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  const find = (name: string) =>
+  const find = (name: string, options?: { limit?: number }) =>
     EffectEx.runPromise(
       Effect.scoped(
         Effect.provide(
           Effect.gen(function* () {
-            return yield* Declarations.find(yield* Store.Store, name);
+            return yield* Declarations.find(yield* Store.Store, name, options);
           }),
           Store.layer(dir),
         ),
@@ -81,6 +81,12 @@ describe('Declarations', () => {
       { path: 'packages/commerce/src/render.test.ts', exported: false, role: 'test', pkg: '@test/commerce' },
     ]);
     expect(found[0].iri).toBe(EXPORTED);
+  });
+
+  test('the store ranks before it limits, so a capped lookup still keeps the definition', async ({ expect }) => {
+    const [only, ...rest] = await find('proxyFetchLegacy', { limit: 1 });
+    expect(only.iri).toBe(EXPORTED);
+    expect(rest).toEqual([]);
   });
 
   test('a dotted name falls back to its last segment, and an unknown name finds nothing', async ({ expect }) => {
