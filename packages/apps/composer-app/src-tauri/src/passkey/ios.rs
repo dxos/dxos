@@ -47,6 +47,7 @@ pub struct PasskeyError {
     name: &'static str,
     cancelled: bool,
     domain: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     code: Option<i64>,
     message: String,
 }
@@ -306,6 +307,15 @@ mod tests {
                 "cancelled": true,
                 "domain": AUTHORIZATION_ERROR_DOMAIN,
                 "code": 1001,
+                "message": "message",
+            })
+        );
+        assert_eq!(
+            serde_json::to_value(PasskeyError::bridge("message")).unwrap(),
+            serde_json::json!({
+                "name": "NativePasskeyError",
+                "cancelled": false,
+                "domain": BRIDGE_ERROR_DOMAIN,
                 "message": "message",
             })
         );

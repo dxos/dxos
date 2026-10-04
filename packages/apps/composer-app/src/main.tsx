@@ -309,14 +309,9 @@ const main = async () => {
 
   let config = await setupConfig();
   if (shouldRunStorageResetMigration(getEnvString(config, 'DX_ENVIRONMENT'))) {
-    try {
-      await runStorageResetMigration();
-      window.location.replace(window.location.href);
-      return;
-    } catch (error) {
-      // The migration retries on the next load; a step this platform cannot complete must not stop boot.
-      log.error('storage reset migration failed', { error: String(error) });
-    }
+    await runStorageResetMigration();
+    window.location.replace(window.location.href);
+    return;
   }
 
   if (

@@ -515,9 +515,9 @@ jobs:
       - name: Set environment variables from secrets and env files
         run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
         env:
-          # TestFlight testers use production accounts, so the iOS app talks to production EDGE, hub and
-          # telemetry whichever environment shipped it; the CrabNebula channel still follows the deploy.
-          ENVIRONMENT: production
+          # Testers sign in with production accounts, so every TestFlight build talks to production EDGE, hub and
+          # telemetry, tagged `testflight` (see env/testflight); the CrabNebula channel still follows the deploy.
+          ENVIRONMENT: testflight
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
@@ -566,6 +566,13 @@ jobs:
 
           keychain="$work/signing.keychain-db"
           password="$(openssl rand -hex 16)"
+          searched=()
+          while IFS= read -r entry; do
+            entry="${entry//\"/}"
+            entry="${entry#"${entry%%[![:space:]]*}"}"
+            [[ -n "$entry" ]] && searched+=("$entry")
+          done < <(security list-keychains -d user)
+          trap 'security list-keychains -d user -s "${searched[@]}"; security delete-keychain "$keychain" || true' EXIT
           security create-keychain -p "$password" "$keychain"
           security set-keychain-settings -lut 3600 "$keychain"
           security unlock-keychain -p "$password" "$keychain"
@@ -573,9 +580,7 @@ jobs:
           security import "$work/certificate.p12" -k "$keychain" -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" > /dev/null
           # codesign only finds identities in keychains on the search list, `--keychain` notwithstanding.
-          searched="$(security list-keychains -d user | tr -d '"')"
-          security list-keychains -d user -s "$keychain" $searched
-          trap 'security list-keychains -d user -s $searched; security delete-keychain "$keychain"' EXIT
+          security list-keychains -d user -s "$keychain" "${searched[@]}"
           identity="$(security find-identity -v -p codesigning "$keychain" | awk '/Apple Distribution/ { print $2; exit }')"
           test -n "$identity" || { echo "::error::No Apple Distribution identity in IOS_CERTIFICATE"; exit 1; }
 
@@ -593,9 +598,18 @@ jobs:
 
           codesign --force --sign "$identity" --keychain "$keychain" --generate-entitlement-der \
             --entitlements "$work/entitlements.plist" "$app"
-          codesign -d --entitlements - --xml "$app" | plutil -p - > "$work/signed.txt"
-          cat "$work/signed.txt"
-          grep -q 'webcredentials:composer.space' "$work/signed.txt"
+          codesign --verify --strict --verbose=2 "$app"
+          codesign -d --entitlements - --xml "$app" > "$work/signed.plist"
+          plutil -p "$work/signed.plist"
+          python3 - "$work/signed.plist" "$work/declared.plist" <<'EOF'
+          import plistlib, sys
+          signed, declared = (plistlib.load(open(path, 'rb')) for path in sys.argv[1:])
+          if not declared:
+              sys.exit('::error::app_iOS.entitlements declares no entitlements')
+          missing = sorted(key for key, value in declared.items() if signed.get(key) != value)
+          if missing:
+              sys.exit(f'::error::The signed app lacks declared entitlements: {missing}')
+          EOF
 
           rm "$ipa"
           (cd "$work/ipa" && zip -qr --symlinks "$OLDPWD/$ipa" .)

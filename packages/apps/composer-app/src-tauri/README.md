@@ -188,24 +188,22 @@ as a `MACOS_PROVISION_PROFILE_<CHANNEL>` secret, select it in `deploy-tauri.yaml
 
 The iOS app creates and redeems `composer.space` passkeys through AuthenticationServices
 (`ios/PasskeyBridge.m`, `src/passkey/ios.rs`), never WebAuthn: its page origin is `tauri://localhost`.
-That needs the `webcredentials:composer.space` associated domain. `gen/apple/project.yml` declares it, and
-`xcodegen` writes it into `gen/apple/app_iOS/app_iOS.entitlements`. The domain side is done: the
-`composer.space` AASA already lists `9428WC5MR8.org.dxos.composer` under `webcredentials`. iOS has one
-App ID for every channel, so there is nothing to register per channel.
+That needs the `webcredentials:composer.space` associated domain:
 
-The signing side is manual, and has to land before the next iOS build: until the profile carries the
-capability, signing fails with `Provisioning profile "..." doesn't support the Associated Domains
-capability`.
+- **Domain:** the `composer.space` AASA lists `9428WC5MR8.org.dxos.composer` under `webcredentials`. iOS
+  has one App ID for every channel, so there is nothing to register per channel.
+- **Profile:** the `org.dxos.composer` App ID has Associated Domains enabled, and the App Store profile in
+  `IOS_MOBILE_PROVISION` allows any domain.
+- **Declaration:** `gen/apple/project.yml` declares the domain, and `xcodegen` writes it into
+  `gen/apple/app_iOS/app_iOS.entitlements`.
+- **Signing:** with App Store Connect API-key credentials, the Tauri CLI exports the IPA without the app's
+  entitlements (tauri-apps/tauri#15663). The deploy workflow's "Restore the app's entitlements in the IPA"
+  step re-signs the app with the profile's entitlements plus the committed declaration, and fails the job
+  if any declared entitlement is missing.
 
-1. In the Apple Developer portal, under Certificates, Identifiers & Profiles > Identifiers, open the
-   `org.dxos.composer` App ID and enable **Associated Domains**. Save; Apple marks the profiles that
-   use the App ID invalid.
-2. Under Profiles, edit the App Store distribution profile for `org.dxos.composer` that CI signs with,
-   regenerate it, and download it.
-3. Store it base64-encoded (`base64 -i <profile>.mobileprovision | pbcopy`) as the `IOS_MOBILE_PROVISION`
-   repository secret.
-4. Regenerate any development profile used for device builds too, or let Xcode's automatic signing
-   pick the capability up.
+TestFlight builds use the `testflight` environment (`.github/workflows/env/testflight`): production EDGE,
+hub and telemetry, since testers sign in with production accounts, tagged `testflight` and wearing the dev
+channel mark.
 
 To check a build, run `codesign -d --entitlements - <Composer.app>` and look for
 `com.apple.developer.associated-domains`. On a device, a missing association surfaces as
