@@ -15,8 +15,14 @@ import { type ActivityState, type SpinnerProps } from './Spinner.tsx';
 // Signals
 //
 
+/** A signal scaled down, so dots peak smaller in the same footprint. */
+const scaled =
+  (signal: DotSignal, scale: number): DotSignal =>
+  (i, j, time) =>
+    signal(i, j, time) * scale;
+
 /** A radial wave about the centre of a `dim × dim` grid. */
-export const radialWave =
+const radialWave =
   (dim: number): DotSignal =>
   (i, j, time) => {
     const centre = (dim - 1) / 2;
@@ -25,16 +31,28 @@ export const radialWave =
   };
 
 /** Each column pulses with a phase-shifted sine: bars sweeping across the grid. */
-export const ripple: DotSignal = (i, j, time) => 0.5 + 0.5 * Math.sin(time * 3 + Math.sin((i + j) / 3) * 0.6);
+const ripple: DotSignal = (i, j, time) => 0.5 + 0.5 * Math.sin(time * 3 + Math.sin((i + j) / 3) * 0.6);
 
-/** A signal scaled down, so dots peak smaller in the same footprint. */
-export const scaled =
-  (signal: DotSignal, scale: number): DotSignal =>
-  (i, j, time) =>
-    signal(i, j, time) * scale;
+/** Seconds per beat, and the gap between its two pulses. */
+const HEARTBEAT_PERIOD = 1.4;
+const HEARTBEAT_GAP = 0.28;
+
+/**
+ * The whole grid beats twice and rests, like a heartbeat: one rhythm across every dot, so it reads as a call for
+ * attention rather than as motion; the corners trail the centre slightly so the beat swells outwards.
+ */
+const heartbeat =
+  (dim: number): DotSignal =>
+  (i, j, time) => {
+    const centre = (dim - 1) / 2;
+    const delay = Math.hypot(i - centre, j - centre) * 0.04;
+    const phase = (time - delay) % HEARTBEAT_PERIOD;
+    const pulse = (at: number) => Math.exp(-((phase - at) ** 2) / (2 * 0.05 ** 2));
+    return Math.max(pulse(0.1), 0.7 * pulse(0.1 + HEARTBEAT_GAP));
+  };
 
 /** Randomly pings dots every `interval` milliseconds; each decays back to zero (half-life ≈ 0.46s). */
-export const useRandomPing = (dim: number, interval: number): DotSignal => {
+const useRandomPing = (dim: number, interval: number): DotSignal => {
   const valuesRef = useRef<Float32Array>(new Float32Array(dim * dim));
   const lastTimeRef = useRef(0);
 
@@ -43,6 +61,7 @@ export const useRandomPing = (dim: number, interval: number): DotSignal => {
     lastTimeRef.current = 0;
   }, [dim]);
 
+  // Thinking.
   useEffect(() => {
     const id = setInterval(() => {
       valuesRef.current[Math.floor(Math.random() * valuesRef.current.length)] = 1;
@@ -181,8 +200,7 @@ const pixels = (size: Size): number => (size === 'px' ? 1 : size * 4);
 // state keeps the spinner's size and dot positions.
 const SIGNALS: Record<Exclude<ActivityState, 'thinking'>, DotSignal> = {
   ready: scaled(radialWave(DIM), 0.6),
-  // The ready wave: the calm motion stays, the colour carries the warning.
-  alert: scaled(radialWave(DIM), 0.6),
+  alert: scaled(heartbeat(DIM), 0.8),
   error: scaled(ripple, 0.6),
 };
 
@@ -193,7 +211,7 @@ const COLORS: Record<ActivityState, string> = {
   error: 'text-rose-500',
 };
 
-/** A dot matrix: a wave when ready (amber on alert), random pings while thinking, a sweep on error. */
+/** A dot matrix: a wave when ready, random pings while thinking, an amber heartbeat on alert, a sweep on error. */
 export const PulseSpinner = ({ classNames, state = 'ready', size = 5, onClick }: SpinnerProps) => {
   const thinking = useRandomPing(DIM, 100);
   const maxRadius = pixels(size) / DIM / 2;
