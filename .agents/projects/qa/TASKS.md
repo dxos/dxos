@@ -38,7 +38,7 @@ across whichever package owns the fix. Findings and rationale live in
 
 Implemented and moved. The component, its dialect seam and the full design write-up now live in
 `packages/ui/react-ui-html/src/HtmlViewer/` — see its
-[DESIGN.md](../../../packages/ui/react-ui-html/src/HtmlViewer/DESIGN.md), which is
+[DESIGN.md](../../../packages/ui/react-ui-html/src/docs/DESIGN.md), which is
 the current record for everything below.
 
 - [x] **Capture real email fixtures to analyze against** — done in the MailboxSync

@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-ui-form",
+  "name": "@dxos/react-ui-query",
   "version": "0.12.0",
-  "description": "Data components.",
+  "description": "Editors for ECHO queries: a query-language input and a type/tag form.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -17,11 +17,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types.ts",
-      "types": "./dist/types/src/types.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -29,11 +24,6 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./annotations": {
-      "source": "./src/annotations.ts",
-      "types": "./dist/types/src/annotations.d.ts",
-      "import": "./dist/lib/annotations.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -47,28 +37,18 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
-    "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-doc": "workspace:*",
-    "@dxos/echo-react": "workspace:*",
-    "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
+    "@dxos/echo-query": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/lit-ui": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-query": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/atom-react": "catalog:",
-    "date-fns": "catalog:"
+    "@lezer/common": "catalog:",
+    "@lezer/highlight": "catalog:",
+    "json5": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-client": "workspace:*",

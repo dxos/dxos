@@ -34,7 +34,7 @@ const DefaultStory = ({ sample, loadRemoteImages, compare }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-html/Html',
+  title: 'ui/react-ui-html/HtmlViewer',
   component: DefaultStory,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],

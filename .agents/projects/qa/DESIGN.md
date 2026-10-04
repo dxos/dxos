@@ -3,7 +3,7 @@
 Rationale behind the items in [TASKS.md](TASKS.md). One section per investigation.
 
 > HTML rendering (the `HtmlViewer`/`Html` dark-mode, dialect, and prior-art analysis) moved to
-> [`packages/ui/react-ui-html/src/HtmlViewer/DESIGN.md`](../../../packages/ui/react-ui-html/src/HtmlViewer/DESIGN.md),
+> [`packages/ui/react-ui-html/src/docs/DESIGN.md`](../../../packages/ui/react-ui-html/src/docs/DESIGN.md),
 > next to the code it describes.
 
 ## 1. Mailbox "Sync" routine with no visible Operation

@@ -33,15 +33,20 @@ const DefaultStory = ({ sample, loadRemoteImages, compare }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-html/Html/email',
-  component: DefaultStory,
+  title: 'ui/react-ui-html/testing',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
   argTypes: {
-    sample: { control: 'select', options: Object.keys(EMAIL_SAMPLES) },
+    sample: {
+      control: 'select',
+      options: Object.keys(EMAIL_SAMPLES),
+    },
   },
-  args: { sample: 'personal', compare: true },
+  args: {
+    sample: 'personal',
+    compare: true,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

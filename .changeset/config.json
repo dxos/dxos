@@ -173,6 +173,7 @@
       "@dxos/react-ui-menu",
       "@dxos/react-ui-mosaic",
       "@dxos/react-ui-pickers",
+      "@dxos/react-ui-query",
       "@dxos/react-ui-rdf",
       "@dxos/react-ui-search",
       "@dxos/react-ui-syntax-highlighter",

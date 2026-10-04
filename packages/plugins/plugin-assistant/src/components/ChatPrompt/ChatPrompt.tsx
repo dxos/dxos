@@ -91,11 +91,11 @@ export const ChatPrompt = ({
   autoFocus = true,
   queueSize = 0,
   maxQueue = DEFAULT_MAX_QUEUE,
-  onPresetChange,
   settings = true,
   presets,
   preset,
   companionTo,
+  onPresetChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
   const processorState = getProcessorState(processor);

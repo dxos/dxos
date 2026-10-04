@@ -247,7 +247,7 @@ export const Compare = ({ render }: { render: () => ReactNode }) => (
 export const SampleFrame = ({ note, children }: { note: string; children: ReactNode }) => (
   <Panel.Root>
     <Panel.Header classNames='flex items-center p-1 text-fg-muted'>{note}</Panel.Header>
-    <Panel.Body classNames='overflow-auto'>{children}</Panel.Body>
+    <Panel.Body classNames='p-2 overflow-auto'>{children}</Panel.Body>
   </Panel.Root>
 );
 

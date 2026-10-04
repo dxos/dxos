@@ -25,11 +25,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./Spinner": {
-      "source": "./src/components/Spinner/index.ts",
-      "types": "./dist/types/src/components/Spinner/index.d.ts",
-      "import": "./dist/lib/components/Spinner.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -43,32 +38,16 @@
   ],
   "dependencies": {
     "@ark-ui/react": "catalog:",
-    "@codemirror/language": "catalog:",
-    "@codemirror/state": "catalog:",
-    "@codemirror/view": "catalog:",
-    "@dxos/echo": "workspace:*",
-    "@dxos/echo-query": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/progress": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/ui": "workspace:*",
-    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@lezer/common": "catalog:",
-    "@lezer/highlight": "catalog:",
     "effect": "catalog:",
-    "json5": "catalog:",
     "motion": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",

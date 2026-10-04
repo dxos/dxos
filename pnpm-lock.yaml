@@ -10835,12 +10835,12 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks
-      '@dxos/react-ui-components':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-components
       '@dxos/react-ui-graph':
         specifier: workspace:*
         version: link:../../ui/react-ui-graph
+      '@dxos/react-ui-query':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -12077,6 +12077,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-query':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
@@ -15395,9 +15398,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-components':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-components
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../ui/react-ui-dnd
@@ -15413,6 +15413,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-query':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -16158,6 +16161,9 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../../ui/react-ui-pickers
+      '@dxos/react-ui-query':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
@@ -17046,9 +17052,6 @@ importers:
       '@dxos/react-ui-calendar':
         specifier: workspace:*
         version: link:../../ui/react-ui-calendar
-      '@dxos/react-ui-components':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-components
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -17061,6 +17064,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-query':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query
       '@dxos/react-ui-task':
         specifier: workspace:*
         version: link:../../ui/react-ui-task
@@ -20104,9 +20110,6 @@ importers:
       '@dxos/react-ui-chat':
         specifier: workspace:*
         version: link:../../ui/react-ui-chat
-      '@dxos/react-ui-components':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-components
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -20119,6 +20122,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-query':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -20856,9 +20862,6 @@ importers:
       '@dxos/react-ui-chat':
         specifier: workspace:*
         version: link:../../ui/react-ui-chat
-      '@dxos/react-ui-components':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-components
       '@dxos/react-ui-debug':
         specifier: workspace:*
         version: link:../../ui/react-ui-debug
@@ -20868,6 +20871,9 @@ importers:
       '@dxos/react-ui-masonry':
         specifier: workspace:*
         version: link:../../ui/react-ui-masonry
+      '@dxos/react-ui-query':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -21902,54 +21908,18 @@ importers:
       '@ark-ui/react':
         specifier: 'catalog:'
         version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@codemirror/language':
-        specifier: 'catalog:'
-        version: 6.12.4
-      '@codemirror/state':
-        specifier: 'catalog:'
-        version: 6.7.6
-      '@codemirror/view':
-        specifier: 'catalog:'
-        version: 6.43.13
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/echo-query':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-query
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
       '@dxos/progress':
         specifier: workspace:*
         version: link:../../core/compute/progress
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
-      '@dxos/ui':
-        specifier: workspace:*
-        version: link:../ui
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../ui-editor
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      '@lezer/common':
-        specifier: ^1.5.2
-        version: 1.5.2
-      '@lezer/highlight':
-        specifier: ^1.2.3
-        version: 1.2.3
       effect:
         specifier: 4.0.0
         version: 4.0.0
-      json5:
-        specifier: 'catalog:'
-        version: 2.2.3
       motion:
         specifier: 'catalog:'
         version: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -21957,21 +21927,12 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
       '@dxos/react-ui-markdown':
         specifier: workspace:*
         version: link:../react-ui-markdown
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../react-ui-syntax-highlighter
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -22486,15 +22447,15 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
-      '@dxos/react-ui-components':
-        specifier: workspace:*
-        version: link:../react-ui-components
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
+      '@dxos/react-ui-query':
+        specifier: workspace:*
+        version: link:../react-ui-query
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -23353,6 +23314,82 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.2.1'
+        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/ui/react-ui-query:
+    dependencies:
+      '@codemirror/language':
+        specifier: 'catalog:'
+        version: 6.12.4
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.6
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.13
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-query
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../ui-editor
+      '@lezer/common':
+        specifier: ^1.5.2
+        version: 1.5.2
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
+      json5:
+        specifier: 'catalog:'
+        version: 2.2.3
+    devDependencies:
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../react-ui-syntax-highlighter
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      effect:
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7

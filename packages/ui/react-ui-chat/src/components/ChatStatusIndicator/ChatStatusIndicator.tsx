@@ -5,16 +5,14 @@
 import React, { useEffect, useState } from 'react';
 
 import { type ThemedClassName, Tooltip, useTimeout } from '@dxos/react-ui';
-// Leaf import (not the package barrel): the barrel re-exports QueryEditor/QueryForm, which pull the
-// heavy @dxos/ai + @dxos/echo-query stack (tiktoken wasm, etc.) — inappropriate for lean consumers
-// like the browser extension. Importing the Spinner leaf keeps that graph out.
-import { PulseSpinner, type SpinnerProps } from '@dxos/react-ui-components/Spinner';
+import { ShapeSpinner, type SpinnerProps } from '@dxos/react-ui-components';
 import { mx } from '@dxos/ui-theme';
 
-const period = 3_000;
+const ANIMATION_PERIOD = 3_000;
 
 export type ChatStatusIndicatorProps = ThemedClassName<
   {
+    // TODO(burdon): Preset (model) triggers reset.
     preset?: string;
     processing?: boolean;
     error?: Error;
@@ -28,14 +26,14 @@ export const ChatStatusIndicator = ({ classNames, preset, processing, error, ...
     async () => {
       setInit(true);
     },
-    period / 2,
+    ANIMATION_PERIOD / 2,
     [preset],
   );
 
   return (
     <div className={mx('relative flex', classNames)}>
-      <PulseSpinner
-        duration={period}
+      <ShapeSpinner
+        duration={ANIMATION_PERIOD}
         state={!init ? 'alert' : error ? 'error' : processing ? 'thinking' : 'ready'}
         {...props}
       />

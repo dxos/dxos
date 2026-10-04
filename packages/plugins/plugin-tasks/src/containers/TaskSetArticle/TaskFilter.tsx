@@ -6,8 +6,8 @@ import React, { type PropsWithChildren, type Ref } from 'react';
 
 import { type Database, type Tag } from '@dxos/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
+import { QueryEditor } from '@dxos/react-ui-query';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
