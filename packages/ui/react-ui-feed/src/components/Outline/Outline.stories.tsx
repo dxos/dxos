@@ -138,6 +138,48 @@ export const Dismissal: Story = {
 };
 
 /**
+ * The card opens beside the tick it describes and follows the pointer along the rail.
+ *
+ * The card mounts after the popover opens (it is keyed to the tick), so it was never measured and sat at the
+ * viewport's top-left corner.
+ */
+export const Placement: Story = {
+  args: { markers: defaultMarkers },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const ticks = canvasElement.querySelectorAll<HTMLElement>('[role="navigation"] button');
+    const settle = async () => {
+      for (let frame = 0; frame < 20; frame++) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+    };
+
+    const placementAt = async (index: number) => {
+      const tick = ticks[index];
+      const bounds = tick.getBoundingClientRect();
+      tick.dispatchEvent(
+        new PointerEvent('pointerover', {
+          bubbles: true,
+          pointerType: 'mouse',
+          clientX: bounds.x + 4,
+          clientY: bounds.y + 4,
+        }),
+      );
+      await settle();
+      const positioner = doc.querySelector<HTMLElement>('[data-scope="popover"][data-part="positioner"]');
+      const card = positioner?.getBoundingClientRect();
+      return {
+        beside: card != null && card.left >= bounds.right,
+        centred: card != null && Math.abs(card.top + card.height / 2 - (bounds.top + bounds.height / 2)) <= 2,
+      };
+    };
+
+    await expect(await placementAt(3)).toEqual({ beside: true, centred: true });
+    await expect(await placementAt(8)).toEqual({ beside: true, centred: true });
+  },
+};
+
+/**
  * The arrows take the card over from the pointer, and pointing takes it back.
  *
  * A reader clicks a tick and then presses an arrow without moving the mouse — which is the whole
