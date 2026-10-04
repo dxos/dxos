@@ -925,10 +925,14 @@ describe('buildSessionTimeline', () => {
     expect(laneOf(parent)?.start).toBe(1_000);
     expect(laneOf(child)?.start).toBe(1_000);
     expect(laneOf(grandchild)?.start).toBe(1_000);
-    // Its own nodes stay where they happened; only the bar reaches back.
-    expect(
-      timeline.markers.filter((marker) => marker.laneId === laneOf(parent)?.id).map(({ timestamp }) => timestamp),
-    ).toEqual([3_000]);
+    // It carries every descendant's start and finish beside its own move, so its first node is where the work began.
+    const nodesOf = (task: Task.Task) =>
+      timeline.markers
+        .filter((marker) => marker.laneId === laneOf(task)?.id)
+        .map(({ timestamp }) => timestamp)
+        .sort((left, right) => left - right);
+    expect(nodesOf(parent)).toEqual([1_000, 2_000, 2_500, 3_000, 4_000]);
+    expect(nodesOf(child)).toEqual([1_000, 2_000, 2_500, 4_000]);
   });
 
   it.effect(

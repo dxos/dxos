@@ -190,6 +190,13 @@
   .dx-card-row > [data-rail='end'] {
     grid-column: content-end / full-end;
   }
+  /* The end rail's content is centred in the rail, and may be wider than a block (a unit such as `KB/s`). */
+  .dx-card-row > .dx-block[data-rail='end'] {
+    justify-self: stretch;
+    width: auto;
+    min-width: var(--dx-block-size);
+    white-space: nowrap;
+  }
   .dx-card-row-main {
     display: grid;
     flex: 1;
@@ -200,6 +207,12 @@
   .dx-card-row[data-trailing] > .dx-card-row-main {
     grid-column: content-start / full-end;
     grid-template-columns: minmax(0, 1fr) minmax(var(--dx-card-trailing-min), auto);
+  }
+  .dx-card-row[data-span='end'] > .dx-card-row-main {
+    grid-column: content-start / full-end;
+  }
+  .dx-card-row[data-span='full'] > .dx-card-row-main {
+    grid-column: full-start / full-end;
   }
   .dx-card-row-content {
     flex: 1;

@@ -971,6 +971,12 @@ export const TestScrollerAtFoot: Story = {
         ).toBeLessThanOrEqual(4);
         // The lanes stop well short of the foot: the frame, not its content, reaches it.
         await expect(chart.getBoundingClientRect().bottom).toBeLessThan(viewport.getBoundingClientRect().bottom - 100);
+        // The bar spans only the chart: its thumb starts right of the sticky legend, which does not scroll.
+        const thumb = frame.querySelector<HTMLElement>('[data-scroll-thumb="horizontal"]');
+        if (!thumb) {
+          throw new Error('No horizontal thumb.');
+        }
+        await expect(thumb.getBoundingClientRect().left).toBeGreaterThanOrEqual(chart.getBoundingClientRect().left);
       },
       { timeout: 10_000 },
     );
