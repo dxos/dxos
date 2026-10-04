@@ -112,6 +112,15 @@ export class TurnFailed extends Schema.TaggedClass<TurnFailed>('code-index/TurnF
 }) {}
 
 /**
+ * A model reply the agent could not use — a malformed tool call — and went back to the model about.
+ * The turn carries on; this is recorded so the transcript shows why it took an extra step.
+ */
+export class StepRetried extends Schema.TaggedClass<StepRetried>('code-index/StepRetried')('StepRetried', {
+  message: Schema.String,
+  turnId: TurnId,
+}) {}
+
+/**
  * The turn is over. Recorded so "is the agent still working?" is answered by the log rather than
  * inferred from the last message's shape — a second client watching the same project needs the
  * same answer, and prose arrives mid-turn as well as at the end.
@@ -129,6 +138,7 @@ export const Event = Schema.Union([
   Presented,
   CanvasCleared,
   TitleSet,
+  StepRetried,
   TurnEnded,
   TurnFailed,
 ]);

@@ -91,12 +91,21 @@ export const signature = (reasoners: readonly Reasoner[]): string =>
     .update(JSON.stringify(reasoners.map((reasoner) => [reasoner.name, 'rules' in reasoner ? reasoner.rules : null])))
     .digest('hex');
 
+export type RunOptions = {
+  /** Told about each reasoner as it finishes; rule files finish together, in one native call. */
+  readonly onOutcome?: (outcome: Outcome) => Effect.Effect<void>;
+};
+
 /**
  * Run each reasoner in order, replacing or incrementally maintaining its graph, and record the facts
  * they ran over (`Store.reasoned`). Returns what each concluded.
  */
-export const run = (reasoners: readonly Reasoner[]): Effect.Effect<Outcome[], Store.StoreError, Store.Store> =>
+export const run = (
+  reasoners: readonly Reasoner[],
+  options: RunOptions = {},
+): Effect.Effect<Outcome[], Store.StoreError, Store.Store> =>
   Effect.gen(function* () {
+    const notify = options.onOutcome ?? (() => Effect.void);
     const store = yield* Store.Store;
     // Read first: a pass writes its own graph, which is a conclusion and not a change to the facts.
     const generation = yield* store.generation();
@@ -108,12 +117,14 @@ export const run = (reasoners: readonly Reasoner[]): Effect.Effect<Outcome[], St
       const started = Date.now();
       const derived = yield* reasoner.derive(store);
       yield* store.writePass(reasoner.name, derived);
-      outcomes.push({
+      const outcome: Outcome = {
         name: reasoner.name,
         derived: derived.length,
         durationMs: Date.now() - started,
         incremental: false,
-      });
+      };
+      outcomes.push(outcome);
+      yield* notify(outcome);
     }
     // A pass that ran before but not now must leave no premise behind; the meta row names them.
     const ran = outcomes.map((outcome) => outcome.name);
@@ -124,6 +135,7 @@ export const run = (reasoners: readonly Reasoner[]): Effect.Effect<Outcome[], St
     yield* store.setMeta(PASSES_KEY, ran.join('\n'));
     const rules = reasoners.filter((reasoner): reasoner is RuleFile => 'rules' in reasoner);
     const ruled = yield* store.reasonAll(rules);
+    yield* Effect.forEach(ruled, notify, { discard: true });
     const all = [...outcomes, ...ruled];
     yield* store.recordReasoned(
       signature(reasoners),

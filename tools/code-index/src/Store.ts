@@ -20,6 +20,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import * as Cooperative from './internal/cooperative.ts';
 import type * as Graph from './internal/graph.ts';
 import * as Native from './internal/native.ts';
 import { encodeDocument } from './internal/ntriples.ts';
@@ -630,7 +631,9 @@ const make = (dir: string, readOnly: boolean): Effect.Effect<Api, StoreError, Sq
             const graph = Ontology.passGraphIri(pass);
             yield* recordDerived([graph.value]);
             const stale = yield* match(undefined, undefined, undefined, graph);
-            const next = quads.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, graph));
+            const next = yield* Cooperative.map(quads, (quad) =>
+              DataFactory.quad(quad.subject, quad.predicate, quad.object, graph),
+            );
             // Only the difference is written, so the native journal sees what actually changed.
             const key = (quad: Quad) =>
               JSON.stringify([
@@ -640,10 +643,10 @@ const make = (dir: string, readOnly: boolean): Effect.Effect<Api, StoreError, Sq
                 quad.object.value,
                 quad.object.termType === 'Literal' ? [quad.object.datatype.value, quad.object.language] : [],
               ]);
-            const kept = new Set(next.map(key));
-            const had = new Set(stale.map(key));
-            yield* graphs.delQuads(stale.filter((quad) => !kept.has(key(quad))));
-            yield* graphs.putQuads(next.filter((quad) => !had.has(key(quad))));
+            const kept = new Set(yield* Cooperative.map(next, key));
+            const had = new Set(yield* Cooperative.map(stale, key));
+            yield* graphs.delQuads(yield* Cooperative.filter(stale, (quad) => !kept.has(key(quad))));
+            yield* graphs.putQuads(yield* Cooperative.filter(next, (quad) => !had.has(key(quad))));
           }),
         ),
 

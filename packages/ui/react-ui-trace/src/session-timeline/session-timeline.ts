@@ -798,25 +798,65 @@ export const buildSessionTimeline = ({
     });
   }
 
-  // A parent task's lane carries each sub-task's start and finish as nodes of its own, so the parent
-  // reads as the span of its sub-tasks' work rather than one unbroken bar.
+  // A parent task's lane carries each of its sub-tasks' starts and finishes as nodes of its own, so it reads as the
+  // span of the work it contains rather than one unbroken bar, and its first node is where that work began. Read from
+  // the task tree rather than the lanes' `parentId`, which joins a sub-task to its parent only when both sit on one
+  // checklist, and carried to every ancestor, since a grandchild's work is inside its grandparent too.
   const laneById = new Map(lanes.map((lane) => [lane.id, lane]));
+  const laneByTaskId = new Map(lanes.flatMap((lane) => (lane.taskId === undefined ? [] : [[lane.taskId, lane]])));
+  const ancestorLanesOf = (lane: Lane): Lane[] => {
+    const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);
+    const ancestors: Lane[] = [];
+    const seen = new Set<string>(task ? [task.id] : []);
+    for (
+      let parent = task && Task.getParentTask(task);
+      parent && !seen.has(parent.id);
+      parent = Task.getParentTask(parent)
+    ) {
+      seen.add(parent.id);
+      const parentLane = laneByTaskId.get(parent.id);
+      if (parentLane?.kind === 'task') {
+        ancestors.push(parentLane);
+      }
+    }
+    return ancestors;
+  };
   for (const marker of [...markers]) {
     const lane = laneById.get(marker.laneId);
-    const parent = lane?.kind === 'task' && lane.parentId ? laneById.get(lane.parentId) : undefined;
-    if (!lane || parent?.kind !== 'task' || !isStatusChange(marker.detail)) {
+    if (lane?.kind !== 'task' || !isStatusChange(marker.detail)) {
       continue;
     }
     const { status } = marker.detail;
     if (status !== 'started' && !CLOSED_STATUSES.has(status)) {
       continue;
     }
-    markers.push({
-      ...marker,
-      id: `${parent.id}:sub:${marker.id}`,
-      laneId: parent.id,
-      label: `${lane.label}: ${status}`,
-    });
+    for (const ancestor of ancestorLanesOf(lane)) {
+      markers.push({
+        ...marker,
+        id: `${ancestor.id}:sub:${marker.id}`,
+        laneId: ancestor.id,
+        label: `${lane.label}: ${status}`,
+      });
+    }
+  }
+
+  // A parent task encloses its sub-tasks, so its bar begins no later than the earliest of theirs. Read
+  // from the task tree rather than the lanes' `parentId`, which joins a sub-task to its parent only when
+  // both sit on one checklist: a parent drawn from its edit history alone, or a sub-task worked by
+  // another session, would otherwise begin at its own `started` move, after work it contains.
+  for (const lane of lanes) {
+    const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);
+    if (!task || lane.start === undefined) {
+      continue;
+    }
+    const seen = new Set<string>([task.id]);
+    for (let parent = Task.getParentTask(task); parent && !seen.has(parent.id); parent = Task.getParentTask(parent)) {
+      seen.add(parent.id);
+      const parentLane = laneByTaskId.get(parent.id);
+      if (parentLane?.start !== undefined && lane.start < parentLane.start) {
+        parentLane.start = lane.start;
+      }
+    }
   }
 
   // Hashed from the mnemonic, as the task's mnemonic chip is, so a lane and its chip share a hue.

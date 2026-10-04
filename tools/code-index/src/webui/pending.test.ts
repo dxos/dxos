@@ -75,6 +75,15 @@ describe('busy state', () => {
     expect([...pending]).toEqual(['kept']);
   });
 
+  test('a turn abandoned without an end event is closed by the next turn that ends', ({ expect }) => {
+    // A server killed mid-turn writes no end event; the next turn could only start once it was gone.
+    const client = session();
+    client.receive(new Events.UserMessage({ text: 'orphan', turnId: 'orphan' }));
+    client.receive(new Events.UserMessage({ text: 'next', turnId: 'next' }));
+    client.receive(new Events.TurnEnded({ steps: 1, turnId: 'next' }));
+    expect(client.busy()).toBe(false);
+  });
+
   test('a log written before turn ids existed still opens and closes turns', ({ expect }) => {
     const client = session();
     client.receive(new Events.UserMessage({ text: 'legacy' }));
