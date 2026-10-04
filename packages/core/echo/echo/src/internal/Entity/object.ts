@@ -94,8 +94,15 @@ export const makeObjectType = <Self, _Schema extends Schema.Top>(
   options?: { id?: EntityId },
 ): Type.ObjClass<Self, Schema.Schema.Type<_Schema>, {}> => {
   const type = EchoObjectSchema(dxn, options)(schema);
-  const constructor = function ObjectType() {};
+  return makeTypeClass<Type.ObjClass<Self, Schema.Schema.Type<_Schema>, {}>>(function ObjectType() {}, type);
+};
+
+/**
+ * Makes `constructor` a class that extends the type entity, so a type can be declared with `class Foo extends ...`.
+ * Shared by the struct-shaped kinds so the one cast it needs lives in one place.
+ */
+export const makeTypeClass = <Class>(constructor: () => void, type: object): Class => {
   Object.setPrototypeOf(constructor, type);
   // Boundary cast: constructor/prototype wiring cannot be expressed in TypeScript's type system.
-  return constructor as unknown as Type.ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+  return constructor as unknown as Class;
 };

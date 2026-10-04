@@ -9,7 +9,7 @@ import { type DXN, type EntityId } from '@dxos/keys';
 import type * as Type from '../../Type.ts';
 import { EntityKind } from '../common/types/index.ts';
 import { type EchoTypeOptions, type EchoTypeSchema } from './entity.ts';
-import { makeStructEntitySchema } from './object.ts';
+import { makeStructEntitySchema, makeTypeClass } from './object.ts';
 
 /**
  * Event schema type with kind marker.
@@ -38,8 +38,5 @@ export const makeEventType = <Self, _Schema extends Schema.Top>(
   options?: { id?: EntityId },
 ): Type.EventClass<Self, Schema.Schema.Type<_Schema>, {}> => {
   const type = EchoEventSchema(dxn, options)(schema);
-  const constructor = function EventType() {};
-  Object.setPrototypeOf(constructor, type);
-  // Boundary cast: constructor/prototype wiring cannot be expressed in TypeScript's type system.
-  return constructor as unknown as Type.EventClass<Self, Schema.Schema.Type<_Schema>, {}>;
+  return makeTypeClass<Type.EventClass<Self, Schema.Schema.Type<_Schema>, {}>>(function EventType() {}, type);
 };
