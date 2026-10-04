@@ -881,14 +881,14 @@ export const TestChartFillsRow: Story = {
   decorators: [(Story) => <div className='w-[800px]'>{Story()}</div>],
   play: async ({ canvasElement }) => {
     await waitFor(
-      () => {
+      async () => {
         const chart = canvasElement
           .querySelector<HTMLElement>('svg')
           ?.closest<HTMLElement>('[data-scope="scroll-area"]');
         if (!chart) {
           throw new Error('No chart.');
         }
-        expect(chart.getBoundingClientRect().width).toBeGreaterThan(200);
+        await expect(chart.getBoundingClientRect().width).toBeGreaterThan(200);
       },
       { timeout: 10_000 },
     );
