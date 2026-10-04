@@ -15,9 +15,8 @@ import React, {
 import { useAttention } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Switch from '@dxos/react-ui/Switch';
+import * as Input from '@dxos/react-ui/Input';
 import * as Theme from '@dxos/react-ui/Theme';
-import * as Toggle from '@dxos/react-ui/Toggle';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
@@ -52,7 +51,7 @@ type ItemProps<T> = { menu: MenuActions } & T;
 
 type ActionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> & {
   action: MenuAction | MenuItemGroup<DropdownMenuItemGroupProperties>;
-  variant: Button.ButtonVariant;
+  variant: Button.Variant;
   iconSize?: Util.Size;
   caretDown?: boolean;
   classNames?: ClassNameValue;
@@ -75,11 +74,11 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
       ref: forwardedRef,
     };
     return icon && iconOnly ? (
-      <Button.Button {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
+      <Button.Root {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
     ) : (
-      <Button.Button {...common} icon={icon}>
+      <Button.Root {...common} icon={icon}>
         <ActionLabel action={action} />
-      </Button.Button>
+      </Button.Root>
     );
   },
 );
@@ -155,11 +154,11 @@ const ToggleToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   };
 
   return icon && iconOnly ? (
-    <Toggle.Toggle {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
+    <Button.Toggle {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
   ) : (
-    <Toggle.Toggle {...common} icon={icon}>
+    <Button.Toggle {...common} icon={icon}>
       <ActionLabel action={action} />
-    </Toggle.Toggle>
+    </Button.Toggle>
   );
 };
 
@@ -182,7 +181,7 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   }
 
   const control = (
-    <Switch.Switch
+    <Input.Switch
       checked={checked}
       disabled={disabled}
       onCheckedChange={handleCheckedChange}

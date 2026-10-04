@@ -13,7 +13,7 @@ import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import * as Field from '../Field/Field.tsx';
-import * as PinInput from './PinInput.tsx';
+import { PinInput } from './PinInput.tsx';
 
 /** Types with the runner's real keyboard, so zag's `beforeinput` validation (numeric cells) sees trusted input. */
 const realType = async (text: string) => {
@@ -28,7 +28,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
     <>
       <Field.Root>
         <Field.Label>Code</Field.Label>
-        <PinInput.PinInput
+        <PinInput
           otp
           value={value}
           onValueChange={setValue}
@@ -42,16 +42,16 @@ const DefaultStory = ({ size }: SizeArgs) => {
       </Field.Root>
       <Field.Root>
         <Field.Label>PIN</Field.Label>
-        <PinInput.PinInput length={4} mask defaultValue='12' data-testid={`masked-${size}`} />
+        <PinInput length={4} mask defaultValue='12' data-testid={`masked-${size}`} />
       </Field.Root>
       <Field.Root invalid>
         <Field.Label>Expired</Field.Label>
-        <PinInput.PinInput length={4} type='alphanumeric' defaultValue='AB12' data-testid={`invalid-${size}`} />
+        <PinInput length={4} type='alphanumeric' defaultValue='AB12' data-testid={`invalid-${size}`} />
         <Field.ErrorText>The code has expired.</Field.ErrorText>
       </Field.Root>
       <Field.Root disabled>
         <Field.Label>Locked</Field.Label>
-        <PinInput.PinInput length={4} data-testid={`disabled-${size}`} />
+        <PinInput length={4} data-testid={`disabled-${size}`} />
       </Field.Root>
     </>
   );

@@ -13,8 +13,8 @@ import { random } from '@dxos/random';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import * as Field from '@dxos/react-ui/Field';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Switch from '@dxos/react-ui/Switch';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -80,7 +80,7 @@ const DefaultStory = (props: TogglePanelRootProps) => {
       <Panel.Header>
         <Toolbar.Root>
           <Field.Root>
-            <Switch.Switch checked={running} onCheckedChange={({ checked }) => setRunning(checked)} />
+            <Input.Switch checked={running} onCheckedChange={({ checked }) => setRunning(checked)} />
           </Field.Root>
           <div className='grow' />
           <div>{count}</div>

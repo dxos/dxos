@@ -12,14 +12,14 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Checkbox from './Checkbox.tsx';
+import { Checkbox } from './Checkbox.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Checkbox.Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
-    <Checkbox.Checkbox label='Some selected' checked='indeterminate' />
-    <Checkbox.Checkbox aria-label='Unlabelled' />
-    <Checkbox.Checkbox label='Disabled' disabled />
+    <Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
+    <Checkbox label='Some selected' checked='indeterminate' />
+    <Checkbox aria-label='Unlabelled' />
+    <Checkbox label='Disabled' disabled />
   </>
 );
 

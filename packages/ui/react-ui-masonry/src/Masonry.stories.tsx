@@ -149,13 +149,13 @@ const DefaultStory = (props: MasonryRootProps) => {
       <Panel.Header>
         <Toolbar.Root>
           {ITEM_COUNTS.map((count) => (
-            <Button.Button key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
+            <Button.Root key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
               {count}
-            </Button.Button>
+            </Button.Root>
           ))}
-          <Button.Button onClick={addOne}>Add one</Button.Button>
-          <Button.Button onClick={removeOne}>Remove one</Button.Button>
-          <Button.Button onClick={() => setVisible([])}>Clear</Button.Button>
+          <Button.Root onClick={addOne}>Add one</Button.Root>
+          <Button.Root onClick={removeOne}>Remove one</Button.Root>
+          <Button.Root onClick={() => setVisible([])}>Clear</Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

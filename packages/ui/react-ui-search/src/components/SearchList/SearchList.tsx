@@ -29,9 +29,9 @@ import React, {
 } from 'react';
 
 import { type EscapeBehavior, Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
-import * as Container from '@dxos/react-ui/Container';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -230,12 +230,12 @@ const SearchListViewport = Util.composable<HTMLDivElement, SearchListViewportPro
   ({ padding = true, children, ...props }, forwardedRef) => {
     // Inside a grid (a dialog or panel body) the list joins its host's gutters, so its rows share the content track
     // and the thumb lands in the host's end gutter; standalone it keeps its own inset.
-    const inGrid = Container.useInGrid();
+    const inGrid = Layout.useInGrid();
     return (
       <ScrollArea.Root {...Util.composableProps<HTMLDivElement>(props)} role='listbox' ref={forwardedRef}>
         {inGrid ? (
           <ScrollArea.Viewport asChild>
-            <Container.Container gutter='inherit'>{children}</Container.Container>
+            <Layout.Container gutter='inherit'>{children}</Layout.Container>
           </ScrollArea.Viewport>
         ) : (
           <ScrollArea.Viewport classNames={padding ? 'px-1' : undefined}>{children}</ScrollArea.Viewport>

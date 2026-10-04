@@ -39,9 +39,9 @@ export const ScriptSettings = ({ settings, onSettingsChange, scope, onAuthentica
               label={t('authenticate-action.label')}
               description={t('authenticate-action.description')}
             >
-              <Button.Button disabled={!onSettingsChange} onClick={onAuthenticate}>
+              <Button.Root disabled={!onSettingsChange} onClick={onAuthenticate}>
                 {t('authenticate-button.label')}
-              </Button.Button>
+              </Button.Root>
             </Form.Field>
             <Form.Fields />
           </Form.FieldSet>

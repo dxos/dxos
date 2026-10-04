@@ -169,7 +169,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
 
       <Toolbar.Root>
         <Field.Root>
-          <Input.Input
+          <Input.Root
             ref={inputRef}
             autoFocus
             placeholder={'Input JSON'}
@@ -178,8 +178,8 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Field.Root>
-        <Button.Button icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
-        <Button.Button
+        <Button.Root icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+        <Button.Root
           icon={isExecuting ? 'ph--stop--regular' : 'ph--trash--regular'}
           label={isExecuting ? 'Stop' : 'Clear'}
           iconOnly

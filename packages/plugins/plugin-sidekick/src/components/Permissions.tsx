@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import * as Checkbox from '@dxos/react-ui/Checkbox';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 
@@ -47,21 +47,21 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
             <tr key={entry.profileId} className='border-t border-separator'>
               <td className='py-1'>{entry.name}</td>
               <td className='py-1 text-center'>
-                <Checkbox.Checkbox
+                <Input.Checkbox
                   checked={entry.autoRespond}
                   onCheckedChange={({ checked }) => onUpdate?.(entry.profileId, 'autoRespond', checked === true)}
                   aria-label={`Auto-respond for ${entry.name}`}
                 />
               </td>
               <td className='py-1 text-center'>
-                <Checkbox.Checkbox
+                <Input.Checkbox
                   checked={entry.createDraft}
                   onCheckedChange={({ checked }) => onUpdate?.(entry.profileId, 'createDraft', checked === true)}
                   aria-label={`Draft for ${entry.name}`}
                 />
               </td>
               <td className='py-1 text-center'>
-                <Checkbox.Checkbox
+                <Input.Checkbox
                   checked={entry.researchEnabled}
                   onCheckedChange={({ checked }) => onUpdate?.(entry.profileId, 'researchEnabled', checked === true)}
                   aria-label={`Research for ${entry.name}`}

@@ -6,10 +6,10 @@ import React, { type KeyboardEvent, type RefObject, useCallback } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
-import * as Textarea from '@dxos/react-ui/Textarea';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
@@ -54,7 +54,7 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
         </span>
       )}
       <Field.Root>
-        <Textarea.Textarea
+        <Input.Textarea
           autoFocus
           rows={4}
           placeholder={t('comment-placeholder.label')}
@@ -63,21 +63,21 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
           onKeyDown={handleKeyDown}
         />
       </Field.Root>
-      <Flex.Flex justify='end' gap='sm'>
-        <Button.Button onClick={onCancel}>{t('comment-cancel.label')}</Button.Button>
-        <Button.Button variant='primary' disabled={busy || !value.trim()} onClick={onSubmit}>
+      <Layout.Flex justify='end' gap='sm'>
+        <Button.Root onClick={onCancel}>{t('comment-cancel.label')}</Button.Root>
+        <Button.Root variant='primary' disabled={busy || !value.trim()} onClick={onSubmit}>
           {t('comment-submit.label')}
-        </Button.Button>
-      </Flex.Flex>
+        </Button.Root>
+      </Layout.Flex>
     </>
   );
 };
 
 /** The composer as a band under the toolbar, for a comment on the pull request as a whole. */
 export const CommentBand = (props: CommentComposerProps) => (
-  <Flex.Flex column gap='sm' classNames='p-3 border-b border-separator'>
+  <Layout.Flex column gap='sm' classNames='p-3 border-b border-separator'>
     <CommentComposer {...props} />
-  </Flex.Flex>
+  </Layout.Flex>
 );
 
 export type LineCommentPopoverProps = CommentComposerProps & {

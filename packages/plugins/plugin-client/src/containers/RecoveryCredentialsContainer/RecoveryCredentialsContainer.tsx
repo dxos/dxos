@@ -82,7 +82,7 @@ export const RecoveryCredentialsContainer = () => {
           <Form.FieldSet label={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
             {supportsPasskeys && (
               <Form.Field standalone label={t('create-passkey.label')} description={t('create-passkey.description')}>
-                <Button.Button
+                <Button.Root
                   label={t('create-passkey.label')}
                   icon='ph--key--duotone'
                   variant='primary'
@@ -100,7 +100,7 @@ export const RecoveryCredentialsContainer = () => {
               label={t('create-recovery-code.label')}
               description={t('create-recovery-code.description')}
             >
-              <Button.Button
+              <Button.Root
                 label={t('create-recovery-code.label')}
                 icon='ph--receipt--duotone'
                 variant='default'
@@ -139,7 +139,7 @@ export const RecoveryCredentialsContainer = () => {
                           // identity, and there is no self-service way back.
                           lookupKey &&
                           activeCount > 1 && (
-                            <Button.Button
+                            <Button.Root
                               iconOnly
                               label={t('revoke-credential.label')}
                               icon='ph--trash--regular'
@@ -166,7 +166,7 @@ export const RecoveryCredentialsContainer = () => {
             )}
             {recoveryCredentials.length > 0 && (
               <Form.Field standalone label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>
-                <Button.Button
+                <Button.Root
                   label={t('manage-passkeys.label')}
                   icon='ph--arrow-square-out--regular'
                   variant='default'

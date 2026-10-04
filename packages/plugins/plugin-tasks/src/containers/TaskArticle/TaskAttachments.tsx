@@ -23,9 +23,9 @@ import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import * as CardMasonry from '@dxos/plugin-space/CardMasonry';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
-import * as Container from '@dxos/react-ui/Container';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -274,7 +274,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
 
   return (
     // A section of the pane's column, headed like the questions and artifacts around it.
-    <Container.Container asChild gutter='inherit' gap='md'>
+    <Layout.Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.attachments'>
         {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
         <Typography.Text asChild tone='subtle' classNames='dx-label py-0'>
@@ -310,7 +310,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
           )}
         </div>
       </section>
-    </Container.Container>
+    </Layout.Container>
   );
 };
 

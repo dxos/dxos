@@ -31,8 +31,8 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import * as Deferred from '@dxos/react-ui/Deferred';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 
@@ -433,7 +433,7 @@ export const MailboxArticle = ({
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
       </Panel.Header>
       <Panel.Body>
-        <Deferred.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
+        <Status.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -449,7 +449,7 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        </Deferred.Deferred>
+        </Status.Deferred>
       </Panel.Body>
       <Panel.Footer>
         <ProgressMeter

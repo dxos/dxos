@@ -133,7 +133,7 @@ export const Toolbar = ({
             {actions
               .filter((action): action is AppGraphNode.Action => AppGraphNode.isAction(action))
               .map((action) => (
-                <Button.Button
+                <Button.Root
                   key={action.id}
                   {...defaultButtonProps}
                   icon={action.properties.icon}
@@ -161,14 +161,14 @@ export const Toolbar = ({
           </>
         )}
         {inRoom ? (
-          <Button.Button
+          <Button.Root
             variant='destructive'
             icon='ph--phone-x--regular'
             label={t('leave-call.button')}
             onClick={onLeave}
           />
         ) : (
-          <Button.Button
+          <Button.Root
             variant='primary'
             icon='ph--phone-incoming--regular'
             label={t('join-call.button')}
@@ -183,7 +183,7 @@ export const Toolbar = ({
 
 Toolbar.displayName = 'MeetingToolbar';
 
-type ButtonProps = ComponentPropsWithoutRef<typeof Button.Button>;
+type ButtonProps = ComponentPropsWithoutRef<typeof Button.Root>;
 
 type ToggleButtonState = Pick<ButtonProps, 'icon' | 'label' | 'onClick'> & { classNames?: string };
 
@@ -201,7 +201,7 @@ const defaultButtonProps = {
 } as const satisfies Partial<ButtonProps>;
 
 const ToggleButton = ({ active, disabled, state }: ToolbarButtonProps) => (
-  <Button.Button
+  <Button.Root
     {...defaultButtonProps}
     disabled={disabled}
     classNames={[active ? (state.on.classNames ?? 'bg-accent-bg') : state.off.classNames]}

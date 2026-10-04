@@ -14,10 +14,10 @@ import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { Masonry } from '@dxos/react-ui-masonry';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -95,9 +95,9 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   return (
     <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Block.Block>
+        <Layout.Block>
           <Icon.Icon icon={icon} classNames={iconStyles?.text} />
-        </Block.Block>
+        </Layout.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
     </Card.Root>

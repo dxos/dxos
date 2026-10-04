@@ -152,10 +152,10 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Button.Button icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
+              <Button.Root icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
               {playing && timed && <span className='tabular-nums text-fg-muted p-1'>{formattedTime}</span>}
-              <Button.Button
+              <Button.Root
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
                 label={playing ? 'Stop' : 'Play'}
@@ -221,7 +221,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
       <OrderedList.DragHandle />
       <OrderedList.ItemIcon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
       <OrderedList.ItemText>{item.name ?? Sequence.getSourceLabel(item.source)}</OrderedList.ItemText>
-      <Button.Button
+      <Button.Root
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         label={t(item.muted ? 'unmute-button.label' : 'mute-button.label')}
         onClick={(event) => {

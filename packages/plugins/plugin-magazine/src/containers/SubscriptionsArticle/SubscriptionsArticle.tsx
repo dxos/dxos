@@ -91,7 +91,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
+          <Button.Root label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>

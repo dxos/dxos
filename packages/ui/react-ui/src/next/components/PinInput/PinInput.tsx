@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { useFieldContext } from '@ark-ui/react/field';
 import { PinInput as PinInputPrimitive } from '@ark-ui/react/pin-input';
 import React, { forwardRef } from 'react';

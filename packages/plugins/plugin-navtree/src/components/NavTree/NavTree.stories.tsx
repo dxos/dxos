@@ -24,10 +24,10 @@ import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Focus from '@dxos/react-ui/Focus';
+import * as Input from '@dxos/react-ui/Input';
 import * as Main from '@dxos/react-ui/Main';
 import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout } from '@dxos/react-ui/testing';
-import * as Textarea from '@dxos/react-ui/Textarea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
@@ -50,7 +50,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   return (
     <Panel.Header classNames='border-b border-separator'>
-      <Button.Button
+      <Button.Root
         size='lg'
         icon='ph--circle--regular'
         label='Test'
@@ -95,7 +95,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
         <StoryPlankHeading attendableId={attendableId} />
         <Panel.Body classNames='grid'>
           <Toolbar.Root classNames='border-b border-separator-subtle'>
-            <Button.Button>Test</Button.Button>
+            <Button.Root>Test</Button.Root>
           </Toolbar.Root>
 
           <div className={mx(container, 'm-2 bg-current-surface')}>
@@ -105,7 +105,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
             <div className={mx(container, 'dx-base-surface')}>
               <Field.Root>
                 <Field.Label>Level 2 (base)</Field.Label>
-                <Textarea.Textarea placeholder='Enter text' />
+                <Input.Textarea placeholder='Enter text' />
               </Field.Root>
             </div>
           </div>

@@ -5,11 +5,11 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
@@ -138,9 +138,9 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Card.Root ref={forwardedRef}>
             <Card.Header>
-              <Block.Block>
+              <Layout.Block>
                 <Icon.Icon icon={icon} classNames={iconClassName} />
-              </Block.Block>
+              </Layout.Block>
               <Card.Title>{feed.name ?? 'Untitled feed'}</Card.Title>
               <Card.Menu label={t('toolbar-menu.label')}>
                 {menuItems.map((item) => (

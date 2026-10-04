@@ -9,9 +9,9 @@ import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { Form } from '@dxos/react-ui-form';
 import { MarkdownLink, MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
@@ -50,7 +50,7 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
           {parsed.markdown ? (
             <MarkdownView content={parsed.markdown} components={components} data-testid='pull-request.body' />
           ) : (
-            <Empty.Empty>{t('no-description.message')}</Empty.Empty>
+            <Status.Empty>{t('no-description.message')}</Status.Empty>
           )}
           <Form.FieldSet label={t('details.label')} data-testid='pull-request.details'>
             <Form.Fields />

@@ -8,7 +8,6 @@ import React, { Suspense, lazy, useState } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
 import * as Button from '@dxos/react-ui/Button';
-import * as Group from '@dxos/react-ui/Group';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Popover from '@dxos/react-ui/Popover';
@@ -23,12 +22,12 @@ const EmojiMartPanel = lazy(() => import('./EmojiMartPanel.tsx'));
 
 export type EmojiPickerProps = Util.ThemedClassName<{
   disabled?: boolean;
-  size?: Button.ButtonProps['size'];
+  size?: Button.RootProps['size'];
   defaultEmoji?: string;
   emoji?: string;
   onChangeEmoji?: (nextEmoji: string) => void;
-  onClickClear?: Button.ButtonProps['onClick'];
-  triggerVariant?: Button.ButtonProps['variant'];
+  onClickClear?: Button.RootProps['onClick'];
+  triggerVariant?: Button.RootProps['variant'];
 }>;
 
 /**
@@ -61,7 +60,7 @@ export const EmojiPickerToolbarButton = ({
       positioning={{ placement: 'bottom' }}
     >
       <Popover.Trigger asChild>
-        <Button.Button
+        <Button.Root
           size={size}
           label={t('select-emoji.label')}
           icon='ph--smiley--regular'
@@ -118,18 +117,18 @@ export const EmojiPickerBlock = ({
   const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
 
   return (
-    <Group.Group classNames={classNames}>
+    <Button.Group classNames={classNames}>
       <Popover.Root
         open={emojiPickerOpen}
         onOpenChange={({ open }) => setEmojiPickerOpen(open)}
         positioning={{ placement: 'right', gutter: isMd ? 0 : -310, overflowPadding: 8 }}
       >
         <Popover.Trigger asChild>
-          <Button.Button variant={triggerVariant} classNames='text-xl' disabled={disabled}>
+          <Button.Root variant={triggerVariant} classNames='text-xl' disabled={disabled}>
             <span className='sr-only'>{t('select-emoji.label')}</span>
             <span>{emojiValue}</span>
             <Icon.Icon icon='ph--caret-down--bold' size='xs' />
-          </Button.Button>
+          </Button.Root>
         </Popover.Trigger>
         {/* Portalled, like `EmojiPickerToolbarButton` above and `PickerButton` (which is why the hue
             picker never had this problem): rendered in place, a 300px panel is clipped by the first
@@ -155,7 +154,7 @@ export const EmojiPickerBlock = ({
           </Suspense>
         </Popover.Content>
       </Popover.Root>
-      <Button.Button
+      <Button.Root
         icon='ph--arrow-counter-clockwise--regular'
         iconOnly
         label={t('clear.label')}
@@ -164,6 +163,6 @@ export const EmojiPickerBlock = ({
         onClick={onClickClear}
         disabled={disabled}
       />
-    </Group.Group>
+    </Button.Group>
   );
 };

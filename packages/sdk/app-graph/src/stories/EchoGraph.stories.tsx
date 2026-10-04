@@ -211,14 +211,14 @@ const Controls = ({ children }: PropsWithChildren) => {
   return (
     <>
       <div className='flex shrink-0 p-2 space-x-2'>
-        <Button.Button
+        <Button.Root
           icon={generating ? 'ph--pause--regular' : 'ph--play--regular'}
           label={generating ? 'Pause' : 'Play'}
           onClick={() => setGenerating((generating) => !generating)}
         />
         <div className='relative' title='mutation period'>
           <Field.Root>
-            <Input.Input
+            <Input.Root
               autoComplete='off'
               classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
@@ -228,7 +228,7 @@ const Controls = ({ children }: PropsWithChildren) => {
           </Field.Root>
           <Icon.Icon icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
         </div>
-        <Button.Button icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
+        <Button.Root icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
         <Select.Root
           value={action ? [action.toString()] : []}
           onValueChange={({ value: [value] }) => setAction(Object.values(Action).find((action) => action === value))}
@@ -321,7 +321,7 @@ const GraphTreeItem = ({
         onClick={() => onSelect(id)}
       >
         {expandable ? (
-          <Button.Button
+          <Button.Root
             iconOnly
             variant='ghost'
             size='sm'

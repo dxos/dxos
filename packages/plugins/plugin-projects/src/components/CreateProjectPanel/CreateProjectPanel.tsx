@@ -72,7 +72,7 @@ export const CreateProjectPanel = ({ onCreateObject, onCancel, templates: templa
             chrome; the gap spaces the name field from the template picker, which are otherwise flush. */}
         <CreateProjectContent>
           <Field.Root>
-            <Input.Input
+            <Input.Root
               autoFocus
               data-testid='create-project-panel.name-input'
               placeholder={t('create-panel.name.placeholder')}

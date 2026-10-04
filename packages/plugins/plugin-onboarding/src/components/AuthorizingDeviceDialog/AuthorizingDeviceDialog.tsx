@@ -7,9 +7,9 @@ import '@fontsource/poiret-one';
 import React from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta.ts';
@@ -32,25 +32,25 @@ export const AuthorizingDeviceDialog = () => {
         backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
       }}
     >
-      <Flex.Flex column gap='2xl' classNames='z-10 p-8 md:px-16 h-full'>
+      <Layout.Flex column gap='2xl' classNames='z-10 p-8 md:px-16 h-full'>
         <span className='font-["Poiret One"] text-[80px] leading-[1.5]' style={{ fontFamily: 'Poiret One' }}>
           composer
         </span>
 
-        <Flex.Flex column align='center' justify='center' gap='lg' classNames='flex-1'>
+        <Layout.Flex column align='center' justify='center' gap='lg' classNames='flex-1'>
           <Icon.Icon icon='ph--spinner-gap--regular' size='xl' spin tone='muted' />
           <h1 className='text-2xl text-center'>{t('authorizing-device.title')}</h1>
-        </Flex.Flex>
+        </Layout.Flex>
 
-        <Flex.Flex column classNames='z-[11] mt-auto'>
+        <Layout.Flex column classNames='z-[11] mt-auto'>
           <a href='https://dxos.org' target='_blank' rel='noreferrer'>
-            <Flex.Flex gap='xs' center classNames='text-sm pr-3 pb-1 opacity-70'>
+            <Layout.Flex gap='xs' center classNames='text-sm pr-3 pb-1 opacity-70'>
               <span className='text-fg-muted'>Powered by</span>
               <DXOSHorizontalType className='fill-white w-[80px]' />
-            </Flex.Flex>
+            </Layout.Flex>
           </a>
-        </Flex.Flex>
-      </Flex.Flex>
+        </Layout.Flex>
+      </Layout.Flex>
     </div>
   );
 };

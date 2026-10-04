@@ -119,9 +119,9 @@ const DefaultStory = ({ reply }: StoryArgs) => {
             {reply && (
               <Panel.Header>
                 <Toolbar.Root>
-                  <Button.Button onClick={handleReply} data-testid='story-reply'>
+                  <Button.Root onClick={handleReply} data-testid='story-reply'>
                     Reply
-                  </Button.Button>
+                  </Button.Root>
                 </Toolbar.Root>
               </Panel.Header>
             )}

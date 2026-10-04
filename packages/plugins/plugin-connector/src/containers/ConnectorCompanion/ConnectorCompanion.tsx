@@ -120,7 +120,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                   error={!targetMissing && !sourceMissing && subject.lastError ? subject.lastError : undefined}
                 >
                   {targetMissing || sourceMissing ? (
-                    <Button.Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button.Button>
+                    <Button.Root onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button.Root>
                   ) : undefined}
 
                   {connector?.sync?.optionsSchema && !targetMissing && !sourceMissing && (
@@ -139,7 +139,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                 {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
                 {!sourceMissing && (
                   <Form.Field standalone label={t('open-connection.label')}>
-                    <Button.Button onClick={handleOpenConnection}>{t('open-connection.label')}</Button.Button>
+                    <Button.Root onClick={handleOpenConnection}>{t('open-connection.label')}</Button.Root>
                   </Form.Field>
                 )}
               </Form.FieldSet>

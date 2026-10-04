@@ -57,7 +57,7 @@ export const TaskFilter = ({
       <TaskStatusFilter value={statuses} active={value.trim().length > 0} onChange={onStatusesChange} />
       {/* The rest of the toolbar's view controls (order, grouping), between the filter and its clear. */}
       {children}
-      <Button.Button
+      <Button.Root
         icon='ph--x--regular'
         iconOnly
         // The status choice is written into the text, so an empty text is the unfiltered list.

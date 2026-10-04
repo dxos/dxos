@@ -13,7 +13,7 @@ import { type MessageValence, type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Container from '../Container/Container.tsx';
+import { type Level, type Span, spanAttributes } from '../Container/Container.tsx';
 
 //
 // Root
@@ -35,9 +35,9 @@ type FieldRootProps = ThemedClassName<FieldPrimitive.RootProps> & {
    */
   layout?: 'stack' | 'row';
   /** A surface rung for a `row` field, which then draws a separator border around itself (a settings card row). */
-  level?: Container.Level;
+  level?: Level;
   /** Tracks the field spans in its parent Container (e.g. two columns of a multi-column form). */
-  span?: Container.Span;
+  span?: Span;
 };
 
 /** A part, not a container (decision 13): a flex stack in the content track with the label above its control. */
@@ -45,7 +45,7 @@ const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
   ({ classNames, invalid, validationValence, layout, level, span, style, ...props }, forwardedRef) => {
     // Ark inherits only `disabled` from an enclosing Fieldset; an invalid set marks its fields invalid too.
     const fieldset = useFieldsetContext();
-    const { style: spanStyle, ...spanAttrs } = Container.spanAttributes(span);
+    const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
     return (
       <FieldPrimitive.Root
         {...props}

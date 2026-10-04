@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { Switch as SwitchPrimitive } from '@ark-ui/react/switch';
 import React, { type ReactNode, forwardRef } from 'react';
 

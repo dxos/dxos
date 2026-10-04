@@ -10,15 +10,13 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { Row } from '@dxos/react-ui-card';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
-import * as DatePicker from '@dxos/react-ui/DatePicker';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
-import * as Switch from '@dxos/react-ui/Switch';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -194,7 +192,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     <>
       <Card.Row>
         <Field.Root>
-          <Input.Input
+          <Input.Root
             placeholder={t('event-untitled.label')}
             value={data.title ?? ''}
             onChange={(ev) =>
@@ -208,28 +206,24 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       <Field.Root>
         <Card.Row>
-          <Block.Block>
-            <Block.Block>
+          <Layout.Block>
+            <Layout.Block>
               <Icon.Icon icon='ph--calendar--regular' />
-            </Block.Block>
-          </Block.Block>
+            </Layout.Block>
+          </Layout.Block>
           <div className={fieldClasses}>
             <div className='grow'>
               {allDay ? (
-                <DatePicker.Input
-                  type='date'
-                  value={toDateInput(data.startDate)}
-                  onValueChange={handleStartDateChange}
-                />
+                <Input.Date type='date' value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
               ) : (
-                <DatePicker.Input
+                <Input.Date
                   type='datetime-local'
                   value={toDateTimeInput(data.startDate)}
                   onValueChange={handleStartDateTimeChange}
                 />
               )}
             </div>
-            <Switch.Switch
+            <Input.Switch
               checked={allDay}
               onCheckedChange={({ checked }) => handleAllDayChange(checked)}
               label={t('event-all-day.label')}
@@ -241,14 +235,14 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       {!allDay && (
         <Field.Root>
           <Card.Row>
-            <Block.Block>
-              <Block.Block>
+            <Layout.Block>
+              <Layout.Block>
                 <Icon.Icon icon='ph--calendar--regular' />
-              </Block.Block>
-            </Block.Block>
+              </Layout.Block>
+            </Layout.Block>
             <div className={fieldClasses}>
               <div className='grow'>
-                <DatePicker.Input
+                <Input.Date
                   type='datetime-local'
                   value={toDateTimeInput(data.endDate)}
                   onValueChange={handleEndDateTimeChange}
@@ -275,9 +269,9 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       {/* Always-blank row for adding the next attendee. */}
       <Card.Row classNames='items-center'>
-        <Block.Block>
+        <Layout.Block>
           <Icon.Icon icon='ph--user-plus--regular' />
-        </Block.Block>
+        </Layout.Block>
         <RefEditor
           db={db}
           type={Person.Person}

@@ -8,10 +8,9 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
-import * as Group from '@dxos/react-ui/Group';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Switch from '@dxos/react-ui/Switch';
+import * as Input from '@dxos/react-ui/Input';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
 import { ACCENT_HUES } from '@dxos/ui-theme';
@@ -126,17 +125,17 @@ export const PluginItem = ({
           </Typography.Text>
         )}
         {displayTags.length > 0 && (
-          <Group.Group>
+          <Button.Group>
             {displayTags.map((tag) => (
               <Tag.Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
                 {tag.toUpperCase()}
               </Tag.Tag>
             ))}
-          </Group.Group>
+          </Button.Group>
         )}
         <Card.Footer justify='between'>
-          <Group.Group>
-            <Button.Button
+          <Button.Group>
+            <Button.Root
               variant='ghost'
               iconOnly
               icon='ph--gear--regular'
@@ -149,20 +148,20 @@ export const PluginItem = ({
                 {t('details.label')}
               </button>
             </Typography.Link>
-          </Group.Group>
+          </Button.Group>
           {isUpdating ? (
-            <Button.Button variant='primary' disabled label={t('updating.label')} />
+            <Button.Root variant='primary' disabled label={t('updating.label')} />
           ) : showUpdateButton ? (
-            <Button.Button variant='primary' label={t('update.label')} onClick={handleUpdate} />
+            <Button.Root variant='primary' label={t('update.label')} onClick={handleUpdate} />
           ) : showInstallButton ? (
-            <Button.Button
+            <Button.Root
               variant='primary'
               disabled={isInstalling}
               label={isInstalling ? t('installing.label') : t('install.label')}
               onClick={handleInstall}
             />
           ) : (
-            <Switch.Switch
+            <Input.Switch
               aria-label={name ?? id}
               checked={isEnabled}
               disabled={readOnly}

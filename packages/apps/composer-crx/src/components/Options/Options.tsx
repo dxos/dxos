@@ -10,8 +10,6 @@ import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Switch from '@dxos/react-ui/Switch';
-import * as Textarea from '@dxos/react-ui/Textarea';
 import * as Util from '@dxos/react-ui/Util';
 
 import {
@@ -120,7 +118,7 @@ export const Options = Util.composable<HTMLDivElement, OptionsProps>((props, for
             <Field.Root>
               <Field.Label>{t('settings.dev-mode.label')}</Field.Label>
               <div className='text-end'>
-                <Switch.Switch
+                <Input.Switch
                   checked={developerMode}
                   onCheckedChange={({ checked }) => handleDeveloperModeChange(checked)}
                 />
@@ -132,7 +130,7 @@ export const Options = Util.composable<HTMLDivElement, OptionsProps>((props, for
             <Field.Root>
               <Field.Label>{t('settings.space-mode.label')}</Field.Label>
               <div className='text-end'>
-                <Switch.Switch checked={spaceMode} onCheckedChange={({ checked }) => handleSpaceModeChange(checked)} />
+                <Input.Switch checked={spaceMode} onCheckedChange={({ checked }) => handleSpaceModeChange(checked)} />
               </div>
             </Field.Root>
           </div>
@@ -141,7 +139,7 @@ export const Options = Util.composable<HTMLDivElement, OptionsProps>((props, for
             <Field.Root>
               <Field.Label>{t('settings.space-id.label')}</Field.Label>
               <div className='text-end'>
-                <Input.Input value={spaceId ?? ''} onChange={handleSpaceIdChange} />
+                <Input.Root value={spaceId ?? ''} onChange={handleSpaceIdChange} />
               </div>
             </Field.Root>
           </div>
@@ -150,7 +148,7 @@ export const Options = Util.composable<HTMLDivElement, OptionsProps>((props, for
             <Field.Root>
               <Field.Label classNames='self-start'>{t('settings.composer-urls.label')}</Field.Label>
               <div className='text-end'>
-                <Textarea.Textarea
+                <Input.Textarea
                   rows={4}
                   placeholder={DEFAULT_COMPOSER_URLS.join('\n')}
                   value={composerUrls}

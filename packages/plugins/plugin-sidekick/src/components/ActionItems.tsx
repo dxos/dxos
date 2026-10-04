@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { List, ListItem } from '@dxos/react-list';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 
@@ -36,7 +36,7 @@ export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
         <List variant='unordered' className='space-y-1'>
           {items.map((item) => (
             <ListItem key={item.id} className='flex items-center gap-2 text-sm'>
-              <Checkbox.Checkbox
+              <Input.Checkbox
                 checked={item.completed}
                 onCheckedChange={() => onToggle?.(item)}
                 label={

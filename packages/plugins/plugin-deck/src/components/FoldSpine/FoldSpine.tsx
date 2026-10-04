@@ -31,7 +31,7 @@ export type FoldSpineProps = Util.ThemedClassName<{
  * (see `Deck.stories.tsx`); keep it on the root.
  */
 export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) => (
-  <Button.Button
+  <Button.Root
     variant='ghost'
     onClick={onClick}
     aria-label={label}
@@ -55,7 +55,7 @@ export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) 
     </div>
     {/* TODO(wittjosiah): Plain span — no react-ui primitive renders a vertical (writing-mode) label. */}
     <span className='truncate text-sm font-normal text-fg-muted [writing-mode:vertical-rl] rotate-180'>{label}</span>
-  </Button.Button>
+  </Button.Root>
 );
 
 FoldSpine.displayName = 'FoldSpine';

@@ -5,11 +5,11 @@
 import React, { useMemo } from 'react';
 
 import { Masonry } from '@dxos/react-ui-masonry';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -119,20 +119,20 @@ const CardHeading = ({
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Card.Header>
-      <Block.Block>
+      <Layout.Block>
         <Icon.Icon icon={icon} classNames={iconClassNames} />
-      </Block.Block>
+      </Layout.Block>
       <Card.Title>{title}</Card.Title>
       {href && (
-        <Block.Block rail='end'>
-          <Button.Button
+        <Layout.Block rail='end'>
+          <Button.Root
             iconOnly
             variant='ghost'
             icon='ph--arrow-square-out--regular'
             label={t('open-link.label')}
             onClick={() => window.open(href, '_blank', 'noopener,noreferrer')}
           />
-        </Block.Block>
+        </Layout.Block>
       )}
     </Card.Header>
   );

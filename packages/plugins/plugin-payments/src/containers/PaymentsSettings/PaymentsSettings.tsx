@@ -14,8 +14,8 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Form } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { buyPremium, createStripeCheckout } from '#services';
@@ -104,13 +104,13 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
             actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Fields />
-            <Flex.Flex column gap='sm' classNames='my-2'>
-              <Button.Button disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
+            <Layout.Flex column gap='sm' classNames='my-2'>
+              <Button.Root disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
                 {pending ? t('pending.label') : t('buy-premium.label')}
-              </Button.Button>
-              <Button.Button disabled={pending || !paymentsUrl} onClick={handleBuyCredits}>
+              </Button.Root>
+              <Button.Root disabled={pending || !paymentsUrl} onClick={handleBuyCredits}>
                 {pending ? t('pending.label') : t('buy-credits.label')}
-              </Button.Button>
+              </Button.Root>
               {status.kind === 'result' && (
                 <pre className='text-xs whitespace-pre-wrap overflow-auto'>{status.text}</pre>
               )}
@@ -120,7 +120,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
                   <Banner.Body>{status.text}</Banner.Body>
                 </Banner.Root>
               )}
-            </Flex.Flex>
+            </Layout.Flex>
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>

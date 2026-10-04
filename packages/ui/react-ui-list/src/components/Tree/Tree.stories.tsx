@@ -198,7 +198,7 @@ const renderColumnsRow = (node: TreeNode<TestItem>) => (
       {node.depth}
     </span>
     <Tree.ItemActions>
-      <Button.Button icon='ph--x--regular' iconOnly label='Remove' variant='ghost' size='sm' />
+      <Button.Root icon='ph--x--regular' iconOnly label='Remove' variant='ghost' size='sm' />
     </Tree.ItemActions>
   </Tree.Item>
 );

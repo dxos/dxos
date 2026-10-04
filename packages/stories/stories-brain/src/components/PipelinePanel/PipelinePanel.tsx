@@ -5,10 +5,10 @@
 import React from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Select from '@dxos/react-ui/Select';
+import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -78,7 +78,7 @@ export const PipelinePanel = ({
           </Select.Root>
           <div className='grow' />
           <span className='text-sm text-fg-muted tabular-nums'>{processed} processed</span>
-          <Button.Button
+          <Button.Root
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
             iconOnly
             label={running ? 'Stop' : 'Start'}
@@ -90,7 +90,7 @@ export const PipelinePanel = ({
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
-            {stages.length === 0 && <Empty.Empty>No stages.</Empty.Empty>}
+            {stages.length === 0 && <Status.Empty>No stages.</Status.Empty>}
             {stages.map((stage) => (
               <div
                 key={stage.id}

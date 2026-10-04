@@ -92,10 +92,10 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         <header className='flex items-center gap-2'>
           <Icon.Icon icon='ph--check-square-offset--regular' size='lg' />
           <h1 className='grow text-lg'>{plan.name}</h1>
-          <Button.Button disabled={starting} onClick={handleStartRun} data-testid='qa.plan.start-run'>
+          <Button.Root disabled={starting} onClick={handleStartRun} data-testid='qa.plan.start-run'>
             <Icon.Icon icon='ph--play--regular' size='md' />
             <span>Run</span>
-          </Button.Button>
+          </Button.Root>
         </header>
 
         {error && (
@@ -107,28 +107,24 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         <section>
           <Field.Label>Cases</Field.Label>
           <div className='flex gap-2 py-2'>
-            <Input.Input
+            <Input.Root
               classNames='w-24'
               placeholder='Key'
               value={caseKey}
               onChange={(event) => setCaseKey(event.target.value)}
               data-testid='qa.plan.case-key'
             />
-            <Input.Input
+            <Input.Root
               classNames='grow'
               placeholder='Title'
               value={caseTitle}
               onChange={(event) => setCaseTitle(event.target.value)}
               data-testid='qa.plan.case-title'
             />
-            <Button.Button
-              disabled={caseKey.trim().length === 0}
-              onClick={handleAddCase}
-              data-testid='qa.plan.add-case'
-            >
+            <Button.Root disabled={caseKey.trim().length === 0} onClick={handleAddCase} data-testid='qa.plan.add-case'>
               <Icon.Icon icon='ph--plus--regular' size='md' />
               <span>Add case</span>
-            </Button.Button>
+            </Button.Root>
           </div>
           {cases.length === 0 ? (
             <p className='text-fg-subtle' data-testid='qa.plan.no-cases'>

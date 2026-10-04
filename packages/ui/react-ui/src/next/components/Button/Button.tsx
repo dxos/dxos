@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import React, { type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 import { type ChromaticPalette, type ClassNameValue, type MessageValence, type NeutralPalette } from '@dxos/ui-types';

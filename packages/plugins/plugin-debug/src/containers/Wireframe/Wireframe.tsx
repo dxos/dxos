@@ -8,7 +8,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Obj } from '@dxos/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Flex from '@dxos/react-ui/Flex';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -25,13 +25,13 @@ export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
 
   return (
     <div ref={ref} className={mx('relative grow min-h-96', classNames)} {...attentionAttrs}>
-      <Flex.Flex column gap='sm' classNames='absolute inset-2 overflow-hidden font-mono'>
-        <Flex.Flex justify='between'>
+      <Layout.Flex column gap='sm' classNames='absolute inset-2 overflow-hidden font-mono'>
+        <Layout.Flex justify='between'>
           <div>{label}</div>
           <div>{`[${width}x${height}]`}</div>
-        </Flex.Flex>
+        </Layout.Flex>
         {object && <JsonHighlighter data={object} classNames='text-xs opacity-75 rounded-sm' />}
-      </Flex.Flex>
+      </Layout.Flex>
       <svg width={width} height={height} className='bg-transparent *:text-fg-subtle'>
         <rect x={0} y={0} width={width} height={height} strokeWidth={1} fill='none' />
         <line x1={0} y1={0} x2={width} y2={height} strokeWidth={1} />

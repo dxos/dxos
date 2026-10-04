@@ -6,8 +6,8 @@ import React, { useRef } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 
@@ -39,7 +39,7 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
       <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text classNames='grow'>Entities{entities.length > 0 ? ` (${entities.length})` : ''}</Toolbar.Text>
-          <Button.Button
+          <Button.Root
             icon='ph--x--regular'
             iconOnly
             label='Clear'
@@ -50,7 +50,7 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
       </Panel.Header>
       <Panel.Body classNames='overflow-auto'>
         {entities.length === 0 ? (
-          <Empty.Empty>No entities.</Empty.Empty>
+          <Status.Empty>No entities.</Status.Empty>
         ) : (
           <Listbox.Root
             value={selected}

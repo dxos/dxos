@@ -6,9 +6,9 @@ import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
 import * as Button from '@dxos/react-ui/Button';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 
@@ -45,23 +45,23 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
     <Panel.Root classNames={classNames}>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
+          <Button.Root variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
             Facts
-          </Button.Button>
-          <Button.Button variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
+          </Button.Root>
+          <Button.Root variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
             Objects
-          </Button.Button>
-          <Button.Button variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
+          </Button.Root>
+          <Button.Root variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
             Stats
-          </Button.Button>
+          </Button.Root>
           {details.map((detail) => (
-            <Button.Button
+            <Button.Root
               key={detail.id}
               variant={active === detail.id ? 'primary' : 'ghost'}
               onClick={() => setTab(detail.id)}
             >
               {detail.label}
-            </Button.Button>
+            </Button.Root>
           ))}
         </Toolbar.Root>
       </Panel.Header>
@@ -78,7 +78,7 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
 const StatsView = ({ stats }: { stats: StatItem[] }) => (
   <ScrollArea.Root classNames='h-full'>
     <ScrollArea.Viewport classNames='flex flex-col gap-1 py-1'>
-      {stats.length === 0 && <Empty.Empty>No stats.</Empty.Empty>}
+      {stats.length === 0 && <Status.Empty>No stats.</Status.Empty>}
       {stats.map((stat) => (
         <div key={stat.label} className='flex items-center justify-between gap-2 border-b border-separator-subtle py-1'>
           <span className='text-sm text-fg-muted truncate'>{stat.label}</span>

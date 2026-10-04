@@ -2,20 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { Toggle as TogglePrimitive, useToggleContext } from '@ark-ui/react/toggle';
 import React from 'react';
 
 import { composable } from '../../../util/slots.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button, type ButtonProps } from '../Button/Button.tsx';
 
 type ToggleIconProps = {
   /** Icon shown while pressed, in place of `icon` (e.g. a filled star for a pinned item). */
   activeIcon?: string;
 };
 
-export type ToggleProps = Button.ButtonProps &
+export type ToggleProps = ButtonProps &
   ToggleIconProps & {
     pressed?: boolean;
     defaultPressed?: boolean;
@@ -40,9 +38,9 @@ export const Toggle = composable<HTMLButtonElement, ToggleProps>(
 Toggle.displayName = 'Toggle';
 
 /** Reads the machine's pressed state, which an uncontrolled toggle's caller does not have, to swap the icon. */
-const ToggleButton = composable<HTMLButtonElement, Button.ButtonProps & ToggleIconProps>(
+const ToggleButton = composable<HTMLButtonElement, ButtonProps & ToggleIconProps>(
   ({ activeIcon, ...props }, forwardedRef) => {
     const { pressed } = useToggleContext();
-    return <Button.Button {...props} {...(pressed && activeIcon && { icon: activeIcon })} ref={forwardedRef} />;
+    return <Button {...props} {...(pressed && activeIcon && { icon: activeIcon })} ref={forwardedRef} />;
   },
 );

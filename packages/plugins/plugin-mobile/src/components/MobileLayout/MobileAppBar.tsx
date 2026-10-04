@@ -73,7 +73,7 @@ export const MobileAppBar = Util.composable<HTMLDivElement, MobileAppBarProps>(
         ref={forwardedRef}
       >
         {keyboardOpen ? (
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--x--regular'
             iconOnly
@@ -81,7 +81,7 @@ export const MobileAppBar = Util.composable<HTMLDivElement, MobileAppBarProps>(
             classNames={TOUCH_TARGET}
           />
         ) : showBackButton ? (
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--caret-left--regular'
             iconOnly
@@ -96,7 +96,7 @@ export const MobileAppBar = Util.composable<HTMLDivElement, MobileAppBarProps>(
         {hasActions ? (
           <AnchorRoot>
             <ActionMenu {...menuActions} caller={meta.profile.key} onAction={onAction}>
-              <Button.Button
+              <Button.Root
                 variant='ghost'
                 icon='ph--dots-three-vertical--regular'
                 iconOnly

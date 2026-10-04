@@ -7,7 +7,6 @@ import React, { type ComponentPropsWithoutRef, forwardRef, useCallback } from 'r
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Button from '@dxos/react-ui/Button';
-import * as Group from '@dxos/react-ui/Group';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
@@ -50,7 +49,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
   },
 );
 
-type PlankControlProps = Pick<ComponentPropsWithoutRef<typeof Button.Button>, 'variant' | 'classNames' | 'disabled'> & {
+type PlankControlProps = Pick<ComponentPropsWithoutRef<typeof Button.Root>, 'variant' | 'classNames' | 'disabled'> & {
   'label': string;
   'icon': string;
   'onClick'?: () => void;
@@ -58,14 +57,14 @@ type PlankControlProps = Pick<ComponentPropsWithoutRef<typeof Button.Button>, 'v
 };
 
 const PlankControl = ({ icon, label, variant = 'ghost', ...props }: PlankControlProps) => {
-  return <Button.Button {...props} label={label} icon={icon} iconOnly variant={variant} tooltipSide='bottom' />;
+  return <Button.Root {...props} label={label} icon={icon} iconOnly variant={variant} tooltipSide='bottom' />;
 };
 
 //
 // PlankControls
 //
 
-export type PlankControlsProps = Omit<ComponentPropsWithoutRef<typeof Group.Group>, 'onClick'> & {
+export type PlankControlsProps = Omit<ComponentPropsWithoutRef<typeof Button.Group>, 'onClick'> & {
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
   close?: boolean | 'minify-start' | 'minify-end';
@@ -101,7 +100,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
       variant === 'hide-disabled' ? `disabled:hidden ${plankControlSpacing}` : plankControlSpacing;
 
     return (
-      <Group.Group compact {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
+      <Button.Group compact {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
         {capabilities.expandToggle && (
           <PlankControl
             label={t(expanded ? 'collapse-plank.label' : 'expand-plank.label')}
@@ -165,7 +164,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           />
         )}
         {children}
-      </Group.Group>
+      </Button.Group>
     );
   },
 );

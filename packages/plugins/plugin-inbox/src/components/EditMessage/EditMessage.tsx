@@ -9,11 +9,11 @@ import { type Database, Obj } from '@dxos/echo';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, RefEditor } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { type Message as MessageType, Person } from '@dxos/types';
@@ -211,7 +211,7 @@ export const EditMessage = Util.composable<HTMLDivElement, EditMessageProps>(
     return (
       <ScrollArea.Root>
         <ScrollArea.Viewport>
-          <Container.Container
+          <Layout.Container
             {...Util.composableProps(props, {
               // The editor row uses `minmax(8lh,1fr)` (not `1fr`) so its minimum height participates in
               // layout: when the surface is short the whole form scrolls (outer ScrollArea) instead of
@@ -227,7 +227,7 @@ export const EditMessage = Util.composable<HTMLDivElement, EditMessageProps>(
               <div className='flex items-center justify-between pt-form-gap'>
                 <h2 className='text-lg'>{title}</h2>
                 {onDelete && (
-                  <Button.Button
+                  <Button.Root
                     iconOnly
                     variant='ghost'
                     icon='ph--trash--regular'
@@ -299,7 +299,7 @@ export const EditMessage = Util.composable<HTMLDivElement, EditMessageProps>(
 
               <Field.Root>
                 <Field.Label srOnly>{t('draft-subject.label')}</Field.Label>
-                <Input.Input
+                <Input.Root
                   ref={subjectRef}
                   classNames='col-span-3'
                   placeholder={t('draft-subject.placeholder')}
@@ -328,12 +328,12 @@ export const EditMessage = Util.composable<HTMLDivElement, EditMessageProps>(
             </div>
 
             <div className='pb-form-padding'>
-              <Button.Button variant='primary' onClick={handleSend} data-testid='send-email-button'>
+              <Button.Root variant='primary' onClick={handleSend} data-testid='send-email-button'>
                 <Icon.Icon icon='ph--paper-plane-right--regular' size='lg' />
                 <span className='ms-2'>{t('send-email-button.label')}</span>
-              </Button.Button>
+              </Button.Root>
             </div>
-          </Container.Container>
+          </Layout.Container>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );

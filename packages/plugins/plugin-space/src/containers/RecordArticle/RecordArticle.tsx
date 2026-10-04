@@ -23,8 +23,8 @@ import {
 } from '@dxos/react-ui-menu';
 import * as Card from '@dxos/react-ui/Card';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
@@ -74,12 +74,12 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 
             {/* TODO(burdon): Only show label if surface exists? */}
             {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}
-            <Flex.Flex column gap='form'>
+            <Layout.Flex column gap='form'>
               <Field.Root>
                 <Field.Label>{t('related-actions.label')}</Field.Label>
               </Field.Root>
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
-            </Flex.Flex>
+            </Layout.Flex>
 
             {/* Gated on the unfiltered set so hiding every type does not remove the filter itself. */}
             {relatedObjects.length > 0 && (

@@ -108,7 +108,7 @@ export const DeviceListItem = forwardRef<
         {isCurrent && (onClickJoinExisting || onClickRecover || onClickReset) && (
           <Menu.Root>
             <Menu.Trigger asChild>
-              <Button.Button
+              <Button.Root
                 variant='ghost'
                 icon='ph--dots-three--regular'
                 iconOnly

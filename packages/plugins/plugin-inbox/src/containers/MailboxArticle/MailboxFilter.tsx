@@ -52,7 +52,7 @@ export const MailboxFilter = ({
         onFilterChange={({ filter }) => onFilterChange(filter)}
         ref={editorRef}
       />
-      <Button.Button
+      <Button.Root
         disabled={!filter}
         icon='ph--folder-plus--regular'
         iconOnly
@@ -60,7 +60,7 @@ export const MailboxFilter = ({
         onClick={onSave}
         ref={saveButtonRef}
       />
-      <Button.Button icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
+      <Button.Root icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
     </>
   );
 };

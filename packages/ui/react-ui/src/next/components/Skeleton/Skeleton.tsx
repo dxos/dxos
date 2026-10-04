@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';

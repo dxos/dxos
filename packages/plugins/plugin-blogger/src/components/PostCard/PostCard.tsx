@@ -6,10 +6,10 @@ import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { Blog } from '#types';
@@ -57,9 +57,9 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
       tabIndex={onClick ? 0 : undefined}
     >
       <Card.Header>
-        <Block.Block>
+        <Layout.Block>
           <Icon.Icon icon={icon} />
-        </Block.Block>
+        </Layout.Block>
         <Card.Title lines={2}>{title}</Card.Title>
       </Card.Header>
       <Card.Body>
@@ -71,9 +71,9 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
           </Card.Row>
         )}
         <Card.Row>
-          <Block.Block>
+          <Layout.Block>
             <Icon.Icon icon={status === 'published' ? 'ph--cloud-check--regular' : 'ph--pencil-simple--regular'} />
-          </Block.Block>
+          </Layout.Block>
           <Card.Text variant='muted'>{t(`post-card.status.${status}.label`)}</Card.Text>
         </Card.Row>
       </Card.Body>

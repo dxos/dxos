@@ -27,8 +27,8 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Container from '../Container/Container.tsx';
-import * as Empty from '../Empty/Empty.tsx';
+import { type ContainerProps, containerAttributes } from '../Container/Container.tsx';
+import { Empty } from '../Empty/Empty.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import { RowContext, handleGridKeyDown, isFromControl, useRowTabStops } from './grid.ts';
@@ -177,7 +177,7 @@ ListboxLabel.displayName = 'Listbox.Label';
 
 type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
   Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'> &
-  Pick<Container.ContainerProps, 'gutter' | 'gap'> & {
+  Pick<ContainerProps, 'gutter' | 'gap'> & {
     /**
      * `false` renders the rows without a ScrollArea of their own, for a host that already scrolls (a ScrollArea
      * composed in `Panel.Body`): the rows then inherit the host's rails (`gutter='inherit'` by default).
@@ -191,7 +191,7 @@ type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
  */
 const ListboxViewport = composable<
   HTMLDivElement,
-  Container.ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'> & { hostScrolls?: boolean }
+  ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'> & { hostScrolls?: boolean }
 >(({ gutter, gap, hostScrolls, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
   const api = useListboxContext();
   const { columns, virtual, scrollToIndexRef } = useRootContext('Content');
@@ -202,7 +202,7 @@ const ListboxViewport = composable<
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, setElement, windowing.listRef);
   useRowTabStops(element);
 
-  const { style, ...attributes } = Container.containerAttributes({ gutter, gap, columns });
+  const { style, ...attributes } = containerAttributes({ gutter, gap, columns });
   const {
     className,
     style: ownStyle,
@@ -296,12 +296,12 @@ ListboxContent.displayName = 'Listbox.Content';
 // Empty
 //
 
-type ListboxEmptyProps = ComponentPropsWithoutRef<typeof Empty.Empty>;
+type ListboxEmptyProps = ComponentPropsWithoutRef<typeof Empty>;
 
 /** `Empty`, rendered only while the Root has no items. */
 const ListboxEmpty = forwardRef<HTMLDivElement, ListboxEmptyProps>((props, forwardedRef) => {
   const { items } = useRootContext('Empty');
-  return items.length === 0 ? <Empty.Empty {...props} ref={forwardedRef} /> : null;
+  return items.length === 0 ? <Empty {...props} ref={forwardedRef} /> : null;
 });
 
 ListboxEmpty.displayName = 'Listbox.Empty';
@@ -347,7 +347,7 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
     const textId = useId();
     const row = useMemo(() => ({ textId }), [textId]);
     // Under Root `columns` the row is a subgrid of the Content's tracks (theme); otherwise it has its own template.
-    const { style: columnsStyle, ...attributes } = Container.containerAttributes(
+    const { style: columnsStyle, ...attributes } = containerAttributes(
       columns ? {} : { columns: 'var(--dx-item-columns)' },
     );
     const itemProps = api.getItemProps({ item, highlightOnHover });
@@ -533,7 +533,7 @@ type ListboxItemGroupProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
  */
 const ListboxItemGroup = forwardRef<HTMLDivElement, ListboxItemGroupProps>(
   ({ classNames, style, children, ...props }, forwardedRef) => {
-    const { style: containerStyle, ...attributes } = Container.containerAttributes({});
+    const { style: containerStyle, ...attributes } = containerAttributes({});
     return (
       <ListboxPrimitive.ItemGroup
         {...props}

@@ -10,8 +10,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Filter, Format, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import * as Container from '@dxos/react-ui/Container';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -43,7 +43,7 @@ const DefaultStory = (_: PaneArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container.Container>
+            <Layout.Container>
               <Form.Root
                 schema={NoteSchema}
                 values={values}
@@ -65,7 +65,7 @@ const DefaultStory = (_: PaneArgs) => {
                   </FormField>
                 </Form.Content>
               </Form.Root>
-            </Container.Container>
+            </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>

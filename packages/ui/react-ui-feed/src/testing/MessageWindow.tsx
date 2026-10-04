@@ -5,7 +5,7 @@
 import React, { type ComponentType, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Window, type WindowController, type WindowState, useListModel } from '@dxos/react-ui-virtual';
-import * as Container from '@dxos/react-ui/Container';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type Message } from '@dxos/types';
 
 import { HtmlBlock, MarkdownBlock, type MessageChromeProps } from '../components/index.ts';
@@ -97,11 +97,11 @@ export const MessageWindow = ({
         }
 
         return (
-          <Container.Container gutter={gutter ?? 'lg'}>
+          <Layout.Container gutter={gutter ?? 'lg'}>
             <Chrome message={message} index={index} selected={selectedIds.has(message.id)} onSelect={onSelect}>
               <Item content={renderer(message)} message={message} Custom={Custom} />
             </Chrome>
-          </Container.Container>
+          </Layout.Container>
         );
       }}
     </Window>

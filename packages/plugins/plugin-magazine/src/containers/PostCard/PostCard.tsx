@@ -8,7 +8,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
-import * as Grid from '@dxos/react-ui/Grid';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { Subscription } from '#types';
 
@@ -59,7 +59,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
       )}
       {(feedName || published) && (
         <Card.Row>
-          <Grid.Grid
+          <Layout.Grid
             cols={['minmax(0, 1fr)', 'auto']}
             gap='sm'
             align='center'
@@ -67,7 +67,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
           >
             <span className='truncate'>{feedName ?? ''}</span>
             <span className='text-end shrink-0'>{published ?? ''}</span>
-          </Grid.Grid>
+          </Layout.Grid>
         </Card.Row>
       )}
       {post.link && <Card.Link label={post.link} href={post.link} />}

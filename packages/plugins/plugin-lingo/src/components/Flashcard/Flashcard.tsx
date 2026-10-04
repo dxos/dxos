@@ -42,22 +42,22 @@ export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: Fl
           {word.examples?.[0] && <span className='text-sm text-fg-muted italic'>{word.examples[0]}</span>}
         </div>
       ) : (
-        <Button.Button onClick={onReveal} data-testid='lingo.flashcard.reveal'>
+        <Button.Root onClick={onReveal} data-testid='lingo.flashcard.reveal'>
           <Icon.Icon icon='ph--eye--regular' size='md' />
           <span className='pl-2'>{t('reveal.button')}</span>
-        </Button.Button>
+        </Button.Root>
       )}
 
       {revealed && (
         <div className='flex gap-2'>
-          <Button.Button onClick={() => onAnswer(false)} data-testid='lingo.flashcard.incorrect'>
+          <Button.Root onClick={() => onAnswer(false)} data-testid='lingo.flashcard.incorrect'>
             <Icon.Icon icon='ph--x--regular' size='md' />
             <span className='pl-2'>{t('incorrect.button')}</span>
-          </Button.Button>
-          <Button.Button variant='primary' onClick={() => onAnswer(true)} data-testid='lingo.flashcard.correct'>
+          </Button.Root>
+          <Button.Root variant='primary' onClick={() => onAnswer(true)} data-testid='lingo.flashcard.correct'>
             <Icon.Icon icon='ph--check--regular' size='md' />
             <span className='pl-2'>{t('correct.button')}</span>
-          </Button.Button>
+          </Button.Root>
         </div>
       )}
     </div>

@@ -10,12 +10,12 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as DragHandle from '@dxos/react-ui/DragHandle';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -72,16 +72,16 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
               <DragHandle.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
               <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Block.Block rail='end'>
+              <Layout.Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <Button.Button
+                  <Button.Root
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Block.Block>
+              </Layout.Block>
             </Card.Header>
             <Card.Body>
               {projection && (

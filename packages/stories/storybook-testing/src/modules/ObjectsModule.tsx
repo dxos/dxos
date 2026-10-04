@@ -80,7 +80,7 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
             </Select.Content>
           </Select.Root>
           <Field.Root>
-            <Input.Input
+            <Input.Root
               classNames='grow'
               placeholder='Filter objects…'
               value={text}

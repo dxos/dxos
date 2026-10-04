@@ -8,8 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Form, type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
-import * as Slider from '@dxos/react-ui/Slider';
+import * as Input from '@dxos/react-ui/Input';
 
 import { Terra } from '#types';
 
@@ -80,7 +79,7 @@ const createSliderField = (key: SliderKey): FormFieldMap[string] => {
         labelEnd={<span className='text-sm text-fg-muted tabular-nums'>{current.toFixed(spec.decimals)}</span>}
         renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}
       >
-        <Slider.Input
+        <Input.Slider
           value={[current]}
           min={spec.min}
           max={spec.max}
@@ -138,12 +137,9 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
         </Form.Viewport>
       </Form.Root>
 
-      <Button.Button icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
+      <Button.Root icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
 
-      <Checkbox.Checkbox
-        onCheckedChange={({ checked }) => handleWaterSheenChange(checked === true)}
-        label='Water sheen'
-      />
+      <Input.Checkbox onCheckedChange={({ checked }) => handleWaterSheenChange(checked === true)} label='Water sheen' />
     </div>
   );
 };

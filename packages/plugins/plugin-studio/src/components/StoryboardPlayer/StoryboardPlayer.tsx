@@ -87,7 +87,7 @@ export const StoryboardPlayer = ({
               would take the first and last cells. */}
           <div className='grow grid grid-cols-[auto_1fr_auto] items-center gap-1'>
             <div className='flex items-center gap-1'>
-              <Button.Button
+              <Button.Root
                 iconOnly
                 icon='ph--caret-left--regular'
                 size='sm'
@@ -99,7 +99,7 @@ export const StoryboardPlayer = ({
               <span className='tabular-nums whitespace-nowrap'>
                 {index + 1} / {clips.length}
               </span>
-              <Button.Button
+              <Button.Root
                 iconOnly
                 icon='ph--caret-right--regular'
                 size='sm'
@@ -110,7 +110,7 @@ export const StoryboardPlayer = ({
             </div>
             <span className='min-w-0 truncate text-center'>{clip.name}</span>
             <div className='flex justify-end'>
-              <Button.Button
+              <Button.Root
                 iconOnly
                 icon='ph--x--regular'
                 label={t('close.label')}

@@ -13,10 +13,10 @@ import { composable, composableProps } from '../../../util/slots.ts';
 import { clickableProps } from '../../clickable.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Block from '../Block/Block.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Container from '../Container/Container.tsx';
-import * as Group from '../Group/Group.tsx';
+import { Block } from '../Block/Block.tsx';
+import { Button, type ButtonProps } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Group, type GroupProps } from '../Group/Group.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import { Image, type ImageProps } from '../Image/Image.tsx';
 import * as Menu from '../Menu/Menu.tsx';
@@ -74,9 +74,9 @@ const CardRoot = composable<HTMLDivElement, Omit<CardRootProps, keyof ThemedClas
       />
     );
     return grid ? (
-      <Container.Container asChild gutter='rail' level='+1'>
+      <Container asChild gutter='rail' level='+1'>
         {card}
-      </Container.Container>
+      </Container>
     ) : (
       card
     );
@@ -222,13 +222,13 @@ CardBody.displayName = 'Card.Body';
 
 type CardFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   /** `between` splits leading actions (a nested Group) from a trailing control. */
-  justify?: Group.GroupProps['justify'];
+  justify?: GroupProps['justify'];
 };
 
 /** A `Group` of actions in the content track, end-justified unless `justify` says otherwise. */
 const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
   ({ classNames, justify = 'end', ...props }, forwardedRef) => (
-    <Group.Group asChild justify={justify}>
+    <Group asChild justify={justify}>
       <div
         {...props}
         data-scope='card'
@@ -236,7 +236,7 @@ const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
         className={mx(recipes.cardFooter(), classNames)}
         ref={forwardedRef}
       />
-    </Group.Group>
+    </Group>
   ),
 );
 
@@ -316,9 +316,7 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
       className={mx(recipes.cardRow(), onClick && recipes.cardClickable(), classNames)}
       ref={forwardedRef}
     >
-      {(leading != null || icon) && (
-        <Block.Block rail='start'>{leading ?? (icon && <Icon.Icon icon={icon} />)}</Block.Block>
-      )}
+      {(leading != null || icon) && <Block rail='start'>{leading ?? (icon && <Icon.Icon icon={icon} />)}</Block>}
       <div data-scope='card' data-part='row-main' className={recipes.cardRowMain()}>
         <div data-scope='card' data-part='row-content' className={recipes.cardRowContent()}>
           {children}
@@ -358,7 +356,7 @@ CardText.displayName = 'Card.Text';
 // Action
 //
 
-type CardActionProps = Omit<Button.ButtonProps, 'iconOnly' | 'icon' | 'label' | 'children'> &
+type CardActionProps = Omit<ButtonProps, 'iconOnly' | 'icon' | 'label' | 'children'> &
   (
     | {
         /** A `SystemButton` preset: its icon, and its translated label unless `label` is given. */
@@ -393,15 +391,7 @@ const CardAction = forwardRef<HTMLButtonElement, CardActionProps>(
     }
 
     return (
-      <Button.Button
-        variant='ghost'
-        {...props}
-        icon={icon}
-        label={label}
-        iconOnly
-        onClick={handleClick}
-        ref={forwardedRef}
-      />
+      <Button variant='ghost' {...props} icon={icon} label={label} iconOnly onClick={handleClick} ref={forwardedRef} />
     );
   },
 );
@@ -436,15 +426,15 @@ const CardLink = forwardRef<HTMLAnchorElement, CardLinkProps>(
       className={mx(recipes.cardRow(), recipes.cardLink(), classNames)}
       ref={forwardedRef}
     >
-      <Block.Block rail='start'>
+      <Block rail='start'>
         <Icon.Icon icon='ph--link--regular' />
-      </Block.Block>
+      </Block>
       <span data-scope='card' data-part='row-content' className={recipes.cardRowContent()}>
         {label}
       </span>
-      <Block.Block rail='end'>
+      <Block rail='end'>
         <Icon.Icon icon='ph--arrow-square-out--regular' />
-      </Block.Block>
+      </Block>
     </a>
   ),
 );
@@ -468,7 +458,7 @@ type CardMenuProps = {
 const CardMenu = ({ label, size, children }: CardMenuProps) => (
   <Menu.Root>
     <Menu.Trigger asChild>
-      <Button.Button
+      <Button
         icon='ph--dots-three-vertical--regular'
         label={label}
         iconOnly

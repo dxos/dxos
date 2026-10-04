@@ -17,8 +17,7 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import * as Container from '@dxos/react-ui/Container';
-import * as Flex from '@dxos/react-ui/Flex';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
@@ -50,18 +49,18 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
       </Panel.Header>
 
       <Panel.Body asChild>
-        <Container.Container gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
+        <Layout.Container gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
-              <Flex.Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
+              <Layout.Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
                 <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
-              </Flex.Flex>
+              </Layout.Flex>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <div className='dx-document pb-4'>
             <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
           </div>
-        </Container.Container>
+        </Layout.Container>
       </Panel.Body>
     </Panel.Root>
   );

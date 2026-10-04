@@ -17,8 +17,8 @@ import React, {
 
 import { type WindowController, type WindowState, useFollow, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { type Message } from '@dxos/types';
@@ -610,7 +610,7 @@ const MessageListViewport = Util.composable<HTMLDivElement, MessageListViewportE
         // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
         <div key={message.id} data-object-id={message.id} {...windowRowProps(index, message.id)}>
           {!empty && (
-            <Container.Container gutter={gutter}>
+            <Layout.Container gutter={gutter}>
               {/* The widgets' query container: it must be an element whose width is definite, since
                   containment stops a descendant's content sizing it (a prompt's bubble collapses). */}
               <div className='dx-container-type-inline-size'>
@@ -623,7 +623,7 @@ const MessageListViewport = Util.composable<HTMLDivElement, MessageListViewportE
                   <MessageListItem message={message} />
                 </Chrome>
               </div>
-            </Container.Container>
+            </Layout.Container>
           )}
         </div>,
       );
@@ -778,7 +778,7 @@ const MessageListNav = Util.composable<HTMLDivElement, MessageListNavExtra>(
     return (
       <div role='group' {...Util.composableProps(props)} onKeyDown={onKeyDown} ref={forwardedRef}>
         {ends && (
-          <Button.Button
+          <Button.Root
             icon='ph--arrow-line-up--regular'
             iconOnly
             label='First message'
@@ -787,7 +787,7 @@ const MessageListNav = Util.composable<HTMLDivElement, MessageListNavExtra>(
             onClick={() => navigation.first()}
           />
         )}
-        <Button.Button
+        <Button.Root
           icon='ph--caret-up--regular'
           iconOnly
           label='Previous message'
@@ -795,7 +795,7 @@ const MessageListNav = Util.composable<HTMLDivElement, MessageListNavExtra>(
           data-testid='feed.nav.back'
           onClick={() => navigation.step(-1)}
         />
-        <Button.Button
+        <Button.Root
           icon='ph--caret-down--regular'
           iconOnly
           label='Next message'
@@ -804,7 +804,7 @@ const MessageListNav = Util.composable<HTMLDivElement, MessageListNavExtra>(
           onClick={() => navigation.step(1)}
         />
         {ends && (
-          <Button.Button
+          <Button.Root
             icon='ph--arrow-line-down--regular'
             iconOnly
             label='Last message'

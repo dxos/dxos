@@ -15,8 +15,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Progress from '@dxos/react-ui/Progress';
-import * as Switch from '@dxos/react-ui/Switch';
+import * as Input from '@dxos/react-ui/Input';
+import * as Status from '@dxos/react-ui/Status';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { Text } from '@dxos/schema';
@@ -87,7 +87,7 @@ const main = async () => {
         <div className='demo'>
           <div className='buttons'>
             <Tooltip.Trigger content='Offline mode' className='flex'>
-              <Switch.Switch
+              <Input.Switch
                 data-testid='airplane-mode'
                 classNames='mr-2'
                 onCheckedChange={({ checked: e }) => {
@@ -99,7 +99,7 @@ const main = async () => {
               <Icon.Icon icon='ph--airplane--regular' size='xl' classNames={mx(offline && 'active')} />
             </Tooltip.Trigger>
             <Tooltip.Trigger content='Write batching' className='flex'>
-              <Switch.Switch
+              <Input.Switch
                 data-testid='batching'
                 classNames='mr-2'
                 onCheckedChange={({ checked: e }) => {
@@ -128,7 +128,7 @@ const fallback = () => {
   root.render(
     <Theme.Provider tx={Theme.defaultTx}>
       <div className='flex h-[100dvh] justify-center items-center'>
-        <Progress.Progress indeterminate label='Initializing' />
+        <Status.Progress indeterminate label='Initializing' />
       </div>
     </Theme.Provider>,
   );

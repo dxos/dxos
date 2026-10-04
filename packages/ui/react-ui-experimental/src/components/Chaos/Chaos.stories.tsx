@@ -56,7 +56,7 @@ const DefaultStory = (props: ChaosProps) => {
   return (
     <div className='flex grow items-center justify-center'>
       <div className='z-[10] absolute right-2 bottom-2'>
-        <Button.Button onClick={() => console.log(JSON.stringify(options, null, 2))}>Snapshot</Button.Button>
+        <Button.Root onClick={() => console.log(JSON.stringify(options, null, 2))}>Snapshot</Button.Root>
       </div>
       <Chaos {...props} options={options} getValue={getAverage} />
     </div>

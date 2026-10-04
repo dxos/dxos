@@ -88,7 +88,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
 
   return (
     <ActionMenu {...menuActions} onAction={handleAction}>
-      <Button.Button variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
+      <Button.Root variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
     </ActionMenu>
   );
 };

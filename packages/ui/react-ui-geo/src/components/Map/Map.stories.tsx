@@ -31,7 +31,7 @@ const DefaultStory = ({ url: urlProp, markers = [] }: StoryArgs) => {
         <Panel.Header>
           <Toolbar.Root>
             <Field.Root>
-              <Input.Input
+              <Input.Root
                 spellCheck={false}
                 placeholder='API KEY'
                 value={key}

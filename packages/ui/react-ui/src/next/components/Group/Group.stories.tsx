@@ -11,8 +11,8 @@ import { expect, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Group from './Group.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from './Group.tsx';
 
 const JUSTIFY = ['start', 'end', 'between'] as const;
 
@@ -20,28 +20,24 @@ const JUSTIFY = ['start', 'end', 'between'] as const;
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     {JUSTIFY.map((justify) => (
-      <Group.Group
-        key={justify}
-        justify={justify === 'start' ? undefined : justify}
-        data-testid={`group-${justify}-${size}`}
-      >
-        <Button.Button data-testid={`cancel-${justify}-${size}`}>Cancel</Button.Button>
-        <Button.Button variant='primary' data-testid={`save-${justify}-${size}`}>
+      <Group key={justify} justify={justify === 'start' ? undefined : justify} data-testid={`group-${justify}-${size}`}>
+        <Button data-testid={`cancel-${justify}-${size}`}>Cancel</Button>
+        <Button variant='primary' data-testid={`save-${justify}-${size}`}>
           Save
-        </Button.Button>
-      </Group.Group>
+        </Button>
+      </Group>
     ))}
-    <Group.Group fill data-testid={`fill-${size}`}>
-      <Button.Button data-testid={`fill-cancel-${size}`}>Cancel</Button.Button>
-      <Button.Button variant='primary' data-testid={`fill-save-${size}`}>
+    <Group fill data-testid={`fill-${size}`}>
+      <Button data-testid={`fill-cancel-${size}`}>Cancel</Button>
+      <Button variant='primary' data-testid={`fill-save-${size}`}>
         Save changes
-      </Button.Button>
-    </Group.Group>
-    <Group.Group fill data-testid={`stretch-${size}`}>
-      <Button.Button variant='primary' data-testid={`stretch-submit-${size}`}>
+      </Button>
+    </Group>
+    <Group fill data-testid={`stretch-${size}`}>
+      <Button variant='primary' data-testid={`stretch-submit-${size}`}>
         Submit
-      </Button.Button>
-    </Group.Group>
+      </Button>
+    </Group>
   </>
 );
 

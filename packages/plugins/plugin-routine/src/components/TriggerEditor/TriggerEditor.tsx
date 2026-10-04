@@ -321,7 +321,7 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
               <Field.Label classNames='grow truncate'>{t(`trigger-kind.${kind}.label`)}</Field.Label>
             </Field.Root>
             {!readonly && (
-              <Button.Button
+              <Button.Root
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly

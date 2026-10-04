@@ -11,8 +11,8 @@ import { DXN, Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import * as Container from '@dxos/react-ui/Container';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -65,7 +65,7 @@ const DefaultStory = ({ system }: StoryArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container.Container>
+            <Layout.Container>
               <ViewEditor
                 ref={projectionRef}
                 type={type}
@@ -74,7 +74,7 @@ const DefaultStory = ({ system }: StoryArgs) => {
                 db={space?.db}
                 onDelete={(fieldId) => projectionRef.current?.deleteFieldProjection(fieldId)}
               />
-            </Container.Container>
+            </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>

@@ -12,9 +12,9 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size } from '../../sizes.ts';
 import { byTestId, expectPopupSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import * as Dialog from '../Dialog/Dialog.tsx';
-import * as Group from '../Group/Group.tsx';
+import { Group } from '../Group/Group.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as AlertDialog from './AlertDialog.tsx';
 
@@ -30,7 +30,7 @@ type ConfirmProps = {
 const Confirm = ({ contentSize, testId, autofocusAction, onAction }: ConfirmProps) => (
   <AlertDialog.Root>
     <AlertDialog.Trigger asChild>
-      <Button.Button data-testid={`${testId}-trigger`}>Delete space</Button.Button>
+      <Button data-testid={`${testId}-trigger`}>Delete space</Button>
     </AlertDialog.Trigger>
     <AlertDialog.Content size={contentSize} data-testid={testId}>
       <AlertDialog.Header>
@@ -60,7 +60,7 @@ const Confirm = ({ contentSize, testId, autofocusAction, onAction }: ConfirmProp
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [deleted, setDeleted] = useState(0);
   return (
-    <Group.Group>
+    <Group>
       <Confirm testId={`confirm-${size}`} onAction={() => setDeleted((count) => count + 1)} />
       <Confirm
         contentSize='lg'
@@ -69,7 +69,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         onAction={() => setDeleted((count) => count + 1)}
       />
       <Typography.Text data-testid={`deleted-${size}`}>Deleted {deleted}</Typography.Text>
-    </Group.Group>
+    </Group>
   );
 };
 

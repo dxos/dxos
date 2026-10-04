@@ -5,8 +5,6 @@
 import React, { type PropsWithChildren, createContext, forwardRef, useCallback, useContext, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
-import * as DatePicker from '@dxos/react-ui/DatePicker';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
@@ -344,7 +342,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.minute.label')}>
           <Field.Root>
-            <Input.Input
+            <Input.Root
               min={0}
               max={59}
               step={1}
@@ -364,7 +362,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.at.label')}>
           <Field.Root>
-            <DatePicker.Input
+            <Input.Date
               type='time'
               hourCycle={12}
               value={value.time}
@@ -379,7 +377,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <div className='@container dx-container-type-inline-size flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
           <LabelledRow label={t('schedule.at.label')}>
             <Field.Root>
-              <DatePicker.Input
+              <Input.Date
                 type='time'
                 hourCycle={12}
                 value={value.time}
@@ -395,7 +393,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 return (
                   <div key={day} className='flex shrink-0 items-center gap-1'>
                     <Field.Root>
-                      <Checkbox.Checkbox
+                      <Input.Checkbox
                         checked={checked}
                         onCheckedChange={({ checked: next }) => {
                           // Preserve the canonical `Days` order so the summary reads naturally.
@@ -423,7 +421,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <div className='flex items-center gap-3'>
           <LabelledRow label={t('schedule.day.label')}>
             <Field.Root>
-              <Input.Input
+              <Input.Root
                 min={1}
                 max={31}
                 step={1}
@@ -439,7 +437,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
           </LabelledRow>
           <LabelledRow label={t('schedule.at.label')}>
             <Field.Root>
-              <DatePicker.Input
+              <Input.Date
                 type='time'
                 hourCycle={12}
                 value={value.time}
@@ -454,7 +452,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.cron.label')}>
           <Field.Root>
-            <Input.Input
+            <Input.Root
               classNames='w-50 tabular-nums'
               placeholder='0 9 * * MON-FRI'
               value={value.cron}

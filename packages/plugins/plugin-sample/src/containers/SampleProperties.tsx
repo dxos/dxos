@@ -36,7 +36,7 @@ export const SampleProperties = ({ subject }: SamplePropertiesProps) => {
     <Field.Root>
       <Field.Label>{t('randomize-item.label')}</Field.Label>
       <Field.HelperText>{t('randomize-item-description.label')}</Field.HelperText>
-      <Button.Button onClick={handleRandomize}>{t('randomize-item.label')}</Button.Button>
+      <Button.Root onClick={handleRandomize}>{t('randomize-item.label')}</Button.Root>
     </Field.Root>
   );
 };

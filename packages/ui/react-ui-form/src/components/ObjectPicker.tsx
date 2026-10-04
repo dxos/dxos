@@ -15,7 +15,7 @@ import React, {
 } from 'react';
 
 import * as Combobox from '@dxos/react-ui/Combobox';
-import * as Container from '@dxos/react-ui/Container';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
 import { hues } from '@dxos/ui-types';
@@ -89,12 +89,12 @@ const CreateForm = ({ schema, query, createInitialValuePath, createFieldMap, onS
     onSave={onSave}
     onCancel={onCancel}
   >
-    <Container.Container gutter='inset'>
+    <Layout.Container gutter='inset'>
       <FormContent>
         <FormFields />
         <FormActions />
       </FormContent>
-    </Container.Container>
+    </Layout.Container>
   </FormRoot>
 );
 

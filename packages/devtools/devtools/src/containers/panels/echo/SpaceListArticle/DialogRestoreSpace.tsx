@@ -32,7 +32,7 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
       <Toolbar.Root>
         {!isControlled && (
           <Dialog.Trigger asChild>
-            <Button.Button>Import space</Button.Button>
+            <Button.Root>Import space</Button.Root>
           </Dialog.Trigger>
         )}
       </Toolbar.Root>
@@ -60,7 +60,7 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
         </Dialog.Body>
         <Dialog.Footer>
           <Dialog.CloseTrigger asChild>
-            <Button.Button variant='primary'>{'Cancel'}</Button.Button>
+            <Button.Root variant='primary'>{'Cancel'}</Button.Root>
           </Dialog.CloseTrigger>
         </Dialog.Footer>
       </Dialog.Content>

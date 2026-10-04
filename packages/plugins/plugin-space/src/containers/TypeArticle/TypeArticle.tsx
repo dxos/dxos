@@ -16,9 +16,9 @@ import { Selection, useSelection, useSelectionActions, useViewStateActions } fro
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx, osTranslations } from '@dxos/ui-theme';
@@ -328,7 +328,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 /** One layout's content, or the message standing in for it when the layout has nothing to show. */
 const LayoutPanel = ({ value, empty, children }: PropsWithChildren<{ value: Layout; empty?: string }>) => (
   <Tabs.Content value={value} classNames='contents'>
-    {empty ? <Empty.Empty classNames='h-full'>{empty}</Empty.Empty> : children}
+    {empty ? <Status.Empty classNames='h-full'>{empty}</Status.Empty> : children}
   </Tabs.Content>
 );
 

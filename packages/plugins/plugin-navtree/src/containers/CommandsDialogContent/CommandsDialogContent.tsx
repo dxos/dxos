@@ -133,7 +133,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
         </Dialog.Body>
         <Dialog.Footer>
           <Dialog.CloseTrigger asChild>
-            <Button.Button classNames='w-full'>{t('close.label', { ns: osTranslations })}</Button.Button>
+            <Button.Root classNames='w-full'>{t('close.label', { ns: osTranslations })}</Button.Root>
           </Dialog.CloseTrigger>
         </Dialog.Footer>
       </Dialog.Content>

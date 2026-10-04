@@ -11,7 +11,7 @@ import { meta } from '#meta';
 
 import { type DebugPanelMode } from './view-state.ts';
 
-export type DebugPanelHeaderProps = Pick<Button.ButtonProps, 'size'> & {
+export type DebugPanelHeaderProps = Pick<Button.RootProps, 'size'> & {
   mode: DebugPanelMode;
   onModeChange: (mode: DebugPanelMode) => void;
   /** Omitted where the host brings its own close (the floating window's `CloseTrigger`). */
@@ -27,7 +27,7 @@ export const DebugPanelHeader = ({ mode, onModeChange, onClose, size }: DebugPan
   const floating = mode === 'floating';
   return (
     <>
-      <Button.Button
+      <Button.Root
         variant='ghost'
         size={size}
         iconOnly
@@ -37,7 +37,7 @@ export const DebugPanelHeader = ({ mode, onModeChange, onClose, size }: DebugPan
         onClick={() => onModeChange(floating ? 'docked' : 'floating')}
       />
       {onClose && (
-        <Button.Button
+        <Button.Root
           variant='ghost'
           size={size}
           iconOnly

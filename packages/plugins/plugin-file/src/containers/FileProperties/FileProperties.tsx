@@ -78,7 +78,7 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
         <Field.Root>
           <Field.Label>{t('properties.reference.label')}</Field.Label>
           <div className='flex w-full gap-1'>
-            <Input.Input readOnly value={reference} classNames='grow' />
+            <Input.Root readOnly value={reference} classNames='grow' />
             <SystemButton.Clipboard iconOnly value={reference} label={t('properties.reference.copy.label')} />
           </div>
         </Field.Root>
@@ -87,9 +87,9 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
         <Field.Root>
           <Field.Label>{t('properties.url.label')}</Field.Label>
           <div className='flex w-full gap-1'>
-            <Input.Input readOnly value={url} classNames='grow' />
+            <Input.Root readOnly value={url} classNames='grow' />
             <SystemButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
-            <Button.Button
+            <Button.Root
               iconOnly
               icon='ph--arrows-clockwise--regular'
               label={t('properties.url.regenerate.label')}

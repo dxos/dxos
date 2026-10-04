@@ -151,8 +151,8 @@ export const LoggingArticle = ({ role }: ArticleProps) => {
         <Toolbar.Root>
           <Select items={presets} onValueChange={handleSearchChange} />
           <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={handleSearchChange} />
-          <Button.Button icon='ph--download--regular' iconOnly onClick={handleDownload} label='Download logs' />
-          <Button.Button icon='ph--x--regular' iconOnly onClick={() => setLogs([])} label='Clear logs' />
+          <Button.Root icon='ph--download--regular' iconOnly onClick={handleDownload} label='Download logs' />
+          <Button.Root icon='ph--x--regular' iconOnly onClick={() => setLogs([])} label='Clear logs' />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

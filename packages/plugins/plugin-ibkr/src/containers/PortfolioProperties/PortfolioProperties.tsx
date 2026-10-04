@@ -12,7 +12,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { Form } from '@dxos/react-ui-form';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Switch from '@dxos/react-ui/Switch';
+import * as Input from '@dxos/react-ui/Input';
 
 import { Ibkr } from '#types';
 
@@ -57,7 +57,7 @@ export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
     <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('daily-sync.label')}</Field.Label>
-        <Switch.Switch checked={syncEnabled ?? false} disabled={pending} onCheckedChange={() => handleToggleSync()} />
+        <Input.Switch checked={syncEnabled ?? false} disabled={pending} onCheckedChange={() => handleToggleSync()} />
       </Field.Root>
     </Form.FieldSet>
   );

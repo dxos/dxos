@@ -8,10 +8,9 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
@@ -66,8 +65,8 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
             <Card.Root border={false}>
               <Card.Header>
-                <Block.Block />
-                <Flex.Flex column gap='xs' classNames='min-w-0'>
+                <Layout.Block />
+                <Layout.Flex column gap='xs' classNames='min-w-0'>
                   <Card.Title>
                     {instrument.symbol}
                     {instrument.name ? ` · ${instrument.name}` : ''}
@@ -77,8 +76,8 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
                       {[instrument.exchange, instrument.sector, instrument.industry].filter(Boolean).join(' · ')}
                     </Card.Text>
                   )}
-                </Flex.Flex>
-                <Block.Block />
+                </Layout.Flex>
+                <Layout.Block />
               </Card.Header>
               <Card.Body>
                 <Card.Row>

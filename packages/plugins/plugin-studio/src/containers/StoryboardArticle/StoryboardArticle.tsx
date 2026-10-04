@@ -14,11 +14,11 @@ import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention, useSelection, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Splitter from '@dxos/react-ui/Splitter';
+import * as Status from '@dxos/react-ui/Status';
 
 import { FrameStack, StoryboardPlayer } from '#components';
 import { meta } from '#meta';
@@ -168,7 +168,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
             <ScrollArea.Root>
               <ScrollArea.Viewport>
                 {frames.length === 0 ? (
-                  <Empty.Empty classNames='h-full'>{t('storyboard-empty.message')}</Empty.Empty>
+                  <Status.Empty classNames='h-full'>{t('storyboard-empty.message')}</Status.Empty>
                 ) : (
                   <FrameStack<Frame.Frame>
                     items={frames}

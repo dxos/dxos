@@ -6,9 +6,9 @@ import React, { type PropsWithChildren } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 
 const DEFAULT_BLOCK_SIZE = 22;
@@ -61,9 +61,9 @@ export const PopoverCardContainer = ({
                 stories exercise the real composition: Card.Root grid + header + content. */}
           <Card.Root border={false} classNames='dx-card-popover'>
             <Card.Header>
-              <Block.Block>
+              <Layout.Block>
                 <Icon.Icon icon={icon} />
-              </Block.Block>
+              </Layout.Block>
               <Card.Title>Popover</Card.Title>
             </Card.Header>
             {children}

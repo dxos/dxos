@@ -11,8 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { controlSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Input from '../Input/Input.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Input } from '../Input/Input.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as Editable from './Editable.tsx';
 import { useEditable } from './useEditable.ts';
@@ -200,17 +200,17 @@ const HeldOpenStory = ({ initialValue = 'Ship the spring release', held = true }
 
   return (
     <>
-      <Input.Input data-testid='held.input' value={draft} onChange={(event) => setDraft(event.target.value)} />
+      <Input data-testid='held.input' value={draft} onChange={(event) => setDraft(event.target.value)} />
       <div className='flex gap-2'>
-        <Button.Button data-testid='held.edit' onClick={() => edit()}>
+        <Button data-testid='held.edit' onClick={() => edit()}>
           Edit
-        </Button.Button>
-        <Button.Button data-testid='held.commit' onClick={() => commit()}>
+        </Button>
+        <Button data-testid='held.commit' onClick={() => commit()}>
           Commit
-        </Button.Button>
-        <Button.Button data-testid='held.revert' onClick={() => revert()}>
+        </Button>
+        <Button data-testid='held.revert' onClick={() => revert()}>
           Revert
-        </Button.Button>
+        </Button>
       </div>
       <span data-testid='held.editing'>{editing ? 'editing' : 'preview'}</span>
       <span data-testid='held.value'>{value}</span>

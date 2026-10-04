@@ -35,14 +35,14 @@ const DefaultStory = ({ orientation: _orientation, pgn, ...props }: StoryArgs) =
   return (
     <div className='flex flex-col grow gap-2 overflow-hidden'>
       <Toolbar.Root>
-        <Button.Button onClick={() => model.update()}>Reset</Button.Button>
-        <Button.Button onClick={() => model.makeRandomMove()}>Move</Button.Button>
+        <Button.Root onClick={() => model.update()}>Reset</Button.Root>
+        <Button.Root onClick={() => model.makeRandomMove()}>Move</Button.Root>
         <div className='grow'></div>
-        <Button.Button
+        <Button.Root
           onClick={() => setOrientation((orientation) => (!orientation || orientation === 'white' ? 'black' : 'white'))}
         >
           Toggle
-        </Button.Button>
+        </Button.Root>
       </Toolbar.Root>
       <Gameboard.Root model={model} onDrop={handleDrop}>
         <Gameboard.Content grow contain>

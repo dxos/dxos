@@ -102,7 +102,7 @@ export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
       {onRewind && (
-        <Button.Button
+        <Button.Root
           icon='ph--clock-counter-clockwise--regular'
           iconOnly
           label={t('rewind.label')}

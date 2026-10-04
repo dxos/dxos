@@ -139,7 +139,7 @@ const DefaultStory = ({
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Button.Button
+              <Button.Root
                 icon={auto ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
                 label={auto ? 'Stop the agent' : 'Let the agent talk'}
@@ -190,7 +190,7 @@ const PromptInput = ({
   return (
     <div className='p-2'>
       <Field.Root>
-        <Input.Input
+        <Input.Root
           placeholder={busy ? 'Answering…' : 'Ask something…'}
           value={prompt}
           data-testid='assistant.prompt'

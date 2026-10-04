@@ -12,8 +12,8 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { realHover, realUnhover, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import * as Field from '../Field/Field.tsx';
-import * as Input from '../Input/Input.tsx';
-import * as Switch from '../Switch/Switch.tsx';
+import { Input } from '../Input/Input.tsx';
+import { Switch } from '../Switch/Switch.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as Collapsible from './Collapsible.tsx';
 
@@ -26,9 +26,9 @@ const DefaultStory = () => (
         <Field.Header>
           <Field.Label>Sync interval</Field.Label>
         </Field.Header>
-        <Input.Input defaultValue='30s' />
+        <Input defaultValue='30s' />
       </Field.Root>
-      <Switch.Switch label='Sync over cellular' />
+      <Switch label='Sync over cellular' />
     </Collapsible.Content>
   </Collapsible.Root>
 );

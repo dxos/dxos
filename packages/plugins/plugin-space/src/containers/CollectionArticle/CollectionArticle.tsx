@@ -13,10 +13,10 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Collection, Obj } from '@dxos/echo';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
@@ -79,9 +79,9 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   return (
     <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Block.Block>
+        <Layout.Block>
           <Icon.Icon icon={item.icon} classNames={styles?.fg} />
-        </Block.Block>
+        </Layout.Block>
         <Card.Title>{label}</Card.Title>
         {archiveItem && (
           <Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>

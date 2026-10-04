@@ -64,7 +64,7 @@ export const AgentConfig = ({
             </span>
             {agentStatus === 'created' && (
               <Tooltip.Trigger asChild content={t('destroy-agent.label')} side='bottom'>
-                <Button.Button
+                <Button.Root
                   variant='ghost'
                   classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid='agent.destroy'
@@ -84,7 +84,7 @@ export const AgentConfig = ({
         </>
       ) : (
         <>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             classNames='my-2 w-full justify-start gap-2 ps-0 pe-3'
             data-testid={agentStatus === 'creatable' ? 'devices-panel.create-agent' : 'devices-panel.agent-error'}
@@ -101,7 +101,7 @@ export const AgentConfig = ({
             <span className='grow font-medium text-start'>
               {t(agentStatus === 'creatable' ? 'create-agent.label' : '')}
             </span>
-          </Button.Button>
+          </Button.Root>
           {agentStatus === 'creatable' && (
             <div className='space-y-2' id='devices-panel.create-agent.description'>
               <p className='text-fg-muted'>

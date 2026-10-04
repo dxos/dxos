@@ -131,9 +131,9 @@ const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button icon='ph--play--regular' label='Start' onClick={handleStart} />
-          <Button.Button icon='ph--warning--regular' label='Fail' onClick={handleFail} />
-          <Button.Button icon='ph--x--regular' label='Reset' onClick={handleCancel} />
+          <Button.Root icon='ph--play--regular' label='Start' onClick={handleStart} />
+          <Button.Root icon='ph--warning--regular' label='Fail' onClick={handleFail} />
+          <Button.Root icon='ph--x--regular' label='Reset' onClick={handleCancel} />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body />

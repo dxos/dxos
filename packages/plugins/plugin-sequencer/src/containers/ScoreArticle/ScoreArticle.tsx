@@ -12,9 +12,9 @@ import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { ActionToolbar, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import { mx } from '@dxos/ui-theme';
 import { downloadBlob } from '@dxos/util';
@@ -447,7 +447,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
         <ActionToolbar {...menuActions} attendableId={attendableId}>
           <Field.Root>
             <Field.Label classNames='text-xs mr-1'>BPM</Field.Label>
-            <Input.Input
+            <Input.Root
               min={1}
               value={score.tempo}
               onChange={(event) => handleTempoChange(Number(event.target.value))}
@@ -459,7 +459,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
       </Panel.Header>
 
       <Panel.Body>
-        <Flex.Flex classNames='h-full min-h-0'>
+        <Layout.Flex classNames='h-full min-h-0'>
           <div className='h-full grid grid-rows-[1fr_auto] w-48 shrink-0 border-r border-separator'>
             <TrackList
               tracks={score.tracks}
@@ -511,15 +511,15 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
               />
             ) : (
               <div className={mx('dx-fullscreen flex items-center justify-center text-neutral-500 text-sm')}>
-                <Flex.Flex column gap='sm' align='center'>
+                <Layout.Flex column gap='sm' align='center'>
                   <Icon.Icon icon='ph--music-notes--regular' size='xl' />
                   <span>Add a track to begin.</span>
-                  <Button.Button onClick={handleAddTrack}>Add track</Button.Button>
-                </Flex.Flex>
+                  <Button.Root onClick={handleAddTrack}>Add track</Button.Root>
+                </Layout.Flex>
               </div>
             )}
           </div>
-        </Flex.Flex>
+        </Layout.Flex>
       </Panel.Body>
     </Panel.Root>
   );

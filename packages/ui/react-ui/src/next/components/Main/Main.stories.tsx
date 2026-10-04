@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import * as Toolbar from '../Toolbar/Toolbar.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as Main from './Main.tsx';
@@ -23,19 +23,14 @@ type StoryArgs = Pick<Main.RootProps, 'defaultNavigationSidebarState' | 'default
 const NavigationToggle = () => {
   const { toggleNavigationSidebar } = Main.useMainSidebars('Story.NavigationToggle');
   return (
-    <Button.Button
-      icon='ph--sidebar-simple--regular'
-      iconOnly
-      label='Toggle navigation'
-      onClick={toggleNavigationSidebar}
-    />
+    <Button icon='ph--sidebar-simple--regular' iconOnly label='Toggle navigation' onClick={toggleNavigationSidebar} />
   );
 };
 
 const ComplementaryToggle = () => {
   const { toggleComplementarySidebar } = Main.useMainSidebars('Story.ComplementaryToggle');
   return (
-    <Button.Button
+    <Button
       icon='ph--sidebar-simple--regular'
       iconOnly
       label='Toggle complementary'
@@ -48,7 +43,7 @@ const ComplementaryToggle = () => {
 const AreaItems = ({ label }: { label: string }) => (
   <>
     {['One', 'Two', 'Three'].map((item) => (
-      <Button.Button key={item} variant='ghost' align='start'>{`${label} ${item}`}</Button.Button>
+      <Button key={item} variant='ghost' align='start'>{`${label} ${item}`}</Button>
     ))}
   </>
 );
@@ -77,9 +72,7 @@ const DefaultStory = ({
         <Toolbar.Root>
           <NavigationToggle />
           <Toolbar.Text>Main</Toolbar.Text>
-          <Button.Button onClick={() => setDrawerState(drawerState === 'open' ? 'closed' : 'open')}>
-            Drawer
-          </Button.Button>
+          <Button onClick={() => setDrawerState(drawerState === 'open' ? 'closed' : 'open')}>Drawer</Button>
           <ComplementaryToggle />
         </Toolbar.Root>
         <AreaItems label='Main' />

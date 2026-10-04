@@ -17,7 +17,6 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import * as Button from '@dxos/react-ui/Button';
-import * as ControlFrame from '@dxos/react-ui/ControlFrame';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -372,7 +371,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         )}
         {/* The field's root is the grid item, so it takes the placement. */}
         <Field.Root classNames='row-start-1 col-start-[title] col-end-[assignee] min-w-0'>
-          <Input.Input
+          <Input.Root
             // An input clips its overflow rather than wrapping it, so a long title ends mid-word against the trailing
             // controls with nothing to say it continues; the ellipsis says so.
             classNames='grow text-ellipsis'
@@ -402,7 +401,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         </Field.Root>
         {hasDescription && (
           // A control frame, as the title's Input is: the well, and the focus ring while the editor has focus.
-          <ControlFrame.ControlFrame
+          <Input.Frame
             rows={2}
             data-testid='taskList.edit.description'
             classNames='row-start-2 col-[title/assignee] min-w-0'
@@ -434,7 +433,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
                 }
               }}
             />
-          </ControlFrame.ControlFrame>
+          </Input.Frame>
         )}
         {showEstimates &&
           (editing ? (
@@ -486,7 +485,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
                 >
                   <Icon.Icon icon='ph--paperclip--regular' size='xs' />
                   <span data-testid='taskList.edit.file.name'>{file.name}</span>
-                  <Button.Button
+                  <Button.Root
                     variant='ghost'
                     size='sm'
                     iconOnly

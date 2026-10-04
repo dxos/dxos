@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 
 // Next components style through `.dx-*` rules that ship separately from the theme.
 import '@dxos/react-ui/theme.css';
-import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
+import * as Status from '@dxos/react-ui/Status';
 import * as Theme from '@dxos/react-ui/Theme';
 
 import { translations } from '../../translations.ts';
@@ -16,7 +16,7 @@ import { translations } from '../../translations.ts';
 /**
  * Wraps children with the app theme, tooltip provider, and a named error boundary.
  */
-export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorFallback.ErrorBoundaryProps, 'name'>>) => {
+export const Root = ({ children, name }: PropsWithChildren<Pick<Status.ErrorBoundaryProps, 'name'>>) => {
   // Monitor system theme.
   useEffect(() => {
     const setTheme = (darkMode: boolean) => {
@@ -31,7 +31,7 @@ export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorFallback.Er
 
   return (
     <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations} themeMode='dark'>
-      <ErrorFallback.ErrorBoundary name={name}>{children}</ErrorFallback.ErrorBoundary>
+      <Status.ErrorBoundary name={name}>{children}</Status.ErrorBoundary>
     </Theme.Provider>
   );
 };

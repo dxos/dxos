@@ -8,8 +8,8 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { DebugNodes, DebugSurface } from '#types';
@@ -45,7 +45,7 @@ export const DebugPanelMain = () => {
   }, [nodeId, keepMounted]);
 
   if (!nodeId) {
-    return <Empty.Empty>{t('debug-panel.empty.label')}</Empty.Empty>;
+    return <Status.Empty>{t('debug-panel.empty.label')}</Status.Empty>;
   }
 
   // Appended in the same render it is selected (the effect only catches up), so the keyed page is
@@ -105,7 +105,7 @@ const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugP
   );
   if (!data) {
     // A persisted id that no longer resolves (a plugin disabled) shows the empty state rather than nothing.
-    return hidden ? null : <Empty.Empty>{t('debug-panel.empty.label')}</Empty.Empty>;
+    return hidden ? null : <Status.Empty>{t('debug-panel.empty.label')}</Status.Empty>;
   }
 
   return (

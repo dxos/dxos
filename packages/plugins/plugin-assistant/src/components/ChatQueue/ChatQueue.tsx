@@ -62,7 +62,7 @@ const QueuedItem = ({ message, onCancel }: QueuedItemProps) => {
           overflows its max-width and the start of the prompt is what gets cut. */}
       <span className='min-w-0 truncate'>{Message.extractText(message)}</span>
       {onCancel && (
-        <Button.Button
+        <Button.Root
           iconOnly
           icon='ph--x--regular'
           variant='ghost'

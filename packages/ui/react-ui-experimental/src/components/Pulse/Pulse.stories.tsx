@@ -21,7 +21,7 @@ const DefaultStory = (props: PulseProps) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button.Button>
+          <Button.Root onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='flex items-center justify-center'>

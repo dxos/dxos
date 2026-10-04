@@ -19,7 +19,7 @@ export type HuePickerProps = {
   defaultValue?: string;
   value?: string;
   onChange?: (nextHue: string) => void;
-  onReset?: Button.ButtonProps['onClick'];
+  onReset?: Button.RootProps['onClick'];
 } & Pick<PickerButtonProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant'>;
 
 export const HuePicker = ({ label, ...props }: Util.ThemedClassName<HuePickerProps>) => {

@@ -16,10 +16,10 @@ import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
@@ -137,7 +137,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
         )}
 
         <div className='absolute bottom-4 right-4 z-10'>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
             iconOnly
@@ -245,9 +245,9 @@ const DatabaseCardTile = ({ data }: { data: DatabaseCardTileData | undefined; in
   return (
     <Card.Root classNames={['cursor-pointer', current && 'ring-2 ring-focus']} onClick={() => onSelect(object.id)}>
       <Card.Header>
-        <Block.Block>
+        <Layout.Block>
           <Icon.Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} tone='subtle' />
-        </Block.Block>
+        </Layout.Block>
         <Card.Title truncate>{label}</Card.Title>
       </Card.Header>
     </Card.Root>

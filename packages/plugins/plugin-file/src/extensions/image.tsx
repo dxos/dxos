@@ -13,7 +13,7 @@ import { createRoot } from 'react-dom/client';
 import { Blob, Database, Filter, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
-import * as Progress from '@dxos/react-ui/Progress';
+import * as Status from '@dxos/react-ui/Status';
 import * as Theme from '@dxos/react-ui/Theme';
 import { File } from '@dxos/types';
 import { focusField } from '@dxos/ui-editor';
@@ -222,7 +222,7 @@ class DxnImageWidget extends WidgetType {
       const root = createRoot(loader);
       root.render(
         <Theme.Provider tx={Theme.defaultTx}>
-          <Progress.Progress indeterminate />
+          <Status.Progress indeterminate />
         </Theme.Provider>,
       );
       widget.appendChild(loader);

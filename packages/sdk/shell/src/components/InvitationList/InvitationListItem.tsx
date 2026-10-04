@@ -154,14 +154,14 @@ export const InvitationListItemImpl = ({
               invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
             }
           >
-            <Button.Button
+            <Button.Root
               variant='ghost'
               classNames='grow justify-start font-medium'
               data-testid='show-qrcode'
               onClick={() => send({ type: 'selectInvitation', invitation })}
             >
               <span>{t('open-share-panel.label')}</span>
-            </Button.Button>
+            </Button.Root>
           </Tooltip.Trigger>
           <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
         </>
@@ -183,7 +183,7 @@ export const InvitationListItemImpl = ({
         <span className='grow'> </span>
       )}
       {isCancellable ? (
-        <Button.Button
+        <Button.Root
           icon='ph--x--regular'
           iconSize='md'
           label={t('cancel-invitation.label')}
@@ -194,7 +194,7 @@ export const InvitationListItemImpl = ({
           data-testid='cancel-invitation'
         />
       ) : (
-        <Button.Button
+        <Button.Root
           icon='ph--x--regular'
           iconSize='md'
           label={t('remove-invitation.label')}

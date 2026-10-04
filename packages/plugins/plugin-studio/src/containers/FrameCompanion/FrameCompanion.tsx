@@ -11,8 +11,8 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSelection } from '@dxos/react-ui-attention';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { Frame, MediaArtifact, type Storyboard } from '#types';
@@ -77,7 +77,7 @@ export const FrameCompanion = ({ companionTo: storyboard, attendableId }: FrameC
   );
 
   if (!frame) {
-    return <Empty.Empty classNames='h-full'>{t('storyboard-empty.message')}</Empty.Empty>;
+    return <Status.Empty classNames='h-full'>{t('storyboard-empty.message')}</Status.Empty>;
   }
 
   return <FrameDetail key={frame.id} frame={frame} attendableId={attendableId} onAddArtifact={handleAddArtifact} />;

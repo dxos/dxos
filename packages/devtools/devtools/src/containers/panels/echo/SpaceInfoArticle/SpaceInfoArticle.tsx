@@ -64,16 +64,16 @@ export const SpaceInfoArticle: FC<SpaceInfoArticleProps> = ({ role, ...props }) 
     () => (
       <Toolbar.Root>
         {!props.space && <DataSpaceSelector />}
-        <Button.Button icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={() => forceUpdate({})} />
+        <Button.Root icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={() => forceUpdate({})} />
         <div className='grow' />
-        <Button.Button onClick={toggleActive}>
+        <Button.Root onClick={toggleActive}>
           {space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}
-        </Button.Button>
-        <Button.Button onClick={toggleEdgeReplication}>
+        </Button.Root>
+        <Button.Root onClick={toggleEdgeReplication}>
           {space?.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED
             ? 'Disable backup to EDGE'
             : 'Enable backup to EDGE'}
-        </Button.Button>
+        </Button.Root>
       </Toolbar.Root>
     ),
     [props.space, space?.state, space?.internal.data.edgeReplication],

@@ -10,9 +10,9 @@ import { type Database, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { ConnectorAuthMenu } from '#components';
 import { meta } from '#meta';
@@ -50,10 +50,10 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
   }
 
   return (
-    <Flex.Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
-      <Flex.Flex gap='sm' align='center'>
+    <Layout.Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
+      <Layout.Flex gap='sm' align='center'>
         <Icon.Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
-        <Flex.Flex column classNames='min-w-0'>
+        <Layout.Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('integration-prompt.title', { service: label })}</p>
           <p className='text-sm text-fg-subtle'>
             {/* With no connector matched, nothing can satisfy the request, so the unavailable
@@ -62,8 +62,8 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
               ? (reason ?? t('integration-prompt.description', { service: label }))
               : t('integration-prompt.unavailable', { service: label })}
           </p>
-        </Flex.Flex>
-      </Flex.Flex>
+        </Layout.Flex>
+      </Layout.Flex>
       {scopes && scopes.length > 0 && (
         <div>
           <p className='text-sm text-fg-subtle'>{t('integration-prompt.scopes')}</p>
@@ -75,11 +75,11 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
         </div>
       )}
       {connectorIds.length > 0 && (
-        <Flex.Flex justify='end'>
+        <Layout.Flex justify='end'>
           <ConnectorAuthMenu connectorIds={connectorIds} db={space?.db} onSelect={armReport} />
-        </Flex.Flex>
+        </Layout.Flex>
       )}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 

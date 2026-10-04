@@ -16,12 +16,12 @@ import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import * as Banner from '@dxos/react-ui/Banner';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -58,7 +58,7 @@ export const ToolResults = Util.composable<HTMLDivElement, ToolResultsProps>(
             <Banner.Body>{error instanceof Error ? error.message : String(error)}</Banner.Body>
           </Banner.Root>
         )}
-        {state === 'empty' && <Empty.Empty>{t('no-result.message')}</Empty.Empty>}
+        {state === 'empty' && <Status.Empty>{t('no-result.message')}</Status.Empty>}
         {state === 'result' &&
           (debug ? (
             <Syntax.Root data={tryParseMcpEnvelope(result)}>
@@ -121,7 +121,7 @@ const ResultTable = ({ data }: { data: unknown }) => {
           <Toolbar.Root>
             <Field.Root>
               <Field.Label srOnly>{t('filter-results.placeholder')}</Field.Label>
-              <Input.Input
+              <Input.Root
                 ref={filterInputRef}
                 autoFocus
                 placeholder={t('filter-results.placeholder')}
@@ -135,7 +135,7 @@ const ResultTable = ({ data }: { data: unknown }) => {
           <ScrollArea.Root>
             <ScrollArea.Viewport>
               {filtered.length === 0 ? (
-                <Empty.Empty>{t('no-matching-rows.message')}</Empty.Empty>
+                <Status.Empty>{t('no-matching-rows.message')}</Status.Empty>
               ) : (
                 <Listbox.Content
                   aria-label={t('tool-result.label')}

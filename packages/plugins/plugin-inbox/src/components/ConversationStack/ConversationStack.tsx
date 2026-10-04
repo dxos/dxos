@@ -17,11 +17,11 @@ import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Html, emailDialect } from '@dxos/react-ui-components';
 import { ActionToolbar, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Collapsible from '@dxos/react-ui/Collapsible';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { TagIndex } from '@dxos/schema';
@@ -744,7 +744,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
             tile's own heading, so `"NAME" <addr>` would just repeat it. */}
         {recipients.length > 0 && (
           <Card.Row>
-            <Block.Block>
+            <Layout.Block>
               {/* One recipient reads as a person, so it gets the same avatar treatment as every other
                   person row; several are a group, which an avatar would misrepresent. */}
               {recipients.length === 1 ? (
@@ -752,7 +752,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
               ) : (
                 <Icon.Icon icon='ph--users--regular' />
               )}
-            </Block.Block>
+            </Layout.Block>
             <Card.Text classNames='text-sm' variant='muted'>
               {recipients.join(', ')}
             </Card.Text>

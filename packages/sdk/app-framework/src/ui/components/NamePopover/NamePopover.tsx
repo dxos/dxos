@@ -42,7 +42,7 @@ export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit
         <div className='flex items-center gap-1 p-2'>
           <Field.Root>
             <Field.Label srOnly>{placeholder}</Field.Label>
-            <Input.Input
+            <Input.Root
               autoFocus
               placeholder={placeholder}
               value={value}
@@ -58,9 +58,9 @@ export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit
               }}
             />
           </Field.Root>
-          <Button.Button variant='primary' onClick={submit}>
+          <Button.Root variant='primary' onClick={submit}>
             {submitLabel}
-          </Button.Button>
+          </Button.Root>
         </div>
       </Popover.Content>
     </Popover.Root>

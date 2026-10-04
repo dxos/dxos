@@ -13,10 +13,10 @@ import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
@@ -110,7 +110,7 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       <Card.Header>
         {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
             `Card.Title` are what keep the icon, label, and caret on one row. */}
-        <Block.Block>
+        <Layout.Block>
           <Avatar.Root
             icon={data.properties.icon}
             hue={Avatar.toAvatarHue(data.properties.hue)}
@@ -119,11 +119,11 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
             fallback={name}
             aria-labelledby={titleId}
           />
-        </Block.Block>
+        </Layout.Block>
         <Card.Title id={titleId} classNames='cursor-pointer'>
           {name}
         </Card.Title>
-        <Block.Block rail='end'>{!pending && <Icon.Icon icon='ph--caret-right--regular' />}</Block.Block>
+        <Layout.Block rail='end'>{!pending && <Icon.Icon icon='ph--caret-right--regular' />}</Layout.Block>
       </Card.Header>
     </Card.Root>
   );

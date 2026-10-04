@@ -8,9 +8,9 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 import type * as Util from '@dxos/react-ui/Util';
 import { Person, Task } from '@dxos/types';
@@ -74,7 +74,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
 
   return (
     // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
-    <Container.Container asChild gutter='inherit' gap='sm' classNames={classNames} data-testid='taskList.properties'>
+    <Layout.Container asChild gutter='inherit' gap='sm' classNames={classNames} data-testid='taskList.properties'>
       <section>
         {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
         <Typography.Text asChild tone='subtle' classNames='dx-label py-0'>
@@ -217,7 +217,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
           }
         />
       </section>
-    </Container.Container>
+    </Layout.Container>
   );
 };
 
@@ -264,7 +264,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
           grid would size the glyph column to the glyph instead of to the shared 24px. `w-fit`, since
           a property is as wide as its value and a full-width button would paint a bar across the
           pane on hover. */}
-      <Button.Button
+      <Button.Root
         variant='ghost'
         size='sm'
         // `items-center`, overriding the shared grid's `items-start`: a property is one line, and the
@@ -275,7 +275,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
         data-testid={testId}
       >
         {content}
-      </Button.Button>
+      </Button.Root>
     </ActionMenu>
   );
 };

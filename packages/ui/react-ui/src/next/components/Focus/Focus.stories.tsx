@@ -11,8 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Group from '../Group/Group.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as Focus from './Focus.tsx';
 import { useFocus } from './FocusContext.ts';
@@ -25,11 +25,11 @@ const ITEMS = ['Inbox', 'Drafts', 'Sent', 'Archive'];
 const Reporter = () => {
   const { setFocus } = useFocus();
   return (
-    <Group.Group>
-      <Button.Button label='Active' onClick={() => setFocus?.('active')} />
-      <Button.Button label='Error' onClick={() => setFocus?.('error')} />
-      <Button.Button label='Clear' onClick={() => setFocus?.(undefined)} />
-    </Group.Group>
+    <Group>
+      <Button label='Active' onClick={() => setFocus?.('active')} />
+      <Button label='Error' onClick={() => setFocus?.('error')} />
+      <Button label='Clear' onClick={() => setFocus?.(undefined)} />
+    </Group>
   );
 };
 

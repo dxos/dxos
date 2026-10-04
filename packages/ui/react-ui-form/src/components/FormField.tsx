@@ -6,9 +6,9 @@ import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { type Format } from '@dxos/echo';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
-import * as Block from '@dxos/react-ui/Block';
 import * as Field from '@dxos/react-ui/Field';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { type FormFieldLabelPlacement, type FormPresentation } from '#types';
@@ -168,9 +168,9 @@ export const FormFieldRow = <T,>({
           )}
           {labelEnd}
           {error && (
-            <Block.Block>
+            <Layout.Block>
               <Icon.Icon icon='ph--warning--regular' valence='error' label={error} />
-            </Block.Block>
+            </Layout.Block>
           )}
         </Field.Header>
       )}

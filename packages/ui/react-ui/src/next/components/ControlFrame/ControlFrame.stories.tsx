@@ -12,34 +12,34 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import * as Icon from '../Icon/Icon.tsx';
-import * as ControlFrame from './ControlFrame.tsx';
+import { ControlFrame } from './ControlFrame.tsx';
 
 /** An editor stand-in (a one-line `contenteditable`) in a frame with adornments, a mono frame, and a disabled one. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <ControlFrame.ControlFrame
+    <ControlFrame
       start={<Icon.Icon icon='ph--code--regular' />}
-      end={<Button.Button icon='ph--x--regular' label='Clear' iconOnly variant='ghost' />}
+      end={<Button icon='ph--x--regular' label='Clear' iconOnly variant='ghost' />}
       data-testid={`frame-${size}`}
     >
       <div role='textbox' aria-label='Expression' contentEditable suppressContentEditableWarning tabIndex={0}>
         a + b
       </div>
-    </ControlFrame.ControlFrame>
-    <ControlFrame.ControlFrame variant='mono' data-testid={`mono-${size}`}>
+    </ControlFrame>
+    <ControlFrame variant='mono' data-testid={`mono-${size}`}>
       <div role='textbox' aria-label='Key' contentEditable suppressContentEditableWarning tabIndex={0}>
         sk-0001
       </div>
-    </ControlFrame.ControlFrame>
-    <ControlFrame.ControlFrame disabled data-testid={`disabled-${size}`}>
+    </ControlFrame>
+    <ControlFrame disabled data-testid={`disabled-${size}`}>
       <div role='textbox' aria-label='Read-only' aria-disabled>
         Locked
       </div>
-    </ControlFrame.ControlFrame>
+    </ControlFrame>
     {/* The editable is nested, as an editor's content element is under its own root. */}
-    <ControlFrame.ControlFrame rows={3} start={<Icon.Icon icon='ph--text-aa--regular' />} data-testid={`rows-${size}`}>
+    <ControlFrame rows={3} start={<Icon.Icon icon='ph--text-aa--regular' />} data-testid={`rows-${size}`}>
       <div>
         <div
           role='textbox'
@@ -52,7 +52,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
           One line
         </div>
       </div>
-    </ControlFrame.ControlFrame>
+    </ControlFrame>
   </>
 );
 

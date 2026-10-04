@@ -9,9 +9,8 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
-import * as Flex from '@dxos/react-ui/Flex';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Media from '@dxos/react-ui/Media';
 import * as Panel from '@dxos/react-ui/Panel';
 
@@ -89,13 +88,13 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
       <Panel.Body classNames='flex flex-col'>
-        <Flex.Flex justify='center'>
+        <Layout.Flex justify='center'>
           <div className='dx-document py-3'>
             <Card.Root border={false}>
               <Card.Header>
-                <Block.Block>
+                <Layout.Block>
                   <img src={bookmark.favicon} alt={bookmark.title} />
-                </Block.Block>
+                </Layout.Block>
                 <Card.Title>{bookmark.title}</Card.Title>
               </Card.Header>
               <Card.Body>
@@ -111,7 +110,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
               </Card.Body>
             </Card.Root>
           </div>
-        </Flex.Flex>
+        </Layout.Flex>
         {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
       </Panel.Body>
     </Panel.Root>

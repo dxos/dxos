@@ -6,7 +6,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import * as Button from '@dxos/react-ui/Button';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
 import * as Field from '@dxos/react-ui/Field';
 import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -74,7 +73,7 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
     >
       <div className='flex flex-col items-center gap-1'>
         <Field.Root>
-          <Checkbox.Checkbox
+          <Input.Checkbox
             checked={selected}
             onCheckedChange={() => onSelect(message.id, true)}
             data-testid='feed.message.select'
@@ -88,15 +87,15 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
         a pointer moving down the list during a scroll then shifts every row below it.
       */}
       <div className='absolute right-1 top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
-        <Button.Button icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' iconSize='xs' />
-        <Button.Button
+        <Button.Root icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' iconSize='xs' />
+        <Button.Root
           icon='ph--arrow-counter-clockwise--regular'
           iconOnly
           label='Rewind'
           variant='ghost'
           iconSize='xs'
         />
-        <Button.Button icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' iconSize='xs' />
+        <Button.Root icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' iconSize='xs' />
       </div>
 
       <div className='min-w-0'>
@@ -285,22 +284,22 @@ export const FeedStory = ({
           <Panel.Root>
             <Panel.Header>
               <Toolbar.Root>
-                <Button.Button
+                <Button.Root
                   icon={streaming ? 'ph--stop--regular' : 'ph--play--regular'}
                   iconOnly
                   label={streaming ? 'Stop' : 'Start'}
                   data-testid='feed.stream.toggle'
                   onClick={() => setStreaming((value) => !value)}
                 />
-                <Button.Button
+                <Button.Root
                   icon='ph--plus--regular'
                   iconOnly
                   label='Add message'
                   data-testid='feed.stream.append'
                   onClick={handleAppend}
                 />
-                <Button.Button icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
-                <Button.Button
+                <Button.Root icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+                <Button.Root
                   icon={debug ? 'ph--bounding-box--fill' : 'ph--bounding-box--regular'}
                   iconOnly
                   label={debug ? 'Hide block outlines' : 'Show block outlines'}
@@ -309,7 +308,7 @@ export const FeedStory = ({
                 />
                 <Toolbar.Separator />
                 <Field.Root>
-                  <Input.Input
+                  <Input.Root
                     placeholder='Search…'
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
@@ -317,8 +316,8 @@ export const FeedStory = ({
                   />
                 </Field.Root>
                 <FindButton hits={hits} />
-                <Button.Button icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
-                <Button.Button
+                <Button.Root icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
+                <Button.Root
                   icon={sweeping ? 'ph--stop--regular' : 'ph--arrows-down-up--regular'}
                   iconOnly
                   label={sweeping ? 'Stop sweep' : 'Sweep (measure a pass)'}
@@ -413,5 +412,5 @@ const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
     }
   }, [hits, scrollToIndex]);
 
-  return <Button.Button icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
+  return <Button.Root icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
 };

@@ -57,15 +57,15 @@ export const QueryPanel = ({
     <Panel.Header>
       <Toolbar.Root>
         <Toolbar.Separator />
-        <Button.Button
+        <Button.Root
           icon='ph--sparkle--regular'
           iconOnly
           label='Generate SPARQL'
           disabled={!!busy || !question}
           onClick={onGenerate}
         />
-        <Button.Button icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
-        <Button.Button
+        <Button.Root icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
+        <Button.Root
           icon='ph--arrow-counter-clockwise--regular'
           iconOnly
           label='Reset query'

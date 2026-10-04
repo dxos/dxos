@@ -94,10 +94,10 @@ export const TrackList = ({
           })}
         </Listbox.Content>
         {onAdd && (
-          <Button.Button onClick={onAdd} classNames='mt-1 justify-start gap-2'>
+          <Button.Root onClick={onAdd} classNames='mt-1 justify-start gap-2'>
             <Icon.Icon icon='ph--plus--regular' size='md' />
             Add track
-          </Button.Button>
+          </Button.Root>
         )}
       </div>
     </Listbox.Root>

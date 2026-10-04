@@ -10,10 +10,9 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as DeckHooks from '@dxos/plugin-deck/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
-import * as Empty from '@dxos/react-ui/Empty';
-import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 
 import { Loading } from '#components';
 import { useMobileDrawerActions, useMobileStack } from '#hooks';
@@ -68,11 +67,11 @@ export const MobileDrawer = () => {
             type={AppSurface.Article}
             data={data}
             limit={1}
-            fallback={ErrorFallback.ErrorFallback}
+            fallback={Status.Error}
             placeholder={placeholder}
           />
         ) : (
-          <Empty.Empty>{t('empty-drawer.message')}</Empty.Empty>
+          <Status.Empty>{t('empty-drawer.message')}</Status.Empty>
         )}
       </Panel.Body>
     </Panel.Root>

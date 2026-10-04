@@ -8,11 +8,10 @@ import { type SelectOption } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
 import { OrderedList } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
 import * as Field from '@dxos/react-ui/Field';
-import * as Group from '@dxos/react-ui/Group';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import { hues } from '@dxos/ui-types';
 import { arrayMove } from '@dxos/util';
@@ -105,7 +104,7 @@ export const SelectOptionField = ({
                   <Tag.Tag hue={hues.find((hue) => hue === option.color)}>{option.title || '\u200b'}</Tag.Tag>
                 </OrderedList.ItemText>
                 {!readonly && (
-                  <Button.Button
+                  <Button.Root
                     iconOnly
                     variant='ghost'
                     icon='ph--x--regular'
@@ -119,10 +118,10 @@ export const SelectOptionField = ({
                   />
                 )}
                 <OrderedList.Detail>
-                  <Container.Container layout='row' gutter='none' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+                  <Layout.Container layout='row' gutter='none' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
                     <Field.Root>
                       <Field.Label>{t('select-option.label')}</Field.Label>
-                      <Input.Input
+                      <Input.Root
                         autoFocus={expandedId === option.id && option.title === ''}
                         disabled={!!readonly}
                         placeholder={t('select-option-label.placeholder')}
@@ -139,7 +138,7 @@ export const SelectOptionField = ({
                         onValueChange={(color) => color && update(option.id, { color })}
                       />
                     </Field.Root>
-                  </Container.Container>
+                  </Layout.Container>
                 </OrderedList.Detail>
               </OrderedList.Item>
             ))}
@@ -147,9 +146,9 @@ export const SelectOptionField = ({
         )}
       </OrderedList.Root>
       {!readonly && (
-        <Group.Group>
-          <Button.Button icon='ph--plus--regular' label={t('select-option-add.button')} onClick={handleAdd} />
-        </Group.Group>
+        <Button.Group>
+          <Button.Root icon='ph--plus--regular' label={t('select-option-add.button')} onClick={handleAdd} />
+        </Button.Group>
       )}
     </>
   );

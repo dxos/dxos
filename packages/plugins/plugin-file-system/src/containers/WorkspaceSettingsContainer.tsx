@@ -147,9 +147,9 @@ export const WorkspaceSettingsContainer = () => {
           </Form.FieldSet>
           <Form.FieldSet label={t('remove-folder.label')}>
             <Form.Field standalone label={t('remove-folder.label')} description={t('remove-folder.description')}>
-              <Button.Button variant='destructive' onClick={handleRemove}>
+              <Button.Root variant='destructive' onClick={handleRemove}>
                 {t('remove-folder.label')}
-              </Button.Button>
+              </Button.Root>
             </Form.Field>
           </Form.FieldSet>
         </Form.Content>

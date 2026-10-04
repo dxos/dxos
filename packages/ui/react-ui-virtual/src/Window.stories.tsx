@@ -145,14 +145,14 @@ const DefaultStory = ({
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
-        <Button.Button
+        <Button.Root
           icon='ph--caret-up--regular'
           iconOnly
           label='Previous'
           data-testid='window.prev'
           onClick={() => step(-1)}
         />
-        <Button.Button
+        <Button.Root
           icon='ph--caret-down--regular'
           iconOnly
           label='Next'
@@ -160,14 +160,14 @@ const DefaultStory = ({
           onClick={() => step(1)}
         />
         <Toolbar.Separator />
-        <Button.Button
+        <Button.Root
           icon='ph--arrow-line-up--regular'
           iconOnly
           label='Top'
           data-testid='window.top'
           onClick={() => controller.current?.scrollToIndex(0)}
         />
-        <Button.Button
+        <Button.Root
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Bottom'
@@ -176,7 +176,7 @@ const DefaultStory = ({
         />
         {(append || prepend || grow) && <Toolbar.Separator />}
         {prepend && (
-          <Button.Button
+          <Button.Root
             icon='ph--arrow-u-left-up--regular'
             iconOnly
             label='Prepend'
@@ -192,7 +192,7 @@ const DefaultStory = ({
           />
         )}
         {append && (
-          <Button.Button
+          <Button.Root
             icon='ph--arrow-u-right-down--regular'
             iconOnly
             label='Append'
@@ -208,7 +208,7 @@ const DefaultStory = ({
           />
         )}
         {grow && (
-          <Button.Button
+          <Button.Root
             icon='ph--arrows-out-line-vertical--regular'
             iconOnly
             label='Grow'

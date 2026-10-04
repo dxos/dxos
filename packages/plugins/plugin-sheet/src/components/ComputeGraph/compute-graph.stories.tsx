@@ -74,9 +74,9 @@ const DefaultStory = () => {
     <div className='flex flex-col gap-2 '>
       <Toolbar.Root>
         <Field.Root>
-          <Input.Input ref={inputRef} placeholder='Formula' value={text} onChange={(ev) => setText(ev.target.value)} />
+          <Input.Root ref={inputRef} placeholder='Formula' value={text} onChange={(ev) => setText(ev.target.value)} />
         </Field.Root>
-        <Button.Button onClick={handleTest}>Test</Button.Button>
+        <Button.Root onClick={handleTest}>Test</Button.Root>
       </Toolbar.Root>
       <JsonHighlighter data={{ space: space?.id, graph: graph?.id, sheet: sheet?.id, model: model?.id, result }} />
     </div>

@@ -66,7 +66,7 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
       <Panel.Header>
         <Toolbar.Root classNames='justify-end'>
           {companionTo && (
-            <Button.Button
+            <Button.Root
               disabled={syncingLots}
               variant='primary'
               iconClassNames={syncingLots ? 'animate-spin' : undefined}

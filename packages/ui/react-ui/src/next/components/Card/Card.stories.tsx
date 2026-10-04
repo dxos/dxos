@@ -15,13 +15,13 @@ import { type Size, SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreX, controlSize, expectTooltip, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import * as Avatar from '../Avatar/Avatar.tsx';
-import * as Block from '../Block/Block.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Container from '../Container/Container.tsx';
+import { Block } from '../Block/Block.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
 import * as DragHandle from '../DragHandle/DragHandle.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import * as Menu from '../Menu/Menu.tsx';
-import * as Switch from '../Switch/Switch.tsx';
+import { Switch } from '../Switch/Switch.tsx';
 import * as Tag from '../Tag/Tag.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as Card from './Card.tsx';
@@ -108,22 +108,22 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           <Card.Description>The first public release, with sharing and sync.</Card.Description>
         </Card.Body>
         <Card.Footer>
-          <Button.Button variant='primary'>Open</Button.Button>
+          <Button variant='primary'>Open</Button>
         </Card.Footer>
       </Card.Root>
 
       <Card.Root data-testid={`card-${size}`}>
         <Card.Header>
           <Card.Title>Roadmap</Card.Title>
-          <Button.Button icon='ph--dots-three--regular' label='More actions' iconOnly />
+          <Button icon='ph--dots-three--regular' label='More actions' iconOnly />
         </Card.Header>
         <Card.Body>
           <Card.Description>What ships next quarter and why.</Card.Description>
           <Typography.Text>Three milestones, each with an owner and a date.</Typography.Text>
         </Card.Body>
         <Card.Footer data-testid={`footer-${size}`}>
-          <Button.Button>Dismiss</Button.Button>
-          <Button.Button variant='primary'>Review</Button.Button>
+          <Button>Dismiss</Button>
+          <Button variant='primary'>Review</Button>
         </Card.Footer>
       </Card.Root>
 
@@ -131,9 +131,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Card.Poster src={BROKEN} alt='Missing artwork' data-testid={`broken-${size}`} />
         <Card.Header>
           <Card.Title>Notes</Card.Title>
-          <Block.Block>
+          <Block>
             <Icon.Icon icon='ph--note--regular' />
-          </Block.Block>
+          </Block>
         </Card.Header>
         <Card.Body>
           <Typography.Text>A card with a broken poster and no footer.</Typography.Text>
@@ -208,9 +208,9 @@ export const Sized: Story = {
   render: () => (
     <Card.Root size='sm' data-testid='sized-card'>
       <Card.Header>
-        <Block.Block data-testid='sized-block'>
+        <Block data-testid='sized-block'>
           <Icon.Icon icon='ph--cube--regular' />
-        </Block.Block>
+        </Block>
         <Card.Title>Small card</Card.Title>
       </Card.Header>
     </Card.Root>
@@ -238,8 +238,8 @@ const TILES = [
 const TileGridStory = () => {
   const [opened, setOpened] = useState('');
   return (
-    <Container.Container gutter='md' padBlock data-testid='tile-root'>
-      <Container.Container
+    <Container gutter='md' padBlock data-testid='tile-root'>
+      <Container
         layout='row'
         columns='repeat(auto-fill, minmax(14rem, 1fr))'
         gap='lg'
@@ -258,14 +258,14 @@ const TileGridStory = () => {
               </Typography.Text>
               <Card.Footer justify='between' data-testid={`tile-footer-${title}`}>
                 <Tag.Tag hue='purple'>labs</Tag.Tag>
-                <Switch.Switch aria-label={title} />
+                <Switch aria-label={title} />
               </Card.Footer>
             </Card.Body>
           </Card.Root>
         ))}
-      </Container.Container>
+      </Container>
       <Typography.Text data-testid='tile-opened'>{opened}</Typography.Text>
-    </Container.Container>
+    </Container>
   );
 };
 

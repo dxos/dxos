@@ -55,7 +55,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
       <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
           <Toolbar.Separator />
-          <Button.Button icon='ph--trash--regular' label={t('reset-history.button')} onClick={handleResetHistory} />
+          <Button.Root icon='ph--trash--regular' label={t('reset-history.button')} onClick={handleResetHistory} />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='dx-document'>

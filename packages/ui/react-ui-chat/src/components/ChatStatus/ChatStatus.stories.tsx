@@ -117,8 +117,8 @@ export const Controller: Story = {
     return (
       <div className='flex flex-col gap-4'>
         <Toolbar.Root>
-          <Button.Button onClick={() => ref.current?.start()}>Start</Button.Button>
-          <Button.Button onClick={() => ref.current?.stop()}>Stop</Button.Button>
+          <Button.Root onClick={() => ref.current?.start()}>Start</Button.Root>
+          <Button.Root onClick={() => ref.current?.stop()}>Stop</Button.Root>
         </Toolbar.Root>
         <ChatStatus.Root ref={ref}>
           <ChatStatus.Icon>

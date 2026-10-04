@@ -13,10 +13,10 @@ import React, { Fragment, type PropsWithChildren, useEffect, useMemo, useRef, us
 import { createPortal } from 'react-dom';
 
 import { random } from '@dxos/random';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -89,9 +89,9 @@ const PreviewCard = () => {
       <Popover.Body>
         <Card.Root border={false} classNames='dx-card-popover'>
           <Card.Header>
-            <Block.Block>
+            <Layout.Block>
               <Icon.Icon icon='ph--file-text--regular' />
-            </Block.Block>
+            </Layout.Block>
             <Card.Title>{target.label}</Card.Title>
             <Popover.CloseTrigger asChild>
               <Card.Action system='close' />
@@ -129,9 +129,9 @@ const PreviewBlockCard = ({ eid, label }: ObjectLinkProps) => {
   return (
     <Card.Root>
       <Card.Header>
-        <Block.Block>
+        <Layout.Block>
           <Icon.Icon icon='ph--arrow-square-up--regular' />
-        </Block.Block>
+        </Layout.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
       {text && (

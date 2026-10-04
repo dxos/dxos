@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
 import * as CardMasonry from '@dxos/plugin-space/CardMasonry';
-import * as Container from '@dxos/react-ui/Container';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 import { type Task } from '@dxos/types';
 
@@ -31,7 +31,7 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
   }
 
   return (
-    <Container.Container asChild gutter='inherit' gap='md'>
+    <Layout.Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.artifacts'>
         {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
         <Typography.Text asChild tone='subtle' classNames='dx-label py-0'>
@@ -39,6 +39,6 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
         </Typography.Text>
         <CardMasonry.Root objects={artifacts} size='compact' inline />
       </section>
-    </Container.Container>
+    </Layout.Container>
   );
 };

@@ -16,7 +16,7 @@ import React, { useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
-import * as Container from '@dxos/react-ui/Container';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -69,7 +69,7 @@ const DefaultStory = ({
   );
 
   return (
-    <Container.Container gutter='sm' classNames='border border-separator rounded-md py-form-gap'>
+    <Layout.Container gutter='sm' classNames='border border-separator rounded-md py-form-gap'>
       <Picker.Root>
         <Picker.Input
           autoFocus
@@ -106,7 +106,7 @@ const DefaultStory = ({
       <div className='text-sm text-fg-muted'>
         Picked: <span className='font-mono'>{picked ?? '—'}</span>
       </div>
-    </Container.Container>
+    </Layout.Container>
   );
 };
 

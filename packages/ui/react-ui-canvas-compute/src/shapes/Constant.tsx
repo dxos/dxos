@@ -12,7 +12,7 @@ import {
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 import * as Field from '@dxos/react-ui/Field';
-import * as Switch from '@dxos/react-ui/Switch';
+import * as Input from '@dxos/react-ui/Input';
 import { safeParseJson } from '@dxos/util';
 
 import { useComputeNodeState } from '../hooks/index.ts';
@@ -76,7 +76,7 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
       {type === 'boolean' && (
         <div className='flex grow justify-center items-center'>
           <Field.Root>
-            <Switch.Switch
+            <Input.Switch
               checked={node.value}
               onCheckedChange={({ checked: value }) => {
                 node.value = value;

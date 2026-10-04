@@ -22,13 +22,13 @@ export const ZoomControls = ({ classNames, onAction }: ControlProps) => {
 
   return (
     <Toolbar.Root classNames={['gap-2', classNames]}>
-      <Button.Button
+      <Button.Root
         icon='ph--plus--regular'
         iconOnly
         label={t('zoom-in-icon.button')}
         onClick={() => onAction?.('zoom-in')}
       />
-      <Button.Button
+      <Button.Root
         icon='ph--minus--regular'
         iconOnly
         label={t('zoom-out-icon.button')}
@@ -43,13 +43,13 @@ export const ActionControls = ({ classNames, onAction }: ControlProps) => {
 
   return (
     <Toolbar.Root classNames={['gap-2', classNames]}>
-      <Button.Button
+      <Button.Root
         icon='ph--path--regular'
         iconOnly
         label={t('start-icon.button')}
         onClick={() => onAction?.('start')}
       />
-      <Button.Button
+      <Button.Root
         icon='ph--globe-hemisphere-west--regular'
         iconOnly
         label={t('toggle-icon.button')}

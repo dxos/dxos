@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import { TextCrawl, type TextCrawlProps } from './TextCrawl.tsx';
 
 random.seed(1234);
@@ -40,13 +40,11 @@ const DefaultStory = (args: StoryArgs) => {
   return (
     <>
       <div className='flex gap-2'>
-        <Button.Button
-          onClick={() => setLines((lines) => [...lines, `[${lines.length + 1}] ${random.lorem.sentence()}`])}
-        >
+        <Button onClick={() => setLines((lines) => [...lines, `[${lines.length + 1}] ${random.lorem.sentence()}`])}>
           Add
-        </Button.Button>
-        <Button.Button onClick={() => setLines(createLines())}>Generate</Button.Button>
-        <Button.Button onClick={() => setLines([])}>Clear</Button.Button>
+        </Button>
+        <Button onClick={() => setLines(createLines())}>Generate</Button>
+        <Button onClick={() => setLines([])}>Clear</Button>
       </div>
       <TextCrawl lines={lines} autoAdvance={args.autoAdvance} cyclic={args.cyclic} transition={args.transition} />
       <TextCrawl lines={lines} autoAdvance greedy />
@@ -78,9 +76,9 @@ const TestStory = ({ size }: StoryArgs) => {
   const [index, setIndex] = useState(0);
   return (
     <>
-      <Button.Button data-testid={`${size}-next`} onClick={() => setIndex((index) => index + 1)}>
+      <Button data-testid={`${size}-next`} onClick={() => setIndex((index) => index + 1)}>
         Next
-      </Button.Button>
+      </Button>
       <TextCrawl lines={LINES} index={index} transition={100} data-testid={`${size}-controlled`} />
       <TextCrawl lines={LINES} greedy data-testid={`${size}-greedy`} />
     </>

@@ -12,15 +12,15 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Block from '../Block/Block.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Checkbox from '../Checkbox/Checkbox.tsx';
+import { Block } from '../Block/Block.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Checkbox } from '../Checkbox/Checkbox.tsx';
 import * as DragHandle from '../DragHandle/DragHandle.tsx';
 import * as Icon from '../Icon/Icon.tsx';
-import * as Input from '../Input/Input.tsx';
+import { Input } from '../Input/Input.tsx';
 import * as Panel from '../Panel/Panel.tsx';
 import * as Select from '../Select/Select.tsx';
-import * as Switch from '../Switch/Switch.tsx';
+import { Switch } from '../Switch/Switch.tsx';
 import * as ToggleGroup from '../ToggleGroup/ToggleGroup.tsx';
 import * as Toolbar from './Toolbar.tsx';
 
@@ -37,14 +37,14 @@ const OPTIONS: Select.Option[] = [
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
     <Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Block.Block>
+      <Block>
         <Icon.Icon icon='ph--circle--regular' />
-      </Block.Block>
-      <Button.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
-      <Button.Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
+      </Block>
+      <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+      <Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
       <Toolbar.Separator data-testid={`separator-${size}`} />
-      <Button.Button data-testid={`button-${size}`}>Save</Button.Button>
-      <Input.Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
+      <Button data-testid={`button-${size}`}>Save</Button>
+      <Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
       <Select.Root items={OPTIONS}>
         <Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
         <Select.Content>
@@ -72,19 +72,19 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       <Toolbar.Link href='https://dxos.org' data-testid={`link-${size}`}>
         Docs
       </Toolbar.Link>
-      <Button.Button data-testid={`share-${size}`}>Share</Button.Button>
+      <Button data-testid={`share-${size}`}>Share</Button>
     </Toolbar.Root>
     <Toolbar.Root disabled data-testid={`disabled-${size}`}>
-      <Button.Button icon='ph--plus--regular' label='Add disabled' iconOnly />
-      <Button.Button>Save</Button.Button>
-      <Input.Input aria-label='Disabled search' />
+      <Button icon='ph--plus--regular' label='Add disabled' iconOnly />
+      <Button>Save</Button>
+      <Input aria-label='Disabled search' />
       <Toolbar.Link href='https://dxos.org'>Docs</Toolbar.Link>
     </Toolbar.Root>
     <Toolbar.Root data-testid={`settings-${size}`}>
-      <Button.Button data-testid={`bold-${size}`}>Bold</Button.Button>
-      <Switch.Switch label='Wrap' data-testid={`wrap-${size}`} />
+      <Button data-testid={`bold-${size}`}>Bold</Button>
+      <Switch label='Wrap' data-testid={`wrap-${size}`} />
       <Toolbar.Separator variant='gap' data-testid={`gap-${size}`} />
-      <Button.Button data-testid={`done-${size}`}>Done</Button.Button>
+      <Button data-testid={`done-${size}`}>Done</Button>
     </Toolbar.Root>
   </>
 );
@@ -112,7 +112,7 @@ export const InputAndButton: Story = {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root data-testid={`input-toolbar-${size}`}>
-          <Checkbox.Checkbox />
+          <Checkbox />
           <Select.Root items={OPTIONS}>
             <Select.Trigger placeholder='Color' aria-label='Color' />
             <Select.Content>
@@ -121,12 +121,12 @@ export const InputAndButton: Story = {
               ))}
             </Select.Content>
           </Select.Root>
-          <Input.Input
+          <Input
             placeholder={`Search (${size})`}
             aria-label='Search'
             end={<Icon.Icon icon='ph--magnifying-glass--regular' />}
           />
-          <Button.Button>Go</Button.Button>
+          <Button>Go</Button>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
@@ -294,8 +294,8 @@ export const Test: Story = {
 export const Banner: Story = {
   render: () => (
     <Toolbar.Root role='banner'>
-      <Button.Button label='Back' />
-      <Button.Button label='Menu' />
+      <Button label='Back' />
+      <Button label='Menu' />
     </Toolbar.Root>
   ),
   play: async ({ canvasElement }) => {
@@ -313,7 +313,7 @@ const InactiveStory = () => {
   const [count, setCount] = useState(0);
   return (
     <Toolbar.Root inactive>
-      <Button.Button label={`Pressed ${count}`} onClick={() => setCount((count) => count + 1)} />
+      <Button label={`Pressed ${count}`} onClick={() => setCount((count) => count + 1)} />
     </Toolbar.Root>
   );
 };

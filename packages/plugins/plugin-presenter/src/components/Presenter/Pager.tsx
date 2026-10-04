@@ -77,7 +77,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
 
   return (
     <div className='flex items-center text-neutral-500'>
-      <Button.Button
+      <Button.Root
         icon='ph--caret-double-left--regular'
         iconSize='xl'
         label='Jump to first'
@@ -87,7 +87,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
         classNames='p-0'
         onClick={() => onChange?.(0)}
       />
-      <Button.Button
+      <Button.Root
         icon='ph--caret-left--regular'
         iconSize='xl'
         label='Previous'
@@ -97,7 +97,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
         classNames='p-0'
         onClick={() => handleChangeIndex(-1)}
       />
-      <Button.Button
+      <Button.Root
         icon='ph--caret-right--regular'
         iconSize='xl'
         label='Next'
@@ -107,7 +107,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
         classNames='p-0'
         onClick={() => handleChangeIndex(1)}
       />
-      <Button.Button
+      <Button.Root
         icon='ph--caret-double-right--regular'
         iconSize='xl'
         label='Jump to last'
@@ -142,7 +142,7 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
 
 export const StartButton = ({ running, onClick }: { running?: boolean; onClick?: (start: boolean) => void }) => {
   return (
-    <Button.Button
+    <Button.Root
       icon={running ? 'ph--x--regular' : 'ph--play--regular'}
       iconSize='xl'
       label={running ? 'Stop' : 'Play'}

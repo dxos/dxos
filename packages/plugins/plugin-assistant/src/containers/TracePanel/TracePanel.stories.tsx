@@ -125,7 +125,7 @@ const DefaultStory = () => {
     <BaseStory
       toolbar={
         <Toolbar.Root>
-          <Button.Button icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
+          <Button.Root icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
         </Toolbar.Root>
       }
     >
@@ -282,16 +282,16 @@ const TimelinePlayback = ({
     <BaseStory
       toolbar={
         <Toolbar.Root>
-          <Button.Button icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
-          <Button.Button icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
-          <Button.Button
+          <Button.Root icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
+          <Button.Root icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
+          <Button.Root
             icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
             iconOnly
             label={playing ? 'Pause (Space)' : 'Play (Space)'}
             onClick={handleTogglePlay}
           />
-          <Button.Button icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
-          <Button.Button icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
+          <Button.Root icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
+          <Button.Root icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
           <Toolbar.Text classNames='text-right text-sm tabular-nums opacity-70'>
             {step} / {total}
           </Toolbar.Text>

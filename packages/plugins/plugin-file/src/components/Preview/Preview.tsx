@@ -112,13 +112,13 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
       {children}
       {paged && (
         <>
-          <Button.Button
+          <Button.Root
             iconOnly
             icon={paged.fit === 'width' ? 'ph--arrows-out-line-horizontal--regular' : 'ph--corners-out--regular'}
             label={paged.fit === 'width' ? t('fit-page.label') : t('fit-width.label')}
             onClick={() => paged.setFit(paged.fit === 'width' ? 'page' : 'width')}
           />
-          <Button.Button
+          <Button.Root
             compact
             iconOnly
             icon='ph--caret-line-left--regular'
@@ -127,7 +127,7 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
             disabled={paged.currentPage <= 1}
             onClick={() => paged.api?.goToPage(1, 'instant')}
           />
-          <Button.Button
+          <Button.Root
             iconOnly
             icon='ph--caret-left--regular'
             label={t('previous-page.label')}
@@ -146,14 +146,14 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
               {t('page-of.label', { page: paged.currentPage, count: paged.pageCount })}
             </span>
           </Toolbar.Text>
-          <Button.Button
+          <Button.Root
             iconOnly
             icon='ph--caret-right--regular'
             label={t('next-page.label')}
             disabled={paged.currentPage >= paged.pageCount}
             onClick={() => paged.api?.stepPage(1)}
           />
-          <Button.Button
+          <Button.Root
             compact
             iconOnly
             icon='ph--caret-line-right--regular'
@@ -164,7 +164,7 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
           />
           <Toolbar.Separator />
           <Field.Root>
-            <Input.Input
+            <Input.Root
               ref={searchRef}
               placeholder={t('search.placeholder')}
               value={query}
@@ -188,14 +188,14 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
                   ? t('no-matches.label')
                   : t('match-of.label', { match: paged.activeMatch, count: paged.matches })}
               </Toolbar.Text>
-              <Button.Button
+              <Button.Root
                 iconOnly
                 icon='ph--caret-up--regular'
                 label={t('previous-match.label')}
                 disabled={paged.matches === 0}
                 onClick={() => paged.api?.goToMatch(paged.activeMatch - 1)}
               />
-              <Button.Button
+              <Button.Root
                 iconOnly
                 icon='ph--caret-down--regular'
                 label={t('next-match.label')}

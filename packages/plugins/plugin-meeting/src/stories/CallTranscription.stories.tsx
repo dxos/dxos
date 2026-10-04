@@ -120,14 +120,14 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
   return (
     <div className='dx-expand flex flex-col gap-2'>
       <Toolbar.Root>
-        <Button.Button
+        <Button.Root
           icon='ph--phone-call--regular'
           label='Start call'
           disabled={!callManager}
           onClick={handleStartCall}
         />
         {/* TODO(burdon): Replace with SystemIconButton.Mic. */}
-        <Button.Button
+        <Button.Root
           icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
           label={recording ? 'Stop transcription' : 'Start transcription'}
           onClick={toggleRecording}

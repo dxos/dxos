@@ -39,9 +39,9 @@ const emit = (file: string, level: 'info' | 'warn' | 'error') => {
 const Render = () => (
   <div className='grid grid-rows-[min-content_1fr] h-[24rem] w-[48rem] max-w-full'>
     <Toolbar.Root>
-      <Button.Button onClick={() => emit(FILES[0], 'info')}>Info</Button.Button>
-      <Button.Button onClick={() => emit(FILES[1], 'warn')}>Warn</Button.Button>
-      <Button.Button onClick={() => emit(FILES[2], 'error')}>Error</Button.Button>
+      <Button.Root onClick={() => emit(FILES[0], 'info')}>Info</Button.Root>
+      <Button.Root onClick={() => emit(FILES[1], 'warn')}>Warn</Button.Root>
+      <Button.Root onClick={() => emit(FILES[2], 'error')}>Error</Button.Root>
     </Toolbar.Root>
     <LoggerPanel />
   </div>

@@ -14,8 +14,8 @@ import { useClient } from '@dxos/react-client';
 import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import * as Select from '@dxos/react-ui/Select';
-import * as Switch from '@dxos/react-ui/Switch';
 import * as UiToast from '@dxos/react-ui/Toast';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { gzip, setDeep } from '@dxos/util';
@@ -163,14 +163,14 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
         <Form.Content>
           <Form.FieldSet label={meta.profile.name ?? meta.profile.key} actions={scope}>
             <Form.Field label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
-              <Switch.Switch
+              <Input.Switch
                 disabled={!onSettingsChange}
                 checked={settings.wireframe}
                 onCheckedChange={({ checked }) => handleWireframeChange(checked)}
               />
             </Form.Field>
             <Form.Field label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
-              <Switch.Switch
+              <Input.Switch
                 disabled={!onSettingsChange}
                 checked={traceAll}
                 onCheckedChange={({ checked }) => handleTraceAllChange(checked)}
@@ -181,7 +181,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.tracing-panel.label')}
               description={t('settings.tracing-panel.description')}
             >
-              <Button.Button
+              <Button.Root
                 icon='ph--arrow-square-out--regular'
                 iconOnly
                 label={t('settings.tracing-panel.label')}
@@ -193,7 +193,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-diagnostics.label')}
               description={t('settings.download-diagnostics.description')}
             >
-              <Button.Button
+              <Button.Root
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-diagnostics.label')}
@@ -205,7 +205,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-logs.label')}
               description={t('settings.download-logs.description')}
             >
-              <Button.Button
+              <Button.Root
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-logs.label')}
@@ -213,7 +213,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               />
             </Form.Field>
             <Form.Field standalone label={t('settings.repair.label')} description={t('settings.repair.description')}>
-              <Button.Button
+              <Button.Root
                 icon='ph--first-aid-kit--regular'
                 iconOnly
                 label={t('settings.repair.label')}

@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { ark } from '@ark-ui/react/factory';
 import React from 'react';
 

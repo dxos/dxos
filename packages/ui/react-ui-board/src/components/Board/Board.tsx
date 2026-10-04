@@ -903,7 +903,7 @@ const BoardDropTarget = ({ position, rect, containerId, debug, onAddClick }: Boa
         </span>
       )}
       {onAddClick && (
-        <Button.Button
+        <Button.Root
           icon='ph--plus--regular'
           iconOnly
           label={t('add-object.button')}
@@ -929,14 +929,14 @@ const BoardZoom = ({ classNames }: BoardZoomProps) => {
   const { zoom, minZoom, zoomIn, zoomOut } = useBoardContext(BOARD_ZOOM_NAME);
   return (
     <div role='group' className={mx('flex items-center rounded-sm dx-modal-surface', classNames)}>
-      <Button.Button
+      <Button.Root
         icon='ph--minus--regular'
         iconOnly
         label={t('zoom-out.button')}
         disabled={zoom <= minZoom}
         onClick={zoomOut}
       />
-      <Button.Button
+      <Button.Root
         icon='ph--plus--regular'
         iconOnly
         label={t('zoom-in.button')}

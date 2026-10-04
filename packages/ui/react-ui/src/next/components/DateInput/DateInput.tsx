@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { DateInput as DateInputPrimitive, useDateInput } from '@ark-ui/react/date-input';
 import { DatePicker as DatePickerPrimitive, useDatePicker } from '@ark-ui/react/date-picker';
 import { useFieldContext } from '@ark-ui/react/field';
@@ -20,7 +18,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import * as Field from '../Field/Field.tsx';
 import {
   type DateInputGranularity,
@@ -34,7 +32,7 @@ import {
 } from './date-value.ts';
 import { DateCalendar } from './DateCalendar.tsx';
 
-type DateInputProps = ThemedClassName<{
+export type DateInputProps = ThemedClassName<{
   'type'?: DateInputType;
   /** `YYYY-MM-DD`, `HH:mm` or `YYYY-MM-DDTHH:mm` (with `:ss` at `second` granularity); empty when unset. */
   'value'?: string;
@@ -75,7 +73,7 @@ type DateInputProps = ThemedClassName<{
  * a trailing trigger, sharing the value. Inside a `Field.Root` the segments take the field's label, description and
  * invalid/disabled/read-only state. `data-testid` and the ref go to the control row.
  */
-const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
+export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
   (
     {
       classNames,
@@ -190,7 +188,7 @@ const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
 
     const trigger = picker && (
       <DatePickerPrimitive.Trigger asChild>
-        <Button.Button
+        <Button
           icon={type === 'date' ? 'ph--calendar-blank--regular' : 'ph--calendar-dots--regular'}
           label={t('date-picker.placeholder.single.label')}
           iconOnly
@@ -240,5 +238,4 @@ const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
 
 DateInput.displayName = 'DateInput';
 
-export { DateInput as Input };
-export type { DateInputGranularity as InputGranularity, DateInputProps as InputProps, DateInputType as InputType };
+export type { DateInputGranularity, DateInputType };

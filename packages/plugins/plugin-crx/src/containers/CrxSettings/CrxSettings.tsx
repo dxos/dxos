@@ -9,8 +9,8 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -67,8 +67,8 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
           </Form.FieldSet>
 
           <Form.FieldSet label={t('test.title')}>
-            <Flex.Flex gap='sm'>
-              <Button.Button
+            <Layout.Flex gap='sm'>
+              <Button.Root
                 disabled={test.kind === 'pending'}
                 icon='ph--plug--regular'
                 label={t('test.button.label')}
@@ -76,7 +76,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
               />
 
               {/* role=status + aria-live so screen readers announce the async outcome. */}
-              <Flex.Flex align='center'>
+              <Layout.Flex align='center'>
                 <span
                   role='status'
                   aria-live='polite'
@@ -91,8 +91,8 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
                   {test.kind === 'ok' || test.kind === 'error' ? test.message : ''}
                   {test.kind === 'pending' ? t('test.pending.message') : ''}
                 </span>
-              </Flex.Flex>
-            </Flex.Flex>
+              </Layout.Flex>
+            </Layout.Flex>
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>

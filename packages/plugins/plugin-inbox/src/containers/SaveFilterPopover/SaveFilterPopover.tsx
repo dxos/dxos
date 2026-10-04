@@ -9,9 +9,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 
 import { meta } from '#meta';
@@ -31,11 +31,11 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   }, [mailbox, name, filter, invokePromise]);
 
   return (
-    <Flex.Flex gap='sm' classNames='p-2'>
+    <Layout.Flex gap='sm' classNames='p-2'>
       <div className='flex-1'>
         <Field.Root>
           <Field.Label srOnly>{t('saved-filter-name.label')}</Field.Label>
-          <Input.Input
+          <Input.Root
             defaultValue={name}
             placeholder={t('save-filter.placeholder')}
             onChange={({ target: { value } }) => setName(value)}
@@ -46,11 +46,11 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
         </Field.Root>
       </div>
       <Popover.CloseTrigger asChild>
-        <Button.Button ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
+        <Button.Root ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
           {t('save-filter.button')}
-        </Button.Button>
+        </Button.Root>
       </Popover.CloseTrigger>
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 

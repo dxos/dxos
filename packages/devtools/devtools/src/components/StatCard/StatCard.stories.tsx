@@ -18,7 +18,7 @@ const DefaultStory = () => {
         icon='ph--cpu--regular'
         title='Memory'
         info='3 rows'
-        action={<Button.Button iconOnly variant='ghost' icon='ph--copy--regular' label='Copy' />}
+        action={<Button.Root iconOnly variant='ghost' icon='ph--copy--regular' label='Copy' />}
       />
       <StatCard.Row label='Used heap' value='42.1' unit='MB' />
       <StatCard.Row label='Allocated heap' value='96.0' unit='MB' />
@@ -28,7 +28,7 @@ const DefaultStory = () => {
         label='A row whose label is far too long to fit and therefore truncates'
         tooltip='A row whose label is far too long to fit and therefore truncates'
         value='1'
-        action={<Button.Button iconOnly variant='ghost' icon='ph--trash--regular' label='Clear' />}
+        action={<Button.Root iconOnly variant='ghost' icon='ph--trash--regular' label='Clear' />}
       />
       <StatCard.Row label='11:26:50.351 · sync.start · BXYZ1' open={open} onToggle={setOpen} />
       {open && (

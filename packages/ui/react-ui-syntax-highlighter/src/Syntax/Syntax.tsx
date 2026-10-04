@@ -7,7 +7,6 @@ import React, { type PropsWithChildren, forwardRef, useCallback, useMemo, useSta
 
 import * as Field from '@dxos/react-ui/Field';
 import * as Input from '@dxos/react-ui/Input';
-import * as NumberInput from '@dxos/react-ui/NumberInput';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -167,7 +166,7 @@ const SyntaxFilter = forwardRef<HTMLInputElement, SyntaxFilterProps>(
 
     return (
       <Field.Root validationValence={filterError ? 'error' : 'success'}>
-        <Input.Input
+        <Input.Root
           classNames={['p-1 px-2 font-mono', filterError && 'border-rose-500', classNames]}
           variant='subdued'
           value={filterText}
@@ -198,7 +197,7 @@ const SyntaxDepth = forwardRef<HTMLInputElement, SyntaxDepthProps>(({ classNames
   const { depth, setDepth } = useSyntaxContext(SYNTAX_DEPTH_NAME);
   return (
     <Field.Root>
-      <NumberInput.NumberInput
+      <Input.Number
         classNames={['font-mono', classNames]}
         min={0}
         step={1}

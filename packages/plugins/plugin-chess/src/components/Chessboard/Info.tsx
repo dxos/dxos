@@ -7,9 +7,9 @@ import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } f
 
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import * as Button from '@dxos/react-ui/Button';
-import * as Grid from '@dxos/react-ui/Grid';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -43,7 +43,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         player={orientation === 'white' ? 'black' : 'white'}
         icon={
           onClose && (
-            <Button.Button
+            <Button.Root
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
@@ -62,7 +62,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         player={orientation}
         icon={
           onOrientationChange && (
-            <Button.Button
+            <Button.Root
               classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
               icon='ph--arrows-clockwise--regular'
               iconOnly
@@ -144,7 +144,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
       }}
     >
       {moves.map(([a, b], index) => (
-        <Grid.Grid key={index} cols={['3rem', '1fr', '1fr', '1rem']} gap='sm' classNames='ps-4'>
+        <Layout.Grid key={index} cols={['3rem', '1fr', '1fr', '1rem']} gap='sm' classNames='ps-4'>
           <div className='content-center text-xs text-fg-subtle'>{index + 1}</div>
           {a && (
             <div
@@ -164,7 +164,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
               {b.move}
             </div>
           )}
-        </Grid.Grid>
+        </Layout.Grid>
       ))}
       {label && <div className='text-center'>{label}</div>}
     </div>
@@ -184,7 +184,7 @@ type PlayerIndicatorProps = PropsWithChildren<{
 const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps) => {
   const turn = player === (model.game.turn() === 'w' ? 'white' : 'black');
   return (
-    <Grid.Grid
+    <Layout.Grid
       cols={['var(--dx-rail-item)', '1fr', 'var(--dx-rail-item)']}
       gap='sm'
       align='center'
@@ -199,6 +199,6 @@ const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps
       </div>
       <div className='truncate overflow-hidden items-center'>{children}</div>
       {icon}
-    </Grid.Grid>
+    </Layout.Grid>
   );
 };

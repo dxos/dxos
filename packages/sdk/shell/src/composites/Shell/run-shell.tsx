@@ -67,9 +67,9 @@ const Fallback = ({ onClose }: { onClose?: () => void }) => {
         <Dialog.Title>{t('shell-fallback.title')}</Dialog.Title>
         <Dialog.Footer>
           <Dialog.CloseTrigger asChild onClick={() => onClose?.()}>
-            <Button.Button variant='primary' classNames='w-full'>
+            <Button.Root variant='primary' classNames='w-full'>
               {t('close.label')}
-            </Button.Button>
+            </Button.Root>
           </Dialog.CloseTrigger>
         </Dialog.Footer>
       </Dialog.Content>

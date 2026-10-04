@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as Button from '@dxos/react-ui/Button';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { type Frame } from '#types';
@@ -36,12 +36,12 @@ export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailP
   const artifact = useResolveRef(snapshot ? frame.artifact : undefined);
   if (!artifact) {
     return (
-      <Empty.Empty classNames='h-full'>
+      <Status.Empty classNames='h-full'>
         {
           <span className='flex flex-col items-center gap-2'>
             {t('frame-empty.message')}
             {onAddArtifact && (
-              <Button.Button
+              <Button.Root
                 icon='ph--plus--regular'
                 label={t('add-frame-artifact.label')}
                 onClick={() => onAddArtifact(frame)}
@@ -49,7 +49,7 @@ export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailP
             )}
           </span>
         }
-      </Empty.Empty>
+      </Status.Empty>
     );
   }
 

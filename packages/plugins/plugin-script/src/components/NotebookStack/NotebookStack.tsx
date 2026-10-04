@@ -140,7 +140,7 @@ const NotebookSection = ({
     >
       {/* Side rail */}
       <div className='flex flex-col p-1 border-e border-separator-subtle dx-attention-surface'>
-        <Button.Button
+        <Button.Root
           ref={setDragHandle}
           variant='ghost'
           icon='ph--dots-six-vertical--regular'
@@ -149,7 +149,7 @@ const NotebookSection = ({
         />
         <Menu.Root>
           <Menu.Trigger asChild>
-            <Button.Button
+            <Button.Root
               variant='ghost'
               icon='ph--dots-three--regular'
               iconOnly

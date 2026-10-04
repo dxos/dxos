@@ -12,7 +12,6 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN, type URI } from '@dxos/keys';
 import * as Button from '@dxos/react-ui/Button';
-import * as Group from '@dxos/react-ui/Group';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { translationKey } from '#translations';
@@ -72,14 +71,14 @@ export const InlineRefField = ({
       ) : (
         !readonly &&
         onCreate && (
-          <Group.Group fill>
-            <Button.Button
+          <Button.Group fill>
+            <Button.Root
               icon='ph--plus--regular'
               label={label || t('ref-field.placeholder')}
               disabled={!createType}
               onClick={() => void handleCreate()}
             />
-          </Group.Group>
+          </Button.Group>
         )
       )}
     </FormFieldSet>

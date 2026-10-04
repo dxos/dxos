@@ -388,11 +388,11 @@ const ObjectFormDialogBody = ({
       {object ? (
         <Dialog.Footer>
           <Dialog.CloseTrigger asChild>
-            <Button.Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button.Button>
+            <Button.Root data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button.Root>
           </Dialog.CloseTrigger>
-          <Button.Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
+          <Button.Root variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
             {t('object-form-confirm.label')}
-          </Button.Button>
+          </Button.Root>
         </Dialog.Footer>
       ) : (
         showTypeSelector &&

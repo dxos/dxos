@@ -70,7 +70,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
         <Form.Content>
           <Form.FieldSet label={t('connections.label')} description={t('connections.description')}>
             <Form.Field standalone label={t('add-connection.label')} description={t('connect-service.description')}>
-              <Button.Button onClick={handleAdd}>{t('connect.label')}</Button.Button>
+              <Button.Root onClick={handleAdd}>{t('connect.label')}</Button.Root>
             </Form.Field>
           </Form.FieldSet>
 

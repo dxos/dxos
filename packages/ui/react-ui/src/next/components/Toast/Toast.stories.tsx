@@ -12,7 +12,7 @@ import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size } from '../../sizes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as Toast from './Toast.tsx';
 
@@ -28,7 +28,7 @@ const DefaultStory = ({ size, duration, title, description }: StoryArgs) => {
   return (
     <Toast.Provider>
       <div className='flex flex-col gap-2'>
-        <Button.Button onClick={() => setOpen(true)}>Show toast</Button.Button>
+        <Button onClick={() => setOpen(true)}>Show toast</Button>
         <Typography.Text data-testid='log'>{log.join(',')}</Typography.Text>
         <Typography.Text data-testid='retries'>{retries}</Typography.Text>
       </div>

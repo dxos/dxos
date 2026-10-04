@@ -8,12 +8,10 @@ import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Grid from '@dxos/react-ui/Grid';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Util from '@dxos/react-ui/Util';
@@ -533,7 +531,7 @@ const TaskListItem = ({
       {/* The one cell not placed by name: it flows into the template's unnamed first track. */}
       {indicator}
       {showGutter && (
-        <Flex.Flex center gap='xs' classNames={TRACK.gutter}>
+        <Layout.Flex center gap='xs' classNames={TRACK.gutter}>
           {onTaskCheck && <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} />}
           {/* One button for the number and the reference it copies. Not beside a checkbox: a number beside a box reads
               as two ways to act on the row. The live task, not the snapshot: only the live object knows its space,
@@ -541,7 +539,7 @@ const TaskListItem = ({
           {(showMnemonics || ordinal !== undefined) && (
             <TaskMnemonic task={task} ordinal={onTaskCheck ? undefined : ordinal} />
           )}
-        </Flex.Flex>
+        </Layout.Flex>
       )}
       <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} classNames={TRACK.status} />
       {/* Inset as the editor's fields are, so a title reads at the x the field below types it. The placeholder is
@@ -559,22 +557,27 @@ const TaskListItem = ({
       </span>
       {/* On the title line, beside who has the task: the pull request is what the row is scanned for once work is under
           way, and on a line of its own it pushed the description down. */}
-      <Flex.Flex align='center' gap='xs' classNames={mx(TRACK.artifacts, 'ps-1')} data-testid='taskList.item.artifacts'>
+      <Layout.Flex
+        align='center'
+        gap='xs'
+        classNames={mx(TRACK.artifacts, 'ps-1')}
+        data-testid='taskList.item.artifacts'
+      >
         <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
-      </Flex.Flex>
+      </Layout.Flex>
       {showAssignees && current.assignee && (
-        <Grid.Grid center classNames={TRACK.assignee}>
+        <Layout.Grid center classNames={TRACK.assignee}>
           <TaskListAssignee assignee={current.assignee} iconOnly />
-        </Grid.Grid>
+        </Layout.Grid>
       )}
       {showEstimates && <TaskEstimateControl task={task} classNames={TRACK.estimate} />}
       <TaskPriorityIcon task={task} classNames={TRACK.priority} />
       <TaskListItemActions task={task} classNames={TRACK.actions} />
 
       {/* The row's second line, under the title; it takes no height when the task has no chips. */}
-      <Flex.Flex align='center' classNames='col-[title] row-start-2 empty:hidden' data-testid='taskList.item.chips'>
+      <Layout.Flex align='center' classNames='col-[title] row-start-2 empty:hidden' data-testid='taskList.item.chips'>
         <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
-      </Flex.Flex>
+      </Layout.Flex>
       {/* Under the title and the chips, clearing the gutter and the status control so it does not read as the row
           above's, and stopping short of the trailing controls. What the task says, and nothing the log recorded. */}
       {description && (
@@ -612,8 +615,8 @@ const TaskListItemActions = ({ task, classNames }: { task: Task.Task; classNames
   if (actions.length === 1 && isMenuAction(only)) {
     return (
       <Tree.ItemActions>
-        <Block.Block classNames={classNames}>
-          <Button.Button
+        <Layout.Block classNames={classNames}>
+          <Button.Root
             variant='ghost'
             iconOnly
             icon={only.properties?.icon ?? fallbackIcon}
@@ -625,18 +628,18 @@ const TaskListItemActions = ({ task, classNames }: { task: Task.Task; classNames
               void executeMenuAction(only);
             }}
           />
-        </Block.Block>
+        </Layout.Block>
       </Tree.ItemActions>
     );
   }
 
   return (
     <Tree.ItemActions>
-      <Block.Block classNames={classNames}>
+      <Layout.Block classNames={classNames}>
         {/* The button is the trigger, not the block: the button stops the click so the row is not
             selected too, and a trigger above it would never receive it. */}
         <ActionMenu deferUntilOpen actions={actions}>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--dots-three-vertical--regular'
@@ -645,7 +648,7 @@ const TaskListItemActions = ({ task, classNames }: { task: Task.Task; classNames
             onClick={(event) => event.stopPropagation()}
           />
         </ActionMenu>
-      </Block.Block>
+      </Layout.Block>
     </Tree.ItemActions>
   );
 };
@@ -745,7 +748,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
 
   if (PullRequest.instanceOf(artifact)) {
     return (
-      <Button.Button
+      <Button.Root
         {...anchor}
         hue='neutral'
         size='sm'
@@ -809,7 +812,7 @@ const TaskListAssignee = Util.composable<HTMLSpanElement, TaskListAssigneeProps>
     // on hover, which already names the run and a tooltip would stack on.
     if (iconOnly && label) {
       return (
-        <Button.Button
+        <Button.Root
           iconOnly
           icon={icon}
           hue={hue}

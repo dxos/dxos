@@ -7,10 +7,10 @@ import React from 'react';
 import { type Database, DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Row } from '@dxos/react-ui-card';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -83,29 +83,29 @@ export const EventDetails = ({
     <>
       {title === 'heading' && (
         <Card.Row>
-          <Block.Block>
+          <Layout.Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Block.Block>
+          </Layout.Block>
           <Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
-            <Block.Block rail='end'>
-              <Button.Button
+            <Layout.Block rail='end'>
+              <Button.Root
                 iconOnly
                 variant='ghost'
                 icon='ph--handshake--regular'
                 label={Obj.getLabel(meeting) ?? 'Meeting'}
                 onClick={onOpenObject ? () => onOpenObject(meeting) : undefined}
               />
-            </Block.Block>
+            </Layout.Block>
           )}
         </Card.Row>
       )}
 
       {title === 'text' && (
         <Card.Row>
-          <Block.Block>
+          <Layout.Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Block.Block>
+          </Layout.Block>
           <Card.Text>{data.title ?? t('event-untitled.label')}</Card.Text>
         </Card.Row>
       )}

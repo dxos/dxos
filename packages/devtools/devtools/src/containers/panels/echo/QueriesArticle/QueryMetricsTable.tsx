@@ -7,10 +7,9 @@ import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 import { type QueryMetrics } from '@dxos/echo-client';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
-import * as Grid from '@dxos/react-ui/Grid';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toggle from '@dxos/react-ui/Toggle';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { mx } from '@dxos/ui-theme';
@@ -129,14 +128,14 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
     <div className='flex flex-col h-full min-h-0'>
       <Toolbar.Root>
         <Searchbar placeholder='Filter queries' value={filter} onChange={setFilter} />
-        <Toggle.Toggle pressed={liveOnly} onPressedChange={setLiveOnly}>
+        <Button.Toggle pressed={liveOnly} onPressedChange={setLiveOnly}>
           Live only
-        </Toggle.Toggle>
+        </Button.Toggle>
         <Toolbar.Text classNames='shrink-0 font-mono text-xs text-fg-muted'>
           {live} live · {queries.length} queries
         </Toolbar.Text>
         {onReset && (
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--arrow-counter-clockwise--regular'
             iconOnly
@@ -145,7 +144,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           />
         )}
       </Toolbar.Root>
-      <Grid.Grid cols={TRACKS} gap='sm' classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted'>
+      <Layout.Grid cols={TRACKS} gap='sm' classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted'>
         {COLUMNS.map((column, index) => (
           <Tooltip.Trigger key={column.id} asChild content={column.title}>
             <button
@@ -160,7 +159,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
             </button>
           </Tooltip.Trigger>
         ))}
-      </Grid.Grid>
+      </Layout.Grid>
       <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
         <ScrollArea.Viewport>
           {rows.length === 0 && <p className='p-2 text-xs text-fg-muted'>No queries.</p>}
@@ -168,7 +167,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
             const open = expanded === query.query;
             return (
               <Fragment key={query.query}>
-                <Grid.Grid
+                <Layout.Grid
                   asChild
                   cols={TRACKS}
                   gap='sm'
@@ -190,7 +189,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
                       <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
                     ))}
                   </button>
-                </Grid.Grid>
+                </Layout.Grid>
                 {open && (
                   <div className='px-2 py-1 text-xs border-y border-separator-subtle'>
                     <JsonHighlighter data={{ ...query, avgTime: averageQueryTime(query) }} />

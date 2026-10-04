@@ -16,11 +16,11 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size } from '../../sizes.ts';
 import { byTestId, expectPopupSize, expectTooltip } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Checkbox from '../Checkbox/Checkbox.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Checkbox } from '../Checkbox/Checkbox.tsx';
 import * as Field from '../Field/Field.tsx';
-import * as Group from '../Group/Group.tsx';
-import * as Input from '../Input/Input.tsx';
+import { Group } from '../Group/Group.tsx';
+import { Input } from '../Input/Input.tsx';
 import * as Select from '../Select/Select.tsx';
 import * as SystemButton from '../SystemButton/SystemButton.tsx';
 import * as Typography from '../Typography/Typography.tsx';
@@ -44,13 +44,13 @@ const ProfileForm = () => (
       <Field.Header>
         <Field.Label>Name</Field.Label>
       </Field.Header>
-      <Input.Input placeholder='Ada Lovelace' />
+      <Input placeholder='Ada Lovelace' />
     </Field.Root>
     <Field.Root data-testid='email'>
       <Field.Header>
         <Field.Label>Email</Field.Label>
       </Field.Header>
-      <Input.Input type='email' placeholder='ada@example.com' />
+      <Input type='email' placeholder='ada@example.com' />
     </Field.Root>
     <Field.Root data-testid='role'>
       <Select.Root items={ROLES}>
@@ -66,7 +66,7 @@ const ProfileForm = () => (
       </Select.Root>
     </Field.Root>
     <Field.Root data-testid='subscribe'>
-      <Checkbox.Checkbox label='Subscribe to updates' />
+      <Checkbox label='Subscribe to updates' />
     </Field.Root>
   </>
 );
@@ -83,7 +83,7 @@ type ProfileDialogProps = {
 const ProfileDialog = ({ contentSize, title, testId, paragraphs }: ProfileDialogProps) => (
   <Dialog.Root>
     <Dialog.Trigger asChild>
-      <Button.Button data-testid={`${testId}-trigger`}>{title}</Button.Button>
+      <Button data-testid={`${testId}-trigger`}>{title}</Button>
     </Dialog.Trigger>
     <Dialog.Content size={contentSize} data-testid={testId}>
       <Dialog.Header data-testid='header'>
@@ -112,10 +112,10 @@ const ProfileDialog = ({ contentSize, title, testId, paragraphs }: ProfileDialog
  * A form dialog, which takes its trigger row's size (Phase 4 decision 2), and one whose body scrolls, `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
-  <Group.Group>
+  <Group>
     <ProfileDialog title='Edit profile' testId={`dialog-${size}`} />
     <ProfileDialog contentSize='lg' title='Read terms' paragraphs={40} testId={`long-${size}`} />
-  </Group.Group>
+  </Group>
 );
 
 const meta = {

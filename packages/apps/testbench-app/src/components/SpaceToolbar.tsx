@@ -52,7 +52,7 @@ export const SpaceToolbar = ({
 
   return (
     <Toolbar.Root>
-      <Button.Button icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
+      <Button.Root icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
       <div className='flex w-32'>
         <Select.Root
           items={spaces.map((space) => ({ value: space.key.toHex(), label: space.key.truncate() }))}
@@ -78,20 +78,20 @@ export const SpaceToolbar = ({
       <div className='grow' />
       {space && (
         <>
-          <Button.Button
+          <Button.Root
             icon={space.isOpen ? 'ph--trash--regular' : 'ph--clock-counter-clockwise--regular'}
             iconOnly
             label={space.isOpen ? 'Close space' : 'Open space'}
             onClick={() => onToggleOpen(selected)}
           />
-          <Button.Button icon='ph--upload-simple--regular' label='Import space.' onClick={handleImport} />
-          <Button.Button
+          <Button.Root icon='ph--upload-simple--regular' label='Import space.' onClick={handleImport} />
+          <Button.Root
             icon='ph--download-simple--regular'
             iconOnly
             label='Download backup'
             onClick={() => onExport(selected)}
           />
-          <Button.Button
+          <Button.Root
             icon='ph--user-plus--regular'
             iconOnly
             label='Share'

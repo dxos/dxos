@@ -23,7 +23,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import { ScrollContainerProvider, type ScrollController, useScrollContainerContext } from './ScrollContainerContext.ts';
 
@@ -224,7 +224,7 @@ const ScrollContainerScrollDownButton = ({
 }: ScrollContainerScrollDownButtonProps) => {
   const { pinned, controller } = useScrollContainerContext('ScrollContainer.ScrollDownButton');
   return (
-    <Button.Button
+    <Button
       variant='primary'
       icon='ph--arrow-down--regular'
       iconOnly

@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { Checkbox as CheckboxPrimitive } from '@ark-ui/react/checkbox';
 import React, { type ReactNode, forwardRef } from 'react';
 

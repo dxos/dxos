@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import * as Flex from '../../../layout/Flex/Flex.tsx';
+import { Flex } from '../../../layout/Flex/Flex.tsx';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import * as Typography from '../Typography/Typography.tsx';
 import * as Splitter from './Splitter.tsx';
@@ -28,7 +28,7 @@ const Pane = ({ label }: { label: string }) => (
 const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
   const [size, setSize] = useState(defaultSize);
   return (
-    <Flex.Flex column classNames='dx-expand border border-separator divide-y divide-separator'>
+    <Flex column classNames='dx-expand border border-separator divide-y divide-separator'>
       <Splitter.Root {...args} size={size} onSizeChange={setSize}>
         <Splitter.Panel position='start'>
           <Pane label='Start' />
@@ -41,7 +41,7 @@ const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
       <Typography.Text data-testid='size' classNames='p-1 tabular-nums'>
         {size.toFixed(2)}rem
       </Typography.Text>
-    </Flex.Flex>
+    </Flex>
   );
 };
 

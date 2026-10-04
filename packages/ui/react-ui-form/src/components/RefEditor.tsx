@@ -5,7 +5,7 @@
 import React, { forwardRef } from 'react';
 
 import { Editor, type EditorController, type EditorViewProps } from '@dxos/react-ui-editor';
-import * as ControlFrame from '@dxos/react-ui/ControlFrame';
+import * as Input from '@dxos/react-ui/Input';
 
 import { type RefEditorOptions, useRefEditor } from './useRefEditor.ts';
 
@@ -13,9 +13,9 @@ export type RefEditorProps = RefEditorOptions &
   Pick<EditorViewProps, 'onChange' | 'autoFocus' | 'extensions'> & {
     'value'?: string;
     /** Leading content inside the frame (e.g. an Icon). */
-    'start'?: ControlFrame.ControlFrameProps['start'];
+    'start'?: Input.FrameProps['start'];
     /** Trailing content inside the frame (e.g. icon-only Buttons). */
-    'end'?: ControlFrame.ControlFrameProps['end'];
+    'end'?: Input.FrameProps['end'];
     'data-testid'?: string;
   };
 
@@ -28,7 +28,7 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
     const rootProps = useRefEditor(options, forwardedRef);
     return (
       <Editor.Root {...rootProps}>
-        <ControlFrame.ControlFrame start={start} end={end} disabled={options.readonly} data-testid={testId}>
+        <Input.Frame start={start} end={end} disabled={options.readonly} data-testid={testId}>
           <Editor.View
             initialValue={value}
             extensions={extensions}
@@ -36,7 +36,7 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
             autoFocus={autoFocus}
             selectionEnd
           />
-        </ControlFrame.ControlFrame>
+        </Input.Frame>
       </Editor.Root>
     );
   },

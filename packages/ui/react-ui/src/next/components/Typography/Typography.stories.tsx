@@ -14,8 +14,8 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Block from '../Block/Block.tsx';
-import * as Container from '../Container/Container.tsx';
+import { Block } from '../Block/Block.tsx';
+import { Container } from '../Container/Container.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import * as Typography from './Typography.tsx';
 
@@ -25,21 +25,21 @@ const TEXT = random.lorem.paragraph();
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Container.Container>
-      <Block.Block rail='start' data-testid={`icon-${size}`}>
+    <Container>
+      <Block rail='start' data-testid={`icon-${size}`}>
         <Icon.Icon icon='ph--chat-circle--regular' />
-      </Block.Block>
+      </Block>
       <Typography.Text data-testid={`text-${size}`}>{TEXT}</Typography.Text>
-    </Container.Container>
-    <Container.Container layout='row' columns='minmax(0, 1fr) auto'>
+    </Container>
+    <Container layout='row' columns='minmax(0, 1fr) auto'>
       <Typography.Text truncate data-testid={`truncate-${size}`}>
         {TEXT}
       </Typography.Text>
       <Typography.Text tone='muted' data-testid={`description-${size}`}>
         Description
       </Typography.Text>
-    </Container.Container>
-    <Container.Container>
+    </Container>
+    <Container>
       <Typography.Text lines={2} data-testid={`lines-${size}`}>
         {TEXT} {TEXT}
       </Typography.Text>
@@ -49,14 +49,14 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Typography.Text mono data-testid={`mono-${size}`}>
         did:key:z6Mk
       </Typography.Text>
-    </Container.Container>
-    <Container.Container>
+    </Container>
+    <Container>
       <Typography.Text asChild>
         <h2 className='font-medium' data-testid={`heading-${size}`}>
           Typography as a heading
         </h2>
       </Typography.Text>
-    </Container.Container>
+    </Container>
   </>
 );
 

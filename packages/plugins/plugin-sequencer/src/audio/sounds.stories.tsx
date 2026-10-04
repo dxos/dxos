@@ -80,7 +80,7 @@ const DefaultStory = () => {
 
   return (
     <Toolbar.Root>
-      <Button.Button
+      <Button.Root
         icon='ph--play--regular'
         iconOnly
         variant='ghost'
@@ -88,7 +88,7 @@ const DefaultStory = () => {
         label='play'
         onClick={() => setRunning(true)}
       />
-      <Button.Button
+      <Button.Root
         icon='ph--stop--regular'
         iconOnly
         variant='ghost'

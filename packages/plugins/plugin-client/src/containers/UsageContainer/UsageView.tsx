@@ -9,7 +9,7 @@ import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageIte
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Progress from '@dxos/react-ui/Progress';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 
@@ -198,7 +198,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
       return (
         <Form.Field standalone label={label} description={description}>
           {typeof percent === 'number' ? (
-            <Progress.Progress value={percent / 100} label={t('usage-percent-used.label', { percent })} />
+            <Status.Progress value={percent / 100} label={t('usage-percent-used.label', { percent })} />
           ) : (
             t('usage-unlimited.label')
           )}

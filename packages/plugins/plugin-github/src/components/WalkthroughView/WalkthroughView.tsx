@@ -6,9 +6,9 @@ import React, { useMemo } from 'react';
 
 import { TextEditor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
-import * as Empty from '@dxos/react-ui/Empty';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 
@@ -50,13 +50,13 @@ export type WalkthroughPlaceholderProps = {
 export const WalkthroughPlaceholder = ({ generating, onGenerate }: WalkthroughPlaceholderProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Flex.Flex column center gap='md' classNames='dx-expand'>
-      <Empty.Empty>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</Empty.Empty>
+    <Layout.Flex column center gap='md' classNames='dx-expand'>
+      <Status.Empty>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</Status.Empty>
       {!generating && (
-        <Button.Button variant='primary' onClick={onGenerate}>
+        <Button.Root variant='primary' onClick={onGenerate}>
           {t('generate-walkthrough.label')}
-        </Button.Button>
+        </Button.Root>
       )}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };

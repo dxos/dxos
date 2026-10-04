@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { invariant } from '@dxos/invariant';
-import * as Container from '@dxos/react-ui/Container';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -30,7 +30,7 @@ const DefaultStory = (_: PaneArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container.Container>
+            <Layout.Container>
               <Form.Root
                 variant='settings'
                 schema={SettingsSchema}
@@ -46,7 +46,7 @@ const DefaultStory = (_: PaneArgs) => {
                   </Form.FieldSet>
                 </Form.Content>
               </Form.Root>
-            </Container.Container>
+            </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>

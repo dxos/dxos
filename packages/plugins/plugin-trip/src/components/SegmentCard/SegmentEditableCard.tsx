@@ -6,12 +6,12 @@ import { format as formatDate } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
-import * as DatePicker from '@dxos/react-ui/DatePicker';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { Segment } from '#types';
@@ -81,9 +81,9 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
     return (
       <Card.Root ref={forwardedRef}>
         <Card.Header>
-          <Block.Block>
+          <Layout.Block>
             <Icon.Icon icon={icon} />
-          </Block.Block>
+          </Layout.Block>
           <Card.Title>{title}</Card.Title>
           <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
         </Card.Header>
@@ -94,11 +94,11 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
             </Card.Row>
           )}
           <Card.Row>
-            <Block.Block>
+            <Layout.Block>
               <Icon.Icon icon='ph--calendar--regular' />
-            </Block.Block>
+            </Layout.Block>
             <Field.Root>
-              <DatePicker.Input
+              <Input.Date
                 type='datetime-local'
                 aria-label={t('segment.depart.placeholder')}
                 value={isoToLocalDateTime(departAt)}

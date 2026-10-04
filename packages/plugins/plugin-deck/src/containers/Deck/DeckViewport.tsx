@@ -28,8 +28,8 @@ import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Attention, useAttended, useAttention, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Main from '@dxos/react-ui/Main';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Splitter from '@dxos/react-ui/Splitter';
@@ -222,7 +222,7 @@ export const DeckContentEmpty = () => {
   const { state } = useDeckState();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
-    <Flex.Flex
+    <Layout.Flex
       column
       center
       classNames='p-8 relative dx-deck-surface'
@@ -231,7 +231,7 @@ export const DeckContentEmpty = () => {
     >
       <Surface.Surface type={DeckRole.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 
@@ -1865,7 +1865,7 @@ const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
         'transition-opacity opacity-(--controls-opacity)',
       )}
     >
-      <Button.Button
+      <Button.Root
         label={t('exit-fullscreen.label')}
         icon='ph--corners-in--regular'
         iconOnly

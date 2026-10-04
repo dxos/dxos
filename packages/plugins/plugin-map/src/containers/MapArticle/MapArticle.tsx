@@ -8,8 +8,8 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { type GeoControlProps, GlobeControl, MAP_MIN_ZOOM, MapControl } from '#components';
@@ -180,8 +180,8 @@ const MapArticleInner = ({
   );
 };
 
-const Container = (props: Flex.FlexProps) => (
-  <Flex.Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />
+const Container = (props: Layout.FlexProps) => (
+  <Layout.Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />
 );
 
 MapArticle.displayName = 'MapArticle';

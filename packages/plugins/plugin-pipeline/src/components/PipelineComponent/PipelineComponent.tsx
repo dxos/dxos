@@ -114,7 +114,7 @@ export const PipelineToolbar = Util.composable<HTMLDivElement, Toolbar.RootProps
 
     return (
       <Toolbar.Root {...Util.composableProps(props)} ref={forwardedRef}>
-        <Button.Button icon='ph--plus--regular' iconOnly label={t('add-column.label')} onClick={onAddColumn} />
+        <Button.Root icon='ph--plus--regular' iconOnly label={t('add-column.label')} onClick={onAddColumn} />
       </Toolbar.Root>
     );
   },

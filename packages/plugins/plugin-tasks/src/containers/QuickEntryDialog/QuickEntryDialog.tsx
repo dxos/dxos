@@ -56,21 +56,21 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
   return (
     <div className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
       {onCancel && (
-        <Button.Button
+        <Button.Root
           iconEnd='ph--x--regular'
           label={t('quick-entry-cancel.label')}
           onClick={onCancel}
           data-testid='cancel-button'
         />
       )}
-      <Button.Button
+      <Button.Root
         disabled={!canSave}
         iconEnd='ph--plus--regular'
         label={t('quick-entry-save-and-continue.label')}
         onClick={handleSaveAndContinue}
         data-testid='save-and-continue-button'
       />
-      <Button.Button
+      <Button.Root
         type='submit'
         variant='primary'
         disabled={!canSave}

@@ -13,7 +13,7 @@ import { SettingsOperation } from '../../operations/index.ts';
 import { usePluginRegistryAvailable } from '../hooks/index.ts';
 
 export type PluginRegistryButtonProps = Pick<
-  ComponentPropsWithoutRef<typeof Button.Button>,
+  ComponentPropsWithoutRef<typeof Button.Root>,
   'onClick' | 'variant' | 'size' | 'disabled' | 'classNames'
 >;
 
@@ -34,7 +34,7 @@ export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistry
     }
 
     return (
-      <Button.Button
+      <Button.Root
         {...props}
         ref={forwardedRef}
         icon='ph--squares-four--regular'

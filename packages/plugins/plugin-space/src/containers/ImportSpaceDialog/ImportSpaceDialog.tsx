@@ -11,9 +11,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
@@ -72,7 +72,7 @@ export const ImportSpaceDialog = () => {
       <Dialog.Body>
         <p className='my-4'>{t('import-space-dialog.description')}</p>
         {importing ? (
-          <Flex.Flex
+          <Layout.Flex
             align='center'
             justify='center'
             gap='sm'
@@ -84,7 +84,7 @@ export const ImportSpaceDialog = () => {
               <Icon.Icon icon='ph--spinner-gap--regular' size='xl' spin />
               <span>{t('import-space-dialog.importing.label', { filename: importing })}</span>
             </div>
-          </Flex.Flex>
+          </Layout.Flex>
         ) : (
           <FileUploader
             types={['json', 'tar']}
@@ -101,7 +101,7 @@ export const ImportSpaceDialog = () => {
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.CloseTrigger asChild>
-          <Button.Button variant='primary'>{t('cancel.label')}</Button.Button>
+          <Button.Root variant='primary'>{t('cancel.label')}</Button.Root>
         </Dialog.CloseTrigger>
       </Dialog.Footer>
     </Dialog.Content>

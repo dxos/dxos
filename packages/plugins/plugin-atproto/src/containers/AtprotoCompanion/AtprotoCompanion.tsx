@@ -14,9 +14,8 @@ import { useObject, useQuery } from '@dxos/react-client/echo';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
@@ -215,7 +214,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <Flex.Flex column gap='md' classNames='p-3'>
+            <Layout.Flex column gap='md' classNames='p-3'>
               {/* Publish status — the status icon overrides the Message's default valence icon. A
                   neutral "checking" state shows until the first async derivation resolves. */}
               <Banner.Root
@@ -247,14 +246,14 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 <Banner.Root valence='warning'>
                   <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
                   <Banner.Body asChild>
-                    <Flex.Flex gap='sm' classNames='pt-2'>
-                      <Button.Button variant='primary' disabled={busy} onClick={handlePublish}>
+                    <Layout.Flex gap='sm' classNames='pt-2'>
+                      <Button.Root variant='primary' disabled={busy} onClick={handlePublish}>
                         {t('confirm-publish.label')}
-                      </Button.Button>
-                      <Button.Button disabled={busy} onClick={() => setConfirming(false)}>
+                      </Button.Root>
+                      <Button.Root disabled={busy} onClick={() => setConfirming(false)}>
                         {t('cancel.label')}
-                      </Button.Button>
-                    </Flex.Flex>
+                      </Button.Root>
+                    </Layout.Flex>
                   </Banner.Body>
                 </Banner.Root>
               )}
@@ -262,7 +261,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
               {/* Public projection: what the network sees, as a treegrid. Each leaf is tagged Published (we
                   publish it), Mirrored (the network sees it via a linked upstream record), or Private;
                   fields whose local value diverges from the mirrored record are flagged Diverged (not pushed). */}
-              <Container.Container gap='sm' gutter='none'>
+              <Layout.Container gap='sm' gutter='none'>
                 <h2 className='text-xs uppercase tracking-wide text-fg-muted'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Banner.Root valence='warning'>
@@ -332,8 +331,8 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                     );
                   })}
                 </div>
-              </Container.Container>
-            </Flex.Flex>
+              </Layout.Container>
+            </Layout.Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>

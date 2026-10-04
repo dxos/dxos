@@ -217,7 +217,7 @@ const ScrollToBottom = () => {
   const hidden = atEnd || following;
 
   return (
-    <Button.Button
+    <Button.Root
       variant='primary'
       icon='ph--arrow-line-down--regular'
       iconOnly

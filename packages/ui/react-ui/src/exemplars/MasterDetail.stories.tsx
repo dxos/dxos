@@ -10,9 +10,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations } from '#translations';
 
-import * as Button from '../next/components/Button/Button.tsx';
-import * as Container from '../next/components/Container/Container.tsx';
-import * as Empty from '../next/components/Empty/Empty.tsx';
+import { Button } from '../next/components/Button/Button.tsx';
+import { Container } from '../next/components/Container/Container.tsx';
+import { Empty } from '../next/components/Empty/Empty.tsx';
 import * as ListboxModule from '../next/components/Listbox/Listbox.tsx';
 import * as Panel from '../next/components/Panel/Panel.tsx';
 import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
@@ -85,7 +85,7 @@ const Host = ({ width, children }: PropsWithChildren<Pick<StoryArgs, 'width'>>) 
 const BackButton = ({ testId = 'back' }: { testId?: string }) => {
   const { collapsed, setMode } = Splitter.useContext();
   return collapsed ? (
-    <Button.Button
+    <Button
       icon='ph--caret-left--regular'
       label='Back'
       iconOnly
@@ -109,7 +109,7 @@ const MasterPane = ({ title, count, children }: PropsWithChildren<{ title: strin
     <Panel.Body asChild>
       <ScrollArea.Root>
         <ScrollArea.Viewport asChild>
-          <Container.Container gutter='rail'>{children}</Container.Container>
+          <Container gutter='rail'>{children}</Container>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </Panel.Body>
@@ -138,8 +138,8 @@ const Fields = ({ fields }: { fields: [label: string, value: string][] }) => (
   <Panel.Body asChild>
     <ScrollArea.Root>
       <ScrollArea.Viewport asChild>
-        <Container.Container gutter='rail'>
-          <Container.Container gutter='inherit' layout='row' columns='minmax(0, 6rem) minmax(0, 1fr)' gap='sm'>
+        <Container gutter='rail'>
+          <Container gutter='inherit' layout='row' columns='minmax(0, 6rem) minmax(0, 1fr)' gap='sm'>
             {fields.flatMap(([label, value]) => [
               <Typography.Text key={`${label}-label`} tone='muted'>
                 {label}
@@ -148,8 +148,8 @@ const Fields = ({ fields }: { fields: [label: string, value: string][] }) => (
                 {value}
               </Typography.Text>,
             ])}
-          </Container.Container>
-        </Container.Container>
+          </Container>
+        </Container>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   </Panel.Body>
@@ -159,11 +159,11 @@ const EmptyBody = ({ children, testId }: PropsWithChildren<{ testId?: string }>)
   <Panel.Body asChild>
     <ScrollArea.Root>
       <ScrollArea.Viewport asChild>
-        <Container.Container gutter='rail'>
-          <Empty.Empty icon='ph--cursor-click--regular' data-testid={testId}>
+        <Container gutter='rail'>
+          <Empty icon='ph--cursor-click--regular' data-testid={testId}>
             {children}
-          </Empty.Empty>
-        </Container.Container>
+          </Empty>
+        </Container>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   </Panel.Body>

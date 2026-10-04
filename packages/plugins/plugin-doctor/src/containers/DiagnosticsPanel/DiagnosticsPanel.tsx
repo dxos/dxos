@@ -9,12 +9,12 @@ import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvide
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Progress from '@dxos/react-ui/Progress';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -114,14 +114,14 @@ export const DiagnosticsPanel = () => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
+          <Button.Root variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
             <Icon.Icon icon='ph--play--regular' size='md' />
             <span className='ps-1'>{t('run-diagnostics.label')}</span>
-          </Button.Button>
+          </Button.Root>
           {isRunning && (
-            <Button.Button variant='ghost' onClick={handleCancel}>
+            <Button.Root variant='ghost' onClick={handleCancel}>
               {t('cancel-diagnostics.label')}
-            </Button.Button>
+            </Button.Root>
           )}
           <span className='grow' />
           <span className='text-xs text-fg-muted'>{t('providers-count.label', { count: sortedProviders.length })}</span>
@@ -149,8 +149,8 @@ const RunProgress = ({
 }) => {
   const progress = state.total === 0 ? 0 : state.current / state.total;
   return (
-    <Flex.Flex column gap='sm' classNames='p-2'>
-      <Progress.Progress value={progress} classNames='block' />
+    <Layout.Flex column gap='sm' classNames='p-2'>
+      <Status.Progress value={progress} classNames='block' />
       <span className='text-xs text-fg-muted'>
         {t('progress.label', {
           current: state.current,
@@ -158,7 +158,7 @@ const RunProgress = ({
           label: state.providerLabel ?? '',
         })}
       </span>
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 
@@ -166,7 +166,7 @@ const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t
   const totalIssues = results.reduce((sum, result) => sum + result.issues.length, 0);
   const failedProviders = results.filter((result) => result.error != null).length;
   return (
-    <Flex.Flex column gap='sm' classNames='p-2'>
+    <Layout.Flex column gap='sm' classNames='p-2'>
       <p className='text-sm font-medium'>{t('summary.label', { count: totalIssues })}</p>
       {failedProviders > 0 && (
         <p className='text-xs text-rose-600'>{t('summary.failed.label', { count: failedProviders })}</p>
@@ -174,7 +174,7 @@ const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t
       {results.map((result) => (
         <ProviderResult key={result.providerId} result={result} t={t} />
       ))}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 
@@ -214,7 +214,7 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: Theme.T
 const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
   <li className='flex items-center gap-2 p-2'>
     <Icon.Icon icon={SEVERITY_ICON[issue.severity]} size='md' classNames={mx(paletteToText(issue.severity))} />
-    <Flex.Flex column gap='xs' classNames='text-xs min-w-0 flex-1'>
+    <Layout.Flex column gap='xs' classNames='text-xs min-w-0 flex-1'>
       <span className='wrap-break-words break-all'>{issue.message}</span>
       {(issue.subjectLabel || issue.spaceId) && (
         <span className='text-fg-muted font-mono break-all'>
@@ -223,7 +223,7 @@ const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
           {issue.spaceId ?? ''}
         </span>
       )}
-    </Flex.Flex>
+    </Layout.Flex>
   </li>
 );
 

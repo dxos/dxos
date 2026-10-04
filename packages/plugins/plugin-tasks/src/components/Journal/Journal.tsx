@@ -76,7 +76,7 @@ export const Journal = Util.composable<HTMLDivElement, JournalProps>(
           ))}
           {!hasTodayEntry && (
             <div className='p-2'>
-              <Button.Button
+              <Button.Root
                 label={t('start-today.label')}
                 icon='ph--calendar-plus--regular'
                 onClick={handleCreateEntry}
@@ -130,7 +130,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
       {...{ 'data-has-focus': focused ? true : undefined }}
     >
       <div className='flex items-center gap-2 bg-transparent'>
-        <Button.Button
+        <Button.Root
           label={date ? format(date, 'MMM d, yyyy') : ''}
           icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
           onClick={handleFocus}

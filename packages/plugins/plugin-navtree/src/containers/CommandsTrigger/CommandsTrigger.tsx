@@ -17,7 +17,7 @@ export const CommandsTrigger = () => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = UiHooks.useTranslation(meta.profile.key);
   return (
-    <Button.Button
+    <Button.Root
       classNames='m-1 px-1 lg:px-2'
       onClick={() =>
         void invokePromise(LayoutOperation.UpdateDialog, { subject: COMMANDS_DIALOG, blockAlign: 'start' })
@@ -25,7 +25,7 @@ export const CommandsTrigger = () => {
     >
       <span className='text-fg-muted font-normal grow text-start'>{t('command-list-input.placeholder')}</span>
       <Icon.Icon icon='ph--magnifying-glass--regular' />
-    </Button.Button>
+    </Button.Root>
   );
 };
 

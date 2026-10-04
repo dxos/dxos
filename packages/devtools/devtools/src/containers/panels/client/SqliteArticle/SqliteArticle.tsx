@@ -17,7 +17,6 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Textarea from '@dxos/react-ui/Textarea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { arrayToString, decodeUint8ArrayFromJson, isEncodedUint8Array } from '@dxos/util';
 
@@ -284,13 +283,13 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root classNames='col-span-2'>
-          <Button.Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
+          <Button.Root onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
             Run Query
-          </Button.Button>
-          <Button.Button onClick={refresh} disabled={isRefreshing}>
+          </Button.Root>
+          <Button.Root onClick={refresh} disabled={isRefreshing}>
             Refresh
-          </Button.Button>
-          <Button.Button
+          </Button.Root>
+          <Button.Root
             icon='ph--download--regular'
             label='Export database'
             onClick={handleExport}
@@ -360,7 +359,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
           <div className='flex flex-col gap-2 p-2 border-b border-separator'>
             <Field.Root>
               <Field.Label>SQL</Field.Label>
-              <Textarea.Textarea
+              <Input.Textarea
                 value={query}
                 onChange={({ target }) => setQuery(target.value)}
                 classNames='min-h-24 font-mono text-xs'
@@ -368,7 +367,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
             </Field.Root>
             <Field.Root>
               <Field.Label>Params (JSON array)</Field.Label>
-              <Input.Input
+              <Input.Root
                 value={params}
                 onChange={({ target }) => setParams(target.value)}
                 placeholder='[]'

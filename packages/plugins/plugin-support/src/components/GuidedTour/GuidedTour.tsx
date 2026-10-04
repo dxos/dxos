@@ -148,7 +148,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
           <div className='flex items-start'>
             <UiTour.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
             <UiTour.CloseTrigger asChild ref={closeRef}>
-              <Button.Button
+              <Button.Root
                 size='md'
                 icon='ph--x--bold'
                 iconOnly
@@ -161,7 +161,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
           </div>
           <UiTour.Description classNames='grow px-4 my-2 text-accent-fg' />
           <UiTour.Control>
-            <Button.Button
+            <Button.Root
               classNames={[!tour.hasPrevStep && 'invisible']}
               icon='ph--caret-left--regular'
               iconOnly
@@ -182,12 +182,12 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
             </div>
             {last ? (
               <UiTour.CloseTrigger asChild>
-                <Button.Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
+                <Button.Root variant='primary' data-testid='helpPlugin.tooltip.finish'>
                   {t('tour-done.label')}
-                </Button.Button>
+                </Button.Root>
               </UiTour.CloseTrigger>
             ) : (
-              <Button.Button
+              <Button.Root
                 icon='ph--caret-right--regular'
                 iconOnly
                 label={t('tour-next.label')}

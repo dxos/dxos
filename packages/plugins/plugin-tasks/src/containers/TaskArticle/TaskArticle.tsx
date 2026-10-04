@@ -14,8 +14,8 @@ import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskHistory, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -126,7 +126,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the
                 section headings and the cards all start at the content track, and only a glyph
                 hangs outside it. */}
-              <Container.Container gutter='md' gap='lg' classNames='py-2'>
+              <Layout.Container gutter='md' gap='lg' classNames='py-2'>
                 {/* The task's own fields, not the list's strip: the pane has a subject, so it
                   needs neither the create case nor the selection the strip reads. */}
                 {/* Keyed by task, so a new subject replaces the text held rather than carrying the previous one's across. */}
@@ -159,7 +159,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                   standing "Questions" label over nothing says the pane expects them, when what a
                   task with none has is nothing to answer. */}
                 {openQuestions.length > 0 && (
-                  <Container.Container asChild gutter='inherit' gap='md'>
+                  <Layout.Container asChild gutter='inherit' gap='md'>
                     <section data-testid='tasksPlugin.questions'>
                       {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
                       <Typography.Text asChild tone='subtle' classNames='dx-label py-0'>
@@ -173,7 +173,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                         />
                       ))}
                     </section>
-                  </Container.Container>
+                  </Layout.Container>
                 )}
 
                 <TaskAttachments
@@ -184,7 +184,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 />
                 {history && history.length > 0 && <TaskHistory entries={history} />}
                 <TaskArtifacts task={task} />
-              </Container.Container>
+              </Layout.Container>
             </TaskAttachmentDropZone>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
@@ -210,7 +210,7 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
 
   return (
     <ActionMenu deferUntilOpen actions={actions}>
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--dots-three-vertical--regular'

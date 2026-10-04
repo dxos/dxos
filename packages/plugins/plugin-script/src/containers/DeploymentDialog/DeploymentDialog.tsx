@@ -91,9 +91,9 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.CloseTrigger asChild>
-          <Button.Button disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Button.Button>
+          <Button.Root disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Button.Root>
         </Dialog.CloseTrigger>
-        <Button.Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
+        <Button.Root variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
           {status === 'pending'
             ? t('deployment-dialog-deploy-functions-pending-button.label', {
                 count: scriptTemplates.length,
@@ -101,7 +101,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
             : t('deployment-dialog-deploy-functions-button.label', {
                 count: scriptTemplates.length,
               })}
-        </Button.Button>
+        </Button.Root>
       </Dialog.Footer>
     </Dialog.Content>
   );

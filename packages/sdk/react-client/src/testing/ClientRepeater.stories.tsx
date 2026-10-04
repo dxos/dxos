@@ -41,7 +41,7 @@ const ClientSpace = ({ spaceId }: ClientRepeatedComponentProps) => {
   return (
     <div className='flex flex-col'>
       <Field.Root>
-        <Input.Input
+        <Input.Root
           placeholder='Name'
           value={space.properties.name}
           onChange={(event) =>

@@ -12,8 +12,8 @@ import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { byTestId } from '../../testing.ts';
-import * as Button from '../Button/Button.tsx';
-import * as Group from '../Group/Group.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
 import * as Tour from './Tour.tsx';
 
 const target = (testId: string) => () => document.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
@@ -61,13 +61,13 @@ const DefaultStory = () => {
   const tour = Tour.useTour({ steps: useMemo(() => STEPS, []) });
   return (
     <>
-      <Group.Group>
-        <Button.Button icon='ph--plus--regular' iconOnly label='Add' data-testid='tour.add' />
-        <Button.Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='tour.search' />
-        <Button.Button onClick={() => tour.start()} data-testid='tour.start'>
+      <Group>
+        <Button icon='ph--plus--regular' iconOnly label='Add' data-testid='tour.add' />
+        <Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='tour.search' />
+        <Button onClick={() => tour.start()} data-testid='tour.start'>
           Start tour
-        </Button.Button>
-      </Group.Group>
+        </Button>
+      </Group>
       <Tour.Root tour={tour}>
         <Tour.Content data-testid='tour.card'>
           <Tour.Header>
@@ -77,7 +77,7 @@ const DefaultStory = () => {
           <Tour.Description />
           <Tour.Control>
             <Tour.ProgressText />
-            <Group.Group>
+            <Group>
               <Tour.Actions>
                 {(actions) =>
                   actions.map((action) => (
@@ -91,10 +91,10 @@ const DefaultStory = () => {
               </Tour.Actions>
               {tour.lastStep && (
                 <Tour.CloseTrigger asChild>
-                  <Button.Button variant='primary'>Done</Button.Button>
+                  <Button variant='primary'>Done</Button>
                 </Tour.CloseTrigger>
               )}
-            </Group.Group>
+            </Group>
           </Tour.Control>
         </Tour.Content>
       </Tour.Root>

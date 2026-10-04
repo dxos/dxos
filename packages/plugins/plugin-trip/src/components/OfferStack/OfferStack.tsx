@@ -6,11 +6,11 @@ import { format } from 'date-fns';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -57,9 +57,9 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root border={false} ref={forwardedRef}>
           <Card.Header>
-            <Block.Block>
+            <Layout.Block>
               <Icon.Icon icon='ph--airplane--regular' />
-            </Block.Block>
+            </Layout.Block>
             <div className='flex items-baseline justify-between gap-2 min-w-0'>
               <Card.Title truncate>{offer.operator.name}</Card.Title>
               <Card.Text classNames='font-mono shrink-0'>
@@ -77,9 +77,9 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
             )}
             {departAt && (
               <Card.Row>
-                <Block.Block>
+                <Layout.Block>
                   <Icon.Icon icon='ph--calendar--regular' />
-                </Block.Block>
+                </Layout.Block>
                 <Card.Text variant='muted'>{format(new Date(departAt), 'PPp')}</Card.Text>
               </Card.Row>
             )}

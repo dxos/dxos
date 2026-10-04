@@ -16,9 +16,9 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size, SIZES } from '../../sizes.ts';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Container from '../Container/Container.tsx';
-import * as Group from '../Group/Group.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Group } from '../Group/Group.tsx';
 import * as Tag from './Tag.tsx';
 
 /** Label text (one step below the body) per size, in px. */
@@ -33,8 +33,8 @@ const InteractiveTags = ({ size }: { size?: Size }) => {
   const remove = (name: string) => () => setDeleted((current) => [...current, name]);
   const shown = (name: string) => !deleted.includes(name);
   return (
-    <Container.Container layout='row' data-testid={`interactive-${size}`}>
-      <Group.Group>
+    <Container layout='row' data-testid={`interactive-${size}`}>
+      <Group>
         <Tag.Tag hue='sky' onClick={() => setClicks((count) => count + 1)} data-testid={`clickable-${size}`}>
           Filter
         </Tag.Tag>
@@ -53,34 +53,34 @@ const InteractiveTags = ({ size }: { size?: Size }) => {
             Bug
           </Tag.Tag>
         )}
-        <Button.Button compact onClick={() => setDeleted([])} data-testid={`reset-${size}`}>
+        <Button compact onClick={() => setDeleted([])} data-testid={`reset-${size}`}>
           Reset
-        </Button.Button>
+        </Button>
         <output data-testid={`clicks-${size}`}>{clicks}</output>
-      </Group.Group>
-    </Container.Container>
+      </Group>
+    </Container>
   );
 };
 
 /** A row of tags centred in a block row, clickable and deletable tags, then every valence and hue. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Container.Container layout='row' data-testid={`row-${size}`}>
-      <Group.Group>
+    <Container layout='row' data-testid={`row-${size}`}>
+      <Group>
         <Tag.Tag hue='blue' data-testid={`tag-${size}`}>
           Release
         </Tag.Tag>
         <Tag.Tag hue='amber'>Draft</Tag.Tag>
-      </Group.Group>
-    </Container.Container>
+      </Group>
+    </Container>
     <InteractiveTags size={size} />
-    <Group.Group>
+    <Group>
       {[...VALENCES, ...hues].map((hue) => (
         <Tag.Tag key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
           {hue}
         </Tag.Tag>
       ))}
-    </Group.Group>
+    </Group>
   </>
 );
 

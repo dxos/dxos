@@ -74,9 +74,9 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
         {role === AppSurface.Article.role && (
           <Panel.Header>
             <Toolbar.Root>
-              {isGameOver && <Button.Button onClick={handleNewGame}>{t('new-game.button')}</Button.Button>}
+              {isGameOver && <Button.Root onClick={handleNewGame}>{t('new-game.button')}</Button.Root>}
               <div className='grow' />
-              <Button.Button
+              <Button.Root
                 icon='ph--info--regular'
                 iconOnly
                 label={t('toggle-info.button')}

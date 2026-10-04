@@ -23,7 +23,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button, type ButtonProps } from '../Button/Button.tsx';
 
 /**
  * Creates the machine, which owns the steps, waits for each target, scrolls it into view, places the card beside it
@@ -177,7 +177,7 @@ const TourActions = TourPrimitive.Actions;
 // ActionTrigger
 //
 
-type TourActionTriggerProps = Omit<Button.ButtonProps, 'label'> & {
+type TourActionTriggerProps = Omit<ButtonProps, 'label'> & {
   action: TourStepAction;
   /** Defaults to the action's `label`. */
   label?: string;
@@ -191,7 +191,7 @@ const TourActionTrigger = forwardRef<HTMLButtonElement, TourActionTriggerProps>(
   ({ action, label, ...props }, forwardedRef) => (
     // Button drops zag's `aria-label` unless it is icon-only, so its visible label names it.
     <TourPrimitive.ActionTrigger action={action} asChild>
-      <Button.Button {...props} label={label ?? action.label} ref={forwardedRef} />
+      <Button {...props} label={label ?? action.label} ref={forwardedRef} />
     </TourPrimitive.ActionTrigger>
   ),
 );
@@ -219,7 +219,7 @@ const TourCloseTrigger = forwardRef<HTMLButtonElement, TourCloseTriggerProps>(
       </TourPrimitive.CloseTrigger>
     ) : (
       <TourPrimitive.CloseTrigger {...props} asChild ref={forwardedRef}>
-        <Button.Button variant='ghost' icon={icon} label={label ?? t('toolbar-close.label')} iconOnly />
+        <Button variant='ghost' icon={icon} label={label ?? t('toolbar-close.label')} iconOnly />
       </TourPrimitive.CloseTrigger>
     );
   },

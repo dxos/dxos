@@ -26,8 +26,8 @@ const meta = {
     return (
       <>
         <Toolbar.Root>
-          <Button.Button onClick={() => setOpen((open) => !open)}>Open</Button.Button>
-          <Button.Button onClick={() => setExpanded((expanded) => !expanded)}>Expand</Button.Button>
+          <Button.Root onClick={() => setOpen((open) => !open)}>Open</Button.Root>
+          <Button.Root onClick={() => setExpanded((expanded) => !expanded)}>Expand</Button.Root>
         </Toolbar.Root>
 
         <ChatDialog.Root
@@ -47,7 +47,7 @@ const meta = {
           </ChatDialog.Content>
           <ChatDialog.Footer classNames='px-2 items-center'>
             <Field.Root>
-              <Input.Input classNames='border-none' placeholder='Test' />
+              <Input.Root classNames='border-none' placeholder='Test' />
             </Field.Root>
           </ChatDialog.Footer>
         </ChatDialog.Root>

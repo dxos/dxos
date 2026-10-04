@@ -8,8 +8,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Button from '@dxos/react-ui/Button';
 import * as Carousel from '@dxos/react-ui/Carousel';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -30,7 +30,7 @@ export const SupportHomeCompanion = () => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button
+          <Button.Root
             icon='ph--path--regular'
             label={t('start-tour.button')}
             onClick={() => invokePromise(HelpOperation.Start)}
@@ -74,7 +74,7 @@ const WelcomePanel = memo(() => {
   }, [manager]);
 
   return (
-    <Flex.Flex column gap='lg' align='center'>
+    <Layout.Flex column gap='lg' align='center'>
       <h1 className='text-lg font-semibold'>{t('welcome.title')}</h1>
       <p className='text-center text-balance text-fg-muted'>{t('welcome.description')}</p>
       {slides.length > 0 && (
@@ -90,7 +90,7 @@ const WelcomePanel = memo(() => {
           <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>
         </Carousel.Root>
       )}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 });
 

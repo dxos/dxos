@@ -9,9 +9,8 @@ import { type InvocationsState } from '@dxos/compute-runtime';
 import * as Hooks from '@dxos/plugin-routine/Hooks';
 import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 
 import { meta } from '#meta';
@@ -76,7 +75,7 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
     <Popover.Root positioning={{ placement: 'left' }}>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon={getIcon(triggerState)}
             iconOnly
@@ -112,14 +111,14 @@ const TriggerStatusPopover = ({
   const { t } = UiHooks.useTranslation(meta.profile.key);
 
   return (
-    <Flex.Flex column gap='sm' classNames='p-2 w-popover-min-width'>
-      <Container.Container gap='sm' gutter='none'>
+    <Layout.Flex column gap='sm' classNames='p-2 w-popover-min-width'>
+      <Layout.Container gap='sm' gutter='none'>
         <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (
           <div className='text-xs text-fg-muted'>{currentFunctionName}</div>
         )}
-      </Container.Container>
-    </Flex.Flex>
+      </Layout.Container>
+    </Layout.Flex>
   );
 };
 

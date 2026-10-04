@@ -316,7 +316,7 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
     // input uncontrolled so it accepts keystrokes without `onValueChange`.
     return (
       <Field.Root>
-        <Input.Input
+        <Input.Root
           {...props}
           autoFocus={shouldAutoFocus}
           {...(value !== undefined && { value })}

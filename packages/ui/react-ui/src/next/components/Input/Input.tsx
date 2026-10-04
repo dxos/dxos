@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { Field as FieldPrimitive } from '@ark-ui/react/field';
 import React, { type InputHTMLAttributes, type ReactNode, useRef } from 'react';
 
@@ -11,7 +9,7 @@ import { useComposedRefs } from '@dxos/react-hooks';
 
 import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import * as ControlFrame from '../ControlFrame/ControlFrame.tsx';
+import { ControlFrame, type ControlFrameVariant } from '../ControlFrame/ControlFrame.tsx';
 import * as Fieldset from '../Fieldset/Fieldset.tsx';
 import * as SystemButton from '../SystemButton/SystemButton.tsx';
 import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
@@ -19,7 +17,7 @@ import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   'data-testid'?: string;
   /** `subdued` drops the well, for an input on a surface that already reads as editable; `mono` is for keys and ids. */
-  'variant'?: ControlFrame.ControlFrameVariant;
+  'variant'?: ControlFrameVariant;
   /** Ask password managers not to offer autofill (`data-1p-ignore`), e.g. for a search box. */
   'noAutoFill'?: boolean;
   /** Leading content inside the control row (an Icon, or short text such as a currency). */
@@ -90,7 +88,7 @@ export const Input = composable<HTMLInputElement, InputProps>(
     }
 
     return (
-      <ControlFrame.ControlFrame
+      <ControlFrame
         scope='input'
         start={start}
         end={end}
@@ -100,7 +98,7 @@ export const Input = composable<HTMLInputElement, InputProps>(
         style={style}
       >
         {input}
-      </ControlFrame.ControlFrame>
+      </ControlFrame>
     );
   },
 );

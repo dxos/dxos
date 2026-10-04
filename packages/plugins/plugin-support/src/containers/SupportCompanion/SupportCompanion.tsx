@@ -97,7 +97,7 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
       <Panel.Header>
         <Toolbar.Root>
           {tours.map((tour) => (
-            <Button.Button
+            <Button.Root
               key={tour.id}
               icon='ph--path--regular'
               label={Theme.toLocalizedString(tour.label, t)}

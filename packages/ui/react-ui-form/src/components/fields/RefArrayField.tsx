@@ -9,8 +9,8 @@ import { Annotation, Entity, Obj, Ref, Type } from '@dxos/echo';
 import type * as SchemaAST from '@dxos/effect/SchemaAST';
 import { URI } from '@dxos/keys';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
-import * as Group from '@dxos/react-ui/Group';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tag from '@dxos/react-ui/Tag';
@@ -143,13 +143,13 @@ export const RefArrayField = ({
     return selected.length === 0 ? (
       <Typography.Text tone='muted'>{t('empty-readonly-ref-field.label')}</Typography.Text>
     ) : (
-      <Group.Group>
+      <Button.Group>
         {selected.map((option) => (
           <Tag.Tag key={option.id} hue={hues.find((hue) => hue === option.hue)}>
             {option.label}
           </Tag.Tag>
         ))}
-      </Group.Group>
+      </Button.Group>
     );
   }
 

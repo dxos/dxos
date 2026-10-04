@@ -31,7 +31,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
         info={`${messages.length} · ${spaceCount} spaces`}
         action={
           onClear && (
-            <Button.Button
+            <Button.Root
               iconOnly
               variant='ghost'
               icon='ph--trash--regular'

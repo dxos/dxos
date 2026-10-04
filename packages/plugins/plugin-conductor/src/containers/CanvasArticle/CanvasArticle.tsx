@@ -35,7 +35,7 @@ import {
   useRegistry,
   useSceneProjection,
 } from '@dxos/react-ui-canvas/scene';
-import * as Flex from '@dxos/react-ui/Flex';
+import * as Layout from '@dxos/react-ui/Layout';
 
 export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
 
@@ -111,8 +111,8 @@ const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
   );
 };
 
-const Container = (props: Flex.FlexProps) => (
-  <Flex.Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />
+const Container = (props: Layout.FlexProps) => (
+  <Layout.Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />
 );
 
 const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {

@@ -5,9 +5,9 @@
 import React, { type ReactNode, forwardRef } from 'react';
 
 import { Entity } from '@dxos/echo';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -54,11 +54,11 @@ export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps
 
     return (
       <Card.Header ref={forwardedRef}>
-        <Block.Block>
+        <Layout.Block>
           <CardIconSlot subject={subject}>
             <Icon.Icon icon={icon} classNames={iconStyles?.text} />
           </CardIconSlot>
-        </Block.Block>
+        </Layout.Block>
         <Card.Title lines={lines}>
           {children ?? (entity && Entity.getLabel(entity, { fallback: 'typename' }))}
         </Card.Title>

@@ -18,7 +18,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Field from '@dxos/react-ui/Field';
 import * as Focus from '@dxos/react-ui/Focus';
-import * as NumberInput from '@dxos/react-ui/NumberInput';
+import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Select from '@dxos/react-ui/Select';
@@ -299,7 +299,7 @@ const FeedPaginationStory = () => {
           <Toolbar.Root>
             <div className='shrink-0' style={{ inlineSize: '6rem' }}>
               <Field.Root>
-                <NumberInput.NumberInput
+                <Input.Number
                   min={1}
                   value={String(addCount)}
                   onValueChange={(_, valueAsNumber) => setAddCount(valueAsNumber || 0)}
@@ -307,12 +307,12 @@ const FeedPaginationStory = () => {
                 />
               </Field.Root>
             </div>
-            <Button.Button onClick={handleAdd} classNames='shrink-0'>
+            <Button.Root onClick={handleAdd} classNames='shrink-0'>
               Add
-            </Button.Button>
-            <Button.Button onClick={handleReset} classNames='shrink-0'>
+            </Button.Root>
+            <Button.Root onClick={handleReset} classNames='shrink-0'>
               Reset
-            </Button.Button>
+            </Button.Root>
             <Select.Root
               value={[sortField]}
               onValueChange={({ value: [value] }) =>

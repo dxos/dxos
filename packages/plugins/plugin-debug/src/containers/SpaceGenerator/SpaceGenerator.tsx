@@ -23,9 +23,9 @@ import { ProgressMeter } from '@dxos/react-ui-components';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
@@ -185,7 +185,7 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
         <Panel.Header>
           <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
             <Field.Root>
-              <Input.Input
+              <Input.Root
                 placeholder='Count'
                 classNames='w-[4rem] text-right'
                 min={1}
@@ -341,23 +341,23 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
 
   return (
     <div className={mx('flex flex-col gap-1 py-1', classNames)}>
-      <Flex.Flex gap='sm' align='center'>
+      <Layout.Flex gap='sm' align='center'>
         <span className='grow'>Progress Monitor</span>
         {running ? (
-          <Button.Button
+          <Button.Root
             icon='ph--x--regular'
             label='Cancel test progress'
             onClick={() => registry?.cancel(TEST_PROGRESS_NAME)}
           />
         ) : (
-          <Button.Button
+          <Button.Root
             icon='ph--play--regular'
             label='Start test progress'
             disabled={!registry}
             onClick={handleStart}
           />
         )}
-      </Flex.Flex>
+      </Layout.Flex>
       {monitor && (monitor.status === 'running' || monitor.status === 'error') && (
         <ProgressMeter state={monitor} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
       )}

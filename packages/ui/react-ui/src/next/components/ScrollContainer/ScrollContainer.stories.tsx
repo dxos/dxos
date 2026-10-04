@@ -11,8 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Group from '../Group/Group.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as ScrollContainer from './ScrollContainer.tsx';
 
@@ -22,9 +22,9 @@ const DefaultStory = ({ pin }: StoryArgs) => {
   const [rows, setRows] = useState(() => Array.from({ length: 20 }, (_, index) => `Entry ${index + 1}`));
   return (
     <>
-      <Group.Group>
-        <Button.Button label='Add entry' onClick={() => setRows((rows) => [...rows, `Entry ${rows.length + 1}`])} />
-      </Group.Group>
+      <Group>
+        <Button label='Add entry' onClick={() => setRows((rows) => [...rows, `Entry ${rows.length + 1}`])} />
+      </Group>
       <ScrollContainer.Root pin={pin}>
         <ScrollContainer.Content classNames='h-[12rem]' data-testid='frame'>
           <ScrollContainer.Fade />

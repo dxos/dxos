@@ -4,11 +4,10 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import type * as Util from '@dxos/react-ui/Util';
@@ -62,14 +61,14 @@ type StatCardHeaderProps = {
 
 const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
   <Card.Header>
-    <Block.Block>
+    <Layout.Block>
       <Icon.Icon icon={icon} classNames={hue && getStyles(hue).text} />
-    </Block.Block>
-    <Flex.Flex align='center' gap='sm' classNames='min-w-0'>
+    </Layout.Block>
+    <Layout.Flex align='center' gap='sm' classNames='min-w-0'>
       <Card.Title>{title}</Card.Title>
       {info !== undefined && <span className='shrink-0 font-mono text-xs text-fg-muted'>{info}</span>}
-    </Flex.Flex>
-    {action && <Block.Block rail='end'>{action}</Block.Block>}
+    </Layout.Flex>
+    {action && <Layout.Block rail='end'>{action}</Layout.Block>}
     {menu && (
       <Card.Menu label={title}>
         {menu.map((item) => (
@@ -152,7 +151,7 @@ const StatCardRow = ({
   const leading =
     control ??
     (onToggle ? (
-      <Button.Button
+      <Button.Root
         variant='ghost'
         icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
         iconOnly
@@ -176,7 +175,7 @@ const StatCardRow = ({
       leading={leading}
       trailing={trailing}
     >
-      <Flex.Flex align='center' justify='between' gap='sm' classNames='min-w-0 text-xs'>
+      <Layout.Flex align='center' justify='between' gap='sm' classNames='min-w-0 text-xs'>
         {children ?? (
           <>
             {tooltip ? (
@@ -191,7 +190,7 @@ const StatCardRow = ({
             )}
           </>
         )}
-      </Flex.Flex>
+      </Layout.Flex>
     </Card.Row>
   );
 };
@@ -231,9 +230,9 @@ type StatCardContentProps = PropsWithChildren<
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, full, children }: StatCardContentProps) => (
   <Card.Row leading={full ? undefined : <span />} classNames={full ? SPAN_FULL : SPAN_TRAILING}>
-    <Flex.Flex column grow={false} classNames={['min-w-0 text-xs', classNames]}>
+    <Layout.Flex column grow={false} classNames={['min-w-0 text-xs', classNames]}>
       {children}
-    </Flex.Flex>
+    </Layout.Flex>
   </Card.Row>
 );
 

@@ -62,7 +62,7 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
   return (
     <Popover.Root autoFocus={false}>
       <Popover.Trigger asChild>
-        <Button.Button
+        <Button.Root
           hue='neutral'
           size='sm'
           classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border align-baseline'

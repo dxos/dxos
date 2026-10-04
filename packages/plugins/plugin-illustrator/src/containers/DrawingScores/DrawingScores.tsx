@@ -6,8 +6,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { useObject } from '@dxos/echo-react';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
@@ -63,14 +63,14 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
             {!result ? (
               <p className='p-3 text-fg-muted'>{t('scores.empty.label')}</p>
             ) : (
-              <Flex.Flex column gap='md' asChild classNames='p-3 text-sm'>
+              <Layout.Flex column gap='md' asChild classNames='p-3 text-sm'>
                 <div data-testid='illustrator.scores'>
-                  <Flex.Flex align='baseline' gap='sm'>
+                  <Layout.Flex align='baseline' gap='sm'>
                     <span className='text-3xl font-medium tabular-nums' data-testid='illustrator.scores.overall'>
                       {overall === undefined ? '—' : percent(overall)}
                     </span>
                     <span className='text-fg-muted'>overall</span>
-                  </Flex.Flex>
+                  </Layout.Flex>
                   {history.length > 1 && (
                     <ol className='flex flex-wrap items-center gap-1 text-xs tabular-nums' aria-label='versions'>
                       {history.map((score, index) => (
@@ -84,11 +84,11 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
                   <ul className='flex flex-col gap-2'>
                     {result.scores.map(({ id, kind, score, detail }) => (
                       <li key={id} className='flex flex-col gap-1'>
-                        <Flex.Flex align='center' gap='sm'>
+                        <Layout.Flex align='center' gap='sm'>
                           <span className='rounded border border-separator px-1 text-xs text-fg-muted'>{kind}</span>
                           <span className='grow truncate'>{id}</span>
                           <span className='tabular-nums'>{percent(score)}</span>
-                        </Flex.Flex>
+                        </Layout.Flex>
                         <div className='h-1.5 rounded bg-separator'>
                           <div className={mx('h-full rounded', tone(score))} style={{ width: `${score * 100}%` }} />
                         </div>
@@ -106,7 +106,7 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
                     </ul>
                   )}
                 </div>
-              </Flex.Flex>
+              </Layout.Flex>
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>

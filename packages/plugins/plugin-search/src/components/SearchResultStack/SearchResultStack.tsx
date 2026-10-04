@@ -12,9 +12,9 @@ import { Entity } from '@dxos/echo';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Focus from '@dxos/react-ui/Focus';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -98,11 +98,11 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
               ref={cardRef}
               subject={result.object}
               menu={
-                <Block.Block rail='end'>
+                <Layout.Block rail='end'>
                   <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                    <Button.Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                    <Button.Root iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                   </ActionMenu>
-                </Block.Block>
+                </Layout.Block>
               }
             >
               <Highlighted text={label} query={query} />

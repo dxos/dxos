@@ -26,52 +26,51 @@ import * as AlertDialog from '../next/components/AlertDialog/AlertDialog.tsx';
 import * as Avatar from '../next/components/Avatar/Avatar.tsx';
 import * as Banner from '../next/components/Banner/Banner.tsx';
 import * as Breadcrumb from '../next/components/Breadcrumb/Breadcrumb.tsx';
-import * as Button from '../next/components/Button/Button.tsx';
+import { Button, type ButtonVariant } from '../next/components/Button/Button.tsx';
 import * as Card from '../next/components/Card/Card.tsx';
 import * as Carousel from '../next/components/Carousel/Carousel.tsx';
-import * as Checkbox from '../next/components/Checkbox/Checkbox.tsx';
+import { Checkbox } from '../next/components/Checkbox/Checkbox.tsx';
 import * as Collapsible from '../next/components/Collapsible/Collapsible.tsx';
 import * as Combobox from '../next/components/Combobox/Combobox.tsx';
-import * as Container from '../next/components/Container/Container.tsx';
-import * as DatePicker from '../next/components/DatePicker/DatePicker.tsx';
+import { Container } from '../next/components/Container/Container.tsx';
 import * as Dialog from '../next/components/Dialog/Dialog.tsx';
 import * as DragHandle from '../next/components/DragHandle/DragHandle.tsx';
 import * as Editable from '../next/components/Editable/Editable.tsx';
-import * as Empty from '../next/components/Empty/Empty.tsx';
+import { Empty } from '../next/components/Empty/Empty.tsx';
 import * as Field from '../next/components/Field/Field.tsx';
-import * as Group from '../next/components/Group/Group.tsx';
+import { Group } from '../next/components/Group/Group.tsx';
 import * as HoverCard from '../next/components/HoverCard/HoverCard.tsx';
 import * as Icon from '../next/components/Icon/Icon.tsx';
-import * as Input from '../next/components/Input/Input.tsx';
+import { Input } from '../next/components/Input/Input.tsx';
 import { Link } from '../next/components/Link/Link.tsx';
 import * as Menu from '../next/components/Menu/Menu.tsx';
-import * as MenuButton from '../next/components/MenuButton/MenuButton.tsx';
-import * as NumberInput from '../next/components/NumberInput/NumberInput.tsx';
+import { MenuButton, type MenuButtonItem } from '../next/components/MenuButton/MenuButton.tsx';
+import { NumberInput } from '../next/components/NumberInput/NumberInput.tsx';
 import * as Panel from '../next/components/Panel/Panel.tsx';
-import * as PasswordInput from '../next/components/PasswordInput/PasswordInput.tsx';
-import * as PinInput from '../next/components/PinInput/PinInput.tsx';
+import { PasswordInput } from '../next/components/PasswordInput/PasswordInput.tsx';
+import { PinInput } from '../next/components/PinInput/PinInput.tsx';
 import * as Popover from '../next/components/Popover/Popover.tsx';
-import * as Progress from '../next/components/Progress/Progress.tsx';
+import { Progress } from '../next/components/Progress/Progress.tsx';
 import * as QrCode from '../next/components/QrCode/QrCode.tsx';
 import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
 import * as Select from '../next/components/Select/Select.tsx';
-import * as Separator from '../next/components/Separator/Separator.tsx';
-import * as Skeleton from '../next/components/Skeleton/Skeleton.tsx';
-import * as Slider from '../next/components/Slider/Slider.tsx';
+import { Separator } from '../next/components/Separator/Separator.tsx';
+import { Skeleton } from '../next/components/Skeleton/Skeleton.tsx';
 import * as Splitter from '../next/components/Splitter/Splitter.tsx';
 import { Steps } from '../next/components/Steps/Steps.tsx';
-import * as Switch from '../next/components/Switch/Switch.tsx';
+import { Switch } from '../next/components/Switch/Switch.tsx';
 import * as SystemButton from '../next/components/SystemButton/SystemButton.tsx';
 import * as Tabs from '../next/components/Tabs/Tabs.tsx';
 import * as Tag from '../next/components/Tag/Tag.tsx';
-import * as Textarea from '../next/components/Textarea/Textarea.tsx';
+import { Textarea } from '../next/components/Textarea/Textarea.tsx';
 import { Timestamp } from '../next/components/Timestamp/Timestamp.tsx';
 import * as Toast from '../next/components/Toast/Toast.tsx';
-import * as Toggle from '../next/components/Toggle/Toggle.tsx';
+import { Toggle } from '../next/components/Toggle/Toggle.tsx';
 import * as ToggleGroup from '../next/components/ToggleGroup/ToggleGroup.tsx';
 import * as Toolbar from '../next/components/Toolbar/Toolbar.tsx';
 import * as Tooltip from '../next/components/Tooltip/Tooltip.tsx';
 import * as Typography from '../next/components/Typography/Typography.tsx';
+import * as UiInput from '../next/namespaces/Input.ts';
 import { type Size, SIZES } from '../next/sizes.ts';
 import { withTheme } from '../testing/index.ts';
 
@@ -94,23 +93,23 @@ const Section = ({ id, title, children }: SectionProps) => {
       <Typography.Text asChild tone='muted' classNames='px-4 font-medium'>
         <h2>{title}</h2>
       </Typography.Text>
-      <Container.Container size={size} gutter='rail' gap='md' level='base'>
+      <Container size={size} gutter='rail' gap='md' level='base'>
         {children}
-      </Container.Container>
+      </Container>
     </section>
   );
 };
 
 /** A labelled run of controls within a section. */
 const Row = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
-  <Group.Group>
+  <Group>
     {label && (
       <Typography.Text tone='muted' classNames='w-24 shrink-0'>
         {label}
       </Typography.Text>
     )}
     {children}
-  </Group.Group>
+  </Group>
 );
 
 type TocEntry = { id: string; title: string };
@@ -241,36 +240,36 @@ const Frame = ({ sections, hue, size }: FrameProps) => {
 // Sections
 //
 
-const BUTTON_VARIANTS: Button.ButtonVariant[] = ['default', 'primary', 'outline', 'ghost', 'destructive'];
+const BUTTON_VARIANTS: ButtonVariant[] = ['default', 'primary', 'outline', 'ghost', 'destructive'];
 const VALENCES: MessageValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
 const ButtonSection = () => (
   <Section id='button' title='Button'>
     {BUTTON_VARIANTS.map((variant) => (
       <Row key={variant} label={variant}>
-        <Button.Button variant={variant}>Button</Button.Button>
-        <Button.Button variant={variant} icon='ph--paper-plane-tilt--regular'>
+        <Button variant={variant}>Button</Button>
+        <Button variant={variant} icon='ph--paper-plane-tilt--regular'>
           With icon
-        </Button.Button>
-        <Button.Button variant={variant} disabled>
+        </Button>
+        <Button variant={variant} disabled>
           Disabled
-        </Button.Button>
-        <Button.Button variant={variant} icon='ph--gear--regular' label='Settings' iconOnly />
-        <Button.Button variant={variant} iconEnd='ph--caret-down--regular' label='More' />
+        </Button>
+        <Button variant={variant} icon='ph--gear--regular' label='Settings' iconOnly />
+        <Button variant={variant} iconEnd='ph--caret-down--regular' label='More' />
       </Row>
     ))}
     <Row label='valence'>
       {VALENCES.map((valence) => (
-        <Button.Button key={valence} variant='valence' valence={valence}>
+        <Button key={valence} variant='valence' valence={valence}>
           {valence}
-        </Button.Button>
+        </Button>
       ))}
     </Row>
     <Row label='toggle'>
-      <Toggle.Toggle icon='ph--text-b--regular' label='Bold' iconOnly />
-      <Toggle.Toggle icon='ph--text-italic--regular' label='Italic' iconOnly defaultPressed />
-      <Toggle.Toggle icon='ph--text-underline--regular' label='Underline' iconOnly disabled />
-      <Toggle.Toggle icon='ph--star--regular' activeIcon='ph--star--fill' label='Pin' iconOnly />
+      <Toggle icon='ph--text-b--regular' label='Bold' iconOnly />
+      <Toggle icon='ph--text-italic--regular' label='Italic' iconOnly defaultPressed />
+      <Toggle icon='ph--text-underline--regular' label='Underline' iconOnly disabled />
+      <Toggle icon='ph--star--regular' activeIcon='ph--star--fill' label='Pin' iconOnly />
       <ToggleGroup.Root type='single' defaultValue='left' aria-label='Alignment'>
         <ToggleGroup.Item value='left' icon='ph--text-align-left--regular' label='Left' iconOnly />
         <ToggleGroup.Item value='center' icon='ph--text-align-center--regular' label='Centre' iconOnly />
@@ -305,9 +304,9 @@ const ButtonSection = () => (
 const MenuButtonDemo = () => {
   const [view, setView] = useState('List');
   const [extraction, setExtraction] = useState(false);
-  const items: MenuButton.MenuButtonItem[] = [
+  const items: MenuButtonItem[] = [
     { type: 'group', label: 'View' },
-    ...['List', 'Grid', 'Board'].map((label): MenuButton.MenuButtonItem => ({
+    ...['List', 'Grid', 'Board'].map((label): MenuButtonItem => ({
       type: 'option',
       label,
       selected: view === label,
@@ -318,7 +317,7 @@ const MenuButtonDemo = () => {
   ];
   return (
     <>
-      <MenuButton.MenuButton icon='ph--sliders--regular' iconOnly caretDown label='Options' items={items} />
+      <MenuButton icon='ph--sliders--regular' iconOnly caretDown label='Options' items={items} />
       <Typography.Text tone='muted'>
         {view} · extraction {extraction ? 'on' : 'off'}
       </Typography.Text>
@@ -330,88 +329,88 @@ const InputSection = () => (
   <Section id='input' title='Input'>
     <Field.Root>
       <Field.Label>Name</Field.Label>
-      <Input.Input placeholder='Ada Lovelace' />
+      <Input placeholder='Ada Lovelace' />
       <Field.HelperText>Shown to other members.</Field.HelperText>
     </Field.Root>
     <Field.Root>
       <Field.Label>Search</Field.Label>
-      <Input.Input start={<Icon.Icon icon='ph--magnifying-glass--regular' />} placeholder='Find…' />
+      <Input start={<Icon.Icon icon='ph--magnifying-glass--regular' />} placeholder='Find…' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Workspace</Field.Label>
-      <Input.Input end='.dxos.org' placeholder='workspace' />
+      <Input end='.dxos.org' placeholder='workspace' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Subdued</Field.Label>
-      <Input.Input variant='subdued' placeholder='No well' />
+      <Input variant='subdued' placeholder='No well' />
     </Field.Root>
     <Field.Root readOnly>
       <Field.Label>Identity</Field.Label>
-      <Input.Input variant='mono' copyable defaultValue='did:key:z6Mk' />
+      <Input variant='mono' copyable defaultValue='did:key:z6Mk' />
     </Field.Root>
     <Field.Root disabled>
       <Field.Label>Disabled</Field.Label>
-      <Input.Input defaultValue='Locked' />
+      <Input defaultValue='Locked' />
     </Field.Root>
     {(['success', 'info', 'warning', 'error'] as const).map((valence) => (
       <Field.Root key={valence} validationValence={valence}>
         <Field.Label>Handle ({valence})</Field.Label>
-        <Input.Input defaultValue='dxos' />
+        <Input defaultValue='dxos' />
         <Field.HelperText>A {valence} message.</Field.HelperText>
       </Field.Root>
     ))}
     <Field.Root invalid>
       <Field.Label>Website</Field.Label>
-      <Input.Input defaultValue='not a url' />
+      <Input defaultValue='not a url' />
       <Field.ErrorText>Enter a valid URL.</Field.ErrorText>
     </Field.Root>
     <Field.Root>
       <Field.Label>Notes</Field.Label>
-      <Textarea.Textarea autoResize placeholder='Grows as you type' />
+      <Textarea autoResize placeholder='Grows as you type' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Password</Field.Label>
-      <PasswordInput.PasswordInput defaultValue='hunter2' autoComplete='current-password' />
+      <PasswordInput defaultValue='hunter2' autoComplete='current-password' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Quantity</Field.Label>
-      <NumberInput.NumberInput min={0} max={10} defaultValue='8' />
+      <NumberInput min={0} max={10} defaultValue='8' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Price</Field.Label>
-      <NumberInput.NumberInput defaultValue='1250' step={0.5} formatOptions={{ style: 'currency', currency: 'USD' }} />
+      <NumberInput defaultValue='1250' step={0.5} formatOptions={{ style: 'currency', currency: 'USD' }} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Code</Field.Label>
-      <PinInput.PinInput length={4} />
+      <PinInput length={4} />
     </Field.Root>
     <Field.Root invalid>
       <Field.Label>Expired</Field.Label>
-      <PinInput.PinInput length={4} type='alphanumeric' defaultValue='AB12' />
+      <PinInput length={4} type='alphanumeric' defaultValue='AB12' />
       <Field.ErrorText>The code has expired.</Field.ErrorText>
     </Field.Root>
     <Field.Root>
       <Field.Label>Due</Field.Label>
-      <DatePicker.Input defaultValue='2026-09-29' />
+      <UiInput.Date defaultValue='2026-09-29' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Starts at</Field.Label>
-      <DatePicker.Input type='time' defaultValue='09:30' />
+      <UiInput.Date type='time' defaultValue='09:30' />
     </Field.Root>
     <Field.Root readOnly>
       <Field.Label>Meeting</Field.Label>
-      <DatePicker.Input type='datetime-local' defaultValue='2026-09-29T14:00' />
+      <UiInput.Date type='datetime-local' defaultValue='2026-09-29T14:00' />
     </Field.Root>
   </Section>
 );
 
 const CheckboxSection = () => (
   <Section id='checkbox' title='Checkbox, switch'>
-    <Checkbox.Checkbox label='Subscribe' defaultChecked />
-    <Checkbox.Checkbox label='Some selected' checked='indeterminate' />
-    <Checkbox.Checkbox label='Disabled' disabled />
-    <Switch.Switch label='Notifications' defaultChecked />
-    <Switch.Switch label='Disabled' disabled />
+    <Checkbox label='Subscribe' defaultChecked />
+    <Checkbox label='Some selected' checked='indeterminate' />
+    <Checkbox label='Disabled' disabled />
+    <Switch label='Notifications' defaultChecked />
+    <Switch label='Disabled' disabled />
   </Section>
 );
 
@@ -495,9 +494,9 @@ const SliderSection = () => {
   const [value, setValue] = useState([40]);
   return (
     <Section id='slider' title='Slider'>
-      <Slider.Input value={value} onValueChange={setValue} max={100} label='Volume' />
-      <Slider.Input defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
-      <Slider.Input defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
+      <UiInput.Slider value={value} onValueChange={setValue} max={100} label='Volume' />
+      <UiInput.Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
+      <UiInput.Slider defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
     </Section>
   );
 };
@@ -506,47 +505,47 @@ const STEPS = ['Plan', 'Build', 'Verify', 'Ship'].map((label) => ({ id: label, l
 
 const ProgressSection = () => (
   <Section id='progress' title='Progress, steps'>
-    <Progress.Progress value={0.35} label='Upload' />
-    <Progress.Progress indeterminate label='Indexing' />
-    <Progress.Progress indeterminate error label='Failed' />
+    <Progress value={0.35} label='Upload' />
+    <Progress indeterminate label='Indexing' />
+    <Progress indeterminate error label='Failed' />
     <Steps steps={STEPS} active={1} fraction={0.5} />
   </Section>
 );
 
 const TagSection = () => (
   <Section id='tag' title='Tag'>
-    <Group.Group>
+    <Group>
       {[...VALENCES, ...hues].map((hue) => (
         <Tag.Tag key={hue} hue={hue}>
           {hue}
         </Tag.Tag>
       ))}
-    </Group.Group>
+    </Group>
   </Section>
 );
 
 const AvatarSection = () => (
   <Section id='avatar' title='Avatar'>
-    <Group.Group>
+    <Group>
       <Avatar.Root fallback='Ada Lovelace' hue='blue' status='current' label='Ada Lovelace' />
       <Avatar.Root fallback='🦊' hue='amber' label='Fox' />
       <Avatar.Root fallback='Bob' hue='rose' variant='square' status='inactive' label='Bob' />
       <Avatar.Root icon='ph--robot--regular' hue='violet' hueVariant='surface' label='Agent' />
       <Avatar.Root fallback='Eve' hue='teal' hueVariant='transparent' status='error' label='Eve' />
-    </Group.Group>
+    </Group>
   </Section>
 );
 
 const SkeletonSection = () => (
   <Section id='skeleton' title='Skeleton'>
     <div className='flex gap-2'>
-      <Skeleton.Skeleton variant='circle' />
+      <Skeleton variant='circle' />
       <div className='flex flex-col grow'>
-        <Skeleton.Skeleton variant='text' classNames='w-2/3' />
-        <Skeleton.Skeleton variant='text' classNames='w-1/3' />
+        <Skeleton variant='text' classNames='w-2/3' />
+        <Skeleton variant='text' classNames='w-1/3' />
       </div>
     </div>
-    <Skeleton.Skeleton />
+    <Skeleton />
   </Section>
 );
 
@@ -576,14 +575,14 @@ const NavigationSection = () => (
       </Link>
       .
     </Typography.Text>
-    <Separator.Separator />
-    <Group.Group>
-      <Button.Button>Left</Button.Button>
-      <Separator.Separator orientation='vertical' />
-      <Button.Button>Middle</Button.Button>
-      <Separator.Separator orientation='vertical' decorative />
-      <Button.Button>Right</Button.Button>
-    </Group.Group>
+    <Separator />
+    <Group>
+      <Button>Left</Button>
+      <Separator orientation='vertical' />
+      <Button>Middle</Button>
+      <Separator orientation='vertical' decorative />
+      <Button>Right</Button>
+    </Group>
   </Section>
 );
 
@@ -602,7 +601,7 @@ const TabsSection = () => (
         <Typography.Text>Three open tasks.</Typography.Text>
       </Tabs.Content>
       <Tabs.Content value='settings'>
-        <Input.Input aria-label='Name' defaultValue='Apollo' />
+        <Input aria-label='Name' defaultValue='Apollo' />
       </Tabs.Content>
     </Tabs.Root>
   </Section>
@@ -611,8 +610,8 @@ const TabsSection = () => (
 const ToolbarSection = () => (
   <Section id='toolbar' title='Toolbar'>
     <Toolbar.Root>
-      <Button.Button icon='ph--arrow-counter-clockwise--regular' label='Undo' iconOnly />
-      <Button.Button icon='ph--arrow-clockwise--regular' label='Redo' iconOnly />
+      <Button icon='ph--arrow-counter-clockwise--regular' label='Undo' iconOnly />
+      <Button icon='ph--arrow-clockwise--regular' label='Redo' iconOnly />
       <Toolbar.Separator />
       <Toolbar.ToggleGroup type='multiple' aria-label='Marks'>
         <ToggleGroup.Item value='bold' icon='ph--text-b--regular' label='Bold' iconOnly />
@@ -620,15 +619,15 @@ const ToolbarSection = () => (
         <ToggleGroup.Item value='underline' icon='ph--text-underline--regular' label='Underline' iconOnly />
       </Toolbar.ToggleGroup>
       <Toolbar.Separator />
-      <Input.Input placeholder='Search' aria-label='Search' />
+      <Input placeholder='Search' aria-label='Search' />
       <Toolbar.Separator variant='gap' />
-      <Button.Button variant='primary'>Publish</Button.Button>
+      <Button variant='primary'>Publish</Button>
     </Toolbar.Root>
     <Toolbar.Root>
       <DragHandle.DragHandle label='Drag' />
       <Toolbar.Text>A document title long enough to be truncated by the toolbar</Toolbar.Text>
       <Toolbar.Link href='https://dxos.org'>Docs</Toolbar.Link>
-      <Button.Button>Share</Button.Button>
+      <Button>Share</Button>
     </Toolbar.Root>
   </Section>
 );
@@ -656,7 +655,7 @@ const CollapsibleSection = () => (
       <Collapsible.Trigger>Advanced settings</Collapsible.Trigger>
       <Collapsible.Content>
         <Typography.Text>These settings change how your space syncs.</Typography.Text>
-        <Switch.Switch label='Sync over cellular' />
+        <Switch label='Sync over cellular' />
       </Collapsible.Content>
     </Collapsible.Root>
     <Accordion.Root border multiple>
@@ -678,15 +677,15 @@ const CardSection = () => (
       <Card.Root>
         <Card.Header>
           <Card.Title>Roadmap</Card.Title>
-          <Button.Button icon='ph--dots-three--regular' label='More actions' iconOnly />
+          <Button icon='ph--dots-three--regular' label='More actions' iconOnly />
         </Card.Header>
         <Card.Body>
           <Card.Description>What ships next quarter and why.</Card.Description>
           <Typography.Text>Three milestones, each with an owner and a date.</Typography.Text>
         </Card.Body>
         <Card.Footer>
-          <Button.Button>Dismiss</Button.Button>
-          <Button.Button variant='primary'>Review</Button.Button>
+          <Button>Dismiss</Button>
+          <Button variant='primary'>Review</Button>
         </Card.Footer>
       </Card.Root>
       <Card.Root grid>
@@ -712,14 +711,14 @@ const CardSection = () => (
 
 const BannerSection = () => (
   <Section id='banner' title='Banner'>
-    <Container.Container gap='md'>
+    <Container gap='md'>
       {VALENCES.map((valence) => (
         <Banner.Root key={valence} valence={valence}>
           <Banner.Title>{valence}</Banner.Title>
           <Banner.Body>A banner with the {valence} valence.</Banner.Body>
         </Banner.Root>
       ))}
-    </Container.Container>
+    </Container>
   </Section>
 );
 
@@ -778,11 +777,11 @@ const ScrollAreaSection = () => (
     <div className='flex flex-col h-40 border border-separator'>
       <ScrollArea.Root classNames='flex-1'>
         <ScrollArea.Viewport asChild>
-          <Container.Container gutter='rail'>
+          <Container gutter='rail'>
             {SCROLL_ROWS.map((row) => (
               <Typography.Text key={row}>{row}</Typography.Text>
             ))}
-          </Container.Container>
+          </Container>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </div>
@@ -815,11 +814,11 @@ const TimestampSection = () => {
   const [now] = useState(() => new Date());
   return (
     <Section id='timestamp' title='Timestamp'>
-      <Group.Group>
+      <Group>
         {MINUTES.map((minutes) => (
           <Timestamp key={minutes} date={new Date(now.getTime() - minutes * 60_000)} />
         ))}
-      </Group.Group>
+      </Group>
     </Section>
   );
 };
@@ -834,16 +833,16 @@ const OverlaysSection = () => {
   const [grid, setGrid] = useState(true);
   return (
     <Section id='overlays' title='Tooltip, popover, hover card, menu'>
-      <Group.Group>
+      <Group>
         <Tooltip.Root>
           <Tooltip.Trigger asChild>
-            <Button.Button>Tooltip</Button.Button>
+            <Button>Tooltip</Button>
           </Tooltip.Trigger>
           <Tooltip.Content>Save changes (⌘S)</Tooltip.Content>
         </Tooltip.Root>
         <Popover.Root>
           <Popover.Trigger asChild>
-            <Button.Button>Popover</Button.Button>
+            <Button>Popover</Button>
           </Popover.Trigger>
           <Popover.Content>
             <Popover.Header>
@@ -853,13 +852,13 @@ const OverlaysSection = () => {
             <Popover.Description>Anyone with the link can view.</Popover.Description>
             <Field.Root>
               <Field.Label>Link</Field.Label>
-              <Input.Input defaultValue='https://composer.space/s/123' readOnly />
+              <Input defaultValue='https://composer.space/s/123' readOnly />
             </Field.Root>
           </Popover.Content>
         </Popover.Root>
         <HoverCard.Root>
           <HoverCard.Trigger asChild>
-            <Button.Button>Hover card</Button.Button>
+            <Button>Hover card</Button>
           </HoverCard.Trigger>
           <HoverCard.Content>
             <Typography.Text>Alice Example</Typography.Text>
@@ -868,7 +867,7 @@ const OverlaysSection = () => {
         </HoverCard.Root>
         <Menu.Root>
           <Menu.Trigger asChild>
-            <Button.Button>Menu</Button.Button>
+            <Button>Menu</Button>
           </Menu.Trigger>
           <Menu.Content>
             <Menu.ItemGroup>
@@ -898,7 +897,7 @@ const OverlaysSection = () => {
             <Menu.Item item={{ value: 'rename', label: 'Rename' }} />
           </Menu.Content>
         </Menu.Root>
-      </Group.Group>
+      </Group>
     </Section>
   );
 };
@@ -907,10 +906,10 @@ const DialogsSection = () => {
   const [toast, setToast] = useState(false);
   return (
     <Section id='dialogs' title='Dialog, alert dialog, toast'>
-      <Group.Group>
+      <Group>
         <Dialog.Root>
           <Dialog.Trigger asChild>
-            <Button.Button>Dialog</Button.Button>
+            <Button>Dialog</Button>
           </Dialog.Trigger>
           <Dialog.Content>
             <Dialog.Header>
@@ -921,7 +920,7 @@ const DialogsSection = () => {
               <Dialog.Description>Update how others see you.</Dialog.Description>
               <Field.Root>
                 <Field.Label>Name</Field.Label>
-                <Input.Input placeholder='Ada Lovelace' />
+                <Input placeholder='Ada Lovelace' />
               </Field.Root>
             </Dialog.Body>
             <Dialog.Footer>
@@ -934,7 +933,7 @@ const DialogsSection = () => {
         </Dialog.Root>
         <AlertDialog.Root>
           <AlertDialog.Trigger asChild>
-            <Button.Button variant='destructive'>Delete space</Button.Button>
+            <Button variant='destructive'>Delete space</Button>
           </AlertDialog.Trigger>
           <AlertDialog.Content>
             <AlertDialog.Header>
@@ -949,8 +948,8 @@ const DialogsSection = () => {
             </AlertDialog.Footer>
           </AlertDialog.Content>
         </AlertDialog.Root>
-        <Button.Button onClick={() => setToast(true)}>Toast</Button.Button>
-      </Group.Group>
+        <Button onClick={() => setToast(true)}>Toast</Button>
+      </Group>
       <Toast.Root open={toast} duration={6_000} onOpenChange={setToast}>
         <Toast.Header icon='ph--sparkle--regular'>Saved</Toast.Header>
         <Toast.Description>The bar counts down to when this closes.</Toast.Description>
@@ -964,8 +963,8 @@ const DialogsSection = () => {
 
 const EmptySection = () => (
   <Section id='empty' title='Empty'>
-    <Empty.Empty />
-    <Empty.Empty icon='ph--tray--regular'>No documents yet</Empty.Empty>
+    <Empty />
+    <Empty icon='ph--tray--regular'>No documents yet</Empty>
   </Section>
 );
 

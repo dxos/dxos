@@ -24,7 +24,7 @@ const DefaultStory = () => (
       </StatusBar.Button>
     </a>
     <StatusBar.Item>
-      <Button.Button variant='ghost' icon='ph--lightning--regular' iconOnly label='Online' />
+      <Button.Root variant='ghost' icon='ph--lightning--regular' iconOnly label='Online' />
     </StatusBar.Item>
   </StatusBar.EndContent>
 );

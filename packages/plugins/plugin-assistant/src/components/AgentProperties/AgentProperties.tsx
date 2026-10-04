@@ -10,9 +10,9 @@ import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Form } from '@dxos/react-ui-form';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import { isFeedOwnerSchema } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -91,7 +91,7 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
       </Field.Root>
 
       {subscribedObjects.map((object) => (
-        <Checkbox.Checkbox
+        <Input.Checkbox
           key={object.id}
           checked={subscribedUris.has(Obj.getURI(object))}
           onCheckedChange={({ checked }) => {

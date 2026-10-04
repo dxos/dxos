@@ -15,28 +15,24 @@ import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import * as Field from '../Field/Field.tsx';
-import * as Input from '../Input/Input.tsx';
-import * as PasswordInput from './PasswordInput.tsx';
+import { Input } from '../Input/Input.tsx';
+import { PasswordInput } from './PasswordInput.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <Field.Root>
       <Field.Label>Password</Field.Label>
-      <PasswordInput.PasswordInput
-        defaultValue='hunter2'
-        autoComplete='current-password'
-        data-testid={`password-${size}`}
-      />
+      <PasswordInput defaultValue='hunter2' autoComplete='current-password' data-testid={`password-${size}`} />
       <Field.HelperText>At least 8 characters.</Field.HelperText>
     </Field.Root>
-    <Input.Input aria-label='Note' data-testid={`input-${size}`} />
+    <Input aria-label='Note' data-testid={`input-${size}`} />
     <Field.Root>
       <Field.Label>API key</Field.Label>
-      <PasswordInput.PasswordInput ignorePasswordManagers placeholder='sk-…' data-testid={`key-${size}`} />
+      <PasswordInput ignorePasswordManagers placeholder='sk-…' data-testid={`key-${size}`} />
     </Field.Root>
     <Field.Root disabled>
       <Field.Label>Locked</Field.Label>
-      <PasswordInput.PasswordInput defaultValue='secret' data-testid={`disabled-${size}`} />
+      <PasswordInput defaultValue='secret' data-testid={`disabled-${size}`} />
     </Field.Root>
   </>
 );
@@ -103,7 +99,7 @@ const BlurStory = () => {
   const [blurred, setBlurred] = useState(0);
   return (
     <div className='flex flex-col gap-2'>
-      <PasswordInput.PasswordInput aria-label='Token' onBlur={() => setBlurred((count) => count + 1)} />
+      <PasswordInput aria-label='Token' onBlur={() => setBlurred((count) => count + 1)} />
       <span data-testid='blurred'>{blurred}</span>
     </div>
   );

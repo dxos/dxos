@@ -15,9 +15,9 @@ import { translationKey } from '#translations';
 
 import { composable, composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import * as Block from '../Block/Block.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Container from '../Container/Container.tsx';
+import { Block } from '../Block/Block.tsx';
+import { Button } from '../Button/Button.tsx';
+import { DefaultGutterProvider, containerAttributes, useInGrid } from '../Container/Container.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 
@@ -53,8 +53,8 @@ const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
     const titleId = useId();
     const descriptionId = useId();
     // Outside a Container (a pane's body) there is no gutter to sit in, so the banner insets itself as a form's would be.
-    const inset = !Container.useInGrid();
-    const { style, ...attributes } = Container.containerAttributes({ gutter: 'rail' });
+    const inset = !useInGrid();
+    const { style, ...attributes } = containerAttributes({ gutter: 'rail' });
     const {
       className,
       style: propsStyle,
@@ -78,7 +78,7 @@ const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
         ref={forwardedRef}
       >
         <BannerProvider titleId={titleId} descriptionId={descriptionId} valence={valence} icon={icon}>
-          <Container.DefaultGutterProvider gutter={undefined}>{children}</Container.DefaultGutterProvider>
+          <DefaultGutterProvider gutter={undefined}>{children}</DefaultGutterProvider>
         </BannerProvider>
       </div>
     );
@@ -104,7 +104,7 @@ const BannerTitle = composable<HTMLDivElement, BannerTitleProps>(
     const { t } = useTranslation(translationKey);
     const { titleId, valence, icon: rootIcon } = useBannerContext('Banner.Title');
     const icon = iconProp ?? rootIcon ?? BANNER_ICONS[valence];
-    const { style, ...attributes } = Container.containerAttributes({ layout: 'row' });
+    const { style, ...attributes } = containerAttributes({ layout: 'row' });
     const {
       className,
       style: propsStyle,
@@ -122,22 +122,16 @@ const BannerTitle = composable<HTMLDivElement, BannerTitleProps>(
         className={className}
         ref={forwardedRef}
       >
-        <Block.Block rail='start'>
+        <Block rail='start'>
           <Icon.Icon icon={icon} />
-        </Block.Block>
+        </Block>
         <Typography.Text asChild>
           <h2 id={titleId}>{children}</h2>
         </Typography.Text>
         {onClose && (
-          <Block.Block rail='end'>
-            <Button.Button
-              icon='ph--x--regular'
-              label={t('toolbar-close.label')}
-              iconOnly
-              variant='ghost'
-              onClick={onClose}
-            />
-          </Block.Block>
+          <Block rail='end'>
+            <Button icon='ph--x--regular' label={t('toolbar-close.label')} iconOnly variant='ghost' onClick={onClose} />
+          </Block>
         )}
       </div>
     );

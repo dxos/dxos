@@ -171,7 +171,7 @@ const ProcessRow = ({ node, onProcessTerminate }: ProcessRowProps) => {
       </span>
       <span>
         {process && onProcessTerminate && process.state !== Process.State.TERMINATED && (
-          <Button.Button
+          <Button.Root
             icon='ph--x--regular'
             iconOnly
             size='sm'

@@ -9,11 +9,10 @@ import * as PluginRegistryButton from '@dxos/app-toolkit/PluginRegistryButton';
 import { Obj, Ref } from '@dxos/echo';
 import { Form } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
-import * as Empty from '@dxos/react-ui/Empty';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
-import * as Separator from '@dxos/react-ui/Separator';
+import * as Status from '@dxos/react-ui/Status';
 import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
@@ -196,7 +195,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
   const flightOffers = offers?.filter((offer): offer is BookingSearch.FlightOffer => offer._tag === 'flight');
 
   return (
-    <Flex.Flex column classNames='dx-expand'>
+    <Layout.Flex column classNames='dx-expand'>
       {/* Query form: content-height (Viewport without `scroll`) — does not expand; offers fill the rest. */}
       <Form.Root
         schema={BookingSearch.FlightSearchFields}
@@ -235,15 +234,15 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
       {/* Offers list: reuses the mosaic stack (own ScrollArea) so offers share the segment list affordances. */}
       {flightOffers && (
         <>
-          <Separator.Separator />
+          <Layout.Separator />
           {flightOffers.length === 0 ? (
-            <Empty.Empty>{t('booking.no-offers.message')}</Empty.Empty>
+            <Status.Empty>{t('booking.no-offers.message')}</Status.Empty>
           ) : (
             <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
           )}
         </>
       )}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 

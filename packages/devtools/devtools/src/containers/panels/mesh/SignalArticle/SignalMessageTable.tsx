@@ -202,7 +202,7 @@ const ToggleConnection: FC<{
   connection: ConnectionState;
   onToggleConnection: () => void;
 }> = ({ connection, onToggleConnection }) => (
-  <Button.Button
+  <Button.Root
     icon={connection === ConnectionState.ONLINE ? 'ph--wifi-high--regular' : 'ph--wifi-slash--regular'}
     iconOnly
     iconSize='xl'

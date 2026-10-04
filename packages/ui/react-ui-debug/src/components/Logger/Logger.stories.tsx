@@ -44,12 +44,12 @@ const DefaultStory = () => (
         <Panel.Header>
           <Toolbar.Root>
             {FILES.map((file) => (
-              <Button.Button key={file} onClick={() => emit(file, 'info')}>
+              <Button.Root key={file} onClick={() => emit(file, 'info')}>
                 {file.split('/').pop()}
-              </Button.Button>
+              </Button.Root>
             ))}
-            <Button.Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Button.Button>
-            <Button.Button onClick={() => emit(FILES[1], 'error')}>Error (beta)</Button.Button>
+            <Button.Root onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Button.Root>
+            <Button.Root onClick={() => emit(FILES[1], 'error')}>Error (beta)</Button.Root>
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body asChild>

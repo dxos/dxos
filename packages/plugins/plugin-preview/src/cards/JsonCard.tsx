@@ -5,8 +5,8 @@
 import React, { useState } from 'react';
 
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 export const JsonCard = ({ data }: { data: unknown }) => {
@@ -18,7 +18,7 @@ export const JsonCard = ({ data }: { data: unknown }) => {
   } catch {}
   return (
     <Card.Row>
-      <Block.Block classNames='self-start'>
+      <Layout.Block classNames='self-start'>
         <SystemButton.Disclosure
           variant='ghost'
           size='sm'
@@ -26,7 +26,7 @@ export const JsonCard = ({ data }: { data: unknown }) => {
           expanded={open}
           onExpandedChange={setOpen}
         />
-      </Block.Block>
+      </Layout.Block>
       {(open && <JsonHighlighter data={data} classNames='col-span-full max-h-[20lh] py-1.5 text-xs' />) || (
         <Card.Text variant='muted'>{collapsedLength}</Card.Text>
       )}

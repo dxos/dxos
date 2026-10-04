@@ -352,7 +352,7 @@ export const L0Menu = ({
       <ActionMenu onAction={handleAction} group={parent} actions={menuActions}>
         {/* The trigger clones this child, so the testid belongs here rather than on `ActionMenu`. */}
         <div className='grid place-items-center' data-testid='spacePlugin.addSpace'>
-          <Button.Button
+          <Button.Root
             size='lg'
             variant='ghost'
             iconSize='lg'

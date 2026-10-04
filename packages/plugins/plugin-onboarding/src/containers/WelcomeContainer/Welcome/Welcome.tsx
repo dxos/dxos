@@ -22,12 +22,11 @@ import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Util from '@dxos/react-ui/Util';
@@ -389,7 +388,7 @@ export const Welcome = ({
         backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
       }}
     >
-      <Flex.Flex column gap='2xl' classNames='z-10 p-8 md:px-16'>
+      <Layout.Flex column gap='2xl' classNames='z-10 p-8 md:px-16'>
         <ComposerLogoMark classNames='text-[80px] leading-[1.5]' />
 
         {state === WelcomeState.INIT && !signupEnabled && loginTab}
@@ -421,11 +420,11 @@ export const Welcome = ({
 
             <Tabs.Content value='signup'>
               {signupStep === 'collect' && signupMode === 'code' && codeSignupEnabled && (
-                <Flex.Flex column gap='xl'>
-                  <Container.Container gap='md' gutter='none'>
+                <Layout.Flex column gap='xl'>
+                  <Layout.Container gap='md' gutter='none'>
                     <h2 className='text-2xl'>{t('signup-code.title')}</h2>
                     <p className='text-fg-muted'>{t('signup-code.description')}</p>
-                  </Container.Container>
+                  </Layout.Container>
                   <InlineForm
                     inputProps={{
                       ref: codeRef,
@@ -443,15 +442,15 @@ export const Welcome = ({
                   {waitlistEnabled && (
                     <SwapLink onClick={() => setSignupMode('waitlist')}>{t('no-invitation-code-link.label')}</SwapLink>
                   )}
-                </Flex.Flex>
+                </Layout.Flex>
               )}
 
               {signupStep === 'collect' && signupMode === 'waitlist' && waitlistEnabled && (
-                <Flex.Flex column gap='xl'>
-                  <Container.Container gap='md' gutter='none'>
+                <Layout.Flex column gap='xl'>
+                  <Layout.Container gap='md' gutter='none'>
                     <h2 className='text-2xl'>{t('waitlist.title')}</h2>
                     <p className='text-fg-muted'>{t('waitlist.description')}</p>
-                  </Container.Container>
+                  </Layout.Container>
                   <InlineForm
                     inputProps={{
                       ref: waitlistEmailRef,
@@ -467,15 +466,15 @@ export const Welcome = ({
                   {codeSignupEnabled && (
                     <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
                   )}
-                </Flex.Flex>
+                </Layout.Flex>
               )}
 
               {signupStep === 'auth' && (
-                <Flex.Flex column gap='xl'>
-                  <Container.Container gap='md' gutter='none'>
+                <Layout.Flex column gap='xl'>
+                  <Layout.Container gap='md' gutter='none'>
                     <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
                     <p className='text-fg-muted'>{t('signup-auth.description')}</p>
-                  </Container.Container>
+                  </Layout.Container>
                   {onCreateAccount && (
                     <>
                       <InlineForm
@@ -499,7 +498,7 @@ export const Welcome = ({
                   {onCreateAccountWithOAuth && (
                     <>
                       {onCreateAccount && <OrDivider>{t('or-divider.label')}</OrDivider>}
-                      <Container.Container gap='md' gutter='none'>
+                      <Layout.Container gap='md' gutter='none'>
                         <p className='text-fg-muted'>{t('atmosphere-account-button.label')}</p>
                         <InlineForm
                           inputProps={{
@@ -528,47 +527,47 @@ export const Welcome = ({
                           }
                           validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
                         />
-                      </Container.Container>
+                      </Layout.Container>
                     </>
                   )}
                   <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
-                </Flex.Flex>
+                </Layout.Flex>
               )}
             </Tabs.Content>
           </Tabs.Root>
         )}
 
         {(state === WelcomeState.EMAIL_SENT || state === WelcomeState.LOGIN_SENT) && (
-          <Flex.Flex column gap='2xl'>
-            <Container.Container gap='md' gutter='none'>
+          <Layout.Flex column gap='2xl'>
+            <Layout.Container gap='md' gutter='none'>
               <h1 className='text-2xl'>{t('check-email.title')}</h1>
               <p className='text-fg-muted'>
                 {state === WelcomeState.EMAIL_SENT
                   ? t('request-access-email.description')
                   : t('check-email.description')}
               </p>
-            </Container.Container>
-          </Flex.Flex>
+            </Layout.Container>
+          </Layout.Flex>
         )}
 
         {state === WelcomeState.WAITLIST_SUBMITTED && (
-          <Flex.Flex column gap='2xl'>
-            <Container.Container gap='md' gutter='none'>
+          <Layout.Flex column gap='2xl'>
+            <Layout.Container gap='md' gutter='none'>
               <h1 className='text-2xl'>{t('waitlist-submitted.title')}</h1>
               <p className='text-fg-muted'>{t('waitlist-submitted.description')}</p>
-            </Container.Container>
-          </Flex.Flex>
+            </Layout.Container>
+          </Layout.Flex>
         )}
 
-        <Flex.Flex column classNames='z-[11] mt-auto'>
+        <Layout.Flex column classNames='z-[11] mt-auto'>
           <a href='https://dxos.org' target='_blank' rel='noreferrer'>
-            <Flex.Flex gap='xs' center classNames='text-sm pr-3 pb-1 opacity-70'>
+            <Layout.Flex gap='xs' center classNames='text-sm pr-3 pb-1 opacity-70'>
               <span className='text-fg-muted'>Powered by</span>
               <DXOSHorizontalType className='fill-white w-[80px]' />
-            </Flex.Flex>
+            </Layout.Flex>
           </a>
-        </Flex.Flex>
-      </Flex.Flex>
+        </Layout.Flex>
+      </Layout.Flex>
     </div>
   );
 };
@@ -749,12 +748,12 @@ const LoginTab = ({
   }
 
   return (
-    <Flex.Flex column gap='xl'>
+    <Layout.Flex column gap='xl'>
       <h2 className='text-2xl'>{identity ? t('existing-identity.title') : t('welcome-back.title')}</h2>
       {/* Primary method */}
       {primary === 'passkey' && methodAvailable.passkey && onPasskey && (
-        <Container.Container gap='md' gutter='none'>
-          <Button.Button
+        <Layout.Container gap='md' gutter='none'>
+          <Button.Root
             variant='primary'
             classNames='w-full justify-center gap-2 disabled:bg-neutral-800'
             disabled={pending}
@@ -762,16 +761,16 @@ const LoginTab = ({
           >
             <Icon.Icon icon='ph--key--regular' size='lg' />
             <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
-          </Button.Button>
+          </Button.Root>
           {error?.startsWith('passkey-') && (
             <Field.Root invalid>
               <ValidationMessage>{t(passkeyErrorKey(error, moreOptions.length === 0))}</ValidationMessage>
             </Field.Root>
           )}
-        </Container.Container>
+        </Layout.Container>
       )}
       {primary === 'email' && onSendSignInLink && (
-        <Container.Container gap='md' gutter='none'>
+        <Layout.Container gap='md' gutter='none'>
           <p className='text-sm text-fg-muted'>{t('login-email.description')}</p>
           <InlineForm
             inputProps={{
@@ -786,10 +785,10 @@ const LoginTab = ({
             onSubmit={onSendSignInLink}
             validation={error === 'email' ? t(errorMessageKeys.email) : null}
           />
-        </Container.Container>
+        </Layout.Container>
       )}
       {primary === 'atproto' && onRecoverWithOAuth && (
-        <Container.Container gap='md' gutter='none'>
+        <Layout.Container gap='md' gutter='none'>
           <p className='text-sm text-fg-muted'>{t('login-atmosphere.description')}</p>
           <InlineForm
             inputProps={{
@@ -809,7 +808,7 @@ const LoginTab = ({
             onSubmit={() => onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle)}
             validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
           />
-        </Container.Container>
+        </Layout.Container>
       )}
       {!methodAvailable[primary] && moreOptions.length === 0 && (
         <Field.Root invalid>
@@ -839,16 +838,16 @@ const LoginTab = ({
                 classNames='gap-3 h-auto'
               >
                 <Menu.ItemIcon size='xl' classNames={mx(opt.classNames)} />
-                <Container.Container gap='sm' gutter='none'>
+                <Layout.Container gap='sm' gutter='none'>
                   <Menu.ItemText />
                   <span className='text-xs text-fg-muted font-normal'>{opt.description}</span>
-                </Container.Container>
+                </Layout.Container>
               </Menu.Item>
             ))}
           </Menu.Content>
         </Menu.Root>
       )}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 
@@ -868,7 +867,7 @@ const InlineForm = ({
   validation,
   onSubmit,
 }: {
-  inputProps: Omit<ComponentProps<typeof Input.Input>, 'classNames' | 'ref'> & {
+  inputProps: Omit<ComponentProps<typeof Input.Root>, 'classNames' | 'ref'> & {
     classNames?: string;
     ref?: Ref<HTMLInputElement>;
   };
@@ -883,20 +882,20 @@ const InlineForm = ({
   return (
     <Field.Root invalid={!!validation}>
       <div className='flex flex-col md:gap-1 flex-row gap-0 sm:items-stretch'>
-        <Input.Input
+        <Input.Root
           {...rest}
           disabled={pending || rest.disabled}
           classNames={mx('bg-deck-surface flex-1 sm:rounded-r-none', inputClasses)}
           ref={ref}
         />
-        <Button.Button
+        <Button.Root
           variant='primary'
           classNames='disabled:bg-neutral-800 sm:rounded-l-none'
           disabled={submitDisabled}
           onClick={onSubmit}
         >
           {submitLabel}
-        </Button.Button>
+        </Button.Root>
       </div>
       {validation && <ValidationMessage>{validation}</ValidationMessage>}
     </Field.Root>
@@ -914,11 +913,11 @@ const ValidationMessage = ({ children }: PropsWithChildren) => (
 
 /** Horizontal "or" separator between alternative auth methods. */
 const OrDivider = ({ children }: PropsWithChildren) => (
-  <Flex.Flex gap='md' align='center' classNames='text-xs text-fg-muted'>
+  <Layout.Flex gap='md' align='center' classNames='text-xs text-fg-muted'>
     <div className='flex-1 border-t border-neutral-700' />
     <span className='uppercase tracking-widest'>{children}</span>
     <div className='flex-1 border-t border-neutral-700' />
-  </Flex.Flex>
+  </Layout.Flex>
 );
 
 export default Welcome;

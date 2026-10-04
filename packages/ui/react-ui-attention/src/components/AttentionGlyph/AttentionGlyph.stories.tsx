@@ -40,14 +40,14 @@ const DefaultStory = ({ attended, containsAttended, syncing }: StoryArgs) => (
   </div>
 );
 
-const meta = {
+const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-core/components/AttentionGlyph',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[24rem]' }), withTheme()],
   args: { size: 'md', attended: false, containsAttended: false, syncing: false },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
-} satisfies Meta<StoryArgs>;
+};
 
 export default meta;
 

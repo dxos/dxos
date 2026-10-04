@@ -17,7 +17,7 @@ import { meta } from '#meta';
 export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
-}: Util.ThemedClassName<Pick<Button.ButtonProps, 'variant'>>) => {
+}: Util.ThemedClassName<Pick<Button.RootProps, 'variant'>>) => {
   const { updateState } = useDeckState();
   const { t } = UiHooks.useTranslation(meta.profile.key);
 
@@ -29,7 +29,7 @@ export const ToggleSidebarButton = ({
   }, [updateState]);
 
   return (
-    <Button.Button
+    <Button.Root
       variant={variant}
       icon='ph--sidebar--regular'
       iconOnly
@@ -50,7 +50,7 @@ export const CloseSidebarButton = () => {
   }, [updateState]);
 
   return (
-    <Button.Button
+    <Button.Root
       variant='ghost'
       icon='ph--caret-line-left--regular'
       iconOnly
@@ -89,7 +89,7 @@ export const ToggleComplementarySidebarButton = ({
   );
 
   return (
-    <Button.Button
+    <Button.Root
       variant='ghost'
       classNames={['[&>svg]:-scale-x-100', classNames]}
       icon='ph--sidebar-simple--regular'

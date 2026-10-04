@@ -17,8 +17,8 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import * as Select from '@dxos/react-ui/Select';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -211,26 +211,26 @@ const ProfileControls = () => {
 
   return (
     <>
-      <Button.Button
+      <Button.Root
         icon='ph--download-simple--regular'
         iconOnly
         label='Export profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleExport()}
       />
-      <Button.Button
+      <Button.Root
         icon='ph--upload-simple--regular'
         iconOnly
         label='Import profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleImport()}
       />
-      <Checkbox.Checkbox
+      <Input.Checkbox
         checked={persistent}
         onCheckedChange={({ checked }) => handlePersistentChange(checked === true)}
         label='Persistent'
       />
-      <Button.Button icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
+      <Button.Root icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </>
   );
 };

@@ -62,7 +62,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
             <Toolbar.Text classNames='text-fg-subtle'>{chat?.name}</Toolbar.Text>
             <Popover.Root>
               <Popover.Trigger asChild>
-                <Button.Button icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+                <Button.Root icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
               </Popover.Trigger>
               <Popover.Content>
                 <ExecutionGraphModule />

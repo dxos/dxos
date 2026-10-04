@@ -14,10 +14,10 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectAnchoredBelow, expectArrow, expectPopupSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import * as Field from '../Field/Field.tsx';
-import * as Group from '../Group/Group.tsx';
-import * as Input from '../Input/Input.tsx';
+import { Group } from '../Group/Group.tsx';
+import { Input } from '../Input/Input.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as VirtualAnchor from '../VirtualAnchor/VirtualAnchor.ts';
 import * as Popover from './Popover.tsx';
@@ -33,7 +33,7 @@ type SharePopoverProps = {
 const SharePopover = ({ contentSize, arrow, label, testId }: SharePopoverProps) => (
   <Popover.Root>
     <Popover.Trigger asChild>
-      <Button.Button data-testid={`${testId}-trigger`}>{label}</Button.Button>
+      <Button data-testid={`${testId}-trigger`}>{label}</Button>
     </Popover.Trigger>
     <Popover.Content size={contentSize} arrow={arrow} data-testid={testId}>
       <Popover.Header>
@@ -43,13 +43,13 @@ const SharePopover = ({ contentSize, arrow, label, testId }: SharePopoverProps) 
       <Popover.Description>Anyone with the link can view.</Popover.Description>
       <Field.Root>
         <Field.Label>Link</Field.Label>
-        <Input.Input defaultValue='https://composer.space/s/123' readOnly />
+        <Input defaultValue='https://composer.space/s/123' readOnly />
       </Field.Root>
-      <Group.Group justify='end'>
+      <Group justify='end'>
         <Popover.CloseTrigger asChild>
-          <Button.Button>Done</Button.Button>
+          <Button>Done</Button>
         </Popover.CloseTrigger>
-      </Group.Group>
+      </Group>
     </Popover.Content>
   </Popover.Root>
 );
@@ -65,7 +65,7 @@ const NotesPopover = ({ size }: SizeArgs) => {
     <>
       <Popover.Root modal>
         <Popover.Trigger asChild>
-          <Button.Button data-testid={`notes-${size}-trigger`}>Notes</Button.Button>
+          <Button data-testid={`notes-${size}-trigger`}>Notes</Button>
         </Popover.Trigger>
         <Popover.Content container={container} data-testid={`notes-${size}`}>
           <Popover.Header>
@@ -77,11 +77,11 @@ const NotesPopover = ({ size }: SizeArgs) => {
               <Typography.Text key={index}>{note}</Typography.Text>
             ))}
           </Popover.Body>
-          <Group.Group justify='end'>
+          <Group justify='end'>
             <Popover.CloseTrigger asChild>
-              <Button.Button>Done</Button.Button>
+              <Button>Done</Button>
             </Popover.CloseTrigger>
-          </Group.Group>
+          </Group>
         </Popover.Content>
       </Popover.Root>
       <div ref={container} data-testid={`notes-${size}-container`} />
@@ -95,9 +95,9 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
   const anchor = useRef<HTMLSpanElement>(null);
   return (
     <>
-      <Button.Button onClick={() => setOpen(true)} data-testid={`anchored-${size}-trigger`}>
+      <Button onClick={() => setOpen(true)} data-testid={`anchored-${size}-trigger`}>
         Open at anchor
-      </Button.Button>
+      </Button>
       <Typography.Text asChild>
         <span ref={anchor} data-testid={`anchor-${size}`}>
           Anchor
@@ -122,12 +122,12 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
  * the arrowless one, which is `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
-  <Group.Group>
+  <Group>
     <SharePopover label='Share' testId={`popover-${size}`} />
     <SharePopover contentSize='lg' arrow={false} label='Share (no arrow)' testId={`plain-${size}`} />
     <NotesPopover size={size} />
     <AnchoredPopover size={size} />
-  </Group.Group>
+  </Group>
 );
 
 const meta = {

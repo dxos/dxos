@@ -222,7 +222,7 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
         />
         {/* TODO(burdon): Create new session; move to menu. */}
         {filteredMessages.length > 0 && (
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--x--regular'
             iconOnly

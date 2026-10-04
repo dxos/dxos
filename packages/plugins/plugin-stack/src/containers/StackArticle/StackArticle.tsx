@@ -182,7 +182,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
     <Panel.Root>
       <Panel.Header classNames='dx-toolbar-surface'>
         <Toolbar.Root classNames='dx-document'>
-          <Button.Button
+          <Button.Root
             icon='ph--plus--regular'
             iconOnly
             label={t('add-section.label')}
@@ -191,7 +191,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
           />
           <Toolbar.Separator />
           <ActionMenu actions={optionsMenu}>
-            <Button.Button
+            <Button.Root
               icon='ph--dots-three-vertical--regular'
               iconOnly
               label={t('options.label')}

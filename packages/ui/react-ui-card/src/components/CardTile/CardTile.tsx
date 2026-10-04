@@ -5,10 +5,10 @@
 import React, { type MouseEvent, PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import type * as Util from '@dxos/react-ui/Util';
 import { osTranslations } from '@dxos/ui-theme';
@@ -89,9 +89,9 @@ const CardTileHeader = ({ title, starred, menu = false, menuItems, onToggleStar 
   const { t } = Hooks.useTranslation(osTranslations);
   return (
     <Card.Header>
-      <Block.Block>
+      <Layout.Block>
         <Row.Star starred={starred} onToggle={onToggleStar} />
-      </Block.Block>
+      </Layout.Block>
       <Card.Title classNames='flex items-center gap-3'>{title}</Card.Title>
       {menu && (
         <Card.Menu label={t('toolbar-menu.label')}>

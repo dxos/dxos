@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import * as NumberInput from '@dxos/react-ui/NumberInput';
+import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -37,7 +37,7 @@ export const NumberField = ({
   }
 
   return (
-    <NumberInput.NumberInput
+    <Input.Number
       disabled={!!readonly}
       placeholder={placeholder}
       min={min}

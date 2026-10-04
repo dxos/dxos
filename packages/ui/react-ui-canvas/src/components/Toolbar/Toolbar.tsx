@@ -68,14 +68,14 @@ export const NavigationToolbar = ({ classNames, actions, children }: NavigationT
   const { path } = actions;
   return (
     <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-toolbar'>
-      <Button.Button
+      <Button.Root
         variant='ghost'
         disabled={path.length < 2}
         data-testid='toolbar-up'
         onClick={() => actions.onPath(path.length - 2)}
       >
         Up
-      </Button.Button>
+      </Button.Root>
       <Breadcrumbs path={path} nameOf={actions.nameOf} onSelect={actions.onPath} />
       {children && (
         <>
@@ -108,7 +108,7 @@ export type ActionToolbarProps = Util.ThemedClassName<{
 export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
   return (
     <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--arrows-out--regular'
@@ -116,7 +116,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-fit'
         onClick={actions.fit}
       />
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--magnifying-glass-plus--regular'
@@ -124,7 +124,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-zoom-in'
         onClick={actions.zoomIn}
       />
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--magnifying-glass-minus--regular'
@@ -132,7 +132,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-zoom-out'
         onClick={actions.zoomOut}
       />
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--grid-four--regular'
@@ -142,7 +142,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         onClick={actions.toggleSnap}
       />
       <Toolbar.Separator variant='line' />
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--arrow-u-up-left--regular'
@@ -151,7 +151,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='undo'
         onClick={actions.undo}
       />
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--arrow-u-up-right--regular'
@@ -161,7 +161,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         onClick={actions.redo}
       />
       <Toolbar.Separator variant='line' />
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--scissors--regular'
@@ -170,7 +170,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='cut'
         onClick={actions.cut}
       />
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--copy--regular'
@@ -179,7 +179,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='copy'
         onClick={actions.copy}
       />
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--clipboard-text--regular'
@@ -188,7 +188,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='paste'
         onClick={actions.paste}
       />
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--trash--regular'
@@ -200,7 +200,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
       <Toolbar.Separator variant='line' />
       <Menu.Root positioning={{ placement: 'bottom-end', gutter: 4 }}>
         <Menu.Trigger asChild>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--plus--regular'
@@ -221,7 +221,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
           ))}
         </Menu.Content>
       </Menu.Root>
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--tree-structure--regular'
@@ -230,7 +230,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-layout'
         onClick={actions.layout}
       />
-      <Button.Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--bug--regular'

@@ -399,7 +399,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     showEdit || showAccept || showAcceptChange || showRejectChange || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <Button.Button
+          <Button.Root
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -410,7 +410,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAccept && (
-          <Button.Button
+          <Button.Root
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -421,7 +421,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAcceptChange && (
-          <Button.Button
+          <Button.Root
             data-testid='thread.message.accept-change'
             variant='ghost'
             icon='ph--check--regular'
@@ -432,7 +432,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showRejectChange && (
-          <Button.Button
+          <Button.Root
             data-testid='thread.message.reject-change'
             variant='ghost'
             icon='ph--x--regular'
@@ -443,7 +443,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showDelete && (
-          <Button.Button
+          <Button.Root
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'
@@ -533,7 +533,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
     showEdit || showAccept || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <Button.Button
+          <Button.Root
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -544,7 +544,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showAccept && (
-          <Button.Button
+          <Button.Root
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -555,7 +555,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showDelete && (
-          <Button.Button
+          <Button.Root
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'

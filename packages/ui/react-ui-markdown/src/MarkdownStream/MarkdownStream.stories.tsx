@@ -11,8 +11,8 @@ import { PublicKey } from '@dxos/keys';
 import { random } from '@dxos/random';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Switch from '@dxos/react-ui/Switch';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Domino } from '@dxos/ui';
@@ -135,26 +135,26 @@ const DefaultStory = ({
     <Panel.Root data-hue={userHue}>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button
+          <Button.Root
             disabled={streaming}
             icon='ph--play--regular'
             iconOnly
             label='Start'
             onClick={() => setStreaming(true)}
           />
-          <Button.Button
+          <Button.Root
             disabled={!streaming}
             icon='ph--stop--regular'
             iconOnly
             label='Stop'
             onClick={() => setStreaming(false)}
           />
-          <Button.Button icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
-          <Button.Button disabled={streaming} icon='ph--plus--regular' iconOnly label='Append' onClick={handleAppend} />
+          <Button.Root icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+          <Button.Root disabled={streaming} icon='ph--plus--regular' iconOnly label='Append' onClick={handleAppend} />
           <Toolbar.Separator />
           <Field.Root>
             <Field.Label classNames='pr-1'>Debug</Field.Label>
-            <Switch.Switch checked={debug} onCheckedChange={({ checked }) => setDebug(checked)} />
+            <Input.Switch checked={debug} onCheckedChange={({ checked }) => setDebug(checked)} />
           </Field.Root>
         </Toolbar.Root>
       </Panel.Header>

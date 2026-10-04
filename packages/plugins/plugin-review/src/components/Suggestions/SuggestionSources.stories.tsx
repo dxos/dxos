@@ -108,12 +108,12 @@ const DefaultStory = ({ onResolved, swap }: StoryArgs) => {
       {swap && (
         <Panel.Header>
           <Toolbar.Root>
-            <Button.Button
+            <Button.Root
               data-testid='swap-document'
               onClick={() => setActive((current) => (current + 1) % documents.length)}
             >
               Swap
-            </Button.Button>
+            </Button.Root>
           </Toolbar.Root>
         </Panel.Header>
       )}

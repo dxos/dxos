@@ -14,11 +14,11 @@ import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
-import * as Empty from '@dxos/react-ui/Empty';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Listbox from '@dxos/react-ui/Listbox';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -114,18 +114,18 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
-          <Flex.Flex gap='sm' classNames='py-form-gap'>
-            <Button.Button onClick={handleSelectAll} disabled={submitting}>
+          <Layout.Flex gap='sm' classNames='py-form-gap'>
+            <Button.Root onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
-            </Button.Button>
-            <Button.Button onClick={handleSelectNone} disabled={submitting}>
+            </Button.Root>
+            <Button.Root onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
-            </Button.Button>
-          </Flex.Flex>
+            </Button.Root>
+          </Layout.Flex>
         )}
 
         {availableTargets.length === 0 ? (
-          <Empty.Empty>{t('no-available-targets.message')}</Empty.Empty>
+          <Status.Empty>{t('no-available-targets.message')}</Status.Empty>
         ) : (
           <ScrollArea.Root>
             <ScrollArea.Viewport>
@@ -155,11 +155,11 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.CloseTrigger asChild>
-          <Button.Button disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button.Button>
+          <Button.Root disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button.Root>
         </Dialog.CloseTrigger>
-        <Button.Button variant='primary' onClick={handleSubmit} disabled={submitting}>
+        <Button.Root variant='primary' onClick={handleSubmit} disabled={submitting}>
           {submitting ? t('saving.label', { ns: osTranslations }) : t('save.label', { ns: osTranslations })}
-        </Button.Button>
+        </Button.Root>
       </Dialog.Footer>
     </Dialog.Content>
   );

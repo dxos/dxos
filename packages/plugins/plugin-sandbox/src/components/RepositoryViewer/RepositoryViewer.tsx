@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import * as Grid from '@dxos/react-ui/Grid';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
@@ -94,7 +94,7 @@ export const RepositoryViewer = ({
             onLoadMore={onLoadMoreCommits}
           />
         ) : (
-          <Grid.Grid grow cols={['18rem', '1fr']} classNames='divide-x divide-separator'>
+          <Layout.Grid grow cols={['18rem', '1fr']} classNames='divide-x divide-separator'>
             <div
               role='region'
               aria-label={t('files-pane.label')}
@@ -118,7 +118,7 @@ export const RepositoryViewer = ({
               </div>
               {file ? <RepositoryFileView file={file} /> : <div />}
             </div>
-          </Grid.Grid>
+          </Layout.Grid>
         )}
       </Panel.Body>
     </Panel.Root>

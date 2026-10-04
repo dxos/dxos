@@ -82,12 +82,12 @@ const DefaultStory = () => {
   return (
     <div className='flex flex-col w-full'>
       <Toolbar.Root>
-        <Button.Button onClick={handleReset}>Reset</Button.Button>
-        <Button.Button onClick={handleReload}>Reload</Button.Button>
-        <Button.Button onClick={handleCreate}>Create</Button.Button>
-        <Button.Button onClick={handleCreateFactory}>Create 1000</Button.Button>
-        <Button.Button onClick={handleFlush}>Flush</Button.Button>
-        <Button.Button onClick={handleQuery}>Query</Button.Button>
+        <Button.Root onClick={handleReset}>Reset</Button.Root>
+        <Button.Root onClick={handleReload}>Reload</Button.Root>
+        <Button.Root onClick={handleCreate}>Create</Button.Root>
+        <Button.Root onClick={handleCreateFactory}>Create 1000</Button.Root>
+        <Button.Root onClick={handleFlush}>Flush</Button.Root>
+        <Button.Root onClick={handleQuery}>Query</Button.Root>
       </Toolbar.Root>
       <Syntax.Root data={data}>
         <Syntax.Content>

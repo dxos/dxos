@@ -69,9 +69,9 @@ export const ProjectModule = ({ data }: { data: ProjectModuleProps }) => {
       <Panel.Root>
         <Panel.Header>
           <Toolbar.Root>
-            <Button.Button data-testid='projects.story.setup' onClick={() => handleCreate(mailbox)}>
+            <Button.Root data-testid='projects.story.setup' onClick={() => handleCreate(mailbox)}>
               Set up project
-            </Button.Button>
+            </Button.Root>
           </Toolbar.Root>
         </Panel.Header>
       </Panel.Root>

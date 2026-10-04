@@ -10,15 +10,15 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Field from '@dxos/react-ui/Field';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
@@ -46,15 +46,15 @@ const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Subscri
       >
         <Card.Root border={false} ref={forwardedRef} data-testid='subscription-card'>
           <Card.Header>
-            <Block.Block>
+            <Layout.Block>
               <Field.Root>
-                <Checkbox.Checkbox
+                <Input.Checkbox
                   checked={selected}
                   onCheckedChange={() => onToggle(subscription.email)}
                   data-testid='subscription-checkbox'
                 />
               </Field.Root>
-            </Block.Block>
+            </Layout.Block>
             <Card.Title>{subscription.name ?? subscription.email}</Card.Title>
           </Card.Header>
           <Card.Body>
@@ -172,7 +172,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
         <Panel.Header>
           <Toolbar.Root classNames='dx-document px-3'>
             <Field.Root>
-              <Checkbox.Checkbox
+              <Input.Checkbox
                 checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                 disabled={results.length === 0}
                 onCheckedChange={() => toggleAll()}
@@ -180,7 +180,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
               />
             </Field.Root>
             <SearchList.Input classNames='grow' placeholder={t('subscriptions.filter.placeholder')} />
-            <Button.Button
+            <Button.Root
               icon='ph--trash--regular'
               iconOnly={false}
               disabled={selected.size === 0}
@@ -192,7 +192,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
         </Panel.Header>
         <Panel.Body asChild>
           {empty ? (
-            <Empty.Empty>{empty}</Empty.Empty>
+            <Status.Empty>{empty}</Status.Empty>
           ) : (
             <ScrollArea.Root orientation='vertical'>
               <ScrollArea.Viewport classNames='dx-document'>

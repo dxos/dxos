@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { Field as FieldPrimitive } from '@ark-ui/react/field';
 import React, { type TextareaHTMLAttributes } from 'react';
 

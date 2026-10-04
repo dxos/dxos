@@ -134,7 +134,7 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
       <Panel.Root>
         <Panel.Header>
           <Toolbar.Root>
-            <Button.Button
+            <Button.Root
               iconOnly
               disabled={!stream}
               icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
@@ -142,7 +142,7 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
               onClick={() => setRunning((value) => !value)}
             />
             <input ref={fileInputRef} type='file' accept='audio/*' className='hidden' onChange={handleFileChange} />
-            <Button.Button
+            <Button.Root
               iconOnly
               icon='ph--upload--regular'
               label='Upload audio'

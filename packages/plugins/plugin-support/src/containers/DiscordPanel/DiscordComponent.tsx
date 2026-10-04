@@ -245,7 +245,7 @@ const StatusBar = () => {
   }
 
   return (
-    <Button.Button
+    <Button.Root
       icon='ph--discord-logo--regular'
       label={t('join-discord.button')}
       variant='primary'

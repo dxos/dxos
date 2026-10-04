@@ -192,7 +192,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
             onSubmit={handleCreate}
             onCancel={() => setNaming(undefined)}
           >
-            <Button.Button
+            <Button.Root
               icon='ph--bookmark-simple--regular'
               label={t('create-checkpoint.label')}
               // A revision records the tip; disable while viewing a historical checkpoint or a fork
@@ -208,7 +208,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
             onSubmit={handleCreate}
             onCancel={() => setNaming(undefined)}
           >
-            <Button.Button
+            <Button.Root
               icon='ph--git-branch--regular'
               label={t('create-branch.label')}
               // Forking a sub-branch off a branch (its tip or one of its revisions) is not yet
@@ -222,8 +222,8 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
           </NamePopover.Root>
           {activeBranch && (
             <>
-              <Button.Button icon='ph--git-merge--regular' label={t('merge.label')} onClick={handleMerge} />
-              <Button.Button icon='ph--trash--regular' label={t('discard-branch.label')} onClick={handleDiscard} />
+              <Button.Root icon='ph--git-merge--regular' label={t('merge.label')} onClick={handleMerge} />
+              <Button.Root icon='ph--trash--regular' label={t('discard-branch.label')} onClick={handleDiscard} />
             </>
           )}
         </Toolbar.Root>

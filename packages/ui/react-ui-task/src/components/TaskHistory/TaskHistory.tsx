@@ -4,9 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import * as Container from '@dxos/react-ui/Container';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 import type * as Util from '@dxos/react-ui/Util';
 import { Task } from '@dxos/types';
@@ -119,7 +119,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
     // gutter with the pane's other glyphs and its text in the content track with the pane's text —
     // rather than in a second set of columns that happens to look similar.
     // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
-    <Container.Container
+    <Layout.Container
       asChild
       gutter='inherit'
       gap='sm'
@@ -162,7 +162,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
           </div>
         ))}
       </section>
-    </Container.Container>
+    </Layout.Container>
   );
 };
 

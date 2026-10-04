@@ -16,8 +16,8 @@ import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar } from '@dxos/react-ui-menu';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { useVisibleMagazinePosts } from '#atoms';
@@ -101,9 +101,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       <Panel.Body>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
-          <Flex.Flex center classNames='h-full text-fg-subtle text-sm'>
+          <Layout.Flex center classNames='h-full text-fg-subtle text-sm'>
             {t('empty-magazine.message')}
-          </Flex.Flex>
+          </Layout.Flex>
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
             <Masonry.Content padding>

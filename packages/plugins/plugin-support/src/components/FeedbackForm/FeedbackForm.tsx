@@ -138,7 +138,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
   return (
     <div className='flex w-full pt-form-padding'>
-      <Button.Button
+      <Button.Root
         classNames='w-full'
         type='button'
         icon='ph--download-simple--regular'

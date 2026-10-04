@@ -11,8 +11,8 @@ import { getEnvString } from '@dxos/config';
 import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { useConfig } from '@dxos/react-client';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import { isTauri } from '@dxos/util';
 
@@ -51,7 +51,7 @@ export const HelpMenu = () => {
     <Menu.Root positioning={{ placement: 'left-end' }}>
       <Menu.Trigger asChild>
         <StatusBar.Item>
-          <Button.Button variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
+          <Button.Root variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
         </StatusBar.Item>
       </Menu.Trigger>
       <Menu.Content>
@@ -102,7 +102,7 @@ export const HelpMenu = () => {
           onClick={openDialog(ABOUT_DIALOG)}
         />
         {version && (
-          <Flex.Flex column classNames='ps-8 pe-2 pb-2 text-xs text-fg-muted'>
+          <Layout.Flex column classNames='ps-8 pe-2 pb-2 text-xs text-fg-muted'>
             <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
               {version}
             </a>
@@ -113,7 +113,7 @@ export const HelpMenu = () => {
                 })}
               </span>
             )}
-          </Flex.Flex>
+          </Layout.Flex>
         )}
       </Menu.Content>
     </Menu.Root>

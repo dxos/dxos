@@ -71,7 +71,7 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
           <Field.Root>
             <div className='flex flex-col gap-1'>
               <div className='flex gap-1'>
-                <Input.Input disabled value={id} />
+                <Input.Root disabled value={id} />
                 <SystemButton.Clipboard iconOnly value={id} />
                 <SystemButton.Clipboard label='Copy JSON' onCopy={handleCopy} />
               </div>

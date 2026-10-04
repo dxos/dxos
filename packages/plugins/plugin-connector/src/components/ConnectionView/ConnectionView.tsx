@@ -11,10 +11,10 @@ import { Cursor } from '@dxos/link';
 import { Form } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 
 import { type TestConnectionStatus } from '#hooks';
 import { meta } from '#meta';
@@ -124,7 +124,7 @@ export const ConnectionView = ({
 
                 {onRename && (
                   <Form.Field label={t('connection-name.label')}>
-                    <Input.Input
+                    <Input.Root
                       // Remounted when the stored name changes. The input is uncontrolled, so
                       // React would otherwise keep the old text after a replicated rename
                       // arrives — and the next blur would write that stale value back over it.
@@ -168,9 +168,9 @@ export const ConnectionView = ({
                 {/* Hide Sync now entirely when the connector has no `sync` op. */}
                 {canSync && (
                   <Form.Field standalone label={t('sync-now.label')} description={t('sync-now.description')}>
-                    <Button.Button onClick={onSync} disabled={syncing || bindings.length === 0}>
+                    <Button.Root onClick={onSync} disabled={syncing || bindings.length === 0}>
                       {syncing ? t('syncing.label') : t('sync-now.label')}
-                    </Button.Button>
+                    </Button.Root>
                   </Form.Field>
                 )}
 
@@ -188,9 +188,9 @@ export const ConnectionView = ({
                     }
                     error={testStatus === 'invalid' && testError ? testError : undefined}
                   >
-                    <Button.Button onClick={onTestConnection} disabled={testing}>
+                    <Button.Root onClick={onTestConnection} disabled={testing}>
                       {testing ? t('testing-connection.label') : t('test-connection.label')}
-                    </Button.Button>
+                    </Button.Root>
                   </Form.Field>
                 )}
 
@@ -201,9 +201,9 @@ export const ConnectionView = ({
                     label={t('reauthenticate.label')}
                     description={t('reauthenticate.description')}
                   >
-                    <Button.Button onClick={onReauthenticate} disabled={reauthenticating}>
+                    <Button.Root onClick={onReauthenticate} disabled={reauthenticating}>
                       {reauthenticating ? t('reauthenticating.label') : t('reauthenticate.label')}
-                    </Button.Button>
+                    </Button.Root>
                   </Form.Field>
                 )}
 
@@ -214,9 +214,9 @@ export const ConnectionView = ({
                     label={t('change-targets.label')}
                     description={t('change-targets.description')}
                   >
-                    <Button.Button onClick={onChangeTargets} disabled={!syncTargetsAvailable || loadingTargets}>
+                    <Button.Root onClick={onChangeTargets} disabled={!syncTargetsAvailable || loadingTargets}>
                       {loadingTargets ? t('loading.label') : t('change-targets.label')}
-                    </Button.Button>
+                    </Button.Root>
                   </Form.Field>
                 )}
 
@@ -225,9 +225,9 @@ export const ConnectionView = ({
                   label={t('delete-connection.label')}
                   description={t('delete-connection.description')}
                 >
-                  <Button.Button variant='destructive' onClick={onDelete}>
+                  <Button.Root variant='destructive' onClick={onDelete}>
                     {t('delete-connection.label')}
-                  </Button.Button>
+                  </Button.Root>
                 </Form.Field>
               </Form.FieldSet>
 
@@ -235,9 +235,9 @@ export const ConnectionView = ({
               {canSync && (
                 <Form.FieldSet label={t('targets.label')}>
                   {bindings.length === 0 ? (
-                    <Empty.Empty>
+                    <Status.Empty>
                       {canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')}
-                    </Empty.Empty>
+                    </Status.Empty>
                   ) : (
                     bindings.map((binding) => (
                       <BindingRow
@@ -320,9 +320,7 @@ const BindingRow = ({
       description={status}
       error={!missing && binding.lastError ? binding.lastError : undefined}
     >
-      {missing ? (
-        <Button.Button onClick={() => onRemove(binding)}>{t('remove-binding.label')}</Button.Button>
-      ) : undefined}
+      {missing ? <Button.Root onClick={() => onRemove(binding)}>{t('remove-binding.label')}</Button.Root> : undefined}
 
       {/* Per-binding options: flat (default variant) so fields render inline rather than each in a border. */}
       {optionsSchema && !missing && (

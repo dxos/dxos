@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import * as Field from '@dxos/react-ui/Field';
-import * as Switch from '@dxos/react-ui/Switch';
+import * as Input from '@dxos/react-ui/Input';
 
 import { useComputeNodeState } from '../hooks/index.ts';
 import { type SwitchShape } from './switch-def.ts';
@@ -29,7 +29,7 @@ export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => 
       onClick={(ev) => ev.stopPropagation()}
     >
       <Field.Root>
-        <Switch.Switch checked={value} onCheckedChange={({ checked: value }) => setValue(value)} />
+        <Input.Switch checked={value} onCheckedChange={({ checked: value }) => setValue(value)} />
       </Field.Root>
     </div>
   );

@@ -14,9 +14,9 @@ import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as QrCode from '@dxos/react-ui/QrCode';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
@@ -74,9 +74,9 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
           </Form.FieldSet>
           <Form.FieldSet label={t('logout-section.title')} description={t('logout-section.description')}>
             <Form.Field standalone label={t('logout.label')} description={t('logout.description')}>
-              <Button.Button variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
+              <Button.Root variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
                 {t('logout.label')}
-              </Button.Button>
+              </Button.Root>
             </Form.Field>
           </Form.FieldSet>
           {identityTestActions && (
@@ -89,22 +89,22 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
                 label={t('recover-identity.label')}
                 description={t('recover-identity.description')}
               >
-                <Button.Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
+                <Button.Root variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
                   {t('recover-identity.label')}
-                </Button.Button>
+                </Button.Root>
               </Form.Field>
               <Form.Field
                 standalone
                 label={t('join-new-identity.label')}
                 description={t('join-new-identity.description')}
               >
-                <Button.Button
+                <Button.Root
                   variant='destructive'
                   onClick={handleJoinNewIdentity}
                   data-testid='devicesContainer.joinExisting'
                 >
                   {t('join-new-identity.label')}
-                </Button.Button>
+                </Button.Root>
               </Form.Field>
             </Form.FieldSet>
           )}
@@ -224,7 +224,7 @@ const InvitationSection = ({
   return activeView === 'init' ? (
     <>
       <p className='text-fg-muted mb-2'>{t('add-device.description')}</p>
-      <Button.Button
+      <Button.Root
         icon='ph--plus--regular'
         label={t('create-device-invitation.label')}
         disabled={!!event}
@@ -261,27 +261,27 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
     <>
       <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
-        <Flex.Flex justify='center' classNames='py-4'>
+        <Layout.Flex justify='center' classNames='py-4'>
           <div className='w-full md:max-w-80 aspect-square relative text-fg-muted'>
             <QrCode.QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
             <Centered>
               <Emoji text={emoji} />
             </Centered>
           </div>
-        </Flex.Flex>
+        </Layout.Flex>
         <span id={qrLabel} className='sr-only'>
           {t('qr.label')}
         </span>
       </div>
       {/* TODO(burdon): Factor out button bar */}
-      <Flex.Flex justify='center'>
-        <Flex.Flex gap='sm'>
+      <Layout.Flex justify='center'>
+        <Layout.Flex gap='sm'>
           <SystemButton.Clipboard value={url ?? 'never'} />
-          <Button.Button variant='ghost' onClick={onCancel}>
+          <Button.Root variant='ghost' onClick={onCancel}>
             {t('cancel.label')}
-          </Button.Button>
-        </Flex.Flex>
-      </Flex.Flex>
+          </Button.Root>
+        </Layout.Flex>
+      </Layout.Flex>
     </>
   );
 };
@@ -296,9 +296,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
       <p className='text-fg-muted'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
-      <Button.Button variant='ghost' onClick={onCancel}>
+      <Button.Root variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button.Button>
+      </Button.Root>
     </>
   );
 };

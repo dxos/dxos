@@ -129,7 +129,7 @@ const BoardColumnHeader = Util.composable<HTMLDivElement, BoardColumnHeaderProps
           </Toolbar.Text>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <ActionMenu disabled={!columnMenuItems?.length} actions={columnMenuItems}>
-            <Button.Button
+            <Button.Root
               iconOnly
               variant='ghost'
               icon='ph--dots-three-vertical--regular'
@@ -205,7 +205,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
     return (
       <Toolbar.Root classNames={mx('rounded-b-sm border-t border-separator', classNames)} ref={forwardedRef}>
         {handleAdd && (
-          <Button.Button
+          <Button.Root
             data-testid='board-column-add-item'
             classNames='group-hover/column:opacity-100 md:opacity-0 transition transition-opacity duration-500'
             variant='ghost'

@@ -17,7 +17,7 @@ import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import * as Icon from '../Icon/Icon.tsx';
 import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
-import * as Separator from '../Separator/Separator.tsx';
+import { Separator, type SeparatorProps } from '../Separator/Separator.tsx';
 import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
@@ -343,11 +343,11 @@ SelectItemGroupLabel.displayName = 'Select.ItemGroupLabel';
 // Separator
 //
 
-type SelectSeparatorProps = Omit<Separator.SeparatorProps, 'orientation' | 'decorative'>;
+type SelectSeparatorProps = Omit<SeparatorProps, 'orientation' | 'decorative'>;
 
 /** A decorative rule between options: a listbox admits only options and groups, so it takes no separator role. */
 const SelectSeparator = composable<HTMLDivElement, SelectSeparatorProps>((props, forwardedRef) => (
-  <Separator.Separator {...props} decorative ref={forwardedRef} />
+  <Separator {...props} decorative ref={forwardedRef} />
 ));
 
 SelectSeparator.displayName = 'Select.Separator';

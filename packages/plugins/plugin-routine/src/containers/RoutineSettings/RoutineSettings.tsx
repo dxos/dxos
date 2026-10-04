@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import { Form } from '@dxos/react-ui-form';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as Switch from '@dxos/react-ui/Switch';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 
@@ -41,7 +41,7 @@ export const RoutineSettings = () => {
         <Form.Content>
           <Form.FieldSet label={t('routine-verbose.label')} description={t('routine.description')}>
             <Form.Field label={t('runtime.label')} description={t('runtime.description')}>
-              <Switch.Switch checked={enabled} onCheckedChange={({ checked }) => handleToggle(checked)} />
+              <Input.Switch checked={enabled} onCheckedChange={({ checked }) => handleToggle(checked)} />
             </Form.Field>
           </Form.FieldSet>
         </Form.Content>

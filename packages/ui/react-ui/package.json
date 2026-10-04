@@ -47,19 +47,14 @@
       "types": "./dist/types/src/next/components/Banner/Banner.d.ts",
       "import": "./dist/lib/Banner.mjs"
     },
-    "./Block": {
-      "source": "./src/next/components/Block/Block.tsx",
-      "types": "./dist/types/src/next/components/Block/Block.d.ts",
-      "import": "./dist/lib/Block.mjs"
-    },
     "./Breadcrumb": {
       "source": "./src/next/components/Breadcrumb/Breadcrumb.tsx",
       "types": "./dist/types/src/next/components/Breadcrumb/Breadcrumb.d.ts",
       "import": "./dist/lib/Breadcrumb.mjs"
     },
     "./Button": {
-      "source": "./src/next/components/Button/Button.tsx",
-      "types": "./dist/types/src/next/components/Button/Button.d.ts",
+      "source": "./src/next/namespaces/Button.ts",
+      "types": "./dist/types/src/next/namespaces/Button.d.ts",
       "import": "./dist/lib/Button.mjs"
     },
     "./Card": {
@@ -72,11 +67,6 @@
       "types": "./dist/types/src/next/components/Carousel/Carousel.d.ts",
       "import": "./dist/lib/Carousel.mjs"
     },
-    "./Checkbox": {
-      "source": "./src/next/components/Checkbox/Checkbox.tsx",
-      "types": "./dist/types/src/next/components/Checkbox/Checkbox.d.ts",
-      "import": "./dist/lib/Checkbox.mjs"
-    },
     "./Collapsible": {
       "source": "./src/next/components/Collapsible/Collapsible.tsx",
       "types": "./dist/types/src/next/components/Collapsible/Collapsible.d.ts",
@@ -86,26 +76,6 @@
       "source": "./src/next/components/Combobox/Combobox.tsx",
       "types": "./dist/types/src/next/components/Combobox/Combobox.d.ts",
       "import": "./dist/lib/Combobox.mjs"
-    },
-    "./Container": {
-      "source": "./src/next/components/Container/Container.tsx",
-      "types": "./dist/types/src/next/components/Container/Container.d.ts",
-      "import": "./dist/lib/Container.mjs"
-    },
-    "./ControlFrame": {
-      "source": "./src/next/components/ControlFrame/ControlFrame.tsx",
-      "types": "./dist/types/src/next/components/ControlFrame/ControlFrame.d.ts",
-      "import": "./dist/lib/ControlFrame.mjs"
-    },
-    "./DatePicker": {
-      "source": "./src/next/components/DatePicker/DatePicker.tsx",
-      "types": "./dist/types/src/next/components/DatePicker/DatePicker.d.ts",
-      "import": "./dist/lib/DatePicker.mjs"
-    },
-    "./Deferred": {
-      "source": "./src/next/components/Deferred/Deferred.tsx",
-      "types": "./dist/types/src/next/components/Deferred/Deferred.d.ts",
-      "import": "./dist/lib/Deferred.mjs"
     },
     "./Dialog": {
       "source": "./src/next/components/Dialog/Dialog.tsx",
@@ -122,16 +92,6 @@
       "types": "./dist/types/src/next/components/Editable/Editable.d.ts",
       "import": "./dist/lib/Editable.mjs"
     },
-    "./Empty": {
-      "source": "./src/next/components/Empty/Empty.tsx",
-      "types": "./dist/types/src/next/components/Empty/Empty.d.ts",
-      "import": "./dist/lib/Empty.mjs"
-    },
-    "./ErrorFallback": {
-      "source": "./src/next/components/ErrorFallback/ErrorFallback.tsx",
-      "types": "./dist/types/src/next/components/ErrorFallback/ErrorFallback.d.ts",
-      "import": "./dist/lib/ErrorFallback.mjs"
-    },
     "./Field": {
       "source": "./src/next/components/Field/Field.tsx",
       "types": "./dist/types/src/next/components/Field/Field.d.ts",
@@ -142,11 +102,6 @@
       "types": "./dist/types/src/next/components/Fieldset/Fieldset.d.ts",
       "import": "./dist/lib/Fieldset.mjs"
     },
-    "./Flex": {
-      "source": "./src/layout/Flex/Flex.tsx",
-      "types": "./dist/types/src/layout/Flex/Flex.d.ts",
-      "import": "./dist/lib/Flex.mjs"
-    },
     "./FloatingPanel": {
       "source": "./src/next/components/FloatingPanel/FloatingPanel.tsx",
       "types": "./dist/types/src/next/components/FloatingPanel/FloatingPanel.d.ts",
@@ -156,16 +111,6 @@
       "source": "./src/next/components/Focus/Focus.tsx",
       "types": "./dist/types/src/next/components/Focus/Focus.d.ts",
       "import": "./dist/lib/Focus.mjs"
-    },
-    "./Grid": {
-      "source": "./src/layout/Grid/Grid.tsx",
-      "types": "./dist/types/src/layout/Grid/Grid.d.ts",
-      "import": "./dist/lib/Grid.mjs"
-    },
-    "./Group": {
-      "source": "./src/next/components/Group/Group.tsx",
-      "types": "./dist/types/src/next/components/Group/Group.d.ts",
-      "import": "./dist/lib/Group.mjs"
     },
     "./Hooks": {
       "source": "./src/hooks/Hooks.ts",
@@ -183,9 +128,14 @@
       "import": "./dist/lib/Icon.mjs"
     },
     "./Input": {
-      "source": "./src/next/components/Input/Input.tsx",
-      "types": "./dist/types/src/next/components/Input/Input.d.ts",
+      "source": "./src/next/namespaces/Input.ts",
+      "types": "./dist/types/src/next/namespaces/Input.d.ts",
       "import": "./dist/lib/Input.mjs"
+    },
+    "./Layout": {
+      "source": "./src/next/namespaces/Layout.ts",
+      "types": "./dist/types/src/next/namespaces/Layout.d.ts",
+      "import": "./dist/lib/Layout.mjs"
     },
     "./Listbox": {
       "source": "./src/next/components/Listbox/Listbox.tsx",
@@ -212,40 +162,15 @@
       "types": "./dist/types/src/next/components/Menu/Menu.d.ts",
       "import": "./dist/lib/Menu.mjs"
     },
-    "./MenuButton": {
-      "source": "./src/next/components/MenuButton/MenuButton.tsx",
-      "types": "./dist/types/src/next/components/MenuButton/MenuButton.d.ts",
-      "import": "./dist/lib/MenuButton.mjs"
-    },
-    "./NumberInput": {
-      "source": "./src/next/components/NumberInput/NumberInput.tsx",
-      "types": "./dist/types/src/next/components/NumberInput/NumberInput.d.ts",
-      "import": "./dist/lib/NumberInput.mjs"
-    },
     "./Panel": {
       "source": "./src/next/components/Panel/Panel.tsx",
       "types": "./dist/types/src/next/components/Panel/Panel.d.ts",
       "import": "./dist/lib/Panel.mjs"
     },
-    "./PasswordInput": {
-      "source": "./src/next/components/PasswordInput/PasswordInput.tsx",
-      "types": "./dist/types/src/next/components/PasswordInput/PasswordInput.d.ts",
-      "import": "./dist/lib/PasswordInput.mjs"
-    },
-    "./PinInput": {
-      "source": "./src/next/components/PinInput/PinInput.tsx",
-      "types": "./dist/types/src/next/components/PinInput/PinInput.d.ts",
-      "import": "./dist/lib/PinInput.mjs"
-    },
     "./Popover": {
       "source": "./src/next/components/Popover/Popover.tsx",
       "types": "./dist/types/src/next/components/Popover/Popover.d.ts",
       "import": "./dist/lib/Popover.mjs"
-    },
-    "./Progress": {
-      "source": "./src/next/components/Progress/Progress.tsx",
-      "types": "./dist/types/src/next/components/Progress/Progress.d.ts",
-      "import": "./dist/lib/Progress.mjs"
     },
     "./QrCode": {
       "source": "./src/next/components/QrCode/QrCode.tsx",
@@ -267,35 +192,20 @@
       "types": "./dist/types/src/next/components/Select/Select.d.ts",
       "import": "./dist/lib/Select.mjs"
     },
-    "./Separator": {
-      "source": "./src/next/components/Separator/Separator.tsx",
-      "types": "./dist/types/src/next/components/Separator/Separator.d.ts",
-      "import": "./dist/lib/Separator.mjs"
-    },
     "./Show": {
       "source": "./src/flow/Show.tsx",
       "types": "./dist/types/src/flow/Show.d.ts",
       "import": "./dist/lib/Show.mjs"
-    },
-    "./Skeleton": {
-      "source": "./src/next/components/Skeleton/Skeleton.tsx",
-      "types": "./dist/types/src/next/components/Skeleton/Skeleton.d.ts",
-      "import": "./dist/lib/Skeleton.mjs"
-    },
-    "./Slider": {
-      "source": "./src/next/components/Slider/Slider.tsx",
-      "types": "./dist/types/src/next/components/Slider/Slider.d.ts",
-      "import": "./dist/lib/Slider.mjs"
     },
     "./Splitter": {
       "source": "./src/next/components/Splitter/Splitter.tsx",
       "types": "./dist/types/src/next/components/Splitter/Splitter.d.ts",
       "import": "./dist/lib/Splitter.mjs"
     },
-    "./Switch": {
-      "source": "./src/next/components/Switch/Switch.tsx",
-      "types": "./dist/types/src/next/components/Switch/Switch.d.ts",
-      "import": "./dist/lib/Switch.mjs"
+    "./Status": {
+      "source": "./src/next/namespaces/Status.ts",
+      "types": "./dist/types/src/next/namespaces/Status.d.ts",
+      "import": "./dist/lib/Status.mjs"
     },
     "./SystemButton": {
       "source": "./src/next/components/SystemButton/SystemButton.tsx",
@@ -312,11 +222,6 @@
       "types": "./dist/types/src/next/components/Tag/Tag.d.ts",
       "import": "./dist/lib/Tag.mjs"
     },
-    "./Textarea": {
-      "source": "./src/next/components/Textarea/Textarea.tsx",
-      "types": "./dist/types/src/next/components/Textarea/Textarea.d.ts",
-      "import": "./dist/lib/Textarea.mjs"
-    },
     "./Theme": {
       "source": "./src/providers/ThemeProvider/Theme.tsx",
       "types": "./dist/types/src/providers/ThemeProvider/Theme.d.ts",
@@ -326,11 +231,6 @@
       "source": "./src/next/components/Toast/Toast.tsx",
       "types": "./dist/types/src/next/components/Toast/Toast.d.ts",
       "import": "./dist/lib/Toast.mjs"
-    },
-    "./Toggle": {
-      "source": "./src/next/components/Toggle/Toggle.tsx",
-      "types": "./dist/types/src/next/components/Toggle/Toggle.d.ts",
-      "import": "./dist/lib/Toggle.mjs"
     },
     "./ToggleGroup": {
       "source": "./src/next/components/ToggleGroup/ToggleGroup.tsx",

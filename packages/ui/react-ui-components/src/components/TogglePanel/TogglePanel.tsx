@@ -6,8 +6,8 @@ import { Collapsible } from '@ark-ui/react/collapsible';
 import React, { type ComponentPropsWithoutRef, type JSX, type PropsWithChildren } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import * as Block from '@dxos/react-ui/Block';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -101,7 +101,7 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
   const { duration } = useTogglePanelContext(HEADER_NAME);
 
   const disclosure = (
-    <Block.Block>
+    <Layout.Block>
       <Icon.Icon
         size='md'
         icon={'ph--caret-right--regular'}
@@ -109,7 +109,7 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
         // The machine owns the state, so the caret reads it off the trigger rather than a prop.
         classNames={['transition transition-transform ease-in-out', 'group-data-[state=open]:rotate-90']}
       />
-    </Block.Block>
+    </Layout.Block>
   );
 
   return (
@@ -126,7 +126,7 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
         {children}
       </div>
       {caret === 'end' && disclosure}
-      {icon && <Block.Block>{icon}</Block.Block>}
+      {icon && <Layout.Block>{icon}</Layout.Block>}
     </Collapsible.Trigger>
   );
 };

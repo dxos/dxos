@@ -15,11 +15,11 @@ import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -369,7 +369,7 @@ export const PreviewComponent = ({
           </div>
 
           <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
-            <Button.Button
+            <Button.Root
               size='sm'
               icon='ph--arrow-square-out--regular'
               iconOnly
@@ -398,7 +398,7 @@ export const PreviewComponent = ({
           <div inert={hasAttention ? undefined : true}>
             <Card.Root grid classNames={hasAttention && 'border-focus-ring-subtle'}>
               <Card.Header>
-                <Block.Block />
+                <Layout.Block />
                 <Card.Title>{objectLabel}</Card.Title>
               </Card.Header>
               <Card.Body>

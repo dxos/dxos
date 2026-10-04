@@ -13,10 +13,10 @@ import { Form } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
@@ -136,7 +136,7 @@ export const AccountContainer = () => {
                   ) : (
                     <form onSubmit={handleRequestAccess} className='flex gap-2 items-center justify-end'>
                       <Field.Root>
-                        <Input.Input
+                        <Input.Root
                           type='email'
                           required
                           placeholder={t('access-request-email.placeholder')}
@@ -145,9 +145,9 @@ export const AccountContainer = () => {
                           classNames='w-64 max-w-full min-w-0'
                         />
                       </Field.Root>
-                      <Button.Button type='submit' size='sm'>
+                      <Button.Root type='submit' size='sm'>
                         {t('request-access.label')}
-                      </Button.Button>
+                      </Button.Root>
                     </form>
                   )}
                 </Form.Field>
@@ -168,21 +168,21 @@ export const AccountContainer = () => {
                       valence='success'
                     />
                   ) : (
-                    <Flex.Flex column gap='xs' align='end'>
-                      <Button.Button
+                    <Layout.Flex column gap='xs' align='end'>
+                      <Button.Root
                         icon='ph--paper-plane-tilt--regular'
                         label={t('resend-verification.label')}
                         onClick={handleResend}
                         size='sm'
                       />
                       {resendStatus ? <span className='text-xs text-fg-muted'>{resendStatus}</span> : null}
-                    </Flex.Flex>
+                    </Layout.Flex>
                   )}
                 </Form.Field>
                 <Form.Field standalone label={t('delete-account.label')} description={t('delete-account.description')}>
-                  <Button.Button variant='destructive' onClick={handleDeleteAccount}>
+                  <Button.Root variant='destructive' onClick={handleDeleteAccount}>
                     {t('delete-account.label')}
-                  </Button.Button>
+                  </Button.Root>
                 </Form.Field>
               </>
             ) : null}
@@ -194,7 +194,7 @@ export const AccountContainer = () => {
                 label={t('open-account-page.label')}
                 description={t('open-account-page.description')}
               >
-                <Button.Button
+                <Button.Root
                   icon='ph--arrow-square-out--regular'
                   label={t('open-account-page.label')}
                   variant='default'

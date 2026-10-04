@@ -15,12 +15,12 @@ import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
@@ -122,9 +122,9 @@ export const NavBranch = ({ id }: NavBranchProps) => {
             {results.length === 0 ? (
               // A branch with no openable children is a legitimate state (an unpopulated section, or a
               // search that matched nothing); rendering nothing at all reads as a broken screen.
-              <Empty.Empty>
+              <Status.Empty>
                 {t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')}
-              </Empty.Empty>
+              </Status.Empty>
             ) : (
               <Mosaic.Stack
                 classNames='py-2 gap-1'
@@ -187,7 +187,7 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       <Card.Header>
         {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
             `Card.Title` are what keep the icon, label, and caret on one row. */}
-        <Block.Block>
+        <Layout.Block>
           <Avatar.Root
             icon={data.properties.icon}
             hue={Avatar.toAvatarHue(data.properties.hue)}
@@ -196,11 +196,11 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
             fallback={name}
             aria-labelledby={titleId}
           />
-        </Block.Block>
+        </Layout.Block>
         <Card.Title id={titleId}>{name}</Card.Title>
-        <Block.Block rail='end'>
+        <Layout.Block rail='end'>
           <Icon.Icon icon='ph--caret-right--regular' />
-        </Block.Block>
+        </Layout.Block>
       </Card.Header>
     </Card.Root>
   );

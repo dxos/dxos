@@ -169,7 +169,7 @@ export const AgentModule = () => {
 
       <div className='flex gap-2 items-center shrink-0'>
         <Field.Root>
-          <Input.Input
+          <Input.Root
             classNames='flex-1 min-w-0'
             placeholder='Ask the agent…'
             value={prompt}
@@ -183,14 +183,14 @@ export const AgentModule = () => {
             }}
           />
         </Field.Root>
-        <Button.Button
+        <Button.Root
           classNames='shrink-0'
           icon='ph--paper-plane-right--regular'
           label='Send'
           disabled={running}
           onClick={() => void send()}
         />
-        <Button.Button
+        <Button.Root
           classNames='shrink-0'
           icon='ph--git-branch--regular'
           label='Fork'

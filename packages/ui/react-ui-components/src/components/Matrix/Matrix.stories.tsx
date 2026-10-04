@@ -17,7 +17,7 @@ const DefaultStory = (props: MatrixProps) => {
   return (
     <div className='flex flex-col grow'>
       <Toolbar.Root>
-        <Button.Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button.Button>
+        <Button.Root onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button.Root>
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
         <Matrix {...props} active={active} />

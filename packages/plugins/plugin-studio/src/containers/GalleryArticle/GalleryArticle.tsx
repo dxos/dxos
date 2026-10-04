@@ -13,9 +13,9 @@ import { useObject, useObjects } from '@dxos/echo-react';
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { GalleryImage } from '#components';
@@ -146,9 +146,9 @@ export const GalleryArticle = ({ role, subject: collection, attendableId }: Gall
       </Panel.Header>
       <Panel.Body>
         {items.length === 0 ? (
-          <Flex.Flex role='status' center classNames='h-full text-fg-subtle'>
+          <Layout.Flex role='status' center classNames='h-full text-fg-subtle'>
             {t('empty.message')}
-          </Flex.Flex>
+          </Layout.Flex>
         ) : (
           <Masonry.Root Tile={ArtifactTile}>
             <Masonry.Content>

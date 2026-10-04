@@ -5,10 +5,9 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -61,14 +60,14 @@ export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
           <Card.Poster alt={result.title ?? t('product.label')} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Block.Block>
+          <Layout.Block>
             <SystemButton.Star variant='ghost' iconOnly pressed={starred} onClick={handleToggleStar} />
-          </Block.Block>
-          <Flex.Flex column gap='xs' classNames='min-w-0 py-2'>
+          </Layout.Block>
+          <Layout.Flex column gap='xs' classNames='min-w-0 py-2'>
             <Card.Title lines={2}>{result.title}</Card.Title>
             {price && <span className='text-sm text-fg-muted'>{price}</span>}
-          </Flex.Flex>
-          <Block.Block rail='end' />
+          </Layout.Flex>
+          <Layout.Block rail='end' />
         </Card.Header>
       </Card.Root>
     );

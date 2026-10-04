@@ -15,8 +15,8 @@ import { log } from '@dxos/log';
 import { Form } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { kebabize } from '@dxos/util';
 
@@ -100,23 +100,23 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
   return (
     <Form.FieldSet label={t('script-publish-settings.label')} description={t('script-publish-settings.description')}>
       {!githubToken && (
-        <Flex.Flex column classNames='py-form-gap'>
+        <Layout.Flex column classNames='py-form-gap'>
           <Banner.Root valence='info'>
             <Banner.Title>{t('no-github-token.label')}</Banner.Title>
           </Banner.Root>
-          <Flex.Flex classNames='pt-form-gap'>
-            <Button.Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button.Button>
-          </Flex.Flex>
-        </Flex.Flex>
+          <Layout.Flex classNames='pt-form-gap'>
+            <Button.Root onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button.Root>
+          </Layout.Flex>
+        </Layout.Flex>
       )}
 
       {githubToken && (
-        <Flex.Flex gap='sm' justify='end'>
+        <Layout.Flex gap='sm' justify='end'>
           {gistUrl && <SystemButton.Clipboard iconOnly value={gistUrl} />}
-          <Button.Button disabled={publishing} onClick={handlePublish}>
+          <Button.Root disabled={publishing} onClick={handlePublish}>
             {t('publish.label')}
-          </Button.Button>
-        </Flex.Flex>
+          </Button.Root>
+        </Layout.Flex>
       )}
     </Form.FieldSet>
   );

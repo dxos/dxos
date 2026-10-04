@@ -30,7 +30,7 @@ export const ProgressStatusIndicator = () => {
     <StatusBar.Item>
       <Popover.Root positioning={{ placement: 'left' }}>
         <Popover.Trigger asChild>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--circle-notch--regular'
             iconOnly

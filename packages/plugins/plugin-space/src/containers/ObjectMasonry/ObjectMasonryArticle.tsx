@@ -10,9 +10,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
@@ -105,7 +105,7 @@ export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage
         </Panel.Header>
         <Panel.Body>
           {empty ? (
-            <Empty.Empty classNames='h-full'>{empty}</Empty.Empty>
+            <Status.Empty classNames='h-full'>{empty}</Status.Empty>
           ) : (
             <ObjectMasonry cacheKey={attendableId} items={items} />
           )}

@@ -53,7 +53,7 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
         }
       >
         <div className='flex gap-1'>
-          <Button.Button
+          <Button.Root
             icon='ph--bookmark-simple--regular'
             label={t('create-checkpoint.label')}
             onClick={handleCheckpoint}

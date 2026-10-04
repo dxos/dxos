@@ -20,8 +20,8 @@ import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
-import * as Separator from '@dxos/react-ui/Separator';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Typography from '@dxos/react-ui/Typography';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
@@ -204,7 +204,7 @@ export const EditorMenuProvider = ({
       >
         {search && (
           <Field.Root>
-            <Input.Input
+            <Input.Root
               ref={searchInputRef}
               variant='subdued'
               classNames='shrink-0 mb-1'
@@ -245,7 +245,7 @@ const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
       {groups.map((group, index) => (
         <Fragment key={group.id}>
           <MenuGroup group={group} currentItem={currentItem} onSelect={onSelect} />
-          {index < groups.length - 1 && <Separator.Separator />}
+          {index < groups.length - 1 && <Layout.Separator />}
         </Fragment>
       ))}
     </ul>

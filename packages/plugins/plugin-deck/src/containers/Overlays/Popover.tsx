@@ -11,10 +11,10 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Attention } from '@dxos/react-ui-attention';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
@@ -171,12 +171,12 @@ export const PopoverContent = () => {
             subject={popoverSubject}
             menu={
               // TODO(wittjosiah): Reconcile with Card.Menu.
-              <Block.Block rail='end'>
+              <Layout.Block rail='end'>
                 {popoverSubject !== undefined && <CardMenuSlot.Root subject={popoverSubject} menu={menu} />}
                 <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                  <Button.Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
+                  <Button.Root variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
                 </ActionMenu>
-              </Block.Block>
+              </Layout.Block>
             }
           >
             {title}

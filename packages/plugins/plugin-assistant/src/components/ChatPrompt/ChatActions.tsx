@@ -68,7 +68,7 @@ export const ChatActions = ({
     <>
       {children}
       {debug && (
-        <Button.Button
+        <Button.Root
           variant='ghost'
           icon='ph--wrench--regular'
           iconOnly
@@ -78,7 +78,7 @@ export const ChatActions = ({
       )}
 
       {tasksVisible != null && (
-        <Button.Button
+        <Button.Root
           variant='ghost'
           classNames={TOUCH_TARGET}
           icon='ph--list-checks--regular'
@@ -95,7 +95,7 @@ export const ChatActions = ({
           submit, and a touch keyboard offers no such affordance. */}
       {onSend && (
         // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
-        <Button.Button
+        <Button.Root
           disabled={!showStop && !canSend}
           variant='ghost'
           classNames={mx(TOUCH_TARGET, 'transition duration-300 ease-in-out', canSend && 'text-accent-text rotate-90')}

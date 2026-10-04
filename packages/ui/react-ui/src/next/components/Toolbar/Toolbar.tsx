@@ -12,7 +12,7 @@ import { composable, composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
-import * as Separator from '../Separator/Separator.tsx';
+import { Separator, type SeparatorProps } from '../Separator/Separator.tsx';
 import * as ToggleGroup from '../ToggleGroup/ToggleGroup.tsx';
 import { ToolbarContext, useToolbarItem } from './toolbar-context.ts';
 import * as toolbar from './toolbar-machine.ts';
@@ -92,7 +92,7 @@ ToolbarRoot.displayName = 'Toolbar.Root';
 // Separator
 //
 
-type ToolbarSeparatorProps = Omit<Separator.SeparatorProps, 'orientation'> & {
+type ToolbarSeparatorProps = Omit<SeparatorProps, 'orientation'> & {
   /** `gap` is an empty spacer that grows, pushing the items after it to the toolbar's end. */
   variant?: 'line' | 'gap';
 };
@@ -109,7 +109,7 @@ const ToolbarSeparator = composable<HTMLDivElement, ToolbarSeparatorProps>(({ va
   }
 
   return (
-    <Separator.Separator
+    <Separator
       {...props}
       orientation={api?.orientation === 'vertical' ? 'horizontal' : 'vertical'}
       ref={forwardedRef}

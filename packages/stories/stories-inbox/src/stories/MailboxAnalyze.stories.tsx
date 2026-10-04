@@ -470,7 +470,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button
+          <Button.Root
             icon='ph--play--regular'
             iconOnly
             label='Execute'
@@ -539,7 +539,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         ))}
         <Toolbar.Root>
           {resets.map((reset) => (
-            <Button.Button
+            <Button.Root
               key={reset.id}
               icon='ph--trash--regular'
               label={reset.label}

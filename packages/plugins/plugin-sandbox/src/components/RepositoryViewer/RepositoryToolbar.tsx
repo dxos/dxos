@@ -58,13 +58,13 @@ export const RepositoryToolbar = ({
         </Select.Content>
       </Select.Root>
       <Toolbar.Separator />
-      <Button.Button
+      <Button.Root
         icon={view === 'files' ? 'ph--clock-counter-clockwise--regular' : 'ph--files--regular'}
         label={t(view === 'files' ? 'show-history.button' : 'show-files.button')}
         onClick={() => onViewChange(view === 'files' ? 'history' : 'files')}
         data-testid='repository.view'
       />
-      <Button.Button icon='ph--arrow-clockwise--regular' label={t('refresh.button')} iconOnly onClick={onRefresh} />
+      <Button.Root icon='ph--arrow-clockwise--regular' label={t('refresh.button')} iconOnly onClick={onRefresh} />
     </Toolbar.Root>
   );
 };

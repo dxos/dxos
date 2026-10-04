@@ -6,8 +6,8 @@ import { formatDistance, isValid } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { StatusBar } from '#components';
@@ -34,10 +34,10 @@ export const VersionNumber = (_props: VersionNumberProps) => {
       : undefined;
 
   const content = (
-    <Flex.Flex column gap='xs' align='start'>
+    <Layout.Flex column gap='xs' align='start'>
       <span className='font-mono'>{version}</span>
       {released && <span className='text-xs'>{released}</span>}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 
   return (

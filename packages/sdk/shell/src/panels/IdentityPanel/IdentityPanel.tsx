@@ -123,7 +123,7 @@ const IdentityHeading = ({
 
       <Field.Root>
         <Field.Label srOnly>{t('display-name-input.label')}</Field.Label>
-        <Input.Input
+        <Input.Root
           variant='subdued'
           data-testid='display-name-input'
           placeholder={t('display-name-input.placeholder')}
@@ -145,7 +145,7 @@ const IdentityHeading = ({
             value={identity.did}
           />
           {onManageCredentials && (
-            <Button.Button
+            <Button.Root
               iconSize='lg'
               icon='ph--identification-card--regular'
               iconOnly
@@ -154,7 +154,7 @@ const IdentityHeading = ({
               onClick={onManageCredentials}
             />
           )}
-          <Button.Button
+          <Button.Root
             iconSize='lg'
             icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
             iconOnly

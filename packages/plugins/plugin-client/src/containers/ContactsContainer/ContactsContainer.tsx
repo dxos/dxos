@@ -38,7 +38,7 @@ export const ContactsContainer = () => {
           <Form.FieldSet label={t('contacts.label')} description={t('contacts.description')}>
             {(contacts.length > 1 || filter !== '') && (
               <Field.Root>
-                <Input.Input
+                <Input.Root
                   placeholder={t('contacts-search.placeholder')}
                   value={filter}
                   onChange={(event) => setFilter(event.target.value)}

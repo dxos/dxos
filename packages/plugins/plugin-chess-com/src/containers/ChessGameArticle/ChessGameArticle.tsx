@@ -14,11 +14,10 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionMenu, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
@@ -89,9 +88,9 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
       </Panel.Header>
       <Panel.Body>
         {empty ? (
-          <Flex.Flex center classNames='h-full text-fg-subtle text-sm'>
+          <Layout.Flex center classNames='h-full text-fg-subtle text-sm'>
             {t('empty-games.message')}
-          </Flex.Flex>
+          </Layout.Flex>
         ) : (
           // TODO(burdon): This seems wrong?
           <Masonry.Root Tile={GameTile} minColumnWidth={18} maxColumnWidth={24}>
@@ -115,16 +114,16 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
       <ObjectCard.Header
         subject={game}
         menu={
-          <Block.Block rail='end'>
+          <Layout.Block rail='end'>
             <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
-              <Button.Button
+              <Button.Root
                 iconOnly
                 variant='ghost'
                 icon='ph--dots-three-vertical--regular'
                 label={t('game-actions.label')}
               />
             </ActionMenu>
-          </Block.Block>
+          </Layout.Block>
         }
       />
       <Card.Body>

@@ -9,9 +9,9 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { buildContactFromActor } from '@dxos/extractor-lib';
 import { EID } from '@dxos/keys';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import { type Actor, type Person } from '@dxos/types';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
@@ -31,9 +31,9 @@ const ContactPreviewCard = () => {
       <Popover.Body classNames='dx-card-popover-width'>
         <Card.Root border={false} data-testid='contact-preview'>
           <Card.Header>
-            <Block.Block>
+            <Layout.Block>
               <Icon.Icon icon='ph--user--regular' />
-            </Block.Block>
+            </Layout.Block>
             <Card.Title>{contact?.fullName ?? target.label}</Card.Title>
           </Card.Header>
           <Card.Row>

@@ -17,7 +17,7 @@ import { LogOperation } from './schema.ts';
 export const Logger = () => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const handleClick = useCallback(() => invokePromise(LogOperation, { message: 'Hello, world!' }), []);
-  return <Button.Button onClick={handleClick}>Log</Button.Button>;
+  return <Button.Root onClick={handleClick}>Log</Button.Root>;
 };
 
 export default Capability.makeModule(() =>

@@ -15,9 +15,9 @@ import { translations } from '#translations';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Container from '../Container/Container.tsx';
-import * as Group from '../Group/Group.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Group } from '../Group/Group.tsx';
 import * as Banner from './Banner.tsx';
 
 const VALENCES: MessageValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
@@ -26,7 +26,7 @@ const VALENCES: MessageValence[] = ['neutral', 'info', 'success', 'warning', 'er
 const DefaultStory = ({ size }: SizeArgs) => {
   const [open, setOpen] = useState(true);
   return (
-    <Container.Container gap='md'>
+    <Container gap='md'>
       {VALENCES.filter((valence) => valence !== 'error' || open).map((valence) => (
         <Banner.Root key={valence} valence={valence} data-testid={`${valence}-${size}`}>
           <Banner.Title onClose={valence === 'error' ? () => setOpen(false) : undefined}>
@@ -34,15 +34,15 @@ const DefaultStory = ({ size }: SizeArgs) => {
           </Banner.Title>
           <Banner.Body>The body text lines up with the title, not the icon.</Banner.Body>
           {valence === 'error' && (
-            <Group.Group>
-              <Button.Button variant='valence' data-testid={`retry-${size}`}>
+            <Group>
+              <Button variant='valence' data-testid={`retry-${size}`}>
                 Retry
-              </Button.Button>
-            </Group.Group>
+              </Button>
+            </Group>
           )}
         </Banner.Root>
       ))}
-    </Container.Container>
+    </Container>
   );
 };
 

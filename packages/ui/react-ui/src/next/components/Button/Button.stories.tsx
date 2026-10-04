@@ -23,14 +23,14 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Group from '../Group/Group.tsx';
-import * as Toggle from '../Toggle/Toggle.tsx';
+import { Group } from '../Group/Group.tsx';
+import { Toggle } from '../Toggle/Toggle.tsx';
 import * as ToggleGroup from '../ToggleGroup/ToggleGroup.tsx';
 import * as Toolbar from '../Toolbar/Toolbar.tsx';
-import * as Button from './Button.tsx';
+import { Button, type ButtonHue, type ButtonValence, type ButtonVariant } from './Button.tsx';
 
 /** Every variant, with the `valence` variant once bare and once per valence. */
-const VARIANTS: { name: string; variant: Button.ButtonVariant; valence?: Button.ButtonValence }[] = [
+const VARIANTS: { name: string; variant: ButtonVariant; valence?: ButtonValence }[] = [
   { name: 'default', variant: 'default' },
   { name: 'primary', variant: 'primary' },
   { name: 'ghost', variant: 'ghost' },
@@ -44,7 +44,7 @@ const VARIANTS: { name: string; variant: Button.ButtonVariant; valence?: Button.
   })),
 ];
 
-const HUES: Button.ButtonHue[] = ['neutral', 'red', 'amber', 'emerald', 'sky', 'error'];
+const HUES: ButtonHue[] = ['neutral', 'red', 'amber', 'emerald', 'sky', 'error'];
 
 type StoryArgs = SizeArgs & {
   /** Also show every variant, icon-only then as text. */
@@ -58,24 +58,24 @@ type StoryArgs = SizeArgs & {
 const DefaultStory = ({ size, variants }: StoryArgs) => (
   <>
     <Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Button.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
-      <Button.Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
-      <Button.Button icon='ph--trash--regular' label='Delete' iconOnly disabled />
-      <Button.Button data-testid={`button-${size}`}>Save</Button.Button>
-      <Button.Button variant='primary' data-testid={`primary-${size}`}>
+      <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+      <Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
+      <Button icon='ph--trash--regular' label='Delete' iconOnly disabled />
+      <Button data-testid={`button-${size}`}>Save</Button>
+      <Button variant='primary' data-testid={`primary-${size}`}>
         Publish
-      </Button.Button>
-      <Button.Button disabled data-testid={`disabled-${size}`}>
+      </Button>
+      <Button disabled data-testid={`disabled-${size}`}>
         Archive
-      </Button.Button>
-      <Button.Button icon='ph--share--regular' label='Share' data-testid={`share-${size}`} />
-      <Button.Button iconEnd='ph--caret-down--regular' label='More' data-testid={`more-${size}`} />
+      </Button>
+      <Button icon='ph--share--regular' label='Share' data-testid={`share-${size}`} />
+      <Button iconEnd='ph--caret-down--regular' label='More' data-testid={`more-${size}`} />
     </Toolbar.Root>
     {variants && (
-      <Group.Group>
+      <Group>
         {VARIANTS.map(({ name, variant, valence }) => (
-          <Group.Group key={name}>
-            <Button.Button
+          <Group key={name}>
+            <Button
               icon='ph--star--regular'
               label={name}
               iconOnly
@@ -83,64 +83,46 @@ const DefaultStory = ({ size, variants }: StoryArgs) => (
               valence={valence}
               data-testid={`icon-variant-${name}-${size}`}
             />
-            <Button.Button variant={variant} valence={valence} data-testid={`variant-${name}-${size}`}>
+            <Button variant={variant} valence={valence} data-testid={`variant-${name}-${size}`}>
               {name}
-            </Button.Button>
-          </Group.Group>
+            </Button>
+          </Group>
         ))}
-      </Group.Group>
+      </Group>
     )}
     <Toolbar.Root>
-      <Button.Button caretDown data-testid={`caret-${size}`}>
+      <Button caretDown data-testid={`caret-${size}`}>
         Format
-      </Button.Button>
-      <Button.Button icon='ph--text-aa--regular' label='Style' iconOnly caretDown data-testid={`icon-caret-${size}`} />
-      <Button.Button compact data-testid={`compact-${size}`}>
+      </Button>
+      <Button icon='ph--text-aa--regular' label='Style' iconOnly caretDown data-testid={`icon-caret-${size}`} />
+      <Button compact data-testid={`compact-${size}`}>
         1
-      </Button.Button>
-      <Button.Button
-        icon='ph--caret-left--regular'
-        label='Previous'
-        iconOnly
-        compact
-        data-testid={`icon-compact-${size}`}
-      />
-      <Button.Button
-        icon='ph--info--regular'
-        label='Details'
-        iconOnly
-        tooltipSide='right'
-        data-testid={`side-${size}`}
-      />
+      </Button>
+      <Button icon='ph--caret-left--regular' label='Previous' iconOnly compact data-testid={`icon-compact-${size}`} />
+      <Button icon='ph--info--regular' label='Details' iconOnly tooltipSide='right' data-testid={`side-${size}`} />
       {HUES.map((hue) => (
-        <Button.Button key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
+        <Button key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
           {hue}
-        </Button.Button>
+        </Button>
       ))}
     </Toolbar.Root>
-    <Group.Group fill>
-      <Button.Button align='start' icon='ph--file--regular' data-testid={`align-start-${size}`}>
+    <Group fill>
+      <Button align='start' icon='ph--file--regular' data-testid={`align-start-${size}`}>
         Packed at the start
-      </Button.Button>
-    </Group.Group>
-    <Group.Group>
-      <Button.Button icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`}>
+      </Button>
+    </Group>
+    <Group>
+      <Button icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`}>
         Saving
-      </Button.Button>
-      <Button.Button
-        icon='ph--star--regular'
-        label='Large icon'
-        iconOnly
-        iconSize='lg'
-        data-testid={`icon-size-${size}`}
-      />
-      <Button.Button
+      </Button>
+      <Button icon='ph--star--regular' label='Large icon' iconOnly iconSize='lg' data-testid={`icon-size-${size}`} />
+      <Button
         icon='ph--check-circle--regular'
         iconClassNames='text-success-text'
         label='Synced'
         data-testid={`icon-class-${size}`}
       />
-    </Group.Group>
+    </Group>
   </>
 );
 
@@ -441,15 +423,15 @@ export const Test: Story = {
 const SizesStory = () => (
   <>
     {SIZES.map((size) => (
-      <Group.Group key={size}>
-        <Button.Button size={size} icon='ph--share--regular' data-testid={`sized-${size}`}>
+      <Group key={size}>
+        <Button size={size} icon='ph--share--regular' data-testid={`sized-${size}`}>
           {size}
-        </Button.Button>
-        <Button.Button size={size} icon='ph--plus--regular' label='Add' iconOnly data-testid={`sized-icon-${size}`} />
-        <Button.Button size={size} compact data-testid={`sized-compact-${size}`}>
+        </Button>
+        <Button size={size} icon='ph--plus--regular' label='Add' iconOnly data-testid={`sized-icon-${size}`} />
+        <Button size={size} compact data-testid={`sized-compact-${size}`}>
           1
-        </Button.Button>
-        <Button.Button
+        </Button>
+        <Button
           size={size}
           icon='ph--star--regular'
           label='Star'
@@ -457,19 +439,13 @@ const SizesStory = () => (
           iconSize='lg'
           data-testid={`sized-icon-size-${size}`}
         />
-        <Toggle.Toggle
-          size={size}
-          icon='ph--push-pin--regular'
-          label='Pin'
-          iconOnly
-          data-testid={`sized-toggle-${size}`}
-        />
+        <Toggle size={size} icon='ph--push-pin--regular' label='Pin' iconOnly data-testid={`sized-toggle-${size}`} />
         <ToggleGroup.Root type='single'>
           <ToggleGroup.Item size={size} value='bold' data-testid={`sized-toggle-group-${size}`}>
             Bold
           </ToggleGroup.Item>
         </ToggleGroup.Root>
-      </Group.Group>
+      </Group>
     ))}
   </>
 );

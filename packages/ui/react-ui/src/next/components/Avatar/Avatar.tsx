@@ -13,7 +13,7 @@ import { type ChromaticPalette, type NeutralPalette, type ThemedClassName, hues 
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import type * as Container from '../Container/Container.tsx';
+import { type CSSVariables } from '../Container/Container.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 
 type AvatarVariant = 'circle' | 'square';
@@ -107,7 +107,7 @@ const AvatarRoot = forwardRef<HTMLDivElement, AvatarRootProps>(
     // Keyed by source, so a new `src` drops the previous image's colour without an effect racing the load event.
     const [sampled, setSampled] = useState<{ src: string; color?: string }>();
     const color = sampled && sampled.src === src ? sampled.color : undefined;
-    const backdropStyle: CSSProperties & Container.CSSVariables = color ? { '--dx-avatar-backdrop': color } : {};
+    const backdropStyle: CSSProperties & CSSVariables = color ? { '--dx-avatar-backdrop': color } : {};
     return (
       <AvatarPrimitive.Root
         role='img'

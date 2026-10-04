@@ -177,7 +177,7 @@ const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
         ref={forwardedRef}
       >
         <div className='flex items-center justify-center'>
-          <Button.Button
+          <Button.Root
             iconOnly
             variant='ghost'
             size='sm'

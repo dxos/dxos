@@ -388,10 +388,10 @@ export const Streaming: Story = {
       <Panel.Root>
         <Panel.Header>
           <Toolbar.Root>
-            <Button.Button onClick={() => setRunning(true)}>Start</Button.Button>
-            <Button.Button onClick={() => setRunning(false)}>Stop</Button.Button>
-            <Button.Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button.Button>
-            <Button.Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button.Button>
+            <Button.Root onClick={() => setRunning(true)}>Start</Button.Root>
+            <Button.Root onClick={() => setRunning(false)}>Stop</Button.Root>
+            <Button.Root onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button.Root>
+            <Button.Root onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button.Root>
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body>

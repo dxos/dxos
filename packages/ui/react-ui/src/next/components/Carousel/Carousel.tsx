@@ -20,7 +20,7 @@ import { translationKey } from '#translations';
 
 import { animationsDisabled, useReducedMotion } from '../../../util/animation.ts';
 import { recipes } from '../../recipes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import { MediaPlayer, type MediaPlayerProps } from '../MediaPlayer/MediaPlayer.tsx';
 
 //
@@ -170,7 +170,7 @@ const CarouselPrevTrigger = forwardRef<HTMLButtonElement, CarouselTriggerProps>(
 
   return (
     <CarouselPrimitive.PrevTrigger asChild>
-      <Button.Button
+      <Button
         variant='ghost'
         icon='ph--caret-left--regular'
         iconOnly
@@ -194,7 +194,7 @@ const CarouselNextTrigger = forwardRef<HTMLButtonElement, CarouselTriggerProps>(
 
   return (
     <CarouselPrimitive.NextTrigger asChild>
-      <Button.Button
+      <Button
         variant='ghost'
         icon='ph--caret-right--regular'
         iconOnly

@@ -3,7 +3,7 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import React, { type ComponentProps, type PropsWithChildren, forwardRef, useCallback, useMemo } from 'react';
+import React, { type PropsWithChildren, forwardRef, useCallback, useMemo } from 'react';
 
 import { createContext, useControllableState } from '@dxos/react-hooks';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
@@ -13,8 +13,6 @@ import { type ComposableProps, type SlottableProps } from '@dxos/ui-types';
 import { type UnitFormat } from '@dxos/util';
 
 import { type ActivityDatum, buildCalendar } from './util.ts';
-
-type ToggleGroupItemProps = ComponentProps<typeof ToggleGroup.Item>;
 
 const DASHBOARD_NAME = 'Dashboard';
 
@@ -216,7 +214,8 @@ DashboardRanges.displayName = 'Dashboard.Ranges';
 // Range
 //
 
-type DashboardRangeProps = ToggleGroupItemProps;
+// An interface, so declarations name it rather than expanding react-ui's button props.
+interface DashboardRangeProps extends ToggleGroup.ItemProps {}
 
 /**
  * Individual range tab.

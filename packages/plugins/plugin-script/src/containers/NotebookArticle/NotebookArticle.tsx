@@ -183,11 +183,11 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
         <Toolbar.Root inactive={!hasAttention}>
           <Menu.Root>
             <Menu.Trigger asChild>
-              <Button.Button icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
+              <Button.Root icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
             </Menu.Trigger>
             <NotebookMenu onCellInsert={handleCellInsert} />
           </Menu.Root>
-          <Button.Button
+          <Button.Root
             icon='ph--play--fill'
             iconOnly
             label={t('compute.label')}

@@ -17,8 +17,8 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -222,7 +222,7 @@ const Article = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwa
 ));
 
 const Container = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
-  <Flex.Flex
+  <Layout.Flex
     {...Util.composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })}
     ref={forwardedRef}
   />

@@ -150,7 +150,7 @@ export const ResetDialog = ({
             <>
               <div>
                 <div className='flex items-center justify-between py-3'>
-                  <Button.Button
+                  <Button.Root
                     icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                     variant='ghost'
                     classNames='flex items-center'
@@ -160,7 +160,7 @@ export const ResetDialog = ({
                   />
                   <div className='flex items-center gap-1'>
                     <SystemButton.Clipboard iconOnly label={t('copy-error.label')} onCopy={handleCopyError} />
-                    <Button.Button
+                    <Button.Root
                       icon='ph--download-simple--regular'
                       iconOnly
                       label={t('download-logs.label')}
@@ -183,14 +183,14 @@ export const ResetDialog = ({
         </AlertDialog.Body>
 
         <AlertDialog.Footer>
-          <Button.Button
+          <Button.Root
             variant='primary'
             icon='ph--barricade--regular'
             iconOnly={!isNotMobile}
             label={t('safe-mode.label')}
             onClick={handleSafeMode}
           />
-          <Button.Button
+          <Button.Root
             icon='ph--stethoscope--regular'
             iconOnly={!isNotMobile}
             label={t('recovery.label')}
@@ -200,7 +200,7 @@ export const ResetDialog = ({
           {onReset && (
             <Menu.Root positioning={{ placement: 'top' }}>
               <Menu.Trigger asChild>
-                <Button.Button
+                <Button.Root
                   icon='ph--trash--regular'
                   iconOnly
                   label={t('reset-app.label')}
@@ -222,11 +222,11 @@ export const ResetDialog = ({
           {onSubmitReport &&
             isNotMobile &&
             (feedbackSent ? (
-              <Button.Button icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
+              <Button.Root icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
             ) : (
               <Popover.Root open={feedbackOpen} onOpenChange={({ open }) => setFeedbackOpen(open)}>
                 <Popover.Trigger asChild>
-                  <Button.Button icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
+                  <Button.Root icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
                 </Popover.Trigger>
                 <Popover.Content>
                   <Popover.Body>
@@ -242,7 +242,7 @@ export const ResetDialog = ({
                 </Popover.Content>
               </Popover.Root>
             ))}
-          <Button.Button
+          <Button.Root
             icon='ph--arrow-clockwise--regular'
             iconOnly={!!isNotMobile}
             label={t(needRefresh ? 'update-and-reload-page.label' : 'reload-page.label')}

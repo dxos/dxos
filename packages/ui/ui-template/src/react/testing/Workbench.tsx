@@ -13,9 +13,9 @@ import React, { ReactNode, useRef } from 'react';
 
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Listbox } from '@dxos/react-ui-list';
-import * as Empty from '@dxos/react-ui/Empty';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { type SequencedLogEntry } from '../useSystem.ts';
@@ -40,8 +40,8 @@ export type WorkbenchProps = {
 
 /** The shared story frame: a stack of tool panes beside the rendered result. */
 export const Workbench = ({ panes, main }: WorkbenchProps) => (
-  <Flex.Flex classNames='dx-expand grid grid-cols-2 divide-x divide-separator' align='stretch'>
-    <Flex.Flex
+  <Layout.Flex classNames='dx-expand grid grid-cols-2 divide-x divide-separator' align='stretch'>
+    <Layout.Flex
       column
       grow
       classNames='dx-expand grid divide-y divide-separator'
@@ -52,9 +52,9 @@ export const Workbench = ({ panes, main }: WorkbenchProps) => (
           {pane.children}
         </Cell>
       ))}
-    </Flex.Flex>
+    </Layout.Flex>
     <div className='dx-expand flex flex-col p-4'>{main.children}</div>
-  </Flex.Flex>
+  </Layout.Flex>
 );
 
 //
@@ -68,12 +68,12 @@ export type CellProps = {
 
 /** One titled pane in a story grid. */
 export const Cell = ({ title, children }: CellProps) => (
-  <Flex.Flex column classNames='dx-expand'>
+  <Layout.Flex column classNames='dx-expand'>
     <div className='px-2 py-1 text-xs uppercase tracking-wide text-fg-muted border-be border-separator'>{title}</div>
-    <Flex.Flex column grow classNames='dx-expand'>
+    <Layout.Flex column grow classNames='dx-expand'>
       {children}
-    </Flex.Flex>
-  </Flex.Flex>
+    </Layout.Flex>
+  </Layout.Flex>
 );
 
 //
@@ -145,7 +145,7 @@ export const OperationLog = ({ entries }: OperationLogProps) => (
           </Listbox.ItemText>
         </Listbox.Item>
       ))}
-      {entries.length === 0 && <Empty.Empty>No operations dispatched.</Empty.Empty>}
+      {entries.length === 0 && <Status.Empty>No operations dispatched.</Status.Empty>}
     </Listbox.Content>
   </Listbox.Root>
 );

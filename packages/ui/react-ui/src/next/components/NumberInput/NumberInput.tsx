@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { NumberInput as NumberInputPrimitive } from '@ark-ui/react/number-input';
 import React, { forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +12,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 
 export type NumberInputProps = ThemedClassName<
   Pick<
@@ -95,7 +93,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           {stepper && (
             <span data-scope='number-input' data-part='end' className={recipes.inputAdornment()}>
               <NumberInputPrimitive.DecrementTrigger asChild>
-                <Button.Button
+                <Button
                   icon='ph--minus--regular'
                   label={decrementLabel ?? t('number-input.decrement.label')}
                   iconOnly
@@ -105,7 +103,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
                 />
               </NumberInputPrimitive.DecrementTrigger>
               <NumberInputPrimitive.IncrementTrigger asChild>
-                <Button.Button
+                <Button
                   icon='ph--plus--regular'
                   label={incrementLabel ?? t('number-input.increment.label')}
                   iconOnly

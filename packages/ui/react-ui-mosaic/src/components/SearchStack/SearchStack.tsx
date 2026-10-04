@@ -5,9 +5,9 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { type SearchResult } from '@dxos/react-ui-search';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -118,7 +118,7 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef}>
           <Card.Header>
-            <Block.Block />
+            <Layout.Block />
             <Card.Title>{result.label}</Card.Title>
           </Card.Header>
           {result.snippet && (

@@ -27,8 +27,8 @@ export const RangeField = ({ label, value, onValueChange }: RangeFieldProps) => 
     <Field.Root>
       {label && <Field.Label>{label}</Field.Label>}
       <div className='grid grid-cols-2 gap-2'>
-        <Input.Input placeholder='Min' value={value?.min ?? ''} onChange={update('min')} type='number' />
-        <Input.Input placeholder='Max' value={value?.max ?? ''} onChange={update('max')} type='number' />
+        <Input.Root placeholder='Min' value={value?.min ?? ''} onChange={update('min')} type='number' />
+        <Input.Root placeholder='Max' value={value?.max ?? ''} onChange={update('max')} type='number' />
       </div>
     </Field.Root>
   );

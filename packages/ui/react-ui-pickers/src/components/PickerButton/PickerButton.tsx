@@ -58,7 +58,7 @@ export const PickerButton = ({
           the id it is handed while the menu would lose its own to one set above it. */}
       <Menu.Trigger asChild>
         <Tooltip.Trigger asChild content={label} side='bottom'>
-          <Button.Button
+          <Button.Root
             variant={rootVariant === 'toolbar-button' ? 'ghost' : 'default'}
             iconOnly
             showTooltip={false}
@@ -68,7 +68,7 @@ export const PickerButton = ({
             disabled={disabled}
           >
             {(value && <Component value={value} size={iconSize} />) || <Icon.Icon icon={icon} size={iconSize} />}
-          </Button.Button>
+          </Button.Root>
         </Tooltip.Trigger>
       </Menu.Trigger>
       <Menu.Content columns={6}>

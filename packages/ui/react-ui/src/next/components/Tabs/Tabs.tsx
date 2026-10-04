@@ -13,7 +13,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 
 type TabsOrientation = 'horizontal' | 'vertical';
 
@@ -92,7 +92,7 @@ TabsList.displayName = 'Tabs.List';
 //
 
 type TabsTriggerProps =
-  | (ComponentPropsWithoutRef<typeof Button.Button> & Pick<TabsPrimitive.TriggerProps, 'value'> & { asChild?: false })
+  | (ComponentPropsWithoutRef<typeof Button> & Pick<TabsPrimitive.TriggerProps, 'value'> & { asChild?: false })
   | (Omit<TabsPrimitive.TriggerProps, 'asChild'> & { asChild: true });
 
 /**
@@ -107,12 +107,7 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((props, forw
   const { value, disabled, classNames, variant = 'ghost', asChild: _asChild, ...buttonProps } = props;
   return (
     <TabsPrimitive.Trigger value={value} disabled={disabled} asChild>
-      <Button.Button
-        {...buttonProps}
-        variant={variant}
-        classNames={[recipes.tabsTrigger(), classNames]}
-        ref={forwardedRef}
-      />
+      <Button {...buttonProps} variant={variant} classNames={[recipes.tabsTrigger(), classNames]} ref={forwardedRef} />
     </TabsPrimitive.Trigger>
   );
 });

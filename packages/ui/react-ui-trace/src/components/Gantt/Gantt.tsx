@@ -408,7 +408,7 @@ const GanttAxisToggle = (_: GanttAxisToggleProps) => {
 
   // The icon names the axis in use; the label names the one a click switches to.
   return (
-    <Button.Button
+    <Button.Root
       variant='ghost'
       size='sm'
       iconSize='xs'

@@ -22,9 +22,9 @@ export const NativeRedirectDialog = ({ onOpenHere }: { onOpenHere: () => void })
         composer
       </h1>
       <p className='text-lg text-fg-subtle'>{t('native-redirect.message')}</p>
-      <Button.Button variant='ghost' onClick={onOpenHere}>
+      <Button.Root variant='ghost' onClick={onOpenHere}>
         {t('open-in-browser-button.label')}
-      </Button.Button>
+      </Button.Root>
     </div>
   );
 };

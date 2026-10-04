@@ -43,7 +43,7 @@ const Text = ({ children, initial = 'open' }: PropsWithChildren<{ initial?: stri
       </div>
 
       <div className='flex justify-center'>
-        <Button.Button icon='ph--arrow-clockwise--regular' iconOnly label='Restart' onClick={toggle} />
+        <Button.Root icon='ph--arrow-clockwise--regular' iconOnly label='Restart' onClick={toggle} />
       </div>
     </div>
   );

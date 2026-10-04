@@ -119,7 +119,7 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
             {contactDisplayName(invitation.sender)}
           </span>
           <div className='flex items-center gap-1'>
-            <Button.Button
+            <Button.Root
               size='sm'
               variant='primary'
               disabled={disabled}
@@ -127,8 +127,8 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
               data-testid='space-invitation-list.join'
             >
               {t('join-space-invitation.label')}
-            </Button.Button>
-            <Button.Button
+            </Button.Root>
+            <Button.Root
               iconOnly
               size='sm'
               variant='ghost'

@@ -319,14 +319,14 @@ const Debug = ({
   return (
     <div className='flex flex-col overflow-hidden'>
       <Toolbar.Root>
-        <Button.Button onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
-        <Button.Button onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
-        <Button.Button onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
-        <Button.Button onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
-        <Button.Button onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
-        <Button.Button onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
-        <Button.Button onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
-        <Button.Button onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
+        <Button.Root onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
+        <Button.Root onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
+        <Button.Root onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
+        <Button.Root onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
+        <Button.Root onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
+        <Button.Root onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
+        <Button.Root onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
+        <Button.Root onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
       <Syntax.Root data={data}>
         <Syntax.Content>

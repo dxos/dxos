@@ -9,8 +9,8 @@ import { random } from '@dxos/random';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Switch from '@dxos/react-ui/Switch';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
@@ -124,13 +124,13 @@ const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button onClick={handleAdd}>Add</Button.Button>
-          <Button.Button onClick={handleSelect}>Pick</Button.Button>
-          <Button.Button onClick={handleError}>Error</Button.Button>
+          <Button.Root onClick={handleAdd}>Add</Button.Root>
+          <Button.Root onClick={handleSelect}>Pick</Button.Root>
+          <Button.Root onClick={handleError}>Error</Button.Root>
           <Toolbar.Separator />
           <Field.Root>
             <Field.Label classNames='pr-1'>Debug</Field.Label>
-            <Switch.Switch checked={debug} onCheckedChange={({ checked }) => handleToggleDebug(checked)} />
+            <Input.Switch checked={debug} onCheckedChange={({ checked }) => handleToggleDebug(checked)} />
           </Field.Root>
         </Toolbar.Root>
       </Panel.Header>

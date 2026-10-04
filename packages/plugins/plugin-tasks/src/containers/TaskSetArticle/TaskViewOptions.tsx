@@ -80,7 +80,7 @@ export const TaskSortMenu = ({ value, onChange }: TaskSortMenuProps) => {
 
   return (
     <ActionMenu deferUntilOpen group={group} actions={actions}>
-      <Button.Button
+      <Button.Root
         // The trigger names the order while it is not the set's own, so a reader can tell why the
         // rows are not where they dragged them.
         icon={
@@ -138,7 +138,7 @@ export const TaskGroupMenu = ({ value, onChange }: TaskGroupMenuProps) => {
 
   return (
     <ActionMenu deferUntilOpen group={group} actions={actions}>
-      <Button.Button
+      <Button.Root
         icon={grouped ? GROUP_ICONS[value] : 'ph--rows--regular'}
         iconOnly={!grouped}
         label={grouped ? t(`group-${value}.label`) : t('group.label')}

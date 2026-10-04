@@ -9,8 +9,8 @@ import { Editor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Switch from '@dxos/react-ui/Switch';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import {
@@ -60,13 +60,13 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
           {parse && (
             <Field.Root>
               <div className='flex items-center gap-2'>
-                <Switch.Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
+                <Input.Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
                 <Field.Label classNames='text-sm text-fg-muted'>POS</Field.Label>
               </div>
             </Field.Root>
           )}
           <div className='grow' />
-          <Button.Button
+          <Button.Root
             icon={busy ? 'ph--spinner-gap--regular' : 'ph--play--regular'}
             iconOnly
             label='Run pipeline'

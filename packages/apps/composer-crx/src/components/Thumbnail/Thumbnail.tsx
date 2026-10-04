@@ -19,9 +19,9 @@ export const Thumbnail = ({ url, classNames }: Util.ThemedClassName<{ url: strin
     <div className={mx('flex flex-col w-full', classNames)}>
       <Toolbar.Root>
         <Field.Root>
-          <Input.Input disabled value={url} />
+          <Input.Root disabled value={url} />
         </Field.Root>
-        <Button.Button
+        <Button.Root
           icon='ph--clipboard--regular'
           iconOnly
           label='Clipboard'

@@ -176,7 +176,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
       </Panel.Body>
       <Panel.Footer>
         <div className='flex items-center my-2 px-2 gap-2'>
-          <Button.Button icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />
+          <Button.Root icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />
           <span className='grow text-sm' onClick={handleCreateSpace}>
             New space
           </span>

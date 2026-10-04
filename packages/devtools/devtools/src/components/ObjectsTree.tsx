@@ -158,7 +158,7 @@ const ObjectsTreeColumns = ({ item, path }: ObjectsTreeRowProps) => {
       {node.role && <span className='text-fg-subtle text-xs'>{node.role}</span>}
       <Menu.Root>
         <Menu.Trigger asChild>
-          <Button.Button
+          <Button.Root
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon='ph--dots-three-vertical--regular'

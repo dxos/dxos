@@ -9,8 +9,8 @@ import { type Database, Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
-import * as ControlFrame from '@dxos/react-ui/ControlFrame';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import * as Typography from '@dxos/react-ui/Typography';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
@@ -79,11 +79,11 @@ const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: String
   const { markdownExtensions } = useFormContext('MarkdownField');
   const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: markdownExtensions });
   return (
-    <ControlFrame.ControlFrame rows={ROWS} disabled={readonly}>
+    <Input.Frame rows={ROWS} disabled={readonly}>
       <Editor.Root>
         <Editor.View extensions={extensions} value={value} onChange={readonly ? undefined : onChange} />
       </Editor.Root>
-    </ControlFrame.ControlFrame>
+    </Input.Frame>
   );
 };
 
@@ -118,11 +118,11 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
   }
 
   return (
-    <ControlFrame.ControlFrame rows={ROWS} disabled={readonly}>
+    <Input.Frame rows={ROWS} disabled={readonly}>
       <Editor.Root>
         <Editor.View extensions={extensions} />
       </Editor.Root>
-    </ControlFrame.ControlFrame>
+    </Input.Frame>
   );
 };
 
@@ -134,12 +134,8 @@ type CreateTextButtonProps = {
 const CreateTextButton = ({ db, onCreate }: CreateTextButtonProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   return (
-    <Button.Button
-      icon='ph--plus--regular'
-      disabled={!db}
-      onClick={() => db && onCreate(Ref.make(db.add(Text.make())))}
-    >
+    <Button.Root icon='ph--plus--regular' disabled={!db} onClick={() => db && onCreate(Ref.make(db.add(Text.make())))}>
       {t('create-text.label')}
-    </Button.Button>
+    </Button.Root>
   );
 };

@@ -13,8 +13,8 @@ import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import * as Field from '../Field/Field.tsx';
-import * as Input from '../Input/Input.tsx';
-import * as Textarea from './Textarea.tsx';
+import { Input } from '../Input/Input.tsx';
+import { Textarea } from './Textarea.tsx';
 
 type StoryArgs = SizeArgs & {
   /** Grow the Notes textarea with its content. */
@@ -25,23 +25,23 @@ const DefaultStory = ({ size, autoResize }: StoryArgs) => (
   <>
     <Field.Root>
       <Field.Label>Title</Field.Label>
-      <Input.Input data-testid={`input-${size}`} />
+      <Input data-testid={`input-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Notes</Field.Label>
-      <Textarea.Textarea autoResize={autoResize} placeholder='Write something' data-testid={`textarea-${size}`} />
+      <Textarea autoResize={autoResize} placeholder='Write something' data-testid={`textarea-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Summary</Field.Label>
-      <Textarea.Textarea rows={6} data-testid={`rows-${size}`} />
+      <Textarea rows={6} data-testid={`rows-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Log</Field.Label>
-      <Textarea.Textarea autoResize placeholder='Grows as you type' data-testid={`auto-${size}`} />
+      <Textarea autoResize placeholder='Grows as you type' data-testid={`auto-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Draft</Field.Label>
-      <Textarea.Textarea variant='subdued' placeholder='No well' data-testid={`subdued-${size}`} />
+      <Textarea variant='subdued' placeholder='No well' data-testid={`subdued-${size}`} />
     </Field.Root>
   </>
 );

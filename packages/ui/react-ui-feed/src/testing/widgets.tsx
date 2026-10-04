@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { TogglePanel } from '@dxos/react-ui-components';
-import * as Block from '@dxos/react-ui/Block';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type WidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -64,9 +64,9 @@ const Panel = ({
         <TogglePanel.Content classNames={mx('min-h-[2.125rem] rounded border border-separator-subtle', classNames)}>
           <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
             <span className='grow text-fg-muted truncate'>{title}</span>
-            <Block.Block>
+            <Layout.Block>
               <Icon.Icon icon={icon} size='md' />
-            </Block.Block>
+            </Layout.Block>
           </TogglePanel.Header>
           <TogglePanel.Body>
             <TogglePanel.Viewport classNames='px-2 pb-1 text-sm'>{children}</TogglePanel.Viewport>

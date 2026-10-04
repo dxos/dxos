@@ -9,7 +9,7 @@ import React, { type CSSProperties } from 'react';
 
 import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import type * as Container from '../Container/Container.tsx';
+import { type CSSVariables } from '../Container/Container.tsx';
 
 type TypographyTone = 'default' | 'muted' | 'subtle';
 
@@ -34,7 +34,7 @@ type TypographyProps = {
 const Typography = slottable<HTMLParagraphElement, TypographyProps>(
   ({ children, asChild, truncate, lines, tone, mono, ...props }, forwardedRef) => {
     const { className, style, ...rest } = composableProps(props, { classNames: recipes.typography() });
-    const linesStyle: CSSProperties & Container.CSSVariables = lines ? { '--dx-lines': String(lines) } : {};
+    const linesStyle: CSSProperties & CSSVariables = lines ? { '--dx-lines': String(lines) } : {};
     return (
       <ark.p
         asChild={asChild}

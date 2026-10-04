@@ -13,11 +13,11 @@ import { createPortal } from 'react-dom';
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type DndTileData, useDndRootContext } from '@dxos/react-ui-dnd';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as DragHandle from '@dxos/react-ui/DragHandle';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -283,8 +283,8 @@ export const BoardCell = ({
           <DragHandle.DragHandle ref={dragHandleRef} />
           {title}
           {onDelete && (
-            <Block.Block rail='end'>
-              <Button.Button
+            <Layout.Block rail='end'>
+              <Button.Root
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly
@@ -294,7 +294,7 @@ export const BoardCell = ({
                   onDelete(item.id);
                 }}
               />
-            </Block.Block>
+            </Layout.Block>
           )}
         </Card.Header>
         {/* Body spans all of the card's column tracks (it has gutter columns) so content — e.g. a

@@ -72,7 +72,7 @@ Do **not** annotate aliases as `FunctionComponent<...>` — it strips ref suppor
 
    export { FooRoot as Root, FooTrigger as Trigger /* ... */ };
    ```
-   A single component keeps its own names (`<Button.Button>`, `Button.ButtonProps`). Each family gets a PascalCase subpath in `package.json` and a vite entry, and its directory barrel re-exports it as `export * as Foo from './Foo.tsx';`. Hooks and constants for the family go in the same namespace (`Foo.useFooContext`); general-purpose hooks go in `Hooks`.
+   A single component keeps its own names (`<Icon.Icon>`, `Icon.IconProps`). Related components can share one namespace module (`Button.Root`, `Button.Toggle`); when a member imports another, the namespace module lives apart from the component files (`src/next/namespaces/`) so it does not form a cycle. Each family gets a PascalCase subpath in `package.json` and a vite entry, and its directory barrel re-exports it as `export * as Foo from './Foo.tsx';`. Hooks and constants for the family go in the same namespace (`Foo.useFooContext`); general-purpose hooks go in `Hooks`.
 4. **Export every part's Props type** under its short name:
    ```tsx
    export type { FooRootProps as RootProps, FooTriggerProps as TriggerProps /* ... */ };

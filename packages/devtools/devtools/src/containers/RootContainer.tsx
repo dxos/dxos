@@ -7,9 +7,9 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { toPublicKey } from '@dxos/protocols/buf';
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
-import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import { mx } from '@dxos/ui-theme';
 
 import { useSections } from '../hooks/index.ts';
@@ -21,11 +21,11 @@ export const RootContainer = () => {
     <div className='dx-expand flex'>
       <Sidebar />
       <div className='flex flex-col grow overflow-hidden'>
-        <ErrorFallback.ErrorBoundary key={pathname} name='devtools.root'>
+        <Status.ErrorBoundary key={pathname} name='devtools.root'>
           <Suspense>
             <Outlet />
           </Suspense>
-        </ErrorFallback.ErrorBoundary>
+        </Status.ErrorBoundary>
       </div>
     </div>
   );

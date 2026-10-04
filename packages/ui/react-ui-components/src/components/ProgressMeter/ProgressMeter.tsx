@@ -7,7 +7,7 @@ import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } fro
 import { Progress as ProgressModel } from '@dxos/progress';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Progress from '@dxos/react-ui/Progress';
+import * as Status from '@dxos/react-ui/Status';
 import * as Typography from '@dxos/react-ui/Typography';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -200,7 +200,7 @@ export const InnerProgressMeter = Util.composable<HTMLDivElement, InnerProgressM
               <span className='text-fg-muted'>({formatDuration(etaMs)})</span>
             )}
             {onCancel && (
-              <Button.Button
+              <Button.Root
                 size='sm'
                 variant='ghost'
                 iconSize='xs'
@@ -217,7 +217,7 @@ export const InnerProgressMeter = Util.composable<HTMLDivElement, InnerProgressM
         {/* A declared plan is drawn as its stages, which carry the fraction on the line leaving the
             one in flight; with no plan there is only the fraction, so a bare bar says it. */}
         {stages > 0 ? (
-          <Progress.Steps
+          <Status.Steps
             classNames='self-center'
             steps={state.phases ?? 0}
             active={state.phase}
@@ -228,7 +228,7 @@ export const InnerProgressMeter = Util.composable<HTMLDivElement, InnerProgressM
             onSelect={onSelect}
           />
         ) : (
-          <Progress.Progress
+          <Status.Progress
             classNames='w-full self-center'
             value={fraction}
             // Uncounted while it runs, and still uncounted when it fails — that is what fills the

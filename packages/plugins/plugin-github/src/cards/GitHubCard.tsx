@@ -6,8 +6,8 @@ import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Card from '@dxos/react-ui/Card';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import { type Issue, type PullRequest, type Repo } from '@dxos/types';
 
@@ -68,10 +68,10 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
       )}
       {(additions !== undefined || deletions !== undefined) && (
         <Card.Row icon='ph--plus-minus--regular'>
-          <Flex.Flex gap='sm' align='center'>
+          <Layout.Flex gap='sm' align='center'>
             {additions !== undefined && <span className='text-green-500'>+{additions}</span>}
             {deletions !== undefined && <span className='text-red-500'>−{deletions}</span>}
-          </Flex.Flex>
+          </Layout.Flex>
         </Card.Row>
       )}
       {description && (

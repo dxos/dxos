@@ -105,9 +105,9 @@ export const VersionBanner = ({
       </div>
       <Toolbar.Separator />
       {mode === 'checkpoint' && onRestore && (
-        <Button.Button variant='ghost' onClick={onRestore}>
+        <Button.Root variant='ghost' onClick={onRestore}>
           {t('restore.label')}
-        </Button.Button>
+        </Button.Root>
       )}
       {mode === 'checkpoint' && onBranchFrom && (
         <NamePopover.Root
@@ -120,9 +120,9 @@ export const VersionBanner = ({
             onBranchFrom(name);
           }}
         >
-          <Button.Button variant='ghost' onClick={() => setNamingBranch(true)}>
+          <Button.Root variant='ghost' onClick={() => setNamingBranch(true)}>
             {t('branch-from.label')}
-          </Button.Button>
+          </Button.Root>
         </NamePopover.Root>
       )}
       {mode === 'branch' && view && onViewChange && (
@@ -139,7 +139,7 @@ export const VersionBanner = ({
           ))}
         </Toolbar.ToggleGroup>
       )}
-      <Button.Button variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
+      <Button.Root variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
     </Toolbar.Root>
   );
 };

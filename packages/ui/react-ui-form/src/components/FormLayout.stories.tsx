@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Annotation, Format } from '@dxos/echo';
-import * as Container from '@dxos/react-ui/Container';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -56,7 +56,7 @@ const DefaultStory = ({ layoutName }: StoryArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container.Container>
+            <Layout.Container>
               <Form.Root
                 schema={Flight}
                 values={values}
@@ -66,7 +66,7 @@ const DefaultStory = ({ layoutName }: StoryArgs) => {
                   <Form.Fields layoutName={layoutName} />
                 </Form.Content>
               </Form.Root>
-            </Container.Container>
+            </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>

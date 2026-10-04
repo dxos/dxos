@@ -87,12 +87,12 @@ export const RunResults = ({ run }: RunResultsProps) => {
           <span className='grow text-fg-subtle text-sm'>unreported</span>
           {snapshot.status === 'running' && (
             <>
-              <Button.Button onClick={() => handlePush(caseKey, 'passed')} data-testid='qa.run.pass'>
+              <Button.Root onClick={() => handlePush(caseKey, 'passed')} data-testid='qa.run.pass'>
                 Pass
-              </Button.Button>
-              <Button.Button onClick={() => handlePush(caseKey, 'failed')} data-testid='qa.run.fail'>
+              </Button.Root>
+              <Button.Root onClick={() => handlePush(caseKey, 'failed')} data-testid='qa.run.fail'>
                 Fail
-              </Button.Button>
+              </Button.Root>
             </>
           )}
         </div>
@@ -100,10 +100,10 @@ export const RunResults = ({ run }: RunResultsProps) => {
 
       {snapshot.status === 'running' && (
         <div className='flex justify-end pt-1'>
-          <Button.Button disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
+          <Button.Root disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
             <Icon.Icon icon='ph--flag-checkered--regular' size='md' />
             <span>Finish run</span>
-          </Button.Button>
+          </Button.Root>
         </div>
       )}
 

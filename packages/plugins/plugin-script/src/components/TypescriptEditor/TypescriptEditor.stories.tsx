@@ -70,7 +70,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button onClick={handleRun}>Run</Button.Button>
+          <Button.Root onClick={handleRun}>Run</Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

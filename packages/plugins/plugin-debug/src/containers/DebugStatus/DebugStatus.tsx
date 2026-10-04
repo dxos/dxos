@@ -89,7 +89,7 @@ const ErrorIndicator = () => {
   if (errorRef.current) {
     return (
       <StatusBar.Item>
-        <Button.Button
+        <Button.Root
           variant='ghost'
           icon='ph--warning-circle--duotone'
           iconOnly
@@ -102,7 +102,7 @@ const ErrorIndicator = () => {
   } else {
     return (
       <StatusBar.Item>
-        <Button.Button variant='ghost' icon='ph--check--regular' iconOnly label='No errors.' />
+        <Button.Root variant='ghost' icon='ph--check--regular' iconOnly label='No errors.' />
       </StatusBar.Item>
     );
   }
@@ -121,13 +121,13 @@ const SwarmIndicator = () => {
   if (state === 0) {
     return (
       <StatusBar.Item>
-        <Button.Button variant='ghost' icon='ph--lightning--regular' iconOnly label='Connected to swarm.' />
+        <Button.Root variant='ghost' icon='ph--lightning--regular' iconOnly label='Connected to swarm.' />
       </StatusBar.Item>
     );
   } else {
     return (
       <StatusBar.Item>
-        <Button.Button
+        <Button.Root
           variant='ghost'
           icon='ph--lightning-slash--regular'
           iconOnly
@@ -168,7 +168,7 @@ const SavingIndicator = () => {
     case 2:
       return (
         <StatusBar.Item>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--circle--duotone'
             iconOnly
@@ -180,7 +180,7 @@ const SavingIndicator = () => {
     case 1:
       return (
         <StatusBar.Item>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--circle--duotone'
             iconOnly
@@ -193,7 +193,7 @@ const SavingIndicator = () => {
     default:
       return (
         <StatusBar.Item>
-          <Button.Button variant='ghost' icon='ph--circle--duotone' iconOnly label='Modified indicator.' />
+          <Button.Root variant='ghost' icon='ph--circle--duotone' iconOnly label='Modified indicator.' />
         </StatusBar.Item>
       );
   }

@@ -9,8 +9,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Video } from '@dxos/types';
 
 import { Pending, Transcript } from '#components';
@@ -83,19 +83,19 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
     }
     if (!transcribable) {
       return (
-        <Flex.Flex column center classNames='w-full p-4 text-fg-muted'>
+        <Layout.Flex column center classNames='w-full p-4 text-fg-muted'>
           {t('unsupported-url.message')}
-        </Flex.Flex>
+        </Layout.Flex>
       );
     }
     if (transcribeError !== undefined) {
       return (
-        <Flex.Flex column center gap='sm' classNames='w-full p-4 text-fg-muted'>
+        <Layout.Flex column center gap='sm' classNames='w-full p-4 text-fg-muted'>
           <span>{transcribeError}</span>
-          <Button.Button variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
+          <Button.Root variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
             {t('transcribe-retry.label')}
-          </Button.Button>
-        </Flex.Flex>
+          </Button.Root>
+        </Layout.Flex>
       );
     }
 

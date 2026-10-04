@@ -5,8 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
@@ -55,7 +55,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
   const summary = useCheckSummary(runs);
 
   if (!sorted || sorted.length === 0) {
-    return <Empty.Empty>{t(sorted ? 'no-checks.message' : 'checks-loading.message')}</Empty.Empty>;
+    return <Status.Empty>{t(sorted ? 'no-checks.message' : 'checks-loading.message')}</Status.Empty>;
   }
 
   return (

@@ -11,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 
 //
 // Root
@@ -84,7 +84,7 @@ ToggleGroupRoot.displayName = 'ToggleGroup.Root';
 // Item
 //
 
-type ToggleGroupItemProps = ComponentPropsWithoutRef<typeof Button.Button> & {
+type ToggleGroupItemProps = ComponentPropsWithoutRef<typeof Button> & {
   value: string;
 };
 
@@ -92,7 +92,7 @@ type ToggleGroupItemProps = ComponentPropsWithoutRef<typeof Button.Button> & {
 const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(
   ({ value, disabled, ...props }, forwardedRef) => (
     <ToggleGroupPrimitive.Item value={value} disabled={disabled} asChild>
-      <Button.Button {...props} disabled={disabled} ref={forwardedRef} />
+      <Button {...props} disabled={disabled} ref={forwardedRef} />
     </ToggleGroupPrimitive.Item>
   ),
 );

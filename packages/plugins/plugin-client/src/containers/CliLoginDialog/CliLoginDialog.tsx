@@ -133,14 +133,14 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
             <AlertDialog.Cancel data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
               {t('cli-login-deny.label')}
             </AlertDialog.Cancel>
-            <Button.Button
+            <Button.Root
               data-testid='cliLogin.authorize'
               variant='primary'
               disabled={!identity || status === 'sending'}
               onClick={handleAuthorize}
             >
               {t('cli-login-authorize.label')}
-            </Button.Button>
+            </Button.Root>
           </>
         ) : (
           <AlertDialog.Action

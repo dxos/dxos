@@ -91,7 +91,7 @@ export const TaskStatusFilter = ({ value, onChange, active }: TaskStatusFilterPr
 
   return (
     <ActionMenu deferUntilOpen group={group} actions={actions}>
-      <Button.Button
+      <Button.Root
         // Filled and accented while anything narrows the list, so the trigger says rows are missing
         // without the reader opening it; the accent survives the toolbar dimming icons at rest.
         icon={narrowed ? 'ph--funnel--fill' : 'ph--funnel--regular'}

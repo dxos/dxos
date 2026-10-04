@@ -38,7 +38,7 @@ export const TestingArticle = ({ role, onScriptPluginOpen }: TestingArticleProps
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='flex flex-col gap-4 p-4'>
-        <Button.Button icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
+        <Button.Root icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
         <div className='border-t border-separator'>{space && <SyncStateInfo space={space} />}</div>
       </Panel.Body>
     </Panel.Root>

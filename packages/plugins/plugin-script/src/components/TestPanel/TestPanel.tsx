@@ -9,10 +9,10 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
-import * as Grid from '@dxos/react-ui/Grid';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
@@ -124,7 +124,7 @@ export const TestPanel = Util.composable<HTMLDivElement, TestPanelProps>(
         {/* TODO(burdon): Replace with Form based on the function's input schema. */}
         <Toolbar.Root>
           <Field.Root>
-            <Input.Input
+            <Input.Root
               ref={inputRef}
               autoFocus
               placeholder={t('function-request.placeholder')}
@@ -133,8 +133,8 @@ export const TestPanel = Util.composable<HTMLDivElement, TestPanelProps>(
               onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
             />
           </Field.Root>
-          <Button.Button icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
-          <Button.Button icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
+          <Button.Root icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+          <Button.Root icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
         </Toolbar.Root>
       </div>
     );
@@ -156,20 +156,20 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
       <ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
         <ScrollArea.Viewport classNames='gap-6 p-2'>
           {history.map((message, i) => (
-            <Grid.Grid key={i} cols={MESSAGE_COLS}>
+            <Layout.Grid key={i} cols={MESSAGE_COLS}>
               <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
               <div className='overflow-auto'>
                 <MessageItem message={message} />
               </div>
-            </Grid.Grid>
+            </Layout.Grid>
           ))}
 
           {state === 'pending' && (
-            <Grid.Grid cols={MESSAGE_COLS}>
+            <Layout.Grid cols={MESSAGE_COLS}>
               <div className='p-1'>
                 <Icon.Icon icon='ph--spinner--regular' size='xl' spin />
               </div>
-            </Grid.Grid>
+            </Layout.Grid>
           )}
         </ScrollArea.Viewport>
       </ScrollArea.Root>

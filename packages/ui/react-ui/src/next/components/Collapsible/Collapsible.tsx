@@ -11,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import * as Container from '../Container/Container.tsx';
+import { containerAttributes } from '../Container/Container.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import { RowContext } from '../Listbox/grid.ts';
 
@@ -78,7 +78,7 @@ type CollapsibleContentProps = ThemedClassName<CollapsiblePrimitive.ContentProps
 /** Animates its height from Ark's measured `--height`. */
 const CollapsibleContent = forwardRef<HTMLDivElement, CollapsibleContentProps>(
   ({ classNames, gutter, style, ...props }, forwardedRef) => {
-    const { style: gridStyle, ...grid } = gutter ? Container.containerAttributes({ gutter }) : { style: undefined };
+    const { style: gridStyle, ...grid } = gutter ? containerAttributes({ gutter }) : { style: undefined };
     return (
       <CollapsiblePrimitive.Content
         {...props}

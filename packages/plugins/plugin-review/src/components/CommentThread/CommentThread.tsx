@@ -146,7 +146,7 @@ export const CommentThread = ({
     <div className='flex flex-row items-center gap-0.5 pe-2'>
       {status === 'staged' && <Tag.Tag hue='neutral'>{t('draft.button')}</Tag.Tag>}
       {onAcceptChange && !detached && status !== 'resolved' && (
-        <Button.Button
+        <Button.Root
           data-testid='thread.accept-change'
           variant='ghost'
           icon='ph--check-circle--regular'
@@ -157,7 +157,7 @@ export const CommentThread = ({
         />
       )}
       {onResolve && !(status === 'staged') && (
-        <Button.Button
+        <Button.Root
           data-testid='thread.resolve'
           variant='ghost'
           icon={status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
@@ -168,7 +168,7 @@ export const CommentThread = ({
         />
       )}
       {onThreadDelete && (
-        <Button.Button
+        <Button.Root
           data-testid='thread.delete'
           variant='ghost'
           icon='ph--x--regular'

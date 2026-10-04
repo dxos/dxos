@@ -16,9 +16,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
@@ -88,9 +88,9 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
           <Popover.Body classNames='dx-card-popover-width'>
             <Card.Root border={false} data-testid='contact-preview'>
               <Card.Header>
-                <Block.Block>
+                <Layout.Block>
                   <Icon.Icon icon='ph--user--regular' />
-                </Block.Block>
+                </Layout.Block>
                 <Card.Title>{link.title ?? link.label}</Card.Title>
               </Card.Header>
               <Card.Row>
@@ -136,9 +136,9 @@ const DefaultStory = () => {
       <Card.Root border={false} classNames='p-1'>
         <Card.Body>
           <Card.Row>
-            <Block.Block>
+            <Layout.Block>
               <Row.Star starred={starred} onToggle={handleToggleStar} />
-            </Block.Block>
+            </Layout.Block>
             <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
           </Card.Row>
           {/* Neither `db` nor `getContact`: no contact resolution, so the avatar is inert. */}

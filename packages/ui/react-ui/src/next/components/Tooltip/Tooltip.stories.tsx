@@ -11,9 +11,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { GEOMETRY, byTestId, expectArrow, expectNoTooltip, expectTooltip } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Group from '../Group/Group.tsx';
-import * as Input from '../Input/Input.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import { Input } from '../Input/Input.tsx';
 import * as Tooltip from './Tooltip.tsx';
 
 const LONG =
@@ -25,26 +25,26 @@ const LONG =
  */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Group.Group>
+    <Group>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          <Button.Button data-testid={`save-${size}`}>Save</Button.Button>
+          <Button data-testid={`save-${size}`}>Save</Button>
         </Tooltip.Trigger>
         <Tooltip.Content data-testid={`save-tooltip-${size}`}>Save changes (⌘S)</Tooltip.Content>
       </Tooltip.Root>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          <Button.Button data-testid={`publish-${size}`}>Publish</Button.Button>
+          <Button data-testid={`publish-${size}`}>Publish</Button>
         </Tooltip.Trigger>
         <Tooltip.Content size='lg'>{LONG}</Tooltip.Content>
       </Tooltip.Root>
-      <Input.Input aria-label='Note' data-testid={`note-${size}`} />
-    </Group.Group>
-    <Group.Group>
+      <Input aria-label='Note' data-testid={`note-${size}`} />
+    </Group>
+    <Group>
       <Tooltip.Trigger asChild content='Opens on the right' side='right'>
-        <Button.Button data-testid={`side-${size}`}>Details</Button.Button>
+        <Button data-testid={`side-${size}`}>Details</Button>
       </Tooltip.Trigger>
-    </Group.Group>
+    </Group>
     <Tooltip.TextTooltip text={LONG} classNames='w-48' data-testid={`truncated-${size}`} />
     <Tooltip.TextTooltip text='Short' classNames='w-48' data-testid={`fits-${size}`} />
   </>

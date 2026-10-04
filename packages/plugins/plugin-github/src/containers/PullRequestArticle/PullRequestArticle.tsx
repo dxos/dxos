@@ -17,8 +17,8 @@ import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import { PullRequest } from '@dxos/types';
@@ -513,7 +513,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
           <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
         </Panel.Header>
         <Panel.Body asChild>
-          <Flex.Flex column>
+          <Layout.Flex column>
             <PullRequestStatus
               reference={reference}
               title={subject.title}
@@ -551,7 +551,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
                 onLineComment={diff.commit ? handleFilesLineComment : undefined}
               />
             )}
-          </Flex.Flex>
+          </Layout.Flex>
         </Panel.Body>
         <Panel.Footer classNames='border-t border-separator-subtle'>
           <ProgressMeter

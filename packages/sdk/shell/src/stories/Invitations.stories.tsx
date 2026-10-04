@@ -18,7 +18,6 @@ import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
-import * as Group from '@dxos/react-ui/Group';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { IdentityListItem } from '../components/index.ts';
@@ -69,9 +68,9 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
     default: {
       // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
       const controls = (
-        <Group.Group classNames='mb-4'>
+        <Button.Group classNames='mb-4'>
           {/* <Tooltip content='Create Space'> */}
-          <Button.Button
+          <Button.Root
             icon='ph--plus-circle--regular'
             label='Create Space'
             iconOnly
@@ -80,7 +79,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
           />
           {/* </Tooltip>
           <Tooltip content='Join Space'> */}
-          <Button.Button
+          <Button.Root
             icon='ph--sign-in--fill'
             label='Join Space'
             iconOnly
@@ -88,7 +87,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
             data-testid='invitations.open-join-space'
           />
           {/* </Tooltip> */}
-        </Group.Group>
+        </Button.Group>
       );
 
       const header = (
@@ -139,9 +138,9 @@ const Invitations = () => {
 
   // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
   const controls = (
-    <Group.Group classNames='mb-4'>
+    <Button.Group classNames='mb-4'>
       {/* <Tooltip content='Create Identity'> */}
-      <Button.Button
+      <Button.Root
         icon='ph--plus--regular'
         label='Create Identity'
         iconOnly
@@ -153,7 +152,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='Join Existing Identity'> */}
-      <Button.Button
+      <Button.Root
         icon='ph--qr-code--fill'
         label='Join Existing Identity'
         iconOnly
@@ -163,7 +162,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='Devices'> */}
-      <Button.Button
+      <Button.Root
         icon='ph--laptop--fill'
         label='Devices'
         iconOnly
@@ -173,7 +172,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='List Spaces'> */}
-      <Button.Button
+      <Button.Root
         icon='ph--planet--fill'
         label='List Spaces'
         iconOnly
@@ -183,7 +182,7 @@ const Invitations = () => {
       />
       {/* </Tooltip> */}
       {/* <ToolTip content='Toggle Network'> */}
-      <Button.Button
+      <Button.Root
         icon={networkStatus === ConnectionState.ONLINE ? 'ph--wifi-high--fill' : 'ph--wifi-slash--fill'}
         label='Toggle Network'
         iconOnly
@@ -195,7 +194,7 @@ const Invitations = () => {
         data-testid='invitations.toggle-network'
       />
       {/* </ToolTip> */}
-    </Group.Group>
+    </Button.Group>
   );
 
   return (

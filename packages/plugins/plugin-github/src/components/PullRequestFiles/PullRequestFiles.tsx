@@ -4,11 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Field from '@dxos/react-ui/Field';
-import * as Grid from '@dxos/react-ui/Grid';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -51,22 +51,22 @@ export const PullRequestFiles = ({
 
   if (error) {
     return (
-      <Empty.Empty icon='ph--warning--regular' classNames='dx-expand'>
+      <Status.Empty icon='ph--warning--regular' classNames='dx-expand'>
         {error}
-      </Empty.Empty>
+      </Status.Empty>
     );
   }
   if (!tree) {
-    return <Empty.Empty classNames='dx-expand'>{t('files-loading.message')}</Empty.Empty>;
+    return <Status.Empty classNames='dx-expand'>{t('files-loading.message')}</Status.Empty>;
   }
 
   return (
-    <Grid.Grid grow cols={['minmax(0, 1fr)', '18rem']} data-testid='pull-request.files'>
+    <Layout.Grid grow cols={['minmax(0, 1fr)', '18rem']} data-testid='pull-request.files'>
       {fence ? (
         // Keyed by file so the next file opens at its top rather than at the previous one's scroll.
         <WalkthroughView key={file?.path} value={fence} onLineComment={onLineComment} />
       ) : (
-        <Empty.Empty classNames='dx-expand'>{t(file ? 'file-no-diff.message' : 'no-files.message')}</Empty.Empty>
+        <Status.Empty classNames='dx-expand'>{t(file ? 'file-no-diff.message' : 'no-files.message')}</Status.Empty>
       )}
       <ScrollArea.Root classNames='border-s border-separator-subtle'>
         <ScrollArea.Viewport classNames='p-2'>
@@ -82,6 +82,6 @@ export const PullRequestFiles = ({
           />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Grid.Grid>
+    </Layout.Grid>
   );
 };

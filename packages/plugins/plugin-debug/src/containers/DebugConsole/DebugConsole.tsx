@@ -70,7 +70,7 @@ export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
       </Panel.Body>
       <Panel.Footer>
         <Toolbar.Root classNames='bg-transparent'>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--eraser--regular'

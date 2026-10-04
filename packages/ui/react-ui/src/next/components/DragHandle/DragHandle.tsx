@@ -15,7 +15,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import { ToolbarContext } from '../Toolbar/toolbar-context.ts';
 import { announce, dragScope } from './drag.ts';
 
@@ -94,7 +94,7 @@ export const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
 
     return (
       <ToolbarContext.Provider value={undefined}>
-        <Button.Button
+        <Button
           icon='ph--dots-six-vertical--regular'
           label={label ?? t('drag-handle.label')}
           iconOnly

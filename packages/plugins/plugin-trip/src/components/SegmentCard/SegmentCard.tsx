@@ -8,11 +8,11 @@ import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 import { Obj } from '@dxos/echo';
 import { Form } from '@dxos/react-ui-form';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
@@ -101,9 +101,9 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root border={false} ref={forwardedRef}>
           <Card.Header>
-            <Block.Block>
+            <Layout.Block>
               <Icon.Icon icon={icon} classNames={iconStyles?.text} />
-            </Block.Block>
+            </Layout.Block>
             <Card.Title>{title}</Card.Title>
             <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Header>
@@ -127,9 +127,9 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
                 )}
                 {date && (
                   <Card.Row>
-                    <Block.Block>
+                    <Layout.Block>
                       <Icon.Icon icon='ph--calendar--regular' />
-                    </Block.Block>
+                    </Layout.Block>
                     <Card.Text variant='muted'>{format(date, 'PPp')}</Card.Text>
                   </Card.Row>
                 )}

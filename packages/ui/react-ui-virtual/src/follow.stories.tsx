@@ -120,14 +120,14 @@ const DefaultStory = ({
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button
+          <Button.Root
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
             iconOnly
             label={running ? 'Stop' : 'Start'}
             data-testid='follow.toggle'
             onClick={handleToggle}
           />
-          <Button.Button
+          <Button.Root
             icon='ph--arrow-line-up--regular'
             iconOnly
             label='Top'

@@ -12,10 +12,10 @@ import { translationKey } from '../../translations.ts';
 /**
  * @deprecated use IconButton directly
  */
-export const CloseButton = ({ onDone, ...props }: Omit<Button.ButtonProps, 'onClick'> & { onDone?: () => void }) => {
+export const CloseButton = ({ onDone, ...props }: Omit<Button.RootProps, 'onClick'> & { onDone?: () => void }) => {
   const { t } = Hooks.useTranslation(translationKey);
   return (
-    <Button.Button
+    <Button.Root
       icon='ph--x--bold'
       iconSize='md'
       label={t('exit.label')}

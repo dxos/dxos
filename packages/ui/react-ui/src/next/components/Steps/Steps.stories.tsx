@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import { Steps, type StepsProps } from './Steps.tsx';
 
 const TICK_MS = 200;
@@ -71,7 +71,7 @@ const TestStory = ({ size }: StoryArgs) => {
   return (
     <>
       <div className='flex gap-2'>
-        <Button.Button
+        <Button
           data-testid={testId('advance')}
           onClick={() => {
             setActive((active) => (active ?? 0) + 1);
@@ -79,11 +79,11 @@ const TestStory = ({ size }: StoryArgs) => {
           }}
         >
           Advance
-        </Button.Button>
-        <Button.Button data-testid={testId('fail')} onClick={() => setError(true)}>
+        </Button>
+        <Button data-testid={testId('fail')} onClick={() => setError(true)}>
           Fail
-        </Button.Button>
-        <Button.Button
+        </Button>
+        <Button
           data-testid={testId('reset')}
           onClick={() => {
             setActive(undefined);
@@ -92,7 +92,7 @@ const TestStory = ({ size }: StoryArgs) => {
           }}
         >
           Reset
-        </Button.Button>
+        </Button>
       </div>
       <Steps steps={4} active={active} fraction={fraction} error={error} data-testid={testId('steps')} />
       <Steps

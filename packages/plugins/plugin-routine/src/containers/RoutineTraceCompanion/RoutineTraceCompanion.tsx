@@ -8,11 +8,11 @@ import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Accordion from '@dxos/react-ui/Accordion';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
@@ -54,7 +54,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {runs.length === 0 ? (
-              <Empty.Empty>{t('history.empty.message')}</Empty.Empty>
+              <Status.Empty>{t('history.empty.message')}</Status.Empty>
             ) : (
               <Accordion.Root>
                 {runs.map((run) => (

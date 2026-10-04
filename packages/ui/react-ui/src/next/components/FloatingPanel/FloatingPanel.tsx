@@ -21,7 +21,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button, type ButtonProps } from '../Button/Button.tsx';
 
 const RESIZE_AXES: readonly FloatingPanelPrimitive.ResizeTriggerAxis[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
 
@@ -218,7 +218,7 @@ const STAGE_ICONS: Record<FloatingPanelStage, string> = {
   default: 'ph--arrows-in-simple--regular',
 };
 
-type FloatingPanelStageTriggerProps = Omit<Button.ButtonProps, 'icon' | 'label' | 'iconOnly'> & {
+type FloatingPanelStageTriggerProps = Omit<ButtonProps, 'icon' | 'label' | 'iconOnly'> & {
   /** The stage the button moves the panel to; zag hides `default` until the panel is staged and the others while it is. */
   stage: FloatingPanelStage;
   icon?: string;
@@ -231,7 +231,7 @@ const FloatingPanelStageTrigger = forwardRef<HTMLButtonElement, FloatingPanelSta
     const { t } = useTranslation(translationKey);
     return (
       <FloatingPanelPrimitive.StageTrigger stage={stage} asChild>
-        <Button.Button
+        <Button
           variant='ghost'
           {...props}
           iconOnly
@@ -250,7 +250,7 @@ FloatingPanelStageTrigger.displayName = 'FloatingPanel.StageTrigger';
 // CloseTrigger
 //
 
-type FloatingPanelCloseTriggerProps = Omit<Button.ButtonProps, 'icon' | 'label' | 'iconOnly'> & {
+type FloatingPanelCloseTriggerProps = Omit<ButtonProps, 'icon' | 'label' | 'iconOnly'> & {
   icon?: string;
   label?: string;
 };
@@ -261,7 +261,7 @@ const FloatingPanelCloseTrigger = forwardRef<HTMLButtonElement, FloatingPanelClo
     const { t } = useTranslation(translationKey);
     return (
       <FloatingPanelPrimitive.CloseTrigger asChild>
-        <Button.Button
+        <Button
           variant='ghost'
           {...props}
           iconOnly

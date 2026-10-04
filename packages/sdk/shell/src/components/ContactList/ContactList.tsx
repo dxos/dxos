@@ -126,7 +126,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
         {common.length > 0 && (
           <div className='flex flex-wrap gap-1'>
             {common.map((space) => (
-              <Button.Button
+              <Button.Root
                 key={space.id}
                 size='sm'
                 hue={getHashStyles(space.id).hue}
@@ -134,7 +134,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
                 data-testid='contact-list.space'
               >
                 {space.name ?? t('unnamed-space.label')}
-              </Button.Button>
+              </Button.Root>
             ))}
           </div>
         )}

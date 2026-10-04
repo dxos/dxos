@@ -86,12 +86,12 @@ export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent =
   const isInstalling = pending === 'install' || status.kind === 'downloading';
 
   const checkButton = (disabled = false) => (
-    <Button.Button
+    <Button.Root
       disabled={disabled || isChecking || isInstalling || pending === 'apply'}
       onClick={() => void onCheck()}
     >
       {isChecking ? t('settings.updates.checking.label') : t('settings.updates.check.label')}
-    </Button.Button>
+    </Button.Root>
   );
 
   return Match.value(status).pipe(
@@ -123,9 +123,9 @@ export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent =
     Match.when({ kind: 'available' }, (s) => ({
       description: t('settings.updates.available.message', { version: s.version }),
       button: (
-        <Button.Button variant='primary' disabled={isInstalling} onClick={() => void onInstall()}>
+        <Button.Root variant='primary' disabled={isInstalling} onClick={() => void onInstall()}>
           {isInstalling ? t('settings.updates.downloading.label') : t('settings.updates.update-now.label')}
-        </Button.Button>
+        </Button.Root>
       ),
     })),
     Match.when({ kind: 'downloading' }, (s) => ({
@@ -134,14 +134,14 @@ export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent =
       description: t('settings.updates.downloading.message', {
         percent: s.progress && s.progress.total > 0 ? Math.round((s.progress.completed / s.progress.total) * 100) : 0,
       }),
-      button: <Button.Button disabled>{t('settings.updates.downloading.label')}</Button.Button>,
+      button: <Button.Root disabled>{t('settings.updates.downloading.label')}</Button.Root>,
     })),
     Match.when({ kind: 'ready' }, () => ({
       description: t('settings.updates.ready.message'),
       button: (
-        <Button.Button variant='primary' disabled={pending === 'apply'} onClick={() => void onApply()}>
+        <Button.Root variant='primary' disabled={pending === 'apply'} onClick={() => void onApply()}>
           {t('settings.updates.relaunch.label')}
-        </Button.Button>
+        </Button.Root>
       ),
     })),
     Match.when({ kind: 'failed' }, (s) => ({

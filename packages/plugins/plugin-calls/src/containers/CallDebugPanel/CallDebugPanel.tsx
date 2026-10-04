@@ -12,7 +12,7 @@ import { truncateKey } from '@dxos/debug';
 import { JsonView, STAT_CARD_HUES, StatCard } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as Switch from '@dxos/react-ui/Switch';
+import * as Input from '@dxos/react-ui/Input';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
@@ -86,7 +86,7 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
       <StatCard.Row
         label={t('show-webrtc-stats.title')}
         action={
-          <Switch.Switch
+          <Input.Switch
             checked={showDetailedWebRTCStats}
             onCheckedChange={({ checked }) => setShowDetailedWebRTCStats(checked)}
           />
@@ -95,7 +95,7 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
       <StatCard.Row
         label={t('show-calls-history.title')}
         action={
-          <Switch.Switch
+          <Input.Switch
             checked={showServiceHistory}
             onCheckedChange={({ checked }) => setShowServiceHistory(checked)}
           />

@@ -11,9 +11,9 @@ import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { log } from '@dxos/log';
 import { OrderedList } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 import { arrayMove } from '@dxos/util';
 
@@ -103,7 +103,7 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
       <Field.Header>
         <Typography.Text truncate>{label}</Typography.Text>
         {editable && (
-          <Button.Button
+          <Button.Root
             iconOnly
             variant='ghost'
             icon='ph--plus--regular'
@@ -127,7 +127,7 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
               <OrderedList.Item key={item.id} id={item.id} canDrag={ordered && editable}>
                 {ordered && editable && <OrderedList.DragHandle />}
                 {/* A cell holding a nested group must be a template root, so the group's subgrid finds `content`. */}
-                <Container.Container gutter='none'>
+                <Layout.Container gutter='none'>
                   <FormFieldDispatch
                     {...props}
                     type={elementType}
@@ -137,9 +137,9 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
                     readonly={!editable}
                     layout={asObject ? layout : 'inline'}
                   />
-                </Container.Container>
+                </Layout.Container>
                 {editable && (
-                  <Button.Button
+                  <Button.Root
                     iconOnly
                     variant='ghost'
                     icon='ph--x--regular'

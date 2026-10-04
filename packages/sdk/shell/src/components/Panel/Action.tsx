@@ -23,7 +23,7 @@ import { translationKey } from '../../translations.ts';
 
 // TODO(burdon): Move to react-ui.
 
-export type LargeButtonProps = ComponentProps<typeof Button.Button> & {
+export type LargeButtonProps = ComponentProps<typeof Button.Root> & {
   isFull?: boolean;
 };
 
@@ -32,7 +32,7 @@ export type ActionMenuItem = {
   description: string;
   icon: string;
   testId?: string;
-} & Pick<Button.ButtonProps, 'onClick'>;
+} & Pick<Button.RootProps, 'onClick'>;
 
 const defaultActions = {
   noopAction: {
@@ -82,7 +82,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 
   return (
     <div className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
-      <Button.Button
+      <Button.Root
         {...rest}
         classNames={['h-11 flex-1 min-w-0 flex gap-2 rounded-ie-none', classNames]}
         ref={forwardedRef}
@@ -92,10 +92,10 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
       >
         {activeAction.icon && <Icon.Icon icon={activeAction.icon} />}
         <span>{activeAction.label}</span>
-      </Button.Button>
+      </Button.Root>
       <Menu.Root>
         <Menu.Trigger asChild>
-          <Button.Button
+          <Button.Root
             iconSize='md'
             label={t('invite-options.label')}
             icon='ph--caret-down--regular'
@@ -150,9 +150,9 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
   const { children, classNames, variant, isFull = true, ...rest } = props;
   return (
-    <Button.Button {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
+    <Button.Root {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
       {children}
-    </Button.Button>
+    </Button.Root>
   );
 });
 

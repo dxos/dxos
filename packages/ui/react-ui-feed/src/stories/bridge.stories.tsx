@@ -51,7 +51,7 @@ const DefaultStory = ({
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
-        <Button.Button
+        <Button.Root
           icon='ph--plus--regular'
           iconOnly
           label='Append'
@@ -66,7 +66,7 @@ const DefaultStory = ({
             ])
           }
         />
-        <Button.Button
+        <Button.Root
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Bottom'

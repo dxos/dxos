@@ -279,9 +279,9 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         </span>
         <SystemButton.Clipboard value={url ?? 'never'} />
       </div>
-      <Button.Button variant='ghost' onClick={onCancel}>
+      <Button.Root variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button.Button>
+      </Button.Root>
     </>
   );
 };
@@ -296,9 +296,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
       <p className='text-fg-muted'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
-      <Button.Button variant='ghost' onClick={onCancel}>
+      <Button.Root variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button.Button>
+      </Button.Root>
     </>
   );
 };

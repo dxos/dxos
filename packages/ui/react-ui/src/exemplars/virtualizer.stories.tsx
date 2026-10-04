@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import * as Button from '../next/components/Button/Button.tsx';
+import { Button } from '../next/components/Button/Button.tsx';
 import * as Panel from '../next/components/Panel/Panel.tsx';
 import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
 import * as Toolbar from '../next/components/Toolbar/Toolbar.tsx';
@@ -117,21 +117,15 @@ const ScrollToolbar = ({
   return (
     <Toolbar.Root>
       <Toolbar.Separator variant='gap' />
-      <Button.Button
-        variant='ghost'
-        icon='ph--arrow-line-left--regular'
-        iconOnly
-        label='start'
-        onClick={() => setIndex(0)}
-      />
-      <Button.Button
+      <Button variant='ghost' icon='ph--arrow-line-left--regular' iconOnly label='start' onClick={() => setIndex(0)} />
+      <Button
         variant='ghost'
         icon='ph--arrows-out-line-horizontal--regular'
         iconOnly
         label='random'
         onClick={() => setIndex(Math.floor(Math.random() * items.length))}
       />
-      <Button.Button
+      <Button
         variant='ghost'
         icon='ph--arrow-line-right--regular'
         iconOnly

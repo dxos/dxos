@@ -7,11 +7,11 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState }
 import { Type } from '@dxos/echo';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -108,24 +108,24 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef}>
           <Card.Header>
-            <Block.Block>
+            <Layout.Block>
               <Icon.Icon icon='ph--rss-simple--regular' />
-            </Block.Block>
+            </Layout.Block>
             <Card.Text truncate>{post.title ?? t('post-title.placeholder')}</Card.Text>
             {post.link && (
-              <Block.Block rail='end'>
+              <Layout.Block rail='end'>
                 <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
                   <Icon.Icon icon='ph--arrow-square-out--regular' size='md' />
                 </a>
-              </Block.Block>
+              </Layout.Block>
             )}
           </Card.Header>
           <Card.Body>
             {post.author && (
               <Card.Row>
-                <Block.Block>
+                <Layout.Block>
                   <Icon.Icon icon='ph--user--regular' />
-                </Block.Block>
+                </Layout.Block>
                 <Card.Text variant='muted'>{post.author}</Card.Text>
               </Card.Row>
             )}
@@ -139,9 +139,9 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
             )}
             {published && (
               <Card.Row>
-                <Block.Block>
+                <Layout.Block>
                   <Icon.Icon icon='ph--calendar--regular' />
-                </Block.Block>
+                </Layout.Block>
                 <Card.Text variant='muted' classNames='text-info-text'>
                   {published}
                 </Card.Text>

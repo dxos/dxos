@@ -36,9 +36,9 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import * as Icon from '../Icon/Icon.tsx';
-import * as Progress from '../Progress/Progress.tsx';
+import { Progress } from '../Progress/Progress.tsx';
 import { ToastContextProvider, type ToastEntry, ToastRegistry, useToastContext } from './registry.ts';
 
 const DEFAULT_DURATION = 5_000;
@@ -101,9 +101,7 @@ const ToastHost = ({ entry, size }: { entry: ToastEntry; size?: Size }) => {
       ref={entry.ref}
     >
       {entry.children}
-      {timed && (
-        <Progress.Progress countdown={entry.countdown} paused={toast.paused} classNames={recipes.toastCountdown()} />
-      )}
+      {timed && <Progress countdown={entry.countdown} paused={toast.paused} classNames={recipes.toastCountdown()} />}
     </ToastPrimitive.Root>
   );
 };
@@ -257,7 +255,7 @@ const ToastCloseTrigger = forwardRef<HTMLButtonElement, ToastCloseTriggerProps>(
   const { t } = useTranslation(translationKey);
   return (
     <ToastPrimitive.CloseTrigger asChild>
-      <Button.Button
+      <Button
         variant='ghost'
         icon='ph--x--regular'
         iconOnly
@@ -335,12 +333,12 @@ ToastFooter.displayName = 'Toast.Footer';
 // ActionTrigger
 //
 
-type ToastActionTriggerProps = ComponentPropsWithRef<typeof Button.Button>;
+type ToastActionTriggerProps = ComponentPropsWithRef<typeof Button>;
 
 /** A Button that runs the toast's action, after which the machine dismisses the toast. */
 const ToastActionTrigger = forwardRef<HTMLButtonElement, ToastActionTriggerProps>((props, forwardedRef) => (
   <ToastPrimitive.ActionTrigger asChild>
-    <Button.Button {...props} ref={forwardedRef} />
+    <Button {...props} ref={forwardedRef} />
   </ToastPrimitive.ActionTrigger>
 ));
 

@@ -13,7 +13,7 @@ import { AccessToken } from '@dxos/link';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Form } from '@dxos/react-ui-form';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as PasswordInput from '@dxos/react-ui/PasswordInput';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -74,7 +74,7 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
             actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Field label={t('api-key.label')}>
-              <PasswordInput.PasswordInput
+              <Input.Password
                 placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
                 value={draft}
                 onValueChange={(value) => {

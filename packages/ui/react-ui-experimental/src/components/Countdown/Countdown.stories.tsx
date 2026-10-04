@@ -21,14 +21,14 @@ const DefaultStory = (props: CountdownProps) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button
+          <Button.Root
             onClick={() => {
               setDone(false);
               setTake((take) => take + 1);
             }}
           >
             Replay
-          </Button.Button>
+          </Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='flex items-center justify-center'>

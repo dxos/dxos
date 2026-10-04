@@ -83,7 +83,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Input.Input
+              <Input.Root
                 aria-label='Filter'
                 placeholder='Filter…'
                 value={filter}

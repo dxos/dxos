@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import ErrorStackParser from 'error-stack-parser';
 import React, { type PropsWithChildren } from 'react';
 import { type FallbackProps } from 'react-error-boundary';

@@ -37,7 +37,7 @@ export const ErrorIndicator = () => {
   }, []);
 
   return (
-    <Button.Button
+    <Button.Root
       classNames={mx(errorRef.current ? styles.error : styles.default)}
       variant='ghost'
       icon='ph--circle--fill'

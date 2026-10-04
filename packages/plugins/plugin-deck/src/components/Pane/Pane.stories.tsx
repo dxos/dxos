@@ -30,8 +30,8 @@ const MainPane = ({ id, label }: { id: string; label: string }) => {
           <Icon.Icon icon='ph--circle-dashed--regular' />
         </Pane.Sigil>
         <Pane.Title attendableId={id}>{label}</Pane.Title>
-        <Button.Button iconOnly variant='ghost' icon='ph--arrows-out--regular' label='Fullscreen' />
-        <Button.Button iconOnly variant='ghost' icon='ph--x--regular' label='Close' />
+        <Button.Root iconOnly variant='ghost' icon='ph--arrows-out--regular' label='Fullscreen' />
+        <Button.Root iconOnly variant='ghost' icon='ph--x--regular' label='Close' />
       </Pane.Toolbar>
       <Pane.Content classNames='grid place-items-center text-fg-muted'>
         <span>{label} content</span>
@@ -50,7 +50,7 @@ const SplitStory = () => {
       <Pane.Root>
         <Pane.Toolbar>
           <Pane.Tabs tabs={TABS} value={tab} onValueChange={setTab} attendableId='plank-main' related />
-          <Button.Button iconOnly variant='ghost' icon='ph--x--regular' label='Close companion' />
+          <Button.Root iconOnly variant='ghost' icon='ph--x--regular' label='Close companion' />
         </Pane.Toolbar>
         <Pane.Content classNames='grid place-items-center text-fg-muted'>
           <span className='flex items-center gap-1'>

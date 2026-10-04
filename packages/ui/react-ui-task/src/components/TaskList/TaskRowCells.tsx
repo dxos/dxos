@@ -6,12 +6,12 @@ import React, { type MouseEvent, useCallback, useEffect, useRef, useState } from
 
 import { Obj } from '@dxos/echo';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
@@ -83,10 +83,10 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
     // `IconButton iconOnly` occupies, or the readonly list's status column collapses to the glyph's
     // own width and stops lining up with the editable list's.
     return (
-      <Block.Block aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
+      <Layout.Block aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
         <Icon.Icon icon={icon} classNames={iconClassNames} />
         <span className='sr-only'>{t(`status-${status}.label`)}</span>
-      </Block.Block>
+      </Layout.Block>
     );
   }
 
@@ -94,7 +94,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   // too, and a trigger above it would never receive it. The block still gives every control in the
   // row one rail-item square.
   const trigger = (
-    <Button.Button
+    <Button.Root
       data-testid='taskList.item.status'
       // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
       // which the `Icon` root reads, so a colour set on the button is overridden at rest and
@@ -110,12 +110,12 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   );
 
   return (
-    <Block.Block classNames={classNames}>
+    <Layout.Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu deferUntilOpen actions={actions}>
         {trigger}
       </ActionMenu>
-    </Block.Block>
+    </Layout.Block>
   );
 };
 
@@ -160,7 +160,7 @@ export const TaskMnemonic = ({ task, ordinal, classNames }: TaskMnemonicProps) =
   const icon = <Icon.Icon icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'} />;
   return (
     <Tooltip.Trigger asChild content={mnemonic}>
-      <Button.Button
+      <Button.Root
         size='sm'
         compact
         // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
@@ -180,7 +180,7 @@ export const TaskMnemonic = ({ task, ordinal, classNames }: TaskMnemonicProps) =
             <span className='hidden group-hover:contents'>{icon}</span>
           </>
         )}
-      </Button.Button>
+      </Button.Root>
     </Tooltip.Trigger>
   );
 };
@@ -204,9 +204,9 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
   return (
     // `IconBlock square` so the box is centred in the same square an `IconButton iconOnly` occupies;
     // bare, the 1rem box hugged the start of a 2rem track beside 2rem controls.
-    <Block.Block aria-hidden={false} classNames={classNames}>
+    <Layout.Block aria-hidden={false} classNames={classNames}>
       <Field.Root>
-        <Checkbox.Checkbox
+        <Input.Checkbox
           checked={checked}
           data-testid='taskList.item.checkbox'
           aria-label={t('task-check.label')}
@@ -215,7 +215,7 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
           onClick={(event) => event.stopPropagation()}
         />
       </Field.Root>
-    </Block.Block>
+    </Layout.Block>
   );
 };
 
@@ -253,11 +253,11 @@ export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: T
   const label = estimate?.toUpperCase() ?? <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onChange) {
-    return <Block.Block classNames={mx(estimateTextStyle(estimate), classNames)}>{label}</Block.Block>;
+    return <Layout.Block classNames={mx(estimateTextStyle(estimate), classNames)}>{label}</Layout.Block>;
   }
 
   return (
-    <Block.Block classNames={classNames}>
+    <Layout.Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu
         deferUntilOpen
@@ -270,16 +270,16 @@ export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: T
           )
         }
       >
-        <Button.Button
+        <Button.Root
           variant='ghost'
           data-testid={testId}
           classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
           onClick={(event: MouseEvent) => event.stopPropagation()}
         >
           {label}
-        </Button.Button>
+        </Button.Root>
       </ActionMenu>
-    </Block.Block>
+    </Layout.Block>
   );
 };
 
@@ -324,14 +324,14 @@ export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: T
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
-      <Block.Block classNames={classNames}>
+      <Layout.Block classNames={classNames}>
         <Icon.Icon icon={icon} classNames={mx(styles)} />
-      </Block.Block>
+      </Layout.Block>
     );
   }
 
   return (
-    <Block.Block classNames={classNames}>
+    <Layout.Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu
         deferUntilOpen
@@ -347,7 +347,7 @@ export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: T
           )
         }
       >
-        <Button.Button
+        <Button.Root
           variant='ghost'
           icon={icon}
           iconOnly
@@ -357,6 +357,6 @@ export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: T
           onClick={(event) => event.stopPropagation()}
         />
       </ActionMenu>
-    </Block.Block>
+    </Layout.Block>
   );
 };

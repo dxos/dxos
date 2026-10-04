@@ -13,10 +13,10 @@ import { random } from '@dxos/random';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { byTestId, expectScoped, realHover } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Block from '../Block/Block.tsx';
-import * as Container from '../Container/Container.tsx';
+import { Block } from '../Block/Block.tsx';
+import { Container } from '../Container/Container.tsx';
 import * as Icon from '../Icon/Icon.tsx';
-import * as Input from '../Input/Input.tsx';
+import { Input } from '../Input/Input.tsx';
 import * as Tag from '../Tag/Tag.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as ScrollArea from './ScrollArea.tsx';
@@ -26,17 +26,17 @@ random.seed(123);
 const PARAGRAPHS = Array.from({ length: 12 }, () => random.lorem.paragraph());
 
 const Header = ({ testId, children }: { testId: string; children: string }) => (
-  <Container.Container gutter='rail' layout='row' data-testid={testId}>
-    <Block.Block rail='start' data-testid={`${testId}-rail-start`}>
+  <Container gutter='rail' layout='row' data-testid={testId}>
+    <Block rail='start' data-testid={`${testId}-rail-start`}>
       <Icon.Icon icon='ph--list--regular' />
-    </Block.Block>
+    </Block>
     <div className='truncate' data-testid={`${testId}-content`}>
       {children}
     </div>
-    <Block.Block rail='end' data-testid={`${testId}-rail-end`}>
+    <Block rail='end' data-testid={`${testId}-rail-end`}>
       <Icon.Icon icon='ph--dots-three-vertical--regular' />
-    </Block.Block>
-  </Container.Container>
+    </Block>
+  </Container>
 );
 
 type PaneProps = Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'> & { prefix: string };
@@ -47,22 +47,22 @@ const Pane = ({ prefix, mode, width, native }: PaneProps) => (
     <Header testId={`${prefix}-header`}>Header</Header>
     <ScrollArea.Root mode={mode} width={width} native={native} classNames='flex-1' data-testid={`${prefix}-root`}>
       <ScrollArea.Viewport asChild>
-        <Container.Container gutter='rail' data-testid={`${prefix}-viewport`}>
-          <Container.Container layout='row'>
-            <Block.Block rail='start' data-testid={`${prefix}-row-rail-start`}>
+        <Container gutter='rail' data-testid={`${prefix}-viewport`}>
+          <Container layout='row'>
+            <Block rail='start' data-testid={`${prefix}-row-rail-start`}>
               <Icon.Icon icon='ph--user--regular' />
-            </Block.Block>
-            <Input.Input aria-label='Name' />
-            <Block.Block rail='end' data-testid={`${prefix}-row-rail-end`}>
+            </Block>
+            <Input aria-label='Name' />
+            <Block rail='end' data-testid={`${prefix}-row-rail-end`}>
               <Icon.Icon icon='ph--x--regular' />
-            </Block.Block>
-          </Container.Container>
+            </Block>
+          </Container>
           {PARAGRAPHS.map((paragraph, index) => (
             <Typography.Text key={index} data-testid={index === 0 ? `${prefix}-paragraph` : undefined}>
               {paragraph}
             </Typography.Text>
           ))}
-        </Container.Container>
+        </Container>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   </div>

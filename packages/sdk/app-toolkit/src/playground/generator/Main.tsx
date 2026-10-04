@@ -30,7 +30,7 @@ const Item = ({
   return (
     <Listbox.Item id={id}>
       <Listbox.ItemText>{id}</Listbox.ItemText>
-      <Button.Button
+      <Button.Root
         iconOnly
         variant='ghost'
         icon='ph--x--regular'

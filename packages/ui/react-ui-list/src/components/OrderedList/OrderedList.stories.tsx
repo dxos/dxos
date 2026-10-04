@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/theme.css';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
+import * as Input from '@dxos/react-ui/Input';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withSizes, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
@@ -199,7 +199,7 @@ const CheckboxWithRemoveStory = () => {
           <OrderedList.Content aria-label='Todos'>
             {items.map((item) => (
               <OrderedList.Item key={item.id} id={item.id}>
-                <Checkbox.Checkbox
+                <Input.Checkbox
                   aria-label={`Done ${item.label}`}
                   checked={item.done}
                   onCheckedChange={({ checked }) =>

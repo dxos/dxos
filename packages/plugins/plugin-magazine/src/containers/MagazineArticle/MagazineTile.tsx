@@ -5,9 +5,9 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { mx } from '@dxos/ui-theme';
 
@@ -52,11 +52,11 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
           <Card.Poster alt={snapshot.title ?? 'Article'} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Block.Block>
+          <Layout.Block>
             <SystemButton.Star variant='ghost' iconOnly iconSize='md' pressed={starred} onClick={handleToggleStar} />
-          </Block.Block>
+          </Layout.Block>
           {snapshot.title ? <Card.Title lines={2}>{snapshot.title}</Card.Title> : <div />}
-          <Block.Block rail='end' />
+          <Layout.Block rail='end' />
         </Card.Header>
         <Card.Body>
           {snippet && (

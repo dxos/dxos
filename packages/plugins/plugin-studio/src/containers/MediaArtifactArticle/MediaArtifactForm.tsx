@@ -19,9 +19,9 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Select from '@dxos/react-ui/Select';
 import type * as Util from '@dxos/react-ui/Util';
@@ -307,15 +307,15 @@ export const MediaArtifactForm = ({
       </Panel.Header>
       <Panel.Body classNames='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
         {/* MediaArtifact-level name (independent of any variant). */}
-        <Flex.Flex column gap='xs' classNames='pt-3 px-2'>
+        <Layout.Flex column gap='xs' classNames='pt-3 px-2'>
           <Field.Root>
-            <Input.Input
+            <Input.Root
               placeholder={t('name.placeholder')}
               value={artifactSnapshot?.name ?? ''}
               onChange={handleNameChange}
             />
           </Field.Root>
-        </Flex.Flex>
+        </Layout.Flex>
         {/* Schema-driven request form (prompt + kind-specific knobs, from the generator's
             requestSchema); read-only while a generation is in flight. */}
         {provider && (

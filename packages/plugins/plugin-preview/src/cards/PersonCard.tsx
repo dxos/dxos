@@ -13,9 +13,9 @@ import { Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Attention } from '@dxos/react-ui-attention/types';
 import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
@@ -62,9 +62,9 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
       )}
       {emails.length > 0 && (
         <Card.Row>
-          <Block.Block>
+          <Layout.Block>
             <Icon.Icon icon='ph--at--regular' />
-          </Block.Block>
+          </Layout.Block>
           <Card.Text truncate classNames='text-sky-text text-sm'>
             {emails.map(({ value }) => (
               <div key={value}>{value}</div>

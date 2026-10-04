@@ -6,11 +6,10 @@ import React, { type PropsWithChildren, forwardRef, useRef } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Field from '@dxos/react-ui/Field';
-import * as Group from '@dxos/react-ui/Group';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
@@ -43,7 +42,7 @@ export type FormViewportProps = PropsWithChildren<{
   size?: Panel.RootProps['size'];
   /** The form keeps the reading width (`document`, the default), centred in a wider host; `full` spans the host. */
   width?: 'document' | 'full';
-  gutter?: Container.Gutter;
+  gutter?: Layout.Gutter;
 }>;
 
 /**
@@ -53,7 +52,7 @@ export type FormViewportProps = PropsWithChildren<{
  */
 export const FormViewport = Util.composable<HTMLDivElement, FormViewportProps>(
   ({ children, scroll, size, width = 'document', gutter, ...props }, forwardedRef) => {
-    const defaultGutter = Container.useDefaultGutter();
+    const defaultGutter = Layout.useDefaultGutter();
     const documentWidth = width === 'document' ? width : undefined;
     return scroll ? (
       <Panel.Root
@@ -67,15 +66,15 @@ export const FormViewport = Util.composable<HTMLDivElement, FormViewportProps>(
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
               {/* The block inset keeps the last section off the pane's bottom edge when scrolled to the end. */}
-              <Container.Container padBlock>{children}</Container.Container>
+              <Layout.Container padBlock>{children}</Layout.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>
       </Panel.Root>
     ) : (
-      <Container.Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} width={documentWidth} ref={forwardedRef}>
+      <Layout.Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} width={documentWidth} ref={forwardedRef}>
         {children}
-      </Container.Container>
+      </Layout.Container>
     );
   },
 );
@@ -100,7 +99,7 @@ export const FormContent = forwardRef<HTMLDivElement, FormContentProps>(({ child
   const settings = variant === 'settings';
   // A settings form is a reading-width column of its own tracks (the current Form's `dx-document` settings content).
   return (
-    <Container.Container
+    <Layout.Container
       role='form'
       gutter={settings ? 'none' : 'inherit'}
       width={settings ? 'document' : undefined}
@@ -110,7 +109,7 @@ export const FormContent = forwardRef<HTMLDivElement, FormContentProps>(({ child
       ref={ref}
     >
       {children}
-    </Container.Container>
+    </Layout.Container>
   );
 });
 
@@ -138,7 +137,7 @@ export const FormActions = ({ submitLabel, submitDisabled }: FormActionsProps) =
   }
 
   return (
-    <Group.Group justify='end'>
+    <Button.Group justify='end'>
       {onCancel && (
         <SystemButton.Cancel
           iconOnly={false}
@@ -159,7 +158,7 @@ export const FormActions = ({ submitLabel, submitDisabled }: FormActionsProps) =
           data-testid='save-button'
         />
       )}
-    </Group.Group>
+    </Button.Group>
   );
 };
 
@@ -198,13 +197,13 @@ export const FormSubmit = ({ label, disabled, icon, busy }: FormSubmitProps) => 
   } as const;
 
   return (
-    <Group.Group fill>
+    <Button.Group fill>
       {icon || busy ? (
-        <Button.Button {...buttonProps} variant='primary' icon={icon ?? 'ph--check--regular'} spin={busy} />
+        <Button.Root {...buttonProps} variant='primary' icon={icon ?? 'ph--check--regular'} spin={busy} />
       ) : (
         <SystemButton.Save {...buttonProps} iconOnly={false} />
       )}
-    </Group.Group>
+    </Button.Group>
   );
 };
 

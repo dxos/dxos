@@ -10,9 +10,9 @@ import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { useObject } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
@@ -36,9 +36,9 @@ const fileType = (file: File): string => {
 };
 
 const Spinner = () => (
-  <Flex.Flex center classNames='h-full text-fg-muted'>
+  <Layout.Flex center classNames='h-full text-fg-muted'>
     <Icon.Icon icon='ph--spinner-gap--regular' size='xl' spin />
-  </Flex.Flex>
+  </Layout.Flex>
 );
 
 /**
@@ -204,11 +204,11 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
       );
     }
     return (
-      <Flex.Flex center classNames='h-full p-4'>
+      <Layout.Flex center classNames='h-full p-4'>
         <Typography.Link href={resolved.url} target='_self' download>
           {t('download-file.label')}
         </Typography.Link>
-      </Flex.Flex>
+      </Layout.Flex>
     );
   }
   if (error) {
@@ -238,7 +238,7 @@ type UploadPromptProps = {
 };
 
 const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: UploadPromptProps) => (
-  <Flex.Flex column gap='md' center classNames='h-full p-4 text-center'>
+  <Layout.Flex column gap='md' center classNames='h-full p-4 text-center'>
     <Icon.Icon icon='ph--book-open--regular' size='xl' tone='muted' />
     <p className='text-sm text-fg-muted'>{message}</p>
     <input
@@ -254,9 +254,9 @@ const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: Upload
         event.target.value = '';
       }}
     />
-    <Button.Button disabled={busy} onClick={() => inputRef.current?.click()}>
+    <Button.Root disabled={busy} onClick={() => inputRef.current?.click()}>
       <Icon.Icon icon='ph--upload-simple--regular' size='md' classNames='me-2' />
       {label}
-    </Button.Button>
-  </Flex.Flex>
+    </Button.Root>
+  </Layout.Flex>
 );

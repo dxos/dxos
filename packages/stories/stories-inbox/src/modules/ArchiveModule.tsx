@@ -210,7 +210,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             disabled={!feed || busy || starredIds.length === 0}
             onDownload={handleDownload}
           />
-          <Button.Button
+          <Button.Root
             iconOnly
             icon='ph--tray-arrow-down--regular'
             label={`Download all (${messages.length})`}
@@ -219,7 +219,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
           />
           {/* Not `SystemIconButton.Download`: it fixes its own glyph, which would make this visually
               identical to the feed export beside it. */}
-          <Button.Button
+          <Button.Root
             iconOnly
             icon='ph--envelope-simple--regular'
             label={selected ? `Save message (${selectedHtml ? 'html' : 'json'})` : 'Save message — select one first'}
@@ -227,7 +227,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             onClick={handleDownloadMessage}
           />
           <Toolbar.Separator />
-          <Button.Button
+          <Button.Root
             iconOnly
             icon='ph--trash--regular'
             label='Reset'

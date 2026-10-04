@@ -16,7 +16,7 @@ export type CompoundButtonSlots = {
 };
 
 export type CompoundButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
-  variant?: Button.ButtonVariant;
+  variant?: Button.Variant;
   children?: ReactNode;
   description?: ReactNode;
   before?: ReactNode;
@@ -38,7 +38,7 @@ export const CompoundButton = ({
   const descriptionId = Hooks.useId('compoundButton-description');
 
   return (
-    <Button.Button
+    <Button.Root
       {...buttonProps}
       variant={variant}
       align='start'
@@ -70,6 +70,6 @@ export const CompoundButton = ({
         )}
       </div>
       {after && <div className='grow-0'>{after}</div>}
-    </Button.Button>
+    </Button.Root>
   );
 };

@@ -17,10 +17,10 @@ const DefaultStory = ({ state: _state }: SpinnerProps) => {
   return (
     <div className='flex flex-col grow'>
       <Toolbar.Root>
-        <Button.Button onClick={() => setState('pulse')}>Pulse</Button.Button>
-        <Button.Button onClick={() => setState('spin')}>Spin</Button.Button>
-        <Button.Button onClick={() => setState('flash')}>Flash</Button.Button>
-        <Button.Button onClick={() => setState('error')}>Error</Button.Button>
+        <Button.Root onClick={() => setState('pulse')}>Pulse</Button.Root>
+        <Button.Root onClick={() => setState('spin')}>Spin</Button.Root>
+        <Button.Root onClick={() => setState('flash')}>Flash</Button.Root>
+        <Button.Root onClick={() => setState('error')}>Error</Button.Root>
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
         <Spinner state={state} size={6} />

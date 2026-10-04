@@ -20,10 +20,10 @@ import {
   useEditorPreview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -56,9 +56,9 @@ const PreviewCard = () => {
       <Popover.Body>
         <Card.Root border={false} classNames='dx-card-popover'>
           <Card.Header>
-            <Block.Block>
+            <Layout.Block>
               <Icon.Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
-            </Block.Block>
+            </Layout.Block>
             <Card.Title>{Obj.getLabel(target.object) ?? target.label}</Card.Title>
             <Popover.CloseTrigger asChild>
               <Card.Action system='close' />

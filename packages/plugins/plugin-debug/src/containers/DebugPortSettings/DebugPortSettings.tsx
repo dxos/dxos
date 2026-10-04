@@ -8,9 +8,9 @@ import { type DebugPortController, getDebugPortController } from '@dxos/react-cl
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Switch from '@dxos/react-ui/Switch';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
@@ -57,20 +57,20 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
       description={t('settings.debug-port.section.description')}
     >
       <Form.Field standalone label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
-        <Flex.Flex gap='md' align='center'>
+        <Layout.Flex gap='md' align='center'>
           {status.running && (
             <span className='text-sm text-fg-muted'>
               {t('settings.debug-port.running.label')} <span className='font-mono'>{status.origin}</span>
             </span>
           )}
           <Field.Root>
-            <Switch.Switch
+            <Input.Switch
               checked={status.running}
               disabled={disabled}
               onCheckedChange={({ checked }) => handleToggle(checked)}
             />
           </Field.Root>
-        </Flex.Flex>
+        </Layout.Flex>
       </Form.Field>
 
       {status.running && (
@@ -80,14 +80,14 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
             label={t('settings.debug-port.session.label')}
             description={t('settings.debug-port.session.description')}
           >
-            <Flex.Flex gap='sm' align='center'>
+            <Layout.Flex gap='sm' align='center'>
               <span className='grow truncate font-mono text-sm'>{status.session}</span>
               <SystemButton.Clipboard
                 iconOnly
                 label={t('settings.debug-port.copy-session.label')}
                 value={status.session ?? ''}
               />
-            </Flex.Flex>
+            </Layout.Flex>
           </Form.Field>
 
           <Form.Field standalone label={t('settings.debug-port.log.label')}>

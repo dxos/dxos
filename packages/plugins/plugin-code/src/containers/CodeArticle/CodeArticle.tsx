@@ -15,8 +15,8 @@ import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { Editor } from '@dxos/react-ui-editor';
-import * as Grid from '@dxos/react-ui/Grid';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import {
   createBasicExtensions,
@@ -227,8 +227,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
           />
         </Panel.Header>
         <Panel.Body asChild>
-          <Grid.Grid grow cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
-            <Grid.Grid grow rows={[1, 2]} classNames='divide-y divide-separator-subtle'>
+          <Layout.Grid grow cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
+            <Layout.Grid grow rows={[1, 2]} classNames='divide-y divide-separator-subtle'>
               <div role='region' aria-label={t('browse-pane.label')} className='dx-expand grid overflow-auto'>
                 <FileTree
                   files={fileEntries}
@@ -240,11 +240,11 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
               <div role='region' aria-label={t('inspect-pane.label')} className='dx-expand grid'>
                 <BuildOutput state={projectState} />
               </div>
-            </Grid.Grid>
+            </Layout.Grid>
             <div role='region' aria-label={t('output-pane.label')} className='dx-expand grid'>
               {selected ? <FileEditor file={selected} role={role} /> : null}
             </div>
-          </Grid.Grid>
+          </Layout.Grid>
         </Panel.Body>
       </Panel.Root>
     );

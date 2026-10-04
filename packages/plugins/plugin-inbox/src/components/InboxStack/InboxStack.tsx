@@ -12,10 +12,10 @@ import { EID } from '@dxos/keys';
 import { CardTile, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { type Actor, type Message, Person } from '@dxos/types';
@@ -632,9 +632,9 @@ const ConversationMessageRow = ({
 
   return (
     <Card.Row classNames='items-start'>
-      <Block.Block classNames='h-8 items-center'>
+      <Layout.Block classNames='h-8 items-center'>
         <ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />
-      </Block.Block>
+      </Layout.Block>
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
         <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
           <span className='truncate'>{from}</span>

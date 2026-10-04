@@ -16,7 +16,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { clickableProps } from '../../clickable.ts';
 import { recipes } from '../../recipes.ts';
-import type * as Container from '../Container/Container.tsx';
+import { type CSSVariables } from '../Container/Container.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 
 type ImageStatus = 'loading' | 'loaded' | 'error';
@@ -73,7 +73,7 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
     const [result, setResult] = useState<{ source: string; status: ImageStatus; color?: string }>();
     const status: ImageStatus = result?.source === source ? result.status : 'loading';
     const color = result?.source === source ? result.color : undefined;
-    const aspectStyle: CSSProperties & Container.CSSVariables = {
+    const aspectStyle: CSSProperties & CSSVariables = {
       '--dx-image-aspect': aspectRatio,
       ...(color ? { '--dx-image-backdrop': color } : {}),
     };

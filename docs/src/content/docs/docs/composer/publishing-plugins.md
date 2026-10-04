@@ -687,7 +687,7 @@ const ClockCard = ({
     <div style={{ opacity: 0.7 }}>{timeZone}</div>
     {/* Last, so it paints above the text it overlaps. */}
     <div style={{ position: 'absolute', top: 4, right: 4 }}>
-      <Button.Button
+      <Button.Root
         data-testid='worldClock.delete'
         variant='ghost'
         icon='ph--x--regular'
@@ -735,7 +735,7 @@ const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
           </Form.Content>
         </Form.Root>
       ) : (
-        <Button.Button
+        <Button.Root
           data-testid='worldClock.add'
           variant='ghost'
           icon='ph--plus--regular'

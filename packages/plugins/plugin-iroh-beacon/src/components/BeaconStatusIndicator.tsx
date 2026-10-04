@@ -31,7 +31,7 @@ export const BeaconStatusIndicator = () => {
     <Popover.Root positioning={{ placement: 'left' }}>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--broadcast--regular'
             iconOnly

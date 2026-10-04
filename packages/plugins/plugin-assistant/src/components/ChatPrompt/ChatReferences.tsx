@@ -38,7 +38,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
           <li key={uri.toString()} className='dx-tag dx-tag-inline py-0 flex items-center gap-1' data-hue='neutral'>
             <Icon.Icon icon={icon} size='md' />
             {Theme.toLocalizedString(label, t)}
-            <Button.Button
+            <Button.Root
               icon='ph--x--bold'
               iconOnly
               variant='ghost'

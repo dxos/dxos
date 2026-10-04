@@ -75,7 +75,7 @@ export const WorldMap = ({ markers = [], selected, view: viewProp = 'map', onVie
           features={features}
         />
         <Globe.Panel position='topright'>
-          <Button.Button
+          <Button.Root
             data-testid='worldMap.toggle'
             icon={view === 'globe' ? 'ph--map-trifold--regular' : 'ph--globe-hemisphere-west--regular'}
             iconOnly

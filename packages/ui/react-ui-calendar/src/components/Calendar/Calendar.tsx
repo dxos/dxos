@@ -161,7 +161,7 @@ const CalendarToolbar = Util.composable<HTMLDivElement, CalendarToolbarProps>(
         ref={forwardedRef}
       >
         <div className='flex justify-start'>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--calendar--regular'
             iconOnly

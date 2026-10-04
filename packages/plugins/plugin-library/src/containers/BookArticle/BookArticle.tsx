@@ -38,13 +38,13 @@ export const BookArticle = ({ subject, role }: BookArticleProps) => {
           {/* Paging controls for the reader — shown only in reading mode; no-op for PDF/no content. */}
           {viewMode === 'read' && (
             <>
-              <Button.Button
+              <Button.Root
                 icon='ph--caret-left--regular'
                 iconOnly
                 label={t('previous-page.label')}
                 onClick={() => readerRef.current?.goLeft()}
               />
-              <Button.Button
+              <Button.Root
                 icon='ph--caret-right--regular'
                 iconOnly
                 label={t('next-page.label')}

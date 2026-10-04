@@ -26,7 +26,7 @@ export const JoinHeading = forwardRef(
     const { t } = Hooks.useTranslation(translationKey);
 
     const exitButton = (
-      <Button.Button
+      <Button.Root
         variant='ghost'
         {...(onExit && { onClick: onExit })}
         classNames={mx('text-fg-muted', 'py-0 px-2 absolute top-0 right-0 z-[1]')}
@@ -34,7 +34,7 @@ export const JoinHeading = forwardRef(
       >
         <Icon.Icon icon='ph--x--bold' size='md' />
         <span className='sr-only'>{t('exit.label')}</span>
-      </Button.Button>
+      </Button.Root>
     );
 
     return (

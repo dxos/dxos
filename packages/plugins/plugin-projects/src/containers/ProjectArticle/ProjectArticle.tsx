@@ -30,13 +30,12 @@ import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
-import * as Container from '@dxos/react-ui/Container';
-import * as Empty from '@dxos/react-ui/Empty';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Splitter from '@dxos/react-ui/Splitter';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
@@ -305,7 +304,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
           )}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
-          {tab === 'tasks' && !taskSet && <Empty.Empty>{t('no-task-set.message')}</Empty.Empty>}
+          {tab === 'tasks' && !taskSet && <Status.Empty>{t('no-task-set.message')}</Status.Empty>}
           {/* One splitter whether or not the chart is shown: collapsing to the ledger keeps the pane the
               section lays out in, so its add row stays below the list rather than past the panel. */}
           {tab === 'tasks' && taskSet && (
@@ -357,11 +356,11 @@ ProjectArticle.displayName = 'ProjectArticle';
 
 /** Read-only: milestones are authored through the agent/MCP verbs, and store no status to render. */
 const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>> }) => (
-  <Container.Container role='list' gap='sm' gutter='none'>
+  <Layout.Container role='list' gap='sm' gutter='none'>
     {refs.map((milestoneRef) => (
       <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} />
     ))}
-  </Container.Container>
+  </Layout.Container>
 );
 
 /** One row, holding its own subscription so a rename re-renders just that row. */
@@ -372,11 +371,11 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
   }
 
   return (
-    <Flex.Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>
+    <Layout.Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>
       <Icon.Icon icon='ph--flag--regular' valence='info' />
       <span className='truncate'>{milestone.name}</span>
       {milestone.targetDate && <span className='text-fg-subtle shrink-0'>{milestone.targetDate}</span>}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 

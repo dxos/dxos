@@ -113,7 +113,7 @@ const PaletteButton = ({
     return draggable({ element: ref.current, getInitialData: () => nodeDragData(nodeType) });
   }, [nodeType]);
   return (
-    <Button.Button
+    <Button.Root
       ref={ref}
       variant='ghost'
       iconOnly

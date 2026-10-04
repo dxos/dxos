@@ -10,9 +10,9 @@ import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvide
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as Operations from '@dxos/plugin-registry/Operations';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -71,7 +71,7 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
   const label = name ?? t('plugin-url-prompt.default.name');
 
   return (
-    <Flex.Flex
+    <Layout.Flex
       role='group'
       column
       gap='sm'
@@ -80,32 +80,32 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
       classNames='my-2 p-3 border border-separator-subtle rounded-sm [contain:inline-size]'
       data-testid='assistant.pluginUrlPrompt'
     >
-      <Flex.Flex gap='sm' align='center'>
+      <Layout.Flex gap='sm' align='center'>
         <Icon.Icon icon='ph--cloud-arrow-down--regular' size='lg' tone='subtle' />
-        <Flex.Flex column classNames='min-w-0'>
+        <Layout.Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-url-prompt.title', { plugin: label })}</p>
           <p className='text-sm text-fg-subtle'>
             {isLoaded
               ? t('plugin-url-prompt.loaded', { plugin: label })
               : t('plugin-url-prompt.description', { plugin: label })}
           </p>
-        </Flex.Flex>
-      </Flex.Flex>
+        </Layout.Flex>
+      </Layout.Flex>
       <code className='text-xs text-fg-subtle break-all'>{url}</code>
       {error && <p className='text-sm text-error-text'>{t('plugin-url-prompt.failed', { error })}</p>}
       {!isLoaded && (
-        <Flex.Flex justify='end'>
-          <Button.Button
+        <Layout.Flex justify='end'>
+          <Button.Root
             variant='primary'
             disabled={pending}
             onClick={() => void handleLoad()}
             data-testid='assistant.pluginUrlPrompt.load'
           >
             {t('plugin-url-prompt.button')}
-          </Button.Button>
-        </Flex.Flex>
+          </Button.Root>
+        </Layout.Flex>
       )}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 

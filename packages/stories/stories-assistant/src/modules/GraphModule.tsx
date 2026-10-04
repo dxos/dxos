@@ -77,7 +77,7 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
         )}
 
         <div className='absolute bottom-4 right-4 z-10'>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
             iconOnly
@@ -100,13 +100,13 @@ export const SearchBar = Util.composable<HTMLDivElement, SearchBarProps>(
     return (
       <Toolbar.Root {...Util.composableProps(props)} ref={forwardedRef}>
         <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} ref={editorRef} />
-        <Button.Button
+        <Button.Root
           icon='ph--magnifying-glass--regular'
           iconOnly
           label='Search'
           onClick={() => onSubmit?.(editorRef.current?.getText() ?? '')}
         />
-        <Button.Button
+        <Button.Root
           disabled={flushState === 'flushing'}
           icon={Match.value(flushState).pipe(
             Match.when('idle', () => 'ph--floppy-disk--regular'),

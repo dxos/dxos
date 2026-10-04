@@ -142,9 +142,9 @@ const RemountStory = () => {
   const [mount, setMount] = useState(0);
   return (
     <div className='flex flex-col dx-expand'>
-      <Button.Button data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
+      <Button.Root data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
         Remount
-      </Button.Button>
+      </Button.Root>
       <DefaultStory key={mount} />
     </div>
   );

@@ -114,7 +114,7 @@ const RenameField = ({ subject }: RenamePopoverProps) => {
     <div className='p-2'>
       <Field.Root>
         <Field.Label srOnly>{t(space ? 'space-name.label' : 'object-name.label')}</Field.Label>
-        <Input.Input
+        <Input.Root
           autoFocus
           value={name}
           placeholder={t(space ? 'unnamed-space.label' : 'object.placeholder')}

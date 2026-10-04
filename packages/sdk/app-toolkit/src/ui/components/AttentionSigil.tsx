@@ -39,7 +39,7 @@ const sigilSizeClassNames: Record<AttentionSigilButtonSize, string> = {
   lg: 'w-(--dx-rail-action) h-(--dx-rail-action)',
 };
 
-export type AttentionSigilButtonProps = Omit<ComponentPropsWithoutRef<typeof Button.Button>, 'variant' | 'size'> &
+export type AttentionSigilButtonProps = Omit<ComponentPropsWithoutRef<typeof Button.Root>, 'variant' | 'size'> &
   Attention.AttendableId &
   Attention.Related & {
     isMenu?: boolean;
@@ -71,7 +71,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
     const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
     // TODO(wittjosiah): Disable hover styles when isMenu is false.
     return (
-      <Button.Button
+      <Button.Root
         {...props}
         variant={variant}
         classNames={['shrink-0 px-0 min-h-0 relative dx-app-no-drag', sigilSizeClassNames[size], classNames]}
@@ -79,7 +79,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
       >
         {isMenu && <MenuSignifierHorizontal />}
         {children}
-      </Button.Button>
+      </Button.Root>
     );
   },
 );

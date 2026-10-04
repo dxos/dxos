@@ -5,8 +5,8 @@
 import React, { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { meta } from '#meta';
@@ -139,18 +139,18 @@ const formatRelative = (iso: string): string => {
 
 const PullRow = ({ pull }: { pull: GithubPullRequest }) => (
   <li>
-    <Flex.Flex asChild align='start' gap='sm' classNames='px-trim-sm py-trim-xs rounded-sm hover:bg-hover-surface'>
+    <Layout.Flex asChild align='start' gap='sm' classNames='px-trim-sm py-trim-xs rounded-sm hover:bg-hover-surface'>
       <a href={pull.html_url} target='_blank' rel='noopener noreferrer'>
         <img src={pull.user.avatar_url} alt='' className='size-6 rounded-full shrink-0' />
-        <Flex.Flex column classNames='min-w-0 flex-1'>
+        <Layout.Flex column classNames='min-w-0 flex-1'>
           {/* `leading-6` gives the title the avatar's line box, so the two align on their own. */}
           <span className='text-sm leading-6 truncate'>{pull.title}</span>
           <span className='text-xs text-fg-muted truncate'>
             #{pull.number} · {pull.user.login} · {pull.merged_at ? formatRelative(pull.merged_at) : ''}
           </span>
-        </Flex.Flex>
+        </Layout.Flex>
       </a>
-    </Flex.Flex>
+    </Layout.Flex>
   </li>
 );
 
@@ -173,7 +173,7 @@ const StatusBar = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { repo } = useComponentContext();
   return (
-    <Button.Button
+    <Button.Root
       icon='ph--github-logo--regular'
       label={t('view-on-github.button')}
       variant='primary'

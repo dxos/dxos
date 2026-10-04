@@ -13,10 +13,10 @@ import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Tree, type TreeNode } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Main from '@dxos/react-ui/Main';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Theme from '@dxos/react-ui/Theme';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
@@ -105,13 +105,13 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
           unavailable && (
-            <Empty.Empty
+            <Status.Empty
               key={id}
               classNames='row-start-2 self-start animate-fade-in'
               style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
             >
               {t('workspace-unavailable.description')}
-            </Empty.Empty>
+            </Status.Empty>
           )
         ))}
     </Tabs.Content>
@@ -202,7 +202,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
       style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
-        <Button.Button
+        <Button.Root
           classNames={[hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--caret-left--regular'
@@ -249,7 +249,7 @@ const MenuActions = ({
 
   if (menuActions.length === 1) {
     return (
-      <Button.Button
+      <Button.Root
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
@@ -264,7 +264,7 @@ const MenuActions = ({
 
   return (
     <ActionMenu caller={NAV_TREE_ITEM} onAction={onAction} group={item} actions={menuActions as MenuItem[]}>
-      <Button.Button
+      <Button.Root
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon='ph--dots-three-vertical--regular'

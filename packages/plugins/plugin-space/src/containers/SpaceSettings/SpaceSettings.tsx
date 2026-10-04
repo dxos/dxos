@@ -9,8 +9,8 @@ import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import * as Select from '@dxos/react-ui/Select';
-import * as Switch from '@dxos/react-ui/Switch';
 import * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
@@ -50,7 +50,7 @@ export const SpaceSettings = ({
         <Form.Content>
           <Form.FieldSet label={t('plugin.name')} actions={scope}>
             <Form.Field label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
-              <Switch.Switch
+              <Input.Switch
                 disabled={!onSettingsChange}
                 checked={settings?.showHidden}
                 onCheckedChange={({ checked }) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
@@ -97,7 +97,7 @@ export const SpaceSettings = ({
                       <Listbox.ItemText classNames='min-h-0!'>
                         {Theme.toLocalizedString(getSpaceDisplayName(space), t)}
                       </Listbox.ItemText>
-                      <Button.Button
+                      <Button.Root
                         icon='ph--faders--regular'
                         iconOnly
                         label={t('settings.open-settings.label')}

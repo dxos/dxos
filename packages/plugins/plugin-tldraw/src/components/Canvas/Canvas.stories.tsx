@@ -43,15 +43,15 @@ const DefaultStory = () => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button variant='primary' onClick={handleClear}>
+          <Button.Root variant='primary' onClick={handleClear}>
             Clear
-          </Button.Button>
-          <Button.Button variant='ghost' onClick={handleCreate}>
+          </Button.Root>
+          <Button.Root variant='ghost' onClick={handleCreate}>
             Create
-          </Button.Button>
-          <Button.Button variant='ghost' onClick={handleMigrate}>
+          </Button.Root>
+          <Button.Root variant='ghost' onClick={handleMigrate}>
             Load V1 Sample
-          </Button.Button>
+          </Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>

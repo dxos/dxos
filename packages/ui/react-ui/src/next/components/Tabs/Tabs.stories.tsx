@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { controlSize, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Input from '../Input/Input.tsx';
+import { Input } from '../Input/Input.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as Tabs from './Tabs.tsx';
 
@@ -43,7 +43,7 @@ const DefaultStory = ({ size, orientation, selectedVariant, keepMounted }: Story
       <Typography.Text>Three open tasks.</Typography.Text>
     </Tabs.Content>
     <Tabs.Content value='settings'>
-      <Input.Input aria-label='Name' defaultValue='Apollo' />
+      <Input aria-label='Name' defaultValue='Apollo' />
     </Tabs.Content>
   </Tabs.Root>
 );

@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
@@ -38,7 +38,7 @@ export const EchoObjectsList = ({ classNames, objects }: EchoObjectsListProps) =
       <ScrollArea.Root>
         <ScrollArea.Viewport>
           {objects.length === 0 ? (
-            <Empty.Empty>No objects.</Empty.Empty>
+            <Status.Empty>No objects.</Status.Empty>
           ) : (
             <Listbox.Root items={objects.map((object) => ({ value: object.id, label: object.label }))}>
               <Listbox.Content aria-label='ECHO objects'>

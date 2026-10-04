@@ -10,10 +10,10 @@ import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import type * as Util from '@dxos/react-ui/Util';
 
@@ -133,17 +133,17 @@ export const MediaArtifactVariants = ({
           label: ['all.tab.label', { ns: meta.profile.key }],
           render: () => (
             <>
-              <Button.Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
+              <Button.Root variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
                 {t('all.tab.label')}
-              </Button.Button>
+              </Button.Root>
               {variants.map((variant, index) => (
-                <Button.Button
+                <Button.Root
                   key={variant.id}
                   variant={selected === index ? 'primary' : 'ghost'}
                   onClick={() => setSelected(index)}
                 >
                   {variant.jobId ? <Icon.Icon icon='ph--spinner-gap--regular' size='md' spin /> : index + 1}
-                </Button.Button>
+                </Button.Root>
               ))}
             </>
           ),
@@ -158,7 +158,7 @@ export const MediaArtifactVariants = ({
             variant: 'custom',
             label: ['cover.label', { ns: meta.profile.key }],
             render: () => (
-              <Checkbox.Checkbox
+              <Input.Checkbox
                 checked={isCover}
                 onCheckedChange={({ checked }) => handleCoverChange(checked === true)}
                 label={t('cover.label')}
@@ -196,9 +196,9 @@ export const MediaArtifactVariants = ({
         ) : (
           selectedVariant &&
           (selectedVariant.jobId ? (
-            <Flex.Flex role='status' center classNames='h-full text-fg-subtle'>
+            <Layout.Flex role='status' center classNames='h-full text-fg-subtle'>
               {t('generating.label')}
-            </Flex.Flex>
+            </Layout.Flex>
           ) : (
             <Surface.Surface
               type={VariantRenderer}

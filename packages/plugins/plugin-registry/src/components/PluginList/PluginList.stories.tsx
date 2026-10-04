@@ -11,7 +11,7 @@ import * as PluginNS from '@dxos/app-framework/Plugin';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 import { random } from '@dxos/random';
-import * as Container from '@dxos/react-ui/Container';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -62,9 +62,9 @@ const DefaultStory = () => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container.Container gutter='md' padBlock>
+            <Layout.Container gutter='md' padBlock>
               <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
-            </Container.Container>
+            </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>

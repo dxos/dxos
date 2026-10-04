@@ -13,19 +13,19 @@ import { invariant } from '@dxos/invariant';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
+import * as UiInput from '../../namespaces/Input.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Checkbox from '../Checkbox/Checkbox.tsx';
-import * as Container from '../Container/Container.tsx';
-import * as DatePicker from '../DatePicker/DatePicker.tsx';
-import * as Input from '../Input/Input.tsx';
-import * as NumberInput from '../NumberInput/NumberInput.tsx';
-import * as PasswordInput from '../PasswordInput/PasswordInput.tsx';
-import * as PinInput from '../PinInput/PinInput.tsx';
-import * as Switch from '../Switch/Switch.tsx';
-import * as Textarea from '../Textarea/Textarea.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Checkbox } from '../Checkbox/Checkbox.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Input } from '../Input/Input.tsx';
+import { NumberInput } from '../NumberInput/NumberInput.tsx';
+import { PasswordInput } from '../PasswordInput/PasswordInput.tsx';
+import { PinInput } from '../PinInput/PinInput.tsx';
+import { Switch } from '../Switch/Switch.tsx';
+import { Textarea } from '../Textarea/Textarea.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as Field from './Field.tsx';
 
@@ -41,60 +41,60 @@ const EveryField = ({ size }: SizeArgs) => (
   <>
     <Field.Root>
       <Field.Label>Name</Field.Label>
-      <Input.Input data-testid={`every-input-${size}`} />
+      <Input data-testid={`every-input-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Bio</Field.Label>
-      <Textarea.Textarea />
+      <Textarea />
     </Field.Root>
     <Field.Root>
       <Field.Label>Birthday</Field.Label>
-      <DatePicker.Input defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
+      <UiInput.Date defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Wake up</Field.Label>
-      <DatePicker.Input type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
+      <UiInput.Date type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Meeting</Field.Label>
-      <DatePicker.Input type='datetime-local' defaultValue='2026-09-29T14:00' />
+      <UiInput.Date type='datetime-local' defaultValue='2026-09-29T14:00' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Code</Field.Label>
-      <PinInput.PinInput length={4} data-testid={`every-pin-${size}`} />
+      <PinInput length={4} data-testid={`every-pin-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Age</Field.Label>
-      <NumberInput.NumberInput min={0} defaultValue='30' data-testid={`every-number-${size}`} />
+      <NumberInput min={0} defaultValue='30' data-testid={`every-number-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Password</Field.Label>
-      <PasswordInput.PasswordInput data-testid={`every-password-${size}`} />
+      <PasswordInput data-testid={`every-password-${size}`} />
     </Field.Root>
     <Field.Root>
-      <Checkbox.Checkbox label='Subscribe' data-testid={`every-checkbox-${size}`} />
+      <Checkbox label='Subscribe' data-testid={`every-checkbox-${size}`} />
     </Field.Root>
     <Field.Root>
-      <Switch.Switch label='Notifications' data-testid={`every-switch-${size}`} />
+      <Switch label='Notifications' data-testid={`every-switch-${size}`} />
     </Field.Root>
     <Field.Root required>
       <Field.Label data-testid={`required-label-${size}`}>Handle</Field.Label>
-      <Input.Input />
+      <Input />
     </Field.Root>
     <Field.Root required>
       <Field.Label data-testid={`placed-label-${size}`}>
         <Field.RequiredIndicator>required</Field.RequiredIndicator> Alias
       </Field.Label>
-      <Input.Input />
+      <Input />
     </Field.Root>
     <Field.Root readOnly>
       <Field.Label>Id</Field.Label>
-      <Input.Input defaultValue='abc-123' />
+      <Input defaultValue='abc-123' />
     </Field.Root>
     <Field.Root asChild data-testid={`every-as-child-${size}`}>
       <section>
         <Field.Label>Nickname</Field.Label>
-        <Input.Input />
+        <Input />
       </section>
     </Field.Root>
   </>
@@ -108,23 +108,23 @@ const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <Field.Root data-testid={`field-${size}`}>
       <Field.Label>Email</Field.Label>
-      <Input.Input data-testid={`field-input-${size}`} />
+      <Input data-testid={`field-input-${size}`} />
       <Field.HelperText>We never share it.</Field.HelperText>
     </Field.Root>
     {(['Website', 'Homepage'] as const).map((name) => (
       <Field.Root key={name} invalid={name === 'Homepage'} data-testid={`${name.toLowerCase()}-${size}`}>
         <Field.Header>
           <Field.Label>{name}</Field.Label>
-          <Button.Button icon='ph--x--regular' label={`Clear ${name.toLowerCase()}`} iconOnly />
+          <Button icon='ph--x--regular' label={`Clear ${name.toLowerCase()}`} iconOnly />
         </Field.Header>
-        <Input.Input defaultValue='not a url' />
+        <Input defaultValue='not a url' />
         <Field.ErrorText>Enter a valid URL.</Field.ErrorText>
       </Field.Root>
     ))}
     {VALENCES.map((valence) => (
       <Field.Root key={valence} validationValence={valence} data-testid={`${valence}-${size}`}>
         <Field.Label>Handle ({valence})</Field.Label>
-        <Input.Input defaultValue='dxos' data-testid={`${valence}-input-${size}`} />
+        <Input defaultValue='dxos' data-testid={`${valence}-input-${size}`} />
         <Field.HelperText data-testid={`${valence}-helper-${size}`}>A {valence} message.</Field.HelperText>
         <Field.ErrorText>The handle is taken.</Field.ErrorText>
       </Field.Root>
@@ -133,31 +133,31 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Field.Label srOnly data-testid={`hidden-label-${size}`}>
         Filter
       </Field.Label>
-      <Input.Input placeholder='Filter' />
+      <Input placeholder='Filter' />
     </Field.Root>
     <EveryField size={size} />
     {/* Row fields (Phase 4 decision 3): bordered subgrid rows of the Container's two tracks. */}
-    <Container.Container gutter='inherit' columns='minmax(0, 1fr) [control] minmax(0, 1fr)'>
+    <Container gutter='inherit' columns='minmax(0, 1fr) [control] minmax(0, 1fr)'>
       {['Theme', 'Language'].map((name) => (
         <Field.Root key={name} layout='row' level='+1' data-testid={`row-${name.toLowerCase()}-${size}`}>
           <Field.Header>
             <Field.Label>{name}</Field.Label>
           </Field.Header>
           <Field.HelperText>The app's {name.toLowerCase()}.</Field.HelperText>
-          <Input.Input />
+          <Input />
         </Field.Root>
       ))}
-    </Container.Container>
+    </Container>
     {/* A header whose label is text (no single control to name): its action still ends the row. */}
     <Field.Header data-testid={`text-header-${size}`}>
       <Typography.Text truncate>Tags</Typography.Text>
-      <Button.Button iconOnly variant='ghost' icon='ph--plus--regular' label='Add tag' />
+      <Button iconOnly variant='ghost' icon='ph--plus--regular' label='Add tag' />
     </Field.Header>
     {/* A row with its own columns spaces them by its gap. */}
-    <Container.Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
-      <Input.Input aria-label='Latitude' data-testid={`pair-first-${size}`} />
-      <Input.Input aria-label='Longitude' data-testid={`pair-second-${size}`} />
-    </Container.Container>
+    <Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+      <Input aria-label='Latitude' data-testid={`pair-first-${size}`} />
+      <Input aria-label='Longitude' data-testid={`pair-second-${size}`} />
+    </Container>
   </>
 );
 

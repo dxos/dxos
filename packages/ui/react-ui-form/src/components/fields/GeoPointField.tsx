@@ -5,10 +5,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { GeoLocation, type GeoPoint } from '@dxos/echo/Format';
-import * as Container from '@dxos/react-ui/Container';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 import { safeParseFloat } from '@dxos/util';
 
@@ -63,7 +63,7 @@ export const GeoPointField = ({
           <Field.Label>{t(`${name}.label`)}</Field.Label>
         </Field.Header>
       )}
-      <Input.Input
+      <Input.Root
         type='number'
         step='0.00001'
         min={-bound}
@@ -77,10 +77,10 @@ export const GeoPointField = ({
   );
 
   return (
-    <Container.Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+    <Layout.Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
       {coordinate('latitude', 90)}
       {coordinate('longitude', 180)}
-    </Container.Container>
+    </Layout.Container>
   );
 };
 

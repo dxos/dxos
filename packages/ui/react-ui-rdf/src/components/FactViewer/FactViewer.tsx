@@ -8,12 +8,12 @@ import { type RDF, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rd
 import { Tree } from '@dxos/react-ui-graph';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Field from '@dxos/react-ui/Field';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
@@ -139,21 +139,21 @@ const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
       <Toolbar.Root classNames={classNames}>
         <Field.Root>
           <Field.Label srOnly>Filter facts</Field.Label>
-          <Input.Input
+          <Input.Root
             placeholder='Filter by entity or predicate…'
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
           />
         </Field.Root>
         <div className={styles.toolbarSpacer()} />
-        <Button.Button
+        <Button.Root
           icon='ph--list--regular'
           iconOnly
           label='List view'
           variant={view === 'list' ? 'primary' : 'default'}
           onClick={() => setView('list')}
         />
-        <Button.Button
+        <Button.Root
           icon='ph--graph--regular'
           iconOnly
           label='Graph view'
@@ -179,7 +179,7 @@ const FactViewerList = ({ classNames }: FactViewerListProps) => {
     <Panel.Body asChild>
       <ScrollArea.Root classNames={classNames}>
         <ScrollArea.Viewport classNames={styles.listViewport()}>
-          {groups.length === 0 && <Empty.Empty>No facts.</Empty.Empty>}
+          {groups.length === 0 && <Status.Empty>No facts.</Status.Empty>}
           {groups.map((group) => (
             <FactViewerGroup key={group.subject} group={group} />
           ))}
@@ -204,7 +204,7 @@ const FactViewerGraph = ({ classNames }: FactViewerGraphProps) => {
       {graph ? (
         <Tree data={graph} variant='tidy' margin={80} classNames={styles.graphTree()} />
       ) : (
-        <Empty.Empty icon='ph--graph--regular'>Select an entity to root the graph.</Empty.Empty>
+        <Status.Empty icon='ph--graph--regular'>Select an entity to root the graph.</Status.Empty>
       )}
     </Panel.Body>
   );

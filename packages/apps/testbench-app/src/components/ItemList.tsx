@@ -8,9 +8,9 @@ import { Obj, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { mapSchemaToFields } from '@dxos/schema';
@@ -83,7 +83,7 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
             {type === 'boolean' && (
               <Field.Root>
                 <Field.Label classNames={labelProps}>{property}</Field.Label>
-                <Checkbox.Checkbox
+                <Input.Checkbox
                   checked={(object as any)[property]}
                   onCheckedChange={({ checked: state }) => setValue(object, property, !!state)}
                 />
@@ -101,7 +101,7 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
       {/* TODO(burdon): Check if mutable. */}
       <div className='flex flex-col shrink-0'>
-        <Button.Button
+        <Button.Root
           icon='ph--x--regular'
           iconOnly
           label='Delete'
@@ -137,13 +137,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object
   return (
     <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
-      <Button.Button
-        icon='ph--x--regular'
-        variant='ghost'
-        iconOnly
-        onClick={() => onDelete(object.id)}
-        label='Delete'
-      />
+      <Button.Root icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
     </div>
   );
 };

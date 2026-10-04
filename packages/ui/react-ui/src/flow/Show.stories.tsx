@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import * as Button from '../next/components/Button/Button.tsx';
+import { Button } from '../next/components/Button/Button.tsx';
 import * as Toolbar from '../next/components/Toolbar/Toolbar.tsx';
 import { withLayout, withTheme } from '../testing/index.ts';
 import * as Match from './Match.tsx';
@@ -19,9 +19,7 @@ const ShowStory = () => {
   return (
     <div className='p-4 flex flex-col gap-4'>
       <Toolbar.Root>
-        <Button.Button onClick={() => setTask(task ? undefined : { title: 'Task 1' })}>
-          {task ? 'Deselect' : 'Select'}
-        </Button.Button>
+        <Button onClick={() => setTask(task ? undefined : { title: 'Task 1' })}>{task ? 'Deselect' : 'Select'}</Button>
       </Toolbar.Root>
       <Show.Show when={task} fallback={<p className='text-fg-subtle'>Nothing selected.</p>}>
         {(task) => <p>Selected: {task.title}</p>}
@@ -36,9 +34,9 @@ const MatchStory = () => {
   return (
     <div className='p-4 flex flex-col gap-4'>
       <Toolbar.Root>
-        <Button.Button onClick={() => setView('list')}>List</Button.Button>
-        <Button.Button onClick={() => setView('grid')}>Grid</Button.Button>
-        <Button.Button onClick={() => setView('other')}>Other</Button.Button>
+        <Button onClick={() => setView('list')}>List</Button>
+        <Button onClick={() => setView('grid')}>Grid</Button>
+        <Button onClick={() => setView('other')}>Other</Button>
       </Toolbar.Root>
       <Match.Root on={view} fallback={<p className='text-fg-subtle'>No view.</p>}>
         <Match.Case when='list'>

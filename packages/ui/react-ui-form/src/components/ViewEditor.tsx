@@ -33,7 +33,6 @@ import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Toggle from '@dxos/react-ui/Toggle';
 import * as Typography from '@dxos/react-ui/Typography';
 import {
   ParentLabelAnnotation,
@@ -275,7 +274,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
       <Field.Header>
         <Typography.Text truncate>{t('fields.label')}</Typography.Text>
         {!readonly && (
-          <Button.Button
+          <Button.Root
             iconOnly
             variant='ghost'
             icon='ph--plus--regular'
@@ -307,7 +306,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
                 >
                   <OrderedList.DragHandle />
                   <OrderedList.ItemText tone={hidden ? 'muted' : undefined}>{field.path}</OrderedList.ItemText>
-                  <Toggle.Toggle
+                  <Button.Toggle
                     iconOnly
                     variant='ghost'
                     pressed={hidden}
@@ -329,7 +328,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
                     data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                   />
                   {!readonly && (
-                    <Button.Button
+                    <Button.Root
                       iconOnly
                       variant='ghost'
                       icon='ph--x--regular'

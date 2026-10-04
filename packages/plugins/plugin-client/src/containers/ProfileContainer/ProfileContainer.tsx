@@ -11,9 +11,9 @@ import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -134,7 +134,7 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Input.Input
+            <Input.Root
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
@@ -171,16 +171,16 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field standalone label={label} description={t('hue.description')}>
-            <Flex.Flex classNames='justify-self-end'>
+            <Layout.Flex classNames='justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
-            </Flex.Flex>
+            </Layout.Flex>
           </Form.Field>
         );
       },
       did: ({ label, getValue }) => {
         return (
           <Form.Field label={label} description={t('did.description')}>
-            <Input.Input variant='mono' value={getValue() ?? ''} readOnly copyable />
+            <Input.Root variant='mono' value={getValue() ?? ''} readOnly copyable />
           </Form.Field>
         );
       },

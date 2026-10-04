@@ -123,7 +123,7 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
   return (
     <>
       {actions.map((action) => (
-        <Button.Button
+        <Button.Root
           key={action.id}
           variant='ghost'
           iconOnly

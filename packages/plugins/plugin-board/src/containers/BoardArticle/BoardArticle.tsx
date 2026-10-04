@@ -169,14 +169,14 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
         {/* TODO(burdon): Migrate to Menu.Root + useMenuActions (threading attendableId). */}
         <Panel.Header>
           <Toolbar.Root>
-            <Button.Button
+            <Button.Root
               icon='ph--crosshair--regular'
               iconOnly
               label={t('move-to-center.button')}
               disabled={!hasAttention}
               onClick={() => controller.current?.center()}
             />
-            <Button.Button
+            <Button.Root
               icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
               iconOnly
               label={t('toggle-zoom.button')}
@@ -187,7 +187,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
               options={options}
               onSelect={handleSelect}
               trigger={
-                <Button.Button
+                <Button.Root
                   icon='ph--plus--regular'
                   iconOnly
                   label={t('add-object.button')}

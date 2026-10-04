@@ -99,7 +99,7 @@ const DefaultStory = ({ source, projection, background }: StoryArgs) => {
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Button.Button
+              <Button.Root
                 icon='ph--arrow-counter-clockwise--regular'
                 label='Reset'
                 disabled={text === source}
@@ -120,7 +120,7 @@ const DefaultStory = ({ source, projection, background }: StoryArgs) => {
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Button.Button
+              <Button.Root
                 icon='ph--arrows-clockwise--regular'
                 label='Re-layout'
                 disabled={pinned === 0}

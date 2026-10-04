@@ -91,9 +91,9 @@ const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
           <Toolbar.Separator />
           <Toolbar.Text>{events.length} events</Toolbar.Text>
           <Toolbar.Separator />
-          <Button.Button onClick={() => setEvents([])} disabled={events.length === 0}>
+          <Button.Root onClick={() => setEvents([])} disabled={events.length === 0}>
             Clear
-          </Button.Button>
+          </Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='overflow-hidden'>

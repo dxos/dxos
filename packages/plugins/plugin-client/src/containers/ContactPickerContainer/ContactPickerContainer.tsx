@@ -9,11 +9,10 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import * as Container from '@dxos/react-ui/Container';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { ContactPicker } from '@dxos/shell/react';
@@ -78,8 +77,8 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   }
 
   return (
-    <Container.Container gap='md' role='group' gutter='none'>
-      <Flex.Flex align='center' gap='sm'>
+    <Layout.Container gap='md' role='group' gutter='none'>
+      <Layout.Flex align='center' gap='sm'>
         <ContactPicker
           contacts={contacts}
           excludeKeys={memberKeys}
@@ -111,16 +110,16 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
           onClick={handleAdd}
           data-testid='contactPicker.add'
         />
-      </Flex.Flex>
+      </Layout.Flex>
       {joinUrl && (
-        <Flex.Flex gap='sm'>
+        <Layout.Flex gap='sm'>
           <Field.Root readOnly>
-            <Input.Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
+            <Input.Root readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
           </Field.Root>
           <SystemButton.Clipboard value={joinUrl} />
-        </Flex.Flex>
+        </Layout.Flex>
       )}
-    </Container.Container>
+    </Layout.Container>
   );
 };
 

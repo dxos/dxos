@@ -141,8 +141,8 @@ const DefaultStory = ({ Tile }: StoryArgs) => {
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Button.Button icon='ph--caret-left--regular' iconOnly label='Back' onClick={handlePrev} />
-              <Button.Button icon='ph--caret-right--regular' iconOnly label='Forward' onClick={handleNext} />
+              <Button.Root icon='ph--caret-left--regular' iconOnly label='Back' onClick={handlePrev} />
+              <Button.Root icon='ph--caret-right--regular' iconOnly label='Forward' onClick={handleNext} />
               <Toolbar.Text>
                 {currentIndex + 1} / {items.length}
               </Toolbar.Text>

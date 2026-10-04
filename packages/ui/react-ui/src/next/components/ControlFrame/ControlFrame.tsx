@@ -2,13 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import React, { type CSSProperties, type ReactNode } from 'react';
 
 import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import type * as Container from '../Container/Container.tsx';
+import { type CSSVariables } from '../Container/Container.tsx';
 
 export type ControlFrameVariant = 'default' | 'subdued' | 'mono';
 
@@ -41,7 +39,7 @@ export const ControlFrame = composable<HTMLDivElement, ControlFrameProps>(
     const { className, style, ...rest } = composableProps<HTMLDivElement>(props, {
       classNames: recipes.controlFrame(),
     });
-    const rowsStyle: CSSProperties & Container.CSSVariables = rows ? { '--dx-rows': String(rows) } : {};
+    const rowsStyle: CSSProperties & CSSVariables = rows ? { '--dx-rows': String(rows) } : {};
     return (
       <div
         {...rest}

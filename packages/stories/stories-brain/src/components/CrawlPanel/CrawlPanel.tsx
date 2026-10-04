@@ -94,13 +94,13 @@ export const CrawlPanel = ({
     <Panel.Root classNames={classNames}>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button
+          <Button.Root
             icon='ph--arrow-clockwise--regular'
             label='List channels'
             disabled={!options.token || !!busy}
             onClick={onListChannels}
           />
-          <Button.Button
+          <Button.Root
             icon='ph--bulldozer--regular'
             iconOnly
             label='Crawl'
@@ -114,7 +114,7 @@ export const CrawlPanel = ({
             onFileChange={handleFileChange}
           />
           <Toolbar.Separator />
-          <Button.Button icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
+          <Button.Root icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

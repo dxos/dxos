@@ -17,15 +17,14 @@ import { useQuery } from '@dxos/react-client/echo';
 import { OrderedList } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 
@@ -66,11 +65,11 @@ type PaneListProps = {
  */
 const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListProps) => (
   // `overflow-hidden` lets the panes shrink below their content so their own scroll areas engage.
-  <Flex.Flex gap='sm' classNames='dx-grow overflow-hidden'>
+  <Layout.Flex gap='sm' classNames='dx-grow overflow-hidden'>
     <Panel.Root classNames='shrink-0 w-max max-w-xs'>
       <Panel.Body>
         {rows.length === 0 ? (
-          <Empty.Empty>{emptyLabel}</Empty.Empty>
+          <Status.Empty>{emptyLabel}</Status.Empty>
         ) : (
           <OrderedList.Root<PaneRow>
             items={rows}
@@ -109,7 +108,7 @@ const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListPr
     <Panel.Root classNames='flex-1 min-w-0'>
       <Panel.Body classNames='flex flex-col dx-grow'>{detail}</Panel.Body>
     </Panel.Root>
-  </Flex.Flex>
+  </Layout.Flex>
 );
 
 /**
@@ -267,10 +266,10 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
   const recordDetail = record ? (
     <ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
-        <Container.Container gap='md' gutter='none'>
+        <Layout.Container gap='md' gutter='none'>
           <span className='font-mono text-xs text-fg-muted truncate'>{record.uri}</span>
           {mappedForCollection ? (
-            <Flex.Flex column gap='sm'>
+            <Layout.Flex column gap='sm'>
               {preview && (
                 <ObjectCard.Root>
                   <ObjectCard.Header subject={preview} />
@@ -280,15 +279,15 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
               {alreadyImported ? (
                 <span className='text-sm text-success-text'>{t('imported.label')}</span>
               ) : (
-                <Button.Button variant='primary' classNames='self-start' onClick={handleImport}>
+                <Button.Root variant='primary' classNames='self-start' onClick={handleImport}>
                   {t('import.label')}
-                </Button.Button>
+                </Button.Root>
               )}
-            </Flex.Flex>
+            </Layout.Flex>
           ) : (
             <JsonHighlighter data={record.value} />
           )}
-        </Container.Container>
+        </Layout.Container>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   ) : null;
@@ -299,7 +298,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
         <Toolbar.Root classNames='px-2'>
           <Icon.Icon icon='ph--at--regular' size='md' tone='muted' />
           <Field.Root>
-            <Input.Input
+            <Input.Root
               classNames='grow'
               placeholder={t('handle.placeholder')}
               value={handleInput}
@@ -311,9 +310,9 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
               }}
             />
           </Field.Root>
-          <Button.Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>
+          <Button.Root onClick={() => setActiveHandle(handleInput.trim() || undefined)}>
             {t('browse.label')}
-          </Button.Button>
+          </Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='flex flex-col dx-grow py-2'>

@@ -157,7 +157,7 @@ export const TaskQuestion = ({
               <div role='list' aria-label={question.text} className='flex flex-col gap-1 min-w-0'>
                 {question.options.map((option, index) => (
                   <div key={option.title} role='listitem' className='min-w-0'>
-                    <Button.Button
+                    <Button.Root
                       variant='default'
                       disabled={busy}
                       // `h-auto` and wrapping: an option is a sentence, not a label, so the button
@@ -177,7 +177,7 @@ export const TaskQuestion = ({
                           <div className='text-xs text-fg-muted wrap-break-word leading-snug'>{option.description}</div>
                         )}
                       </div>
-                    </Button.Button>
+                    </Button.Root>
                   </div>
                 ))}
               </div>
@@ -188,7 +188,7 @@ export const TaskQuestion = ({
               <div className='flex-[1_1_10rem] min-w-0'>
                 <Field.Root>
                   <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
-                  <Input.Input
+                  <Input.Root
                     value={text}
                     disabled={busy}
                     placeholder={t('question-answer.placeholder')}
@@ -198,14 +198,14 @@ export const TaskQuestion = ({
                   />
                 </Field.Root>
               </div>
-              <Button.Button
+              <Button.Root
                 variant='primary'
                 disabled={busy || text.trim() === ''}
                 data-testid='task-question.submit'
                 onClick={() => handleSubmit(text)}
               >
                 {t('question-submit.label')}
-              </Button.Button>
+              </Button.Root>
             </div>
           </div>
         )

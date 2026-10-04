@@ -14,9 +14,9 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Checkbox from '../Checkbox/Checkbox.tsx';
-import * as Container from '../Container/Container.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Checkbox } from '../Checkbox/Checkbox.tsx';
+import { Container } from '../Container/Container.tsx';
 import * as Panel from '../Panel/Panel.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import * as SystemButton from '../SystemButton/SystemButton.tsx';
@@ -87,7 +87,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                   <Listbox.ItemText />
                   {item.description && <Listbox.ItemDescription />}
                   {item.value === 'carol' && (
-                    <Button.Button icon='ph--envelope--regular' label='Message Carol' iconOnly variant='ghost' />
+                    <Button icon='ph--envelope--regular' label='Message Carol' iconOnly variant='ghost' />
                   )}
                   <Listbox.ItemIndicator />
                 </>
@@ -126,7 +126,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           <Panel.Body asChild data-testid={`panel-${size}`}>
             <ScrollArea.Root>
               <ScrollArea.Viewport asChild>
-                <Container.Container gutter='rail'>
+                <Container gutter='rail'>
                   <Typography.Text data-testid={`panel-heading-${size}`}>In a panel</Typography.Text>
                   <Listbox.Root items={LONG}>
                     <Listbox.Content aria-label='In panel' scroll={false}>
@@ -135,7 +135,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                       ))}
                     </Listbox.Content>
                   </Listbox.Root>
-                </Container.Container>
+                </Container>
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Panel.Body>
@@ -156,9 +156,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Listbox.Content data-testid={`tasks-${size}`}>
           {tasks.map((item) => (
             <Listbox.Item key={item.value} item={item} data-testid={`task-${item.value}-${size}`}>
-              <Checkbox.Checkbox aria-label={`Done ${item.label}`} />
+              <Checkbox aria-label={`Done ${item.label}`} />
               <Listbox.ItemText />
-              <Button.Button icon='ph--pen--regular' label={`Edit ${item.label}`} iconOnly variant='ghost' />
+              <Button icon='ph--pen--regular' label={`Edit ${item.label}`} iconOnly variant='ghost' />
               <SystemButton.Remove
                 onClick={() => setTasks((tasks) => tasks.filter((task) => task.value !== item.value))}
               />

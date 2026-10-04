@@ -8,7 +8,7 @@ import { Dialog as DialogPrimitive, useDialogContext } from '@ark-ui/react/dialo
 import { useEnvironmentContext } from '@ark-ui/react/environment';
 import React, { forwardRef, useId } from 'react';
 
-import * as Button from '../Button/Button.tsx';
+import { Button, type ButtonProps } from '../Button/Button.tsx';
 import * as Dialog from '../Dialog/Dialog.tsx';
 
 //
@@ -50,12 +50,12 @@ AlertDialogRoot.displayName = 'AlertDialog.Root';
 // Cancel
 //
 
-type AlertDialogCancelProps = Button.ButtonProps;
+type AlertDialogCancelProps = ButtonProps;
 
 /** A Button that closes the dialog without acting; the caller names it (Next ships no translated labels). */
 const AlertDialogCancel = forwardRef<HTMLButtonElement, AlertDialogCancelProps>((props, forwardedRef) => (
   <DialogPrimitive.CloseTrigger asChild>
-    <Button.Button {...props} ref={forwardedRef} />
+    <Button {...props} ref={forwardedRef} />
   </DialogPrimitive.CloseTrigger>
 ));
 
@@ -65,14 +65,14 @@ AlertDialogCancel.displayName = 'AlertDialog.Cancel';
 // Action
 //
 
-type AlertDialogActionProps = Button.ButtonProps;
+type AlertDialogActionProps = ButtonProps;
 
 /** The confirming Button (`primary` by default): runs `onClick`, then closes unless the handler prevents default. */
 const AlertDialogAction = forwardRef<HTMLButtonElement, AlertDialogActionProps>(
   ({ variant = 'primary', onClick, ...props }, forwardedRef) => {
     const dialog = useDialogContext();
     return (
-      <Button.Button
+      <Button
         {...props}
         variant={variant}
         onClick={(event) => {

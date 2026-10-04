@@ -23,8 +23,8 @@ import { createPortal } from 'react-dom';
 import { addEventListener } from '@dxos/async';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
-import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 import type * as Util from '@dxos/react-ui/Util';
 import {
   type AutoScrollProps,
@@ -254,12 +254,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         <div className={mx('dx-expand', classNames)} ref={parentRef} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
-        <ErrorFallback.ErrorBoundary name='markdown-stream'>
+        <Status.ErrorBoundary name='markdown-stream'>
           {widgets.map(({ Component, root, id, props }) => (
             <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
           ))}
           {footerRoot && footerVisible && createPortal(footer, footerRoot)}
-        </ErrorFallback.ErrorBoundary>
+        </Status.ErrorBoundary>
       </>
     );
   },

@@ -40,14 +40,13 @@ import React, {
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-import * as Block from '@dxos/react-ui/Block';
-import type * as Container from '@dxos/react-ui/Container';
 import * as DragHandle from '@dxos/react-ui/DragHandle';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Listbox from '@dxos/react-ui/Listbox';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Typography from '@dxos/react-ui/Typography';
@@ -695,7 +694,7 @@ TreeLabel.displayName = 'Tree.Label';
  * Ark's `tree` element carrying Container attributes, so the ScrollArea viewport slot merges onto it and the tree
  * element itself scrolls (part-naming rules 1 and 2).
  */
-const TreeContentElement = Util.composable<HTMLDivElement, { gutter?: Container.Gutter; rowInset?: boolean }>(
+const TreeContentElement = Util.composable<HTMLDivElement, { gutter?: Layout.Gutter; rowInset?: boolean }>(
   ({ children, gutter = 'none', rowInset = true, ...props }, forwardedRef) => {
     const { onTreeKeyDown, onTreePointerDownCapture } = useTreeContext('Tree.Content');
     const { className, ...rest } = Util.composableProps(props, { classNames: 'dx-container dx-tree-content' });
@@ -729,7 +728,7 @@ type TreeContentProps = {
    * The scroll area's own gutter; none by default, so a row's highlight runs to the pane's edges and the overlay thumb
    * floats over the rows rather than beside them.
    */
-  gutter?: Container.Gutter;
+  gutter?: Layout.Gutter;
   /**
    * Pad each row's ends by the space an icon has inside its block, so the disclosure and a trailing count sit as far
    * from the row's edges as its icon sits from its cell; on by default. Off for rows whose edge cells are blocks.
@@ -1217,7 +1216,7 @@ type TreeItemIndicatorProps = {
 const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
   const { node } = useTreeItemContext('Tree.ItemIndicator');
   return (
-    <Block.Block classNames='dx-tree-item-indicator'>
+    <Layout.Block classNames='dx-tree-item-indicator'>
       {node.branch && (
         <TreeView.BranchTrigger className='dx-tree-branch-trigger' data-empty={node.empty ? '' : undefined}>
           <TreeView.BranchIndicator className='dx-tree-branch-indicator'>
@@ -1225,7 +1224,7 @@ const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndica
           </TreeView.BranchIndicator>
         </TreeView.BranchTrigger>
       )}
-    </Block.Block>
+    </Layout.Block>
   );
 };
 
@@ -1255,10 +1254,10 @@ const TreeItemIcon = ({ icon, hue, children, ...props }: TreeItemIconProps) => {
   const glyph = icon ?? node.props.icon;
   const iconHue = node.props.iconHue;
   return (
-    <Block.Block classNames='dx-tree-item-icon'>
+    <Layout.Block classNames='dx-tree-item-icon'>
       {children ??
         (glyph && <Icon.Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />)}
-    </Block.Block>
+    </Layout.Block>
   );
 };
 
@@ -1352,7 +1351,7 @@ type TreeEmptyProps = {
 /** `Empty` (its text the children or the translated "No items"), rendered only while the root has no children. */
 const TreeEmpty = forwardRef<HTMLDivElement, TreeEmptyProps>((props, forwardedRef) => {
   const { walk } = useTreeContext('Tree.Empty');
-  return walk.rows.length === 0 ? <Empty.Empty {...props} ref={forwardedRef} /> : null;
+  return walk.rows.length === 0 ? <Status.Empty {...props} ref={forwardedRef} /> : null;
 });
 
 TreeEmpty.displayName = 'Tree.Empty';

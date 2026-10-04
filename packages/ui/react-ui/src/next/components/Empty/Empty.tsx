@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -10,9 +10,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import * as Hooks from '../hooks/Hooks.ts';
-import * as Checkbox from '../next/components/Checkbox/Checkbox.tsx';
+import { Checkbox } from '../next/components/Checkbox/Checkbox.tsx';
 import * as Field from '../next/components/Field/Field.tsx';
-import * as Input from '../next/components/Input/Input.tsx';
+import { Input } from '../next/components/Input/Input.tsx';
 import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
 
 // TODO(burdon): Implement horizontal movement between columns when column is selected.
@@ -84,10 +84,10 @@ const Item = ({ value }: { value: string }) => {
       className={mx('flex shrink-0 w-full gap-4 p-4 items-center', border)}
     >
       <Field.Root>
-        <Checkbox.Checkbox />
+        <Checkbox />
       </Field.Root>
       <Field.Root>
-        <Input.Input defaultValue={value} />
+        <Input defaultValue={value} />
       </Field.Root>
     </div>
   );

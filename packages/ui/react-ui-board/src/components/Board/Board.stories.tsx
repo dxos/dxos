@@ -116,15 +116,15 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Button.Button
+              <Button.Root
                 icon='ph--crosshair--regular'
                 iconOnly
                 label='Center board'
                 onClick={() => controller.current?.center()}
               />
-              <Button.Button onClick={() => setZoom(1)} disabled={zoom === 1}>
+              <Button.Root onClick={() => setZoom(1)} disabled={zoom === 1}>
                 100%
-              </Button.Button>
+              </Button.Root>
             </Toolbar.Root>
           </Panel.Header>
           <Panel.Body asChild>

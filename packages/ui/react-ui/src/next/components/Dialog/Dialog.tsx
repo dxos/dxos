@@ -22,9 +22,9 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Button from '../Button/Button.tsx';
-import * as Container from '../Container/Container.tsx';
-import * as Group from '../Group/Group.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Container, DefaultGutterProvider } from '../Container/Container.tsx';
+import { Group } from '../Group/Group.tsx';
 import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 
@@ -239,7 +239,7 @@ const DialogCloseTrigger = forwardRef<HTMLButtonElement, DialogCloseTriggerProps
       </DialogPrimitive.CloseTrigger>
     ) : (
       <DialogPrimitive.CloseTrigger {...props} asChild ref={forwardedRef}>
-        <Button.Button icon={icon} label={label} iconOnly />
+        <Button icon={icon} label={label} iconOnly />
       </DialogPrimitive.CloseTrigger>
     ),
 );
@@ -261,10 +261,10 @@ type DialogBodyProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'widt
 const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ classNames, children, ...props }, forwardedRef) => (
   <ScrollArea.Root {...props} classNames={mx(recipes.dialogBody(), classNames)} ref={forwardedRef}>
     <ScrollArea.Viewport asChild>
-      <Container.Container gutter='md'>
+      <Container gutter='md'>
         {/* Its direct content (a form's Viewport) joins these rails rather than nesting a second inset. */}
-        <Container.DefaultGutterProvider gutter='inherit'>{children}</Container.DefaultGutterProvider>
-      </Container.Container>
+        <DefaultGutterProvider gutter='inherit'>{children}</DefaultGutterProvider>
+      </Container>
     </ScrollArea.Viewport>
   </ScrollArea.Root>
 ));
@@ -282,7 +282,7 @@ type DialogFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
  * actions stay regular-sized in a small dialog, since they are the dialog's primary targets.
  */
 const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(({ classNames, ...props }, forwardedRef) => (
-  <Group.Group asChild justify='end'>
+  <Group asChild justify='end'>
     <div
       data-size='md'
       {...props}
@@ -291,7 +291,7 @@ const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(({ classNames
       className={mx(recipes.dialogFooter(), classNames)}
       ref={forwardedRef}
     />
-  </Group.Group>
+  </Group>
 ));
 
 DialogFooter.displayName = 'Dialog.Footer';

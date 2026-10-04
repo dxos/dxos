@@ -121,10 +121,10 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
       <StatusBar.Item classNames='relative'>
         {mode === 'floating' ? (
           <FloatingPanel.Trigger asChild>
-            <Button.Button variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
+            <Button.Root variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
           </FloatingPanel.Trigger>
         ) : (
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--terminal-window--regular'
             iconOnly

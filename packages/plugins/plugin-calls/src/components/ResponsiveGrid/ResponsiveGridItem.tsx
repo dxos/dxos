@@ -91,7 +91,7 @@ export const ResponsiveGridItem = <T extends object = any>({
       {/* Action. */}
       {onClick && (
         <div className='z-10 absolute top-1 right-1 flex'>
-          <Button.Button
+          <Button.Root
             classNames={mx('p-1 min-h-1 rounded-sm', groupHoverControlItemWithTransition)}
             iconOnly
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
@@ -123,7 +123,7 @@ export const ResponsiveGridItem = <T extends object = any>({
       <div className='z-10 absolute bottom-1 left-1 flex'>
         {(speaking && <Waveform active size={pinned ? 5 : 4} />) ||
           (props && (
-            <Button.Button
+            <Button.Root
               classNames={mx('p-1 min-h-1 rounded-sm', props?.classNames)}
               icon={props?.icon}
               label={props?.label}

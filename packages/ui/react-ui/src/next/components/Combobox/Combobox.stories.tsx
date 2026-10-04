@@ -25,10 +25,10 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
+import { Button } from '../Button/Button.tsx';
 import * as Field from '../Field/Field.tsx';
-import * as Group from '../Group/Group.tsx';
-import * as Input from '../Input/Input.tsx';
+import { Group } from '../Group/Group.tsx';
+import { Input } from '../Input/Input.tsx';
 import * as Tag from '../Tag/Tag.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as Combobox from './Combobox.tsx';
@@ -142,17 +142,17 @@ const AnchoredCombobox = ({ size = 'md' }: SizeArgs) => {
   const anchor = useRef<HTMLSpanElement>(null);
   return (
     <>
-      <Group.Group>
-        <Button.Button onClick={() => setOpen(true)} data-testid={`open-anchored-${size}`}>
+      <Group>
+        <Button onClick={() => setOpen(true)} data-testid={`open-anchored-${size}`}>
           Mention
-        </Button.Button>
+        </Button>
         <Typography.Text>
           Hello{' '}
           <span ref={anchor} data-testid={`anchor-${size}`}>
             @{OPTIONS.find((option) => option.value === value[0])?.label ?? '…'}
           </span>
         </Typography.Text>
-      </Group.Group>
+      </Group>
       <Combobox.Root
         items={OPTIONS}
         open={open}
@@ -189,7 +189,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         <Combobox.Content data-testid={`listbox-${size}`} />
       </Combobox.Root>
     </Field.Root>
-    <Input.Input aria-label='Note' data-testid={`input-${size}`} />
+    <Input aria-label='Note' data-testid={`input-${size}`} />
     <Field.Root>
       <Combobox.Root items={OPTIONS} filter={startsWith}>
         <Combobox.Label>Reviewer</Combobox.Label>

@@ -122,7 +122,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
         {title}
       </Dialog.Title>
       <Endcap>
-        <Button.Button
+        <Button.Root
           variant='ghost'
           icon='ph--caret-up--regular'
           iconOnly

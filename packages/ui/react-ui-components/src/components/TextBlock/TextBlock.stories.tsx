@@ -37,14 +37,14 @@ const DefaultStory = ({ blocks, interval = 0 }: { blocks: string[]; interval?: n
   return (
     <div>
       <Toolbar.Root>
-        <Button.Button
+        <Button.Root
           onClick={() => {
             setText('');
             setRefresh({});
           }}
         >
           Restart
-        </Button.Button>
+        </Button.Root>
       </Toolbar.Root>
       <TextBlock classNames='p-2' text={text} />
     </div>

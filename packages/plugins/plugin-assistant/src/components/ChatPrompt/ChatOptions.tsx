@@ -18,13 +18,11 @@ import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
-import * as PasswordInput from '@dxos/react-ui/PasswordInput';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Select from '@dxos/react-ui/Select';
-import * as Switch from '@dxos/react-ui/Switch';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -63,10 +61,10 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
   const { t } = UiHooks.useTranslation(meta.profile.key);
 
   return (
-    <Flex.Flex>
+    <Layout.Flex>
       <Popover.Root positioning={{ placement: 'top' }}>
         <Popover.Trigger asChild>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--plus--regular'
             iconOnly
@@ -82,7 +80,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
 
       <Popover.Root positioning={{ placement: 'top' }}>
         <Popover.Trigger asChild>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--sliders-horizontal--regular'
             iconOnly
@@ -128,7 +126,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
           </Tabs.Root>
         </Popover.Content>
       </Popover.Root>
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 
@@ -254,7 +252,7 @@ const ModelsPanel = ({
   const { t } = UiHooks.useTranslation(meta.profile.key);
 
   return (
-    <Flex.Flex column classNames='dx-expand'>
+    <Layout.Flex column classNames='dx-expand'>
       <Listbox.Root
         value={preset}
         onValueChange={onPresetChange}
@@ -273,7 +271,7 @@ const ModelsPanel = ({
       <Toolbar.Root>
         <OnlineSwitch />
       </Toolbar.Root>
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 
@@ -300,7 +298,7 @@ const OnlineSwitch = () => {
   );
 
   return (
-    <Switch.Switch
+    <Input.Switch
       checked={online}
       onCheckedChange={({ checked }) => handleChange(checked)}
       data-testid='assistant.online'
@@ -358,7 +356,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   return (
-    <Flex.Flex column data-testid='assistant.mcp-servers'>
+    <Layout.Flex column data-testid='assistant.mcp-servers'>
       <Listbox.Root items={servers.map((server) => ({ value: server.id, label: server.name ?? server.id }))}>
         <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
           {servers.map((server) => (
@@ -369,17 +367,17 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
       {adding ? (
         <McpForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <Flex.Flex classNames='p-1'>
-          <Button.Button
+        <Layout.Flex classNames='p-1'>
+          <Button.Root
             variant='ghost'
             icon='ph--plus--regular'
             label={t('mcp-server-add.label')}
             onClick={() => setAdding(true)}
             data-testid='assistant.mcp-server.add'
           />
-        </Flex.Flex>
+        </Layout.Flex>
       )}
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };
 
@@ -416,17 +414,17 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
 
   return (
     <Listbox.Item id={server.id} classNames='flex-col items-stretch px-form-chrome' data-testid='assistant.mcp-server'>
-      <Flex.Flex align='center' gap='sm'>
+      <Layout.Flex align='center' gap='sm'>
         <Field.Root>
           <Field.Label srOnly>{name}</Field.Label>
-          <Switch.Switch checked={enabled !== false} onCheckedChange={({ checked }) => setEnabled(!!checked)} />
+          <Input.Switch checked={enabled !== false} onCheckedChange={({ checked }) => setEnabled(!!checked)} />
         </Field.Root>
-        <Flex.Flex column grow classNames='min-w-0'>
+        <Layout.Flex column grow classNames='min-w-0'>
           <span className='truncate text-sm'>{name}</span>
           <span className='truncate text-xs text-fg-muted'>{url}</span>
-        </Flex.Flex>
+        </Layout.Flex>
         {status.state === 'unauthorized' && (
-          <Button.Button
+          <Button.Root
             variant='primary'
             icon='ph--sign-in--regular'
             label={t('mcp-server-sign-in.label')}
@@ -436,7 +434,7 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
           />
         )}
         {(status.state === 'error' || status.state === 'unauthorized') && (
-          <Button.Button
+          <Button.Root
             variant='ghost'
             icon='ph--arrow-clockwise--regular'
             iconOnly
@@ -444,14 +442,14 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
             onClick={() => setRevision((revision) => revision + 1)}
           />
         )}
-        <Button.Button
+        <Button.Root
           variant='ghost'
           icon='ph--x--regular'
           iconOnly
           label={t('mcp-server-remove.label')}
           onClick={() => onRemove(server)}
         />
-      </Flex.Flex>
+      </Layout.Flex>
       <span
         className={mx(
           'text-xs truncate',
@@ -499,7 +497,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
     >
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-name.label')}</Field.Label>
-        <Input.Input
+        <Input.Root
           placeholder={t('mcp-server-name.placeholder')}
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -509,7 +507,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
       </Field.Root>
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-url.label')}</Field.Label>
-        <Input.Input
+        <Input.Root
           type='url'
           placeholder={t('mcp-server-url.placeholder')}
           value={url}
@@ -533,7 +531,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
       </Select.Root>
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-api-key.label')}</Field.Label>
-        <PasswordInput.PasswordInput
+        <Input.Password
           ignorePasswordManagers
           placeholder={t('mcp-server-api-key.placeholder')}
           value={apiKey}
@@ -541,7 +539,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
           data-testid='assistant.mcp-server.api-key'
         />
       </Field.Root>
-      <Flex.Flex justify='end'>
+      <Layout.Flex justify='end'>
         <SystemButton.Save
           type='submit'
           variant='ghost'
@@ -549,7 +547,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
           data-testid='assistant.mcp-server.save'
         />
         <SystemButton.Cancel type='button' variant='ghost' onClick={onCancel} />
-      </Flex.Flex>
+      </Layout.Flex>
     </form>
   );
 };
@@ -596,7 +594,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
   });
 
   return (
-    <Flex.Flex column classNames='min-h-0 divide-y divide-separator'>
+    <Layout.Flex column classNames='min-h-0 divide-y divide-separator'>
       {/* Shrinks to the popover's height, so the list scrolls rather than pushing the filter out of it. */}
       <SearchList.Root onSearch={handleSearch}>
         {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
@@ -645,6 +643,6 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
           </Select.Root>
         </Toolbar.Root>
       </SearchList.Root>
-    </Flex.Flex>
+    </Layout.Flex>
   );
 };

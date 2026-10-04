@@ -18,7 +18,7 @@ export type IconPickerProps = {
   defaultValue?: string;
   value?: string;
   onChange?: (nextHue: string) => void;
-  onReset?: Button.ButtonProps['onClick'];
+  onReset?: Button.RootProps['onClick'];
 } & Pick<
   PickerButtonProps,
   'disabled' | 'rootVariant' | 'iconSize' | 'defaultValue' | 'value' | 'onChange' | 'onReset'

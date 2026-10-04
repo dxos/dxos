@@ -8,10 +8,10 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Routine from '@dxos/compute/Routine';
 import type * as Trigger from '@dxos/compute/Trigger';
 import { useObject } from '@dxos/echo-react';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -38,9 +38,9 @@ export const RoutineCard = ({ subject }: RoutineCardProps) => {
     <Card.Body>
       <Card.Row>
         {/* The gutter is reserved either way so the summary stays aligned across cards. */}
-        <Block.Block>
+        <Layout.Block>
           {active && <Icon.Icon icon='ph--check-circle--regular' classNames='text-green-text' />}
-        </Block.Block>
+        </Layout.Block>
         <Card.Text variant='muted' classNames='line-clamp-2'>
           {describeTrigger(trigger?.spec, t)}
         </Card.Text>

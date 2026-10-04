@@ -130,9 +130,9 @@ const RemountableThread = (props: { messages: MessageType.Message[]; viewType?: 
   const [mounted, setMounted] = useState(true);
   return (
     <div className='flex flex-col h-full'>
-      <Button.Button data-testid='story.toggleMount' onClick={() => setMounted((value) => !value)}>
+      <Button.Root data-testid='story.toggleMount' onClick={() => setMounted((value) => !value)}>
         {mounted ? 'Unmount' : 'Mount'}
-      </Button.Button>
+      </Button.Root>
       {mounted && <Thread {...props} />}
     </div>
   );

@@ -201,7 +201,7 @@ const CommentsList = ({
                 {(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
               </Listbox.ItemText>
               <Listbox.ItemDescription>{range ? `${range.from}–${range.to}` : comment.cursor}</Listbox.ItemDescription>
-              <Button.Button
+              <Button.Root
                 variant='ghost'
                 iconOnly
                 icon='ph--x--regular'

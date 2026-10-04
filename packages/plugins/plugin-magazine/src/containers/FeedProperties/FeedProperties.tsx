@@ -16,9 +16,9 @@ import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
 import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as Switch from '@dxos/react-ui/Switch';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
@@ -84,8 +84,8 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
     <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('feed-sync.label')}</Field.Label>
-        <Flex.Flex align='center'>
-          <Switch.Switch
+        <Layout.Flex align='center'>
+          <Input.Switch
             checked={syncEnabled ?? false}
             disabled={pending}
             onCheckedChange={() => {
@@ -93,14 +93,14 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
             }}
           />
           {syncTrigger && (
-            <Button.Button
+            <Button.Root
               iconOnly
               icon='ph--gear--regular'
               label={t('view-trigger.label')}
               onClick={handleViewTrigger}
             />
           )}
-        </Flex.Flex>
+        </Layout.Flex>
       </Field.Root>
     </Form.FieldSet>
   );

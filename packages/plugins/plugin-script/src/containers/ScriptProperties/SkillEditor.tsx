@@ -15,7 +15,7 @@ import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Textarea from '@dxos/react-ui/Textarea';
+import * as Input from '@dxos/react-ui/Input';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -86,7 +86,7 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
     <Form.FieldSet label={t('skill-editor.label')} description={t('skill-editor.description')}>
       <Field.Root>
         <Field.Label>{t('skill-instructions.label')}</Field.Label>
-        <Textarea.Textarea
+        <Input.Textarea
           placeholder={t('skill-instructions.placeholder')}
           rows={6}
           value={instructions}
@@ -96,9 +96,9 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
       </Field.Root>
 
       <div className='pt-2'>
-        <Button.Button disabled={(!existingSkill && !fnKey) || creating} onClick={handleSave}>
+        <Button.Root disabled={(!existingSkill && !fnKey) || creating} onClick={handleSave}>
           {t(existingSkill ? 'update-skill.label' : 'create-skill.label')}
-        </Button.Button>
+        </Button.Root>
       </div>
     </Form.FieldSet>
   );

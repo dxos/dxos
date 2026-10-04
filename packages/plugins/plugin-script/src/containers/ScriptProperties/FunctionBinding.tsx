@@ -56,7 +56,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
       {functionUrl && (
         <Field.Root>
           <Field.Label>{t('function-url.label')}</Field.Label>
-          <Input.Input
+          <Input.Root
             disabled
             value={functionUrl}
             onChange={(event) => {
@@ -71,7 +71,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
 
       <Field.Root>
         <Field.Label>{t('function-binding.label')}</Field.Label>
-        <Input.Input
+        <Input.Root
           placeholder={t('function-binding.placeholder')}
           value={binding}
           onChange={handleBindingChange}

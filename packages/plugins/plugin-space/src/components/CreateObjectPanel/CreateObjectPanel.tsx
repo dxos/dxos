@@ -12,9 +12,9 @@ import { Form, ObjectForm, omitId, useFormContext, useSubmitOnEnter } from '@dxo
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
@@ -203,16 +203,16 @@ const CreateObjectFormContent = ({ onCancel }: CreateObjectFormContentProps) => 
   return (
     <Form.Content ref={contentRef}>
       <Form.Fields />
-      <Flex.Flex gap='sm' justify='end' classNames='pt-form-padding'>
+      <Layout.Flex gap='sm' justify='end' classNames='pt-form-padding'>
         {onCancel && (
-          <Button.Button onClick={onCancel} data-testid='cancel-button'>
+          <Button.Root onClick={onCancel} data-testid='cancel-button'>
             {t('object-form-cancel.label')}
-          </Button.Button>
+          </Button.Root>
         )}
-        <Button.Button variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
+        <Button.Root variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
           {t('object-form-confirm.label')}
-        </Button.Button>
-      </Flex.Flex>
+        </Button.Root>
+      </Layout.Flex>
     </Form.Content>
   );
 };

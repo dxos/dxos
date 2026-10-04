@@ -44,7 +44,7 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
       <Panel.Header>
         <Toolbar.Root>
           <Field.Root>
-            <Input.Input
+            <Input.Root
               placeholder='Ask a standing question…'
               value={text}
               disabled={disabled}
@@ -52,7 +52,7 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
               onKeyDown={(event) => event.key === 'Enter' && handleAdd()}
             />
           </Field.Root>
-          <Button.Button
+          <Button.Root
             icon='ph--plus--regular'
             iconOnly
             label='Add question'

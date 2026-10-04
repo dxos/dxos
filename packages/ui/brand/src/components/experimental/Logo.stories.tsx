@@ -58,7 +58,7 @@ export const Default: Story = {
     return (
       <div className='dx-fullscreen flex items-center justify-center'>
         <div className='absolute left-4 top-4'>
-          <Button.Button onClick={handleSpin}>Spin</Button.Button>
+          <Button.Root onClick={handleSpin}>Spin</Button.Root>
         </div>
 
         <div>
@@ -150,8 +150,8 @@ const SpinnerContainer = () => {
   return (
     <div className='flex flex-col gap-20'>
       <div className='absolute left-4 top-4'>
-        {(spinning && <Button.Button onClick={() => setSpinning(false)}>Stop</Button.Button>) || (
-          <Button.Button onClick={() => setSpinning(true)}>Start</Button.Button>
+        {(spinning && <Button.Root onClick={() => setSpinning(false)}>Stop</Button.Root>) || (
+          <Button.Root onClick={() => setSpinning(true)}>Start</Button.Root>
         )}
       </div>
       <div className='grid grid-cols-3 gap-20'>
@@ -254,7 +254,7 @@ export const Oblique: Story = {
     return (
       <div className='dx-fullscreen grid place-items-center'>
         <div className='absolute top-4 left-4'>
-          <Button.Button icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
+          <Button.Root icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
         </div>
         <div className='absolute grid place-items-center'>
           <AltComposerLogo

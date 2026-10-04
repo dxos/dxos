@@ -12,9 +12,9 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Empty from '@dxos/react-ui/Empty';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { Result, Search } from '#types';
@@ -157,9 +157,9 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           />
         )) ||
           (visibleResults.length === 0 ? (
-            <Empty.Empty classNames='h-full'>
+            <Status.Empty classNames='h-full'>
               {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
-            </Empty.Empty>
+            </Status.Empty>
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
               <Masonry.Content padding>

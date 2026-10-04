@@ -99,20 +99,20 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
     <div className='dx-fill grid grid-rows-[auto_1fr]'>
       <div className='flex items-center gap-2 p-2 border-be border-separator'>
         <Field.Root classNames='flex-1'>
-          <Input.Input
+          <Input.Root
             placeholder='https://github.com/owner/repo/pull/123'
             value={url}
             disabled={busy}
             onChange={(event) => setUrl(event.target.value)}
           />
         </Field.Root>
-        <Button.Button disabled={busy} onClick={handleGenerate}>
+        <Button.Root disabled={busy} onClick={handleGenerate}>
           <Icon.Icon
             icon={busy ? 'ph--circle-notch--regular' : 'ph--path--regular'}
             classNames={busy ? 'animate-spin' : ''}
           />
           <span className='ms-2'>{busy ? PHASE_LABEL[phase] : 'Generate'}</span>
-        </Button.Button>
+        </Button.Root>
         {result && (
           <span className='text-sm text-fg-muted whitespace-nowrap'>
             {result.covered} of {result.total} hunks narrated

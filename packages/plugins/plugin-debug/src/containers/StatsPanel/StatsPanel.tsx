@@ -9,7 +9,7 @@ import React from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { STAT_CARD_HUES, StatCard } from '@dxos/devtools';
-import * as Container from '@dxos/react-ui/Container';
+import * as Layout from '@dxos/react-ui/Layout';
 
 // Fallback so the atom hook is called unconditionally when no store is contributed (host plugin not
 // loaded); the panel then renders its empty state.
@@ -60,7 +60,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
   }
 
   return (
-    <Container.Container gap='md' gutter='none'>
+    <Layout.Container gap='md' gutter='none'>
       {compartments.map(([pluginKey, value]) => (
         <StatCard.Root key={pluginKey}>
           <StatCard.Header icon='ph--chart-bar--regular' hue={STAT_CARD_HUES.system} title={pluginKey} />
@@ -69,7 +69,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
           ))}
         </StatCard.Root>
       ))}
-    </Container.Container>
+    </Layout.Container>
   );
 };
 

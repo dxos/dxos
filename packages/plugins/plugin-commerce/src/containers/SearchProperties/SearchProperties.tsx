@@ -10,8 +10,8 @@ import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
@@ -78,7 +78,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   }, [invokePromise, search, database]);
 
   return (
-    <Container.Container gutter='none'>
+    <Layout.Container gutter='none'>
       {/* TODO(burdon): Fix indentation; is this the right way to extend properties? */}
       {selectedProviders.length > 0 && (
         // Re-key the form on the set of selected providers so the merged schema
@@ -96,13 +96,13 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
         </Form.Root>
       )}
 
-      <Button.Button
+      <Button.Root
         icon='ph--shopping-cart--regular'
         label={running ? t('running.label') : t('run.label')}
         disabled={selectedProviders.length === 0 || running}
         onClick={handleRun}
       />
-    </Container.Container>
+    </Layout.Container>
   );
 };
 

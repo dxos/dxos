@@ -7,8 +7,8 @@ import React, { useMemo, useState } from 'react';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import * as Button from '@dxos/react-ui/Button';
-import * as Checkbox from '@dxos/react-ui/Checkbox';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -62,15 +62,15 @@ export const DiagnosticsArticle = ({ role }: ArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root>
-          <Checkbox.Checkbox
+          <Input.Checkbox
             checked={recording}
             onCheckedChange={({ checked: recording }) => handleSetRecording(!!recording)}
             label='Record metrics'
           />
           <div className='grow' />
-          <Button.Button onClick={handleRefresh}>Run Diagnostics</Button.Button>
-          <Button.Button icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
-          <Button.Button onClick={handleResetMetrics}>Reset metrics</Button.Button>
+          <Button.Root onClick={handleRefresh}>Run Diagnostics</Button.Root>
+          <Button.Root icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
+          <Button.Root onClick={handleResetMetrics}>Reset metrics</Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

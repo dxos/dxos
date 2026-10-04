@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
-import * as Textarea from '@dxos/react-ui/Textarea';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 import { Markdown } from '#types';
@@ -53,7 +53,7 @@ const SnippetsField = ({
   onBlur,
 }: FormFieldRendererProps<string>) => (
   <Form.Field path={jsonPath} label={label} readonly={readonly} presentation={presentation}>
-    <Textarea.Textarea
+    <Input.Textarea
       disabled={!!readonly}
       rows={5}
       value={getValue() ?? ''}

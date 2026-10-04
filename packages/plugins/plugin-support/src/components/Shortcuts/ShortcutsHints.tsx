@@ -34,7 +34,7 @@ export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
         <Shortcut key={binding.id} binding={binding} />
       ))}
       {onClose && (
-        <Button.Button
+        <Button.Root
           icon='ph--x--regular'
           iconSize='md'
           label='Close'

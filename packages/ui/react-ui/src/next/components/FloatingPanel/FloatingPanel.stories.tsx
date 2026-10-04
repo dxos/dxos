@@ -14,8 +14,8 @@ import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { GEOMETRY, byTestId } from '../../testing.ts';
-import * as Button from '../Button/Button.tsx';
-import * as Container from '../Container/Container.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as FloatingPanel from './FloatingPanel.tsx';
@@ -36,7 +36,7 @@ const DefaultStory = (args: StoryArgs) => (
     closeOnEscape
   >
     <FloatingPanel.Trigger asChild>
-      <Button.Button data-testid='panel.trigger'>Open log</Button.Button>
+      <Button data-testid='panel.trigger'>Open log</Button>
     </FloatingPanel.Trigger>
     <FloatingPanel.Content data-testid='panel'>
       <FloatingPanel.Header data-testid='panel.header'>
@@ -53,11 +53,11 @@ const DefaultStory = (args: StoryArgs) => (
       <FloatingPanel.Body data-testid='panel.body'>
         <ScrollArea.Root classNames='h-full'>
           <ScrollArea.Viewport asChild>
-            <Container.Container gutter='inset'>
+            <Container gutter='inset'>
               {LINES.map((line, index) => (
                 <Typography.Text key={index}>{line}</Typography.Text>
               ))}
-            </Container.Container>
+            </Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </FloatingPanel.Body>

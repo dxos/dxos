@@ -11,8 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { random } from '@dxos/random';
 import '@dxos/react-ui/theme.css';
 import * as Button from '@dxos/react-ui/Button';
-import * as Container from '@dxos/react-ui/Container';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
@@ -54,7 +54,7 @@ export const DropdownMenu: Story = {
 
     return (
       <ActionMenu {...menu}>
-        <Button.Button icon='ph--list-checks--regular' label='Options' iconOnly />
+        <Button.Root icon='ph--list-checks--regular' label='Options' iconOnly />
       </ActionMenu>
     );
   },
@@ -122,7 +122,7 @@ export const TrailingChildren: Story = {
 
     return (
       <ActionToolbar {...menu} alwaysActive>
-        <Input.Input placeholder='Filter…' aria-label='Filter' />
+        <Input.Root placeholder='Filter…' aria-label='Filter' />
       </ActionToolbar>
     );
   },
@@ -136,10 +136,10 @@ export const EmbeddedMenu: Story = {
 
     return (
       <Toolbar.Root>
-        <Button.Button>Foo</Button.Button>
+        <Button.Root>Foo</Button.Root>
         <Toolbar.Separator />
         <ActionMenu {...menu}>
-          <Button.Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
+          <Button.Root icon='ph--dots-three-vertical--regular' label='More' iconOnly />
         </ActionMenu>
       </Toolbar.Root>
     );
@@ -254,10 +254,10 @@ export const Builder: Story = {
     );
 
     return (
-      <Container.Container gap='md'>
+      <Layout.Container gap='md'>
         <ActionToolbar {...menu} alwaysActive />
         <Typography.Text data-testid='log'>{log.join(',')}</Typography.Text>
-      </Container.Container>
+      </Layout.Container>
     );
   },
   play: async ({ canvasElement }) => {

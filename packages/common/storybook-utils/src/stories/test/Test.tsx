@@ -11,12 +11,12 @@ export const TEST_ID = 'test';
 export type TestProps = {
   'icon': string;
   'label': string;
-  'variant'?: Button.ButtonVariant;
+  'variant'?: Button.Variant;
   'onClick'?: () => void;
   'id'?: string;
   'data-testid'?: string;
 };
 
 export const Test = (props: TestProps) => {
-  return <Button.Button {...props} />;
+  return <Button.Root {...props} />;
 };

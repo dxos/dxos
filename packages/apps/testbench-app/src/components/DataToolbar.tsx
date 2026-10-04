@@ -34,9 +34,9 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
 
   return (
     <Toolbar.Root>
-      <Button.Button icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
+      <Button.Root icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
       <Field.Root>
-        <Input.Input
+        <Input.Root
           classNames='max-w-16 text-right'
           value={count}
           onChange={(event) => setCount(safeParseInt(event.target.value) ?? count)}
@@ -58,7 +58,7 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       )}
       {onFilterChange && (
         <Field.Root>
-          <Input.Input
+          <Input.Root
             placeholder='Filter objects...'
             value={filter ?? ''}
             onChange={(event) => setFilter(event.target.value)}

@@ -14,7 +14,7 @@ import { meta } from '#meta';
 export type PluginFailureBadgeProps = {
   failure: PluginManager.PluginFailure;
   /** Size of the warning icon. */
-  size?: ComponentPropsWithoutRef<typeof Button.Button>['iconSize'];
+  size?: ComponentPropsWithoutRef<typeof Button.Root>['iconSize'];
 };
 
 /**
@@ -30,7 +30,7 @@ export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) =
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <Button.Button
+        <Button.Root
           variant='destructive'
           icon='ph--warning--bold'
           iconOnly

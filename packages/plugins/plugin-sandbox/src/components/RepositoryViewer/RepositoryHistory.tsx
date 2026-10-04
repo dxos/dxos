@@ -64,9 +64,9 @@ export const RepositoryHistory = ({
         </ul>
         {hasMore && onLoadMore && (
           <div className='p-2 grid'>
-            <Button.Button variant='ghost' onClick={onLoadMore}>
+            <Button.Root variant='ghost' onClick={onLoadMore}>
               {t('history-more.button')}
-            </Button.Button>
+            </Button.Root>
           </div>
         )}
       </ScrollArea.Viewport>

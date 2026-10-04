@@ -10,11 +10,11 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EntityId } from '@dxos/keys';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import * as Block from '@dxos/react-ui/Block';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -59,25 +59,25 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
     // beside each other and wrong in a message, where the thread's column is the width to fill.
     <Card.Root classNames='my-2' size='sm'>
       <Card.Header>
-        <Block.Block>
+        <Layout.Block>
           <CardIconSlot.Root subject={object}>
             <Icon.Icon icon='ph--question--regular' />
           </CardIconSlot.Root>
-        </Block.Block>
+        </Layout.Block>
         {/* The task, not the question: a `Card.Title` truncates to one line by design, and the
             question is a sentence the reader has to read in full — so the body carries it. */}
         <Card.Title>{object.title}</Card.Title>
         {/* The task's actions, as a task card anywhere else offers them. */}
-        <Block.Block rail='end'>
+        <Layout.Block rail='end'>
           <ActionMenu disabled={!menuItems.length} actions={menuItems}>
-            <Button.Button
+            <Button.Root
               variant='ghost'
               icon='ph--dots-three-vertical--regular'
               iconOnly
               label={t('question-actions.label')}
             />
           </ActionMenu>
-        </Block.Block>
+        </Layout.Block>
       </Card.Header>
       <QuestionCard task={object} questionId={questionId} />
     </Card.Root>

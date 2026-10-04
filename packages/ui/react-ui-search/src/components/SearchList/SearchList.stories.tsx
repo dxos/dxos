@@ -102,7 +102,7 @@ const ControlledStory = ({ items = defaultItems }: StoryArgs) => {
         <Panel.Header>
           <Toolbar.Root>
             <SearchList.Input placeholder='Controlled search...' onChange={(e) => handleQueryChange(e.target.value)} />
-            <Button.Button onClick={() => handleQueryChange('')}>Clear Query</Button.Button>
+            <Button.Root onClick={() => handleQueryChange('')}>Clear Query</Button.Root>
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body asChild>
@@ -355,7 +355,7 @@ const CustomInput = () => {
   return (
     <Toolbar.Root>
       <Field.Root>
-        <Input.Input
+        <Input.Root
           type='text'
           value={query}
           placeholder='Custom input...'
@@ -363,7 +363,7 @@ const CustomInput = () => {
           onKeyDown={handleKeyDown}
         />
       </Field.Root>
-      {query && <Button.Button icon='ph--x--regular' iconOnly label='Clear' onClick={() => onQueryChange('')} />}
+      {query && <Button.Root icon='ph--x--regular' iconOnly label='Clear' onClick={() => onQueryChange('')} />}
     </Toolbar.Root>
   );
 };

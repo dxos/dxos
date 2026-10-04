@@ -177,13 +177,13 @@ export const StorageArticle = ({ role }: ArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button onClick={refresh} disabled={isRefreshing}>
+          <Button.Root onClick={refresh} disabled={isRefreshing}>
             Refresh
-          </Button.Button>
+          </Button.Root>
           <div className='grow' />
           <Menu.Root positioning={{ placement: 'top' }}>
             <Menu.Trigger asChild>
-              <Button.Button>Reset Storage</Button.Button>
+              <Button.Root>Reset Storage</Button.Root>
             </Menu.Trigger>
             <Menu.Content>
               <Menu.Item

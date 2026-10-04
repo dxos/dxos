@@ -47,16 +47,16 @@ const DefaultStory = () => {
     <Panel.Root classNames='dx-base-surface'>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
-          <Button.Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
+          <Button.Root icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+          <Button.Root icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
           <Toolbar.Separator variant='gap' />
-          <Button.Button icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
+          <Button.Root icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='grid place-items-center'>
-        <Button.Button onClick={() => setRunning(true)} data-testid='story.start'>
+        <Button.Root onClick={() => setRunning(true)} data-testid='story.start'>
           Start tour
-        </Button.Button>
+        </Button.Root>
       </Panel.Body>
       <GuidedTour steps={steps} running={running} onRunningChanged={setRunning} />
     </Panel.Root>
@@ -152,19 +152,19 @@ const LateStepsStory = () => {
     <Panel.Root classNames='dx-base-surface'>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Button icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
-          <Button.Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
+          <Button.Root icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+          <Button.Root icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
           <Toolbar.Separator variant='gap' />
-          <Button.Button icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
+          <Button.Root icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='grid place-items-center gap-2'>
-        <Button.Button onClick={() => load(steps)} data-testid='story.startFirst'>
+        <Button.Root onClick={() => load(steps)} data-testid='story.startFirst'>
           Start first tour
-        </Button.Button>
-        <Button.Button onClick={() => load(laterSteps)} data-testid='story.startSecond'>
+        </Button.Root>
+        <Button.Root onClick={() => load(laterSteps)} data-testid='story.startSecond'>
           Start second tour
-        </Button.Button>
+        </Button.Root>
       </Panel.Body>
       <GuidedTour steps={current} running={running && current.length > 0} onRunningChanged={setRunning} />
     </Panel.Root>
@@ -203,13 +203,13 @@ export const TestMissingTarget: Story = {
       <Panel.Root classNames='dx-base-surface'>
         <Panel.Header>
           <Toolbar.Root>
-            <Button.Button icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+            <Button.Root icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body classNames='grid place-items-center'>
-          <Button.Button onClick={() => setRunning(true)} data-testid='story.start'>
+          <Button.Root onClick={() => setRunning(true)} data-testid='story.start'>
             Start tour
-          </Button.Button>
+          </Button.Root>
         </Panel.Body>
         <GuidedTour steps={withMissing} running={running} onRunningChanged={setRunning} />
       </Panel.Root>

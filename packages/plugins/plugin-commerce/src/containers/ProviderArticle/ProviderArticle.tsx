@@ -18,8 +18,8 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
@@ -77,10 +77,10 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
         {searchFields.length > 0 ? (
           <dl className='flex flex-col gap-1'>
             {searchFields.map((field) => (
-              <Flex.Flex key={field.key} gap='sm' align='baseline' justify='between'>
+              <Layout.Flex key={field.key} gap='sm' align='baseline' justify='between'>
                 <dt className='text-sm'>{field.title}</dt>
                 {field.type && <dd className='text-xs text-fg-muted'>{field.type}</dd>}
-              </Flex.Flex>
+              </Layout.Flex>
             ))}
           </dl>
         ) : (

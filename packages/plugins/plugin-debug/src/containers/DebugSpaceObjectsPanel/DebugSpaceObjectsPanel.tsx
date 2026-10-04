@@ -10,9 +10,9 @@ import { type Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import * as Grid from '@dxos/react-ui/Grid';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -35,7 +35,7 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Input.Input
+          <Input.Root
             placeholder='Search...'
             aria-label='Search'
             noAutoFill
@@ -46,7 +46,7 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
-        <Grid.Grid grow rows={2} classNames='divide-y divide-separator-subtle'>
+        <Layout.Grid grow rows={2} classNames='divide-y divide-separator-subtle'>
           <ScrollArea.Root>
             <ScrollArea.Viewport>
               <ObjectsTree
@@ -59,7 +59,7 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           {selectedObject && <JsonHighlighter classNames='p-1' data={selectedObject} />}
-        </Grid.Grid>
+        </Layout.Grid>
       </Panel.Body>
     </Panel.Root>
   );

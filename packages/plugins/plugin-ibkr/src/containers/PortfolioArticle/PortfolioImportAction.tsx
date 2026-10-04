@@ -60,7 +60,7 @@ export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) =
 
   return (
     <>
-      <Button.Button
+      <Button.Root
         disabled={importing}
         variant='ghost'
         iconClassNames={importing ? 'animate-spin' : undefined}

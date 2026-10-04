@@ -12,7 +12,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
-import type * as Container from '../Container/Container.tsx';
+import { type CSSVariables } from '../Container/Container.tsx';
 
 /** One stage of a plan that has identity: a stage the caller can address and select. */
 export type Step = {
@@ -77,7 +77,7 @@ export const Steps = forwardRef<HTMLDivElement, StepsProps>(
   ) => {
     const count = stepCount(steps);
     const { shown, handover } = useHandover(active, duration);
-    const rootStyle: CSSProperties & Container.CSSVariables = { ...style, '--dx-steps-duration': `${duration}ms` };
+    const rootStyle: CSSProperties & CSSVariables = { ...style, '--dx-steps-duration': `${duration}ms` };
 
     return (
       <StepsPrimitive.Root

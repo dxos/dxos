@@ -20,8 +20,8 @@ import {
   popupFrame,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import * as Button from '../Button/Button.tsx';
-import * as Group from '../Group/Group.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
 import * as Typography from '../Typography/Typography.tsx';
 import * as VirtualAnchor from '../VirtualAnchor/VirtualAnchor.ts';
 import * as Menu from './Menu.tsx';
@@ -97,7 +97,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
     <>
       <Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Menu.Trigger asChild>
-          <Button.Button data-testid={`trigger-${size}`}>Actions</Button.Button>
+          <Button data-testid={`trigger-${size}`}>Actions</Button>
         </Menu.Trigger>
         <Menu.Content>
           <Menu.ItemGroup>
@@ -142,7 +142,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       </Menu.Root>
       <Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Menu.Trigger asChild>
-          <Button.Button data-testid={`file-${size}`}>File</Button.Button>
+          <Button data-testid={`file-${size}`}>File</Button>
         </Menu.Trigger>
         <Menu.Content>
           <MenuNodes nodes={HIERARCHY} />
@@ -150,7 +150,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       </Menu.Root>
       <Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Menu.Trigger asChild>
-          <Button.Button data-testid={`long-${size}`}>Long</Button.Button>
+          <Button data-testid={`long-${size}`}>Long</Button>
         </Menu.Trigger>
         <Menu.Content size='lg'>
           {LONG.map((label) => (
@@ -166,16 +166,16 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           <Menu.Item item={{ value: 'rename', label: 'Rename' }} />
         </Menu.Content>
       </Menu.Root>
-      <Group.Group>
-        <Button.Button onClick={() => setAnchored(true)} data-testid={`open-anchored-${size}`}>
+      <Group>
+        <Button onClick={() => setAnchored(true)} data-testid={`open-anchored-${size}`}>
           Open at anchor
-        </Button.Button>
+        </Button>
         <Typography.Text asChild>
           <span ref={anchor} data-testid={`anchor-${size}`}>
             Anchor
           </span>
         </Typography.Text>
-      </Group.Group>
+      </Group>
       <Menu.Root
         open={anchored}
         onOpenChange={({ open }) => setAnchored(open)}

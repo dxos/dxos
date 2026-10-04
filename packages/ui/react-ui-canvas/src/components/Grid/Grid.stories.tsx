@@ -93,21 +93,21 @@ const DefaultStory = ({ size, showAxes }: GridProps) => {
       {/* Pointer presses on the toolbar must not pan the grid underneath. */}
       <div className='absolute top-2 left-2 w-fit' onPointerDown={(event) => event.stopPropagation()}>
         <Toolbar.Root size='sm' classNames='gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'>
-          <Button.Button
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--magnifying-glass-plus--regular'
             label='Zoom in'
             onClick={() => zoomBy(ZOOM_STEP)}
           />
-          <Button.Button
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--magnifying-glass-minus--regular'
             label='Zoom out'
             onClick={() => zoomBy(1 / ZOOM_STEP)}
           />
-          <Button.Button variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
+          <Button.Root variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
           <Toolbar.Separator variant='line' />
           <Toolbar.Text classNames='text-fg-muted font-mono text-sm whitespace-nowrap'>
             {Math.round(camera.zoom * 100)}% · [{format(topLeft.x)}, {format(topLeft.y)}] – [{format(bottomRight.x)},{' '}

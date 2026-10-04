@@ -20,8 +20,8 @@ const DefaultStory = () => (
 const WithActionsStory = () => (
   <HomeSection.Root>
     <HomeSection.Header title='Activity' onClose={() => {}}>
-      <Button.Button variant='ghost'>All</Button.Button>
-      <Button.Button variant='ghost'>30d</Button.Button>
+      <Button.Root variant='ghost'>All</Button.Root>
+      <Button.Root variant='ghost'>30d</Button.Root>
     </HomeSection.Header>
     <div className='rounded-sm bg-group-surface p-4 text-fg-muted'>Section content.</div>
   </HomeSection.Root>

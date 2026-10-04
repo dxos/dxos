@@ -7,8 +7,8 @@ import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { Editor } from '@dxos/react-ui-editor';
-import * as Grid from '@dxos/react-ui/Grid';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
@@ -77,14 +77,14 @@ const EditorStory = ({ columnWidth, ...props }: RevealProps & { columnWidth?: st
   );
 
   return (
-    <Grid.Grid grow cols={[columnWidth ?? 'minmax(0, 1fr)', columnWidth ?? 'minmax(0, 1fr)']}>
+    <Layout.Grid grow cols={[columnWidth ?? 'minmax(0, 1fr)', columnWidth ?? 'minmax(0, 1fr)']}>
       <div className='overflow-y-auto border-e border-separator'>
         <Editor.Root extensions={extensions}>
           <Editor.View classNames='p-4' value={content} onChange={setContent} />
         </Editor.Root>
       </div>
       <RevealPlayer {...props} fullscreen={false} content={content} />
-    </Grid.Grid>
+    </Layout.Grid>
   );
 };
 

@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Annotation, DXN, Entity, Obj, Ref, Tag, Type } from '@dxos/echo';
-import * as Container from '@dxos/react-ui/Container';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -104,7 +104,7 @@ const DefaultStory = ({ display, ordered }: StoryArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container.Container>
+            <Layout.Container>
               <Form.Root
                 schema={schema}
                 values={values}
@@ -118,7 +118,7 @@ const DefaultStory = ({ display, ordered }: StoryArgs) => {
                   <Form.Fields />
                 </Form.Content>
               </Form.Root>
-            </Container.Container>
+            </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>

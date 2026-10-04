@@ -9,7 +9,7 @@ import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Progress from '@dxos/react-ui/Progress';
+import * as Status from '@dxos/react-ui/Status';
 import { formatForDisplay } from '@dxos/schema';
 
 import { Ibkr } from '#types';
@@ -108,7 +108,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
               {asOfDescription && <p className='text-fg-muted'>{asOfDescription}</p>}
             </div>
             {onRefresh ? (
-              <Button.Button
+              <Button.Root
                 iconOnly
                 variant='ghost'
                 icon='ph--arrows-clockwise--regular'
@@ -120,7 +120,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
           </div>
 
           {loading ? (
-            <Progress.Progress indeterminate label={t('fundamentals.heading')} />
+            <Status.Progress indeterminate label={t('fundamentals.heading')} />
           ) : error ? (
             <Banner.Root valence='error'>
               <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>

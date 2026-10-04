@@ -11,12 +11,12 @@ import { MarkdownView } from '@dxos/react-ui-markdown';
 import * as Button from '@dxos/react-ui/Button';
 import * as Carousel from '@dxos/react-ui/Carousel';
 import * as Field from '@dxos/react-ui/Field';
-import * as Grid from '@dxos/react-ui/Grid';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Select from '@dxos/react-ui/Select';
-import * as Switch from '@dxos/react-ui/Switch';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
 import * as Util from '@dxos/react-ui/Util';
@@ -169,7 +169,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
            * with the rest of the content in col 2, and `Carousel.Next` sits
            * in col 3.
            */}
-          <Grid.Grid
+          <Layout.Grid
             cols={isMobile ? ['2.5rem', 'minmax(0, 1fr)', '2.5rem'] : ['4rem', 'minmax(0, 1fr)', '4rem']}
             align='start'
             classNames='dx-document gap-x-4 p-4'
@@ -179,7 +179,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
               icon={iconKey}
             />
 
-            <Grid.Grid
+            <Layout.Grid
               cols={['1fr', 'min-content']}
               classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'
             >
@@ -188,12 +188,12 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                 {failure && <PluginFailureBadge failure={failure} size='lg' />}
               </div>
               {onInstall ? (
-                <Button.Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
+                <Button.Root size='md' variant='primary' disabled={installing} onClick={onInstall}>
                   {installing ? t('installing.label') : t('install.label')}
-                </Button.Button>
+                </Button.Root>
               ) : (
                 <Field.Root>
-                  <Switch.Switch
+                  <Input.Switch
                     classNames='self-center'
                     checked={enabled}
                     onCheckedChange={({ checked }) => onEnabledChange?.(checked)}
@@ -208,7 +208,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                   </span>
                 )}
               </div>
-            </Grid.Grid>
+            </Layout.Grid>
 
             {scope && (
               <Section.Root>
@@ -327,14 +327,14 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                       </Select.Content>
                     </Select.Root>
                     {onInstallVersion && (
-                      <Button.Button
+                      <Button.Root
                         size='md'
                         variant='primary'
                         disabled={installing || selectedVersionTag === installedVersionTag}
                         onClick={onInstallVersion}
                       >
                         {installing ? t('installing.label') : t('install-version.label')}
-                      </Button.Button>
+                      </Button.Root>
                     )}
                   </div>
                 </Section.Body>
@@ -344,18 +344,18 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
             {(onUninstall || (hasUpdate && onUpdate) || updating) && (
               <div className='col-start-2 col-span-2 flex gap-2'>
                 {updating ? (
-                  <Button.Button variant='primary' disabled>
+                  <Button.Root variant='primary' disabled>
                     {t('updating.label')}
-                  </Button.Button>
+                  </Button.Root>
                 ) : hasUpdate && onUpdate ? (
-                  <Button.Button variant='primary' onClick={onUpdate}>
+                  <Button.Root variant='primary' onClick={onUpdate}>
                     {t('update.label')}
-                  </Button.Button>
+                  </Button.Root>
                 ) : null}
-                {onUninstall && <Button.Button onClick={onUninstall}>{t('uninstall.label')}</Button.Button>}
+                {onUninstall && <Button.Root onClick={onUninstall}>{t('uninstall.label')}</Button.Root>}
               </div>
             )}
-          </Grid.Grid>
+          </Layout.Grid>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );

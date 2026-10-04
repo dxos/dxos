@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import React, { type PropsWithChildren, type ReactNode, useEffect, useRef, useState } from 'react';
 
 /**

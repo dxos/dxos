@@ -99,7 +99,7 @@ export const AboutDialog = () => {
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.CloseTrigger asChild>
-          <Button.Button variant='primary'>{t('close.label')}</Button.Button>
+          <Button.Root variant='primary'>{t('close.label')}</Button.Root>
         </Dialog.CloseTrigger>
       </Dialog.Footer>
     </Dialog.Content>

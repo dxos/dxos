@@ -149,7 +149,7 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
         ref={forwardedRef}
       >
         {tabs.map(({ id, icon, label, testId }) => (
-          <Button.Button
+          <Button.Root
             key={id}
             role='tab'
             aria-selected={value === id}

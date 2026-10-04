@@ -16,9 +16,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import * as Container from '@dxos/react-ui/Container';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -148,7 +148,7 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
       <Panel.Root {...Util.composableProps(props)} ref={forwardedRef}>
         <Panel.Header>
           <Toolbar.Root>
-            <Input.Input
+            <Input.Root
               aria-label={t('filter.label')}
               placeholder={t('filter.placeholder')}
               value={filter}
@@ -159,7 +159,7 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
         <Panel.Body asChild>
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
-              <Container.Container gutter='md' padBlock>
+              <Layout.Container gutter='md' padBlock>
                 {filtered.length > 0 ? (
                   <PluginList
                     plugins={filtered}
@@ -182,7 +182,7 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
                 ) : (
                   empty
                 )}
-              </Container.Container>
+              </Layout.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>

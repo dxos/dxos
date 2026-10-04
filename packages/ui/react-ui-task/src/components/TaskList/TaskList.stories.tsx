@@ -9,11 +9,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { createMenuAction } from '@dxos/react-ui-menu';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
-import * as Flex from '@dxos/react-ui/Flex';
-import * as Grid from '@dxos/react-ui/Grid';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
@@ -473,9 +471,9 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
           <Popover.Body classNames='dx-card-popover-width'>
             <Card.Root border={false} data-testid='artifact-preview'>
               <Card.Header>
-                <Block.Block>
+                <Layout.Block>
                   <Icon.Icon icon={iconFor(artifact)} />
-                </Block.Block>
+                </Layout.Block>
                 <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
               </Card.Header>
               {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
@@ -671,19 +669,19 @@ const DefaultStory = ({
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
-      <Grid.Grid grow rows={['minmax(0, 1fr)', 'min-content']}>
+      <Layout.Grid grow rows={['minmax(0, 1fr)', 'min-content']}>
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <Flex.Flex classNames='p-3'>
+        <Layout.Flex classNames='p-3'>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
           {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
-        </Flex.Flex>
-      </Grid.Grid>
+        </Layout.Flex>
+      </Layout.Grid>
     </TaskList.Root>
   );
 };

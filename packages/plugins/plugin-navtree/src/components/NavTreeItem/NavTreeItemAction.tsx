@@ -36,7 +36,7 @@ export const NavTreeItemActionDropdownMenu = Util.composable<HTMLButtonElement, 
 
     return (
       <ActionMenu caller={caller} onAction={handleAction} group={parent} actions={menuActions as MenuItem[]}>
-        <Button.Button
+        <Button.Root
           {...props}
           classNames='shrink-0 px-2 pointer-fine:px-1'
           variant='ghost'
@@ -72,7 +72,7 @@ export const NavTreeItemMonolithicAction = (
   } = props;
   const runAction = GraphHooks.useActionRunner();
   return (
-    <Button.Button
+    <Button.Root
       variant={variant}
       classNames={['shrink-0', iconOnly ? 'px-2 pointer-fine:px-1' : 'p-2 pointer-fine:p-2 me-1']}
       icon={icon ?? fallbackIcon}

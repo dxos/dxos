@@ -60,7 +60,7 @@ export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }:
             <div className='px-2 text-right font-mono'>
               {typeof type.presetLabel === 'string' ? '—' : typename ? (objects[typename] ?? 0) : 0}
             </div>
-            <Button.Button
+            <Button.Root
               variant='ghost'
               icon={pending === typename ? 'ph--spinner--regular' : 'ph--plus--regular'}
               iconOnly

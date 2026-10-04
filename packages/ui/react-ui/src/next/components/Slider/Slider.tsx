@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { Slider as SliderPrimitive } from '@ark-ui/react/slider';
 import React, { type ReactNode, forwardRef, useId } from 'react';
 
@@ -13,7 +11,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 
-type SliderProps = ThemedClassName<
+export type SliderProps = ThemedClassName<
   Omit<
     SliderPrimitive.RootProps,
     | 'children'
@@ -48,7 +46,7 @@ type SliderProps = ThemedClassName<
  * Ark's slider as a leaf control: an optional label above a block-tall row holding the track, its range and one thumb
  * per value. Every thumb must be named, so a missing name throws rather than rendering an unlabelled control.
  */
-const Slider = forwardRef<HTMLDivElement, SliderProps>(
+export const Slider = forwardRef<HTMLDivElement, SliderProps>(
   (
     {
       classNames,
@@ -115,6 +113,3 @@ const Slider = forwardRef<HTMLDivElement, SliderProps>(
 );
 
 Slider.displayName = 'Slider';
-
-export { Slider as Input };
-export type { SliderProps as InputProps };

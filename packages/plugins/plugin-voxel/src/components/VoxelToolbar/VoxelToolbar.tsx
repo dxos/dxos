@@ -75,7 +75,7 @@ export const VoxelToolbar = Util.composable<HTMLDivElement, VoxelToolbarProps>(
             <ToggleGroup.Item key={tool.value} value={tool.value} icon={tool.icon} iconOnly label={tool.label} />
           ))}
         </Toolbar.ToggleGroup>
-        <Button.Button
+        <Button.Root
           icon={showGrid ? 'ph--grid-four--fill' : 'ph--grid-four--regular'}
           iconOnly
           variant='ghost'
@@ -83,7 +83,7 @@ export const VoxelToolbar = Util.composable<HTMLDivElement, VoxelToolbarProps>(
           onClick={onToggleGrid}
         />
         {onGenerate && (
-          <Button.Button
+          <Button.Root
             icon='ph--shapes--regular'
             iconOnly
             variant='ghost'
@@ -91,12 +91,10 @@ export const VoxelToolbar = Util.composable<HTMLDivElement, VoxelToolbarProps>(
             onClick={onGenerate}
           />
         )}
-        {onClear && (
-          <Button.Button icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />
-        )}
+        {onClear && <Button.Root icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />}
         <Toolbar.Separator />
         {onSeedLife && (
-          <Button.Button
+          <Button.Root
             icon='ph--dna--regular'
             iconOnly
             variant='ghost'
@@ -105,7 +103,7 @@ export const VoxelToolbar = Util.composable<HTMLDivElement, VoxelToolbarProps>(
           />
         )}
         {onToggleLife && (
-          <Button.Button
+          <Button.Root
             icon={lifeRunning ? 'ph--pause--fill' : 'ph--play--fill'}
             iconOnly
             variant='ghost'

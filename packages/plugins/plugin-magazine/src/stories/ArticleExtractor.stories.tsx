@@ -67,7 +67,7 @@ const DefaultStory = () => {
       <Panel.Header>
         <Toolbar.Root>
           <Field.Root>
-            <Input.Input
+            <Input.Root
               placeholder='Article URL'
               value={url}
               onChange={(event) => setUrl(event.target.value)}
@@ -94,14 +94,14 @@ const DefaultStory = () => {
               ))}
             </Select.Content>
           </Select.Root>
-          <Button.Button
+          <Button.Root
             icon='ph--arrow-clockwise--regular'
             iconOnly
             label='Fetch'
             onClick={() => void handleFetch()}
             disabled={state.status === 'loading'}
           />
-          <Button.Button
+          <Button.Root
             label={showMarkdown ? 'Show preview' : 'Show Markdown'}
             icon={showMarkdown ? 'ph--article--regular' : 'ph--code--regular'}
             iconOnly

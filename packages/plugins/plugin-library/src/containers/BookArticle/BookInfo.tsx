@@ -13,9 +13,9 @@ import { useObject } from '@dxos/react-client/echo';
 import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import * as Button from '@dxos/react-ui/Button';
-import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
 
@@ -143,27 +143,27 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
   return (
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
-        <Flex.Flex column gap='lg' classNames='mx-auto max-w-document-max-width p-4'>
+        <Layout.Flex column gap='lg' classNames='mx-auto max-w-document-max-width p-4'>
           {/* Header — cover + catalog identity. */}
           <section className='flex gap-4 rounded-lg border border-separator p-4'>
             {cover ? (
               <img src={cover} alt='' className='w-24 aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
-              <Flex.Flex center classNames='w-24 aspect-[2/3] shrink-0 rounded bg-input-surface'>
+              <Layout.Flex center classNames='w-24 aspect-[2/3] shrink-0 rounded bg-input-surface'>
                 <Icon.Icon icon='ph--book--regular' size='xl' tone='muted' />
-              </Flex.Flex>
+              </Layout.Flex>
             )}
-            <Flex.Flex column gap='sm' classNames='min-w-0'>
+            <Layout.Flex column gap='sm' classNames='min-w-0'>
               <h1 className='text-xl font-semibold'>{catalog?.title}</h1>
               {authors.length > 0 && (
                 <p className='text-fg-muted'>{t('by-author.label', { authors: authors.join(', ') })}</p>
               )}
               {/* The user's own rating (1–10) as five stars in half-star increments. */}
               {stars != null && <StarRating value={stars / STARS_PER_STAR} />}
-              <Flex.Flex gap='xs' align='center' wrap>
+              <Layout.Flex gap='xs' align='center' wrap>
                 {live.status && <Tag.Tag hue='info'>{STATUS_LABELS[live.status]}</Tag.Tag>}
                 {live.owned && <Tag.Tag hue='neutral'>{t('owned.label')}</Tag.Tag>}
-              </Flex.Flex>
+              </Layout.Flex>
               {(publication || externalLinks.length > 0) && (
                 <p className='text-sm text-fg-muted'>
                   {publication}
@@ -183,15 +183,15 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                 </p>
               )}
               {catalog?.genres && catalog.genres.length > 0 && (
-                <Flex.Flex gap='xs' wrap>
+                <Layout.Flex gap='xs' wrap>
                   {catalog.genres.map((genre) => (
                     <Tag.Tag key={genre} hue='neutral'>
                       {genre}
                     </Tag.Tag>
                   ))}
-                </Flex.Flex>
+                </Layout.Flex>
               )}
-            </Flex.Flex>
+            </Layout.Flex>
           </section>
 
           {/* Description — stored as markdown (converted from BookHive's HTML on ingest). */}
@@ -202,9 +202,9 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                 <MarkdownView content={description} classNames='text-sm' />
               </div>
               {showDescriptionToggle && (
-                <Button.Button variant='ghost' classNames='self-start' onClick={() => setExpanded((value) => !value)}>
+                <Button.Root variant='ghost' classNames='self-start' onClick={() => setExpanded((value) => !value)}>
                   {t(expanded ? 'show-less.label' : 'show-more.label')}
-                </Button.Button>
+                </Button.Root>
               )}
             </section>
           )}
@@ -223,7 +223,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               </Form.Content>
             </Form.Root>
           </section>
-        </Flex.Flex>
+        </Layout.Flex>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );

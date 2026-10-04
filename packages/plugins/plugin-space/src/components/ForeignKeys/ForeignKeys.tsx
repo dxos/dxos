@@ -45,7 +45,7 @@ const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
     <Listbox.Item id={forignKey.id}>
       <Listbox.ItemText />
       <Listbox.ItemDescription />
-      <Button.Button
+      <Button.Root
         iconOnly
         icon='ph--x--regular'
         variant='ghost'

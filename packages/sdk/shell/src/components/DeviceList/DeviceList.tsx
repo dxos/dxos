@@ -52,7 +52,7 @@ export const DeviceList = ({
           </Listbox.Content>
         </Listbox.Root>
       )}
-      <Button.Button
+      <Button.Root
         variant='ghost'
         classNames='justify-start gap-2 ps-0 pe-3 w-full'
         data-testid='devices-panel.create-invitation'
@@ -63,7 +63,7 @@ export const DeviceList = ({
         </div>
         <span className='grow font-medium text-start'>{t('choose-add-device.label')}</span>
         <Icon.Icon icon='ph--caret-right--bold' size='md' />
-      </Button.Button>
+      </Button.Root>
     </div>
   );
 };

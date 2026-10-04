@@ -15,9 +15,9 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
-import * as Block from '@dxos/react-ui/Block';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Task } from '@dxos/types';
@@ -71,9 +71,9 @@ const DefaultStory = () => {
             <CardContainer role={role} icon='ph--question--regular'>
               <Card.Root border={false}>
                 <Card.Header>
-                  <Block.Block>
+                  <Layout.Block>
                     <Icon.Icon icon='ph--question--regular' />
-                  </Block.Block>
+                  </Layout.Block>
                   <Card.Title>{task.title}</Card.Title>
                 </Card.Header>
                 <QuestionCard task={task} questionId={question.question.id} />

@@ -23,8 +23,8 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Button from '../Button/Button.tsx';
-import * as Container from '../Container/Container.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Container, DefaultGutterProvider } from '../Container/Container.tsx';
 import { popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 
@@ -215,10 +215,10 @@ type PopoverBodyProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'wid
 const PopoverBody = forwardRef<HTMLDivElement, PopoverBodyProps>(({ classNames, children, ...props }, forwardedRef) => (
   <ScrollArea.Root {...props} classNames={mx(recipes.popoverBody(), classNames)} ref={forwardedRef}>
     <ScrollArea.Viewport asChild>
-      <Container.Container gutter='inset'>
+      <Container gutter='inset'>
         {/* Its direct content (a form's Viewport) joins these rails rather than nesting a second inset. */}
-        <Container.DefaultGutterProvider gutter='inherit'>{children}</Container.DefaultGutterProvider>
-      </Container.Container>
+        <DefaultGutterProvider gutter='inherit'>{children}</DefaultGutterProvider>
+      </Container>
     </ScrollArea.Viewport>
   </ScrollArea.Root>
 ));
@@ -256,7 +256,7 @@ const PopoverCloseTrigger = forwardRef<HTMLButtonElement, PopoverCloseTriggerPro
       </ark.button>
     ) : (
       <PopoverPrimitive.CloseTrigger {...props} onClick={onClick} asChild ref={forwardedRef}>
-        <Button.Button icon={icon} label={label} iconOnly />
+        <Button icon={icon} label={label} iconOnly />
       </PopoverPrimitive.CloseTrigger>
     );
   },

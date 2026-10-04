@@ -13,7 +13,7 @@ import {
   listAudioInputs,
   setPreferredAudioInput,
 } from '@dxos/react-ui-transcription';
-import * as Group from '@dxos/react-ui/Group';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
@@ -159,7 +159,7 @@ export const Mic = ({ docId }: MicProps) => {
         : t('start-recording.label');
 
   return (
-    <Group.Group compact>
+    <Button.Group compact>
       <SystemButton.Mic
         iconOnly
         variant='ghost'
@@ -181,6 +181,6 @@ export const Mic = ({ docId }: MicProps) => {
         onEntityExtractionChange={handleEntityExtractionChange}
         onSelectDevice={handleSelectDevice}
       />
-    </Group.Group>
+    </Button.Group>
   );
 };

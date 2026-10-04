@@ -115,7 +115,7 @@ export const FeedsArticle = ({ role, ...props }: ArticleProps & { space?: Space 
             onChange={handleSelect}
           />
 
-          <Button.Button icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
+          <Button.Root icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

@@ -14,31 +14,25 @@ import { byTestId, controlSize, expectScoped, expectTooltip, realHover, realUnho
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import * as Toolbar from '../Toolbar/Toolbar.tsx';
 import * as Typography from '../Typography/Typography.tsx';
-import * as Toggle from './Toggle.tsx';
+import { Toggle } from './Toggle.tsx';
 
 /** Icon-only toggles (one pressed, one disabled), a labelled toggle, a controlled one, and one with an `activeIcon`. */
 const DefaultStory = ({ size }: SizeArgs) => {
   const [wrap, setWrap] = useState(false);
   return (
     <Toolbar.Root>
-      <Toggle.Toggle icon='ph--text-b--regular' label='Bold' iconOnly data-testid={`bold-${size}`} />
-      <Toggle.Toggle icon='ph--text-italic--regular' label='Italic' iconOnly defaultPressed />
-      <Toggle.Toggle icon='ph--text-underline--regular' label='Underline' iconOnly disabled />
-      <Toggle.Toggle icon='ph--eye--regular' label='Preview' data-testid={`preview-${size}`} />
-      <Toggle.Toggle
+      <Toggle icon='ph--text-b--regular' label='Bold' iconOnly data-testid={`bold-${size}`} />
+      <Toggle icon='ph--text-italic--regular' label='Italic' iconOnly defaultPressed />
+      <Toggle icon='ph--text-underline--regular' label='Underline' iconOnly disabled />
+      <Toggle icon='ph--eye--regular' label='Preview' data-testid={`preview-${size}`} />
+      <Toggle
         icon='ph--arrows-in-line-horizontal--regular'
         label='Wrap lines'
         iconOnly
         pressed={wrap}
         onPressedChange={setWrap}
       />
-      <Toggle.Toggle
-        icon='ph--star--regular'
-        activeIcon='ph--star--fill'
-        label='Pin'
-        iconOnly
-        data-testid={`pin-${size}`}
-      />
+      <Toggle icon='ph--star--regular' activeIcon='ph--star--fill' label='Pin' iconOnly data-testid={`pin-${size}`} />
       <Typography.Text data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Typography.Text>
     </Toolbar.Root>
   );

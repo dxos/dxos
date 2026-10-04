@@ -10,7 +10,7 @@ import React, { createContext, useContext } from 'react';
 import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import * as Container from '../Container/Container.tsx';
+import { DefaultGutterProvider, type Gutter, type Level } from '../Container/Container.tsx';
 
 //
 // Root
@@ -19,17 +19,17 @@ import * as Container from '../Container/Container.tsx';
 type PanelRootProps = {
   size?: Size;
   /** An absolute rung of the surface ladder; `base` by default, as the current Panel's content. */
-  level?: Exclude<Container.Level, '+1'>;
+  level?: Exclude<Level, '+1'>;
   /** `document` keeps a scrolling Body's content at the reading width, centred, while it still scrolls at the panel's edge. */
   width?: 'document';
   /**
    * The gutter of the first Container under the Body when it names none (`sm`, the form inset, by default); content
    * that puts icons in the rails names `gutter='rail'` itself.
    */
-  gutter?: Exclude<Container.Gutter, 'inherit'>;
+  gutter?: Exclude<Gutter, 'inherit'>;
 };
 
-const PanelGutterContext = createContext<Exclude<Container.Gutter, 'inherit'>>('sm');
+const PanelGutterContext = createContext<Exclude<Gutter, 'inherit'>>('sm');
 
 /**
  * The plank host (Phase 4 decision 1): fills its parent, sets `data-size` and a level for its subtree, and is the pane's
@@ -105,11 +105,11 @@ const PanelBody = slottable<HTMLDivElement, PanelBodyProps>(({ children, asChild
   const gutter = useContext(PanelGutterContext);
   const { className, ...rest } = composableProps(props, { classNames: recipes.panelBody() });
   return (
-    <Container.DefaultGutterProvider gutter={gutter}>
+    <DefaultGutterProvider gutter={gutter}>
       <ark.div asChild={asChild} {...rest} data-scope='panel' data-part='body' className={className} ref={forwardedRef}>
         {children}
       </ark.div>
-    </Container.DefaultGutterProvider>
+    </DefaultGutterProvider>
   );
 });
 
