@@ -35,6 +35,7 @@ type TaskEditorContextValue = {
   draft: string;
   setDraft: (title: string) => void;
   commitTitle: () => void;
+  // TODO(burdon): Remove.
   descriptionRef: React.RefObject<MarkdownEditableController | null>;
 };
 
@@ -129,11 +130,6 @@ const TaskEditorTitle = ({ classNames }: TaskEditorTitleProps) => {
     <Field.Root>
       <Input
         variant='subdued'
-        // An input clips its overflow rather than wrapping it, so a long title ends mid-word with
-        // nothing to say it continues; the ellipsis says so. (Shown while the field is not focused,
-        // which is how a pane holds it open.)
-        classNames={mx('px-0 text-ellipsis', classNames)}
-        ref={inputRef}
         data-testid='taskEditor.title'
         placeholder={t('task-title.placeholder')}
         value={draft}
@@ -141,6 +137,7 @@ const TaskEditorTitle = ({ classNames }: TaskEditorTitleProps) => {
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={commitTitle}
+        ref={inputRef}
       />
     </Field.Root>
   );
@@ -166,6 +163,7 @@ const TaskEditorDescription = ({ placeholder, extensions, classNames }: TaskEdit
 
   return (
     <div data-testid='taskEditor.description' className={mx('flex min-w-0', classNames)}>
+      xxx
       {/* `editing` is held open — the pane IS the editor, so there is nothing to click into — and
           the key remounts it per task, since a field held open never re-reads its subject. */}
       <MarkdownEditable

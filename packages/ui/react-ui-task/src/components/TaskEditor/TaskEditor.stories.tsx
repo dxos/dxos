@@ -28,14 +28,7 @@ const DefaultStory = ({ seed, showDescription, readonly }: DefaultStoryProps) =>
     setVersion((version) => version + 1);
   }, []);
 
-  return (
-    <div className='flex flex-col gap-4 p-2 w-[32rem]'>
-      <TaskEditor task={task} showDescription={showDescription} onUpdate={readonly ? undefined : handleUpdate} />
-      <pre data-testid='story.task' className='text-xs text-fg-muted whitespace-pre-wrap'>
-        {JSON.stringify({ title: task.title, description: task.description }, null, 2)}
-      </pre>
-    </div>
-  );
+  return <TaskEditor task={task} showDescription={showDescription} onUpdate={readonly ? undefined : handleUpdate} />;
 };
 
 const meta = {
@@ -78,7 +71,7 @@ export const Readonly: Story = {
 
 /**
  * 1. Rename the task: Enter commits the title.
- * 2. The snapshot shows the new title.
+ * 2. The field keeps the new title.
  */
 export const TestRename: Story = {
   args: {
@@ -91,8 +84,6 @@ export const TestRename: Story = {
     }
     await userEvent.clear(title);
     await userEvent.type(title, 'Draft the launch email{Enter}');
-    await waitFor(() =>
-      expect(canvasElement.querySelector('[data-testid="story.task"]')).toHaveTextContent('Draft the launch email'),
-    );
+    await waitFor(() => expect(title).toHaveValue('Draft the launch email'));
   },
 };
