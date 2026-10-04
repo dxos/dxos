@@ -60,7 +60,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
       {(feedName || published) && (
         <Card.Row>
           <Layout.Grid
-            cols={['minmax(0, 1fr)', 'auto']}
+            cols={['fill', 'auto']}
             gap='sm'
             align='center'
             classNames='text-sm text-fg-muted overflow-hidden'

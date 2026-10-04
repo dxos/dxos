@@ -99,7 +99,7 @@ const DefaultStory = () => {
   }, [runtime, space, handleStart]);
 
   const handleStop = useCallback(
-    (process: Process.Info) => {
+    (process: Process.Process) => {
       if (!runtime) {
         return;
       }

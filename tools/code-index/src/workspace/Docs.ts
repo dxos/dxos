@@ -36,6 +36,10 @@ const edges = await rdf.query(\`PREFIX deus: <https://dxos.org/vocab/deus#>
 const lines = edges.map((row) => \`  echo --> \${row.to.replace(/[^a-zA-Z0-9]/g, '_')}["\${row.to}"]\`);
 await display.mermaid(['graph LR', '  echo["@dxos/echo"]', ...lines].join('\\n'), '@dxos/echo dependencies');
 
+// Where a name is defined: the first declaration is the real one, not a same-named test double.
+const [definition] = await symbols.declarations('proxyFetchLegacy');
+print(definition?.package, definition?.path);
+
 // Remember something across turns.
 await storage.set('focus', { package: '@dxos/echo', why: 'user asked about it' });
 const focus = await storage.get('focus');
@@ -58,6 +62,11 @@ export const systemPrompt = (): string =>
     'Prefer a Mermaid diagram when the answer is a shape (dependencies, layering, a flow) and a',
     'table when it is a list of facts. Explore first with small queries and `print`, then display',
     'the finished result.',
+    '',
+    'To find where X is defined, call `symbols.declarations(X)` and take `[0]`: a name often has test',
+    'doubles too. In raw SPARQL, require `deus:exported true`, exclude test and story files, and never',
+    'use `LIMIT 1` without an `ORDER BY` that ranks. For who uses X, pass the chosen declaration:',
+    '`symbols.usages(definition.iri)`; a bare name with several declarations returns only candidates.',
     '',
     'The sandbox globals are declared as:',
     '',

@@ -33,11 +33,16 @@
     flex-direction: column;
     min-width: 0;
   }
+  /* A header that is the toolbar (`Panel.Header asChild`) keeps the toolbar's row, or its centring acts across it. */
+  .dx-panel-header.dx-toolbar {
+    flex-direction: row;
+  }
   /*
    * An article's toolbar is the app's toolbar height (ui-theme `--dx-toolbar-size`), its controls centred in it; a panel
    * given its own size keeps that size's block-tall header.
    */
-  .dx-panel:not([data-size]) > .dx-panel-header .dx-toolbar {
+  .dx-panel:not([data-size]) > .dx-panel-header .dx-toolbar,
+  .dx-panel:not([data-size]) > .dx-panel-header.dx-toolbar {
     min-height: var(--dx-toolbar-size, 2.5rem);
   }
 

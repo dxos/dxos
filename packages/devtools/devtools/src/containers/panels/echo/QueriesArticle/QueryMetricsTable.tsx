@@ -83,7 +83,7 @@ const COLUMNS: Column[] = [
   },
 ];
 
-const TRACKS = ['minmax(12rem,1fr)', ...COLUMNS.slice(1).map(() => '3.75rem')];
+const TRACKS: Layout.GridTrack[] = ['minmax(12rem,1fr)', ...COLUMNS.slice(1).map((): Layout.GridTrack => '3.75rem')];
 
 type Sort = { column: string; descending: boolean };
 

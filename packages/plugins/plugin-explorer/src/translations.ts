@@ -3,7 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
-import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
@@ -32,5 +32,5 @@ export const translations = [
       },
     },
   },
-  ...componentsTranslations,
+  ...queryTranslations,
 ] as const satisfies Theme.Resource[];

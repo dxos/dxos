@@ -61,7 +61,7 @@ export const PullRequestFiles = ({
   }
 
   return (
-    <Layout.Grid grow cols={['minmax(0, 1fr)', '18rem']} data-testid='pull-request.files'>
+    <Layout.Grid grow cols={['fill', '18rem']} data-testid='pull-request.files'>
       {fence ? (
         // Keyed by file so the next file opens at its top rather than at the previous one's scroll.
         <WalkthroughView key={file?.path} value={fence} onLineComment={onLineComment} />

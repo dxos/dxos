@@ -23,7 +23,7 @@ export type QueriesCardProps = {
 };
 
 /** Query takes the slack; fixed fired, active, items and duration tracks line the figures up across rows. */
-const ROW_TRACKS = ['minmax(0,1fr)', '2rem', '1.5rem', '2.5rem', '3rem'];
+const ROW_TRACKS = ['fill', '2rem', '1.5rem', '2.5rem', '3rem'] as const;
 
 /** The slowest queries, one row per query text: how often it fired, how many run reactively, what it returns. */
 export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardProps) => {

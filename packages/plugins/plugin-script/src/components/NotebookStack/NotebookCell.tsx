@@ -11,8 +11,8 @@ import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as TemplateEditor from '@dxos/plugin-routine/TemplateEditor';
-import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
+import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-query';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import {
   type BasicExtensionsOptions,

@@ -37,7 +37,7 @@ type ScrollAreaRootProps = {
   native?: boolean;
   /** Scrolling axis; `all` scrolls both (the current ScrollArea's values). */
   orientation?: AllowedAxis;
-  /** Overlay thumbs show only while the pointer is over the frame (or a thumb is dragged). */
+  /** Overlay thumbs show only while the pointer is over the frame (or a thumb is dragged); `false` keeps them visible. */
   autoHide?: boolean;
   /** Mandatory snapping on the scrolling axis; children carry their own `scroll-snap-align`. */
   snap?: boolean;
@@ -63,7 +63,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
       width = 'thin',
       native = false,
       orientation = 'vertical',
-      autoHide = false,
+      autoHide = true,
       snap = false,
       scrollbars = true,
       ...props

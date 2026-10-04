@@ -20,10 +20,10 @@ import { existsSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import * as Cooperative from './internal/cooperative.ts';
 import type * as Graph from './internal/graph.ts';
 import * as Native from './internal/native.ts';
 import { encodeDocument } from './internal/ntriples.ts';
-import * as Quadstore from './internal/quadstore.ts';
 import { clientLayer } from './internal/sqlite.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 import * as Ontology from './Ontology.ts';
@@ -33,9 +33,8 @@ import * as Ontology from './Ontology.ts';
  * quad store holding one named graph per file, plus SPARQL, LDkit and N3 reasoning over those
  * graphs. Nothing outside this module opens a database.
  *
- * Two quad-store backends sit behind the same interface (see `design/NATIVE-BACKEND.md`): `js`
- * (Quadstore over LevelDB, EYE for rules) and `native` (oxigraph plus an incremental rule engine,
- * from `tools/code-index-native`).
+ * The quads live in oxigraph and the rules run on an incremental engine, both from the Rust addon
+ * `tools/code-index-native` (see `design/NATIVE-BACKEND.md`).
  */
 
 export class StoreError extends Data.TaggedError('code-index/StoreError')<{
@@ -85,22 +84,6 @@ export type DerivedGraphCount = {
 export type Binding = Graph.Binding;
 
 export type ReasonOutcome = Graph.ReasonOutcome;
-
-export type Backend = 'js' | 'native';
-
-const isBackend = (value: string | undefined): value is Backend => value === 'js' || value === 'native';
-
-/** The backend `CODE_INDEX_BACKEND` names, if it names one. */
-const envBackend = (): Backend | undefined => {
-  const value = process.env.CODE_INDEX_BACKEND;
-  return isBackend(value) ? value : undefined;
-};
-
-/**
- * What a new store is written with when not given a backend: `CODE_INDEX_BACKEND`, else `js`. An
- * existing store opened without one keeps the backend it was written with.
- */
-export const defaultBackend = (): Backend => envBackend() ?? 'js';
 
 export type LayerOptions = {
   /**
@@ -165,14 +148,14 @@ export interface Api {
   readonly dump: () => Effect.Effect<string, StoreError>;
   readonly load: (turtle: string) => Effect.Effect<number, StoreError>;
   /**
-   * Run N3 rules (EYE) over the asserted facts; returns the derived quads. `materialize` replaces
+   * Run N3 rules over the asserted facts; returns the derived quads. `materialize` replaces
    * the derived graph with this pass's conclusions — derivations never outlive their premises.
    */
   readonly reason: (reasoner: string, rules: string, options?: ReasonOptions) => Effect.Effect<Quad[], StoreError>;
   /**
    * Run every reasoner in order, each replacing its own graph — what an indexing pass closes with.
-   * The native backend maintains the graphs from the changes since the last call when the rule set
-   * is the one they were computed with; see `design/NATIVE-BACKEND.md`.
+   * The graphs are maintained from the changes since the last call when the rule set is the one
+   * they were computed with; see `design/NATIVE-BACKEND.md`.
    */
   readonly reasonAll: (reasoners: readonly Graph.ReasonerInput[]) => Effect.Effect<ReasonOutcome[], StoreError>;
   /** Replace a JS pass's graph with these conclusions; see `Ontology.passGraphIri`. */
@@ -195,7 +178,6 @@ export interface Api {
 
   readonly stats: () => Effect.Effect<Stats, StoreError>;
   readonly clear: () => Effect.Effect<void, StoreError>;
-  readonly backend: Backend;
 }
 
 export class Store extends Context.Service<Store, Api>()('code-index/Store') {}
@@ -219,6 +201,12 @@ const VERSION_KEY = 'ontologyVersion';
 
 /** The backend whose graphs the ledger describes; recorded with {@link VERSION_KEY}. */
 const BACKEND_KEY = 'backend';
+
+/** The only backend; a store stamped otherwise (`js`) or not at all holds graphs this one cannot read. */
+const BACKEND = 'native';
+
+/** The LevelDB directory a `js`-stamped store keeps its graphs in, deleted on reset so it does not linger. */
+const JS_GRAPH_DIR = 'graph';
 
 /** Advanced by every write, before it lands, so a reasoning pass can tell its premises moved since. */
 const GENERATION_KEY = 'generation';
@@ -246,22 +234,21 @@ const readStamp = (): Effect.Effect<{ version?: string; backend?: string }, Stor
   });
 
 /**
- * Empty a store written under another {@link Ontology.VERSION} or by the other backend before the
+ * Empty a store written under another {@link Ontology.VERSION} or by another backend before the
  * graph opens, so the next pass reindexes everything: the ledger's mtimes and the reasoning marks
  * describe the graphs of whoever wrote them. A store without a recorded backend predates the stamp
  * and resets too. Both are recorded last, in one statement: a crash part-way leaves them unset and
  * the next open simply resets again.
  */
-const resetIfStale = (dir: string, backend: Backend): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
+const resetIfStale = (dir: string): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
     const stamp = yield* readStamp();
     const version = String(Ontology.VERSION);
-    if (stamp.version === version && stamp.backend === backend) {
+    if (stamp.version === version && stamp.backend === BACKEND) {
       return;
     }
-    // Both backends' directories go, so switching backend after an upgrade cannot revive old graphs.
-    for (const graphDir of [Quadstore.DIR, Native.DIR]) {
+    for (const graphDir of [JS_GRAPH_DIR, Native.DIR]) {
       yield* Effect.tryPromise({
         try: () => rm(join(dir, graphDir), { recursive: true, force: true }),
         catch: fail('Failed to drop stale graph'),
@@ -269,19 +256,13 @@ const resetIfStale = (dir: string, backend: Backend): Effect.Effect<void, StoreE
     }
     yield* sql`DELETE FROM files`.pipe(Effect.mapError(fail('Failed to drop stale ledger')));
     yield* sql`DELETE FROM meta`.pipe(Effect.mapError(fail('Failed to drop stale meta')));
-    yield* sql`INSERT INTO meta (key, value) VALUES (${VERSION_KEY}, ${version}), (${BACKEND_KEY}, ${backend})`.pipe(
+    yield* sql`INSERT INTO meta (key, value) VALUES (${VERSION_KEY}, ${version}), (${BACKEND_KEY}, ${BACKEND})`.pipe(
       Effect.mapError(fail('Failed to record store version')),
     );
   });
 
-/**
- * A reader cannot reset a stale store, so it refuses one rather than answering from old graphs, and
- * returns the backend to open: the recorded one, which an explicit `requested` must match.
- */
-const requireCurrent = (
-  dir: string,
-  requested: Backend | undefined,
-): Effect.Effect<Backend, StoreError, SqlClient.SqlClient> =>
+/** A reader cannot reset a stale store, so it refuses one rather than answering from old graphs. */
+const requireCurrent = (dir: string): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
     const stamp = yield* readStamp();
     const rebuild = 'run `code-index index` to rebuild it';
@@ -291,46 +272,33 @@ const requireCurrent = (
         `was written by ontology version ${stamp.version ?? 'unknown'}, not ${Ontology.VERSION}; ${rebuild}`,
       );
     }
-    if (!isBackend(stamp.backend)) {
+    if (stamp.backend === undefined) {
       return yield* refuse(`does not record which backend wrote it; ${rebuild}`);
     }
-    if (requested !== undefined && requested !== stamp.backend) {
-      return yield* refuse(
-        `was written by the ${stamp.backend} backend, not ${requested}; read it with CODE_INDEX_BACKEND=${stamp.backend}, or ${rebuild} with ${requested}`,
-      );
+    if (stamp.backend !== BACKEND) {
+      return yield* refuse(`was written by the ${stamp.backend} backend, which is no longer supported; ${rebuild}`);
     }
-    return stamp.backend;
   });
 
-const make = (
-  dir: string,
-  requested: Backend | undefined,
-  readOnly: boolean,
-): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
+const make = (dir: string, readOnly: boolean): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
-    // Settled before the graph opens, so a reader never creates the other backend's directory.
-    let backend: Backend;
+    // Settled before the graph opens, so a reader never creates a graph directory in a stale store.
     if (readOnly) {
-      backend = yield* requireCurrent(dir, requested);
+      yield* requireCurrent(dir);
     } else {
       // WAL with FULL fsyncs every commit; NORMAL fsyncs at checkpoints and still survives a process
-      // crash at any point. Only an OS crash can lose the last commits, and the quad stores (RocksDB,
-      // LevelDB) never fsync their own writes, so FULL bought no durability the graphs had.
+      // crash at any point. Only an OS crash can lose the last commits, and the quad store (RocksDB)
+      // never fsyncs its own writes, so FULL bought no durability the graphs had.
       yield* sql`PRAGMA synchronous = NORMAL`.pipe(Effect.mapError(fail('Failed to configure ledger')));
       yield* Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
         // A schema the store cannot create is a construction failure, not something a caller recovers from.
         Effect.orDie,
       );
-      // Without an explicit backend a writer keeps the recorded one: `code-index query` must not wipe it.
-      const recorded = (yield* readStamp()).backend;
-      backend = requested ?? (isBackend(recorded) ? recorded : 'js');
-      yield* resetIfStale(dir, backend);
+      yield* resetIfStale(dir);
     }
 
-    const graphs: Graph.Graph<StoreError> = yield* backend === 'native'
-      ? Native.make(dir, fail)
-      : Quadstore.make(dir, fail);
+    const graphs: Graph.Graph<StoreError> = yield* Native.make(dir, fail);
     const { match } = graphs;
 
     const getMeta: Api['getMeta'] = (key) =>
@@ -663,7 +631,9 @@ const make = (
             const graph = Ontology.passGraphIri(pass);
             yield* recordDerived([graph.value]);
             const stale = yield* match(undefined, undefined, undefined, graph);
-            const next = quads.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, graph));
+            const next = yield* Cooperative.map(quads, (quad) =>
+              DataFactory.quad(quad.subject, quad.predicate, quad.object, graph),
+            );
             // Only the difference is written, so the native journal sees what actually changed.
             const key = (quad: Quad) =>
               JSON.stringify([
@@ -673,10 +643,10 @@ const make = (
                 quad.object.value,
                 quad.object.termType === 'Literal' ? [quad.object.datatype.value, quad.object.language] : [],
               ]);
-            const kept = new Set(next.map(key));
-            const had = new Set(stale.map(key));
-            yield* graphs.delQuads(stale.filter((quad) => !kept.has(key(quad))));
-            yield* graphs.putQuads(next.filter((quad) => !had.has(key(quad))));
+            const kept = new Set(yield* Cooperative.map(next, key));
+            const had = new Set(yield* Cooperative.map(stale, key));
+            yield* graphs.delQuads(yield* Cooperative.filter(stale, (quad) => !kept.has(key(quad))));
+            yield* graphs.putQuads(yield* Cooperative.filter(next, (quad) => !had.has(key(quad))));
           }),
         ),
 
@@ -730,21 +700,15 @@ const make = (
             yield* graphs.clear();
           }),
         ),
-      backend,
     } satisfies Api;
   });
 
 /**
  * Opens (creating if absent, unless `readOnly`) the store rooted at `dir`; each database is a file
- * or directory inside it. Scoped — both databases close when the enclosing scope ends. `backend`
- * defaults to `CODE_INDEX_BACKEND`; with neither, the store keeps the backend it records (`js` if new).
- * An explicit backend the store was not written with resets a writer's store and fails a reader.
+ * or directory inside it. Scoped — both databases close when the enclosing scope ends. A store
+ * written under another ontology version or backend is reset by a writer and refused by a reader.
  */
-export const layer = (
-  dir: string,
-  backend: Backend | undefined = envBackend(),
-  options: LayerOptions = {},
-): Layer.Layer<Store, StoreError> => {
+export const layer = (dir: string, options: LayerOptions = {}): Layer.Layer<Store, StoreError> => {
   const readOnly = options.readOnly ?? false;
   const prepare = readOnly
     ? existsSync(join(dir, SQLITE_FILE))
@@ -756,7 +720,7 @@ export const layer = (
       }).pipe(Effect.asVoid);
   return Layer.unwrap(
     Effect.map(prepare, () =>
-      Layer.effect(Store, make(dir, backend, readOnly)).pipe(
+      Layer.effect(Store, make(dir, readOnly)).pipe(
         Layer.provide(clientLayer(join(dir, SQLITE_FILE), { readonly: readOnly })),
       ),
     ),

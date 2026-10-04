@@ -785,7 +785,7 @@ const ScrollAreaSection = () => (
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </div>
-    <ScrollArea.Root orientation='horizontal' snap autoHide>
+    <ScrollArea.Root orientation='horizontal' snap>
       <ScrollArea.Viewport>
         <div className='flex w-max gap-2 py-2'>
           {SCROLL_TAGS.map((tag) => (

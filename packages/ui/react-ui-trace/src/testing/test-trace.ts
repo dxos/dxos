@@ -8,8 +8,8 @@ import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 
 export const makeProcess = (
-  overrides: Partial<Process.Info> & Pick<Process.Info, 'pid' | 'state'> & { name: string },
-): Process.Info => ({
+  overrides: Partial<Process.Process> & Pick<Process.Process, 'pid' | 'state'> & { name: string },
+): Process.Process => ({
   parentPid: null,
   key: `test.process.${overrides.name}`,
   params: { name: overrides.name, annotations: Annotation.buildDictionary(() => {}) },

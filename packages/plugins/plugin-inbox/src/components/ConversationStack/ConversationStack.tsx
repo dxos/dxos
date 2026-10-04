@@ -14,7 +14,7 @@ import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
 import { createContext } from '@dxos/react-hooks';
 import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
-import { Html, emailDialect } from '@dxos/react-ui-components';
+import { Html, emailDialect } from '@dxos/react-ui-html';
 import { ActionToolbar, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import * as Card from '@dxos/react-ui/Card';

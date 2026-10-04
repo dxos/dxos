@@ -20,7 +20,7 @@ import { createClientSaveTracker, getIcon, getStatus } from '#components';
 import { useEdgeStatus, useStalled } from '#hooks';
 import { meta } from '#meta';
 
-const SYNC_COLS = ['min-content', '1fr', 'min-content', 'min-content'];
+const SYNC_COLS = ['min', 'fill', 'min', 'min'] as const;
 
 export const SyncStatus = () => {
   const client = useClient();

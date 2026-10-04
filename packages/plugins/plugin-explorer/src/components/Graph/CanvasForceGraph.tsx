@@ -109,7 +109,7 @@ export const CanvasForceGraph = Util.composable<HTMLDivElement, CanvasForceGraph
 
     return (
       <div {...Util.composableProps(props, { classNames: 'relative grow' })} onClick={handleClick} ref={setRef}>
-        <div ref={rootRef} className='dx-fullscreen' />
+        <div ref={rootRef} className='dx-cover' />
       </div>
     );
   },

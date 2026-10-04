@@ -27,8 +27,8 @@ import {
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
-import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
+import { QueryForm, type QueryFormProps } from '@dxos/react-ui-query';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';

@@ -92,7 +92,7 @@ const ICONS = {
 
 export interface BuildExecutionGraphParams {
   traceMessages: readonly Trace.Message[];
-  activeProcesses?: readonly Process.Info[];
+  activeProcesses?: readonly Process.Process[];
   collapseCompletedSpans?: boolean;
   eventLimit?: number;
   /**
@@ -584,7 +584,7 @@ const parentIds = (...tips: (Commit | undefined)[]): string[] =>
 
 const spanTreeToCommits = (
   root: Span,
-  activeProcesses: readonly Process.Info[],
+  activeProcesses: readonly Process.Process[],
   toolCallContext: ToolCallContext,
   collapseCompletedSpans: boolean,
 ): { branches: string[]; commits: Commit[]; details: ExecutionGraphDetailsMap } => {

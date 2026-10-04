@@ -52,13 +52,41 @@ const flexProps = (props: Readonly<Record<string, string | number | boolean>>) =
 });
 
 /** A `columns`/`rows` aspect: whitespace-separated CSS tracks, bare numbers read as `<n>fr`. */
-const tracks = (value: string | number | boolean | undefined): (string | number)[] | undefined =>
-  typeof value === 'string' && value.trim()
-    ? value
-        .trim()
-        .split(/\s+/)
-        .map((track) => (/^\d+$/.test(track) ? Number(track) : track))
-    : undefined;
+const LENGTH = /^(\d+(\.\d+)?(rem|em|px|ch|%|vw|vh)|(var|calc|minmax)\(.*\))$/;
+
+const isLength = (token: string): token is Layout.GridLength => LENGTH.test(token);
+
+/** One CSS track as a Grid token: `Nfr` and a bare number are shares, `*-content` the content sizes; anything else is dropped. */
+const toTrack = (token: string): Layout.GridTrack | undefined => {
+  const share = /^(\d+(?:\.\d+)?)(fr)?$/.exec(token);
+  if (share) {
+    return Number(share[1]);
+  }
+  switch (token) {
+    case 'fill':
+    case 'min':
+    case 'max':
+    case 'auto':
+      return token;
+    case 'min-content':
+      return 'min';
+    case 'max-content':
+      return 'max';
+  }
+  return isLength(token) ? token : undefined;
+};
+
+const tracks = (value: string | number | boolean | undefined): Layout.GridTrack[] | undefined => {
+  if (typeof value !== 'string' || !value.trim()) {
+    return undefined;
+  }
+  const parsed = value
+    .trim()
+    .split(/\s+/)
+    .map(toTrack)
+    .filter((track) => track !== undefined);
+  return parsed.length > 0 ? parsed : undefined;
+};
 
 /** Resolve a per-item binding (`item-id`, `item-label`) declared on the collection node itself. */
 const itemField = (node: Node, scope: Scope, item: unknown, name: string): unknown => {

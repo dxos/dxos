@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React from 'react';
@@ -52,10 +53,10 @@ import { ChatArticle, ChatArticleProps } from './ChatArticle.tsx';
  * are unaffected. The script is exhausted rather than looped, so submitting more often than there are
  * replies fails loudly instead of hanging.
  */
-const scriptedAiServiceMiddleware = (replies: readonly string[]) => {
+const scriptedAiServiceMiddleware = (turns: readonly StoryTurn[]) => {
   const model = Effect.runSync(
     ScriptedLanguageModel.makeScriptedLanguageModel(
-      replies.map((reply) => ({ parts: [ScriptedLanguageModel.text(reply)] })),
+      turns.map(({ reply, delay }) => ({ parts: [ScriptedLanguageModel.text(reply)], delay })),
     ),
   );
   const layer = Layer.succeed(LanguageModel.LanguageModel, model);
@@ -117,9 +118,12 @@ const desktopOnlyChrome = (canvasElement: HTMLElement) => ({
   statusPill: canvasElement.querySelector('[data-testid="assistant.chat-status"]'),
 });
 
+/** A turn the story drives: the prompt submitted, and the reply the scripted model returns after `delay`. */
+type StoryTurn = { prompt: string; reply: string; delay?: Duration.Input };
+
 type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
-  messages?: { prompt: string; reply: string }[];
+  messages?: StoryTurn[];
   /** Seed the chat's checklist, so the article renders its `Chat.TaskList`. */
   tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
@@ -190,8 +194,7 @@ const meta = {
           AssistantPlugin({
             // Only the stories that declare their turns are scripted; the rest keep the real service, so
             // `Default` stays a place to actually talk to a model rather than one with an empty script.
-            aiServiceMiddleware:
-              messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
+            aiServiceMiddleware: messages.length > 0 ? scriptedAiServiceMiddleware(messages) : undefined,
           }),
           PreviewPlugin.make(),
           // The assistant contributes the database SKILL unconditionally, but its tools resolve to
@@ -342,7 +345,8 @@ export const Send: Story = {
 export const QueueWhileProcessing: Story = {
   args: {
     messages: [
-      { prompt: 'First question', reply: 'The first answer.' },
+      // Held, so the second prompt waits in the queue long enough to be seen there.
+      { prompt: 'First question', reply: 'The first answer.', delay: '2 seconds' },
       { prompt: 'Second question', reply: 'The second answer.' },
     ],
   },
@@ -350,6 +354,26 @@ export const QueueWhileProcessing: Story = {
     await submitPrompt(canvasElement, messages[0].prompt);
     // No `waitFor` on the first reply: this submit is meant to land while the first turn is running.
     await submitPrompt(canvasElement, messages[1].prompt);
+
+    // While it waits, the queued prompt shows over the thread as a right-aligned bubble wide enough to read, not a
+    // sliver its container squeezed to nothing.
+    await waitFor(
+      () => {
+        const status = canvasElement.querySelector<HTMLElement>('[data-testid="assistant.chat-status"]');
+        const bubble = [
+          ...(status?.querySelectorAll<HTMLElement>('[data-testid="assistant.queued-message"]') ?? []),
+        ].find((item) => item.textContent?.includes(messages[1].prompt));
+        if (!status || !bubble) {
+          throw new Error(`Queued prompt "${messages[1].prompt}" not shown.`);
+        }
+        const box = bubble.getBoundingClientRect();
+        void expect(box.width).toBeGreaterThan(100);
+        // Right-aligned, flush with the status chip under it.
+        const chip = status.querySelector<HTMLElement>(':scope > :last-child');
+        void expect(Math.abs((chip?.getBoundingClientRect().right ?? 0) - box.right)).toBeLessThan(1);
+      },
+      { timeout: 10_000, interval: 50 },
+    );
 
     for (const { prompt, reply } of messages) {
       await waitFor(() => void expect(threadText(canvasElement)).toContain(reply), {

@@ -82,7 +82,7 @@ export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
     // Only the agent process itself is renamed: its children inherit the conversation environment and
     // keep their own operation names.
     const resolveLabel = useCallback(
-      (process: Process.Info) => {
+      (process: Process.Process) => {
         if (!Process.isHarnessHost(process)) {
           return undefined;
         }

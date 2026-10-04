@@ -25,7 +25,7 @@ import { useTraceMenu } from './useTraceMenu.ts';
 export type TracePanelProps = Util.ThemedClassName<
   Pick<ProcessTreeProps, 'resolveLabel' | 'selected' | 'onSelectedChange' | 'onProcessTerminate'> & {
     /** The live process tree; narrowed here by `environments`. */
-    processes: readonly Process.Info[];
+    processes: readonly Process.Process[];
     /** The trace as a commit graph, built by `useExecutionGraph` (already narrowed to `selected`). */
     graph: ExecutionGraph;
     /** Process environments shown; the toolbar's funnel edits it. */
@@ -217,7 +217,7 @@ const NO_SELECTION: readonly string[] = [];
 
 type ProcessTreeContainerProps = Util.ThemedClassName<
   Pick<ProcessTreeProps, 'resolveLabel' | 'selected' | 'onSelectedChange' | 'onProcessTerminate'> & {
-    processes: readonly Process.Info[];
+    processes: readonly Process.Process[];
     environments: readonly ProcessEnvironment[];
   }
 >;

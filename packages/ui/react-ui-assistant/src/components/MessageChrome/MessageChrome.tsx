@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, memo, useEffect, useState } from 'react';
 
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
@@ -75,11 +75,21 @@ const MessageId = ({ message }: { message: Message.Message }) => {
   );
 };
 
+/** How often a relative time is re-read; the coarsest label it shows changes by the minute. */
+const TIME_REFRESH_MS = 30_000;
+
 const Time = ({ message }: { message: Message.Message }) => {
   const { t } = Hooks.useTranslation(translationKey);
+  // Its own clock: the toolbar is memoized, so nothing else re-renders a label that has gone stale.
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), TIME_REFRESH_MS);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <time dateTime={message.created} title={new Date(message.created).toLocaleString()}>
-      {formatTime(message.created, { justNow: t('just-now.label') })}
+      {formatTime(message.created, { now, justNow: t('just-now.label') })}
     </time>
   );
 };
@@ -94,7 +104,7 @@ export type MessageToolbarProps = Util.ThemedClassName<{
  * disappears changes the row's height, and a pointer travelling down a scrolling list would then
  * move every row below it.
  */
-export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
+export const PromptToolbar = memo(({ classNames, message }: MessageToolbarProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const { onRewind } = useMessageChromeContext('PromptToolbar');
 
@@ -116,12 +126,12 @@ export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
       <MessageId message={message} />
     </div>
   );
-};
+});
 
 PromptToolbar.displayName = 'PromptToolbar';
 
 /** The controls under an answer: copy, and when the answer finished. */
-export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) => {
+export const AssistantToolbar = memo(({ classNames, message }: MessageToolbarProps) => {
   return (
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
@@ -131,7 +141,7 @@ export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) =
       <Stats message={message} classNames='ms-auto' />
     </div>
   );
-};
+});
 
 AssistantToolbar.displayName = 'AssistantToolbar';
 
@@ -204,17 +214,28 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
 // Chrome
 //
 
-/** Shared hover reveal: present in flow at all times, visible when the row is under the pointer. */
-const reveal = 'pt-1 opacity-0 transition-opacity';
-// A named group: the bare `group` variant matches ANY ancestor carrying `group`, and the app's
-// planks do — every toolbar lit up when the pointer was anywhere in the deck.
-const revealOnHover = 'group-hover/message:opacity-100';
+/**
+ * Shared hover reveal: present in flow at all times, visible when the row is under the pointer.
+ *
+ * A named group: the bare `group` variant matches ANY ancestor carrying `group`, and the app's
+ * planks do — every toolbar lit up when the pointer was anywhere in the deck. Streaming hides it
+ * from the row's attribute rather than the toolbar's props, so the memoized toolbars do not
+ * re-render on every row each time a turn starts or ends.
+ */
+const reveal =
+  'pt-1 opacity-0 transition-opacity group-hover/message:opacity-100 group-data-[streaming]/message:invisible';
 
-const Row = ({ children, classNames }: PropsWithChildren<{ classNames?: string }>) => (
-  <div className={mx('group/message relative py-2', classNames)} data-testid='feed.message'>
+const Row = ({ children, classNames, streaming }: PropsWithChildren<{ classNames?: string; streaming?: boolean }>) => (
+  <div
+    className={mx('group/message relative py-2', classNames)}
+    data-streaming={streaming || undefined}
+    data-testid='feed.message'
+  >
     {children}
   </div>
 );
+
+const promptReveal = mx('justify-end', reveal);
 
 /**
  * The assistant feed's per-message frame: the reader's prompts and the model's answers are framed
@@ -230,7 +251,7 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
   const prompt = isPrompt(message);
 
   return (
-    <Row classNames={mx(selected && 'bg-hover-surface')}>
+    <Row classNames={mx(selected && 'bg-hover-surface')} streaming={streaming}>
       {prompt ? (
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[70%] min-w-0'>
@@ -243,13 +264,13 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
             >
               {children}
             </div>
-            <PromptToolbar classNames={mx('justify-end', reveal, !streaming && revealOnHover)} message={message} />
+            <PromptToolbar classNames={promptReveal} message={message} />
           </div>
         </div>
       ) : (
         <div className='min-w-0'>
           {children}
-          <AssistantToolbar classNames={mx(reveal, !streaming && revealOnHover)} message={message} />
+          <AssistantToolbar classNames={reveal} message={message} />
         </div>
       )}
     </Row>

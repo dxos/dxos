@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef } from 'react';
 
-import { Matrix } from '@dxos/react-ui-components';
+import { Matrix } from '@dxos/react-ui-experimental';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';

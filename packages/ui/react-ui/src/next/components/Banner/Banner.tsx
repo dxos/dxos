@@ -41,6 +41,8 @@ type BannerRootProps = {
   valence?: MessageValence;
   /** Overrides the valence's icon in the Title's start rail. */
   icon?: string;
+  /** Inset by a gutter of its own; by default only outside a grid, so `false` for a host that already pads it. */
+  inset?: boolean;
 };
 
 /**
@@ -49,11 +51,12 @@ type BannerRootProps = {
  * any other an alert. Buttons with `variant='valence'` inside it take its colours.
  */
 const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
-  ({ children, valence = 'neutral', icon, ...props }, forwardedRef) => {
+  ({ children, valence = 'neutral', icon, inset: insetProp, ...props }, forwardedRef) => {
     const titleId = useId();
     const descriptionId = useId();
     // Outside a Container (a pane's body) there is no gutter to sit in, so the banner insets itself as a form's would be.
-    const inset = !useInGrid();
+    const inGrid = useInGrid();
+    const inset = insetProp ?? !inGrid;
     const { style, ...attributes } = containerAttributes({ gutter: 'rail' });
     const {
       className,

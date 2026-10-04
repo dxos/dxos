@@ -68,7 +68,7 @@ const typeAtLineEnd = async (canvasElement: HTMLElement, line: string, text: str
   await userEvent.keyboard(`${index > 0 ? `{ArrowDown>${index}/}` : ''}{End}${text}`);
 };
 
-const EditorStory = ({ columnWidth, ...props }: RevealProps & { columnWidth?: string }) => {
+const EditorStory = ({ columnWidth, ...props }: RevealProps & { columnWidth?: Layout.GridTrack }) => {
   const themeMode = Hooks.useThemeMode();
   const [content, setContent] = useState(props.content);
   const extensions = useMemo(
@@ -77,7 +77,7 @@ const EditorStory = ({ columnWidth, ...props }: RevealProps & { columnWidth?: st
   );
 
   return (
-    <Layout.Grid grow cols={[columnWidth ?? 'minmax(0, 1fr)', columnWidth ?? 'minmax(0, 1fr)']}>
+    <Layout.Grid grow cols={[columnWidth ?? 'fill', columnWidth ?? 'fill']}>
       <div className='overflow-y-auto border-e border-separator'>
         <Editor.Root extensions={extensions}>
           <Editor.View classNames='p-4' value={content} onChange={setContent} />

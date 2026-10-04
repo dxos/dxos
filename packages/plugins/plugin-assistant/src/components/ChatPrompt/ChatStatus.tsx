@@ -4,14 +4,15 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { Alarm } from '@dxos/assistant';
 import { ChatStatus as NaturalChatStatus, formatElapsed } from '@dxos/react-ui-chat';
-import { Matrix } from '@dxos/react-ui-components';
+import { Matrix } from '@dxos/react-ui-experimental';
 import * as Icon from '@dxos/react-ui/Icon';
 import type * as Util from '@dxos/react-ui/Util';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
 
-import { type ChatRequestTiming, useChatContext } from '../Chat/context.ts';
+import { type ChatRequestTiming, useChatThreadContext } from '../Chat/context.ts';
 
 const CHAT_STREAM_STATUS_NAME = 'Chat.StreamStatus';
 const TICK_MS = 1_000;
@@ -33,6 +34,8 @@ export type ChatStatusViewProps = ChatStreamStatusProps & {
    * Storybook arg (its proxy rejects the mutation Storybook's arg handling performs).
    */
   alarm?: { wakeAt: number; message?: string };
+  /** Alarms that have woken the agent since the last user prompt, shown against `Alarm.MAX_SELF_WAKES`. */
+  selfWakes?: number;
 };
 
 /**
@@ -54,7 +57,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
   // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
   // (including the per-turn `stats` block we read for token counts) are submitted to the
   // feed via `_submitMessage` and only show up through `useQuery`.
-  const { messages, requestTiming, alarms } = useChatContext(CHAT_STREAM_STATUS_NAME);
+  const { messages, requestTiming, alarms, selfWakes } = useChatThreadContext(CHAT_STREAM_STATUS_NAME);
 
   const { lastOutputTokens, sessionTotalTokens } = useMemo(() => {
     let last: number | undefined;
@@ -82,6 +85,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
       sessionTotalTokens={sessionTotalTokens}
       // The earliest pending alarm is the one that wakes the agent next, so it is the one worth a slot.
       alarm={nextAlarm && { wakeAt: nextAlarm.wakeAt, message: nextAlarm.message }}
+      selfWakes={selfWakes}
     />
   );
 };
@@ -97,6 +101,7 @@ export const ChatStatusView = ({
   lastOutputTokens,
   sessionTotalTokens = 0,
   alarm,
+  selfWakes = 0,
 }: ChatStatusViewProps) => {
   const isRunning = requestTiming != null && requestTiming.endedAt == null;
   const show = requestTiming || lastOutputTokens || sessionTotalTokens > 0 || alarm != null;
@@ -149,6 +154,11 @@ export const ChatStatusView = ({
                 >
                   <Icon.Icon icon='ph--alarm--regular' size='md' />
                   {formatWakeAt(alarm.wakeAt)}
+                  {selfWakes > 0 && (
+                    <span data-testid='assistant.chat-status.self-wakes' className='text-fg-muted'>
+                      {selfWakes}/{Alarm.MAX_SELF_WAKES}
+                    </span>
+                  )}
                 </span>
               </NaturalChatStatus.Text>
             </>

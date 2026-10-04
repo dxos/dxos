@@ -3,44 +3,64 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { type FC, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Spinner, type SpinnerProps } from './Spinner.tsx';
+import { PulseSpinner } from './PulseSpinner.tsx';
+import { ShapeSpinner } from './ShapeSpinner.tsx';
+import { type ActivityState, type SpinnerProps } from './Spinner.tsx';
 
-const DefaultStory = ({ state: _state }: SpinnerProps) => {
-  const [state, setState] = useState(_state);
+const STATES: ActivityState[] = ['ready', 'thinking', 'alert', 'error'];
+
+type StoryArgs = SpinnerProps & { Spinner: FC<SpinnerProps> };
+
+/** One implementation of the interface, with a button per state. */
+const DefaultStory = ({ Spinner, state: initialState }: StoryArgs) => {
+  const [state, setState] = useState(initialState);
 
   return (
-    <div className='flex flex-col grow'>
+    <Layout.Flex column grow>
       <Toolbar.Root>
-        <Button.Root onClick={() => setState('pulse')}>Pulse</Button.Root>
-        <Button.Root onClick={() => setState('spin')}>Spin</Button.Root>
-        <Button.Root onClick={() => setState('flash')}>Flash</Button.Root>
-        <Button.Root onClick={() => setState('error')}>Error</Button.Root>
+        {STATES.map((value) => (
+          <Button.Root key={value} onClick={() => setState(value)} classNames='capitalize'>
+            {value}
+          </Button.Root>
+        ))}
       </Toolbar.Root>
-      <div className='flex grow items-center justify-center'>
+      <Layout.Flex grow center>
         <Spinner state={state} size={6} />
-      </div>
-    </div>
+      </Layout.Flex>
+    </Layout.Flex>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-components/Spinner',
-  component: Spinner,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof Spinner>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+/** The morphing square. */
+export const Shape: Story = {
+  args: {
+    Spinner: ShapeSpinner,
+  },
+};
+
+/** The dot matrix; its alert state is a heartbeat. */
+export const Pulse: Story = {
+  args: {
+    Spinner: PulseSpinner,
+  },
+};

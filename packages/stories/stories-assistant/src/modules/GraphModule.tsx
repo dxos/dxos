@@ -12,7 +12,7 @@ import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import * as ExplorerHooks from '@dxos/plugin-explorer/Hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
-import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
+import { type EditorController, QueryEditor } from '@dxos/react-ui-query';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';

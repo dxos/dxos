@@ -188,8 +188,8 @@ const MESSAGE_ID = '01HQ0000000000000000000000';
 const SHIMMER_EFFECT_TAG = 'effect:shimmer';
 
 const makeActiveProcess = (
-  overrides: Partial<Process.Info> & Pick<Process.Info, 'pid' | 'key' | 'state'>,
-): Process.Info => ({
+  overrides: Partial<Process.Process> & Pick<Process.Process, 'pid' | 'key' | 'state'>,
+): Process.Process => ({
   parentPid: null,
   params: { name: null, annotations: {} },
   environment: {},

@@ -23,7 +23,7 @@ export type SyncCardProps = {
  * differently under the header's label and the data rows' chips and the columns would drift.
  * The chip track takes the slack; the figures are sized for `pending/total`.
  */
-const ROW_TRACKS = ['1fr', '4.5rem', '4rem'];
+const ROW_TRACKS = ['fill', '4.5rem', '4rem'] as const;
 
 const Metric = ({ pending, total }: { pending: number; total: number }) => (
   <span className={mx('font-mono tabular-nums', pending > 0 ? 'text-warning-text' : 'text-success-text')}>

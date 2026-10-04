@@ -108,6 +108,13 @@ export type CompileOptions = {
   maxWidth?: number;
   /** Connector router (default: obstacle-avoiding A* with the Z-router as fallback). */
   route?: Router;
+  /**
+   * Routes one candidate, nearly all of the layout's time (default: on this thread); a caller with
+   * worker threads can run {@link emitJob} there. Each candidate is handed over as soon as it is
+   * placed, so placing the rest overlaps the routing; the candidates are still collected in
+   * generation order. Not used with a custom `route`, which cannot leave the thread.
+   */
+  emitCandidate?: (job: EmitJob) => Promise<Scene.Command[]>;
 };
 
 /** One generated layout with the objective's verdict on it. */
@@ -129,7 +136,7 @@ export type Result = {
   ranked: readonly Objective.Ranked<Candidate>[];
 };
 
-type Cell = { w: number; h: number };
+export type Cell = { w: number; h: number };
 type Pitch = { x: number; y: number };
 
 /** One cell size for every node, sized to the longest label wrapped at `maxWidth`. */
@@ -155,7 +162,7 @@ const pitchFor = (graph: MermaidGraph, cell: Cell, lattice: number): Pitch => {
   };
 };
 
-type Placement = {
+export type Placement = {
   nodes: Map<string, Rect>;
   frames: Map<string, Rect>;
 };
@@ -603,6 +610,13 @@ type EmitOptions = {
   route?: Router;
 };
 
+/** One candidate's routing, as structured-cloneable data so it can cross to a worker thread. */
+export type EmitJob = Omit<EmitOptions, 'route'> & {
+  source: string;
+  cell: Cell;
+  placement: Placement;
+};
+
 const rectsOverlap = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
 /** Whether an axis-aligned (or short diagonal) segment passes through a rect, by its bounding box. */
@@ -860,6 +874,10 @@ const emit = (
   return commands;
 };
 
+/** Routes one candidate with the default router; what a worker runs for `CompileOptions.emitCandidate`. */
+export const emitJob = ({ source, cell, placement, ...options }: EmitJob): Scene.Command[] =>
+  emit(parse(source), cell, placement, options);
+
 const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
 
@@ -872,6 +890,7 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
   const graph = parse(source);
   const { origin = { x: 0, y: 0 }, scale = 1, maxWidth = MAX_W, objective = Objective.DEFAULT, route } = options;
   const cell = measureCell(graph, maxWidth);
+  const horizontal = graph.direction === 'LR' || graph.direction === 'RL';
   const lattices = typeof options.lattice === 'number' ? [options.lattice] : (options.lattice ?? LATTICES);
   const orders = options.order ?? ORDERS;
   const buses = options.bus ?? [true, false];
@@ -890,7 +909,16 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
     'every candidate axis needs a value',
   );
 
-  const candidates: Candidate[] = [];
+  const emitCandidate = route ? undefined : options.emitCandidate;
+  // A candidate can fail while later ones are still being placed, before `Promise.all` below
+  // observes it; marking it handled here keeps that from crashing the process as an unhandled
+  // rejection, and `Promise.all` still rethrows the failure.
+  const settleLater = (commands: Promise<Scene.Command[]>) => {
+    commands.catch(() => {});
+    return commands;
+  };
+
+  const pending: { candidate: Omit<Candidate, 'commands' | 'layout'>; commands: Promise<Scene.Command[]> }[] = [];
   // Knobs often reach the same placement (a graph with no in-package references layers the same
   // either way; equal-height packages align the same every way); each is routed and graded once.
   const seen = new Set<string>();
@@ -907,22 +935,22 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
               .map(([id, rect]) => `${id}:${rect.x}:${rect.y}`)
               .sort()
               .join(' ');
+            // Without a row of subtypes to gather, the bus draws exactly what its absence does; the
+            // `false` twin is routed anyway, so routing both would be the same work twice.
+            const formsBus = !horizontal && inheritanceBuses(graph.edges, placement.nodes).consumed.size > 0;
             for (const bus of buses) {
-              if (seen.has(`${arrangement}|${bus}|${key}`)) {
+              if (seen.has(`${arrangement}|${bus}|${key}`) || (bus && !formsBus && buses.includes(false))) {
                 continue;
               }
               seen.add(`${arrangement}|${bus}|${key}`);
-              const commands = emit(graph, cell, placement, { origin, scale, bus, arrangement, route });
-              const objects = objectsOf(commands);
-              candidates.push({
-                lattice,
-                order,
-                arrangement,
-                layering,
-                alignment,
-                bus,
-                commands,
-                layout: { objects, report: Diagnostics.analyze(objects) },
+              const job: EmitJob = { source, cell, placement, origin, scale, bus, arrangement };
+              pending.push({
+                candidate: { lattice, order, arrangement, layering, alignment, bus },
+                commands: settleLater(
+                  emitCandidate
+                    ? emitCandidate(job)
+                    : Promise.resolve(emit(graph, cell, placement, { origin, scale, bus, arrangement, route })),
+                ),
               });
             }
           }
@@ -930,6 +958,13 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
       }
     }
   }
+
+  const emitted = await Promise.all(pending.map(({ commands }) => commands));
+  const candidates = pending.map(({ candidate }, index): Candidate => {
+    const commands = emitted[index];
+    const objects = objectsOf(commands);
+    return { ...candidate, commands, layout: { objects, report: Diagnostics.analyze(objects) } };
+  });
 
   const { chosen, ranked } = Objective.select(objective, candidates);
   return { commands: chosen.candidate.commands, chosen, ranked };

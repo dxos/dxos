@@ -5,7 +5,7 @@ Status: implemented (Steps 1–8 landed).
 Progress:
 
 - [x] **Step 1 — generic process RPC control plane** (`@dxos/compute` + `@dxos/compute-runtime`).
-      Landed: `Process.make({ rpcs })`, `Callbacks.rpcHandlers`, `Handle.rpc`, in-memory
+      Landed: `Operation.makeDurable({ rpcs })`, `Callbacks.rpcHandlers`, `Handle.rpc`, in-memory
       dispatch via `@effect/rpc` `RpcTest.makeClient`. See §4 for the as-built notes.
 - [x] Step 2 — annotations-based discovery (`HarnessHostAnnotation`, surface `params.annotations`).
 - [x] Step 3 — `AgentProcess` `HarnessControl` group + handlers; stamp host annotation at spawn.
@@ -94,7 +94,7 @@ A process optionally declares an `rpcs` group; `create()` must then return match
 
 ```ts
 // Process.ts
-Process.make(
+Operation.makeDurable(
   {
     key: 'test.process-with-rpcs',
     input: Schema.Void,
@@ -122,7 +122,7 @@ Process.make(
 );
 ```
 
-`Callbacks.rpcHandlers: Context.Context<Rpc.ToHandler<_Rpcs>>`. `Process.make` validates the
+`Callbacks.rpcHandlers: Context.Context<Rpc.ToHandler<_Rpcs>>`. `Operation.makeDurable` validates the
 handler contract at construction via `sanitizeRpcs`: handlers are required iff a non-empty
 `rpcs` group is declared (and rejected/empty otherwise).
 
@@ -254,7 +254,7 @@ the live `AgentProcess` scope, with that process's `AlarmManager`/`inputQueue` i
 Defined and implemented by `AgentProcess` (it owns the state):
 
 ```ts
-// AgentProcess module scope — the group passed to Process.make({ rpcs: HarnessControl }).
+// AgentProcess module scope — the group passed to Operation.makeDurable({ rpcs: HarnessControl }).
 const HarnessControl = RpcGroup.make(
   Rpc.make('setAlarm', {
     payload: { at: Schema.DateTimeUtc, message: Schema.NullOr(Schema.String) },
@@ -341,7 +341,7 @@ editing so the fix lands on the active copy.
 
 ## 11. Sequencing
 
-1. ~~Generic process RPC surface: `Process.make({ rpcs })`, `Callbacks.rpcHandlers`,
+1. ~~Generic process RPC surface: `Operation.makeDurable({ rpcs })`, `Callbacks.rpcHandlers`,
    `Handle.rpc`, in-memory dispatch (via `@effect/rpc` `RpcTest.makeClient`, with failure
    isolation).~~ **Done** (§4).
 2. Annotations-based discovery: `HarnessHostAnnotation`; surface `params.annotations` on

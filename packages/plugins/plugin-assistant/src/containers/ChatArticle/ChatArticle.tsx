@@ -128,22 +128,18 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 {/** Floating info. */}
                 {!mobile && (
                   <Layout.Grid
-                    cols={['minmax(0, 1fr)', 'auto']}
+                    cols={['fill', 'auto']}
                     gap='sm'
                     classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-3'
                     data-testid='assistant.chat-status'
                   >
-                    {/* A box of its own: the queue's root is its listbox, which takes no placement. */}
-                    <Layout.Flex justify='end' classNames='col-span-2'>
+                    {/* A column, so the queue's listbox spans the row: a row shrinks it and wraps each bubble to nothing. */}
+                    <Layout.Flex column classNames='col-span-2'>
                       <ChatComponent.Queue />
                     </Layout.Flex>
-                    {/* `min-w-0` so the activity line truncates in its column instead of widening it. */}
-                    <Layout.Flex align='center' classNames='min-w-0'>
-                      <ChatComponent.Activity />
-                    </Layout.Flex>
-                    <Layout.Flex justify='end'>
-                      <ChatComponent.Status classNames='bg-input-surface rounded-sm' />
-                    </Layout.Flex>
+                    {/* Pinned to their columns: either renders nothing while idle, which would move the other over. */}
+                    <ChatComponent.Activity classNames='col-start-1 self-center' />
+                    <ChatComponent.Status classNames='col-start-2 justify-self-end bg-input-surface rounded-sm' />
                   </Layout.Grid>
                 )}
               </Layout.Flex>

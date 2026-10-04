@@ -30,8 +30,14 @@ export const ChatQueue = ({ classNames, messages, onCancel }: ChatQueueProps) =>
   }
 
   return (
-    <Listbox.Root items={messages.map((message) => ({ value: message.id, label: Message.extractText(message) }))}>
-      <Listbox.Content classNames={['w-full gap-1 items-end', classNames]}>
+    // Small rows: a queued prompt is a note above the composer, not a list to work through.
+    <Listbox.Root
+      size='sm'
+      items={messages.map((message) => ({ value: message.id, label: Message.extractText(message) }))}
+    >
+      {/* The content is a grid, so the bubbles are right-aligned by `justify-items`, not `items-end`; no gutter, so
+          they end flush with what sits under them (the status chip). */}
+      <Listbox.Content gutter='none' classNames={['w-full gap-y-1 justify-items-end', classNames]}>
         {messages.map((message) => (
           <QueuedItem key={message.id} message={message} onCancel={onCancel} />
         ))}

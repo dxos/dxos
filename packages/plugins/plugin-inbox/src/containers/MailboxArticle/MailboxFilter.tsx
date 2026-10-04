@@ -5,8 +5,8 @@
 import React, { type Ref } from 'react';
 
 import { type Database, Filter, Tag } from '@dxos/echo';
-import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
+import { QueryEditor } from '@dxos/react-ui-query';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
