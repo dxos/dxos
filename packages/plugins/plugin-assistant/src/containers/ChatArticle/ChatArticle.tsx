@@ -14,7 +14,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
-import { Flex, Panel } from '@dxos/react-ui';
+import { Flex, Grid, Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
 import { Merge } from '@dxos/util';
@@ -126,13 +126,17 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
 
                 {/** Floating info. */}
                 {!mobile && (
-                  <div
-                    className='absolute bottom-0 left-0 right-0 dx-document grid grid-cols-[minmax(0,1fr)_auto] gap-2 px-3 pb-2'
+                  <Grid
+                    cols={['minmax(0, 1fr)', 'auto']}
+                    gap='sm'
+                    grow={false}
+                    classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-2'
                     data-testid='assistant.chat-status'
                   >
-                    <div className='col-span-2'>
-                      <ChatComponent.Queue classNames='flex justify-end' />
-                    </div>
+                    {/* A box of its own: the queue's root is its listbox, which takes no placement. */}
+                    <Flex justify='end' classNames='col-span-2'>
+                      <ChatComponent.Queue />
+                    </Flex>
                     {/* `min-w-0` so the activity line truncates in its column instead of widening it. */}
                     <Flex align='center' classNames='min-w-0'>
                       <ChatComponent.Activity />
@@ -140,12 +144,16 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                     <Flex justify='end'>
                       <ChatComponent.Status classNames='bg-input-surface rounded-sm' />
                     </Flex>
-                  </div>
+                  </Grid>
                 )}
               </div>
 
-              <div className='dx-document flex flex-col px-2 pb-2'>
-                <div className='grid grid-cols-2'>{mobile && <ChatComponent.Activity />}</div>
+              <Flex column classNames='dx-document px-2 pb-2'>
+                {mobile && (
+                  <Grid cols={2} grow={false}>
+                    <ChatComponent.Activity />
+                  </Grid>
+                )}
 
                 {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
@@ -158,7 +166,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   nodeId={actionNodeId}
                   preset={preset?.id}
                 />
-              </div>
+              </Flex>
             </ChatComponent.Content>
           </Panel.Body>
         </Panel.Root>

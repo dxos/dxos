@@ -35,13 +35,6 @@ export type GridProps = {
   contents?: boolean;
 };
 
-const trackList = (tracks: GridTracks): string =>
-  typeof tracks === 'number'
-    ? `repeat(${tracks}, 1fr)`
-    : tracks === 'subgrid'
-      ? 'subgrid'
-      : tracks.map((track) => (typeof track === 'number' ? `${track}fr` : track)).join(' ');
-
 /**
  * CSS grid container.
  *
@@ -108,3 +101,10 @@ export const Grid = slottable<HTMLDivElement, GridProps>(
     );
   },
 );
+
+const trackList = (tracks: GridTracks): string =>
+  typeof tracks === 'number'
+    ? `repeat(${tracks}, 1fr)`
+    : tracks === 'subgrid'
+      ? 'subgrid'
+      : tracks.map((track) => (typeof track === 'number' ? `${track}fr` : track)).join(' ');
