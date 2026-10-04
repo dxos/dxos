@@ -3,7 +3,7 @@
 //
 
 import { useAnimationFrame } from 'motion/react';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -30,8 +30,15 @@ const radialWave =
     return 0.5 + 0.5 * Math.sin(time * 2 - distance * 0.9);
   };
 
-/** Each column pulses with a phase-shifted sine: bars sweeping across the grid. */
-const ripple: DotSignal = (i, j, time) => 0.5 + 0.5 * Math.sin(time * 3 + Math.sin((i + j) / 3) * 0.6);
+/** Plays `signal` from the first frame it is asked for, for `duration` seconds, then rests at zero. */
+const once = (signal: DotSignal, duration: number): DotSignal => {
+  let start: number | undefined;
+  return (i, j, time) => {
+    start ??= time;
+    const elapsed = time - start;
+    return elapsed < duration ? signal(i, j, elapsed) : 0;
+  };
+};
 
 /** Seconds per beat, and the gap between its two pulses. */
 const HEARTBEAT_PERIOD = 1.4;
@@ -221,23 +228,8 @@ const pixels = (size: Size): number => (size === 'px' ? 1 : size * 4);
 
 // Smaller peaks than thinking's pings, in the same footprint: the signal is scaled rather than the radius, so every
 // state keeps the spinner's size and dot positions.
-const SIGNALS: Record<Exclude<ActivityState, 'thinking' | 'alert'>, DotSignal> = {
-  ready: scaled(radialWave(DIM), 0.6),
-  error: scaled(ripple, 0.6),
-};
-
-/** The candidate alert patterns, so they can be compared side by side. */
-const ALERTS = {
-  heartbeat: scaled(heartbeat(DIM), 0.8),
-  orbit: scaled(orbit(DIM), 0.8),
-} satisfies Record<string, DotSignal>;
-
-export type PulseAlert = keyof typeof ALERTS;
-
-export type PulseSpinnerProps = SpinnerProps & {
-  /** The pattern for the alert state. */
-  alert?: PulseAlert;
-};
+const READY = scaled(radialWave(DIM), 0.6);
+const ALERT = scaled(orbit(DIM), 0.8);
 
 const COLORS: Record<ActivityState, string> = {
   ready: 'text-primary-500',
@@ -246,15 +238,12 @@ const COLORS: Record<ActivityState, string> = {
   error: 'text-rose-500',
 };
 
-/** A dot matrix: a wave when ready, random pings while thinking, an amber heartbeat or orbit on alert, a sweep on error. */
-export const PulseSpinner = ({
-  classNames,
-  state = 'ready',
-  size = 5,
-  alert = 'heartbeat',
-  onClick,
-}: PulseSpinnerProps) => {
+/** A dot matrix: a wave when ready, random pings while thinking, an amber orbit on alert, one heartbeat on error. */
+export const PulseSpinner = ({ classNames, state = 'ready', size = 5, onClick }: SpinnerProps) => {
   const thinking = useRandomPing(DIM, 100);
+  // A single beat each time the spinner enters the error state: an error is news once, not an alarm that keeps ringing.
+  const failing = state === 'error';
+  const error = useMemo(() => (failing ? once(scaled(heartbeat(DIM), 0.8), HEARTBEAT_PERIOD) : undefined), [failing]);
   const maxRadius = pixels(size) / DIM / 2;
 
   return (
@@ -267,7 +256,7 @@ export const PulseSpinner = ({
         gap={0}
         smoothing={0.3}
         classNames={COLORS[state]}
-        getSignal={state === 'thinking' ? thinking : state === 'alert' ? ALERTS[alert] : SIGNALS[state]}
+        getSignal={state === 'thinking' ? thinking : state === 'alert' ? ALERT : (error ?? READY)}
       />
     </div>
   );

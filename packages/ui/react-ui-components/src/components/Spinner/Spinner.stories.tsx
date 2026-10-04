@@ -58,8 +58,3 @@ export const Shape: Story = {
 export const Pulse: Story = {
   args: { Spinner: PulseSpinner },
 };
-
-/** The dot matrix with the orbit alert: a light circling the outer ring. */
-export const PulseOrbit: Story = {
-  args: { Spinner: (props: SpinnerProps) => <PulseSpinner {...props} alert='orbit' /> },
-};
