@@ -37,16 +37,32 @@ export const toKind = (value: string): PresentationKind => {
   }
 };
 
+const mintId = (): string => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
 /**
  * Identifies one code run across the three events that describe it — the call, whatever it
  * displayed, and its result. `Fold.apply` joins them on this, so it is minted before the call is
  * appended and reused verbatim; deriving it from anything written later leaves the join unmade.
  */
-export const newCallId = (): string => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+export const newCallId = (): string => mintId();
+
+/**
+ * Identifies one turn across the message that opens it and the event that closes it, so a reader
+ * can tell whose turn an end event closes. Minted by whoever sends the prompt — the browser mints it
+ * so it can recognise its own turn when the log echoes it back.
+ */
+export const newTurnId = (): string => mintId();
+
+/**
+ * The turn id is optional on every turn event because logs written before it existed must still
+ * decode; `Fold.apply` lets an id-less end event close whatever turn is open.
+ */
+const TurnId = Schema.optional(Schema.String);
 
 /** A user turn, as typed. */
 export class UserMessage extends Schema.TaggedClass<UserMessage>('code-index/UserMessage')('UserMessage', {
   text: Schema.String,
+  turnId: TurnId,
 }) {}
 
 /** An assistant turn's prose. Tool calls are their own events, so a turn can span several. */
@@ -92,6 +108,7 @@ export class TitleSet extends Schema.TaggedClass<TitleSet>('code-index/TitleSet'
 /** A turn ended abnormally (model error, cancellation) — recorded so the transcript stays honest. */
 export class TurnFailed extends Schema.TaggedClass<TurnFailed>('code-index/TurnFailed')('TurnFailed', {
   message: Schema.String,
+  turnId: TurnId,
 }) {}
 
 /**
@@ -101,6 +118,7 @@ export class TurnFailed extends Schema.TaggedClass<TurnFailed>('code-index/TurnF
  */
 export class TurnEnded extends Schema.TaggedClass<TurnEnded>('code-index/TurnEnded')('TurnEnded', {
   steps: Schema.Number,
+  turnId: TurnId,
 }) {}
 
 export const Event = Schema.Union([
