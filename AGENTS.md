@@ -301,6 +301,11 @@ Deeper conventions:
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. Always surface the Composer preview URL next to the PR link.
+- **Every PR body is built from the `pr-description` skill's templates.** Summary
+  and Safety always; Bugfix, Architecture (diagrams, new cross-component
+  dependencies) and UI (screenshots, Autocue videos) whenever they apply, and
+  several can apply at once. This holds for every PR an agent opens or edits,
+  whether or not `submit-pr` is in use.
 - Consumer-relevant changes need a `.changeset/*.md`: written when opening the
   PR and rewritten before landing, as a summary of the whole PR — see
   [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
@@ -361,7 +366,7 @@ Do not paste real credential values into any shell command, and do not paste the
   use `agents/superpowers/…` instead.
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
-  operations, testing, code-style, submit-pr, land, …).
+  operations, testing, code-style, submit-pr, pr-description, land, …).
 - **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
   job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
   (`.agents/skills/depot-ci/SKILL.md`).
