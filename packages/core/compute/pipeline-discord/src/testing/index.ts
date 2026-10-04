@@ -3,7 +3,7 @@
 //
 
 import * as Layer from 'effect/Layer';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlClient from 'effect/sql/SqlClient';
 
 import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';

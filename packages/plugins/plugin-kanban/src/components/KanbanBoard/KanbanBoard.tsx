@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -92,7 +92,7 @@ export const KanbanBoardRoot = ({
 
   if (columns.length === 0) {
     return (
-      <div className='flex flex-1 items-center justify-center p-8 text-center text-description'>
+      <div className='flex flex-1 items-center justify-center p-8 text-center text-fg-muted'>
         {t('select-pivot.placeholder')}
       </div>
     );

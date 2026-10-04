@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -14,7 +14,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { Flex, Grid, Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
 import { Merge } from '@dxos/util';
@@ -24,7 +24,8 @@ import { useChatProcessor, useChatServices, usePlatform, usePresets, useSelectio
 import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
-  AppSurface.ObjectSectionProps<ChatType.Chat> & {
+  Omit<AppSurface.ObjectSectionProps<ChatType.Chat>, 'subject'> & {
+    subject?: ChatType.Chat;
     companionTo?: Obj.Unknown;
   },
   Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>
@@ -41,7 +42,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const atomRegistry = useCapability(Capabilities.AtomRegistry);
     const stateAtom = useCapability(AssistantCapabilities.State);
     // Transient (pre-submit) chats have no database; fall back to the companion's.
-    const db = Obj.getDatabase(chat) ?? (companionTo && Obj.getDatabase(companionTo));
+    const db = (chat && Obj.getDatabase(chat)) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });
 
     const { preset, ...chatProps } = usePresets(settings, chat);
@@ -69,7 +70,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     // plank. Filtered to the prompt surface for the same reason the id is: an action on the chat
     // acts on the chat, and only some of those belong beside the text being composed.
     const { graph } = useAppGraph();
-    const actionNodeId = nodeId ?? Obj.getURI(chat);
+    const actionNodeId = nodeId ?? (chat && Obj.getURI(chat));
     const customActions = useMemo(
       () => Atom.make((get) => graphActions(graph, get, actionNodeId, { filter: isPromptAction })),
       [graph, actionNodeId],
@@ -100,10 +101,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
       }
     }, [processor, attendableId, atomRegistry, stateAtom]);
 
-    if (!processor) {
-      return null;
-    }
-
     return (
       <ChatComponent.Root
         chat={chat}
@@ -115,12 +112,12 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         onSubmit={onSubmit}
       >
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Toolbar>
+          <Panel.Header>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <ChatComponent.Content>
-              <div className='dx-expand relative'>
+              <Flex classNames='dx-expand relative'>
                 {/* Thread outline (Table of Contents). */}
                 {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
 
@@ -129,39 +126,44 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
 
                 {/** Floating info. */}
                 {!mobile && (
-                  <div
-                    className='absolute bottom-0 left-0 right-0 dx-document grid grid-cols-[1fr_auto] gap-2 px-3 pb-2'
+                  <Grid
+                    cols={['fill', 'auto']}
+                    gap='sm'
+                    classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-3'
                     data-testid='assistant.chat-status'
                   >
-                    <div className='col-span-2'>
-                      <ChatComponent.Queue classNames='flex justify-end' />
-                    </div>
-                    <div className='flex items-center'>
-                      <ChatComponent.Activity />
-                    </div>
-                    <div className='flex justify-end'>
-                      <ChatComponent.Status classNames='bg-input-surface rounded-sm' />
-                    </div>
-                  </div>
+                    {/* A column, so the queue's listbox spans the row: a row shrinks it and wraps each bubble to nothing. */}
+                    <Flex column classNames='col-span-2'>
+                      <ChatComponent.Queue />
+                    </Flex>
+                    {/* Pinned to their columns: either renders nothing while idle, which would move the other over. */}
+                    <ChatComponent.Activity classNames='col-start-1 self-center' />
+                    <ChatComponent.Status classNames='col-start-2 justify-self-end bg-input-surface rounded-sm' />
+                  </Grid>
                 )}
-              </div>
+              </Flex>
 
-              <div className='dx-document flex flex-col px-2 pb-2'>
-                <div className='grid grid-cols-2'>{mobile && <ChatComponent.Activity />}</div>
+              <Flex column classNames='dx-document px-2 pb-2'>
+                {mobile && (
+                  <Grid cols={2}>
+                    <ChatComponent.Activity />
+                  </Grid>
+                )}
 
                 {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
+                  autoFocus={!companionTo}
                   attendableId={attendableId}
                   companionTo={companionTo}
                   customActions={customActions}
                   nodeId={actionNodeId}
                   preset={preset?.id}
                 />
-              </div>
+              </Flex>
             </ChatComponent.Content>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </ChatComponent.Root>
     );

@@ -11,7 +11,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -49,19 +49,15 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
+      <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
           <Toolbar.Separator />
-          <Toolbar.IconButton
-            icon='ph--trash--regular'
-            label={t('reset-history.button')}
-            onClick={handleResetHistory}
-          />
+          <Button icon='ph--trash--regular' label={t('reset-history.button')} onClick={handleResetHistory} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='dx-document'>
+      </Panel.Header>
+      <Panel.Body classNames='dx-document'>
         {instructions && <InstructionsEditor db={db} instructions={instructions} />}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -46,7 +46,7 @@ const ResizableTile = ({ data, size, onResize, ...tileProps }: ResizableTileProp
       onSizeChange={handleSizeChange}
     >
       <div className='font-medium'>{data.label}</div>
-      <div className='text-xs text-description'>{typeof size === 'number' ? `${size}rem` : 'intrinsic'}</div>
+      <div className='text-xs text-fg-muted'>{typeof size === 'number' ? `${size}rem` : 'intrinsic'}</div>
       <Mosaic.ResizeHandle />
     </Mosaic.Tile>
   );

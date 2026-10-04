@@ -18,12 +18,13 @@ import {
 import * as AssistantChat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
-import { Outline, Task, TaskSet } from '@dxos/types';
+import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import {
@@ -32,6 +33,8 @@ import {
   ModuleContainer,
   config,
   createDecorators,
+  seedBlankSpace,
+  seedBusySpace,
   storyParameters,
 } from '../testing/index.ts';
 
@@ -41,7 +44,7 @@ const meta: Meta<typeof ModuleContainer> = {
   parameters: storyParameters,
 };
 
-const { text, toolCall, promptIncludes } = ScriptedLanguageModel;
+const { text, reasoning, toolCall, promptIncludes } = ScriptedLanguageModel;
 
 /** Shared by the delegation script and its assertions. */
 const TASK_TITLE = 'Compute 10 factorial';
@@ -355,6 +358,39 @@ export const WithTasks: Story = {
   }),
   args: {
     layout: [[StoryRole.Chat]],
+  },
+};
+
+/**
+ * Agent-facing plugin-url prompt: the chat is seeded with an assistant turn that emits a
+ * `plugin-url-prompt` surface, as the model does once it has built and served a plugin (see the
+ * Plugin Manager skill). Clicking the button would load the plugin; the story shows the offer.
+ */
+export const WithPluginUrlPrompt: Story = {
+  decorators: createDecorators({
+    onChatCreated: async ({ db, chat }) => {
+      const feed = await chat.feed.load();
+      await db.appendToFeed(feed, [
+        Message.make({
+          sender: 'assistant',
+          blocks: [
+            { _tag: 'text', text: 'Space Clock is built and served. Load it into the app:' },
+            {
+              _tag: 'surface',
+              role: 'plugin-url-prompt',
+              data: { url: 'http://localhost:4173/plugins/space-clock/manifest.json', name: 'Space Clock' },
+            },
+          ],
+        }),
+      ]);
+    },
+  }),
+  args: {
+    layout: [[StoryRole.Chat]],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('assistant.pluginUrlPrompt.load', {}, { timeout: 10_000 })).toBeVisible();
   },
 };
 
@@ -849,5 +885,85 @@ export const TestProjectTaskDelegationScripted: Story = {
     const tasks = await storySpace.db.query(Filter.type(Task.Task)).run();
     const worked = tasks.find(({ title }) => title === POEM_TASK_TITLE);
     await expect(worked?.status).toEqual('review');
+  },
+};
+
+//
+// Performance — driven by `assistant-e2e`'s `perf-chat.spec.ts`, which types the prompt itself.
+//
+
+/** Calculator calls per user prompt before the closing answer; the spec waits for that line. */
+const PERF_TOOL_TURNS = 20;
+
+const PERF_CALCULATE = Operation.toolName(Calculate);
+
+/** Tool calls since the latest user prompt, which is how far through the loop the session is. */
+const countToolCallsSincePrompt = ({ prompt }: ScriptedLanguageModel.ScriptedRequest): number => {
+  let count = 0;
+  for (let index = prompt.content.length - 1; index >= 0; index--) {
+    const message = prompt.content[index];
+    // A user message right after a tool result is a mid-loop reminder, not a new prompt.
+    if (message.role === 'user' && prompt.content[index - 1]?.role !== 'tool') {
+      break;
+    }
+    if (message.role === 'assistant') {
+      count += message.content.filter((part) => part.type === 'tool-call' && part.name === PERF_CALCULATE).length;
+    }
+  }
+  return count;
+};
+
+/**
+ * A fixed agent loop for measuring the chat stack offline: reasoning, streamed status text and a
+ * real tool round trip per turn, with a delay so each turn renders rather than landing in one frame.
+ */
+const perfScript: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
+  // Side calls (chat naming) offer no tools; a tool call there could not be dispatched.
+  if (!request.tools.includes(PERF_CALCULATE)) {
+    return { parts: [text('Perf run')] };
+  }
+  const turn = countToolCallsSincePrompt(request);
+  if (turn >= PERF_TOOL_TURNS) {
+    return {
+      delay: '250 millis',
+      parts: [
+        reasoning(`All ${PERF_TOOL_TURNS} calculations returned; summarizing.`),
+        text(`Done — ran ${PERF_TOOL_TURNS} calculations.`),
+      ],
+    };
+  }
+  return {
+    delay: '250 millis',
+    parts: [
+      reasoning(`Turn ${turn + 1} of ${PERF_TOOL_TURNS}: computing ${turn + 1}!.`),
+      text(`Computing ${turn + 1}! (${turn + 1}/${PERF_TOOL_TURNS}).`),
+      toolCall(PERF_CALCULATE, { expression: `${turn + 1}!` }),
+    ],
+  };
+};
+
+export const PerfScripted: Story = {
+  decorators: createDecorators({
+    config: config.offlinePersistent,
+    skills: [CalculatorSkill.key],
+    scripted: perfScript,
+    onInit: seedBlankSpace,
+  }),
+  args: {
+    layout: [[StoryRole.Chat]],
+  },
+};
+
+/** {@link PerfScripted} on a space shaped like a long-lived one, to compare against the blank run. */
+export const PerfScriptedBusy: Story = {
+  decorators: createDecorators({
+    config: config.offlinePersistent,
+    types: [Trace.Message, AiContext.Binding, Message.Message],
+    skills: [CalculatorSkill.key],
+    scripted: perfScript,
+    onInit: seedBusySpace,
+  }),
+  args: {
+    layout: [[StoryRole.Chat]],
   },
 };

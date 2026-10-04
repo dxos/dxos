@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { IconButton, Toolbar } from '@dxos/react-ui';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { type WindowController } from '@dxos/react-ui-virtual';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
@@ -50,7 +50,7 @@ const DefaultStory = ({
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
-        <IconButton
+        <Button
           icon='ph--plus--regular'
           iconOnly
           label='Append'
@@ -65,7 +65,7 @@ const DefaultStory = ({
             ])
           }
         />
-        <IconButton
+        <Button
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Bottom'

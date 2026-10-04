@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
-import { Matrix } from '@dxos/react-ui-components';
+import { Matrix } from '@dxos/react-ui-experimental';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ChatStatus, type ChatStatusController } from './ChatStatus.tsx';

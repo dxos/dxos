@@ -42,9 +42,7 @@ const DefaultStory = () => {
       >{`tasks:${tasks.length} ${tasks.map((task) => task.title).join(',')}`}</div>
       {space ? (
         <Dialog.Root defaultOpen>
-          <Dialog.Overlay>
-            <ObjectFormDialog target={space.db} typename={Type.getTypename(Task.Task)} shouldNavigate={() => false} />
-          </Dialog.Overlay>
+          <ObjectFormDialog target={space.db} typename={Type.getTypename(Task.Task)} shouldNavigate={() => false} />
         </Dialog.Root>
       ) : (
         <Loading />
@@ -114,7 +112,7 @@ export const SubmitWithKeyboard: Story = {
   play: async () => {
     const body = within(document.body);
     // Pasted rather than typed: the client boot already spends most of the story's time budget.
-    await userEvent.click(await body.findByLabelText(/^title$/i, undefined, { timeout: 15_000 }));
+    await userEvent.click(await body.findByLabelText(/^title\*?$/i, undefined, { timeout: 15_000 }));
     await userEvent.paste('Roast the samples');
 
     await userEvent.click(await findDescription());
@@ -132,7 +130,7 @@ export const SubmitWithKeyboard: Story = {
 export const EmptyTitleIgnored: Story = {
   play: async () => {
     const body = within(document.body);
-    await userEvent.click(await body.findByLabelText(/^title$/i, undefined, { timeout: 15_000 }));
+    await userEvent.click(await body.findByLabelText(/^title\*?$/i, undefined, { timeout: 15_000 }));
     await userEvent.paste('   ');
     await userEvent.keyboard('{Control>}{Enter}{/Control}');
 

@@ -5,8 +5,8 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -242,6 +242,9 @@ describe('AnswerQuestion', () => {
   /** Events of one type on the space's trace feed, in the order they were written. */
   const readEvents = <T>(eventType: Trace.EventType<T>) =>
     Effect.gen(function* () {
+      // The sink batches its appends, so the trace can trail the operation that wrote it.
+      yield* FeedTraceSink.flush();
+      yield* Database.flush();
       const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
       const messages = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
       return messages

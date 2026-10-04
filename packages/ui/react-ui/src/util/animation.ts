@@ -27,7 +27,7 @@ export const useReducedMotion = (): boolean =>
  * `VITE_DX_DISABLE_ANIMATIONS=true` turns off animation that runs without a user gesture —
  * carousel auto-advance and the like.
  *
- * Agent-driven recordings (`recording-demos`) are culled by dropping runs of identical frames, and
+ * Agent-driven recordings (`autocue`) are culled by dropping runs of identical frames, and
  * an unattended animation makes every frame differ, so the whole session survives the cull.
  */
 export const animationsDisabled = (): boolean => {

@@ -80,7 +80,13 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../core/halo/halo"
+    },
+    {
       "path": "../../core/halo/halo-react"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"
@@ -125,9 +131,6 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
       "path": "../../ui/react-ui-dnd"
     },
     {
@@ -141,6 +144,9 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-query"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

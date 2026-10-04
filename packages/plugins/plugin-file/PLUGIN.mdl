@@ -144,8 +144,8 @@ component FileArticle
 op Create
   key: org.dxos.operation.file.create
   desc: |
-    Validates a browser File object's MIME type, resolves the active
-    BackendDescriptor, and composes File.fromBytes (which hashes/uploads the
+    Resolves the MIME type to store (FileLimits.toStoredMimeType), resolves the
+    active BackendDescriptor, and composes File.fromBytes (which hashes/uploads the
     bytes via the Blob API and adds the resulting Blob to the database) to
     construct a File ECHO object. Does not add the File object itself to the
     space — callers do that separately.
@@ -154,7 +154,6 @@ op Create
     db: Database
   output: { object: File }
   errors:
-    UnsupportedFileTypeError: MIME type is not image/*, video/*, or application/pdf
     FileTooLargeError: file exceeds the 4 MB inline limit (only possible when the
       resolved backend's storage is 'inline'; other backends scale beyond it)
     NoBackendError: no BackendDescriptor capability is registered
@@ -165,8 +164,9 @@ op Create
 ```mdl
 feat F-1: File upload
 
-  req F-1.1: Accepted MIME types MUST be image/* (jpg, jpeg, png, gif, webp, svg),
-    video/* (mp4, webm, mov), and application/pdf only.
+  req F-1.1: Every MIME type MUST be accepted, including an absent one. A type
+    that is absent or that a browser executes (text/html, application/xhtml+xml,
+    text/xml, application/xml) MUST be stored as application/octet-stream.
 
   req F-1.2: Maximum upload size MUST be 4 MB when the resolved backend's storage
     is 'inline'. Other backends (e.g. edge, wnfs) are not subject to this cap.
@@ -180,8 +180,8 @@ feat F-1: File upload
         renderable url resolved via Blob.url, if one is available)
 
   req F-1.4:
-    when: file MIME type is not accepted
-    then: UnsupportedFileTypeError returned; no ECHO write occurs
+    when: file MIME type is unrecognized or empty (e.g. a .ndjson.gz log bundle)
+    then: the File is created; Preview shows the no-preview message and a download
 
   req F-1.5:
     when: file size exceeds the limit and the resolved backend's storage is 'inline'
@@ -279,12 +279,11 @@ scenario T-2: Reject oversized file
 ```
 
 ```mdl
-scenario T-3: Reject unsupported MIME type
+scenario T-3: Store an unrecognized MIME type
   given: inline backend registered
   when: user uploads a .zip file
   then:
-    - UnsupportedFileTypeError is returned
-    - no File object is created
+    - a File object is created whose Blob type is application/zip
 ```
 
 ```mdl
@@ -400,26 +399,16 @@ test QA-1: Upload an image and preview it
 ```
 
 ```mdl
-test QA-2: Reject an oversized or unsupported upload
-  desc: The two rejection paths (F-1.4, F-1.5) — a validation round-trip that must leave no ECHO write behind.
+test QA-2: Reject an oversized upload
+  desc: The rejection path (F-1.5) — a validation round-trip that must leave no ECHO write behind.
   actors: agent
-  covers: [F-1.4, F-1.5, T-2, T-3]
+  covers: [F-1.5, T-2]
   status: unverified
   given:
     - an identity exists
     - space: a space is open
     - only the inline BackendDescriptor is registered (4 MB cap applies)
   steps:
-    - name: Reject an unsupported MIME type
-      do: In the Create Object form, attempt to upload a .zip file.
-      invoke: |
-        org.dxos.operation.file.create {
-          file: new File([new Uint8Array([80, 75])], "qa.zip", { type: "application/zip" }),
-          db: $given.space.db
-        }
-      expect: the upload is refused with UnsupportedFileTypeError and no File object is created
-      assert: |
-        return /UnsupportedFileType/.test($error?.message ?? $error?._tag ?? '');
     - name: Reject an oversized file
       do: Attempt to upload a PNG larger than 4 MB.
       invoke: |

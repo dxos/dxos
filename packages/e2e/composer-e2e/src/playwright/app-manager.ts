@@ -79,6 +79,13 @@ const OBJECT_TYPENAMES: Record<string, string> = {
   Table: 'org.dxos.type.table',
 };
 
+/** The tree row's `data-drop-target` for each drop instruction a test asks for. */
+const DROP_TARGETS: Record<string, string> = {
+  'reorder-above': 'top',
+  'reorder-below': 'bottom',
+  'make-child': 'inside',
+};
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
@@ -499,11 +506,12 @@ export class AppManager {
 
   /** Discloses a row's children, leaving an already-open row alone. */
   async #expandRow(row: Locator, timeout: number): Promise<void> {
-    const toggle = row.getByTestId('treeItem.toggle').first();
+    // The tree's disclosure caret (Ark's branch trigger), which carries the branch's open state.
+    const toggle = row.locator('[data-part="branch-trigger"]').first();
     // Read the state only once the toggle exists: `getAttribute` on a detached element answers
     // `null`, which is indistinguishable from "collapsed" and would click an open row shut.
     await expect(toggle).toBeAttached({ timeout });
-    if ((await toggle.getAttribute('aria-expanded')) === 'true') {
+    if ((await toggle.getAttribute('data-state')) === 'open') {
       return;
     }
     // Hovering the row is what expands it in the graph, and a row with no children yet has a
@@ -513,7 +521,7 @@ export class AppManager {
     await expect(toggle).toBeEnabled({ timeout });
     await toggle.click();
     // An open commits through the model at once, so an expand that did not take fails here.
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true', { timeout });
+    await expect(toggle).toHaveAttribute('data-state', 'open', { timeout });
   }
 
   async expandCollection(nth = 0, timeout = 15_000): Promise<void> {
@@ -577,8 +585,12 @@ export class AppManager {
       .first()
       .click();
     await this.page.getByTestId('spacePlugin.renameObject').last().click();
-    await this.page.getByTestId('spacePlugin.rename.input').fill(newName);
-    await this.page.getByTestId('spacePlugin.rename.input').press('Enter');
+    // An object's rename popover is its properties form, whose Name field writes as it is typed; Escape closes it.
+    const name = this.page
+      .locator('[data-scope="popover"][data-part="content"]')
+      .getByRole('textbox', { name: 'Name' });
+    await name.fill(newName);
+    await name.press('Escape');
     await this.page.mouse.move(0, 0, { steps: 4 });
   }
 
@@ -596,7 +608,9 @@ export class AppManager {
   }
 
   getObjectByName(name: string): Locator {
-    return this.getObjectLinks().filter({ has: this.page.locator(`span:has-text("${name}")`) });
+    return this.getObjectLinks().filter({
+      has: this.page.getByTestId('treeItem.heading').getByText(name, { exact: true }),
+    });
   }
 
   getSpaceItems(): Locator {
@@ -609,13 +623,22 @@ export class AppManager {
 
   /**
    * Drags `active` onto `over` and releases only once `over` reports `instruction` as its drop zone.
-   * The dragged row leaves the list when the drag starts, so rows below it move up: the target is
-   * measured after that, not before.
+   * The target is measured once the drag has started, so a tree that removes its source row (and
+   * moves the rows below it up) is measured where it ends up.
    */
   async dragTo(
     active: Locator,
     over: Locator,
-    { instruction, offset = { x: 0, y: 0 } }: { instruction: string; offset?: { x: number; y: number } },
+    {
+      instruction,
+      offset = { x: 0, y: 0 },
+      holdUntil,
+    }: {
+      instruction: string;
+      offset?: { x: number; y: number };
+      /** Keeps the pointer in the zone until this holds, then drops. */
+      holdUntil?: () => Promise<boolean>;
+    },
   ): Promise<void> {
     const start = await active.boundingBox();
     const initial = await over.boundingBox();
@@ -629,7 +652,7 @@ export class AppManager {
     // Past the drag threshold, still inside the source row, and toward the target: a nudge away from
     // it leaves the pointer over the row that slides into the dragged row's place.
     await this.page.mouse.move(startX, startY + (initial.y < start.y ? -6 : 6), { steps: 2 });
-    await expect(active).toBeHidden();
+    await expect(active).toHaveAttribute('data-dragging');
 
     const box = await over.boundingBox();
     if (!box) {
@@ -645,10 +668,22 @@ export class AppManager {
       .poll(async () => {
         nudge = 1 - nudge;
         await this.page.mouse.move(x, y + nudge);
-        return over.getAttribute('data-instruction');
+        const zone = await over.getAttribute('data-drop-target');
+        if (zone !== DROP_TARGETS[instruction]) {
+          return zone;
+        }
+        return !holdUntil || (await holdUntil()) ? zone : `${zone} (holding)`;
       })
-      .toBe(instruction);
+      .toBe(DROP_TARGETS[instruction]);
     await this.page.mouse.up();
+  }
+
+  /** Drops `active` inside `collection`, holding over it until the tree opens it. */
+  async dragInto(active: Locator, collection: Locator): Promise<void> {
+    await this.dragTo(active, collection, {
+      instruction: 'make-child',
+      holdUntil: async () => (await collection.getAttribute('data-state')) === 'open',
+    });
   }
 
   //
@@ -712,6 +747,11 @@ export class AppManager {
 
   getPluginToggle(plugin: string): Locator {
     return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
+  }
+
+  async togglePlugin(plugin: string): Promise<void> {
+    // The switch's input is visually hidden, so the press lands on its root.
+    await this.page.getByTestId(`pluginList.${plugin}`).locator('[data-scope="switch"][data-part="root"]').click();
   }
 
   async changeStorageVersionInMetadata(version: number): Promise<void> {

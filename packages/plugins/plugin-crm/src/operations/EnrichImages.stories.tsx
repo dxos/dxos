@@ -14,7 +14,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Card, Icon, Toolbar } from '@dxos/react-ui';
+import { Block, Button, Card, Icon, Toolbar } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
@@ -62,22 +62,22 @@ const DefaultStory = () => {
         <Button onClick={handleEnrich} data-testid='crm.story.enrich'>
           Enrich images
         </Button>
-        <span className='text-sm text-description' data-testid='crm.story.status'>
+        <span className='text-sm text-fg-muted' data-testid='crm.story.status'>
           {status}
         </span>
       </Toolbar.Root>
 
       {[...people, ...organizations].map((subject) => (
-        <Card.Root key={subject.id} fullWidth>
+        <Card.Root key={subject.id}>
           <Card.Header>
-            <Card.Block>
+            <Block>
               <Icon icon={Obj.instanceOf(Person.Person, subject) ? 'ph--user--regular' : 'ph--buildings--regular'} />
-            </Card.Block>
+            </Block>
             <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           </Card.Header>
           <Card.Body>
             <Card.Row>
-              <Card.Text classNames='text-sm text-description' data-testid={`crm.story.image.${subject.id}`}>
+              <Card.Text classNames='text-sm' data-testid={`crm.story.image.${subject.id}`} variant='muted'>
                 {(subject as { image?: string }).image ?? 'image: none'}
               </Card.Text>
             </Card.Row>

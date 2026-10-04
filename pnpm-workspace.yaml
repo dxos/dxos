@@ -50,6 +50,7 @@ catalog:
   '@bufbuild/buf': 1.65.0
   '@bufbuild/protobuf': 2.11.0
   '@bufbuild/protoc-gen-es': 2.11.0
+  '@carderne/sandbox-runtime': ^0.0.72
   '@ch-ui/colors': 1.2.1
   '@ch-ui/icons': ^1.0.1
   '@ch-ui/tailwind-tokens': 2.8.1
@@ -61,7 +62,7 @@ catalog:
   '@cloudflare/vitest-pool-workers': ^0.18.6
   '@cloudflare/workers-types': ^5.20260717.1
   '@codemirror/autocomplete': ^6.20.3
-  '@codemirror/commands': ^6.10.4
+  '@codemirror/commands': ^6.11.1
   '@codemirror/lang-html': ^6.4.12
   '@codemirror/lang-javascript': ^6.2.5
   '@codemirror/lang-json': ^6.0.2
@@ -72,10 +73,10 @@ catalog:
   '@codemirror/language-data': ^6.5.2
   '@codemirror/lint': 6.9.7
   '@codemirror/merge': ^6.12.2
-  '@codemirror/search': ^6.7.1
-  '@codemirror/state': ^6.7.1
+  '@codemirror/search': ^6.7.2
+  '@codemirror/state': ^6.7.6
   '@codemirror/theme-one-dark': ^6.1.3
-  '@codemirror/view': ^6.43.9
+  '@codemirror/view': ^6.43.13
   '@comunica/query-sparql-rdfjs': 5.2.3
   '@crxjs/vite-plugin': ^2.4.0
   '@dagrejs/dagre': ^3.1.1
@@ -91,19 +92,19 @@ catalog:
   '@dxos/ui-types': ^0.9.0
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-rx/rx-react': ^0.42.4
-  '@effect/ai-anthropic': 4.0.0-rc.117
-  '@effect/ai-openai': 4.0.0-rc.117
-  '@effect/atom-react': 4.0.0-rc.117
-  '@effect/language-service': ^0.86.4
-  '@effect/opentelemetry': 4.0.0-rc.117
-  '@effect/platform-browser': 4.0.0-rc.117
-  '@effect/platform-bun': 4.0.0-rc.117
-  '@effect/platform-node': 4.0.0-rc.117
-  '@effect/sql-sqlite-bun': 4.0.0-rc.117
-  '@effect/sql-sqlite-node': 4.0.0-rc.117
-  '@effect/sql-sqlite-wasm': 4.0.0-rc.117
+  '@effect/ai-anthropic': 4.0.0
+  '@effect/ai-openai': 4.0.0
+  '@effect/atom-react': 4.0.0
+  '@effect/language-service': ^0.87.3
+  '@effect/opentelemetry': 4.0.0
+  '@effect/platform-browser': 4.0.0
+  '@effect/platform-bun': 4.0.0
+  '@effect/platform-node': 4.0.0
+  '@effect/sql-sqlite-bun': 4.0.0
+  '@effect/sql-sqlite-node': 4.0.0
+  '@effect/sql-sqlite-wasm': 4.0.0
   '@effect/tsgo': ^0.36.5
-  '@effect/vitest': 4.0.0-rc.117
+  '@effect/vitest': 4.0.0
   '@effect/wa-sqlite': ^0.1.2
   '@elgato/streamdeck': ^2.1.2
   '@emoji-mart/data': ^1.1.2
@@ -135,21 +136,21 @@ catalog:
   '@octokit/core': ^7.0.6
   '@octokit/rest': ^22.0.1
   '@opentelemetry/api': ^1.9.1
-  '@opentelemetry/api-logs': ^0.221.0
-  '@opentelemetry/auto-instrumentations-node': ^0.79.0
-  '@opentelemetry/auto-instrumentations-web': ^0.66.0
-  '@opentelemetry/core': ^2.10.0
-  '@opentelemetry/exporter-logs-otlp-http': ^0.221.0
-  '@opentelemetry/exporter-metrics-otlp-http': ^0.221.0
-  '@opentelemetry/exporter-trace-otlp-http': ^0.221.0
-  '@opentelemetry/instrumentation': ^0.221.0
-  '@opentelemetry/resources': ^2.10.0
-  '@opentelemetry/sdk-logs': ^0.221.0
-  '@opentelemetry/sdk-metrics': ^2.10.0
-  '@opentelemetry/sdk-node': ^0.221.0
-  '@opentelemetry/sdk-trace-base': ^2.10.0
-  '@opentelemetry/sdk-trace-node': ^2.10.0
-  '@opentelemetry/sdk-trace-web': ^2.10.0
+  '@opentelemetry/api-logs': ^0.222.0
+  '@opentelemetry/auto-instrumentations-node': ^0.80.0
+  '@opentelemetry/auto-instrumentations-web': ^0.67.0
+  '@opentelemetry/core': ^2.11.0
+  '@opentelemetry/exporter-logs-otlp-http': ^0.222.0
+  '@opentelemetry/exporter-metrics-otlp-http': ^0.222.0
+  '@opentelemetry/exporter-trace-otlp-http': ^0.222.0
+  '@opentelemetry/instrumentation': ^0.222.0
+  '@opentelemetry/resources': ^2.11.0
+  '@opentelemetry/sdk-logs': ^0.222.0
+  '@opentelemetry/sdk-metrics': ^2.11.0
+  '@opentelemetry/sdk-node': ^0.222.0
+  '@opentelemetry/sdk-trace-base': ^2.11.0
+  '@opentelemetry/sdk-trace-node': ^2.11.0
+  '@opentelemetry/sdk-trace-web': ^2.11.0
   '@opentelemetry/semantic-conventions': ^1.43.0
   '@opentui/core': 0.1.61
   '@opentui/core-darwin-arm64': 0.1.61
@@ -166,6 +167,7 @@ catalog:
   '@phosphor-icons/react': 2.1.10
   '@playwright/test': 1.63.0
   '@posthog/mcp': ^0.12.0
+  '@rdfjs/types': ^2.0.1
   '@react-three/drei': ^10.7.7
   '@react-three/fiber': ^9.5.0
   '@replit/codemirror-vim': ^6.3.0
@@ -176,18 +178,18 @@ catalog:
   '@rollup/plugin-swc': ^0.4.0
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
-  '@storybook/addon-docs': ^10.5.8
-  '@storybook/addon-links': ^10.5.8
-  '@storybook/addon-themes': ^10.5.8
-  '@storybook/addon-vitest': ^10.5.8
-  '@storybook/builder-vite': ^10.5.8
-  '@storybook/html-vite': ^10.5.8
+  '@storybook/addon-docs': ^10.6.0
+  '@storybook/addon-links': ^10.6.0
+  '@storybook/addon-themes': ^10.6.0
+  '@storybook/addon-vitest': ^10.6.0
+  '@storybook/builder-vite': ^10.6.0
+  '@storybook/html-vite': ^10.6.0
   '@storybook/icons': ^2.1.0
   '@storybook/mdx2-csf': ^1.1.0
-  '@storybook/react-vite': ^10.5.8
-  '@storybook/web-components-vite': ^10.5.8
+  '@storybook/react-vite': ^10.6.0
+  '@storybook/web-components-vite': ^10.6.0
   '@svgr/cli': ^8.1.0
-  '@swc/core': 1.16.2
+  '@swc/core': 1.16.13
   '@swc/types': ^0.1.28
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
@@ -197,16 +199,16 @@ catalog:
   '@tanstack/virtual-core': ^3.17.7
   '@tauri-apps/api': ^2.11.1
   '@tauri-apps/cli': ^2.11.4
-  '@tauri-apps/plugin-deep-link': ^2.4.9
-  '@tauri-apps/plugin-dialog': ^2.7.2
-  '@tauri-apps/plugin-fs': ^2.5.1
-  '@tauri-apps/plugin-haptics': ^2.3.2
-  '@tauri-apps/plugin-http': ^2.5.9
-  '@tauri-apps/plugin-opener': ^2.5.4
+  '@tauri-apps/plugin-deep-link': ^2.4.10
+  '@tauri-apps/plugin-dialog': ^2.7.3
+  '@tauri-apps/plugin-fs': ^2.5.2
+  '@tauri-apps/plugin-haptics': ^2.3.3
+  '@tauri-apps/plugin-http': ^2.6.0
+  '@tauri-apps/plugin-opener': ^2.5.5
   '@tauri-apps/plugin-os': ^2.3.2
   '@tauri-apps/plugin-process': ^2.3.1
-  '@tauri-apps/plugin-shell': ^2.3.5
-  '@tauri-apps/plugin-updater': ^2.10.1
+  '@tauri-apps/plugin-shell': ^2.3.6
+  '@tauri-apps/plugin-updater': ^2.11.0
   '@testing-library/dom': ^10.4.1
   '@testing-library/jest-dom': ^6.9.1
   '@testing-library/react': ^16.3.2
@@ -229,6 +231,7 @@ catalog:
   '@types/color-hash': ^1.0.1
   '@types/columnify': ^1.5.1
   '@types/d3': ^7.4.3
+  '@types/d3-force': ^3.0.10
   '@types/d3-hierarchy': ^3.1.6
   '@types/debug': ^4.1.10
   '@types/deep-equal': ^1.0.4
@@ -285,7 +288,7 @@ catalog:
   '@types/wtfnode': ^0.10.0
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3
-  '@typescript-eslint/parser': ^8.66.0
+  '@typescript-eslint/parser': ^8.71.0
   '@typescript/typescript6': ^6.0.2
   '@typescript/vfs': ^1.6.0
   '@uiw/codemirror-theme-vscode': ^4.25.2
@@ -387,12 +390,12 @@ catalog:
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
   dompurify: ^3.3.1
-  effect: 4.0.0-rc.117
+  effect: 4.0.0
   elkjs: ^0.12.0
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
-  esbuild: 0.28.1
+  esbuild: 0.28.2
   esbuild-plugin-glsl: ^1.4.2
   esbuild-plugin-inline-image: ^0.0.9
   esbuild-plugin-raw: 0.4.2
@@ -462,6 +465,7 @@ catalog:
   json-stringify-safe: ^5.0.1
   json5: ^2.2.3
   jsonata: ^2.1.0
+  jsonld-streaming-parser: ^5.0.1
   jsonpath-plus: ^10.3.0
   jsonpointer: ^5.0.1
   jszip: ^3.10.1
@@ -469,6 +473,7 @@ catalog:
   kbn-handlebars: ^1.0.0
   knip: ^5.64.3
   koffi: ^2.8.0
+  ldkit: ^2.7.2
   leaflet: ^1.9.4
   leva: ^0.10.1
   lib0: ^0.2.65
@@ -515,6 +520,7 @@ catalog:
   ollama: ^0.5.11
   once: ^1.4.0
   openapi-types: ^12.1.3
+  oxc-parser: ^0.148.0
   oxc-resolver: ^11.9.0
   oxlint-tsgolint: ^7.0.2001
   papaparse: ^5.5.3
@@ -603,8 +609,8 @@ catalog:
   sparqljs: ^3.7.4
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.24.0
-  storybook: ^10.5.8
-  storybook-solidjs-vite: ^10.6.0
+  storybook: ^10.6.0
+  storybook-solidjs-vite: ^10.7.1
   streamx: ^2.12.5
   style-mod: ^4.1.0
   tailwind-merge: ^3.5.0
@@ -646,7 +652,7 @@ catalog:
   varint: 6.0.0
   versor: ^0.2.0
   viem: ^2.21.26
-  vite: ^8.2.1
+  vite: ^8.2.2
   vite-node: ^6.0.0
   vite-plugin-devtools-json: ^1.1.0
   vite-plugin-glslify: ^2.3.0
@@ -769,6 +775,7 @@ patchedDependencies:
   '@automerge/automerge-subduction@0.17.2': patches/@automerge__automerge-subduction@0.17.2.patch
   '@vitest/browser@4.1.10': patches/@vitest__browser@4.1.10.patch
   '@zag-js/presence@1.43.3': patches/@zag-js__presence@1.43.3.patch
+  dfx@1.0.15: patches/dfx@1.0.15.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch

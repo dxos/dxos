@@ -11,6 +11,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import { translations as shellTranslations } from '@dxos/shell/translations';
 
 import { meta } from '#meta';
@@ -28,18 +29,19 @@ export { makeCreateObjectEntryForDatabaseType } from '../util/index.ts';
 
 export const Commands = AppCapability.commands(() => import('./commands.ts'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Dashboard = Capability.lazyModule(
   'Dashboard',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [Capabilities.PluginManager, ClientCapabilities.Client, AppCapabilities.Layout],
     provides: [SpaceCapabilities.Dashboard],
     activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./dashboard.ts'),
 );
+export const DefaultParent = AppCapability.defaultParent(() => import('./default-parent.ts'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
@@ -49,7 +51,7 @@ export const IdentityCreated = Capability.lazyModule(
     provides: [SpaceCapabilities.DefaultSpace],
     // Runtime event: the default space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./identity-created.ts'),
 );
@@ -58,7 +60,7 @@ export type { NavigationHandlerOptions } from './navigation-handler/index.ts';
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [ClientCapabilities.Client],
   },
 );
@@ -67,6 +69,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
   roles: [
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.role.article',
+    'org.dxos.role.cardMasonry',
     'org.dxos.role.dialog',
     'org.dxos.role.formInput',
     'org.dxos.role.navbarEnd',
@@ -93,7 +96,7 @@ export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SpacesAvailable = Capability.lazyModule(
   'SpacesAvailable',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
@@ -122,7 +125,7 @@ export const SpaceState = Capability.lazyModule(
   {
     requires: [Capabilities.AtomRegistry, Capabilities.PluginManager],
     provides: [SpaceCapabilities.State, SpaceCapabilities.EphemeralState],
-    environments: [],
+    environments: ['browser', 'tauri'],
   },
   () => import('./state.ts'),
 );
@@ -130,7 +133,7 @@ export const ObservabilityMappings = AppCapability.observabilityMappings(() => i
   props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
 });
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
@@ -140,6 +143,7 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
 export const Translations = AppCapability.translations([
   ...translations,
   ...componentsTranslations,
+  ...queryTranslations,
   ...formTranslations,
   ...shellTranslations,
 ]);

@@ -62,6 +62,7 @@ rule no-compat-shims: No compatibility re-exports when moving code
     - packages/**/*.ts
     - packages/**/*.tsx
   grep: compat|backward|@deprecated|re-export|export \*
+  context: diff, importers
   severity: warn
 ```
 
@@ -83,6 +84,7 @@ rule no-echo-internal-in-sdk: SDK and app code uses the public ECHO API
     - packages/apps/**/*.ts
     - packages/apps/**/*.tsx
   grep: '@dxos/echo/internal'
+  context: package
   severity: warn
 ```
 
@@ -97,6 +99,7 @@ rule private-new-packages: New packages must be private
   scope: repo
   files:
     - packages/**/package.json
+  context: diff
   severity: error
 ```
 
@@ -112,6 +115,7 @@ rule workspace-deps: In-repo deps use the workspace protocol
   files:
     - packages/**/package.json
   grep: @dxos/
+  context: diff
   severity: error
 ```
 
@@ -147,6 +151,7 @@ rule bounded-live-state: Every collection of live entities has an explicit upper
     - packages/**/src/**/*.ts
     - packages/**/src/**/*.tsx
   grep: \.set\(|\.push\(|\.add\(|\.put\(|\.insert\(|register\w*\(|spawn\w*\(|INSERT INTO|insert into
+  context: diff
   severity: error
 ```
 
@@ -184,6 +189,7 @@ rule collect-dead-entities: Terminated entries are retained up to a cap and then
     - packages/**/src/**/*.ts
     - packages/**/src/**/*.tsx
   grep: completedAt|terminated|Terminated|done: true|completed: true|status: ['"](done|completed|failed)['"]|_tag: ['"](Done|Completed|Failed)['"]
+  context: diff
   severity: error
 ```
 

@@ -41,6 +41,7 @@ export const translations = [
         'space.label': 'Space',
         'feeds.label': 'Feeds',
         'objects.label': 'Objects',
+        'queries.label': 'Queries',
         'schema.label': 'Schema',
         'registry.label': 'Registry',
         'automerge.label': 'Automerge',

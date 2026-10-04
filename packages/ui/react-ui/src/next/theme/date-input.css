@@ -1,0 +1,125 @@
+/*
+ * DateInput: zag's segmented date/time entry in a control row, with an optional trailing calendar trigger; the
+ * calendar is a portalled popup (`.dx-popup` supplies size, level and radius) holding zag's day/month/year tables.
+ */
+
+@layer dx-components {
+  /* The Ark roots only carry context and state, so the row is laid out as the parent's child. */
+  .dx-date-field {
+    display: contents;
+  }
+  :is(.dx-field, .dx-container[data-layout='stack']) > .dx-date-field .dx-date-input {
+    margin-block: var(--dx-control-inset);
+  }
+
+  /* Segments are focused, not the row, so the row draws the ring as an outline (wrapper rings, Phase 3 follow-up 6). */
+  .dx-date-input:has(.dx-date-input-segment:focus-visible) {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
+  }
+  .dx-date-input:has(> .dx-date-input-segments[data-disabled]) {
+    opacity: 0.5;
+  }
+
+  .dx-date-input-segments {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+  .dx-date-input-segment-group {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dx-date-input-segment {
+    padding-inline: 1px;
+    border-radius: 2px;
+    outline: none;
+    text-align: end;
+  }
+  .dx-date-input-segment[data-type='literal'],
+  .dx-date-input-segment[data-placeholder-shown] {
+    color: var(--color-fg-muted);
+  }
+  .dx-date-input-segment[data-editable]:focus {
+    background: var(--color-accent-bg);
+    color: var(--color-accent-fg);
+  }
+  .dx-date-input-segment[aria-invalid='true']:not(:focus) {
+    color: var(--color-error-text);
+  }
+
+  /*
+   * The calendar keeps its own square-ish shape rather than the anchor's width: seven block-sized day columns plus the
+   * padding, whatever the field's width, so every view (day, month, year) shares that width.
+   */
+  .dx-date-calendar {
+    box-sizing: content-box;
+    width: calc(7 * var(--dx-block-size));
+    min-width: 0;
+    padding: var(--dx-gap-size);
+  }
+  .dx-date-calendar-view[hidden] {
+    display: none;
+  }
+  .dx-date-calendar-header {
+    display: flex;
+    align-items: center;
+  }
+  .dx-date-calendar-title {
+    flex: 1;
+    min-width: 0;
+  }
+  .dx-date-calendar-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+  .dx-date-calendar-table th {
+    height: var(--dx-block-size);
+    padding: 0;
+    font-weight: normal;
+    color: var(--color-fg-muted);
+  }
+  .dx-date-calendar-table td {
+    padding: 0;
+    text-align: center;
+  }
+
+  /* A day is a block-sized square; month and year cells share a row's width four to a row at the same height. */
+  .dx-date-calendar-cell {
+    display: grid;
+    place-items: center;
+    height: var(--dx-block-size);
+    border-radius: var(--radius-sm, 0.25rem);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+  .dx-date-calendar-cell[data-view='day'] {
+    width: var(--dx-block-size);
+  }
+  .dx-date-calendar-cell:hover:not([data-disabled]) {
+    background: var(--color-hover-surface);
+  }
+  .dx-date-calendar-cell[data-today] {
+    font-weight: 600;
+    color: var(--color-accent-text);
+  }
+  .dx-date-calendar-cell[data-outside-range] {
+    color: var(--color-fg-muted);
+  }
+  .dx-date-calendar-cell[data-selected],
+  .dx-date-calendar-cell[data-selected]:hover {
+    background: var(--color-accent-bg);
+    color: var(--color-accent-fg);
+  }
+  .dx-date-calendar-cell[data-disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

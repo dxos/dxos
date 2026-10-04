@@ -43,10 +43,10 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Ref from 'effect/Ref';
 import * as Semaphore from 'effect/Semaphore';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AtomEx, EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -208,6 +208,8 @@ export interface PluginManager {
    * Loads a plugin via the plugin loader and registers it without enabling it.
    * Returns the loaded plugin so callers can enable it by its canonical id
    * (which may differ from the locator used to load it, e.g. URL loaders).
+   * A plugin whose id is already enabled, such as one persisted from an earlier
+   * session, is activated as part of the add.
    */
   add(id: string): Effect.Effect<Plugin.Plugin, Error>;
 
@@ -535,7 +537,13 @@ class ManagerImpl implements PluginManager {
   }
 
   add(id: string): Effect.Effect<Plugin.Plugin, Error> {
-    return this._catalog.add(id);
+    return this._catalog.add(id).pipe(
+      // An id already in the enabled set (persisted from an earlier session) would otherwise read
+      // as enabled while none of its modules is registered, and no toggle short of off-and-on starts it.
+      Effect.tap((plugin) =>
+        this._state.isEnabled(plugin.meta.profile.key) ? this.enable(plugin.meta.profile.key) : Effect.void,
+      ),
+    );
   }
 
   enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error> {

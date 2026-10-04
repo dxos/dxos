@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Migrator from 'effect/unstable/sql/Migrator';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as Migrator from 'effect/sql/Migrator';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { readdirSync } from 'node:fs';
 import { test } from 'vitest';
 
-import { SqlMigrations } from '@dxos/sql-sqlite';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
+import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
 import activityInit from './activity/0001_init.sql?raw';
 import { MIGRATIONS as ACTIVITY } from './activity/index.ts';
 import entityMetaInit from './entity-meta/0001_init.sql?raw';
@@ -24,8 +24,6 @@ import reverseRefInit from './reverse-ref/0001_init.sql?raw';
 import { MIGRATIONS as REVERSE_REF } from './reverse-ref/index.ts';
 import trackerInit from './tracker/0001_init.sql?raw';
 import { MIGRATIONS as TRACKER } from './tracker/index.ts';
-
-const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 
 const STORES = [
   { name: 'activity', init: activityInit, manifest: ACTIVITY },
@@ -54,6 +52,7 @@ const objectMetaColumns = Effect.gen(function* () {
 });
 
 const DESIRED_COLUMNS = [
+  'annotations',
   'convergenceKey',
   'createdAt',
   'deleted',

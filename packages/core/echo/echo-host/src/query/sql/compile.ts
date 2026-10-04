@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as Statement from 'effect/unstable/sql/Statement';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as Statement from 'effect/sql/Statement';
 
 import { EncodedReference, QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META } from '@dxos/echo/internal';
@@ -404,6 +404,15 @@ export class SqlPlanCompiler {
         // A tag is an encoded reference or (legacy) a bare URI; both sides compare by entity id.
         return sql`EXISTS (SELECT 1 FROM json_each(d.snapshot, ${tagsPath}) t
           WHERE ${localIdOfUri(sql, sql`COALESCE(json_extract(t.value, '$."/"'), t.value)`)} = ${target})`;
+      }
+      case 'annotation': {
+        // Keys are matched with `json_each` rather than a JSON path, which cannot address every key
+        // (e.g. a legacy id containing `"`); a NULL column or absent key is a definite non-match, so
+        // `not` keeps entities that never carried the annotation.
+        const annotations = sql`json_each(COALESCE(m.annotations, '{}'))`;
+        return filter.value === undefined
+          ? sql`EXISTS (SELECT 1 FROM ${annotations} a WHERE a.key = ${filter.key})`
+          : sql`EXISTS (SELECT 1 FROM ${annotations} a WHERE a.key = ${filter.key} AND ${scalarEquals(sql, sql`a.value`, sql`a.type`, filter.value)})`;
       }
       case 'text-search':
         // The executors behind an index resolve text search in the select; a residual node

@@ -2,12 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
@@ -18,17 +15,17 @@ import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
 import { IndexEngine, type IndexingResult } from './index-engine.ts';
 import { type IndexCursor } from './index-tracker.ts';
 import { type DocumentActivity, EntityMetaIndex, type IndexerObject } from './indexes/index.ts';
+import { TestSqliteLayer as TestLayer } from './testing/index.ts';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
 const TYPE_B = DXN.make('com.example.type.TypeB', '0.1.0');
 
-const TestLayer = SqliteClient.layer({
-  filename: ':memory:',
-}).pipe(Layer.provideMerge(Reactivity.layer));
-
 class MockIndexDataSource implements IndexDataSource {
   readonly sourceName = 'mock-source';
+
+  /** Whether to say when the limit cut a read short, as a source predating `more` does not. */
+  constructor(private readonly _reportsMore = false) {}
 
   // Composite Key -> { object, hash, timestamp }
   // Key: `${spaceId}:${documentId}`
@@ -49,7 +46,7 @@ class MockIndexDataSource implements IndexDataSource {
     _ctx: Context,
     cursors: IndexCursor[],
     opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; more?: boolean }> {
     return Effect.sync(() => {
       const results: { object: IndexerObject; hash: string }[] = [];
 
@@ -82,7 +79,9 @@ class MockIndexDataSource implements IndexDataSource {
         cursor: r.hash,
       }));
 
-      return { objects, cursors: newCursors };
+      return this._reportsMore
+        ? { objects, cursors: newCursors, more: limitedResults.length < results.length }
+        : { objects, cursors: newCursors };
     });
   }
 }
@@ -142,6 +141,71 @@ describe('IndexEngine', () => {
     // one constructed here reads exactly what the engine wrote.
     return { engine, metaIndex: new EntityMetaIndex(yield* SqlClient.SqlClient) };
   });
+
+  // `done` needs an empty batch, which writes arriving faster than passes never leave; `drained` is
+  // what lets a caller waiting for its own writes settle anyway.
+  it.effect(
+    'reports a batch drained once it indexed everything the source held, before any batch is empty',
+    Effect.fnUntraced(function* () {
+      const { engine } = yield* setup;
+      const spaceId = SpaceId.random();
+      const makeObject = (documentId: string): IndexerObject => ({
+        spaceId,
+        documentId,
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: documentId },
+      });
+
+      const dataSource = new MockIndexDataSource(true);
+      dataSource.push(['doc-1', 'doc-2', 'doc-3'].map(makeObject));
+      const cut = yield* engine.update(Context.default(), dataSource, { spaceId: null, limit: 2 });
+      expect(cut).toMatchObject({ done: false, drained: false });
+      const rest = yield* engine.update(Context.default(), dataSource, { spaceId: null, limit: 2 });
+      expect(rest).toMatchObject({ done: false, drained: true });
+      const empty = yield* engine.update(Context.default(), dataSource, { spaceId: null, limit: 2 });
+      expect(empty).toMatchObject({ done: true, drained: true });
+
+      // A source that does not report `more` could have been cut short whenever it returned anything.
+      const legacySource = new MockIndexDataSource();
+      legacySource.push([makeObject('doc-4')]);
+      const legacy = yield* engine.update(Context.default(), legacySource, { spaceId: null, limit: 2 });
+      expect(legacy).toMatchObject({ done: false, drained: false });
+    }, Effect.provide(TestLayer)),
+  );
+
+  // Each transaction rewrites every page it dirties, so a second stamp per pass doubled the writes.
+  it.effect(
+    'stamps each object once per pass while the snapshot and reverse-ref legs share a position',
+    Effect.fnUntraced(function* () {
+      const { engine, metaIndex } = yield* setup;
+      const dataSource = new MockIndexDataSource();
+      const spaceId = SpaceId.random();
+      const object: IndexerObject = {
+        spaceId,
+        documentId: 'doc-1',
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Hello' },
+      };
+
+      dataSource.push([object]);
+      yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      const [created] = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
+      expect(created.version).toBe(1);
+
+      dataSource.push([{ ...object, data: { ...object.data, title: 'Hello World' } }]);
+      yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      const [updated] = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
+      expect(updated.version).toBe(2);
+    }, Effect.provide(TestLayer)),
+  );
 
   it.effect(
     'should index and update objects',

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -23,7 +23,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
-import { Position, kebabize } from '@dxos/util';
+import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
@@ -324,25 +324,6 @@ export default Capability.makeModule(
         },
       }),
 
-      // A "Message" companion on every mailbox: the slot a row's detail opens into where the deck has
-      // room beside the list, so reading a message keeps the mailbox in front of the reader. One
-      // fixed slot — which message it shows is the list's own selection, read by the surface.
-      AppGraphBuilder.createExtension({
-        id: 'mailboxMessageCompanion',
-        relation: AppNode.companion,
-        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeCompanion({
-              variant: 'message',
-              label: ['message-companion.label', { ns: meta.profile.key }],
-              icon: 'ph--envelope-open--regular',
-              data: 'message',
-              position: Position.first,
-            }),
-          ]),
-      }),
-
       // Every message in a mailbox's feed, plus its in-progress local drafts, as a hidden child of the
       // mailbox node — so `…/mailboxes/<mailboxId>/<messageId>` resolves via the `message` key even
       // though messages aren't enumerated in the nav tree. Each node's data is the message Echo object
@@ -406,6 +387,7 @@ export default Capability.makeModule(
                 properties: {
                   label: attachment.name ?? 'Attachment',
                   icon: 'ph--paperclip--regular',
+                  [AppNode.TYPE_LABEL_PROPERTY]: ['attachment-type.label', { ns: meta.profile.key }],
                   disposition: 'hidden',
                 },
               }),

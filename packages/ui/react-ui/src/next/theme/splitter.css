@@ -1,0 +1,84 @@
+/*
+ * Splitter: two panes filling the host along the split axis. A pane is one row of its own height (`minmax(0, 1fr)`,
+ * never `auto`), so what it holds is capped by the pane. The resize trigger is a 7px grab area whose negative margin
+ * cancels its extent, so it straddles the seam without taking a slice of the layout; a 1px divider brightens on hover,
+ * focus and drag. The machine supplies the axis cursor. A splitter that is not resizable draws only the divider.
+ */
+
+@layer dx-components {
+  .dx-splitter {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .dx-splitter[data-orientation='vertical'] {
+    flex-direction: column;
+  }
+
+  .dx-splitter-panel {
+    position: relative;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  /* A fixed splitter's seam: the divider alone, taking its 1px of the layout. */
+  .dx-splitter-divider {
+    flex-shrink: 0;
+    background: var(--color-separator);
+  }
+  .dx-splitter-divider[data-orientation='horizontal'] {
+    width: 1px;
+  }
+  .dx-splitter-divider[data-orientation='vertical'] {
+    height: 1px;
+  }
+
+  .dx-splitter-resize-trigger {
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    touch-action: none;
+    user-select: none;
+  }
+  .dx-splitter-resize-trigger::before {
+    content: '';
+    position: absolute;
+    display: block;
+    background: var(--color-separator);
+    transition: background-color 100ms ease-in-out;
+  }
+  .dx-splitter-resize-trigger:is(:hover, :focus-visible, :active)::before {
+    background: var(--color-focus);
+  }
+  .dx-splitter-resize-trigger:focus-visible {
+    outline: none;
+  }
+  .dx-splitter-resize-trigger[data-orientation='horizontal'] {
+    width: 7px;
+    margin-inline: -3.5px;
+  }
+  .dx-splitter-resize-trigger[data-orientation='horizontal']::before {
+    inset-block: 0;
+    inset-inline-start: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+  }
+  .dx-splitter-resize-trigger[data-orientation='vertical'] {
+    height: 7px;
+    margin-block: -3.5px;
+  }
+  .dx-splitter-resize-trigger[data-orientation='vertical']::before {
+    inset-inline: 0;
+    top: 50%;
+    height: 1px;
+    transform: translateY(-50%);
+  }
+}

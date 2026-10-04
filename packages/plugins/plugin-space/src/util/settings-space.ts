@@ -67,7 +67,10 @@ export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) 
   }
 
   const space = yield* Effect.promise(() =>
-    client.spaces.create({}, { tags: [AppSpace.SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+    client.spaces.create(
+      {},
+      { tags: [AppSpace.SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED, origin: 'system' },
+    ),
   );
   yield* Effect.promise(() => space.waitUntilReady());
   yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));

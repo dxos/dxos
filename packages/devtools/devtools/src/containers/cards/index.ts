@@ -6,6 +6,7 @@ import { type ComponentType, lazy } from 'react';
 
 export * from './DatabaseCard/index.ts';
 export * from './EdgeCard/index.ts';
+export * from './IndexerCard/index.ts';
 export * from './MemoryCard/index.ts';
 export * from './NetworkCard/index.ts';
 export * from './PerformanceCard/index.ts';

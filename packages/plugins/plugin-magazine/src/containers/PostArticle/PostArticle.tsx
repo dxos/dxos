@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -133,9 +133,9 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
         onOpenOriginal={handleOpenOriginal}
         onRefresh={() => void handleRefresh()}
       />
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <PostContent post={subject} metadata={feedName ? [feedName] : undefined} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

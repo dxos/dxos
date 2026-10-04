@@ -5,16 +5,13 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Annotation, Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
-import { CollectionItemAnnotation } from '@dxos/schema';
 
 import { type Translations } from '../app/index.ts';
-import { AppAnnotation } from '../echo/index.ts';
+import { TypeOptions } from '../echo/index.ts';
 
 /** An object that lists other objects in one of its ref-array fields, owning only some of them. */
 export type Container = {
@@ -81,9 +78,17 @@ type LinkProps = {
   index?: number;
 };
 
-/** Lists the object, leaving its parent alone; a no-op when it is listed already or not accepted. */
+const assertAccepts = (container: Container, object: Obj.Unknown): void =>
+  invariant(container.accepts?.(object) !== false, `${container.property} does not take ${Obj.getTypename(object)}`);
+
+/** Lists the object, leaving its parent alone; a no-op when it is listed already. Throws when not accepted. */
 export const link = ({ container, object, index }: LinkProps): void => {
-  if (container.accepts?.(object) === false || includes(container, object)) {
+  assertAccepts(container, object);
+  insert({ container, object, index });
+};
+
+const insert = ({ container, object, index }: LinkProps): void => {
+  if (includes(container, object)) {
     return;
   }
   const objectRef = Ref.make(object);
@@ -140,7 +145,7 @@ export const release = ({ container, object, to }: Omit<LinkProps, 'index'> & { 
 
 type AddProps = {
   object: Obj.Unknown;
-  /** The object's parent; absent, the object files at the space root. */
+  /** The object's parent; absent, the object is only persisted. */
   target?: Obj.Unknown;
 };
 
@@ -151,87 +156,32 @@ type AddProps = {
 export const containing = (object: Obj.Unknown): Query.Query<Collection.Collection> =>
   Query.select(Filter.id(object.id)).referencedBy(Collection.Collection, 'objects');
 
-/**
- * Whether the object's type is annotated hidden. Unregistered types (e.g. a snapshot whose type
- * entity isn't wired up) read as visible — the same default the navtree's type branches use.
- */
-const isHidden = (object: Obj.Unknown): boolean => {
-  const type = Obj.getType(object);
-  return type ? Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)) : false;
-};
-
-/** Returns true when the object is eligible to live inside a collection. */
-const isCollectionItem = (object: Obj.Unknown): boolean => {
-  if (Obj.instanceOf(Collection.Collection, object)) {
-    return true;
-  }
-  const type = Obj.getType(object);
-  if (!type) {
-    return false;
-  }
-  return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
-};
-
 const MOVE_SCOPE = 'collection';
 
-/** A collection's list of objects. */
+/** A collection's list of objects; it takes any object of a user-facing type. */
+// TODO(wittjosiah): Declare what a list takes on the field itself (e.g. an annotation on `Collection.objects`
+//   naming the type annotation its targets must carry), so ECHO can enforce it instead of each caller.
 export const collection = (target: Collection.Collection): Container =>
-  make(target, 'objects', { moveScope: MOVE_SCOPE, accepts: isCollectionItem });
+  make(target, 'objects', { moveScope: MOVE_SCOPE, accepts: TypeOptions.isUserObject });
 
-/** A target that is not a collection files the object itself, so there is nothing to file here. */
-const filesItself = (target: Obj.Unknown | undefined): boolean =>
-  target !== undefined && !Collection.isCollection(target);
+/** Whether {@link add} takes the object for the target: always, unless the target is a collection that refuses it. */
+export const canAdd = ({ object, target }: AddProps): boolean =>
+  !Collection.isCollection(target) || collection(target).accepts?.(object) !== false;
 
+/**
+ * Persists the object and, when the target is a collection, lists it there; a collection takes an object
+ * with no parent as its own. Any other target files the object itself, so there is nothing to list.
+ * Throws, before persisting anything, when the collection refuses the object.
+ */
 export const add = Effect.fn(function* ({ object, target }: AddProps) {
-  const objectRef = Ref.make(object);
-  if (isHidden(object) || filesItself(target)) {
-    if (!Obj.getDatabase(object)) {
-      yield* Database.add(object);
-    }
-    return;
+  const container = Collection.isCollection(target) ? collection(target) : undefined;
+  if (container) {
+    assertAccepts(container, object);
   }
-
-  if (Collection.isCollection(target)) {
-    Obj.update(target, (target) => {
-      target.objects.push(objectRef);
-    });
-  } else if (!isCollectionItem(object)) {
+  if (!Obj.getDatabase(object)) {
     yield* Database.add(object);
-  } else {
-    const objects = yield* Database.query(Query.type(SpaceProperties)).run;
-    // A fully-scaffolded space has exactly one SpaceProperties carrying the root collection; more than
-    // one is corruption and must fail fast.
-    invariant(objects.length <= 1, 'Multiple SpaceProperties objects found');
-    // In a bare database (e.g. a headless/agent test harness) it may be absent; rather than assert,
-    // fall back to persisting the object directly so collection-aware operations still work.
-    if (objects.length === 0) {
-      if (!Obj.getDatabase(object)) {
-        yield* Database.add(object);
-      }
-      return;
-    }
-    const properties: Obj.Any = objects[0];
-
-    const collectionRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(
-      Option.getOrUndefined,
-    );
-    if (collectionRef) {
-      const collection = yield* Database.load(collectionRef);
-      Obj.update(collection, (collection) => {
-        collection.objects.push(objectRef);
-      });
-    } else {
-      // Persisted, not only referenced: the collection becomes the object's parent, and a parent
-      // missing from the space drops the object from every query.
-      const newCollection = yield* Database.add(Collection.make({ objects: [objectRef] }));
-      const newCollectionRef = Ref.make(newCollection);
-      Obj.update(properties, (properties) => {
-        const meta = Obj.getMeta(properties);
-        if (!meta.annotations) {
-          meta.annotations = {};
-        }
-        Annotation.setDictionary(meta.annotations, AppAnnotation.RootCollectionAnnotation, newCollectionRef);
-      });
-    }
+  }
+  if (container) {
+    insert({ container, object });
   }
 });

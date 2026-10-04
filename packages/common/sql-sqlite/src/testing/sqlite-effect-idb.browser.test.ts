@@ -6,14 +6,14 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Reactivity from 'effect/reactivity/Reactivity';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlConnection from 'effect/sql/SqlConnection';
+import * as SqlError from 'effect/sql/SqlError';
+import * as Statement from 'effect/sql/Statement';
 import * as Stream from 'effect/Stream';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlConnection from 'effect/unstable/sql/SqlConnection';
-import * as SqlError from 'effect/unstable/sql/SqlError';
-import * as Statement from 'effect/unstable/sql/Statement';
 
 // @ts-expect-error
 import { SQLITE_OPEN_CREATE, SQLITE_OPEN_READWRITE } from '@dxos/wa-sqlite';

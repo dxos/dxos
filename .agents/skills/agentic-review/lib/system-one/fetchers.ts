@@ -6,7 +6,7 @@
 // model cannot open files, so each fetcher decides what it sees: a narrow, relevant cut,
 // because unrelated material costs a System One model accuracy, not just tokens.
 
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { join, normalize, posix } from 'node:path';
 
 import { git } from '../git.ts';
@@ -79,7 +79,11 @@ const MAX_FETCH_CHARS = 16_000;
 const readText = (root: string, path: string): string | null => {
   if (!caches.files.has(path)) {
     const absolute = join(root, path);
-    caches.files.set(path, existsSync(absolute) ? readFileSync(absolute, 'utf8') : null);
+    // A resolved import or a moved path can name a directory, which has no text to show.
+    caches.files.set(
+      path,
+      statSync(absolute, { throwIfNoEntry: false })?.isFile() ? readFileSync(absolute, 'utf8') : null,
+    );
   }
   return caches.files.get(path) ?? null;
 };
@@ -228,6 +232,8 @@ export type ContextFetchOptions = {
   file: string;
   base: string | null;
   maxChars: number;
+  /** The file's own source when it is not the working tree's, as when calibrating on historical code. */
+  text?: string;
 };
 
 type Fetcher = (options: ContextFetchOptions) => string | null;
@@ -248,8 +254,8 @@ const fetchDiff: Fetcher = ({ root, file, base, maxChars }) => {
   return diff ? truncateText(diff, maxChars) : '(no changes to this file in the reviewed range)';
 };
 
-const fetchImports: Fetcher = ({ root, file, maxChars }) => {
-  const text = readText(root, file);
+const fetchImports: Fetcher = ({ root, file, maxChars, text: source }) => {
+  const text = source ?? readText(root, file);
   const blocks: string[] = [];
   const seen = new Set<string>();
   for (const { specifier } of parseImports(text ?? '')) {
@@ -423,8 +429,8 @@ const exportIndex = (): { entries: ExportEntry[]; byWord: Map<string, ExportEntr
   return caches.exportIndex;
 };
 
-const fetchSimilar: Fetcher = ({ root, file, base, maxChars }) => {
-  const text = readText(root, file) ?? '';
+const fetchSimilar: Fetcher = ({ root, file, base, maxChars, text: source }) => {
+  const text = source ?? readText(root, file) ?? '';
   let names = exportedNames(text);
   if (base) {
     // Only what this change adds can be a new parallel mechanism; untouched exports are not the question.
@@ -525,7 +531,11 @@ export const fetchContext = (kind: ContextKind, options: ContextFetchOptions): s
   if (!fetcher) {
     throw new Error(`no fetcher for context kind ${JSON.stringify(kind)}`);
   }
-  // One file is planned once per context group and round, so each kind is fetched once per file.
+  // One file is planned once per context group and round, so each kind is fetched once per file;
+  // supplied source is not the working tree's, so it is never served from or stored in the cache.
+  if (options.text !== undefined) {
+    return truncateText(fetcher({ ...options, maxChars: MAX_FETCH_CHARS }) ?? '', options.maxChars) || null;
+  }
   const key = `${kind}\u0000${options.file}\u0000${options.base ?? ''}`;
   if (!caches.fetched.has(key)) {
     caches.fetched.set(key, fetcher({ ...options, maxChars: MAX_FETCH_CHARS }));

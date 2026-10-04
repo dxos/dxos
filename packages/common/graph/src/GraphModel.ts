@@ -7,9 +7,9 @@
 import * as Function from 'effect/Function';
 import * as EffectGraph from 'effect/Graph';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { inspectCustom } from '@dxos/debug';
 import { AtomEx } from '@dxos/effect';

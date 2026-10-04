@@ -27,10 +27,10 @@ export const JoinHeading = forwardRef(
       <Button
         variant='ghost'
         {...(onExit && { onClick: onExit })}
-        classNames={mx('text-description', 'py-0 px-2 absolute top-0 right-0 z-[1]')}
+        classNames={mx('text-fg-muted', 'py-0 px-2 absolute top-0 right-0 z-[1]')}
         data-testid='join-exit'
       >
-        <Icon icon='ph--x--bold' size={4} />
+        <Icon icon='ph--x--bold' size='md' />
         <span className='sr-only'>{t('exit.label')}</span>
       </Button>
     );

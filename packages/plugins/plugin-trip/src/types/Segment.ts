@@ -147,10 +147,7 @@ export class Segment extends Type.makeObject<Segment>(DXN.make('org.dxos.type.tr
     booking: Schema.optional(Ref.Ref(Booking.Booking)),
     notes: Schema.optional(Schema.String),
     details: Details,
-  }).pipe(
-    Annotation.IconAnnotation.set({ icon: 'ph--ticket--regular', hue: 'sky' }),
-    Annotation.HiddenAnnotation.set(true),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--ticket--regular', hue: 'sky' })),
 ) {}
 
 /** Type guard for Segment ECHO objects. */

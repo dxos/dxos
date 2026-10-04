@@ -3,3 +3,4 @@
 //
 
 export * from './GitHubCard.tsx';
+export * from './PullRequestCard.tsx';

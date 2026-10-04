@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Format, Type } from '@dxos/echo';
 import { createDefaultSchema } from '@dxos/schema';
@@ -35,6 +36,9 @@ export const TaskInputSchema = Schema.Struct(Task.Task.fields).mapFields(
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Held for the Type entry: the dialog creates through `AddType`, whose process cannot see them.
+    const plugins = yield* Plugin.Service;
+    const capabilities = yield* Capability.Service;
     return [
       Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
         {
@@ -66,6 +70,12 @@ export default Capability.makeModule(
                 },
                 { spaceId: options.db.spaceId },
               );
+              if (!result.notified) {
+                yield* SpaceCapabilities.notifyTypeAdded(
+                  { plugins, capabilities },
+                  { db: options.db, type: result.object },
+                );
+              }
               return {
                 id: result.id,
                 object: result.object,

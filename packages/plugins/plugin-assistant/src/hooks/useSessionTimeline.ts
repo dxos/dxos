@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-trace';
 import { Task } from '@dxos/types';
 
-const atomEmpty = Atom.make(() => [] as const as readonly Process.Info[]);
+const atomEmpty = Atom.make(() => [] as const as readonly Process.Process[]);
 
 /** A chat as the timeline's session: its uri is the agent process's target, its feed the trace meta's. */
 export const sessionFromChat = (chat: Chat.Chat): Session => ({
@@ -30,6 +30,10 @@ export const sessionFromChat = (chat: Chat.Chat): Session => ({
   feedId: Chat.feedEntityId(chat),
   taskIds: chat.tasks.map((ref) => Task.refEntityId(ref)).filter((id): id is string => id !== undefined),
 });
+
+/** What a session is drawn from, as a comparable string. */
+const sessionKey = (chat: Chat.Chat): string =>
+  `${chat.id}:${chat.name ?? ''}:${chat.tasks.map((ref) => Task.refEntityId(ref)).join(',')}`;
 
 export type UseSessionTimelineOptions = {
   /** The chats whose sessions are shown; each contributes a session lane and its checklist's task lanes. */
@@ -48,6 +52,9 @@ export const useSessionTimeline = (
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
   );
-  const sessions = useMemo(() => chats.map(sessionFromChat), [chats]);
+  // Keyed on the checklists as well as the chats: an agent assigning itself a task edits a chat in
+  // place, and a session missing that task would draw it as a lane of its own, outside its band.
+  const checklists = chats.map(sessionKey).join('|');
+  const sessions = useMemo(() => chats.map(sessionFromChat), [chats, checklists]);
   return useNaturalSessionTimeline(space, { sessions, tasks, processes });
 };

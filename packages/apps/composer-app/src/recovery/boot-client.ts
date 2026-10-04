@@ -12,7 +12,7 @@ import { Config, defs } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 
-import { initAutomergeWasm } from '../util/automerge-wasm.ts';
+import { initEchoHostWasm } from '../util/automerge-wasm.ts';
 import { setupConfig } from '../util/index.ts';
 
 let bootedClient: Client | undefined;
@@ -32,7 +32,7 @@ export const bootRecoveryClient = async (): Promise<Client> => {
 
   // This client hosts echo in-page; automerge is slim-resolved and must be initialized before
   // it (see util/automerge-wasm.ts).
-  await initAutomergeWasm();
+  await initEchoHostWasm();
 
   const base = await setupConfig();
   const config = new Config(

@@ -24,6 +24,9 @@
       "path": "../../packages/core/compute/agent-claude"
     },
     {
+      "path": "../../packages/ui/react-ui"
+    },
+    {
       "path": "../../packages/ui/ui-theme"
     },
     {
@@ -34,6 +37,9 @@
     },
     {
       "path": "../vite-plugin-log"
+    },
+    {
+      "path": "../vite-plugin-module-url"
     }
   ]
 }

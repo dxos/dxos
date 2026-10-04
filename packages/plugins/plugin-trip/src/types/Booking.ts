@@ -35,6 +35,7 @@ export class Booking extends Type.makeObject<Booking>(DXN.make('org.dxos.type.tr
   }).pipe(
     Annotation.LabelAnnotation.set(['confirmationCode']),
     Annotation.IconAnnotation.set({ icon: 'ph--ticket--regular', hue: 'sky' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

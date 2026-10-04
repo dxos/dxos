@@ -13,7 +13,20 @@ import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos
 import { useObject, useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Field, IconButton, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Field,
+  Flex,
+  Input,
+  PasswordInput,
+  Popover,
+  Select,
+  Switch,
+  SystemButton,
+  Tabs,
+  Toolbar,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -36,13 +49,12 @@ import { resolveProvider } from '../../processor/index.ts';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
-  toolbar: 'p-0! gap-0! border-t border-separator',
 };
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
   db: Database.Database;
   chat?: ChatModule.Chat;
-  context: AiContext.Binder;
+  context?: AiContext.Binder;
   registry?: Registry.Registry;
 };
 
@@ -53,79 +65,72 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <div className='flex'>
-      <Popover.Root>
+    <Flex>
+      <Popover.Root positioning={{ placement: 'top' }}>
         <Popover.Trigger asChild>
-          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context-objects.button')} />
+          <Button
+            variant='ghost'
+            icon='ph--plus--regular'
+            iconOnly
+            label={t('context-objects.button')}
+            disabled={!context}
+          />
         </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content side='top' classNames={styles.panel}>
-            <Popover.Viewport>
-              <ObjectsPanel db={db} context={context} />
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content classNames={styles.panel}>
+          {/* No Body: the list scrolls itself above its filter controls, in the popover's column. */}
+          {context && <ObjectsPanel db={db} context={context} />}
+        </Popover.Content>
       </Popover.Root>
 
-      <Popover.Root>
+      <Popover.Root positioning={{ placement: 'top' }}>
         <Popover.Trigger asChild>
-          <IconButton
+          <Button
             variant='ghost'
             icon='ph--sliders-horizontal--regular'
             iconOnly
             label={t('context-settings.button')}
             data-testid='assistant.options'
+            disabled={!context}
           />
         </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content side='top' classNames={styles.panel}>
-            <Popover.Viewport>
-              <Tabs.Root asChild orientation='horizontal' defaultValue='view' defaultActivePart='list' tabIndex={-1}>
-                <Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
-                    <ViewPanel chat={chat} />
-                  </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
-                    <SkillsPanel registry={registry} db={db} context={context} />
-                  </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
-                    <McpServersPanel db={db} />
-                  </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
-                    <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-                  </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
-                    <EnvironmentPanel chat={chat} />
-                  </Tabs.Panel>
-                  <Tabs.Tablist classNames={[styles.toolbar]}>
-                    <Tabs.IconButton value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                    <Tabs.IconButton value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
-                    <Tabs.IconButton
-                      value='mcp-servers'
-                      icon='ph--plugs-connected--regular'
-                      label={t('options.mcp.title')}
-                    />
-                    <Tabs.IconButton
-                      value='model'
-                      icon='ph--cpu--regular'
-                      label={t('options.chat-model.title')}
-                      data-testid='assistant.options.model'
-                    />
-                    <Tabs.IconButton
-                      value='environment'
-                      icon='ph--hard-drives--regular'
-                      label={t('options.environment.title')}
-                    />
-                  </Tabs.Tablist>
-                </Tabs.Viewport>
-              </Tabs.Root>
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content classNames={styles.panel}>
+          {/* No Body: each tab's list and the tab bar share the popover's own padding. */}
+          <Tabs.Root orientation='horizontal' defaultValue='view' classNames='grid grid-rows-[1fr_40px] w-full'>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
+              <ViewPanel chat={chat} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
+              {context && <SkillsPanel registry={registry} db={db} context={context} />}
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
+              <McpServersPanel db={db} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
+              <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
+              <EnvironmentPanel chat={chat} />
+            </Tabs.Content>
+            <Tabs.List classNames='p-1 gap-1 border-t border-separator'>
+              <Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
+              <Tabs.Trigger value='skills' icon='ph--student--regular' label={t('options.skills.title')} />
+              <Tabs.Trigger value='mcp-servers' icon='ph--plugs-connected--regular' label={t('options.mcp.title')} />
+              <Tabs.Trigger
+                value='model'
+                icon='ph--cpu--regular'
+                label={t('options.chat-model.title')}
+                data-testid='assistant.options.model'
+              />
+              <Tabs.Trigger
+                value='environment'
+                icon='ph--hard-drives--regular'
+                label={t('options.environment.title')}
+              />
+            </Tabs.List>
+          </Tabs.Root>
+        </Popover.Content>
       </Popover.Root>
-    </div>
+    </Flex>
   );
 };
 
@@ -161,7 +166,9 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
             );
           })}
         </SearchList.Viewport>
-        <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
+        </Toolbar.Root>
       </SearchList.Content>
     </SearchList.Root>
   );
@@ -173,12 +180,21 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   const value = (view as ChatView | undefined) ?? 'normal';
 
   return (
-    <Listbox.Root value={value} onValueChange={setView} autoFocus>
-      <Listbox.Content aria-label={t('chat-view.title')}>
+    <Listbox.Root
+      value={value}
+      onValueChange={setView}
+      autoFocus
+      items={Assistant.ChatViews.map((view) => ({
+        value: view,
+        label: t(`chat-view.${view}.label`, { defaultValue: view }),
+      }))}
+    >
+      {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
+      <Listbox.Content gutter='none' aria-label={t('chat-view.title')}>
         {Assistant.ChatViews.map((view) => (
-          <Listbox.Item key={view} id={view} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
-            <Listbox.ItemLabel>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemLabel>
-            <Listbox.Indicator />
+          <Listbox.Item key={view} id={view} classNames='dx-focus-ring rounded-xs'>
+            <Listbox.ItemText>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemText>
+            <Listbox.ItemIndicator />
           </Listbox.Item>
         ))}
       </Listbox.Content>
@@ -206,12 +222,21 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   const handleChange = useCallback((value: string) => setRemote(value === 'remote'), [setRemote]);
 
   return (
-    <Listbox.Root value={value} onValueChange={handleChange} autoFocus>
-      <Listbox.Content aria-label={t('options.environment.title')}>
+    <Listbox.Root
+      value={value}
+      onValueChange={handleChange}
+      autoFocus
+      items={environments.map((environment) => ({
+        value: environment,
+        label: t(`chat-environment.${environment}.label`),
+      }))}
+    >
+      {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
+      <Listbox.Content gutter='none' aria-label={t('options.environment.title')}>
         {environments.map((environment) => (
-          <Listbox.Item key={environment} id={environment} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
-            <Listbox.ItemLabel>{t(`chat-environment.${environment}.label`)}</Listbox.ItemLabel>
-            <Listbox.Indicator />
+          <Listbox.Item key={environment} id={environment} classNames='dx-focus-ring rounded-xs'>
+            <Listbox.ItemText>{t(`chat-environment.${environment}.label`)}</Listbox.ItemText>
+            <Listbox.ItemIndicator />
           </Listbox.Item>
         ))}
       </Listbox.Content>
@@ -219,9 +244,9 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   );
 };
 
-type ChatEnvironment = (typeof CHAT_ENVIRONMENTS)[number];
-
 const CHAT_ENVIRONMENTS = ['local', 'remote'] as const;
+
+type ChatEnvironment = (typeof CHAT_ENVIRONMENTS)[number];
 
 const ModelsPanel = ({
   presets,
@@ -229,14 +254,20 @@ const ModelsPanel = ({
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   const { t } = useTranslation(meta.profile.key);
+
   return (
-    <div className='dx-expand flex flex-col'>
-      <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
-        <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
+    <Flex column classNames='dx-expand'>
+      <Listbox.Root
+        value={preset}
+        onValueChange={onPresetChange}
+        autoFocus
+        items={(presets ?? []).map(({ id, label }) => ({ value: id, label: label }))}
+      >
+        <Listbox.Content gutter='none' aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
-            <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
-              <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
-              <Listbox.Indicator />
+            <Listbox.Item key={id} id={id} classNames='dx-focus-ring rounded-xs' data-testid={`assistant.models.${id}`}>
+              <Listbox.ItemText>{label}</Listbox.ItemText>
+              <Listbox.ItemIndicator />
             </Listbox.Item>
           ))}
         </Listbox.Content>
@@ -244,7 +275,7 @@ const ModelsPanel = ({
       <Toolbar.Root>
         <OnlineSwitch />
       </Toolbar.Root>
-    </div>
+    </Flex>
   );
 };
 
@@ -271,16 +302,13 @@ const OnlineSwitch = () => {
   );
 
   return (
-    <div className='px-1 flex items-center gap-2'>
-      <Field.Switch checked={online} onCheckedChange={handleChange} data-testid='assistant.online'>
-        {t('online-switch.label')}
-      </Field.Switch>
-    </div>
+    <Switch
+      checked={online}
+      onCheckedChange={({ checked }) => handleChange(checked)}
+      data-testid='assistant.online'
+      label={t('online-switch.label')}
+    />
   );
-};
-
-type McpServersPanelProps = {
-  db: Database.Database;
 };
 
 type McpServerDraft = {
@@ -288,6 +316,10 @@ type McpServerDraft = {
   url: string;
   protocol: McpServer.Spec['protocol'];
   apiKey?: string;
+};
+
+type McpServersPanelProps = {
+  db: Database.Database;
 };
 
 const McpServersPanel = ({ db }: McpServersPanelProps) => {
@@ -328,24 +360,28 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   return (
-    <div className='p-form-chrome space-y-1' data-testid='assistant.mcp-servers'>
-      {servers.map((server) => (
-        <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
-      ))}
+    <Flex column data-testid='assistant.mcp-servers'>
+      <Listbox.Root items={servers.map((server) => ({ value: server.id, label: server.name ?? server.id }))}>
+        <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
+          {servers.map((server) => (
+            <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
       {adding ? (
-        <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
+        <McpForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <div>
-          <IconButton
+        <Flex classNames='p-1'>
+          <Button
             variant='ghost'
             icon='ph--plus--regular'
             label={t('mcp-server-add.label')}
             onClick={() => setAdding(true)}
             data-testid='assistant.mcp-server.add'
           />
-        </div>
+        </Flex>
       )}
-    </div>
+    </Flex>
   );
 };
 
@@ -356,14 +392,16 @@ type McpServerRowProps = {
 
 /**
  * `useQuery` returns live objects but only re-renders on result-identity changes,
- * so we must subscribe to the per-server `enabled` field via `useObject` to keep the
- * switch in sync with mutations made through the returned setter.
+ * so we must subscribe to the per-server `enabled`/`oauth`/`name`/`url` fields via `useObject`
+ * to keep the row in sync with mutations made through the returned setters (or elsewhere).
  */
 const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [enabled, setEnabled] = useObject(server, 'enabled');
   // Subscribed so the status re-checks once a sign-in stores tokens.
   useObject(server, 'oauth');
+  const [name] = useObject(server, 'name');
+  const [url] = useObject(server, 'url');
   const [revision, setRevision] = useState(0);
   const status = useMcpServerStatus(server, { enabled: enabled !== false, revision });
   const { signIn, pending, error } = useMcpServerSignIn(server);
@@ -379,18 +417,18 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
         : t(`mcp-server-status.${status.state}`);
 
   return (
-    <div className='flex flex-col px-form-chrome' data-testid='assistant.mcp-server'>
-      <div className='flex items-center gap-2'>
+    <Listbox.Item id={server.id} classNames='flex-col items-stretch px-form-chrome' data-testid='assistant.mcp-server'>
+      <Flex align='center' gap='sm'>
         <Field.Root>
-          <Field.Label srOnly>{server.name}</Field.Label>
-          <Field.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
+          <Field.Label srOnly>{name}</Field.Label>
+          <Switch checked={enabled !== false} onCheckedChange={({ checked }) => setEnabled(!!checked)} />
         </Field.Root>
-        <div className='flex flex-col flex-1 min-w-0'>
-          <span className='truncate text-sm'>{server.name}</span>
-          <span className='truncate text-xs text-description'>{server.url}</span>
-        </div>
+        <Flex column grow classNames='min-w-0'>
+          <span className='truncate text-sm'>{name}</span>
+          <span className='truncate text-xs text-fg-muted'>{url}</span>
+        </Flex>
         {status.state === 'unauthorized' && (
-          <IconButton
+          <Button
             variant='primary'
             icon='ph--sign-in--regular'
             label={t('mcp-server-sign-in.label')}
@@ -400,7 +438,7 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
           />
         )}
         {(status.state === 'error' || status.state === 'unauthorized') && (
-          <IconButton
+          <Button
             variant='ghost'
             icon='ph--arrow-clockwise--regular'
             iconOnly
@@ -408,14 +446,14 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
             onClick={() => setRevision((revision) => revision + 1)}
           />
         )}
-        <IconButton
+        <Button
           variant='ghost'
           icon='ph--x--regular'
           iconOnly
           label={t('mcp-server-remove.label')}
           onClick={() => onRemove(server)}
         />
-      </div>
+      </Flex>
       <span
         className={mx(
           'text-xs truncate',
@@ -428,16 +466,16 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
       >
         {error ?? statusLabel}
       </span>
-    </div>
+    </Listbox.Item>
   );
 };
 
-type McpServerFormProps = {
+type McpFormProps = {
   onSubmit: (draft: McpServerDraft) => void;
   onCancel: () => void;
 };
 
-const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
+const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
@@ -463,7 +501,7 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
     >
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-name.label')}</Field.Label>
-        <Field.Input
+        <Input
           placeholder={t('mcp-server-name.placeholder')}
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -473,7 +511,7 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
       </Field.Root>
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-url.label')}</Field.Label>
-        <Field.Input
+        <Input
           type='url'
           placeholder={t('mcp-server-url.placeholder')}
           value={url}
@@ -481,47 +519,39 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           data-testid='assistant.mcp-server.url'
         />
       </Field.Root>
-      <Select.Root value={protocol} onValueChange={(value) => setProtocol(value === 'sse' ? 'sse' : 'http')}>
-        <Select.TriggerButton placeholder={t('mcp-server-protocol.label')} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              <Select.Option value='http'>HTTP</Select.Option>
-              <Select.Option value='sse'>SSE</Select.Option>
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
+      <Select.Root
+        value={[protocol]}
+        onValueChange={({ value: [value] }) => setProtocol(value === 'sse' ? 'sse' : 'http')}
+        items={[
+          { value: 'http', label: 'HTTP' },
+          { value: 'sse', label: 'SSE' },
+        ]}
+      >
+        <Select.Trigger placeholder={t('mcp-server-protocol.label')} />
+        <Select.Content>
+          <Select.Item item={{ value: 'http', label: 'HTTP' }} />
+          <Select.Item item={{ value: 'sse', label: 'SSE' }} />
+        </Select.Content>
       </Select.Root>
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-api-key.label')}</Field.Label>
-        <Field.Input
-          type='password'
-          autoComplete='off'
+        <PasswordInput
+          ignorePasswordManagers
           placeholder={t('mcp-server-api-key.placeholder')}
           value={apiKey}
-          onChange={(event) => setApiKey(event.target.value)}
+          onValueChange={setApiKey}
           data-testid='assistant.mcp-server.api-key'
         />
       </Field.Root>
-      <div className='flex gap-2'>
-        <IconButton
+      <Flex justify='end'>
+        <SystemButton.Save
           type='submit'
           variant='ghost'
-          icon='ph--check--regular'
-          iconOnly
-          label={t('save.button')}
           disabled={!canSubmit}
           data-testid='assistant.mcp-server.save'
         />
-        <IconButton
-          type='button'
-          variant='ghost'
-          icon='ph--x--regular'
-          iconOnly
-          label={t('cancel.button')}
-          onClick={onCancel}
-        />
-      </div>
+        <SystemButton.Cancel type='button' variant='ghost' onClick={onCancel} />
+      </Flex>
     </form>
   );
 };
@@ -547,6 +577,14 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
     return options;
   }, [types, t]);
 
+  const typeItems = useMemo(
+    () => [
+      { value: ANY, label: t('any-type-filter.label') },
+      ...typeOptions.map(({ uri, label }) => ({ value: uri, label })),
+    ],
+    [typeOptions, t],
+  );
+
   // Current type URI and filter.
   const [selectedUri, setSelectedUri] = useState<URI.URI | typeof ANY>(ANY);
   const anyFilter = useMemo(() => Filter.or(...typeOptions.map(({ uri }) => Filter.type(uri))), [typeOptions]);
@@ -560,56 +598,55 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
-      {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
+    <Flex column classNames='min-h-0 divide-y divide-separator'>
+      {/* Shrinks to the popover's height, so the list scrolls rather than pushing the filter out of it. */}
+      <SearchList.Root onSearch={handleSearch}>
+        {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
           `Content` and so sits flush against the panel edge. */}
-      <SearchList.Content>
-        <SearchList.Viewport padding={false}>
-          {results.length ? (
-            results.map((object) => {
-              const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
-              const { icon, hue } = Obj.getIcon(object) ?? { icon: 'ph--cube--regular', hue: undefined };
-              const styles = hue ? getStyles(hue) : undefined;
-              return (
-                <SearchList.Item
-                  classNames='flex items-center overflow-hidden'
-                  key={object.id}
-                  value={object.id}
-                  icon={icon}
-                  iconClassNames={styles?.text}
-                  label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
-                  checked={isActive}
-                  onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
-                />
-              );
-            })
-          ) : (
-            <SearchList.Item value='__empty__' label={t('no-results.message')} />
-          )}
-        </SearchList.Viewport>
-      </SearchList.Content>
+        <SearchList.Content classNames='flex flex-col'>
+          <SearchList.Viewport padding={false} classNames='min-h-0 flex-auto'>
+            {results.length ? (
+              results.map((object) => {
+                const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
+                const { icon, hue } = Obj.getIcon(object) ?? { icon: 'ph--cube--regular', hue: undefined };
+                const styles = hue ? getStyles(hue) : undefined;
+                return (
+                  <SearchList.Item
+                    classNames='flex items-center overflow-hidden'
+                    key={object.id}
+                    value={object.id}
+                    icon={icon}
+                    iconClassNames={styles?.text}
+                    label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
+                    checked={isActive}
+                    onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
+                  />
+                );
+              })
+            ) : (
+              <SearchList.Item value='__empty__' label={t('no-results.message')} />
+            )}
+          </SearchList.Viewport>
+        </SearchList.Content>
 
-      <div className={mx('flex flex-col', styles.toolbar)}>
-        <Select.Root
-          value={selectedUri === ANY ? undefined : selectedUri}
-          onValueChange={(val) => setSelectedUri(val as URI.URI | typeof ANY)}
-        >
-          <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
-          <Select.Portal>
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
+          <Select.Root
+            items={typeItems}
+            value={selectedUri === ANY ? [] : [selectedUri]}
+            onValueChange={({ value: [value] }) =>
+              setSelectedUri(typeOptions.find(({ uri }) => uri === value)?.uri ?? ANY)
+            }
+          >
+            <Select.Trigger fixed placeholder={t('type-filter.placeholder')} />
             <Select.Content>
-              <Select.Viewport>
-                <Select.Option value={ANY}>{t('any-type-filter.label')}</Select.Option>
-                {typeOptions.map(({ uri, label }) => (
-                  <Select.Option key={uri} value={uri}>
-                    {label}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
+              {typeItems.map((item) => (
+                <Select.Item key={item.value} item={item} />
+              ))}
             </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-        <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
-      </div>
-    </SearchList.Root>
+          </Select.Root>
+        </Toolbar.Root>
+      </SearchList.Root>
+    </Flex>
   );
 };

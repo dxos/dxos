@@ -1,0 +1,13 @@
+/*
+ * Textarea: an Input that is `rows` lines tall (at least 3); the first line sits where a single-line control's text does.
+ */
+
+@layer dx-components {
+  .dx-textarea {
+    display: block;
+    height: auto;
+    min-height: var(--dx-control-size);
+    padding-block: calc((var(--dx-control-size) - var(--dx-line-height)) / 2);
+    resize: vertical;
+  }
+}

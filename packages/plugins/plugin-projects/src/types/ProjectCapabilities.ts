@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import type * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Project from '@dxos/compute/Project';
@@ -47,3 +48,8 @@ export type Template = {
 };
 
 export const Template = Capability.make<Template>()(`${meta.profile.key}.capability.template`);
+
+// Inline import so the `Settings` namespace does not collide with the capability of the same name.
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
+  `${meta.profile.key}.capability.settings`,
+);

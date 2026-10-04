@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Icon } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 
 import { QaOperation, type TestCase, TestRun } from '#types';
 
@@ -61,10 +61,10 @@ export const RunResults = ({ run }: RunResultsProps) => {
         <div key={result.caseKey} className='flex items-center gap-2' data-testid='qa.run.result'>
           <span className='font-mono text-sm w-20 shrink-0'>{result.caseKey}</span>
           <StatusBadge status={result.status} />
-          <span className='grow text-subdued text-sm'>{result.note ?? ''}</span>
+          <span className='grow text-fg-subtle text-sm'>{result.note ?? ''}</span>
           {result.artifacts && result.artifacts.length > 0 && (
-            <span className='flex items-center gap-1 text-subdued text-sm'>
-              <Icon icon='ph--paperclip--regular' size={4} />
+            <span className='flex items-center gap-1 text-fg-subtle text-sm'>
+              <Icon icon='ph--paperclip--regular' size='md' />
               {result.artifacts.length}
             </span>
           )}
@@ -76,22 +76,22 @@ export const RunResults = ({ run }: RunResultsProps) => {
           <span className='font-mono text-sm w-20 shrink-0'>{caseKey}</span>
           {/* `skipped` is a terminal outcome, and a case can still report while the run is open. */}
           {snapshot.status === 'running' ? (
-            <span className='flex items-center gap-1 text-subdued'>
-              <Icon icon='ph--circle-dashed--regular' size={4} />
+            <span className='flex items-center gap-1 text-fg-subtle'>
+              <Icon icon='ph--circle-dashed--regular' size='md' />
               <span className='text-sm'>pending</span>
             </span>
           ) : (
             <StatusBadge status='skipped' />
           )}
-          <span className='grow text-subdued text-sm'>unreported</span>
+          <span className='grow text-fg-subtle text-sm'>unreported</span>
           {snapshot.status === 'running' && (
             <>
-              <button className='dx-button' onClick={() => handlePush(caseKey, 'passed')} data-testid='qa.run.pass'>
+              <Button onClick={() => handlePush(caseKey, 'passed')} data-testid='qa.run.pass'>
                 Pass
-              </button>
-              <button className='dx-button' onClick={() => handlePush(caseKey, 'failed')} data-testid='qa.run.fail'>
+              </Button>
+              <Button onClick={() => handlePush(caseKey, 'failed')} data-testid='qa.run.fail'>
                 Fail
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -99,14 +99,14 @@ export const RunResults = ({ run }: RunResultsProps) => {
 
       {snapshot.status === 'running' && (
         <div className='flex justify-end pt-1'>
-          <button className='dx-button' disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
-            <Icon icon='ph--flag-checkered--regular' size={4} />
+          <Button disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
+            <Icon icon='ph--flag-checkered--regular' size='md' />
             <span>Finish run</span>
-          </button>
+          </Button>
         </div>
       )}
 
-      {snapshot.summary && <p className='text-subdued text-sm'>{snapshot.summary}</p>}
+      {snapshot.summary && <p className='text-fg-subtle text-sm'>{snapshot.summary}</p>}
 
       {error && (
         <p className='text-red-text text-sm' role='alert' data-testid='qa.run.error'>

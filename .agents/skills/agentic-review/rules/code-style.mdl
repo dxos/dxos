@@ -59,6 +59,7 @@ rule no-trivial-wrappers-over-official-apis: Do not extract a helper that only f
   files:
     - packages/**/*.ts
     - packages/**/*.tsx
+  context: importers
   severity: warn
 ```
 
@@ -110,6 +111,7 @@ rule declare-optional-services-with-noop-layers: An optional service is a declar
   files:
     - packages/**/*.ts
   grep: serviceOption|LayerSpec|\w+\?:.*=>.*(Service|Manager|Provider|Layer)\b
+  context: importers
   severity: warn
 ```
 
@@ -174,6 +176,7 @@ rule errors-extend-base-error: Error classes are defined with `BaseError.extend`
     - packages/**/*.ts
     - packages/**/*.tsx
   grep: \bclass\s+\w+(<[^>]*>)?\s+extends\b
+  context: imports
   severity: error
 ```
 

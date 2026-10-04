@@ -193,13 +193,16 @@ export const getDefaultSpace = (client: SpaceResolver): Space | undefined => {
  */
 export const setupIdentitySpaces = Effect.fnUntraced(function* (client: Client) {
   const defaultSpace = yield* Effect.promise(() =>
-    client.spaces.create({ name: DEFAULT_SPACE_NAME }, { membershipPolicy: MembershipPolicy.LOCKED }),
+    client.spaces.create({ name: DEFAULT_SPACE_NAME }, { membershipPolicy: MembershipPolicy.LOCKED, origin: 'system' }),
   );
   yield* Effect.promise(() => defaultSpace.waitUntilReady());
   yield* Effect.promise(() => defaultSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
 
   const settingsSpace = yield* Effect.promise(() =>
-    client.spaces.create({}, { tags: [SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+    client.spaces.create(
+      {},
+      { tags: [SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED, origin: 'system' },
+    ),
   );
   yield* Effect.promise(() => settingsSpace.waitUntilReady());
   yield* Effect.promise(() => settingsSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));

@@ -4,29 +4,29 @@
 
 import React from 'react';
 
-import { type SelectRootProps, Toolbar, Select as UiSelect } from '@dxos/react-ui';
+import { type SelectOption, Select as UiSelect } from '@dxos/react-ui';
 
-export type SelectProps = SelectRootProps & {
-  items?: { value: string; label: string }[];
+export type SelectProps = {
+  items?: SelectOption[];
+  value?: string;
+  onValueChange?: (value: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
 };
 
-export const Select = ({ items = [], ...props }: SelectProps) => {
-  return (
-    <UiSelect.Root {...props}>
-      <Toolbar.Button asChild>
-        <UiSelect.TriggerButton placeholder={'Select value'} />
-      </Toolbar.Button>
-      <UiSelect.Portal>
-        <UiSelect.Content>
-          <UiSelect.Viewport>
-            {items?.map(({ value, label }) => (
-              <UiSelect.Option key={value} value={value}>
-                <span className='font-mono'>{label}</span>
-              </UiSelect.Option>
-            ))}
-          </UiSelect.Viewport>
-        </UiSelect.Content>
-      </UiSelect.Portal>
-    </UiSelect.Root>
-  );
-};
+/** A single-value Select over `items`. */
+export const Select = ({ items = [], value, onValueChange, disabled, placeholder = 'Select value' }: SelectProps) => (
+  <UiSelect.Root
+    items={items}
+    value={value === undefined ? [] : [value]}
+    onValueChange={({ value: [next] }) => next !== undefined && onValueChange?.(next)}
+    disabled={disabled}
+  >
+    <UiSelect.Trigger placeholder={placeholder} />
+    <UiSelect.Content>
+      {items.map((item) => (
+        <UiSelect.Item key={item.value} item={item} classNames='font-mono' />
+      ))}
+    </UiSelect.Content>
+  </UiSelect.Root>
+);

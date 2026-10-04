@@ -15,6 +15,8 @@ const handler: Operation.WithHandler<typeof TaskOperation.AddArtifact> = TaskOpe
     Effect.fnUntraced(function* ({ task: taskRef, object: objectRef }) {
       const task = yield* Database.load(taskRef);
       const object = yield* Database.load(objectRef);
+
+      yield* Task.checkArtifact(task, object);
       Task.addArtifact(task, object);
       yield* Database.flush();
       return { task };

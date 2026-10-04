@@ -172,7 +172,7 @@ export const RevokeRecoveryCredential = Operation.make({
      * `PublicKey.from` silently drops non-hex characters rather than rejecting them, so an
      * unvalidated string would decode to some other key instead of failing.
      */
-    lookupKey: Schema.String.check(Schema.isPattern(/^[0-9a-fA-F]{64}$/)),
+    lookupKey: Schema.String.check(Schema.isPattern(/^[0-9a-fA-F]{64}$/u)),
   }),
   output: Schema.Void,
 });

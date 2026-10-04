@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Obj, Ref, Tag } from '@dxos/echo';

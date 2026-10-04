@@ -3,6 +3,7 @@
 //
 
 import { isGeneratedFile } from './generated.ts';
+import { spaceHeadings } from './headings.ts';
 import { type PatchFile, parsePatch } from './patch.ts';
 
 /**
@@ -242,8 +243,9 @@ export const buildChapterPrompt = (plan: Plan, chapter: Chapter, diff: string): 
 
 /** Stitches the planner's opening and the chapter bodies into one document. */
 export const assembleWalkthrough = (plan: Plan, chapters: string[]): string =>
-  [`# ${plan.title}`, '', plan.overview, '', ...chapters.map((chapter) => chapter.trim())]
-    .filter((part, index) => part !== '' || index < 3)
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trimEnd() + '\n';
+  spaceHeadings(
+    [`# ${plan.title}`, '', plan.overview, '', ...chapters.map((chapter) => chapter.trim())]
+      .filter((part, index) => part !== '' || index < 3)
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n'),
+  ).trimEnd() + '\n';

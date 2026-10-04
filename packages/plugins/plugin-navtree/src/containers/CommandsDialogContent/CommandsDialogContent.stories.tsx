@@ -19,9 +19,7 @@ import { CommandsDialogContent } from './CommandsDialogContent.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>
-    <Dialog.Overlay>
-      <CommandsDialogContent />
-    </Dialog.Overlay>
+    <CommandsDialogContent />
   </Dialog.Root>
 );
 

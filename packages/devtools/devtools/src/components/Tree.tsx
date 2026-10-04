@@ -24,7 +24,7 @@ export const Node = ({ data }: ThemedClassName<{ data?: any; root?: boolean }>) 
     return (
       <div className='flex flex-col space-y-1'>
         {data.map((value, index) => (
-          <KeyValue key={index} label={String(index)} data={value} classNames='text-description font-thin' />
+          <KeyValue key={index} label={String(index)} data={value} classNames='text-fg-muted font-thin' />
         ))}
       </div>
     );
@@ -33,7 +33,7 @@ export const Node = ({ data }: ThemedClassName<{ data?: any; root?: boolean }>) 
   return (
     <div className='flex flex-col space-y-1'>
       {Object.entries(data).map(([key, value]) => (
-        <KeyValue key={key} label={key} data={value} classNames='dx-group-surface text-description font-thin' />
+        <KeyValue key={key} label={key} data={value} classNames='dx-group-surface text-fg-muted font-thin' />
       ))}
     </div>
   );
@@ -46,7 +46,7 @@ export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: s
   }
 
   return (
-    <div className='flex'>
+    <div className='flex gap-1'>
       <Box
         className={mx('flex py-0.5 select-none text-sm cursor-pointer', classNames)}
         role='button'
@@ -69,7 +69,7 @@ export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: s
 
 const Scalar = ({ classNames, value }: ThemedClassName<{ value: any }>) => {
   return (
-    <Box className={mx('dx-tag dx-tag--green text-xs items-center', classNames)}>
+    <Box className={mx('dx-tag dx-tag-inline items-center', classNames)} data-hue='green'>
       {(value === undefined && 'undefined') ||
         (value === null && 'null') ||
         (typeof value === 'string' && value) ||

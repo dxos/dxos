@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
@@ -42,6 +42,13 @@ import { isUnauthorizedFunctionError } from './utils.ts';
 export type IndexingResult = {
   updated: number;
   done: boolean;
+  /**
+   * Every change the sources held when the pass read them is now indexed. Unlike `done`, it holds for
+   * a pass that indexed something, so writes arriving faster than passes complete can still settle a
+   * caller waiting for the writes it made — `done` needs an empty batch, which such a stream never
+   * leaves.
+   */
+  drained: boolean;
   spaces: ReadonlySet<SpaceId>;
   queues: ReadonlySet<EntityId>;
   documents: ReadonlySet<string>;
@@ -52,6 +59,7 @@ export type IndexingResult = {
 type MutableIndexingResult = {
   updated: number;
   done: boolean;
+  drained: boolean;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -62,6 +70,7 @@ type MutableIndexingResult = {
 const makeEmptyIndexingResult = (): MutableIndexingResult => ({
   updated: 0,
   done: true,
+  drained: true,
   spaces: new Set(),
   queues: new Set(),
   documents: new Set(),
@@ -139,6 +148,18 @@ const anyCursorMoved = (
   );
   return updated.some((cursor) => positions.get(`${cursor.spaceId}/${cursor.resourceId}`) !== cursor.cursor);
 };
+
+/** Whether two indexes stand at the same position on every resource, and so would read the same batch. */
+const samePositions = (left: readonly IndexCursor[], right: readonly IndexCursor[]): boolean => {
+  if (left.length !== right.length) {
+    return false;
+  }
+  const positions = new Map(left.map((cursor) => [`${cursor.spaceId}/${cursor.resourceId}`, cursor.cursor]));
+  return right.every((cursor) => positions.get(`${cursor.spaceId}/${cursor.resourceId}`) === cursor.cursor);
+};
+
+/** One index a batch is written into, under the name its cursor is tracked by. */
+type IndexLeg = { index: Index; indexName: string };
 
 export class IndexEngine {
   readonly #sql: SqlClient.SqlClient;
@@ -258,14 +279,19 @@ export class IndexEngine {
       const result = makeEmptyIndexingResult();
       const cursors = yield* this.#tracker.queryCursorsBySource({ sourceName: this.#indexedObjectSource.sourceName });
 
-      const { updated, done, objects } = yield* this.#update(ctx, this.#ftsIndex, this.#indexedObjectSource, {
-        indexName: INDEX_NAMES.fts,
-        spaceId: null,
-        limit: opts?.limit,
-        cursors: cursors.get(INDEX_NAMES.fts) ?? [],
-      });
+      const { updated, done, drained, objects } = yield* this.#update(
+        ctx,
+        [{ index: this.#ftsIndex, indexName: INDEX_NAMES.fts }],
+        this.#indexedObjectSource,
+        {
+          spaceId: null,
+          limit: opts?.limit,
+          cursors: cursors.get(INDEX_NAMES.fts) ?? [],
+        },
+      );
       result.updated += updated;
       result.done = result.done && done;
+      result.drained = result.drained && drained;
       accumulateIndexingResult(result, objects);
 
       return result as IndexingResult;
@@ -418,33 +444,29 @@ export class IndexEngine {
 
       // The full-text index is not a leg of this pass: it is a secondary index, sourced from what
       // this one writes (see `updateSecondaryIndexes`).
-      const {
-        updated: updatedSnapshotIndex,
-        done: doneSnapshotIndex,
-        objects: snapshotObjects,
-      } = yield* this.#update(ctx, this.#objectSnapshotIndex, dataSource, {
-        indexName: INDEX_NAMES.objectSnapshot,
-        spaceId: opts.spaceId,
-        limit: opts.limit,
-        cursors: cursorsByIndex.get(INDEX_NAMES.objectSnapshot) ?? [],
-      });
-      result.updated += updatedSnapshotIndex;
-      result.done = result.done && doneSnapshotIndex;
-      accumulateIndexingResult(result, snapshotObjects);
-
-      const {
-        updated: updatedReverseRefIndex,
-        done: doneReverseRefIndex,
-        objects: reverseRefObjects,
-      } = yield* this.#update(ctx, this.#reverseRefIndex, dataSource, {
-        indexName: INDEX_NAMES.reverseRef,
-        spaceId: opts.spaceId,
-        limit: opts.limit,
-        cursors: cursorsByIndex.get(INDEX_NAMES.reverseRef) ?? [],
-      });
-      result.updated += updatedReverseRefIndex;
-      result.done = result.done && doneReverseRefIndex;
-      accumulateIndexingResult(result, reverseRefObjects);
+      const snapshotCursors = cursorsByIndex.get(INDEX_NAMES.objectSnapshot) ?? [];
+      const reverseRefCursors = cursorsByIndex.get(INDEX_NAMES.reverseRef) ?? [];
+      const snapshotLeg: IndexLeg = { index: this.#objectSnapshotIndex, indexName: INDEX_NAMES.objectSnapshot };
+      const reverseRefLeg: IndexLeg = { index: this.#reverseRefIndex, indexName: INDEX_NAMES.reverseRef };
+      // Legs at the same position share one batch and one transaction: each transaction rewrites every
+      // page it dirties, and writing the batch twice re-stamped every `objectMeta` row it touched.
+      const batches: { legs: IndexLeg[]; cursors: IndexCursor[] }[] = samePositions(snapshotCursors, reverseRefCursors)
+        ? [{ legs: [snapshotLeg, reverseRefLeg], cursors: snapshotCursors }]
+        : [
+            { legs: [snapshotLeg], cursors: snapshotCursors },
+            { legs: [reverseRefLeg], cursors: reverseRefCursors },
+          ];
+      for (const { legs, cursors } of batches) {
+        const { updated, done, drained, objects } = yield* this.#update(ctx, legs, dataSource, {
+          spaceId: opts.spaceId,
+          limit: opts.limit,
+          cursors,
+        });
+        result.updated += updated;
+        result.done = result.done && done;
+        result.drained = result.drained && drained;
+        accumulateIndexingResult(result, objects);
+      }
 
       const activity = yield* this.#updateActivity(ctx, dataSource, {
         spaceId: opts.spaceId,
@@ -453,6 +475,7 @@ export class IndexEngine {
       });
       result.updated += activity.updated;
       result.done = result.done && activity.done;
+      result.drained = result.drained && activity.drained;
       for (const { spaceId, documentId } of activity.documents) {
         result.spaces.add(spaceId);
         result.documents.add(documentId);
@@ -469,8 +492,9 @@ export class IndexEngine {
   }
 
   /**
-   * Indexes one batch from a source into one index, advancing that index's cursor in the same
-   * transaction as the write so an interrupted pass resumes rather than losing the batch.
+   * Indexes one batch from a source into each of the given indexes, advancing their cursors in the same
+   * transaction as the write so an interrupted pass resumes rather than losing the batch. The indexes
+   * must stand at the same position (`opts.cursors`), since they share the batch read from it.
    *
    * A source feeding a primary index carries objects that may be new, so the batch is first written
    * to `objectMeta` — which stamps each object's `version` and yields the `recordId` the index
@@ -479,10 +503,13 @@ export class IndexEngine {
    */
   #update(
     ctx: Context,
-    index: Index,
+    legs: readonly IndexLeg[],
     source: IndexDataSource,
-    opts: { indexName: string; spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
-  ): Effect.Effect<{ updated: number; done: boolean; objects: readonly IndexerObject[] }, SqlError.SqlError> {
+    opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
+  ): Effect.Effect<
+    { updated: number; done: boolean; drained: boolean; objects: readonly IndexerObject[] },
+    SqlError.SqlError
+  > {
     return Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
 
@@ -490,12 +517,18 @@ export class IndexEngine {
       // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
       // TransactionConnection context. If those reads ran inside withTransaction, they would
       // try to acquire the same semaphore that the transaction already holds — causing a deadlock.
-      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, opts.cursors, {
+      const {
+        objects,
+        cursors: updatedCursors,
+        more,
+      } = yield* source.getChangedObjects(ctx, opts.cursors, {
         limit: opts.limit,
       });
 
+      // An empty batch counts as drained even when the source says it stopped at the limit: the
+      // entries it skipped (a document that will not load) do not advance, so waiting would spin.
       if (objects.length === 0) {
-        return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
+        return { updated: 0, done: true, drained: true, objects: [] as readonly IndexerObject[] };
       }
 
       // Convergence keys in this batch, deduplicated — recorded as durable merge intents inside the
@@ -528,17 +561,21 @@ export class IndexEngine {
             yield* this.#convergenceKeyIntents.record(intents);
           }
 
-          yield* index.update(objects);
+          for (const { index } of legs) {
+            yield* index.update(objects);
+          }
           yield* this.#tracker.updateCursors(
-            updatedCursors.map((_): IndexCursor => ({
-              indexName: opts.indexName,
-              spaceId: _.spaceId,
-              sourceName: source.sourceName,
-              resourceId: _.resourceId,
-              cursor: _.cursor,
-            })),
+            legs.flatMap(({ indexName }) =>
+              updatedCursors.map((_): IndexCursor => ({
+                indexName,
+                spaceId: _.spaceId,
+                sourceName: source.sourceName,
+                resourceId: _.resourceId,
+                cursor: _.cursor,
+              })),
+            ),
           );
-          return { updated: objects.length, done: false, objects };
+          return { updated: objects.length * legs.length, done: false, drained: more === false, objects };
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
@@ -549,20 +586,29 @@ export class IndexEngine {
     source: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
   ): Effect.Effect<
-    { updated: number; done: boolean; documents: readonly { spaceId: SpaceId; documentId: string }[] },
+    {
+      updated: number;
+      done: boolean;
+      drained: boolean;
+      documents: readonly { spaceId: SpaceId; documentId: string }[];
+    },
     SqlError.SqlError
   > {
     return Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
 
-      const { cursors: updatedCursors, activity = [] } = yield* source.getChangedObjects(ctx, opts.cursors, {
+      const {
+        cursors: updatedCursors,
+        activity = [],
+        more,
+      } = yield* source.getChangedObjects(ctx, opts.cursors, {
         limit: opts.limit,
         activity: true,
         objects: false,
       });
 
       if (updatedCursors.length === 0) {
-        return { updated: 0, done: true, documents: [] };
+        return { updated: 0, done: true, drained: true, documents: [] };
       }
 
       return yield* sql.withTransaction(
@@ -578,11 +624,8 @@ export class IndexEngine {
             })),
           );
           const updated = activity.reduce((sum, entry) => sum + entry.changes.length, 0);
-          return {
-            updated,
-            done: !anyCursorMoved(source.sourceName, opts.cursors, updatedCursors),
-            documents: activity,
-          };
+          const done = !anyCursorMoved(source.sourceName, opts.cursors, updatedCursors);
+          return { updated, done, drained: done || more === false, documents: activity };
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#updateActivity'), SpanAttributes.annotateSpace(opts.spaceId));

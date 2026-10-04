@@ -14,7 +14,7 @@ import * as Skill from './Skill.ts';
 /** A sentinel command the model recognizes in chat (e.g. `$track <text>`). */
 export const Command = Schema.Struct({
   sentinel: Schema.String.annotate({ description: 'Token that invokes the command (e.g. "$track").' }),
-  description: Schema.optional(Schema.String),
+  description: Schema.optional(Format.Text),
   prompt: Schema.String.annotate({ description: 'What the model should do when the sentinel appears.' }),
 });
 export type Command = Schema.Schema.Type<typeof Command>;
@@ -27,7 +27,6 @@ export type Command = Schema.Schema.Type<typeof Command>;
 export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dxos.type.instructions', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
     input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotate({
       description: 'Input schema',
     }),
@@ -52,14 +51,12 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--scroll--regular', hue: 'sky' }),
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 
 export type MakeProps = {
   [Obj.Parent]?: Obj.Unknown;
   name?: string;
-  description?: string;
   input?: Schema.Codec<any, any>;
   output?: Schema.Codec<any, any>;
   text?: string;
@@ -72,7 +69,6 @@ export type MakeProps = {
 export const make = ({
   [Obj.Parent]: parent,
   name,
-  description,
   input,
   output,
   text,
@@ -84,7 +80,6 @@ export const make = ({
   return Obj.make(Instructions, {
     [Obj.Parent]: parent,
     name,
-    description,
     input: JsonSchema.toJsonSchema(input ?? Schema.Void),
     output: JsonSchema.toJsonSchema(output ?? Schema.Void),
     text: Ref.make(body),

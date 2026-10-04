@@ -58,6 +58,7 @@ export default Capability.makeModule(
               properties: {
                 label: ['plugin-settings.label', { ns: meta.profile.key }],
                 icon: 'ph--gear--regular',
+                iconHue: 'emerald',
                 disposition: 'pin-end',
                 position: Position.first,
                 testId: 'treeView.appSettings',
@@ -101,8 +102,9 @@ export default Capability.makeModule(
                   data: settings,
                   properties: {
                     label: meta.profile.name ?? meta.profile.key,
-                    // The plugin's own hue is dropped so the settings list reads as one uniform group.
+                    // One hue for every plugin, matching the space settings nodes, so the list reads as one group.
                     icon: meta.profile.icon?.key ?? 'ph--circle--regular',
+                    iconHue: 'emerald',
                     testId: `settings.${meta.profile.key}`,
                   },
                 }),

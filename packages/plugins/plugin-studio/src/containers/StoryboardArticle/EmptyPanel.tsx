@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Panel } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Empty, Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 export type EmptyPanelProps = {
@@ -33,12 +32,12 @@ export const EmptyPanel = ({ label, attendableId }: EmptyPanelProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='bg-scrim-surface'>
-        <Empty classNames='h-full' label={label} />
-      </Panel.Content>
+      </Panel.Header>
+      <Panel.Body classNames='bg-scrim-surface'>
+        <Empty classNames='h-full'>{label}</Empty>
+      </Panel.Body>
     </Panel.Root>
   );
 };

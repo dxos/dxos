@@ -4,7 +4,7 @@
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { type Obj, Query } from '@dxos/echo';
@@ -431,6 +431,14 @@ type QueryScopes = {
   objectIds: Set<EntityId> | null;
 };
 
+/**
+ * Replaces each compiled {@link QueryPlan.SqlStep} with the steps it stands for: scope analysis must
+ * see the original selects and filters, or every compiled query reads as unconstrained and re-runs on
+ * every write.
+ */
+const flattenSqlSteps = (steps: readonly QueryPlan.Step[]): QueryPlan.Step[] =>
+  steps.flatMap((step) => (step._tag === 'SqlStep' ? flattenSqlSteps(step.steps) : [step]));
+
 const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
   const scopes: QueryScopes = {
     isSimple: true,
@@ -440,7 +448,7 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
     objectIds: null,
   };
 
-  for (const step of plan.steps) {
+  for (const step of flattenSqlSteps(plan.steps)) {
     switch (step._tag) {
       case 'SelectStep': {
         // Extract spaceIds from space-scoped entries.

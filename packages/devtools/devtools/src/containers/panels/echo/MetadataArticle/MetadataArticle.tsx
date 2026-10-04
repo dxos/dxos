@@ -15,9 +15,9 @@ export const MetadataArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         <JsonView data={metadata} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

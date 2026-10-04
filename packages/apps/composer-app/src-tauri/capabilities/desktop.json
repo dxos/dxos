@@ -1,7 +1,7 @@
 {
   "identifier": "desktop-capability",
   "description": "Permissions for the bundled app, served over HTTP from the asset-server port this build's release channel owns (see src/channel.rs). Every channel's port is listed because the capability set is static while the port is chosen at runtime.",
-  "platforms": ["macOS"],
+  "platforms": ["macOS", "linux"],
   "windows": ["main", "popover"],
   "remote": {
     "urls": [
@@ -44,8 +44,8 @@
       ]
     },
     "fs:write-all",
-    "macos-passkey:default",
     "process:default",
+    "shell:allow-kill",
     "shell:allow-open",
     {
       "identifier": "shell:allow-spawn",
@@ -54,9 +54,15 @@
           "args": ["serve"],
           "cmd": "$RESOURCE/ollama",
           "name": "ollama"
+        },
+        {
+          "args": [],
+          "cmd": "$RESOURCE/dx-sandbox",
+          "name": "dx-sandbox"
         }
       ]
     },
+    "shell:allow-stdin-write",
     "opener:allow-open-url",
     "opener:default",
     "updater:default",
