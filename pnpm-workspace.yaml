@@ -210,7 +210,7 @@ catalog:
   '@tauri-apps/plugin-shell': ^2.3.6
   '@tauri-apps/plugin-updater': ^2.11.0
   '@testing-library/dom': ^10.4.2
-  '@testing-library/jest-dom': ^7.0.1
+  '@testing-library/jest-dom': ^6.9.1
   '@testing-library/react': ^16.3.3
   '@testing-library/user-event': ^14.6.7
   '@tldraw/assets': ^3.0.0
