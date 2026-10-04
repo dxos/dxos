@@ -54,6 +54,21 @@ tasks:
       - diagnose.sh
       - static/*
     preset: server
+  # `serve` without its build deps, for restarting on a worktree whose `dist` is already built: those
+  # deps are the same `:build` tasks another moon run (e.g. `composer-app:bundle`) may be running, and
+  # moon does not coordinate across processes, so two runs rewrite the same `dist/types` at once.
+  serve-nodeps:
+    command: ./serve.sh
+    args:
+      - --port=9009
+      - --no-open
+    inputs:
+      - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts
+      - serve.sh
+      - diagnose.sh
+      - static/*
+    preset: server
   # Fast dev variant: DX_FASTBUNDLE skips the `importSource` source-resolution plugin and
   # pre-bundles heavy deps, shrinking the live module graph so long sessions are less likely
   # to wedge the browser renderer. Trades granular HMR on DXOS source for lower memory/churn.

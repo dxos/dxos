@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -120,6 +120,12 @@ export default Capability.makeModule(
       pending.add(companionUri);
       void operationInvoker
         .invokePromise(AssistantOperation.EnsureCompanionChat, { companionTo: object }, { spaceId: db.spaceId })
+        // A failed operation resolves with `error` rather than rejecting, and is retried on the next trigger.
+        .then(({ error }) => {
+          if (error) {
+            log.warn('Failed to provision companion chat', { plankId, error });
+          }
+        })
         .catch((error) => log.warn('Failed to provision companion chat', { plankId, error }))
         .finally(() => pending.delete(companionUri));
 

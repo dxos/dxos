@@ -45,10 +45,10 @@ export const StreamDeckDashboard = ({ space, role }: StreamDeckDashboardProps) =
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         <div className='flex flex-col gap-2'>
           <VirtualStreamDeck device={DEVICE} frame={frame} />
-          <div className='text-xs text-description'>
+          <div className='text-xs text-fg-muted'>
             {status?.state === 'connected'
               ? (status.device?.model ?? 'Device')
               : status?.state === 'incompatible'
@@ -56,7 +56,7 @@ export const StreamDeckDashboard = ({ space, role }: StreamDeckDashboardProps) =
                 : 'No device connected'}
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

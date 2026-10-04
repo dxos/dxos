@@ -12,10 +12,10 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
@@ -876,7 +876,7 @@ describe('Agent Service (control plane)', () => {
 
         // Selecting a model on the chat tears the process down and respawns it bound to the selection.
         Obj.update(chat, (chat) => {
-          chat.model = Ref.fromURI(DXN.make('com.anthropic.model.claude-haiku-4-5.default'));
+          chat.session = { model: DXN.make('com.anthropic.model.claude-haiku-4-5.default') };
         });
         yield* Database.flush();
         const sessionB = yield* ComputeAgentService.getSession(chat);

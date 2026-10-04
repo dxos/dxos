@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -30,16 +27,7 @@
       "path": "../react-primitives/react-focus"
     },
     {
-      "path": "../react-primitives/react-list"
-    },
-    {
       "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-menu"
-    },
-    {
-      "path": "../react-ui-virtual"
     },
     {
       "path": "../ui-theme"

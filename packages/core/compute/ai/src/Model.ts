@@ -149,9 +149,9 @@ export const deepseekV4Pro: Model = make('com.deepseek.model.deepseek-v4-pro.def
 });
 
 //
-// Decision models: TypeSafe's jev, which answers typed questions rather than generating text, as
-// served by each provider. Distinct ids so `AiService.decisionModel(id)` picks the provider; not in
-// `all`, which lists language models for pickers.
+// Decision models, which answer typed questions rather than generating text, as served by each
+// provider. All speak TypeSafe's System One wire. Distinct ids so `AiService.decisionModel(id)` picks
+// the provider; not in `all`, which lists language models for pickers.
 //
 
 /** jev on TypeSafe's own API. */
@@ -170,6 +170,31 @@ export const cloudflareJev: Model = make('com.cloudflare.model.typesafe-jev.defa
   backend: 'jev-latest',
   label: 'Jev (Cloudflare Workers AI)',
 });
+
+/** Cloudflare's Clef (`@cf/cloudflare/clef`, https://blog.cloudflare.com/clef-decision-models/) on Workers AI. */
+export const cloudflareClef: Model = make('com.cloudflare.model.clef.default', {
+  provider: Provider.workersAi.id,
+  backend: 'clef',
+  label: 'Clef (Cloudflare Workers AI)',
+  characteristics: { contextWindow: 64_000, image: true },
+});
+
+/** Clef's faster, smaller variant (`@cf/cloudflare/clef-flash`) on Workers AI. */
+export const cloudflareClefFlash: Model = make('com.cloudflare.model.clef-flash.default', {
+  provider: Provider.workersAi.id,
+  backend: 'clef-flash',
+  label: 'Clef Flash (Cloudflare Workers AI)',
+  characteristics: { image: true },
+});
+
+/** Every decision model, for pickers. */
+export const decisionModels: readonly Model[] = [typesafeJev, cloudflareJev, cloudflareClef, cloudflareClefFlash];
+
+/**
+ * Stands for whichever decision model the space is configured to use, so a consumer that has no reason
+ * to pin one asks for this and follows the user's choice. Resolvers substitute it; it is not a model.
+ */
+export const defaultDecisionModel: DXN.DXN = DXN.make('org.dxos.model.decision.default');
 
 /**
  * Curated model catalog. Each entry is a model AS SERVED BY ONE PROVIDER; the same `id` appearing

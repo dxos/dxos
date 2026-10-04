@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
 import { CardMasonry } from '@dxos/plugin-space/components';
-import { Column, useTranslation } from '@dxos/react-ui';
+import { Container, Typography, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -29,8 +29,14 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
   }
 
   return (
-    <Column.Section label={t('task-artifacts.label')} data-testid='tasksPlugin.artifacts'>
-      <CardMasonry objects={artifacts} size='compact' inline />
-    </Column.Section>
+    <Container asChild gutter='inherit' gap='md'>
+      <section data-testid='tasksPlugin.artifacts'>
+        {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
+        <Typography asChild tone='subtle' classNames='dx-label py-0'>
+          <h2>{t('task-artifacts.label')}</h2>
+        </Typography>
+        <CardMasonry objects={artifacts} size='compact' inline />
+      </section>
+    </Container>
   );
 };

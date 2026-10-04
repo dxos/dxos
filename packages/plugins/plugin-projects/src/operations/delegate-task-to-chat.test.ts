@@ -8,7 +8,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
@@ -47,6 +47,30 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // The checklist is a plain ref array, so delegation does not claim ownership of the task: an
     // unparented one stays unparented.
     expect(Obj.getParent(task)).toBeUndefined();
+  });
+
+  test("starts the chat on the project's session config", async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const { project } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.Create, { name: 'Voyage' }, { spaceId: space.id }),
+    );
+    const model = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
+    Obj.update(project, (project) => {
+      project.session = { model };
+    });
+    const taskSet = await project.taskSet?.tryLoad();
+    invariant(taskSet, 'Expected the scaffolded task set.');
+    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Write a poem', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    expect(chat.session?.model).toBe(model);
   });
 
   test('files the chat under the task project, marks it started, and names a reviewer', async ({ expect }) => {
@@ -146,6 +170,36 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Every delegated task is underway and assigned to the agent; the one left unchecked is untouched.
     expect(tasks.map((task) => task.status)).toEqual(['started', 'todo', 'started']);
     expect(tasks.map((task) => task.assignee?.role)).toEqual(['assistant', undefined, 'assistant']);
+  });
+
+  test('a parent brings its subtasks, parent first', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const children = ['Read the guide', 'Write the plugin'].map((title) => Task.make({ title, status: 'todo' }));
+    const finished = Task.make({ title: 'Already shipped', status: 'done' });
+    const parent = space.db.add(
+      Task.make({
+        title: 'Build the plugin',
+        status: 'todo',
+        subtasks: [...children, finished].map((child) => Ref.make(child)),
+      }),
+    );
+    const sibling = space.db.add(Task.make({ title: 'Unrelated', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(parent)] }, { spaceId: space.id }),
+    );
+
+    // Ticking the parent is enough: the whole subtree joins the checklist, in tree order.
+    expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toEqual([parent.id, ...children.map((child) => child.id)]);
+    expect(chat.name).toBe('Build the plugin');
+    expect([parent, ...children].map((task) => task.status)).toEqual(['started', 'started', 'started']);
+    expect(sibling.status).toBe('todo');
+    // A finished subtask is not reopened.
+    expect(finished.status).toBe('done');
   });
 
   test('refuses a list spanning two projects', async ({ expect }) => {

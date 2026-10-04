@@ -4,14 +4,14 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { truncateKey } from '@dxos/debug';
 import { JsonView, STAT_CARD_HUES, StatCard } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import { Field, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Switch, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
@@ -83,11 +83,18 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
       ))}
       <StatCard.Row
         label={t('show-webrtc-stats.title')}
-        action={<Field.Switch checked={showDetailedWebRTCStats} onCheckedChange={setShowDetailedWebRTCStats} />}
+        action={
+          <Switch
+            checked={showDetailedWebRTCStats}
+            onCheckedChange={({ checked }) => setShowDetailedWebRTCStats(checked)}
+          />
+        }
       />
       <StatCard.Row
         label={t('show-calls-history.title')}
-        action={<Field.Switch checked={showServiceHistory} onCheckedChange={setShowServiceHistory} />}
+        action={
+          <Switch checked={showServiceHistory} onCheckedChange={({ checked }) => setShowServiceHistory(checked)} />
+        }
       />
       {showDetailedWebRTCStats && (
         <StatCard.Content>

@@ -1,6 +1,0 @@
----
-'@dxos/plugin-projects': patch
-'@dxos/react-ui-components': patch
----
-
-Delegating project tasks to an agent is now idempotent — `DelegateTaskToChat` skips tasks the agent already holds and the toolbar action is disabled while an invocation is in flight — and the Tasks tab gains a toggle that splits it with a live pipeline chart of the project's agent sessions beneath the ledger, opened automatically when tasks are delegated. Underneath: the agent runtime emits an `assistant.delegationSpawned` trace event joining a delegated sub-agent's process to its task; `@dxos/plugin-assistant` gains `buildSessionTimeline` and a `useSessionTimeline` hook that turn trace events, processes, chats and tasks into session and task lanes; `@dxos/react-ui-components` gains a composite `Gantt` (`Root`/`Legend`/`Chart`/`Meta`) drawing sessions as rectangles enclosing the tasks they work, with threaded event nodes, dependency and delegation connectors; and `@dxos/react-ui` gains a `HoverCard` composite over Ark's hover-card, which the chart's nodes use for event detail. Also fixed: a task list row's tags take at most half the row and scroll instead of collapsing the title, the trace timeline's `Generating…` spinner no longer detaches after a completed request, and sync-status labels truncate with an ellipsis inside the progress popover.

@@ -4,7 +4,7 @@
 
 import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useState } from 'react';
 
-import { Dialog, Icon, IconButton, type ThemedClassName, createContext, useControlledState } from '@dxos/react-ui';
+import { Button, Dialog, Icon, type ThemedClassName, createContext, useControlledState } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
@@ -67,20 +67,21 @@ const ChatDialogRoot = ({
       size={size}
       setSize={setSize}
     >
-      <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
-        <div className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
-          <Dialog.Content
-            size='md'
-            inOverlayLayout
-            classNames={[
-              'grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content pointer-events-auto',
-            ]}
-            onEscapeKeyDown={onEscape}
-            onInteractOutside={(event) => event.preventDefault()}
-          >
-            {children}
-          </Dialog.Content>
-        </div>
+      <Dialog.Root
+        modal={false}
+        open={open}
+        onOpenChange={({ open }) => setOpen(open)}
+        onEscapeKeyDown={onEscape}
+        onInteractOutside={(event) => event.preventDefault()}
+      >
+        <Dialog.Content
+          size='md'
+          placement='end'
+          scrim={false}
+          classNames='grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content'
+        >
+          {children}
+        </Dialog.Content>
       </Dialog.Root>
     </ChatDialogContextProvider>
   );
@@ -106,18 +107,18 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
       className={mx('grid grid-cols-[var(--dx-rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}
     >
       <Endcap>
-        <Dialog.Close>
+        <Dialog.CloseTrigger>
           <Icon icon='ph--x--regular' />
-        </Dialog.Close>
+        </Dialog.CloseTrigger>
       </Endcap>
       <Dialog.Title
-        classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
+        classNames='flex w-full justify-center text-sm text-fg-subtle select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}
       </Dialog.Title>
       <Endcap>
-        <IconButton
+        <Button
           variant='ghost'
           icon='ph--caret-up--regular'
           iconOnly
@@ -149,7 +150,7 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   return (
     <div
       className={mx(
-        'border-t border-b border-subdued-separator',
+        'border-t border-b border-separator-subtle',
         'transition ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
         classNames,
       )}

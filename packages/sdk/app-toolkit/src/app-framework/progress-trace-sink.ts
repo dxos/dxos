@@ -60,8 +60,8 @@ type MonitorEntry = {
   target: CancelTarget;
   /** Fires when this monitor has gone `stallTimeout` without an update; re-armed by every update. */
   stall?: ReturnType<typeof setTimeout>;
-  /** Set once the stall fired, so the next update starts a clean run rather than reviving a dead one. */
-  stalled?: boolean;
+  /** Set once the run failed or stalled, so the next update starts a clean run rather than reviving a dead one. */
+  ended?: boolean;
   /** Last phase index seen, so a change of phase can clear the count belonging to the old one. */
   phase?: number;
 };
@@ -178,9 +178,9 @@ export const createProgressTraceSink = (
     entry.stall = setTimeout(() => {
       // The entry stays in the map: the meter shows the failure with its dismiss control, and that
       // control routes through `makeOnCancel` → `cancelMonitor`, both of which need the entry to
-      // still be here. `stalled` is what stops it from being mistaken for a live run.
+      // still be here. `ended` is what stops it from being mistaken for a live run.
       entry.stall = undefined;
-      entry.stalled = true;
+      entry.ended = true;
       entry.handle.fail(PROGRESS_STATUS_STALLED);
     }, stallTimeout);
   };
@@ -216,7 +216,7 @@ export const createProgressTraceSink = (
     target: CancelTarget,
   ) => {
     const existing = monitors.get(key);
-    if (existing && !existing.stalled) {
+    if (existing && !existing.ended) {
       // Same run, new process — an EDGE continuation reports under a fresh pid. Re-registering here
       // would call `register`, which drops the prior entry so a genuine re-run starts clean, and the
       // total this run already reported would go with it: the meter falls back to a sweep mid-run,
@@ -226,8 +226,8 @@ export const createProgressTraceSink = (
       return existing.handle;
     }
 
-    // A stalled monitor is not resumed in place: `register` drops the dead entry so the reviving run
-    // starts from its own numbers, rather than inheriting a `current` the abandoned one left behind.
+    // An ended monitor is not resumed in place: `register` drops the dead entry so the reviving run
+    // starts from its own numbers and status, rather than inheriting the abandoned one's `current` or error.
     if (existing) {
       dropMonitor(key);
     }
@@ -280,6 +280,10 @@ export const createProgressTraceSink = (
       // reported failure would replace the producer's reason with a guess about silence.
       disarmStall(key);
       handle.fail(PROGRESS_STATUS_FAILED);
+      const entry = monitors.get(key);
+      if (entry) {
+        entry.ended = true;
+      }
       return;
     }
 

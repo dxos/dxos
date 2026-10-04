@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { HomeSection, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
-import { Card, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Container, Icon, useTranslation } from '@dxos/react-ui';
 
 import { useHomeSuggestions } from '#hooks';
 import { meta } from '#meta';
@@ -44,7 +44,7 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
   return (
     <HomeSection.Root>
       <HomeSection.Header title={t('space-home.suggestions.heading')} onClose={onClose} />
-      <Flex column gap='md'>
+      <Container gap='lg' gutter='none'>
         {suggestions.map((prompt, index) => (
           // A real button, not a `role='button'` div: WKWebView only reliably synthesizes a tap into
           // a click for natively interactive elements, and the iOS walkthrough could not launch a
@@ -56,17 +56,17 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
             className='cursor-pointer w-full text-start'
             onClick={() => handleRunPrompt(prompt)}
           >
-            <Card.Root fullWidth>
+            <Card.Root>
               <Card.Header>
-                <Card.Block>
+                <Block>
                   <Icon icon='ph--sparkle--regular' />
-                </Card.Block>
+                </Block>
                 <Card.Title>{prompt}</Card.Title>
               </Card.Header>
             </Card.Root>
           </button>
         ))}
-      </Flex>
+      </Container>
     </HomeSection.Root>
   );
 };

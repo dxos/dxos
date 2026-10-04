@@ -45,7 +45,12 @@ export const useCreateAndDeployScriptTemplates = (db: Database.Database | undefi
         invariant(Obj.instanceOf(Script.Script, createResult.data?.object));
         await invokePromise(SpaceOperation.AddObject, { object: createResult.data.object }, { spaceId: db.spaceId });
 
-        return deployScript({ db, client, script: createResult.data.object });
+        return deployScript({
+          db,
+          getEdgeHttpClient: () => client.edge.http,
+          ownerDid: client.halo.identity.get()?.did,
+          script: createResult.data.object,
+        });
       }),
     );
 

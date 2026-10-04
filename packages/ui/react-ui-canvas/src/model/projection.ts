@@ -8,9 +8,9 @@
 // `freehand` is the identity projection: intents write coordinates straight into the scene.
 //
 
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { layoutScene } from '../utils/layout.ts';
 import { resizeNode } from '../utils/shapes.ts';

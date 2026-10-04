@@ -6,9 +6,9 @@ import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Focus, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
@@ -89,19 +89,19 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   return (
     <Mosaic.Tile
       asChild
-      classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-subdued-separator'
+      classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-separator-subtle'
       id={segment.id}
       data={data}
       location={location}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root fullWidth border={false} ref={forwardedRef}>
+        <Card.Root border={false} ref={forwardedRef}>
           <Card.Header>
-            <Card.Block>
+            <Block>
               <Icon icon={icon} classNames={iconStyles?.text} />
-            </Card.Block>
+            </Block>
             <Card.Title>{title}</Card.Title>
-            <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
+            <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Header>
           {flightDetails ? (
             <Card.Body>
@@ -118,15 +118,15 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
               <Card.Body>
                 {route && (
                   <Card.Row>
-                    <Card.Text variant='description'>{route}</Card.Text>
+                    <Card.Text variant='muted'>{route}</Card.Text>
                   </Card.Row>
                 )}
                 {date && (
                   <Card.Row>
-                    <Card.Block>
+                    <Block>
                       <Icon icon='ph--calendar--regular' />
-                    </Card.Block>
-                    <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
+                    </Block>
+                    <Card.Text variant='muted'>{format(date, 'PPp')}</Card.Text>
                   </Card.Row>
                 )}
               </Card.Body>

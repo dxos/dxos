@@ -24,14 +24,14 @@ export const ChannelBackendFeed = Capability.lazyModule(
   {
     provides: [ThreadCapabilities.ChannelBackend],
     activatesOn: ThreadEvents.Start,
-    environments: ['node', 'workerd'],
+    environments: ['browser', 'node', 'tauri', 'workerd'],
   },
   () => import('./channel-backend-feed.ts'),
 );
 // `CreateObjectEntry` carries a `customPanel` React component alongside the object factory, so it
 // cannot load without React — browser only.
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,

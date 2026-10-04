@@ -31,19 +31,19 @@ export const AuthorizingDeviceDialog = () => {
       }}
     >
       <Flex column gap='2xl' classNames='z-10 p-8 md:px-16 h-full'>
-        <span className='font-["Poiret One"] text-[80px]' style={{ fontFamily: 'Poiret One' }}>
+        <span className='font-["Poiret One"] text-[80px] leading-[1.5]' style={{ fontFamily: 'Poiret One' }}>
           composer
         </span>
 
         <Flex column align='center' justify='center' gap='lg' classNames='flex-1'>
-          <Icon icon='ph--spinner-gap--regular' size={10} classNames='animate-spin text-description' />
+          <Icon icon='ph--spinner-gap--regular' size='xl' spin tone='muted' />
           <h1 className='text-2xl text-center'>{t('authorizing-device.title')}</h1>
         </Flex>
 
         <Flex column classNames='z-[11] mt-auto'>
           <a href='https://dxos.org' target='_blank' rel='noreferrer'>
             <Flex gap='xs' center classNames='text-sm pr-3 pb-1 opacity-70'>
-              <span className='text-description'>Powered by</span>
+              <span className='text-fg-muted'>Powered by</span>
               <DXOSHorizontalType className='fill-white w-[80px]' />
             </Flex>
           </a>

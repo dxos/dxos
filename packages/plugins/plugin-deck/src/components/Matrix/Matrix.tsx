@@ -7,8 +7,7 @@ import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useI
 import { Obj } from '@dxos/echo';
 import { findFirstFocusable } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
-import { ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -171,7 +170,7 @@ const MatrixViewport = composable<HTMLDivElement>(({ ...props }, forwardedRef) =
   );
 
   return (
-    <ScrollArea.Root orientation='horizontal' padding snap {...composableProps(props)} ref={forwardedRef}>
+    <ScrollArea.Root orientation='horizontal' snap {...composableProps(props)} ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef}>
         <Mosaic.Stack
           orientation='horizontal'

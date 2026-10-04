@@ -71,13 +71,13 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
   const isEnabled = enabled.includes(pluginId);
 
   return (
-    <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>
+    <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
       <Flex gap='sm' align='center'>
-        <Icon icon='ph--plugs--regular' size={5} classNames='shrink-0 text-subdued' />
+        <Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-prompt.title', { plugin: label })}</p>
           {/* A plugin's own description runs to paragraphs and would dwarf the chat. */}
-          <p className='text-sm text-subdued'>
+          <p className='text-sm text-fg-subtle'>
             {!plugin
               ? t('plugin-prompt.unavailable', { plugin: label })
               : isEnabled

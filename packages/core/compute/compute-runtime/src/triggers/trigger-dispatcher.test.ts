@@ -6,14 +6,14 @@ import { describe, it } from '@effect/vitest';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 import * as Tracer from 'effect/Tracer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService } from '@dxos/ai';
 import { ServiceNotAvailableError } from '@dxos/compute';

@@ -31,12 +31,12 @@ import { parseArgs } from 'node:util';
 import { discoverRules, groupRuleMatches, listRepoFiles, matchRuleFiles, type RuleMatch } from '../lib/discover.ts';
 import {
   changedFiles,
+  commitAdding,
   commitTimestamp,
   currentBranch,
   headCommit,
   isAncestor,
   isWorkingTreeDirty,
-  lastCommitTouching,
   mainMergeBase,
   prChangedFiles,
   repoRoot,
@@ -128,7 +128,7 @@ const scanPriorReviews = (mainBase: string | null): PriorReviewScan => {
       // main under a new SHA, or a shallow clone may never have fetched it.
       // Fall back to the commit that actually landed this review's own files
       // in HEAD's history — reachable by construction, so safe to diff from.
-      const landing = lastCommitTouching(`${REVIEWS_DIR}/${entry.name}/REVIEW.md`, head);
+      const landing = commitAdding(`${REVIEWS_DIR}/${entry.name}/REVIEW.md`, head);
       if (!landing || landing === head || !isAncestor(landing, head)) {
         continue;
       }

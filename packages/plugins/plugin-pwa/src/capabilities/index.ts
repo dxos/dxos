@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schedule from 'effect/Schedule';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import { registerSW } from 'virtual:pwa-register';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';

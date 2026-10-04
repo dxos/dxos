@@ -889,6 +889,52 @@ describe('buildSessionTimeline', () => {
     expect(timeline.lanes.find((lane) => lane.id === `task:${child.id}`)?.parentId).toBe(`task:${parent.id}`);
   });
 
+  test("a parent task's lane begins no later than its sub-tasks', even when they are not on one checklist", ({
+    expect,
+  }) => {
+    const parent = Task.make({ title: 'Parent', status: 'started' });
+    const child = Task.make({ [Obj.Parent]: parent, title: 'Child', status: 'done' });
+    const grandchild = Task.make({ [Obj.Parent]: child, title: 'Grandchild', status: 'done' });
+    // The parent is not on the checklist, so it is drawn from its edit history alone, unnested.
+    const chat = makeChat('Run', [child, grandchild]);
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [chat.session],
+      tasks: [parent, child, grandchild],
+      taskStatusChanges: new Map([
+        [parent.id, [{ timestamp: 3_000, status: 'started', previousStatus: 'todo' }]],
+        [
+          child.id,
+          [
+            { timestamp: 2_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 4_000, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+        [
+          grandchild.id,
+          [
+            { timestamp: 1_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 2_500, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+      ]),
+    });
+
+    const laneOf = (task: Task.Task) => timeline.lanes.find((lane) => lane.taskId === task.id);
+    expect(laneOf(parent)?.parentId).toBeUndefined();
+    expect(laneOf(parent)?.start).toBe(1_000);
+    expect(laneOf(child)?.start).toBe(1_000);
+    expect(laneOf(grandchild)?.start).toBe(1_000);
+    // It carries every descendant's start and finish beside its own move, so its first node is where the work began.
+    const nodesOf = (task: Task.Task) =>
+      timeline.markers
+        .filter((marker) => marker.laneId === laneOf(task)?.id)
+        .map(({ timestamp }) => timestamp)
+        .sort((left, right) => left - right);
+    expect(nodesOf(parent)).toEqual([1_000, 2_000, 2_500, 3_000, 4_000]);
+    expect(nodesOf(child)).toEqual([1_000, 2_000, 2_500, 4_000]);
+  });
+
   it.effect(
     'draws a status move once when both the trace and the edit history record it',
     Effect.fnUntraced(function* ({ expect }) {
@@ -961,6 +1007,49 @@ describe('buildSessionTimeline', () => {
       ).toEqual([{ label: 'Task started', pid: undefined }]);
     }, Effect.provide(TestTraceService.layer)),
   );
+
+  test('records the stretch a task was put down between two runs as a gap', ({ expect }) => {
+    const task = Task.make({ title: 'Cup the samples', status: 'done' });
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [],
+      tasks: [task],
+      taskStatusChanges: new Map([
+        [
+          task.id,
+          [
+            { timestamp: 1_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 2_000, status: 'blocked', previousStatus: 'started' },
+            { timestamp: 5_000, status: 'started', previousStatus: 'blocked' },
+            { timestamp: 6_000, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+      ]),
+    });
+
+    expect(timeline.lanes).toMatchObject([{ start: 1_000, end: 6_000, gaps: [{ start: 2_000, end: 5_000 }] }]);
+  });
+
+  test('a task still blocked has no gap: its lane ends where it was put down', ({ expect }) => {
+    const task = Task.make({ title: 'Cup the samples', status: 'blocked' });
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [],
+      tasks: [task],
+      taskStatusChanges: new Map([
+        [
+          task.id,
+          [
+            { timestamp: 1_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 2_000, status: 'blocked', previousStatus: 'started' },
+          ],
+        ],
+      ]),
+    });
+
+    expect(timeline.lanes[0]).toMatchObject({ start: 1_000, end: 2_000 });
+    expect(timeline.lanes[0].gaps).toBeUndefined();
+  });
 
   test('draws a task no session works as a lane of its own, from its edit history', ({ expect }) => {
     const done = Task.make({ title: 'Done elsewhere', status: 'done' });
@@ -1061,7 +1150,7 @@ describe('readTaskStatusChanges', () => {
   );
 });
 
-const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Info => ({
+const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Process => ({
   pid: Process.ID.make(pid),
   parentPid: null,
   key: 'agent',

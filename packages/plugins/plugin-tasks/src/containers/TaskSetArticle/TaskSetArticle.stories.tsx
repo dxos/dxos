@@ -17,6 +17,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
+import { translations as githubTranslations } from '@dxos/plugin-github/translations';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -153,7 +154,6 @@ const meta = {
   title: 'plugins/plugin-tasks/containers/TaskSetArticle',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // The plugin manager, not a bare client provider: the article invokes the task verbs through
     // `useOperationInvoker`, which throws without PluginManagerContext.
@@ -188,11 +188,13 @@ const meta = {
       ],
       setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
+    // Outermost, so the popover the layout renders outside the story still reads the story's translations.
+    withTheme(),
   ],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...translations, ...reactUiTranslations],
+    translations: [...translations, ...githubTranslations, ...reactUiTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -412,7 +414,7 @@ export const SortAndGroup: Story = {
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.group"]')).find((row) =>
         row.textContent?.includes('Done'),
       ) ?? null;
-    await clickElement(doneGroup()?.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]') ?? null);
+    await clickElement(doneGroup()?.querySelector<HTMLElement>('[data-part="branch-trigger"]') ?? null);
     await waitFor(() => expect(titles()).not.toContain('Source green coffee'), { timeout: 10_000 });
     await expect(headers()).toContain('Done1');
 
@@ -608,7 +610,7 @@ export const AddSubTask: Story = {
     );
 
     // Collapse the parent, then add another: the branch opens so both children are in view.
-    await userEvent.click(parentRow().querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!);
+    await userEvent.click(parentRow().querySelector<HTMLElement>('[data-part="branch-trigger"]')!);
     await waitFor(() => expect(visible(first.id)).toBe(false), { timeout: 10_000 });
     await addSubTask();
     await waitFor(() => expect(children()).toHaveLength(2), { timeout: 10_000 });
@@ -642,7 +644,7 @@ export const CreateWithAttachment: Story = {
       timeout: 10_000,
     });
 
-    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]')!);
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"] input')!);
     await userEvent.keyboard('Dial in the grinder{Enter}');
 
     const context = seeded;
@@ -666,7 +668,7 @@ export const CreateWithAttachment: Story = {
     for (const type of ['dragenter', 'dragover', 'drop']) {
       pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: refused }));
     }
-    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]')!);
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"] input')!);
     await userEvent.keyboard('Publish the page{Enter}');
     await waitFor(
       async () =>
@@ -766,7 +768,7 @@ export const CollapsePersists: Story = {
       canvas
         .getByText(title)
         .closest<HTMLElement>('[data-testid="taskList.item"]')!
-        .querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+        .querySelector<HTMLElement>('[data-part="branch-trigger"]')!;
     await waitFor(() => expect(visible('Pick the typeface')).toBe(true), { timeout: 10_000 });
     await waitFor(() => expect(visible('Order the samples')).toBe(true), { timeout: 10_000 });
 

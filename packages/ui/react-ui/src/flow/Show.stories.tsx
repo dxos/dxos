@@ -5,11 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button } from '../components/Button/index.ts';
-import { Toolbar } from '../components/Toolbar/index.ts';
+import { Button, Toolbar } from '../next/components/index.ts';
 import { withLayout, withTheme } from '../testing/index.ts';
+import { Match } from './Match.tsx';
 import { Show } from './Show.tsx';
-import { Switch } from './Switch.tsx';
 
 type Task = { title: string };
 
@@ -21,14 +20,14 @@ const ShowStory = () => {
       <Toolbar.Root>
         <Button onClick={() => setTask(task ? undefined : { title: 'Task 1' })}>{task ? 'Deselect' : 'Select'}</Button>
       </Toolbar.Root>
-      <Show when={task} fallback={<p className='text-subdued'>Nothing selected.</p>}>
+      <Show when={task} fallback={<p className='text-fg-subtle'>Nothing selected.</p>}>
         {(task) => <p>Selected: {task.title}</p>}
       </Show>
     </div>
   );
 };
 
-const SwitchStory = () => {
+const MatchStory = () => {
   const [view, setView] = useState<'list' | 'grid' | 'other'>('list');
 
   return (
@@ -38,20 +37,20 @@ const SwitchStory = () => {
         <Button onClick={() => setView('grid')}>Grid</Button>
         <Button onClick={() => setView('other')}>Other</Button>
       </Toolbar.Root>
-      <Switch.Root on={view} fallback={<p className='text-subdued'>No view.</p>}>
-        <Switch.Match when='list'>
+      <Match.Root on={view} fallback={<p className='text-fg-subtle'>No view.</p>}>
+        <Match.Case when='list'>
           <ul className='list-disc ps-6'>
             <li>Item 1</li>
             <li>Item 2</li>
           </ul>
-        </Switch.Match>
-        <Switch.Match when='grid'>
+        </Match.Case>
+        <Match.Case when='grid'>
           <div className='grid grid-cols-2 gap-2'>
             <div className='border border-separator p-2'>Item 1</div>
             <div className='border border-separator p-2'>Item 2</div>
           </div>
-        </Switch.Match>
-      </Switch.Root>
+        </Match.Case>
+      </Match.Root>
     </div>
   );
 };
@@ -61,7 +60,7 @@ const SwitchStory = () => {
 //
 
 const meta: Meta = {
-  title: 'ui/react-ui-core/flow/Show',
+  title: 'ui/react-ui-core/components/Show',
   decorators: [withTheme(), withLayout()],
 };
 
@@ -70,4 +69,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { render: ShowStory };
-export const SwitchMatch: Story = { render: SwitchStory };
+export const MatchCase: Story = { render: MatchStory };

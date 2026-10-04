@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { ShortcutsList } from '#components';
 import { meta } from '#meta';
@@ -16,9 +16,9 @@ export const ShortcutsDialogContent = () => {
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('shortcuts-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <ShortcutsList />

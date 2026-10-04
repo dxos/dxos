@@ -5,9 +5,9 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, IconButton, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, DragHandle, Focus, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
+import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { type KanbanCardProps, useKanbanBoard } from '#components';
 import { meta } from '#meta';
@@ -51,23 +51,23 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         <Focus.Item asChild>
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Header>
-              <Card.DragHandle ref={dragHandleRef} />
+              <DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Card.Block end>
+              <Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <IconButton
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             <Card.Body>
-              <Card.Row fullWidth>
-                <pre className='p-2 text-xs text-description whitespace-pre-wrap'>{JSON.stringify(data, null, 2)}</pre>
+              <Card.Row>
+                <pre className='p-2 text-xs text-fg-muted whitespace-pre-wrap'>{JSON.stringify(data, null, 2)}</pre>
               </Card.Row>
             </Card.Body>
           </Card.Root>

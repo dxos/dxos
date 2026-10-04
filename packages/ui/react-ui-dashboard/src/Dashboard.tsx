@@ -3,7 +3,7 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import React, { type PropsWithChildren, forwardRef, useCallback, useMemo } from 'react';
+import React, { type ComponentProps, type PropsWithChildren, forwardRef, useCallback, useMemo } from 'react';
 
 import { createContext, useControllableState } from '@dxos/react-hooks';
 import {
@@ -11,8 +11,6 @@ import {
   type SlottableProps,
   type ThemedClassName,
   ToggleGroup,
-  ToggleGroupItem,
-  type ToggleGroupItemProps,
   composable,
   composableProps,
   slottable,
@@ -21,6 +19,8 @@ import { mx } from '@dxos/ui-theme';
 import { type UnitFormat } from '@dxos/util';
 
 import { type ActivityDatum, buildCalendar } from './util.ts';
+
+type ToggleGroupItemProps = ComponentProps<typeof ToggleGroup.Item>;
 
 const DASHBOARD_NAME = 'Dashboard';
 
@@ -145,7 +145,7 @@ type DashboardStatLabelProps = ComposableProps;
  * Muted caption of a stat card.
  */
 const DashboardStatLabel = composable<HTMLSpanElement>(({ children, ...props }, forwardedRef) => (
-  <span {...composableProps(props, { classNames: 'truncate text-sm text-description' })} ref={forwardedRef}>
+  <span {...composableProps(props, { classNames: 'truncate text-sm text-fg-muted' })} ref={forwardedRef}>
     {children}
   </span>
 ));
@@ -171,7 +171,7 @@ const DashboardStatValue = composable<HTMLSpanElement, DashboardStatValueCustomP
   ({ children, value, unit, ...props }, forwardedRef) => {
     const content = typeof value === 'number' ? (unit ? unit(value).toString() : value.toLocaleString()) : value;
     return (
-      <span {...composableProps(props, { classNames: 'truncate text-xl font-medium text-base-fg' })} ref={forwardedRef}>
+      <span {...composableProps(props, { classNames: 'truncate text-xl font-medium text-fg' })} ref={forwardedRef}>
         {content ?? children}
       </span>
     );
@@ -202,7 +202,7 @@ const DashboardRanges = forwardRef<HTMLDivElement, DashboardRangesProps>(
     );
 
     return (
-      <ToggleGroup
+      <ToggleGroup.Root
         {...props}
         type='single'
         value={range ?? ''}
@@ -211,7 +211,7 @@ const DashboardRanges = forwardRef<HTMLDivElement, DashboardRangesProps>(
         ref={forwardedRef}
       >
         {children}
-      </ToggleGroup>
+      </ToggleGroup.Root>
     );
   },
 );
@@ -228,8 +228,8 @@ type DashboardRangeProps = ToggleGroupItemProps;
  * Individual range tab.
  */
 const DashboardRange = forwardRef<HTMLButtonElement, DashboardRangeProps>(
-  ({ variant = 'ghost', density = 'sm', ...props }, forwardedRef) => (
-    <ToggleGroupItem {...props} variant={variant} density={density} ref={forwardedRef} />
+  ({ variant = 'ghost', size = 'sm', ...props }, forwardedRef) => (
+    <ToggleGroup.Item {...props} variant={variant} size={size} ref={forwardedRef} />
   ),
 );
 
@@ -290,7 +290,7 @@ const DashboardActivity = composable<HTMLDivElement, DashboardActivityCustomProp
             <span
               key={day}
               style={{ gridRow: day + 2 }}
-              className='self-center pe-1 text-[10px] leading-none text-description uppercase font-mono'
+              className='self-center pe-1 text-[10px] leading-none text-fg-muted uppercase font-mono'
             >
               {dayFormat.format(new Date(referenceMonday.getFullYear(), 0, referenceMonday.getDate() + day))}
             </span>
@@ -312,7 +312,7 @@ const DashboardActivity = composable<HTMLDivElement, DashboardActivityCustomProp
                 style={{ gridColumn: weekIndex + 1, gridRow: 1 }}
                 // justify-self-end sets the label's right edge on its week column so overflow
                 // extends left, keeping the last month label unclipped at the pinned right edge.
-                className='justify-self-end whitespace-nowrap text-xs text-description'
+                className='justify-self-end whitespace-nowrap text-xs text-fg-muted'
               >
                 {monthFormat.format(new Date(year, month, 1))}
               </span>

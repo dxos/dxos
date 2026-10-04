@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Field } from '@dxos/react-ui';
+import { Field, Input } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -40,7 +40,7 @@ const ClientSpace = ({ spaceId }: ClientRepeatedComponentProps) => {
   return (
     <div className='flex flex-col'>
       <Field.Root>
-        <Field.Input
+        <Input
           placeholder='Name'
           value={space.properties.name}
           onChange={(event) =>

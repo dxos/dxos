@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
         id: 'pdsBrowser',
         filter: AppSurface.subject(AppSurface.Article, isPdsSubject),
         component: PdsBrowser,
-        props: ({ role, data: { subject } }) => ({ role, space: subject.space }),
+        props: ({ role, data: { subject } }) => ({ role, db: subject.db }),
       }),
     ]),
   ),

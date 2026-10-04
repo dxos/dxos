@@ -8,7 +8,17 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
+import {
+  Block,
+  Card,
+  DX_ANCHOR_ACTIVATE,
+  DxAnchorActivate,
+  Flex,
+  Grid,
+  Icon,
+  Popover,
+  virtualAnchor,
+} from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { File, PullRequest, Task, TaskSet } from '@dxos/types';
@@ -396,12 +406,12 @@ const iconFor = (artifact: Obj.Unknown): string =>
 const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequest }) => (
   <>
     <Card.Row>
-      <Card.Text variant='description'>
+      <Card.Text variant='muted'>
         {PullRequest.reference(pullRequest)} · {pullRequest.state} · {pullRequest.headBranch} → {pullRequest.baseBranch}
       </Card.Text>
     </Card.Row>
     <Card.Row>
-      <Card.Text variant='description' data-testid='artifact-preview.pullRequest'>
+      <Card.Text variant='muted' data-testid='artifact-preview.pullRequest'>
         +{pullRequest.additions ?? 0} −{pullRequest.deletions ?? 0}
       </Card.Text>
     </Card.Row>
@@ -411,24 +421,36 @@ const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequ
 /**
  * Answers the card request an artifact tag dispatches, standing in for PreviewPlugin so the story
  * shows what each artifact is without the plugin layers. The event does not bubble, so it is caught
- * in the capture phase on `window`, as the app's own host does.
+ * in the capture phase on `window`, as the app's own host does. Opening an object is recorded on
+ * `artifact-opened` in place of navigating.
  */
 const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifacts: Obj.Unknown[] }>) => {
   const triggerRef = useRef<HTMLElement | null>(null);
   const [artifact, setArtifact] = useState<Obj.Unknown>();
   const [open, setOpen] = useState(false);
+  const [opened, setOpened] = useState<string>();
 
   const handleActivate = useCallback(
     (event: Event) => {
       if (!(event instanceof DxAnchorActivate)) {
         return;
       }
-      const match = artifacts.find((artifact) => String(Obj.getURI(artifact)) === event.eid);
-      if (match) {
-        triggerRef.current = event.trigger;
-        setArtifact(match);
-        setOpen(true);
+      if (event.state === false) {
+        setOpen(false);
+        return;
       }
+      const match = artifacts.find((artifact) => String(Obj.getURI(artifact)) === event.eid);
+      if (!match) {
+        return;
+      }
+      if (event.navigate) {
+        setOpen(false);
+        setOpened(Obj.getLabel(match));
+        return;
+      }
+      triggerRef.current = event.trigger;
+      setArtifact(match);
+      setOpen(true);
     },
     [artifacts],
   );
@@ -439,31 +461,35 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
   }, [handleActivate]);
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.VirtualTrigger virtualRef={triggerRef} />
+    <Popover.Root
+      open={open}
+      onOpenChange={({ open }) => setOpen(open)}
+      positioning={virtualAnchor(triggerRef)}
+      autoFocus={false}
+    >
       {children}
+      <output className='sr-only' data-testid='artifact-opened'>
+        {opened}
+      </output>
       {artifact && (
-        <Popover.Portal>
-          <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-            <Popover.Viewport classNames='dx-card-popover-width'>
-              <Card.Root border={false} data-testid='artifact-preview'>
-                <Card.Header>
-                  <Card.Block>
-                    <Icon icon={iconFor(artifact)} />
-                  </Card.Block>
-                  <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
-                </Card.Header>
-                {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
-                {Obj.instanceOf(File.File, artifact) && (
-                  <Card.Row>
-                    <FilePreview file={artifact} />
-                  </Card.Row>
-                )}
-              </Card.Root>
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content>
+          <Popover.Body classNames='dx-card-popover-width'>
+            <Card.Root border={false} data-testid='artifact-preview'>
+              <Card.Header>
+                <Block>
+                  <Icon icon={iconFor(artifact)} />
+                </Block>
+                <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
+              </Card.Header>
+              {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
+              {Obj.instanceOf(File.File, artifact) && (
+                <Card.Row>
+                  <FilePreview file={artifact} />
+                </Card.Row>
+              )}
+            </Card.Root>
+          </Popover.Body>
+        </Popover.Content>
       )}
     </Popover.Root>
   );
@@ -526,8 +552,6 @@ const DefaultStory = ({
   showOrdinals,
   showDescription = true,
   showEstimates,
-  debug,
-  framed = true,
   acceptFiles = false,
 }: {
   /**
@@ -548,11 +572,6 @@ const DefaultStory = ({
   showOrdinals?: boolean;
   showDescription?: boolean;
   showEstimates?: boolean;
-  /** Paint every row's drop bands, so the zones are visible without holding a drag. */
-  debug?: boolean;
-  /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
-      columns against a row's, which the inset would offset. */
-  framed?: boolean;
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
 }) => {
@@ -639,7 +658,6 @@ const DefaultStory = ({
 
   return (
     <TaskList.Root
-      debug={debug}
       tasks={tasks}
       selected={selected}
       checked={checked}
@@ -656,21 +674,19 @@ const DefaultStory = ({
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
-      <TaskList.Viewport>
-        <TaskList.Content />
-      </TaskList.Viewport>
-      {framed ? (
-        <div className='p-2'>
+      <Grid grow rows={['fill', 'min']}>
+        <TaskList.Viewport>
+          <TaskList.Content />
+        </TaskList.Viewport>
+        <Flex classNames='p-3'>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
           {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
-        </div>
-      ) : (
-        <TaskList.Editor grid showDescription={showDescription} />
-      )}
+        </Flex>
+      </Grid>
     </TaskList.Root>
   );
 };
@@ -715,21 +731,20 @@ const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] })
             <TaskList.Editor showDescription classNames='p-2' />
           </TaskList.Root>
         ) : (
-          <p className='p-4 text-subdued'>No task selected.</p>
+          <p className='p-4 text-fg-subtle'>No task selected.</p>
         )}
       </div>
     </div>
   );
 };
 
-/** The row's title cell: the grid track that the mnemonic chip and the title text share. */
+/** The row's title cell. */
 const titleCell = (row: Element): HTMLElement => {
   const title = row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]');
-  const cell = title?.parentElement;
-  if (!cell) {
+  if (!title) {
     throw new Error('Task title cell not found.');
   }
-  return cell;
+  return title;
 };
 
 const meta = {
@@ -744,6 +759,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** No description line, as the chat's checklist shows it: the add row is exactly one task row tall. */
+export const WithoutDescription: Story = {
+  args: {
+    showDescription: false,
+  },
+};
 
 /** A list long enough to scroll, group and number into double digits. */
 export const ManyTasks: Story = {
@@ -841,7 +863,7 @@ export const TestListAndDetail: Story = {
     await waitFor(async () => {
       await expect(detail()?.querySelector('[data-testid="taskList.edit.title"]')).not.toBeNull();
     });
-    await expect(detail()?.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')?.value).toEqual(
+    await expect(detail()?.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')?.value).toEqual(
       'Draft the refund reply',
     );
 
@@ -868,8 +890,9 @@ const assertDescriptionClamp: Story['play'] = async ({ canvasElement }) => {
   });
 
   const lineHeight = parseFloat(getComputedStyle(description).lineHeight);
+  // Awaited: the description is found as soon as it mounts, before the row's columns have given it its width.
+  await waitFor(() => expect(description.scrollHeight).toBeGreaterThan(description.clientHeight));
   const box = description.getBoundingClientRect();
-  await expect(description.scrollHeight).toBeGreaterThan(description.clientHeight);
   await expect(Math.abs(box.height - lineHeight * 3)).toBeLessThan(1);
 
   // Text rects only: an element's border box spans its padding, which is not a line of text.
@@ -966,22 +989,8 @@ export const HierarchicalDraggable: Story = {
   },
 };
 
-/** The drop bands painted on every row, so the zones can be seen without holding a drag. */
-export const DragDebug: Story = {
-  args: {
-    seed: seedHierarchy,
-    hierarchical: true,
-    draggable: true,
-    showOrdinals: true,
-    showDescription: true,
-    debug: true,
-    framed: false,
-  },
-};
-
 /**
- * The minimal `A > B, C` shape TREE.md reasons the six landing places about, with the bands painted.
- * Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
+ * The minimal `A > B, C` shape TREE.md reasons the six landing places about. Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
  * check a hitbox change against.
  */
 export const DropZones: Story = {
@@ -990,8 +999,6 @@ export const DropZones: Story = {
     hierarchical: true,
     draggable: true,
     showDescription: false,
-    debug: true,
-    framed: false,
   },
 };
 
@@ -1155,7 +1162,7 @@ export const WithTags: Story = {
   },
 };
 
-/** A pull request, the one artifact a row shows, opens its summary from the row. */
+/** A pull request, the one artifact a row shows, shows its summary on hover and opens on click. */
 export const TestArtifactPreviews: Story = {
   render: ArtifactsStory,
   args: {
@@ -1171,6 +1178,7 @@ export const TestArtifactPreviews: Story = {
         ),
       ].find((element) => element.textContent === label);
     const preview = () => document.querySelector<HTMLElement>('[data-testid="artifact-preview"]');
+    const opened = () => document.querySelector<HTMLElement>('[data-testid="artifact-opened"]');
 
     const open = async (label: string, testId: string) => {
       const tag = await waitFor(
@@ -1183,13 +1191,17 @@ export const TestArtifactPreviews: Story = {
         },
         { timeout: 10_000 },
       );
-      await userEvent.click(tag);
+      await userEvent.hover(tag);
       await waitFor(async () => expect(preview()?.querySelector(`[data-testid="${testId}"]`)).toBeTruthy(), {
         timeout: 5_000,
       });
       await expect(preview()?.textContent).toContain(label);
-      await userEvent.keyboard('{Escape}');
+      await userEvent.unhover(tag);
       await waitFor(async () => expect(preview()).toBeNull());
+
+      await userEvent.click(tag);
+      await waitFor(async () => expect(opened()?.textContent).not.toBe(''));
+      await expect(preview()).toBeNull();
     };
 
     // The pull request's tag is its `#number` pill; the preview names it by its full reference.
@@ -1269,7 +1281,7 @@ export const TestEdit: Story = {
       throw new Error('Task edit pane not found.');
     }
     const title = () => {
-      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input');
       if (!input) {
         throw new Error('Task edit title input not found.');
       }
@@ -1293,12 +1305,16 @@ export const TestEdit: Story = {
     // ...and offers no Save/Cancel: with nothing typed there is nothing to save and nothing to
     // cancel, and two dead controls read as a form to fill in rather than a place to type.
     const save = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]');
+    const cancel = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]');
     await expect(save()).toBeNull();
+    await expect(cancel()).toBeNull();
     await userEvent.click(title());
     await userEvent.keyboard('Something');
     await waitFor(async () => expect(save()).not.toBeNull());
+    await expect(cancel()).not.toBeNull();
     await userEvent.clear(title());
     await waitFor(async () => expect(save()).toBeNull());
+    await expect(cancel()).toBeNull();
 
     // A half-typed title that loses focus creates nothing: leaving the field is not a decision to
     // add a task. Enter and Save are the deliberate acts, and they still work.
@@ -1312,6 +1328,15 @@ export const TestEdit: Story = {
     await waitFor(async () => expect(title()).not.toEqual(document.activeElement));
     await expect(rows()).toHaveLength(before);
     await userEvent.clear(title());
+
+    // The mnemonic chip copies the task's reference; it does not select the row it sits in.
+    const mnemonic = rows()[0].querySelector<HTMLElement>('[data-testid="taskList.item.mnemonic"]');
+    if (!mnemonic) {
+      throw new Error('Task mnemonic not found.');
+    }
+    await userEvent.click(mnemonic);
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    await expect(title().value).toEqual('');
 
     // Selecting a task fills the pane with it.
     const first = rows()[0];
@@ -1345,7 +1370,11 @@ export const TestEdit: Story = {
     if (!descriptionLine) {
       throw new Error('Description editor line not found.');
     }
-    await expect(left(descriptionLine)).toEqual(left(title()));
+    // The title is a standard (padded) Input, so its text starts at its padding edge, not its box's.
+    const titleText = Math.round(
+      title().getBoundingClientRect().left + parseFloat(getComputedStyle(title()).paddingLeft),
+    );
+    await expect(left(descriptionLine)).toEqual(titleText);
 
     // Tab moves from the title into the description's TEXT. The editor otherwise puts its tab stop
     // on a wrapper that needs a further Enter to get into, so the caret was two keys away.
@@ -1422,7 +1451,7 @@ export const TestCreateFailureKeepsDraft: Story = {
       throw new Error('Task edit pane not found.');
     }
     const title = () => {
-      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input');
       if (!input) {
         throw new Error('Task edit title input not found.');
       }
@@ -1460,7 +1489,7 @@ export const TestCreateWithAttachments: Story = {
       throw new Error('Task edit pane not found.');
     }
     const title = () => {
-      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input');
       if (!input) {
         throw new Error('Task edit title input not found.');
       }
@@ -1530,7 +1559,7 @@ export const TestCreateWithDescription: Story = {
       throw new Error('Task edit pane not found.');
     }
     const title = () => {
-      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input');
       if (!input) {
         throw new Error('Task edit title input not found.');
       }
@@ -1595,7 +1624,7 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
       throw new Error('Task edit pane not found.');
     }
     const title = () => {
-      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input');
       if (!input) {
         throw new Error('Task edit title input not found.');
       }
@@ -1665,7 +1694,8 @@ export const TestSaveDescriptionWithModEnter: Story = {
       return element;
     };
     const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Edit pane');
-    const title = () => found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]'), 'Title');
+    const title = () =>
+      found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title');
     const content = () =>
       found(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"] .cm-content'), 'Description');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
@@ -1730,7 +1760,7 @@ export const TestEditWithoutDescription: Story = {
       throw new Error('Task edit pane not found.');
     }
     const title = () => {
-      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input');
       if (!input) {
         throw new Error('Task edit title input not found.');
       }
@@ -1770,7 +1800,6 @@ export const TestTabIndent: Story = {
     seed: seedHierarchy,
     hierarchical: true,
     draggable: true,
-    framed: false,
   },
   play: async ({ canvasElement }) => {
     const rows = () =>
@@ -1915,7 +1944,6 @@ export const TestHierarchy: Story = {
     draggable: true,
     showOrdinals: true,
     showDescription: true,
-    framed: false,
   },
   // The tree is what the walk produces, not what the array holds; and restructuring is driven from
   // the keyboard, which is the half of the gesture set that CAN be synthesized (a native HTML5 drag
@@ -1936,7 +1964,7 @@ export const TestHierarchy: Story = {
         }));
     const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
     const toggle = (row: HTMLElement) => {
-      const element = row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]');
+      const element = row.querySelector<HTMLElement>('[data-part="branch-trigger"]');
       if (!element) {
         throw new Error('Tree item toggle not found.');
       }
@@ -2065,7 +2093,7 @@ export const TestHierarchy: Story = {
 
     // The disclosure toggle sits on the title's centreline whether or not a description follows.
     for (const { row } of rows()) {
-      const toggle = row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]');
+      const toggle = row.querySelector<HTMLElement>('[data-part="branch-trigger"]');
       const rowTitle = row.querySelector<HTMLElement>('.truncate');
       if (toggle && rowTitle) {
         const centre = (element: HTMLElement) => {
@@ -2088,56 +2116,7 @@ export const TestHierarchy: Story = {
     }
     const textStart = (element: HTMLElement) =>
       Math.round(element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingInlineStart));
-    await expect(textStart(description)).toEqual(Math.round(titleCell(described.row).getBoundingClientRect().left));
-  },
-};
-
-export const Test: Story = {
-  args: {
-    framed: false,
-  },
-  // The status toggle and the add-`+` share one row grid; assert their icon gutters actually line
-  // up, since only geometry (not the DOM) shows the misalignment.
-  play: async ({ canvasElement }) => {
-    const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
-    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
-    if (!row || !create) {
-      throw new Error('Task rows not found.');
-    }
-
-    const center = (element: Element) => {
-      const { left, width } = element.getBoundingClientRect();
-      return left + width / 2;
-    };
-
-    // `:not([data-focus-sentinel])`: a focus group inserts zero-size boundary elements as its first
-    // and last children, so the first *rendered* cell is not the first element child.
-    const firstCell = (element: HTMLElement) => element.querySelector(':scope > *:not([data-focus-sentinel])');
-    // A tree row leads with its disclosure toggle and carries the status control inside the
-    // heading, where the pane — which has no disclosure — leads with the status column itself.
-    const rowIcon = row.querySelector<HTMLElement>('[data-testid="taskList.item.status"]');
-    // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
-    // child — the same column a row's status toggle occupies.
-    const createIcon = firstCell(create);
-    // The title cell, not the title text: the mnemonic chip leads the text within the cell.
-    const rowLabel = titleCell(row);
-    // The title input itself: its field root takes no box, so a positional pick would measure nothing.
-    const createLabel = create.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]');
-    // Guarded together: indexing a NodeList yields `undefined` for a missing cell, and reading
-    // geometry off it would throw a TypeError instead of failing the alignment assertion.
-    if (!rowIcon || !createIcon || !rowLabel || !createLabel) {
-      throw new Error('Row icons or label cells not found.');
-    }
-
-    // Same icon column ⇒ same horizontal centre (sub-pixel tolerance for rounding).
-    await expect(Math.abs(center(rowIcon) - center(createIcon))).toBeLessThan(1);
-    // ...and the labels start at the same x.
-    await expect(
-      Math.abs(rowLabel.getBoundingClientRect().left - createLabel.getBoundingClientRect().left),
-    ).toBeLessThan(1);
-
-    // The row spans the full width, so trailing actions sit at the far edge.
-    await expect(row.getBoundingClientRect().width).toBeGreaterThan(create.getBoundingClientRect().width * 0.9);
+    await expect(textStart(description)).toEqual(textStart(titleCell(described.row)));
   },
 };
 

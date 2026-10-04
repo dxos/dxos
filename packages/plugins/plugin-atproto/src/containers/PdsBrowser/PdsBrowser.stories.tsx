@@ -75,7 +75,7 @@ const Story = () => {
   if (!space) {
     return <Loading />;
   }
-  return <PdsBrowser space={space} role='article' />;
+  return <PdsBrowser db={space.db} role='article' />;
 };
 
 const meta = {
