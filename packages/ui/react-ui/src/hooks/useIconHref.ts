@@ -4,6 +4,9 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 
+// Imports the defining module rather than a barrel: both providers barrels re-export
+// ThemeProvider.tsx, which imports the hooks barrel this file is part of — a barrel import
+// here would be a real cycle, not just an internal-path style violation.
 import { useIconRegistry } from '../providers/ThemeProvider/icon-registry.ts';
 
 /**
@@ -26,11 +29,9 @@ export const useIconHref = (icon?: string) => {
   if (!icon) {
     return undefined;
   }
-
   if (!hasIcon) {
     registry.requestIcon(icon);
     return undefined;
   }
-
   return `#${icon}`;
 };
