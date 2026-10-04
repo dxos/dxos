@@ -52,12 +52,14 @@ export const rank = (left: Declaration, right: Declaration): number =>
 /**
  * A name or canonical name as a key, ordered by {@link rank} before the limit so a name with more
  * declarations than {@link MAX_ROWS} still keeps its best ones; the tail stays inside the pattern
- * because the native evaluator scans a trailing join.
+ * because the native evaluator scans a trailing join. Re-export aliases are dropped in the pattern,
+ * since an alias is a passage rather than a definition and one ranked ahead would take a limited slot.
  */
 const lookup = (key: 'name' | 'canonicalName', value: string, limit: number): string => `${DEUS}
   SELECT ?s ?name ?kind ?path ?pkg ?test ?exp ?pub WHERE {
     ?s deus:${key} ${JSON.stringify(value)} .
     ?file deus:declares ?s ; deus:path ?path .
+    FILTER NOT EXISTS { ?s deus:kind "reexport" }
     OPTIONAL { ?s deus:name ?name }
     OPTIONAL { ?s deus:kind ?kind }
     OPTIONAL { ?s deus:exported ?exp }
@@ -78,8 +80,7 @@ const DOTTED_NAME = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+$/;
 const toDeclarations = (rows: readonly Store.Binding[], fallbackName: string): Declaration[] => {
   const byIri = new Map<string, Declaration>();
   for (const row of rows) {
-    // A re-export alias stands for a declaration elsewhere; it is a passage, not a definition.
-    if (row.kind === 'reexport' || byIri.has(row.s)) {
+    if (byIri.has(row.s)) {
       continue;
     }
     byIri.set(row.s, {
