@@ -3,9 +3,17 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { type FC, type KeyboardEvent, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import React, {
+  type FC,
+  type KeyboardEvent,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
-import { useObject } from '@dxos/echo-react';
 import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree, type TreeDropEvent, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list';
 import { type Task } from '@dxos/types';
@@ -18,9 +26,8 @@ import {
   resolveReparent,
   resolveTaskPlacement,
 } from './hierarchy.ts';
-import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.tsx';
+import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
-import { TaskCheckbox, TaskMnemonic, TaskOrdinal, TaskStatusControl } from './TaskRowCells.tsx';
 import {
   TASK_TREE_ROOT_ID,
   type TaskGroup,
@@ -46,8 +53,21 @@ import {
  */
 export type TaskSelectModifiers = { meta?: boolean };
 
-/** The trailing cells of a task row (artifacts, assignee, estimate, priority, actions, chips). */
-export type TaskTrailingRenderer = FC<{ item: TaskNode }>;
+export type TaskItemProps = {
+  node: TaskNode;
+  /** The tree's disclosure cell, when the list discloses branches. */
+  indicator?: ReactNode;
+  ordinal?: number;
+  checked: boolean;
+  translationKey: string;
+  showDescription: boolean;
+  descriptionComponents?: TaskDescriptionProps['components'];
+  onTaskCheck?: (task: Task.Task) => void;
+  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
+};
+
+/** A task's whole row, rendered into the tree's row; injected so this module need not know its cells. */
+export type TaskItemRenderer = FC<TaskItemProps>;
 
 export type TaskTreeNodeProps = {
   /** Render status headers with their tasks flat beneath, instead of the hierarchy. */
@@ -60,7 +80,6 @@ export type TaskTreeNodeProps = {
   collapsed: ReadonlySet<string>;
   /** Whether rows lead with a disclosure cell: a flat list has no branch to disclose. */
   toggle: boolean;
-  showGutter: boolean;
   ordinals: ReadonlyMap<string, number>;
   selected?: string;
   /** Ids of the checked rows; the gutter renders a checkbox instead of an ordinal once wired. */
@@ -77,7 +96,7 @@ export type TaskTreeNodeProps = {
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
   /** The rows' column template (see `buildGridTemplate`); the edit pane lays out on the same tracks. */
   columns: string;
-  renderTrailing?: TaskTrailingRenderer;
+  renderItem: TaskItemRenderer;
 };
 
 export const TaskTreeNode = ({
@@ -87,12 +106,11 @@ export const TaskTreeNode = ({
   tasks,
   collapsed,
   toggle,
-  showGutter,
   ordinals,
   selected,
   checked,
   columns,
-  renderTrailing: Trailing,
+  renderItem: Item,
   translationKey,
   showDescription = false,
   descriptionComponents,
@@ -284,29 +302,25 @@ export const TaskTreeNode = ({
         );
       }
 
+      const task = node.item.task;
       return (
         <Tree.Item node={node}>
-          {toggle && <Tree.ItemIndicator />}
-          <TaskRowHeading
+          <Item
             node={node.item}
-            {...{
-              showGutter,
-              ordinals,
-              checked,
-              translationKey,
-              showDescription,
-              descriptionComponents,
-              onTaskCheck,
-              onTaskUpdate,
-            }}
+            indicator={toggle ? <Tree.ItemIndicator /> : undefined}
+            ordinal={task && ordinals.get(task.id)}
+            checked={!!task && !!checked?.has(task.id)}
+            translationKey={translationKey}
+            showDescription={showDescription}
+            descriptionComponents={descriptionComponents}
+            onTaskCheck={onTaskCheck}
+            onTaskUpdate={onTaskUpdate}
           />
-          {Trailing && <Trailing item={node.item} />}
         </Tree.Item>
       );
     },
     [
       toggle,
-      showGutter,
       ordinals,
       checked,
       translationKey,
@@ -314,7 +328,7 @@ export const TaskTreeNode = ({
       descriptionComponents,
       onTaskCheck,
       onTaskUpdate,
-      Trailing,
+      Item,
     ],
   );
 
@@ -347,89 +361,6 @@ export const TaskTreeNode = ({
       <Tree.Label srOnly>{t('task-list.label')}</Tree.Label>
       <Tree.Content gutter={flush ? 'none' : undefined}>{renderRow}</Tree.Content>
     </Tree.Root>
-  );
-};
-
-type TaskRowHeadingProps = {
-  node: TaskNode;
-  showGutter: boolean;
-  ordinals: ReadonlyMap<string, number>;
-  checked?: ReadonlySet<string>;
-  translationKey: string;
-  showDescription: boolean;
-  descriptionComponents?: TaskDescriptionProps['components'];
-  onTaskCheck?: (task: Task.Task) => void;
-  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
-};
-
-/**
- * The gutter cell, status control and title — the row's leading cells, after the tree's own
- * disclosure. The gutter holds either the checkbox or the ordinal, never both: they occupy one cell,
- * and a number beside a box reads as two ways to act on the row.
- */
-const TaskRowHeading = ({
-  node,
-  showGutter,
-  ordinals,
-  checked,
-  translationKey,
-  showDescription,
-  descriptionComponents,
-  onTaskCheck,
-  onTaskUpdate,
-}: TaskRowHeadingProps) => {
-  const { t } = useTranslation(translationKey);
-  const { showMnemonics } = useTaskListContext('TaskList.RowHeading');
-  const task = node.task;
-  // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
-  // does not change, so a rename made anywhere else would leave the row showing its old title.
-  // Read through the snapshot; the controls still take the live object, which is what they write to.
-  const [snapshot] = useObject(task);
-  const current = snapshot ?? task;
-  const ordinal = task && ordinals.get(task.id);
-
-  if (!task || !current) {
-    return null;
-  }
-
-  const description = showDescription ? current.description?.trim() || undefined : undefined;
-
-  return (
-    // Cells, not a container: they are direct children of the tree row's grid and flow into its
-    // tracks in order, so the pane, which names the same tracks, lines up with them.
-    <>
-      {showGutter &&
-        (onTaskCheck ? (
-          <TaskCheckbox task={task} checked={!!checked?.has(task.id)} onCheckedChange={onTaskCheck} />
-        ) : ordinal !== undefined ? (
-          <TaskOrdinal task={task} ordinal={ordinal} />
-        ) : (
-          // Holds the gutter track so a numberless row's title still lines up with its neighbours.
-          <span />
-        ))}
-      <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} />
-      <div className='inline-flex min-w-0 items-center gap-2'>
-        {/* The live task, not the snapshot: only the live object knows its space, which the copied URI names. */}
-        {showMnemonics && <TaskMnemonic task={task} />}
-        {/* The placeholder is drawn by CSS so the element's text stays the title itself. */}
-        <span
-          data-testid='taskList.item.title'
-          data-placeholder={t('task-title.placeholder')}
-          className='truncate empty:before:text-placeholder empty:before:content-[attr(data-placeholder)]'
-        >
-          {current.title}
-        </span>
-      </div>
-      {/* Under the title and the chips line (line 2, which collapses when the task has no chips): it
-          clears the ordinal and the status control, or it reads as belonging to the row above, and
-          stops short of the trailing controls so it does not run beneath them. What the task says,
-          and nothing the log recorded — the detail pane a click opens has the room for that. */}
-      {description && (
-        <div className='col-[title/assignee] row-start-3 flex min-w-0 flex-col gap-2 pb-1'>
-          <TaskDescription content={description} components={descriptionComponents} />
-        </div>
-      )}
-    </>
   );
 };
 

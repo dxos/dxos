@@ -28,14 +28,21 @@ import { translationKey } from '#translations';
 import { useAssigneeDisplay } from '../../hooks/index.ts';
 import { STATUS_ORDER } from '../../util/status-icons.ts';
 import { type TaskPlacement } from './hierarchy.ts';
-import { type TaskDescriptionProps } from './TaskDescription.tsx';
+import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.tsx';
 import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
 import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
-import { TaskEstimateControl, TaskPriorityIcon } from './TaskRowCells.tsx';
-import { type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
+import { TaskRow } from './TaskRow.tsx';
+import {
+  TaskCheckbox,
+  TaskEstimateControl,
+  TaskMnemonic,
+  TaskOrdinal,
+  TaskPriorityIcon,
+  TaskStatusControl,
+} from './TaskRowCells.tsx';
+import { type TaskItemProps, type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
 import {
   type TaskGroup,
-  type TaskNode,
   buildTaskForest,
   buildTaskGroups,
   flattenVisibleTasks,
@@ -254,6 +261,7 @@ const TaskListRoot = ({
   // shows no numbers. A movable one does not: the whole row is the drag source, and a track held
   // for a handle that no longer exists only pushed every title one square right.
   const showGutter = showOrdinals || !!onTaskCheck;
+  const hasActions = !!getTaskActions || !!onTaskCreate || !!onTaskUpdate;
   const { columns, gridTemplateColumns } = useMemo(
     () =>
       buildGridTemplate({
@@ -261,9 +269,9 @@ const TaskListRoot = ({
         showGutter,
         showEstimates,
         showAssignees,
-        hasActions: !!getTaskActions,
+        hasActions,
       }),
-    [hierarchical, groups, showGutter, showEstimates, showAssignees, getTaskActions],
+    [hierarchical, groups, showGutter, showEstimates, showAssignees, hasActions],
   );
 
   return (
@@ -285,6 +293,7 @@ const TaskListRoot = ({
       showAssignees={showAssignees}
       showMnemonics={showMnemonics}
       flush={flush}
+      hasActions={hasActions}
       isCollapsed={isCollapsed}
       selected={selected}
       checked={checked}
@@ -458,13 +467,12 @@ const TaskListContent = (_props: TaskListContentProps) => {
       tasks={tasks}
       collapsed={collapsed}
       toggle={hierarchical || !!groups}
-      showGutter={showGutter}
       columns={columns}
       ordinals={showOrdinals ? ordinals : EMPTY_ORDINALS}
       selected={selected}
       checked={checked}
       showDescription={showDescription}
-      renderTrailing={TaskTreeTrailing}
+      renderItem={TaskListItem}
       translationKey={translationKey}
       onCollapseToggle={onCollapseToggle}
       onTaskCheck={onTaskCheck}
@@ -498,37 +506,86 @@ const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, f
 
 TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 
-/** Trailing cells of a tree row, after its title, and the chips line under it. */
-const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
-  const { showEstimates, showAssignees } = useTaskListContext('TaskList.TreeTrailing');
-  const task = item.task;
-  // Subscribed for the same reason as the heading: priority, estimate and assignee are property
-  // edits, which do not change the task array the model is built from.
+/**
+ * A task's row in the tree, read-only apart from its own controls: the cells the editor below edits, on the same
+ * {@link TaskRow} layout.
+ */
+const TaskListItem = ({
+  node,
+  indicator,
+  ordinal,
+  checked,
+  translationKey: itemTranslationKey,
+  showDescription,
+  descriptionComponents,
+  onTaskCheck,
+  onTaskUpdate,
+}: TaskItemProps) => {
+  const { t } = useTranslation(itemTranslationKey);
+  const { showMnemonics, showAssignees, showEstimates } = useTaskListContext('TaskList.Item');
+  const task = node.task;
+  // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit does not change, so
+  // a rename made anywhere else would leave the row showing its old title. Read through the snapshot; the controls
+  // still take the live object, which is what they write to.
   const [snapshot] = useObject(task);
   const current = snapshot ?? task;
   if (!task || !current) {
     return null;
   }
 
-  return (
-    <>
-      {/* On the title line, beside who has the task: the pull request is what the row is scanned for
-          once work is under way, and on a line of its own it pushed the description down. */}
-      <div className='flex items-center gap-1 ps-1' data-testid='taskList.item.artifacts'>
-        <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
-      </div>
-      <div className='grid place-items-center'>
-        {showAssignees && current.assignee && <TaskListAssignee assignee={current.assignee} iconOnly />}
-      </div>
-      {showEstimates && <TaskEstimateControl task={task} />}
-      <TaskPriorityIcon task={task} />
-      <TaskListItemActions task={task} />
+  const description = showDescription ? current.description?.trim() || undefined : undefined;
 
-      {/* The row's second line, under the title; it takes no height when the task has no chips. */}
-      <div className='col-[title] row-start-2 flex items-center empty:hidden' data-testid='taskList.item.chips'>
-        <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
-      </div>
-    </>
+  return (
+    <TaskRow
+      indicator={indicator}
+      // The gutter holds either the checkbox or the ordinal, never both: a number beside a box reads as two ways to
+      // act on the row.
+      gutter={
+        onTaskCheck ? (
+          <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} />
+        ) : ordinal !== undefined ? (
+          <TaskOrdinal task={task} ordinal={ordinal} />
+        ) : undefined
+      }
+      status={<TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} />}
+      // Inset as the editor's fields are, so a title reads at the x the field below types it.
+      title={
+        <div className='inline-flex min-w-0 items-center gap-2 px-(--dx-gap-size)'>
+          {/* The live task, not the snapshot: only the live object knows its space, which the copied URI names. */}
+          {showMnemonics && <TaskMnemonic task={task} />}
+          {/* The placeholder is drawn by CSS so the element's text stays the title itself. */}
+          <span
+            data-testid='taskList.item.title'
+            data-placeholder={t('task-title.placeholder')}
+            className='truncate empty:before:text-placeholder empty:before:content-[attr(data-placeholder)]'
+          >
+            {current.title}
+          </span>
+        </div>
+      }
+      // On the title line, beside who has the task: the pull request is what the row is scanned for once work is
+      // under way, and on a line of its own it pushed the description down.
+      artifacts={
+        <div className='flex items-center gap-1 ps-1' data-testid='taskList.item.artifacts'>
+          <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
+        </div>
+      }
+      assignee={
+        <div className='grid place-items-center'>
+          {showAssignees && current.assignee && <TaskListAssignee assignee={current.assignee} iconOnly />}
+        </div>
+      }
+      estimate={showEstimates && <TaskEstimateControl task={task} />}
+      priority={<TaskPriorityIcon task={task} />}
+      actions={<TaskListItemActions task={task} />}
+      chips={<TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />}
+      // What the task says, and nothing the log recorded — the detail pane a click opens has the room for that.
+      description={
+        description && (
+          <TaskDescription content={description} components={descriptionComponents} classNames='px-(--dx-gap-size)' />
+        )
+      }
+    />
   );
 };
 

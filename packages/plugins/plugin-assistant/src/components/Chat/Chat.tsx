@@ -851,7 +851,7 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
             questions — a row replaying them grew by a line each — but a chat is where the asking
             happened, so the answer is given here rather than in a pane the reader has to open. */}
         <ChatTaskQuestions tasks={tasks} />
-        <TaskList.Editor grid />
+        <TaskList.Editor />
       </div>
     </TaskList.Root>
   );

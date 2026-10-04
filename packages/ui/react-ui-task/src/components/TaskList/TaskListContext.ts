@@ -44,6 +44,8 @@ export type TaskListContextValue = {
   showMnemonics: boolean;
   /** Rows and the edit pane run to the host's edges, with no inline inset. */
   flush: boolean;
+  /** Whether the trailing menu column exists: for row actions, and for the edit pane's cancel in an editable list. */
+  hasActions: boolean;
   /**
    * The edit pane's column template, built once from the options so the tree's rows and the pane
    * lay out on the same named tracks (`gutter`, `status`, `title`, `assignee`, `estimate`, `priority`,

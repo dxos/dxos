@@ -858,7 +858,7 @@ export const TestListAndDetail: Story = {
     await waitFor(async () => {
       await expect(detail()?.querySelector('[data-testid="taskList.edit.title"]')).not.toBeNull();
     });
-    await expect(detail()?.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')?.value).toEqual(
+    await expect(detail()?.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')?.value).toEqual(
       'Draft the refund reply',
     );
 
@@ -1260,7 +1260,7 @@ export const TestEdit: Story = {
       throw new Error('Task edit pane not found.');
     }
     const title = () => {
-      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input');
       if (!input) {
         throw new Error('Task edit title input not found.');
       }
@@ -1284,12 +1284,16 @@ export const TestEdit: Story = {
     // ...and offers no Save/Cancel: with nothing typed there is nothing to save and nothing to
     // cancel, and two dead controls read as a form to fill in rather than a place to type.
     const save = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]');
+    const cancel = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]');
     await expect(save()).toBeNull();
+    await expect(cancel()).toBeNull();
     await userEvent.click(title());
     await userEvent.keyboard('Something');
     await waitFor(async () => expect(save()).not.toBeNull());
+    await expect(cancel()).not.toBeNull();
     await userEvent.clear(title());
     await waitFor(async () => expect(save()).toBeNull());
+    await expect(cancel()).toBeNull();
 
     // A half-typed title that loses focus creates nothing: leaving the field is not a decision to
     // add a task. Enter and Save are the deliberate acts, and they still work.
@@ -1422,7 +1426,7 @@ export const TestCreateFailureKeepsDraft: Story = {
   },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
     const titles = () =>
       [...canvasElement.querySelectorAll('[data-testid="taskList.item.title"]')].map((element) => element.textContent);
 
@@ -1451,7 +1455,7 @@ export const TestCreateWithAttachments: Story = {
   },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
     const chips = () => [...pane.querySelectorAll<HTMLElement>('[data-testid="taskList.edit.file"]')];
 
     const dataTransfer = new DataTransfer();
@@ -1508,7 +1512,7 @@ export const TestCreateWithDescription: Story = {
   },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
@@ -1552,7 +1556,7 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
   },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
@@ -1605,7 +1609,8 @@ export const TestSaveDescriptionWithModEnter: Story = {
       return element;
     };
     const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Edit pane');
-    const title = () => found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]'), 'Title');
+    const title = () =>
+      found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title');
     const content = () =>
       found(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"] .cm-content'), 'Description');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
@@ -1666,7 +1671,7 @@ export const TestEditWithoutDescription: Story = {
   },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
@@ -1994,7 +1999,7 @@ export const TestHierarchy: Story = {
     const description = described.row.querySelector<HTMLElement>('.line-clamp-3')!;
     const textStart = (element: HTMLElement) =>
       Math.round(element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingInlineStart));
-    await expect(textStart(description)).toEqual(Math.round(titleCell(described.row).getBoundingClientRect().left));
+    await expect(textStart(description)).toEqual(textStart(titleCell(described.row)));
   },
 };
 

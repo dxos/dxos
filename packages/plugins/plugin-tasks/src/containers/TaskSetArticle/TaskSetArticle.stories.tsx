@@ -644,7 +644,7 @@ export const CreateWithAttachment: Story = {
       timeout: 10_000,
     });
 
-    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]')!);
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"] input')!);
     await userEvent.keyboard('Dial in the grinder{Enter}');
 
     const context = seeded;
@@ -668,7 +668,7 @@ export const CreateWithAttachment: Story = {
     for (const type of ['dragenter', 'dragover', 'drop']) {
       pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: refused }));
     }
-    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]')!);
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.title"] input')!);
     await userEvent.keyboard('Publish the page{Enter}');
     await waitFor(
       async () =>
