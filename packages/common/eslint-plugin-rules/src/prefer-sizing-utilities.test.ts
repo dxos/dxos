@@ -32,7 +32,7 @@ describe('prefer-sizing-utilities', () => {
         { filename, code: "<div className='flex-1' />" },
         // A clip alongside a sizing utility is a deliberate choice, not a duplicated constraint.
         { filename, code: "<div className='dx-expand overflow-hidden' />" },
-        { filename, code: "<div className='dx-fullscreen overflow-hidden' />" },
+        { filename, code: "<div className='dx-cover overflow-hidden' />" },
         // Not a class-bearing attribute.
         { filename, code: "<div title='h-full w-full' />" },
         // A variant retargets the class, so the pair is not a rule about this element.
@@ -71,7 +71,7 @@ describe('prefer-sizing-utilities', () => {
         {
           filename,
           code: "<div className='absolute inset-0' />",
-          errors: [{ messageId: 'handRolled', data: { classes: 'absolute inset-0', suggestion: 'dx-fullscreen' } }],
+          errors: [{ messageId: 'handRolled', data: { classes: 'absolute inset-0', suggestion: 'dx-cover' } }],
         },
         // The longest match wins, so one class list yields one suggestion rather than a cascade.
         {

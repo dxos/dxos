@@ -97,9 +97,6 @@
       "path": "../../ui/react-ui-calendar"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
       "path": "../../ui/react-ui-editor"
     },
     {
@@ -110,6 +107,9 @@
     },
     {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-query"
     },
     {
       "path": "../../ui/react-ui-task"

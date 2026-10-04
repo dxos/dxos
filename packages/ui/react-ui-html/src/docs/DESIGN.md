@@ -126,7 +126,7 @@ this.
   documented as being for RSS feed content: bare `dangerouslySetInnerHTML`, so no shadow isolation, no
   remote-image blocking, no theming. It has **zero call sites** in the repo, so nothing is exposed
   today — but it is exported API, so a future RSS consumer would reach for it and silently get none of
-  the guarantees `Html` provides. It cannot be reimplemented on `Html`: `react-ui-components` depends
+  the guarantees `Html` provides. It cannot be reimplemented on `Html`: `react-ui-html` depends
   on `react-ui`, so the import would cycle. Open decision: delete it as dead code (needs a changeset —
   it is published API), or keep it as documented-inferior. For now it carries a pointer comment.
 - **Calendar events — the decision was already made at ingest.** Google Calendar returns HTML

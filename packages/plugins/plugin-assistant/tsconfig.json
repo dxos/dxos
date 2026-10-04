@@ -139,6 +139,9 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-experimental"
+    },
+    {
       "path": "../../ui/react-ui-feed"
     },
     {

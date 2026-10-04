@@ -13,9 +13,6 @@
   ],
   "references": [
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/random"
     },
     {
@@ -25,37 +22,13 @@
       "path": "../../core/compute/progress"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-query"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/types"
-    },
-    {
       "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../react-ui"
     },
     {
-      "path": "../react-ui-editor"
-    },
-    {
       "path": "../react-ui-markdown"
-    },
-    {
-      "path": "../react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../ui"
-    },
-    {
-      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"
