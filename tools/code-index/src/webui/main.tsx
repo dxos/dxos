@@ -7,6 +7,9 @@ import '@dxos-theme';
 
 import { render } from 'solid-js/web';
 
+// The thread's components style through `.dx-*` rules that ship separately from the theme.
+import '@dxos/react-ui/theme.css';
+
 import { App } from './App.tsx';
 
 /**

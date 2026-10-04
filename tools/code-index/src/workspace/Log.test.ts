@@ -106,7 +106,35 @@ describe('Log', () => {
       { role: 'assistant', text: 'there it is' },
     ]);
     expect(state.canvas).toEqual([{ seq: 3, kind: 'mermaid', title: undefined, content: 'graph TD\n  a --> b' }]);
-    expect(state.calls).toEqual([{ callId, code: 'await display.text("x")', output: 'done', ok: true }]);
+    expect(state.items.filter((item) => item.kind === 'tool')).toEqual([
+      { kind: 'tool', id: callId, code: 'await display.text("x")', output: 'done', ok: true },
+    ]);
+  });
+
+  test('compacting a settled message deletes its deltas and nothing else', async () => {
+    const { events, state } = await withLog((api) =>
+      Effect.gen(function* () {
+        const project = yield* api.createProject({ id: 'compacted' });
+        yield* api.append(project.id, new Events.UserMessage({ text: 'hi' }));
+        yield* api.append(project.id, new Events.AssistantDelta({ messageId: 'kept', delta: 'partial' }));
+        yield* api.append(project.id, new Events.AssistantDelta({ messageId: 'settled', delta: 'Hel' }));
+        yield* api.append(project.id, new Events.AssistantDelta({ messageId: 'settled', delta: 'lo' }));
+        yield* api.append(project.id, new Events.AssistantMessage({ messageId: 'settled', text: 'Hello' }));
+        yield* api.compact(project.id, 'settled');
+        // The next append still takes the next sequence number: deleted rows never sat at the head.
+        yield* api.append(project.id, new Events.TurnEnded({ steps: 1 }));
+        const entries = yield* api.read(project.id);
+        return { events: entries.map((entry) => [entry.seq, entry.event._tag]), state: Fold.fold(entries) };
+      }),
+    );
+
+    expect(events).toEqual([
+      [1, 'UserMessage'],
+      [2, 'AssistantDelta'],
+      [5, 'AssistantMessage'],
+      [6, 'TurnEnded'],
+    ]);
+    expect(state.items.map((item) => ('text' in item ? item.text : item.code))).toEqual(['hi', 'partial', 'Hello']);
   });
 
   test('clearing the canvas is an event, and the fold obeys it', async () => {

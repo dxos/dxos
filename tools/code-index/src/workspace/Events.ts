@@ -54,6 +54,12 @@ export const newCallId = (): string => mintId();
 export const newTurnId = (): string => mintId();
 
 /**
+ * Identifies one assistant message across the deltas that stream it and the `AssistantMessage` that
+ * settles it, so `Fold.apply` can grow the right message and then replace it with the final text.
+ */
+export const newMessageId = (): string => mintId();
+
+/**
  * The turn id is optional on every turn event because logs written before it existed must still
  * decode; `Fold.apply` lets an id-less end event close whatever turn is open.
  */
@@ -65,18 +71,35 @@ export class UserMessage extends Schema.TaggedClass<UserMessage>('code-index/Use
   turnId: TurnId,
 }) {}
 
-/** An assistant turn's prose. Tool calls are their own events, so a turn can span several. */
+/**
+ * An assistant turn's prose. Tool calls are their own events, so a turn can span several. A message
+ * that streamed carries the id its deltas did and supersedes them; one without an id stands alone.
+ */
 export class AssistantMessage extends Schema.TaggedClass<AssistantMessage>('code-index/AssistantMessage')(
   'AssistantMessage',
   {
     text: Schema.String,
+    messageId: Schema.optional(Schema.String),
+    turnId: TurnId,
   },
 ) {}
+
+/**
+ * A fragment of an assistant message as the model generates it. Persisted so a reload mid-message
+ * replays the partial text, and deleted once the `AssistantMessage` with the same id lands, so the
+ * log keeps one row per message rather than one per token.
+ */
+export class AssistantDelta extends Schema.TaggedClass<AssistantDelta>('code-index/AssistantDelta')('AssistantDelta', {
+  messageId: Schema.String,
+  delta: Schema.String,
+  turnId: TurnId,
+}) {}
 
 /** The agent asked to run code in the sandbox. */
 export class ToolCall extends Schema.TaggedClass<ToolCall>('code-index/ToolCall')('ToolCall', {
   callId: Schema.String,
   code: Schema.String,
+  turnId: TurnId,
 }) {}
 
 /** What the sandbox returned to the agent — the model's view, not the user's. */
@@ -133,6 +156,7 @@ export class TurnEnded extends Schema.TaggedClass<TurnEnded>('code-index/TurnEnd
 export const Event = Schema.Union([
   UserMessage,
   AssistantMessage,
+  AssistantDelta,
   ToolCall,
   ToolResult,
   Presented,

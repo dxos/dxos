@@ -59,10 +59,16 @@ const stubOllama = (mode: 'answer' | 'stall'): Server =>
       response.writeHead(200, { 'content-type': 'application/json' }).end('{"version":"0.0.0"}');
     } else if (request.url === '/api/chat' && mode === 'answer') {
       request.resume();
+      // A turn streams, so the reply is Ollama's NDJSON: one line per chunk, each newline-terminated.
       request.on('end', () =>
-        response
-          .writeHead(200, { 'content-type': 'application/json' })
-          .end(JSON.stringify({ message: { role: 'assistant', content: 'Answered.' }, done: true })),
+        response.writeHead(200, { 'content-type': 'application/x-ndjson' }).end(
+          [
+            { message: { role: 'assistant', content: 'Answ' }, done: false },
+            { message: { role: 'assistant', content: 'ered.' }, done: true },
+          ]
+            .map((chunk) => `${JSON.stringify(chunk)}\n`)
+            .join(''),
+        ),
       );
     } else if (request.url !== '/api/chat') {
       response.writeHead(404).end();
