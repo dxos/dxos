@@ -26,7 +26,7 @@ const Pane = ({ label }: { label: string }) => (
 const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
   const [size, setSize] = useState(defaultSize);
   return (
-    <div className='flex flex-col w-[40rem] h-[24rem] border border-separator'>
+    <div className='flex flex-col dx-expand border border-separator divide-y divide-separator'>
       <Splitter.Root {...args} size={size} onSizeChange={setSize}>
         <Splitter.Panel position='start'>
           <Pane label='Start' />
@@ -36,7 +36,9 @@ const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
           <Pane label='End' />
         </Splitter.Panel>
       </Splitter.Root>
-      <Typography data-testid='size'>{size.toFixed(2)}rem</Typography>
+      <Typography data-testid='size' classNames='p-1 tabular-nums'>
+        {size.toFixed(2)}rem
+      </Typography>
     </div>
   );
 };
@@ -44,7 +46,7 @@ const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
 const meta = {
   title: 'ui/react-ui-core/components/Splitter',
   render: DefaultStory,
-  decorators: [withLayout({ classNames: 'p-0' }), withTheme()],
+  decorators: [withLayout({ layout: 'column' }), withTheme()],
   args: { orientation: 'horizontal', anchor: 'start', mode: 'split', resizable: true, defaultSize: 12, minSize: 6 },
   argTypes: {
     orientation: { control: 'inline-radio', options: ['horizontal', 'vertical'] },
@@ -106,6 +108,7 @@ export const Collapsed: Story = {
     const panels = panelsOf(canvasElement);
     await expect(canvasElement.querySelector('[data-part="resize-trigger"]')).toBeNull();
     await waitFor(() => expect(panels[1].getBoundingClientRect().height).toBe(0));
-    await expect(panels[0].getBoundingClientRect().height).toBeCloseTo(root.getBoundingClientRect().height, 0);
+    // The root's inner height: a host's divider can border the root itself.
+    await expect(panels[0].getBoundingClientRect().height).toBeCloseTo(root.clientHeight, 0);
   },
 };

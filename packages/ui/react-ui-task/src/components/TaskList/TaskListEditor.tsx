@@ -345,7 +345,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           (hasDescription || (takesFiles && files.length > 0)) && 'gap-y-2',
           // The drop target is the pane itself, marked while files are held over it.
           dragOver && 'ring-2 ring-inset ring-accent-bg',
-          // The tree's rows sit inside its content's inset gutter, so the pane insets by the same gap.
+          // The tree's rows pad their ends by the same gap, so the pane's fields start where the rows' cells do.
           !flush && 'px-(--dx-gap-size)',
           className,
         )}

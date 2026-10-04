@@ -82,7 +82,9 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
           <div className={TASK_GRID_ICON}>
             <TaskMnemonic task={task} />
           </div>
-          <span className='min-w-0 pe-1.5 text-sm font-mono truncate'>{Obj.getMnemonic(task)}</span>
+          <Typography tone='muted' classNames='text-sm'>
+            {Obj.getMnemonic(task)}
+          </Typography>
         </div>
         {createdAt !== undefined && (
           <TaskProperty

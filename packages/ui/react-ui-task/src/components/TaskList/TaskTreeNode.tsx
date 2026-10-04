@@ -359,10 +359,8 @@ export const TaskTreeNode = ({
       onDrop={handleDrop}
     >
       <Tree.Label srOnly>{t('task-list.label')}</Tree.Label>
-      {/* The list's own inset, and no row inset: its edge cells (the reference, the menu) are blocks already. */}
-      <Tree.Content gutter={flush ? 'none' : 'inset'} rowInset={false}>
-        {renderRow}
-      </Tree.Content>
+      {/* Rows pad their ends as any tree's do, so the highlight runs edge to edge; a flush list's host frames it. */}
+      <Tree.Content rowInset={!flush}>{renderRow}</Tree.Content>
     </Tree.Root>
   );
 };
