@@ -42,8 +42,8 @@ const MixedStory = () => (
 );
 
 const TracksStory = () => (
-  <Grid grow rows={['min-content', '1fr', 'min-content']} gap='sm' classNames='p-2'>
-    <Grid cols={['min-content', '1fr']} gap='sm' align='center'>
+  <Grid grow rows={['min', 'fill', 'min']} gap='sm' classNames='p-2'>
+    <Grid cols={['min', 'fill']} gap='sm' align='center'>
       <Cell label='min-content' hue='red' />
       <Cell label='1fr' hue='green' />
     </Grid>
@@ -51,7 +51,7 @@ const TracksStory = () => (
       <Cell label='2fr' hue='blue' />
       <Cell label='1fr' hue='yellow' />
     </Grid>
-    <Grid cols={['30rem', 'minmax(0, 1fr)']} gap='sm'>
+    <Grid cols={['30rem', 'fill']} gap='sm'>
       <Cell label='30rem' hue='purple' />
       <Cell label='minmax(0, 1fr)' hue='orange' />
     </Grid>
@@ -59,7 +59,7 @@ const TracksStory = () => (
 );
 
 const SubgridStory = () => (
-  <Grid grow cols={['min-content', '1fr', 'min-content']} gap='sm' classNames='p-2'>
+  <Grid grow cols={['min', 'fill', 'min']} gap='sm' classNames='p-2'>
     {['A', 'B', 'C'].map((label) => (
       // The row adopts the outer tracks, so every row's columns line up.
       <Grid key={label} cols='subgrid' gap='sm' align='center'>

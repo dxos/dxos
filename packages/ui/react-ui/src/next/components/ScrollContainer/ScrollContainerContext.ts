@@ -17,12 +17,15 @@ export type ScrollContainerContextValue = {
   controller: ScrollController;
   /** Following the tail: new content scrolls into view. */
   pinned: boolean;
-  /** Scrolled away from the top, so the Fade shows. */
+  /** Scrolled away from the top, so the top Fade shows. */
   overflow: boolean;
+  /** Content continues below the visible end, so the bottom Fade shows. */
+  overflowEnd: boolean;
   /** Called by Viewport to register its scrolling element. */
   setViewport: (viewport: HTMLElement | null) => void;
   setPinned: (pinned: boolean) => void;
   setOverflow: (overflow: boolean) => void;
+  setOverflowEnd: (overflowEnd: boolean) => void;
 };
 
 export const [ScrollContainerProvider, useScrollContainerContext] =

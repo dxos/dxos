@@ -26,7 +26,7 @@ const DefaultStory = (props: MatrixProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-components/Matrix',
+  title: 'ui/react-ui-experimental/Matrix',
   component: Matrix,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

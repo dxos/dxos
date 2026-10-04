@@ -39,6 +39,9 @@ import { ChatOptions } from './ChatOptions.tsx';
 import { ChatReferences } from './ChatReferences.tsx';
 import { useChatVoiceInput } from './useChatVoiceInput.ts';
 
+/** Prompts that may wait behind a running turn, by default. */
+export const DEFAULT_MAX_QUEUE = 3;
+
 export type ChatPromptProps = Merge<
   ThemedClassName<{
     outline?: boolean;
@@ -63,6 +66,10 @@ export type ChatPromptProps = Merge<
     nodeId?: string;
     placeholder?: ChatEditorProps['placeholder'];
     autoFocus?: boolean;
+    /** How many prompts are waiting behind the running turn. */
+    queueSize?: number;
+    /** The most prompts that may wait behind a running turn; past it the prompt takes no more until one is taken up. */
+    maxQueue?: number;
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
   }>,
@@ -82,11 +89,13 @@ export const ChatPrompt = ({
   nodeId,
   placeholder,
   autoFocus = true,
-  onPresetChange,
+  queueSize = 0,
+  maxQueue = DEFAULT_MAX_QUEUE,
   settings = true,
   presets,
   preset,
   companionTo,
+  onPresetChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
   const processorState = getProcessorState(processor);
@@ -145,7 +154,9 @@ export const ChatPrompt = ({
     [],
   );
 
-  const canSend = hasText && processor != null;
+  // A full queue stops taking prompts: what is typed stays in the editor until the agent takes one up.
+  const queueFull = active && queueSize >= maxQueue;
+  const canSend = hasText && processor != null && !queueFull;
 
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
@@ -156,13 +167,13 @@ export const ChatPrompt = ({
   // queued behind the running turn rather than dropped (`Chat.Root` routes it to `enqueue`).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!processor) {
+      if (!processor || queueFull) {
         return false;
       }
       event.emit({ type: 'submit', text });
       return true;
     },
-    [event, processor],
+    [event, processor, queueFull],
   );
 
   // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;

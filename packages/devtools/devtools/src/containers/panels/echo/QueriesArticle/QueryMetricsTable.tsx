@@ -5,7 +5,7 @@
 import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type QueryMetrics } from '@dxos/echo-client';
-import { Button, Grid, Icon, ScrollArea, Toggle, Toolbar, Tooltip } from '@dxos/react-ui';
+import { Button, Grid, type GridTrack, Icon, ScrollArea, Toggle, Toolbar, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -78,7 +78,7 @@ const COLUMNS: Column[] = [
   },
 ];
 
-const TRACKS = ['minmax(12rem,1fr)', ...COLUMNS.slice(1).map(() => '3.75rem')];
+const TRACKS: GridTrack[] = ['minmax(12rem,1fr)', ...COLUMNS.slice(1).map((): GridTrack => '3.75rem')];
 
 type Sort = { column: string; descending: boolean };
 
