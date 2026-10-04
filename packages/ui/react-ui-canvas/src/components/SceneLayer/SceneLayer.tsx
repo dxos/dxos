@@ -370,27 +370,25 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
           </span>
         </div>
       )}
-      {tier === 'live' &&
-        child &&
-        bounds && (
-          // The nested layer is read-only: only the root scene receives handlers.
-          // Pulled out by the frame's border, so the child's origin is the node's corner as
-          // `portalTransform` and `enterPortal` assume; inside the padding box it sat a border in and
-          // the scene jumped by that at the drill-in swap.
-          <div
-            className='absolute -top-1 -left-1 pointer-events-none'
-            style={{ transform: portalTransform(node, bounds), transformOrigin: '0 0' }}
-          >
-            <SceneLayer
-              store={store}
-              scene={child}
-              registry={registry}
-              zoom={zoom * portalScale(node, bounds)}
-              depth={depth + 1}
-              liveDepth={liveDepth}
-            />
-          </div>
-        )}
+      {tier === 'live' && child && bounds && (
+        // The nested layer is read-only: only the root scene receives handlers.
+        // Pulled out by the frame's border, so the child's origin is the node's corner as
+        // `portalTransform` and `enterPortal` assume; inside the padding box it sat a border in and
+        // the scene jumped by that at the drill-in swap.
+        <div
+          className='absolute -top-1 -left-1 pointer-events-none'
+          style={{ transform: portalTransform(node, bounds), transformOrigin: '0 0' }}
+        >
+          <SceneLayer
+            store={store}
+            scene={child}
+            registry={registry}
+            zoom={zoom * portalScale(node, bounds)}
+            depth={depth + 1}
+            liveDepth={liveDepth}
+          />
+        </div>
+      )}
       {!opening && (
         <span className='absolute top-1 left-2 text-xs text-fg-subtle pointer-events-none'>
           {child?.name ?? child?.id}

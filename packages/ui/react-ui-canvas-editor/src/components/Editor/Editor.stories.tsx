@@ -70,21 +70,19 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
       {/* TODO(burdon): Need to set schema based on what is selected. */}
       {sidebar && (
         <Container id='sidebar' classNames='flex grow overflow-hidden'>
-          {sidebar === 'selected' &&
-            selected &&
-            isPolygon(selected) && (
-              // `Polygon`, not `RectangleShape`: the selection is only ever narrowed that far, and the
-              // rectangle's `type: 'rectangle'` literal is not assignable from a `Shape`'s `string`.
-              // `center` and `size` render as nested field sets of their coordinates.
-              <Form.Root schema={Polygon} values={selected}>
-                <Form.Viewport>
-                  <Form.Content>
-                    <Form.Fields />
-                    <Form.Actions />
-                  </Form.Content>
-                </Form.Viewport>
-              </Form.Root>
-            )}
+          {sidebar === 'selected' && selected && isPolygon(selected) && (
+            // `Polygon`, not `RectangleShape`: the selection is only ever narrowed that far, and the
+            // rectangle's `type: 'rectangle'` literal is not assignable from a `Shape`'s `string`.
+            // `center` and `size` render as nested field sets of their coordinates.
+            <Form.Root schema={Polygon} values={selected}>
+              <Form.Viewport>
+                <Form.Content>
+                  <Form.Fields />
+                  <Form.Actions />
+                </Form.Content>
+              </Form.Viewport>
+            </Form.Root>
+          )}
 
           {sidebar === 'json' && <JsonHighlighter data={{ graph: graph?.graph }} classNames='text-xs' />}
         </Container>

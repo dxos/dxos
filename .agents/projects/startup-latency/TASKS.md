@@ -832,7 +832,7 @@ Remaining navToReady = client init + identity render (out of scope) + ~2.8s boot
   | variant | total chunks | main boot graph |
   | default splitting | 4,795–4,829 | 521 / 4.03MB |
   | per-package groups | 3,006 | 12 scripts / 10.07MB |
-  | $initial boot group    | 2,993        | 87 preloads / 19.09MB|
+  | $initial boot group | 2,993 | 87 preloads / 19.09MB|
   Per-package welds each package's eager and lazy halves (the architecture pairs thin
   eager entries with heavy lazy islands inside every package). $initial spans all five
   HTML entries and, with includeDependenciesRecursively defaulting true, their recursive
