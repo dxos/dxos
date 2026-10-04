@@ -190,11 +190,13 @@ export const layer = (
       const deadline = (yield* Clock.currentTimeMillis) + Duration.toMillis(timeout);
       let announced = false;
       while (true) {
-        // Each attempt gets its own scope so a failed one closes whatever it opened before failing.
-        const scope = yield* Scope.make();
+        // Each attempt gets its own scope so a failed one closes whatever it opened before failing; it
+        // is tied to the layer's scope before the build starts, so an interrupted build releases the lock.
+        const scope = yield* Effect.uninterruptible(
+          Effect.tap(Scope.make(), (attempt) => Effect.addFinalizer((outer) => Scope.close(attempt, outer))),
+        );
         const result = yield* Effect.result(Layer.buildWithScope(open(), scope));
         if (Result.isSuccess(result)) {
-          yield* Effect.addFinalizer((outer) => Scope.close(scope, outer));
           return result.success;
         }
         const error = result.failure;

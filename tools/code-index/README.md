@@ -119,7 +119,7 @@ one — add it locally):
 | `ask`        | `sparql`, `timeoutMs` | A SPARQL ASK, as a boolean. |
 | `files`      | `prefix`, `language`, `limit` | Indexed files, filtered by path prefix and language. |
 | `stats`      | — | Files, quads and per-reasoner derived counts. |
-| `design`     | `prompt`, `budget`, `threshold` | The files that answer a design question and how they connect, with a mermaid draft (see Design questions). Scored by System One when the server has `TYPESAFE_API_KEY`, by a text/degree baseline otherwise. |
+| `design`     | `prompt`, `budget`, `threshold` | The files that answer a design question and how they connect, with a mermaid draft (see Design questions). Explored by query and selected when the server has an Anthropic key, by the text-seeded walk otherwise; scored by System One when it has `TYPESAFE_API_KEY`, by a text/degree baseline otherwise. |
 
 `query` and `ask` declare any known prefix (`deus:`, `file:`, `pkg:`, `module:`, `graph:`, `rdf:`,
 `rdfs:`, `xsd:`, …) a query uses without declaring, and say so in `prefixesInjected`; name a `deus:`
@@ -148,13 +148,21 @@ services?" with a compact diagram, in three stages (`src/design/`):
 1. **Explore** (recall) — a few hundred candidate _files_, each with a card (primary declaration,
    kind, package, doc, snippet, degree, why it was included), and typed edges: imports plus the
    framework relations (`providesService`, `implementsOperation`, `contributesCapability`, …) lifted
-   from symbols to their files. `--explorer bfs` (default, no model) seeds by text match and walks a
-   fixed relation set; `--explorer llm` lets a workspace-agent turn choose seeds and relations
-   (`--provider anthropic --model claude-haiku-4-5-20251001`).
+   from symbols to their files. `--explorer query` (default) has a small model (Haiku with an Anthropic
+   key, else the Ollama default; `--provider`/`--model` override) run up to `--max-queries` SPARQL
+   queries over the documented vocabulary, bounded in rows and time, with failed queries fed back;
+   every file any query returns, plus the text-match seeds, is unioned with its provenance, and files
+   linking two of them join as bridges. `--explorer bfs` (the previous default, no model) seeds by
+   text match and walks a fixed relation set; `--explorer llm` lets a workspace-agent turn choose seeds
+   and relations for that walk.
 2. **Zoom** (precision) — System One judges each card, each relation kind and the grouping level, 16
    calls at a time, cached in `<store>/design-cache.jsonl` so a rerun bills nothing it already asked.
-   Pruning keeps `--budget` nodes over `--threshold`, and a dropped node between two survivors becomes
-   a relay edge. `--scorer baseline` scores by text match, degree and hop distance instead.
+   After the query explorer, selection (`src/design/Select.ts`) hides tests, stories, generated,
+   `internal/` and file-local files unless the prompt asks for them, scales each file's relevance by
+   its degree in the candidates and in the index, and grows the kept set outward from the best file
+   so it stays connected. After the other explorers, pruning keeps `--budget` nodes over
+   `--threshold`. Either way a dropped node between two survivors becomes a relay edge.
+   `--scorer baseline` scores by text match, degree and hop distance instead.
 3. **Draw** — four compact variants (≲ 14 nodes, ≤ 3 groups, `%% ref` per node, no caption), each
    laid out by `MermaidEngine` and scored by the layout objective plus `Architecture.judge()` and
    `Aesthetics.judge()`; the best is written as `diagram.mmd` and `diagram.svg`. Layout runs in a Node

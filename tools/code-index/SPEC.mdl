@@ -302,7 +302,17 @@ module mcp/Server
     handlers: (Store.Api) => Effect<handlers> # what the toolkit layer is built from (and tests drive).
     open: (dir) => Effect<Store.Api, StoreError, Scope>  # read-only; names a lock holder.
     run: ({ dir, version }) => Effect<never>             # opens, then serves until stdin closes.
+```
+
+```mdl
+module mcp/Sparql
+  desc: |
+    Preprocessing for model-written SPARQL, shared by the MCP server and the design query explorer:
+    missing prefixes are declared, unknown `deus:` terms are named, and a SELECT is capped at the engine.
+  api:
     boundQuery: (sparql, limit) => string     # caps a SELECT at the engine.
+    withPrefixes: (sparql) => { sparql, injected }
+    unknownTermWarnings: (sparql, known) => string[]
     NAMESPACES: Record<string, string>        # the prefixes of design/ONTOLOGY.md.
 ```
 
@@ -442,7 +452,7 @@ feat F-6: Derived relations are rules, recomputed with the index
              closure rule that used to ship (147s per pass, 123k stored quads for identical answers)
              was removed. `rules/50-example.n3` says so in its header; keep derivations small.
   req F-6.2: A conclusion never outlives its premises — retracting an import retracts what it entailed.
-  req F-6.3: Conclusions are never premises: a pass reads the file graphs only.
+  req F-6.3: A JS pass reads the file graphs only. A rule file reads the file graphs, the JS passes' graphs and the derived graphs of the rule files before it, never its own output or a later rule file's graph.
   req F-6.4: A pass skips reasoning, leaving the derived graphs as they are, only when the same reasoners already ran over the facts the store holds now.
   req F-6.6: A rule reads only the predicates it names; an unbound predicate reads the whole graph.
   req F-6.5: `--no-reason` skips the phase; the derived graph is then only as fresh as the last pass that ran it.
