@@ -4,7 +4,7 @@
 
 import { type Decorator, type StoryContext } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
 import { raise } from '@dxos/debug';
 import { EffectEx } from '@dxos/effect';
@@ -100,6 +100,62 @@ export type WithPluginManagerInitializer<Args = void> =
   | WithPluginManagerOptions
   | ((context: StoryContext<Args>) => WithPluginManagerOptions);
 
+export type PluginManagerHostProps = PropsWithChildren<{
+  /** Keys the manager: a new id builds a new one, and the old one shuts down. */
+  id: string;
+  /** Read with `id`; a new value also rebuilds the manager, so memoize it. */
+  options: WithPluginManagerOptions;
+}>;
+
+/**
+ * Hosts `children` as the root of a plugin app built from `options`. The decorator form is
+ * {@link withPluginManager}; this form lets one story host several apps, e.g. one per client.
+ */
+export const PluginManagerHost = ({ id, options, children }: PluginManagerHostProps) => {
+  const [managerState, setManagerState] = useState<ManagedPluginManagerState>();
+  // The root is contributed once per manager, so it reads the latest children rather than capturing them.
+  const childrenRef = useRef(children);
+  childrenRef.current = children;
+
+  useEffect(() => {
+    const pluginManager = setupPluginManager(options);
+    const [capability] = CapabilityManager.expandContributions([
+      Capability.contribute(Capabilities.ReactRoot, {
+        id,
+        root: () => <>{childrenRef.current}</>,
+      }),
+    ]);
+
+    pluginManager.capabilities.contribute({
+      interface: capability.interface,
+      implementation: capability.implementation,
+      module: 'org.dxos.app-framework.with-plugin-manager',
+    });
+
+    setManagerState({
+      pluginManager,
+      setupEvents: options.setupEvents,
+      fireEvents: options.fireEvents,
+      fallback: options.fallback,
+      storyId: id,
+    });
+
+    return () => {
+      pluginManager.capabilities.remove(capability.interface, capability.implementation);
+      // A story switch tears down while the start-event trickle is still activating, which
+      // interrupts the shutdown fiber — expected; real failures still surface.
+      EffectEx.runDetached(pluginManager.shutdown());
+    };
+  }, [id, options]);
+
+  // Avoid mounting useApp with a stale manager from the previous story.
+  if (!managerState || managerState.storyId !== id) {
+    return <></>;
+  }
+
+  return <WithPluginManagerApp {...managerState} />;
+};
+
 /**
  * Wraps a story with a plugin manager.
  * NOTE: This builds up and tears down the plugin manager on every render.
@@ -107,47 +163,14 @@ export type WithPluginManagerInitializer<Args = void> =
 export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args> = {}): Decorator => {
   return (Story, context) => {
     const storyId = context.id;
-    const options = typeof init === 'function' ? init(context as any) : init;
-    const [managerState, setManagerState] = useState<ManagedPluginManagerState>();
+    // Storybook replaces the full context object often, so the manager is keyed by story id.
+    const options = useMemo(() => (typeof init === 'function' ? init(context as any) : init), [storyId, init]);
 
-    // Storybook replaces the full context object often, so key manager ownership by story id.
-    useEffect(() => {
-      const pluginManager = setupPluginManager(options);
-      const [capability] = CapabilityManager.expandContributions([
-        Capability.contribute(Capabilities.ReactRoot, {
-          id: storyId,
-          root: () => <Story />,
-        }),
-      ]);
-
-      pluginManager.capabilities.contribute({
-        interface: capability.interface,
-        implementation: capability.implementation,
-        module: 'org.dxos.app-framework.with-plugin-manager',
-      });
-
-      setManagerState({
-        pluginManager,
-        setupEvents: options.setupEvents,
-        fireEvents: options.fireEvents,
-        fallback: options.fallback,
-        storyId,
-      });
-
-      return () => {
-        pluginManager.capabilities.remove(capability.interface, capability.implementation);
-        // A story switch tears down while the start-event trickle is still activating, which
-        // interrupts the shutdown fiber — expected; real failures still surface.
-        EffectEx.runDetached(pluginManager.shutdown());
-      };
-    }, [storyId, init]);
-
-    // Avoid mounting useApp with a stale manager from the previous story.
-    if (!managerState || managerState.storyId !== storyId) {
-      return <></>;
-    }
-
-    return <WithPluginManagerApp {...managerState} />;
+    return (
+      <PluginManagerHost id={storyId} options={options}>
+        <Story />
+      </PluginManagerHost>
+    );
   };
 };
 

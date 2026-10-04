@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Database, Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Message } from '@dxos/types';
@@ -44,6 +45,8 @@ export const startInboxMaterializer = ({
   onWritten,
 }: InboxMaterializerProps): InboxMaterializer => {
   let closed = false;
+  // Stopping interrupts a pass in flight, which would otherwise write to a client being torn down.
+  const stopped = new AbortController();
   let running = false;
   let rerun = false;
   let watchedSpace: Space | undefined;
@@ -90,15 +93,20 @@ export const startInboxMaterializer = ({
     }
 
     running = true;
-    void EffectEx.runPromise(
+    void Effect.runPromiseExit(
       pass.pipe(
         Effect.catch((error) => Effect.sync(() => log.warn('failed to materialize inbox messages', { error }))),
       ),
-    ).finally(() => {
+      { signal: stopped.signal },
+    ).then((exit) => {
       running = false;
       if (rerun) {
         rerun = false;
         schedule();
+      }
+      // Only an interruption by `stop` is expected; a defect still surfaces as an unhandled rejection.
+      if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
+        throw Cause.squash(exit.cause);
       }
     });
   };
@@ -122,6 +130,7 @@ export const startInboxMaterializer = ({
     refresh: schedule,
     stop: () => {
       closed = true;
+      stopped.abort();
       unsubscribeReloaded();
       unsubscribe();
       unwatchContainers();
