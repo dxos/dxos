@@ -10,7 +10,7 @@ import { Matrix } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
 
-import { type ChatRequestTiming, useChatContext } from '../Chat/context.ts';
+import { type ChatRequestTiming, useChatThreadContext } from '../Chat/context.ts';
 
 const CHAT_STREAM_STATUS_NAME = 'Chat.StreamStatus';
 const TICK_MS = 1_000;
@@ -53,7 +53,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
   // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
   // (including the per-turn `stats` block we read for token counts) are submitted to the
   // feed via `_submitMessage` and only show up through `useQuery`.
-  const { messages, requestTiming, alarms } = useChatContext(CHAT_STREAM_STATUS_NAME);
+  const { messages, requestTiming, alarms } = useChatThreadContext(CHAT_STREAM_STATUS_NAME);
 
   const { lastOutputTokens, sessionTotalTokens } = useMemo(() => {
     let last: number | undefined;

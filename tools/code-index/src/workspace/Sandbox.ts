@@ -5,6 +5,7 @@
 //
 
 import * as DecisionModel from 'effect/ai/DecisionModel';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
@@ -106,6 +107,8 @@ const make = Effect.gen(function* () {
 
   // Optional, so the chat runs with no decision model at all; `design.subgraph` then scores by baseline.
   const decisions = yield* Effect.serviceOption(DecisionModel.DecisionModel);
+  // Optional too: with a model `design.subgraph` explores by query, without one by the deterministic walk.
+  const explorer = yield* Effect.serviceOption(LanguageModel.LanguageModel);
   // Opened on first use: most sessions never ask a design question.
   const designCache = yield* Effect.cached(Cache.open(join(store.dir, 'design-cache.jsonl')));
 
@@ -156,11 +159,17 @@ const make = Effect.gen(function* () {
       case 'design.subgraph':
         return designCache.pipe(
           Effect.flatMap((cache) =>
-            Design.subgraph(store, cache, decisions, {
-              prompt: String(params.prompt),
-              budget: typeof params.budget === 'number' ? params.budget : undefined,
-              threshold: typeof params.threshold === 'number' ? params.threshold : undefined,
-            }),
+            Design.subgraph(
+              store,
+              cache,
+              decisions,
+              {
+                prompt: String(params.prompt),
+                budget: typeof params.budget === 'number' ? params.budget : undefined,
+                threshold: typeof params.threshold === 'number' ? params.threshold : undefined,
+              },
+              explorer,
+            ),
           ),
           Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
         );
