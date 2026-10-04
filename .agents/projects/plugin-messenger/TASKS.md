@@ -10,13 +10,20 @@ Design: [`agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`](../..
       8: invitations stored as messages, envelope migration in Phase 1, toast on materialization.
 - [ ] Spec reviewed by the user.
 
-## Phase 1: transport
+## Shipping
+
+Stacked PRs: Phase 1 (this branch) → Phase 2 (child branch, `gh stack link`), landed together —
+Phase 1 alone leaves invitations unannounced. Phase 3 follows.
+
+## Phase 1: transport + invitations as messages
 
 - [ ] `@dxos/credentials` `inbox-envelope.ts`: create/verify, device chain, id, size check + tests.
 - [ ] `InboxServiceImpl.#pull` dispatch; unknown types left pending; tests.
 - [ ] `HaloInbox.messages` / `sendMessage` in client proxy.
 - [ ] `InboxService` message-only: `send`/`Notices` replaced; legacy credential → invitation message.
 - [ ] `SpaceInvitationMessage` in app-toolkit; plugin-space sends via `sendMessage`.
+- [ ] plugin-client: `spaceInvitation` surface (Join / Open); remove inbox-monitor, tracker, filter,
+      `SpaceInvitationsContainer`, graph node.
 - [ ] Lift `MemoryEdgeInbox` to `@dxos/client-services/testing`; inject into local services.
 
 ## Phase 2: plugin-messenger
@@ -27,8 +34,6 @@ Design: [`agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`](../..
 - [ ] `MessengerCapabilities.Sender` + `MessengerOperation.Send`.
 - [ ] plugin-deck companion `badge`.
 - [ ] Deck companion, `NotificationsPanel`, `NotificationTile`, filters.
-- [ ] plugin-client (same PR as the materializer, so invitations are never unannounced): `spaceInvitation` surface (Join / Open); remove inbox-monitor, tracker, filter,
-      `SpaceInvitationsContainer`, graph node.
 - [ ] `PLUGIN.mdl`, README, translations.
 
 ## Phase 3: storybook

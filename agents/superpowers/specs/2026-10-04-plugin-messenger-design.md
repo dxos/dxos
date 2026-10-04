@@ -164,6 +164,17 @@ materializer, so it cannot be optional.
   - Right column: user B's `NotificationsPanel` with its badge.
   - A `play` step sends, waits for the tile on B, clicks it, and asserts the badge clears.
 
+## Shipping
+
+Stacked PRs, landed together:
+
+1. Transport, envelope and invitations as messages: the `InboxService`/`HaloInbox` changes,
+   `SpaceInvitationMessage`, plugin-space sending, plugin-client's surface and removals, and
+   `MemoryEdgeInbox` in testing. It builds on its own, but nothing announces invitations until
+   PR 2 lands, so it must not land alone.
+2. plugin-messenger and the deck badge.
+3. The two-column storybook, as a follow-up PR.
+
 ## Testing
 
 - `inbox-envelope.test.ts`: round trip; tampered payload; wrong recipient; device key not in the
