@@ -864,6 +864,25 @@
     --dx-arrow-border: var(--dx-focus-ring-color);
     --dx-arrow-border-width: var(--dx-focus-ring-width);
   }
+  /*
+   * The ring is inset, so it crosses the arrow's base: the arrow rises above it, clipped to its outer half plus the
+   * ring's band, so its fill opens the ring under the base without covering an item's highlight further in.
+   */
+  .dx-popup:is(:focus-visible, :has(> .dx-scroll-viewport:focus-visible)) > .dx-arrow {
+    z-index: 1;
+  }
+  .dx-popup:has(> [data-placement^='bottom']) > .dx-arrow {
+    clip-path: inset(0 0 calc(50% - var(--dx-focus-ring-width)) 0);
+  }
+  .dx-popup:has(> [data-placement^='top']) > .dx-arrow {
+    clip-path: inset(calc(50% - var(--dx-focus-ring-width)) 0 0 0);
+  }
+  .dx-popup:has(> [data-placement^='right']) > .dx-arrow {
+    clip-path: inset(0 calc(50% - var(--dx-focus-ring-width)) 0 0);
+  }
+  .dx-popup:has(> [data-placement^='left']) > .dx-arrow {
+    clip-path: inset(0 0 0 calc(50% - var(--dx-focus-ring-width)));
+  }
   /* A small caption naming the Menu or Select group that follows. */
   .dx-popup-group-label {
     display: flex;
