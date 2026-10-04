@@ -32,8 +32,15 @@ export const layer = (options: {
   const stores = Layer.merge(store, Log.layer(options.storeDir));
   const models = Models.layer(options.model);
   // System One scores the sandbox's design questions when a key is present; the baseline otherwise.
+  // The sandbox's design questions explore with the small model, not the one driving the chat.
   const sandbox = Sandbox.layer.pipe(
-    Layer.provide(Layer.merge(stores, SystemOne.available() ? SystemOne.layer : SystemOne.refusing)),
+    Layer.provide(
+      Layer.mergeAll(
+        stores,
+        SystemOne.available() ? SystemOne.layer : SystemOne.refusing,
+        Models.layer(Models.explorer(options.model)),
+      ),
+    ),
   );
   return Layer.mergeAll(
     stores,

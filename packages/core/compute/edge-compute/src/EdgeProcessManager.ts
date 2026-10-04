@@ -44,7 +44,7 @@ const makeManager = (
   control?: RemoteProcessManager.Control,
   remoteTrace?: RemoteTraceMonitor.Monitor,
 ): RemoteProcessManager.Manager => {
-  const processTreeAtom = Atom.make<readonly Process.Info[]>([]);
+  const processTreeAtom = Atom.make<readonly Process.Process[]>([]);
   registry.mount(processTreeAtom);
   return {
     processTree: Effect.sync(() => registry.get(processTreeAtom)),

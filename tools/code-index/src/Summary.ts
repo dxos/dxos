@@ -57,7 +57,7 @@ const compareCodeUnits = (left: string, right: string): number => (left < right 
 
 /**
  * Classes first, then by count descending, then by name: a total order, so a recorded summary equals a
- * live count of the same graph. Sorted here rather than by `ORDER BY`, which neither backend applies to
+ * live count of the same graph. Sorted here rather than by `ORDER BY`, which the store does not apply to
  * ties alike from one evaluation to the next.
  */
 const byKindCountTerm = (left: VocabularyCount, right: VocabularyCount): number =>

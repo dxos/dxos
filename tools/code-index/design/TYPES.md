@@ -82,7 +82,7 @@ Two different things stand in for "not known here", and neither is TypeScript's 
 
 `src/worker/types/Bind.ts`, run as the built-in JS pass `bind-types` (`src/TypeBinding.ts`). A pass
 runs before every rule file and writes a graph outside the derived prefix (`graph/pass/<name>`), so
-both backends take it as a premise — the native engine journals it like a file graph and stays
+every rule file takes it as a premise — the engine journals it like a file graph and stays
 incremental — and `15-types` sees bound terms. It reads every symbol's term
 (`deus:typeTerm`, JSON with literal freshness) plus `aliasOf`, `namespaceOf`, `reexports` and
 `deus:moduleFile` (a bare specifier that resolves inside the repository), and binds:
