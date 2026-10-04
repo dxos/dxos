@@ -39,6 +39,11 @@ type CardRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
    * Off by default: the card is a padded column, and rows lay their icon, text and trailing cells out inline.
    */
   grid?: boolean;
+  /**
+   * The rails' width in a `grid` card: one block (`rail`, the default), or a gutter step for a card whose rows should
+   * sit further in. Rows and their icons follow the rails; a Header lays out by blocks, so wider rails suit row headers.
+   */
+  gutter?: 'rail' | 'md' | 'lg';
   /** Sizes the card's rows, blocks and controls (its `data-size` scope), whatever its host's size. */
   size?: Size;
 };
@@ -50,7 +55,7 @@ type CardRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * menus stop their clicks reaching it.
  */
 const CardRoot = composable<HTMLDivElement, Omit<CardRootProps, keyof ThemedClassName<{}>>>(
-  ({ border = true, selected, grid = false, size, onClick, onKeyDown, ...props }, forwardedRef) => {
+  ({ border = true, selected, grid = false, gutter = 'rail', size, onClick, onKeyDown, ...props }, forwardedRef) => {
     // Composable, so the card can be an `asChild` host's child (a Mosaic tile, a Focus item) and take its props.
     const { className, ...rest } = composableProps<HTMLDivElement>(props, {
       classNames: [recipes.cardRoot(), onClick && recipes.cardClickable()],
@@ -72,7 +77,7 @@ const CardRoot = composable<HTMLDivElement, Omit<CardRootProps, keyof ThemedClas
       />
     );
     return grid ? (
-      <Container asChild gutter='rail' level='+1'>
+      <Container asChild gutter={gutter} level='+1'>
         {card}
       </Container>
     ) : (

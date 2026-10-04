@@ -68,6 +68,7 @@ const MenuStory = () => (
       />
       <StatCard.Row label='Websocket' value='connected' />
       <StatCard.Row label='RTT' value='85' unit='ms' />
+      <StatCard.Row icon='ph--warning--regular' label='Warn' value='1' />
       <StatCard.Row
         label='Cache'
         value='12'
@@ -92,11 +93,17 @@ export const TestHeaderMenu: Story = {
     await expect(Math.abs(trigger.right - rowAction.right)).toBeLessThanOrEqual(1);
     // The status is pushed to the end of the middle column, against the rail.
     await expect(trigger.left - info.right).toBeLessThan(16);
-    // The control is centred in its rail cell.
-    const triggerElement = canvas.getByRole('button', { name: 'EDGE' });
-    const cell = triggerElement.closest<HTMLElement>('[data-rail="end"]')?.getBoundingClientRect();
+    // The header's icon sits in the start rail with the rows' icons.
+    const headerIcon = canvasElement.querySelector<HTMLElement>('[data-part="row"] svg')?.getBoundingClientRect();
+    const rowIcon = canvas
+      .getByText('Warn')
+      .closest<HTMLElement>('[data-part="row"]')
+      ?.querySelector('svg')
+      ?.getBoundingClientRect();
     await expect(
-      cell != null && Math.abs((cell.left + cell.right) / 2 - (trigger.left + trigger.right) / 2),
+      headerIcon != null &&
+        rowIcon != null &&
+        Math.abs((headerIcon.left + headerIcon.right) / 2 - (rowIcon.left + rowIcon.right) / 2),
     ).toBeLessThanOrEqual(1);
     // A card with no control keeps its end rail, so its figure ends where the status does.
     await expect(Math.abs(canvas.getByText('0').getBoundingClientRect().right - info.right)).toBeLessThanOrEqual(1);

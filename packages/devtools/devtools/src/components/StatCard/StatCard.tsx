@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { Block, Button, Card, Flex, Grid, Icon, Menu, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { Button, Card, Flex, Grid, Icon, Menu, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { type Hue, getStyles, mx } from '@dxos/ui-theme';
 
 /** An entry of a card's header menu. */
@@ -30,7 +30,7 @@ type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string }>>;
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
 const StatCardRoot = ({ id, classNames, children }: StatCardRootProps) => (
-  <Card.Root id={id} size='sm' grid classNames={classNames}>
+  <Card.Root id={id} size='sm' grid gutter='lg' classNames={classNames}>
     {children}
   </Card.Root>
 );
@@ -55,33 +55,34 @@ type StatCardHeaderProps = {
 
 /**
  * One layout for every card: the icon in the start rail, the title and optional info as a two-column grid in the content
- * track (so the info ends at the same edge on every card), and the button or menu in the end rail. The end rail is
- * kept when empty, so a card without a control still ends its info where the others do.
+ * track, and the button or menu in the end rail. A row rather than a `Card.Header`, so it follows the rails at any width
+ * as the rows under it do; its end cell is kept when empty, so the info ends at the same edge on every card.
  */
 const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
-  <Card.Header>
-    <Block>
-      <Icon icon={icon} classNames={hue && getStyles(hue).text} />
-    </Block>
-    <Grid cols={['fill', 'auto']} gap='sm' classNames='grow min-w-0 items-center'>
-      <Card.Title>{title}</Card.Title>
+  <Card.Row
+    leading={<Icon icon={icon} classNames={hue && getStyles(hue).text} />}
+    trailing={
+      action ??
+      (menu ? (
+        <Card.Menu label={title}>
+          {menu.map((item) => (
+            <Menu.Item
+              key={item.label}
+              item={{ value: item.label, label: item.label, icon: item.icon }}
+              onClick={item.onClick}
+            />
+          ))}
+        </Card.Menu>
+      ) : (
+        <span />
+      ))
+    }
+  >
+    <Grid cols={['fill', 'auto']} gap='sm' classNames='items-center'>
+      <Card.Title truncate>{title}</Card.Title>
       {info !== undefined && <span className='font-mono text-xs text-fg-muted'>{info}</span>}
     </Grid>
-    <Block rail='end'>
-      {action ??
-        (menu && (
-          <Card.Menu label={title}>
-            {menu.map((item) => (
-              <Menu.Item
-                key={item.label}
-                item={{ value: item.label, label: item.label, icon: item.icon }}
-                onClick={item.onClick}
-              />
-            ))}
-          </Card.Menu>
-        ))}
-    </Block>
-  </Card.Header>
+  </Card.Row>
 );
 
 StatCardHeader.displayName = 'StatCard.Header';
