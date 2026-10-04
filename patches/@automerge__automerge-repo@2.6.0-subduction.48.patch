@@ -655,7 +655,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..f35b76264c687b78d606eca08a7b5141
       */
      resync(documentId: DocumentId): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e199c0fbd 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..a17e1ecfc1c40c687abd99ef1ff9aafca0384273 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -13,8 +13,8 @@ import { WebSocketEndpoint, } from "./websocket-endpoint.js";
@@ -1368,10 +1368,15 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
      /**
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
-@@ -1321,6 +1756,11 @@ export class SubductionSource {
+@@ -1321,6 +1756,16 @@ export class SubductionSource {
              return;
          this.#scheduler.resetHealState(sid);
          entry.lastSyncResult = null;
++        // DXOS patch: a running or queued round overwrites `lastSyncResult` when it settles, so the
++        // request must also ride `needsResync` or a round that predates the divergence swallows it.
++        if (entry.syncInFlight) {
++            entry.needsResync = true;
++        }
 +        // DXOS patch: a round that finds nothing new never reloads storage, so a fragment already
 +        // persisted locally but dropped before reaching the handle would stay out of the doc forever.
 +        if (entry.syncState === "running") {
@@ -1380,7 +1385,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
          this.#scheduleRecompute(entry);
      }
      // ── Flush ───────────────────────────────────────────────────────────
-@@ -1478,12 +1918,28 @@ export class SubductionSource {
+@@ -1478,12 +1923,28 @@ export class SubductionSource {
          catch (e) {
              this.#log.debug("error disconnecting subduction transports: %O", e);
          }
