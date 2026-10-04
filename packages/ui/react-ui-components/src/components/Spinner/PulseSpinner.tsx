@@ -42,7 +42,11 @@ const once = (signal: DotSignal, duration: number, rest = 0): DotSignal => {
 
 /** Seconds per beat, and the gap between its two pulses. */
 const HEARTBEAT_PERIOD = 1.4;
-const HEARTBEAT_GAP = 0.28;
+const HEARTBEAT_GAP = 0.3;
+/** The first pulse waits for the dots to settle from the previous state, or the eased change swallows it. */
+const HEARTBEAT_START = 0.35;
+/** Each pulse's width (σ, seconds): wide enough to outlast the per-frame easing toward it. */
+const HEARTBEAT_WIDTH = 0.07;
 
 /**
  * The whole grid beats twice and rests, like a heartbeat: one rhythm across every dot, so it reads as a call for
@@ -54,8 +58,8 @@ const heartbeat =
     const centre = (dim - 1) / 2;
     const delay = Math.hypot(i - centre, j - centre) * 0.04;
     const phase = (time - delay) % HEARTBEAT_PERIOD;
-    const pulse = (at: number) => Math.exp(-((phase - at) ** 2) / (2 * 0.05 ** 2));
-    return Math.max(pulse(0.1), 0.7 * pulse(0.1 + HEARTBEAT_GAP));
+    const pulse = (at: number) => Math.exp(-((phase - at) ** 2) / (2 * HEARTBEAT_WIDTH ** 2));
+    return Math.max(pulse(HEARTBEAT_START), 0.85 * pulse(HEARTBEAT_START + HEARTBEAT_GAP));
   };
 
 /** Seconds per lap of the orbit. */
@@ -231,8 +235,8 @@ const pixels = (size: Size): number => (size === 'px' ? 1 : size * 4);
 const READY = scaled(radialWave(DIM), 0.6);
 const ALERT = scaled(orbit(DIM), 0.8);
 
-/** Where the error beat settles: the grid stays lit at about half size, so the state reads after the beat has passed. */
-const ERROR_REST = 0.4;
+/** Where the error beat settles: the grid stays lit at a quarter size, so the state reads after the beat has passed. */
+const ERROR_REST = 0.25;
 
 const COLORS: Record<ActivityState, string> = {
   ready: 'text-primary-500',
@@ -246,10 +250,7 @@ export const PulseSpinner = ({ classNames, state = 'ready', size = 5, onClick }:
   const thinking = useRandomPing(DIM, 100);
   // A single beat each time the spinner enters the error state: an error is news once, not an alarm that keeps ringing.
   const failing = state === 'error';
-  const error = useMemo(
-    () => (failing ? once(scaled(heartbeat(DIM), 0.8), HEARTBEAT_PERIOD, ERROR_REST) : undefined),
-    [failing],
-  );
+  const error = useMemo(() => (failing ? once(heartbeat(DIM), HEARTBEAT_PERIOD, ERROR_REST) : undefined), [failing]);
   const maxRadius = pixels(size) / DIM / 2;
 
   return (

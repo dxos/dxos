@@ -51,10 +51,14 @@ type Story = StoryObj<typeof meta>;
 
 /** The morphing square. */
 export const Shape: Story = {
-  args: { Spinner: ShapeSpinner },
+  args: {
+    Spinner: ShapeSpinner,
+  },
 };
 
 /** The dot matrix; its alert state is a heartbeat. */
 export const Pulse: Story = {
-  args: { Spinner: PulseSpinner },
+  args: {
+    Spinner: PulseSpinner,
+  },
 };
