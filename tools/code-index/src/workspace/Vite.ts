@@ -9,7 +9,7 @@ import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
 import { readFile } from 'node:fs/promises';
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import { join } from 'node:path';
 import { type Plugin, type ViteDevServer, createServer } from 'vite';
 import solid from 'vite-plugin-solid';
@@ -47,6 +47,11 @@ export type Options = {
   readonly repoRoot: string;
   /** Where the pre-bundled dependencies go; kept beside the index rather than in the source tree. */
   readonly cacheDir: string;
+  /**
+   * The caller's listener, which carries the HMR websocket too: left to itself, middleware mode opens
+   * a second server on port 24678 whose close never completes under Bun once a browser has connected.
+   */
+  readonly httpServer: Server;
 };
 
 /**
@@ -76,6 +81,7 @@ export const middleware = ({
   appRoot,
   repoRoot,
   cacheDir,
+  httpServer,
 }: Options): Effect.Effect<Middleware, ViteError, Scope.Scope> =>
   Effect.gen(function* () {
     const server = yield* Effect.acquireRelease(
@@ -90,6 +96,7 @@ export const middleware = ({
             appType: 'custom',
             server: {
               middlewareMode: true,
+              hmr: { server: httpServer },
               // The UI imports TypeScript out of the workspace, which is outside `root`, so both
               // trees are allowed explicitly. `strict` stays on: turning it off does not widen the
               // allow list, it removes it, and `/@fs/<absolute path>` would then serve any file the

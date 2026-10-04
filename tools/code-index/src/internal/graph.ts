@@ -7,8 +7,8 @@ import type * as Effect from 'effect/Effect';
 import type { Lens, Schema } from 'ldkit';
 
 /**
- * The quad-store half of `Store`, behind which the two backends differ. The ledger and its commit
- * protocol sit above this and are shared, so both backends make the same crash-safety guarantees.
+ * The quad-store half of `Store`, implemented by `native.ts`. The ledger and its commit protocol sit
+ * above this, so the quad store only has to make one batch of graph swaps atomic.
  */
 
 export type Binding = Record<string, string>;
@@ -22,7 +22,7 @@ export type ReasonOutcome = {
   readonly name: string;
   readonly derived: number;
   readonly durationMs: number;
-  /** Maintained from the changes since the last pass rather than recomputed (native backend only). */
+  /** Maintained from the changes since the last pass rather than recomputed. */
   readonly incremental: boolean;
 };
 
@@ -34,7 +34,7 @@ export type DocumentWrite = {
 };
 
 export interface Graph<E> {
-  /** Every write of a batch in one backend batch: nothing observes a half-written graph. */
+  /** Every write of a batch in one transaction: nothing observes a half-written graph. */
   readonly swap: (writes: readonly DocumentWrite[]) => Effect.Effect<void, E>;
   readonly drop: (graph: string) => Effect.Effect<void, E>;
   readonly putQuads: (quads: readonly Quad[]) => Effect.Effect<void, E>;
