@@ -46,18 +46,13 @@
     "@phosphor-icons/core": "catalog:",
     "@typescript/typescript6": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "classic-level": "catalog:",
     "d3-force": "catalog:",
     "effect": "catalog:",
-    "eyereasoner": "catalog:",
-    "jsonld-streaming-parser": "catalog:",
     "ldkit": "catalog:",
     "mermaid": "catalog:",
     "n3": "catalog:",
     "oxc-parser": "catalog:",
     "oxc-resolver": "catalog:",
-    "quadstore": "catalog:",
-    "quadstore-comunica": "catalog:",
     "react": "catalog:",
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
@@ -74,6 +69,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "jsonld-streaming-parser": "catalog:",
     "vitest": "catalog:"
   }
 }

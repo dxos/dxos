@@ -26,7 +26,7 @@ const TICK_MS = 5_000;
 // timeline from the full message history — so the rebuild rate is capped rather than the feed's.
 const TRACE_DEBOUNCE = Duration.millis(500);
 
-const NO_PROCESSES: readonly Process.Info[] = [];
+const NO_PROCESSES: readonly Process.Process[] = [];
 
 type StatusChangeCache = Map<string, { heads: string; changes: TaskStatusChange[] }>;
 
@@ -50,7 +50,7 @@ export type UseSessionTimelineOptions = {
   sessions: readonly Session[];
   tasks?: readonly Task.Task[];
   /** The live process tree, from whichever monitor the host has; without it a session's liveness is read from the trace alone. */
-  processes?: readonly Process.Info[];
+  processes?: readonly Process.Process[];
 };
 
 /**

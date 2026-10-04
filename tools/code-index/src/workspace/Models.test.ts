@@ -3,6 +3,7 @@
 //
 
 import * as AiError from 'effect/ai/AiError';
+import { createServer } from 'node:http';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -70,6 +71,23 @@ describe('Models', () => {
       'https://api.anthropic.com/v1/messages',
     );
     expect(Models.explainFailure(new Error('boom'))).toBeUndefined();
+  });
+
+  test('the probe keeps a path prefix on the endpoint', async ({ expect }) => {
+    const server = createServer((request, response) => {
+      response.statusCode = request.url === '/ollama/api/version' ? 200 : 404;
+      response.end('{}');
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    try {
+      const address = server.address();
+      const port = typeof address === 'object' && address !== null ? address.port : 0;
+      expect(await EffectEx.runPromise(Models.probe(`http://127.0.0.1:${port}/ollama/`))).toBe(true);
+      expect(await EffectEx.runPromise(Models.probe(`http://127.0.0.1:${port}/ollama`))).toBe(true);
+      expect(await EffectEx.runPromise(Models.probe(`http://127.0.0.1:${port}`))).toBe(false);
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
   });
 
   test('a closed port probes as unreachable', async ({ expect }) => {
