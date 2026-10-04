@@ -16,6 +16,7 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as DeckPlugin from '@dxos/plugin-deck/DeckPlugin';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
+import * as MessengerPlugin from '@dxos/plugin-messenger/MessengerPlugin';
 import * as MobilePlugin from '@dxos/plugin-mobile/MobilePlugin';
 import * as NativePlugin from '@dxos/plugin-native/NativePlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
@@ -126,6 +127,8 @@ export const getCorePlugins = ({
     ConnectorPlugin.make(),
     GraphPlugin.make(),
     ...layoutPlugins,
+    // Core because invitations reach the user only through its inbox materializer.
+    MessengerPlugin.make(),
     NavTreePlugin.make(),
     ObservabilityPlugin.make({
       namespace: appKey,

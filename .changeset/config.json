@@ -297,6 +297,7 @@
       "@dxos/plugin-markdown",
       "@dxos/plugin-meeting",
       "@dxos/plugin-mermaid",
+      "@dxos/plugin-messenger",
       "@dxos/plugin-mobile",
       "@dxos/plugin-native",
       "@dxos/plugin-navtree",
