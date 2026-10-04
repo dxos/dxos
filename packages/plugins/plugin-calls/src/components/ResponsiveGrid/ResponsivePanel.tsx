@@ -20,7 +20,7 @@ export const ResponsivePanel = ({ children }: PropsWithChildren) => {
     // Outer container that takes full size of parent.
     <div className='dx-expand relative flex'>
       {/* Absolute positioning layer for centering content. */}
-      <div className='dx-fullscreen flex justify-center items-center'>
+      <div className='dx-cover flex justify-center items-center'>
         {/* Content container that maintains given aspect ratio and proper scaling. */}
         <div className={mx('max-h-full max-w-full w-auto h-auto aspect-video')}>{children}</div>
       </div>

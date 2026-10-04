@@ -4,6 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { Outline, RemoteSession } from '@dxos/types';
 
@@ -12,6 +13,7 @@ import { Journal } from '#types';
 
 export const translations = [
   ...taskTranslations,
+  ...queryTranslations,
   {
     'en-US': {
       [Type.getTypename(Journal.Journal)]: {

@@ -856,7 +856,7 @@ const BoardBackdrop = (_props: BoardBackdropProps) => {
   }, [columns, rows, cellSize, gap]);
 
   return (
-    <div className='dx-fullscreen'>
+    <div className='dx-cover'>
       {cells.map(({ position, rect }) => (
         <BoardDropTarget
           key={`${position.x}-${position.y}`}

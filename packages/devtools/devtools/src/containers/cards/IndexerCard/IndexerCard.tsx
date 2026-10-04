@@ -15,7 +15,7 @@ export type IndexerCardProps = {
   onCopy?: () => void;
 };
 
-const ROW_TRACKS = ['1fr', 'auto'];
+const ROW_TRACKS = ['fill', 'auto'] as const;
 
 const rowIcon = (row: IndexerRow): { icon: string; className: string } => {
   if (row.error) {
