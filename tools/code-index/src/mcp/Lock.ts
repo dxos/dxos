@@ -4,7 +4,14 @@
 // @import-as-namespace
 //
 
+import * as Clock from 'effect/Clock';
+import * as Console from 'effect/Console';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
+import * as Scope from 'effect/Scope';
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { readdir, readFile, readlink, realpath } from 'node:fs/promises';
@@ -94,13 +101,18 @@ export const holders = (dir: string): Effect.Effect<Holder[]> =>
     );
   });
 
+/** The subcommand a code-index holder runs, if its command line is one. */
+const subcommandOf = (command: string): string | undefined => {
+  const match = /(?:^|[\s/])code-index(?:\.ts)?(?=\s|$)(?:\s+([a-z]+))?/.exec(command);
+  return match === null ? undefined : (match[1] ?? 'serve');
+};
+
 /** Which code-index command a holder's command line is, so the message says what to stop; no subcommand is `serve`. */
 const role = (command: string): string | undefined => {
-  const match = /(?:^|[\s/])code-index(?:\.ts)?(?=\s|$)(?:\s+([a-z]+))?/.exec(command);
-  if (match === null) {
+  const subcommand = subcommandOf(command);
+  if (subcommand === undefined) {
     return undefined;
   }
-  const subcommand = match[1] ?? 'serve';
   return subcommand === 'mcp' ? 'another `code-index mcp`' : `\`code-index ${subcommand}\``;
 };
 
@@ -109,8 +121,18 @@ const describeHolder = (holder: Holder): string => {
   return `pid ${holder.pid} (${what === undefined ? holder.command || 'unknown command' : `${what}: ${holder.command}`})`;
 };
 
-/** RocksDB and LevelDB both say "lock" when another process holds the directory. */
-const isLockError = (error: Store.StoreError): boolean => /\block\b|LOCK/.test(error.message);
+/**
+ * RocksDB and LevelDB both say "lock" when another process holds the directory, but the store wraps
+ * that in its own "failed to open" error, so the whole cause chain is searched.
+ */
+export const isLockError = (error: unknown): boolean => {
+  for (let current = error; current instanceof Error; current = current.cause) {
+    if (/\block\b|LOCK/.test(current.message)) {
+      return true;
+    }
+  }
+  return false;
+};
 
 const ADVICE =
   'A store has one holder at a time — `code-index index`, `code-index serve` or another `code-index mcp` — ' +
@@ -126,13 +148,75 @@ export const explain = (dir: string, error: Store.StoreError): Effect.Effect<nev
       found.length > 0
         ? new Store.StoreError({
             message: `The store at ${dir} is held open by ${found.map(describeHolder).join(', ')}. ${ADVICE}`,
-            cause: error,
+            // The database's own lock message only repeats this one, less helpfully.
+            cause: isLockError(error) ? undefined : error,
           })
         : isLockError(error)
           ? new Store.StoreError({
               message: `The store at ${dir} is locked by another process whose PID could not be found. ${ADVICE}`,
-              cause: error,
             })
           : error,
     ),
+  );
+
+/** Holders that keep the store until stopped; waiting on one of them can only time out. */
+const LONG_LIVED = new Set(['serve', 'mcp', 'chat']);
+
+/** Only a holder known to finish on its own (`index`, `query`, ...) is worth waiting for. */
+export const isTransient = (holder: Holder): boolean => {
+  const subcommand = subcommandOf(holder.command);
+  return subcommand !== undefined && !LONG_LIVED.has(subcommand);
+};
+
+export type WaitOptions = {
+  /** How long to wait for a transient holder before failing (default 2 min). */
+  readonly timeout?: Duration.Input;
+  /** How often to retry the open while waiting (default 1 s). */
+  readonly interval?: Duration.Input;
+};
+
+/**
+ * Opens the store with `open`. A lock held by a command that finishes on its own (or by a process
+ * that cannot be identified) is waited for, with one line saying so; one held by `serve`, `mcp` or
+ * `chat`, or still held at the deadline, fails with the holders named. The retry is a loop over
+ * builds rather than a recursive `Layer.catchTag`, because a recovered layer is rebuilt for every
+ * consumer of it, which would race several opens of one store.
+ */
+export const layer = (
+  dir: string,
+  open: () => Layer.Layer<Store.Store, Store.StoreError>,
+  { timeout = Duration.minutes(2), interval = Duration.seconds(1) }: WaitOptions = {},
+): Layer.Layer<Store.Store, Store.StoreError> =>
+  Layer.effectContext(
+    Effect.gen(function* () {
+      const deadline = (yield* Clock.currentTimeMillis) + Duration.toMillis(timeout);
+      let announced = false;
+      while (true) {
+        // Each attempt gets its own scope so a failed one closes whatever it opened before failing.
+        const scope = yield* Scope.make();
+        const result = yield* Effect.result(Layer.buildWithScope(open(), scope));
+        if (Result.isSuccess(result)) {
+          yield* Effect.addFinalizer((outer) => Scope.close(scope, outer));
+          return result.success;
+        }
+        const error = result.failure;
+        yield* Scope.close(scope, Exit.fail(error));
+        if (!isLockError(error)) {
+          return yield* explain(dir, error);
+        }
+        const found = yield* holders(dir);
+        const now = yield* Clock.currentTimeMillis;
+        if (now >= deadline || !found.every(isTransient)) {
+          return yield* explain(dir, error);
+        }
+        if (!announced) {
+          announced = true;
+          const who = found.length > 0 ? found.map(describeHolder).join(', ') : 'another process';
+          yield* Console.error(
+            `Waiting up to ${Duration.format(Duration.seconds(Math.ceil((deadline - now) / 1000)))} for the store at ${dir}, held by ${who}…`,
+          );
+        }
+        yield* Effect.sleep(interval);
+      }
+    }),
   );

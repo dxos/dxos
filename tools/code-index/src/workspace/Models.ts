@@ -6,9 +6,12 @@
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as AiError from 'effect/ai/AiError';
 import type * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Config from 'effect/Config';
+import * as Console from 'effect/Console';
 import * as Data from 'effect/Data';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
@@ -118,4 +121,90 @@ export const select = (options: {
       options.model ?? fromEnvironment ?? (provider === 'anthropic' ? DEFAULT_ANTHROPIC_MODEL : DEFAULT_OLLAMA_MODEL),
     endpoint: options.endpoint,
   });
+};
+
+/** Whether either Anthropic key variable is set, without reading the value anywhere it could print. */
+export const hasAnthropicKey = (env: Record<string, string | undefined> = process.env): boolean =>
+  Boolean(env.DX_ANTHROPIC_API_KEY) || Boolean(env.ANTHROPIC_API_KEY);
+
+const START_OLLAMA = (selection: Selection): string =>
+  `start it with \`ollama serve\` (and \`ollama pull ${selection.model}\`), ` +
+  'or pass --provider anthropic with DX_ANTHROPIC_API_KEY set';
+
+export type Availability = {
+  readonly selection: Selection;
+  /** One line for stderr when the selection changed or will not work. */
+  readonly notice?: string;
+};
+
+/**
+ * Settles the model once Ollama has been probed. An unreachable Ollama falls back to Anthropic only
+ * when a key is present and the user named no provider, model or endpoint, since any of those says
+ * what they asked for and a silent switch would override it.
+ */
+export const settle = (
+  selection: Selection,
+  options: { readonly reachable: boolean; readonly chosen: boolean; readonly hasKey: boolean },
+): Availability => {
+  if (selection.provider !== 'ollama' || options.reachable) {
+    return { selection };
+  }
+  const endpoint = selection.endpoint ?? OLLAMA_ENDPOINT;
+  if (!options.chosen && options.hasKey) {
+    return {
+      selection: { provider: 'anthropic', model: DEFAULT_ANTHROPIC_MODEL },
+      notice: `Ollama is not reachable at ${endpoint}; using anthropic/${DEFAULT_ANTHROPIC_MODEL} because an Anthropic key is set.`,
+    };
+  }
+  return {
+    selection,
+    notice: `Ollama is not reachable at ${endpoint}, so chat turns will fail: ${START_OLLAMA(selection)}.`,
+  };
+};
+
+/** How long the startup probe waits; a local server answers in milliseconds or not at all. */
+export const PROBE_TIMEOUT = Duration.seconds(2);
+
+/** Whether an Ollama server answers at `endpoint`; any failure, timeout included, is "no". */
+export const probe = (endpoint: string, timeout: Duration.Input = PROBE_TIMEOUT): Effect.Effect<boolean> =>
+  Effect.tryPromise(() =>
+    fetch(new URL('/api/version', endpoint), { signal: AbortSignal.timeout(Duration.toMillis(timeout)) }),
+  ).pipe(
+    Effect.map((response) => response.ok),
+    Effect.orElseSucceed(() => false),
+  );
+
+/** Probes Ollama when it is selected, prints what was decided, and returns the model to run. */
+export const ensureAvailable = (
+  selection: Selection,
+  options: { readonly chosen: boolean },
+): Effect.Effect<Selection> =>
+  Effect.gen(function* () {
+    if (selection.provider !== 'ollama') {
+      return selection;
+    }
+    const reachable = yield* probe(selection.endpoint ?? OLLAMA_ENDPOINT);
+    const settled = settle(selection, { reachable, chosen: options.chosen, hasKey: hasAnthropicKey() });
+    if (settled.notice !== undefined) {
+      yield* Console.error(settled.notice);
+    }
+    return settled.selection;
+  });
+
+/** The route the Ollama dialect posts every turn to, which marks a transport failure as Ollama's. */
+const OLLAMA_CHAT_PATH = '/api/chat';
+
+/**
+ * A failed model call in words a user can act on, or none when the failure is not the transport's.
+ * The provider's own text ends in generic advice to "check your network connection", which says
+ * nothing about the usual cause here: no Ollama running on this machine.
+ */
+export const explainFailure = (cause: unknown): string | undefined => {
+  if (!AiError.isAiError(cause) || cause.reason._tag !== 'NetworkError') {
+    return undefined;
+  }
+  const url = cause.reason.request.url;
+  return url.endsWith(OLLAMA_CHAT_PATH)
+    ? `Cannot reach Ollama at ${url.slice(0, -OLLAMA_CHAT_PATH.length)}: start it with \`ollama serve\`, or restart with --provider anthropic and DX_ANTHROPIC_API_KEY set.`
+    : `Cannot reach the model at ${url || 'its endpoint'}: ${cause.reason.description ?? cause.reason.reason}.`;
 };
