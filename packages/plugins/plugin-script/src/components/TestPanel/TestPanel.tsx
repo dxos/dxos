@@ -152,7 +152,7 @@ type MessageThreadProps = {
   history: Message[];
 };
 
-const MESSAGE_COLS = ['var(--dx-rail-item)', '1fr', 'var(--dx-rail-item)'];
+const MESSAGE_COLS = ['var(--dx-rail-item)', 'fill', 'var(--dx-rail-item)'] as const;
 
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history }: MessageThreadProps, forwardedRef) => {

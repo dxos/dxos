@@ -94,7 +94,7 @@ const DefaultStory = ({ size, mode, width }: StoryArgs) => (
       <Pane prefix={`overlay-${size}`} mode={mode} width={width} />
       <Pane prefix={`native-${size}`} native />
     </div>
-    <Strip prefix={`strip-${size}`} snap autoHide />
+    <Strip prefix={`strip-${size}`} snap />
     <Strip prefix={`bare-${size}`} scrollbars={false} />
   </>
 );

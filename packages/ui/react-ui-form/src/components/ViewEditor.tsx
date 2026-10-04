@@ -28,8 +28,8 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Banner, Button, Field, Toggle, Typography, useTranslation } from '@dxos/react-ui';
-import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
+import { QueryForm, type QueryFormProps } from '@dxos/react-ui-query';
 import {
   ParentLabelAnnotation,
   ProjectionModel,

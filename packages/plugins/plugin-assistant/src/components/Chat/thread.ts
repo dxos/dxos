@@ -88,6 +88,26 @@ export const projectThread = ({
 };
 
 /**
+ * Alarms that have woken the agent since the last prompt the user typed: the count the runtime caps at
+ * `Alarm.MAX_SELF_WAKES`, read from the feed so the status can show it.
+ */
+export const projectSelfWakes = ({
+  feedAlarms,
+  messages,
+}: {
+  feedAlarms: readonly Alarm.Alarm[];
+  messages: readonly Message.Message[];
+}): number => {
+  const lastPrompt = messages.findLast(
+    (message) =>
+      message.sender.role === 'user' &&
+      message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic'),
+  );
+  const since = lastPrompt?.created ?? '';
+  return feedAlarms.filter((alarm) => isConsumed(alarm) && alarm.created >= since).length;
+};
+
+/**
  * The alarms still waiting to fire, earliest first: those the agent has not consumed and (for a
  * cancelled one) not removed from the feed.
  */
