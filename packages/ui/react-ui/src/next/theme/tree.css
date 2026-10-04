@@ -26,11 +26,24 @@
     outline: none;
   }
 
+  /*
+   * The space an icon has inside its block: with `rowInset` (`data-row-inset`) a row's ends are padded by it, so the
+   * disclosure and a trailing count sit as far from the row's edges as its icon sits from its cell. Declared on the row
+   * so it resolves against the row's size.
+   */
+  .dx-tree-item {
+    --dx-tree-inset: 0px;
+  }
+  [data-row-inset] .dx-tree-item,
+  [data-row-inset] .dx-tree-group {
+    --dx-tree-inset: calc((var(--dx-block-size) - var(--dx-control-icon)) / 2);
+  }
+
   /* One block tall at every size: the row's auto rows are `minmax(block, auto)` and nothing in it exceeds a block. */
   .dx-tree-item {
     position: relative;
     grid-auto-rows: var(--dx-block-size);
-    padding-inline-start: calc(var(--dx-tree-depth) * var(--dx-half-block-size));
+    padding-inline: calc(var(--dx-tree-inset) + var(--dx-tree-depth) * var(--dx-half-block-size)) var(--dx-tree-inset);
     outline: none;
     user-select: none;
   }
@@ -56,7 +69,7 @@
     outline-style: dashed;
   }
   .dx-tree-item[data-drop-target]::after {
-    inset-inline-start: calc(var(--dx-tree-drop-level, 0) * var(--dx-half-block-size));
+    inset-inline-start: calc(var(--dx-tree-inset) + var(--dx-tree-drop-level, 0) * var(--dx-half-block-size));
   }
   /* A link adds a reference and leaves the item where it is, so its line is dashed. */
   .dx-tree-item[data-drop-kind='link']::after {
@@ -199,7 +212,9 @@
     display: flex;
     align-items: flex-end;
     block-size: var(--dx-block-size);
-    padding-inline-start: calc(var(--dx-tree-depth) * var(--dx-half-block-size) + var(--dx-half-block-size));
+    padding-inline-start: calc(
+      var(--dx-tree-inset, 0px) + var(--dx-tree-depth) * var(--dx-half-block-size) + var(--dx-half-block-size)
+    );
     padding-block-end: 0.125rem;
     user-select: none;
   }
@@ -220,7 +235,9 @@
   .dx-tree-indent-guide {
     position: absolute;
     inset-block: 0;
-    inset-inline-start: calc((var(--dx-tree-guide-level) + 0.5) * var(--dx-half-block-size));
+    inset-inline-start: calc(
+      var(--dx-tree-inset, 0px) + (var(--dx-tree-guide-level) + 0.5) * var(--dx-half-block-size)
+    );
     width: 0;
     border-inline-start: 1px solid var(--color-separator-subtle);
     pointer-events: none;

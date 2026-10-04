@@ -359,7 +359,10 @@ export const TaskTreeNode = ({
       onDrop={handleDrop}
     >
       <Tree.Label srOnly>{t('task-list.label')}</Tree.Label>
-      <Tree.Content gutter={flush ? 'none' : undefined}>{renderRow}</Tree.Content>
+      {/* The list's own inset, and no row inset: its edge cells (the reference, the menu) are blocks already. */}
+      <Tree.Content gutter={flush ? 'none' : 'inset'} rowInset={false}>
+        {renderRow}
+      </Tree.Content>
     </Tree.Root>
   );
 };
