@@ -5,3 +5,4 @@
 export * from './inbox-materializer.ts';
 export * from './materialize.ts';
 export * from './sender.ts';
+export * from './link.ts';

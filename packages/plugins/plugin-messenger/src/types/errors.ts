@@ -16,3 +16,9 @@ export class MessageSendError extends BaseError.extend('MessageSendError', 'The 
 
 /** Failures of `MessengerCapabilities.Sender.send`. */
 export type InboxSendError = UnknownRecipientError | MessageSendError | InboxPayloadTooLargeError;
+
+/** A notification links to an object in a space this identity is not a member of, or that no longer exists. */
+export class LinkUnavailableError extends BaseError.extend(
+  'LinkUnavailableError',
+  'The linked object is not available.',
+) {}

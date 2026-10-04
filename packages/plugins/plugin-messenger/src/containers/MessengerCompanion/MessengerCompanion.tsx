@@ -2,17 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Surface, useOperationInvoker, useOptionalAtomCapability } from '@dxos/app-framework/ui';
+import { Surface, useCapability, useOperationInvoker, useOptionalAtomCapability } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { type InvitationRenderer, NotificationsPanel } from '#components';
+import { loadLink } from '#materializer';
 import { meta } from '#meta';
 import { MESSENGER_COMPANION, MessengerCapabilities } from '#types';
 
@@ -27,6 +31,7 @@ const renderInvitation: InvitationRenderer = ({ data, sender }) => (
 export const MessengerCompanion = () => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
+  const client = useCapability(ClientCapabilities.Client);
   const notifications = useOptionalAtomCapability(MessengerCapabilities.NotificationsContainer);
 
   const handleOpen = useCallback(
@@ -36,12 +41,17 @@ export const MessengerCompanion = () => {
         return;
       }
 
-      void ref
-        .load()
-        .then((object) => invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] }))
-        .catch((error) => log.warn('failed to open notification link', { error }));
+      void EffectEx.runPromise(
+        loadLink(client, ref).pipe(
+          Effect.flatMap((object) =>
+            Effect.promise(() =>
+              invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] }),
+            ),
+          ),
+        ),
+      ).catch((error) => log.warn('failed to open notification link', { error }));
     },
-    [invokePromise],
+    [client, invokePromise],
   );
 
   if (!notifications) {

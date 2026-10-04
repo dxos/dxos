@@ -22,7 +22,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization } from '@dxos/types';
 
 import { NotificationsPanel } from '#components';
-import { makeSender, startInboxMaterializer } from '#materializer';
+import { loadLink, makeSender, startInboxMaterializer } from '#materializer';
 import { translations } from '#translations';
 import { Notifications } from '#types';
 
@@ -184,13 +184,20 @@ const BobColumn = () => {
     return stop;
   }, [client, space]);
 
-  const handleOpen = useCallback((message: Message.Message) => {
-    const ref = message.attachments?.[0]?.ref;
-    void ref
-      ?.load()
-      .then((object) => setOpened(Obj.getLabel(object) ?? object.id))
-      .catch((error) => log.warn('failed to resolve link', { error }));
-  }, []);
+  const handleOpen = useCallback(
+    (message: Message.Message) => {
+      const ref = message.attachments?.[0]?.ref;
+      if (!ref) {
+        return;
+      }
+
+      void EffectEx.runPromise(loadLink(client, ref)).then(
+        (object) => setOpened(Obj.getLabel(object) ?? object.id),
+        (error) => log.warn('failed to resolve link', { error }),
+      );
+    },
+    [client],
+  );
 
   return (
     <Panel.Root data-testid='messenger.bob'>
@@ -221,7 +228,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-messenger/Messenger',
+  title: 'plugins/plugin-messenger/stories/Messenger',
   render: DefaultStory,
   // The client grid is innermost so the layout wraps both columns rather than each one.
   decorators: [
@@ -269,8 +276,9 @@ export const TwoUsers: Story = {
     const tile = await bob.findByText('Please review', {}, { timeout: 20_000 });
     await waitFor(() => expect(bob.getByTestId('messenger.badge')).toHaveTextContent('1'), { timeout: 10_000 });
 
-    // 3. Opening the tile marks it read, which clears the badge.
+    // 3. Opening the tile marks it read, which clears the badge, and resolves the link in the shared space.
     await userEvent.click(tile);
     await waitFor(() => expect(bob.queryByTestId('messenger.badge')).toBeNull(), { timeout: 10_000 });
+    await bob.findByText(`Opened “${LINKED_OBJECT_NAME}”`, {}, { timeout: 10_000 });
   },
 };

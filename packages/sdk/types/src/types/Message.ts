@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { type MakeOptional } from '@dxos/util';
+import { type MakeOptional, deepMapValues } from '@dxos/util';
 
 import * as Actor from './Actor.ts';
 import * as ContentBlock from './ContentBlock.ts';
@@ -101,11 +101,22 @@ export type Data = Obj.MakeProps<typeof Message>;
 
 const MessageSchema = Type.getSchema(Message);
 
+/** Qualifies a ref to a stored object with its space, since a relative ref resolves against the reader's own space. */
+const toAbsoluteRef = (ref: Ref.Unknown): Ref.Unknown => {
+  const target = ref.target;
+  return target && Obj.getDatabase(target) ? Ref.fromURI(Obj.getURI(target, { prefer: 'absolute' })) : ref;
+};
+
 /**
  * Encodes a message as JSON with its Effect Schema, for transport (e.g., an inbox payload).
+ * Refs to stored objects are written as absolute (`echo://<spaceId>/<objectId>`) URIs.
  */
 export const encodeJson = (message: Message): string =>
-  JSON.stringify(Schema.encodeUnknownSync(MessageSchema)(message));
+  JSON.stringify(
+    Schema.encodeUnknownSync(MessageSchema)(
+      deepMapValues({ ...message }, (value, recurse) => (Ref.isRef(value) ? toAbsoluteRef(value) : recurse(value))),
+    ),
+  );
 
 /**
  * Decodes {@link encodeJson} output into message data; the sender's object id is dropped, since
