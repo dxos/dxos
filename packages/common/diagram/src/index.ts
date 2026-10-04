@@ -15,6 +15,7 @@ export * as Mermaid from './mermaid.ts';
 export * as MermaidEngine from './mermaid-engine.ts';
 export * as Nudge from './nudge.ts';
 export * as Objective from './objective.ts';
+export * as Ports from './ports.ts';
 export * as Rules from './rules.ts';
 export * as Scene from './scene.ts';
 export * as Score from './score.ts';

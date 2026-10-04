@@ -21,6 +21,7 @@ import { type Direction, type MermaidEdge, type MermaidGraph, markers, parse } f
 import * as Nudge from './nudge.ts';
 import * as Objective from './objective.ts';
 import { makeAvoidingRouter } from './ortho-router.ts';
+import * as Ports from './ports.ts';
 import type * as Scene from './scene.ts';
 import { GRID, type Rect, type Router, zRouter } from './uml-grid.ts';
 
@@ -501,7 +502,20 @@ const frame = (graph: MermaidGraph, positions: Map<string, Scene.Point>, cell: C
   return { nodes, frames };
 };
 
-type Ports = { start?: number; end?: number };
+type PortPair = { start?: number; end?: number };
+
+/** Rounds of port reordering per emit; each re-routes every edge, so it is capped. */
+const PORT_ROUNDS = 3;
+
+/** Local-search passes on the chosen layout, and the most re-routes they may spend. */
+const SEARCH_PASSES = 4;
+const SEARCH_TRIES = 48;
+
+/** Whether a re-routed scene has fewer crossings without any new error or connector overlap. */
+const improves = (next: Diagnostics.Report, current: Diagnostics.Report): boolean =>
+  next.metrics.crossings < current.metrics.crossings &&
+  Diagnostics.errors(next).length <= Diagnostics.errors(current).length &&
+  next.metrics.edgeOverlaps <= current.metrics.edgeOverlaps;
 
 /**
  * Straightened ports: when an edge's nodes overlap on the cross axis, both terminals take one
@@ -513,8 +527,8 @@ const straighten = (
   edges: readonly MermaidEdge[],
   nodes: Map<string, Rect>,
   isHorizontal: (edge: MermaidEdge) => boolean,
-): Map<MermaidEdge, Ports> => {
-  const ports = new Map<MermaidEdge, Ports>();
+): Map<MermaidEdge, PortPair> => {
+  const ports = new Map<MermaidEdge, PortPair>();
   const taken = new Map<string, number[]>();
   for (const edge of edges) {
     const from = nodes.get(edge.from);
@@ -627,6 +641,8 @@ type EmitOptions = {
   bus: boolean;
   arrangement: Arrangement;
   route?: Router;
+  /** Run the port local search; costly, so only for the layout already chosen. */
+  search?: boolean;
 };
 
 const rectsOverlap = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
@@ -703,7 +719,7 @@ const emit = (
   graph: MermaidGraph,
   cell: Cell,
   { nodes, frames }: Placement,
-  { origin, scale, bus, arrangement, route }: EmitOptions,
+  { origin, scale, bus, arrangement, route, search = false }: EmitOptions,
 ): Scene.Command[] => {
   const horizontal = graph.direction === 'LR' || graph.direction === 'RL';
   const at = (rect: Rect): Scene.Point => ({ x: origin.x + rect.x * scale, y: origin.y + rect.y * scale });
@@ -770,7 +786,13 @@ const emit = (
 
   if (graph.edges.length > 0) {
     // Frames are containers, not obstacles: only node rects block routes.
-    const router = route ?? makeAvoidingRouter([...nodes.values()], zRouter, { step: GRID / 4 });
+    const makeRouter = (): { router: Router; reserve?: (points: readonly Scene.Point[]) => void } => {
+      if (route) {
+        return { router: route };
+      }
+      const avoiding = makeAvoidingRouter([...nodes.values()], zRouter, { step: GRID / 4 });
+      return { router: avoiding, reserve: avoiding.reserve };
+    };
     const buses = bus && !horizontal ? inheritanceBuses(graph.edges, nodes) : { elements: [], consumed: new Set() };
     const routed = graph.edges.filter((edge) => !buses.consumed.has(edge));
     // In columns the root level runs across the flow, so an edge between two of its members — groups
@@ -779,23 +801,7 @@ const emit = (
     const rootOf = (id: string) => groupOf.get(id) ?? id;
     const isHorizontal = (edge: MermaidEdge) =>
       arrangement === 'columns' && rootOf(edge.from) !== rootOf(edge.to) ? !horizontal : horizontal;
-    const ports = straighten(routed, nodes, isHorizontal);
-    const elements: Scene.Element[] = [...buses.elements];
-    // Terminals already placed, per node, with their role. Edges are routed independently (and an
-    // internal edge and a cross-group edge may even route in different modes), so a later edge can
-    // land its terminal on an earlier one. Only an exit on an entry is a defect — it reads as a
-    // crossing — so a slot is taken by the opposite role alone: two exits (a fork) or two entries (a
-    // merge) share a trunk, as a bus does. Such an edge is re-routed with the port nudged to a free
-    // slot on that side, preferring the nudge that keeps the route straightest.
-    type Role = 'exit' | 'entry';
-    const terminals = new Map<string, { point: Scene.Point; role: Role }[]>();
-    const taken = (nodeId: string, point: Scene.Point, role: Role) =>
-      (terminals.get(nodeId) ?? []).some(
-        (other) =>
-          other.role !== role &&
-          Math.abs(other.point.x - point.x) < GRID_FINE &&
-          Math.abs(other.point.y - point.y) < GRID_FINE,
-      );
+    const straightened = straighten(routed, nodes, isHorizontal);
     // Paired nudges first: both ends move together, so a straight edge stays straight; single-ended
     // ones for when only one end is crowded.
     const NUDGES: [number, number][] = [
@@ -809,94 +815,311 @@ const emit = (
       [0, 1],
       [0, -1],
     ];
-    const routeEdge = (edge: MermaidEdge, from: Rect, to: Rect): Scene.Point[] => {
-      const horizontal = isHorizontal(edge);
-      const sameLane = horizontal ? from.x === to.x : from.y === to.y;
-      const alongY = horizontal ? sameLane : !sameLane;
-      const base = ports.get(edge) ?? {};
-      const center = (rect: Rect) => (alongY ? rect.x + rect.w / 2 : rect.y + rect.h / 2);
-      const within = (rect: Rect, value: number) =>
-        alongY
-          ? Math.min(rect.x + rect.w - GRID_FINE, Math.max(rect.x + GRID_FINE, value))
-          : Math.min(rect.y + rect.h - GRID_FINE, Math.max(rect.y + GRID_FINE, value));
-      const route = ([startNudge, endNudge]: [number, number]) =>
-        router({
-          relation: edge,
-          from,
-          to,
-          horizontal,
-          offset: 0,
-          ports: {
-            start: within(from, (base.start ?? center(from)) + startNudge * GRID_FINE),
-            end: within(to, (base.end ?? center(to)) + endNudge * GRID_FINE),
-          },
+    type Routed = {
+      edge: MermaidEdge;
+      index: number;
+      points: Scene.Point[];
+      source: Rect;
+      target: Rect;
+      /** Every path the router returned for this edge, each of which steered the edges after it. */
+      attempts: Scene.Point[][];
+    };
+    /**
+     * Routes every edge with a fresh router, since the avoiding router steers each route off earlier
+     * ones. Edges before the first whose ports changed would route exactly as in `previous`, so their
+     * routes are replayed into the router instead of searched again.
+     */
+    const routeAll = (
+      ports: Map<MermaidEdge, PortPair>,
+      previous?: { ports: Map<MermaidEdge, PortPair>; routes: readonly Routed[] },
+    ): Routed[] => {
+      const { router: search, reserve } = makeRouter();
+      let attempts: Scene.Point[][] = [];
+      const router: Router = (relation) => {
+        const points = search(relation);
+        attempts.push(points);
+        return points;
+      };
+      // Terminals already placed, per node, with their role. Edges are routed independently (and an
+      // internal edge and a cross-group edge may even route in different modes), so a later edge can
+      // land its terminal on an earlier one. Only an exit on an entry is a defect — it reads as a
+      // crossing — so a slot is taken by the opposite role alone: two exits (a fork) or two entries (a
+      // merge) share a trunk, as a bus does. Such an edge is re-routed with the port nudged to a free
+      // slot on that side, preferring the nudge that keeps the route straightest.
+      type Role = 'exit' | 'entry';
+      const terminals = new Map<string, { point: Scene.Point; role: Role }[]>();
+      const taken = (nodeId: string, point: Scene.Point, role: Role) =>
+        (terminals.get(nodeId) ?? []).some(
+          (other) =>
+            other.role !== role &&
+            Math.abs(other.point.x - point.x) < GRID_FINE &&
+            Math.abs(other.point.y - point.y) < GRID_FINE,
+        );
+      const routeEdge = (edge: MermaidEdge, from: Rect, to: Rect): Scene.Point[] => {
+        const horizontal = isHorizontal(edge);
+        const sameLane = horizontal ? from.x === to.x : from.y === to.y;
+        const alongY = horizontal ? sameLane : !sameLane;
+        const base = ports.get(edge) ?? {};
+        const center = (rect: Rect) => (alongY ? rect.x + rect.w / 2 : rect.y + rect.h / 2);
+        const within = (rect: Rect, value: number) =>
+          alongY
+            ? Math.min(rect.x + rect.w - GRID_FINE, Math.max(rect.x + GRID_FINE, value))
+            : Math.min(rect.y + rect.h - GRID_FINE, Math.max(rect.y + GRID_FINE, value));
+        const route = ([startNudge, endNudge]: [number, number]) =>
+          router({
+            relation: edge,
+            from,
+            to,
+            horizontal,
+            offset: 0,
+            ports: {
+              start: within(from, (base.start ?? center(from)) + startNudge * GRID_FINE),
+              end: within(to, (base.end ?? center(to)) + endNudge * GRID_FINE),
+            },
+          });
+        const free = (points: Scene.Point[]) =>
+          !taken(edge.from, points[0], 'exit') && !taken(edge.to, points[points.length - 1], 'entry');
+        const direct = route(NUDGES[0]);
+        if (free(direct)) {
+          return direct;
+        }
+        let best: Scene.Point[] | undefined;
+        for (const nudge of NUDGES.slice(1)) {
+          const attempt = route(nudge);
+          if (free(attempt) && (!best || attempt.length < best.length)) {
+            best = attempt;
+          }
+        }
+        return best ?? direct;
+      };
+      const replayed = new Map(previous?.routes.map((entry) => [entry.edge, entry]));
+      const samePorts = (edge: MermaidEdge) =>
+        previous?.ports.get(edge)?.start === ports.get(edge)?.start &&
+        previous?.ports.get(edge)?.end === ports.get(edge)?.end;
+      let replaying = reserve !== undefined && previous !== undefined;
+      return routed.flatMap((edge, index): Routed[] => {
+        const from = nodes.get(edge.from);
+        const to = nodes.get(edge.to);
+        if (!from || !to) {
+          return [];
+        }
+        const earlier = replayed.get(edge);
+        replaying = replaying && earlier !== undefined && samePorts(edge);
+        let points: Scene.Point[];
+        if (replaying && earlier && reserve) {
+          earlier.attempts.forEach(reserve);
+          attempts = earlier.attempts;
+          points = earlier.points;
+        } else {
+          attempts = [];
+          points = routeEdge(edge, from, to);
+        }
+        terminals.set(edge.from, [...(terminals.get(edge.from) ?? []), { point: points[0], role: 'exit' }]);
+        terminals.set(edge.to, [
+          ...(terminals.get(edge.to) ?? []),
+          { point: points[points.length - 1], role: 'entry' },
+        ]);
+        return [{ edge, index, points, source: from, target: to, attempts }];
+      });
+    };
+    // Edges are routed one at a time, so parallel runs land on the same line; the bus is a deliberate merge and stays put.
+    const draw = (routes: readonly Routed[]) => {
+      const nudged = Nudge.nudge(routes, {
+        spacing: GRID / 4,
+        obstacles: [...nodes.values()],
+        fixed: buses.elements.flatMap((element) =>
+          element.kind === 'line'
+            ? [element.points]
+            : element.kind === 'arrow' && element.start && element.end
+              ? [[element.start, element.end]]
+              : [],
+        ),
+      });
+      const elements: Scene.Element[] = [...buses.elements];
+      const labelled: { id: string; text: string; points: Scene.Point[] }[] = [];
+      const paths: Scene.Point[][] = [];
+      routes.forEach(({ edge, index }, position) => {
+        const points = nudged[position];
+        const id = `${edge.from}-${edge.to}-${index}`;
+        const style = markers(edge.kind);
+        if (points.length > 2) {
+          elements.push({
+            kind: 'line',
+            id: `${id}-path`,
+            points: points.slice(0, -1),
+            ...(style.stroke ? { stroke: style.stroke } : {}),
+          });
+        }
+        elements.push({
+          kind: 'arrow',
+          id,
+          start: points[points.length - 2],
+          end: points[points.length - 1],
+          ...style,
         });
-      const free = (points: Scene.Point[]) =>
-        !taken(edge.from, points[0], 'exit') && !taken(edge.to, points[points.length - 1], 'entry');
-      const direct = route(NUDGES[0]);
-      if (free(direct)) {
-        return direct;
+        if (edge.label) {
+          labelled.push({ id, text: edge.label, points });
+        }
+        paths.push(points);
+      });
+      elements.push(...placeLabels(labelled, paths, [...nodes.values()]));
+      const object: Scene.WorldObject = { id: 'edges', origin, scale, elements };
+      return { object, nudged };
+    };
+    // The faces whose port the router honours: a terminal it moved to a cross face is not ours to order.
+    const flowSides = (edge: MermaidEdge, from: Rect, to: Rect): [Ports.Side, Ports.Side] => {
+      const horizontal = isHorizontal(edge);
+      const alongY = horizontal ? from.x === to.x : from.y !== to.y;
+      return alongY
+        ? to.y >= from.y
+          ? ['bottom', 'top']
+          : ['top', 'bottom']
+        : to.x >= from.x
+          ? ['right', 'left']
+          : ['left', 'right'];
+    };
+    const others = objectsOf(commands);
+    let ports = straightened;
+    let routes = routeAll(ports);
+    let drawn = draw(routes);
+    let report = Diagnostics.analyze([...others, drawn.object]);
+    const refOf = ({ edge, index }: Routed) => `edges/${edge.from}-${edge.to}-${index}`;
+    const crossingRefs = () =>
+      new Set(report.diagnostics.flatMap(({ code, refs }) => (code === 'edge-crossing' ? refs : [])));
+    /** Re-routes with `candidate` ports and keeps the result only if it {@link improves} the scene. */
+    const attempt = (candidate: Map<MermaidEdge, PortPair>): boolean => {
+      const candidateRoutes = routeAll(candidate, { ports, routes });
+      const candidateDrawn = draw(candidateRoutes);
+      const candidateReport = Diagnostics.analyze([...others, candidateDrawn.object]);
+      if (!improves(candidateReport, report)) {
+        return false;
       }
-      let best: Scene.Point[] | undefined;
-      for (const nudge of NUDGES.slice(1)) {
-        const attempt = route(nudge);
-        if (free(attempt) && (!best || attempt.length < best.length)) {
-          best = attempt;
+      [ports, routes, drawn, report] = [candidate, candidateRoutes, candidateDrawn, candidateReport];
+      return true;
+    };
+    const withPort = (
+      base: Map<MermaidEdge, PortPair>,
+      edge: MermaidEdge,
+      end: 'start' | 'end',
+      coord: number,
+    ): Map<MermaidEdge, PortPair> => new Map(base).set(edge, { ...base.get(edge), [end]: coord });
+
+    for (let round = 0; round < PORT_ROUNDS && report.metrics.crossings > 0; round++) {
+      const assigned = Ports.assign(
+        routes.map(({ edge, source, target }, position) => {
+          const points = drawn.nudged[position];
+          const [startSide, endSide] = flowSides(edge, source, target);
+          // A straightened edge pins its ports only while its route really is one straight run.
+          const straight = straightened.has(edge) && points.length === 2;
+          return {
+            points,
+            source,
+            target,
+            fixed: {
+              start: straight || Ports.sideOf(points[0], source) !== startSide,
+              end: straight || Ports.sideOf(points[points.length - 1], target) !== endSide,
+            },
+          };
+        }),
+        { step: GRID_FINE },
+      );
+      // Re-routing is the expensive part, and moving ports of edges that cross nothing cannot uncross anything.
+      const crossing = crossingRefs();
+      const moved = routes.filter(
+        (_, position) => assigned[position].start !== undefined || assigned[position].end !== undefined,
+      );
+      if (!moved.some((entry) => crossing.has(refOf(entry)))) {
+        break;
+      }
+      let candidate = ports;
+      routes.forEach(({ edge }, position) => {
+        for (const end of ['start', 'end'] as const) {
+          const coord = assigned[position][end];
+          if (coord !== undefined) {
+            candidate = withPort(candidate, edge, end, coord);
+          }
+        }
+      });
+      if (!attempt(candidate)) {
+        break;
+      }
+    }
+
+    // Local search, for the chosen layout only: swap two ports of one side, or slide one to a free
+    // slot beside it, where an edge on that side still crosses another.
+    let tries = 0;
+    for (let pass = 0; search && pass < SEARCH_PASSES && report.metrics.crossings > 0; pass++) {
+      type Slot = { edge: MermaidEdge; end: 'start' | 'end'; coord: number; crossing: boolean; rect: Rect };
+      const crossing = crossingRefs();
+      const sides = new Map<string, Slot[]>();
+      for (const entry of routes) {
+        const { edge, source, target, points } = entry;
+        const flow = flowSides(edge, source, target);
+        const ends = [
+          { end: 'start' as const, rect: source, point: points[0], side: flow[0], node: edge.from },
+          { end: 'end' as const, rect: target, point: points[points.length - 1], side: flow[1], node: edge.to },
+        ];
+        for (const { end, rect, point, side, node } of ends) {
+          if (Ports.sideOf(point, rect) === side) {
+            const coord = side === 'top' || side === 'bottom' ? point.x : point.y;
+            const key = `${node}:${side}`;
+            sides.set(key, [
+              ...(sides.get(key) ?? []),
+              { edge, end, coord, crossing: crossing.has(refOf(entry)), rect },
+            ]);
+          }
         }
       }
-      return best ?? direct;
-    };
-    const labelled: { id: string; text: string; points: Scene.Point[] }[] = [];
-    const paths: Scene.Point[][] = [];
-    const routes = routed.flatMap((edge, index) => {
-      const from = nodes.get(edge.from);
-      const to = nodes.get(edge.to);
-      if (!from || !to) {
-        return [];
-      }
-      const points = routeEdge(edge, from, to);
-      terminals.set(edge.from, [...(terminals.get(edge.from) ?? []), { point: points[0], role: 'exit' }]);
-      terminals.set(edge.to, [...(terminals.get(edge.to) ?? []), { point: points[points.length - 1], role: 'entry' }]);
-      return [{ edge, index, points, source: from, target: to }];
-    });
-    // Edges are routed one at a time, so parallel runs land on the same line; the bus is a deliberate merge and stays put.
-    const nudged = Nudge.nudge(routes, {
-      spacing: GRID / 4,
-      obstacles: [...nodes.values()],
-      fixed: buses.elements.flatMap((element) =>
-        element.kind === 'line'
-          ? [element.points]
-          : element.kind === 'arrow' && element.start && element.end
-            ? [[element.start, element.end]]
-            : [],
-      ),
-    });
-    routes.forEach(({ edge, index }, position) => {
-      const points = nudged[position];
-      const id = `${edge.from}-${edge.to}-${index}`;
-      const style = markers(edge.kind);
-      if (points.length > 2) {
-        elements.push({
-          kind: 'line',
-          id: `${id}-path`,
-          points: points.slice(0, -1),
-          ...(style.stroke ? { stroke: style.stroke } : {}),
-        });
-      }
-      elements.push({
-        kind: 'arrow',
-        id,
-        start: points[points.length - 2],
-        end: points[points.length - 1],
-        ...style,
+      const moves = [...sides.entries()].flatMap(([key, slots]): Map<MermaidEdge, PortPair>[] => {
+        if (slots.length < 2 || !slots.some((slot) => slot.crossing)) {
+          return [];
+        }
+        const horizontalSide = key.endsWith(':top') || key.endsWith(':bottom');
+        const swaps = slots.flatMap((first, index) =>
+          slots
+            .slice(index + 1)
+            .filter(
+              (second) => (first.crossing || second.crossing) && Math.abs(first.coord - second.coord) >= GRID_FINE,
+            )
+            .map((second) =>
+              withPort(withPort(ports, first.edge, first.end, second.coord), second.edge, second.end, first.coord),
+            ),
+        );
+        const slides = slots
+          .filter((slot) => slot.crossing)
+          .flatMap((slot) =>
+            [-GRID_FINE, GRID_FINE]
+              .map((delta) => slot.coord + delta)
+              .filter((coord) => {
+                const [low, high] = horizontalSide
+                  ? [slot.rect.x, slot.rect.x + slot.rect.w]
+                  : [slot.rect.y, slot.rect.y + slot.rect.h];
+                return (
+                  coord >= low + GRID_FINE &&
+                  coord <= high - GRID_FINE &&
+                  slots.every((other) => other === slot || Math.abs(other.coord - coord) >= GRID_FINE)
+                );
+              })
+              .map((coord) => withPort(ports, slot.edge, slot.end, coord)),
+          );
+        return [...swaps, ...slides];
       });
-      if (edge.label) {
-        labelled.push({ id, text: edge.label, points });
+      let improved = false;
+      for (const move of moves) {
+        if (tries++ >= SEARCH_TRIES) {
+          break;
+        }
+        if (attempt(move)) {
+          improved = true;
+          // Routes changed, so the remaining moves were built on stale coordinates.
+          break;
+        }
       }
-      paths.push(points);
-    });
-    elements.push(...placeLabels(labelled, paths, [...nodes.values()]));
-    commands.push({ op: 'upsert-object', object: { id: 'edges', origin, scale, elements } });
+      if (!improved) {
+        break;
+      }
+    }
+    commands.push({ op: 'upsert-object', object: drawn.object });
   }
 
   return commands;
@@ -941,6 +1164,7 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
   );
 
   const candidates: Candidate[] = [];
+  const placements = new Map<Candidate, Placement>();
   // Knobs often reach the same placement (a graph with no in-package references layers the same
   // either way; equal-height packages align the same every way); each is routed and graded once.
   const seen = new Set<string>();
@@ -969,7 +1193,7 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
                 const commands = emit(graph, cell, placement, { origin, scale, bus, arrangement, route });
                 const objects = objectsOf(commands);
                 const report = Diagnostics.analyze(objects);
-                candidates.push({
+                const candidate: Candidate = {
                   lattice,
                   order,
                   arrangement,
@@ -979,7 +1203,9 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
                   bus,
                   commands,
                   layout: { objects, report },
-                });
+                };
+                candidates.push(candidate);
+                placements.set(candidate, placement);
               }
             }
           }
@@ -993,11 +1219,55 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
   const ceiling = plain.length
     ? Objective.select(objective, plain).chosen.candidate.layout.report.metrics.crossings
     : Infinity;
-  const { chosen, ranked } = Objective.select(
+  const { ranked } = Objective.select(
     objective,
     candidates.filter((candidate) => !candidate.compact || candidate.layout.report.metrics.crossings <= ceiling),
   );
-  return { commands: chosen.candidate.commands, chosen, ranked };
+  return refine(graph, cell, placements, objective, { origin, scale, route }, ranked);
+};
+
+/** How many of the best-ranked layouts get the port local search; refining more found nothing better on the corpus. */
+const REFINE_TOP = 1;
+
+/**
+ * Re-emits the best-ranked layouts with the port local search, which is too costly to run on every
+ * candidate, keeps each result the objective rates no worse, and picks again among them.
+ */
+const refine = (
+  graph: MermaidGraph,
+  cell: Cell,
+  placements: Map<Candidate, Placement>,
+  objective: Objective.Objective,
+  { origin, scale, route }: Pick<EmitOptions, 'origin' | 'scale' | 'route'>,
+  ranked: readonly Objective.Ranked<Candidate>[],
+): Result => {
+  const refineOne = (entry: Objective.Ranked<Candidate>): Objective.Ranked<Candidate> => {
+    const placement = placements.get(entry.candidate);
+    if (!placement || entry.candidate.layout.report.metrics.crossings === 0) {
+      return entry;
+    }
+    const { bus, arrangement } = entry.candidate;
+    const commands = emit(graph, cell, placement, { origin, scale, bus, arrangement, route, search: true });
+    const objects = objectsOf(commands);
+    const candidate: Candidate = {
+      ...entry.candidate,
+      commands,
+      layout: { objects, report: Diagnostics.analyze(objects) },
+    };
+    const evaluation = Objective.evaluate(objective, candidate.layout);
+    return evaluation.violations.length > entry.evaluation.violations.length || evaluation.cost > entry.evaluation.cost
+      ? entry
+      : { candidate, evaluation };
+  };
+  // Same order as `Objective.select`, and stable, so untouched ties keep the generator's order.
+  const reranked = ranked
+    .map((entry, index) => (index < REFINE_TOP ? refineOne(entry) : entry))
+    .sort(
+      (left, right) =>
+        left.evaluation.violations.length - right.evaluation.violations.length ||
+        left.evaluation.cost - right.evaluation.cost,
+    );
+  return { commands: reranked[0].candidate.commands, chosen: reranked[0], ranked: reranked };
 };
 
 /** The chosen layout's scene commands; see {@link layout} for the candidates and verdicts. */
