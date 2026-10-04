@@ -1,11 +1,21 @@
 # @dxos/code-index
 
 Indexes a repository into a SQLite ledger and a persistent RDF quad store — one named graph per
-file, speaking the DEUS code vocabulary. Query it with SPARQL or LDkit, extend it with N3 (EYE)
-rules.
+file, speaking the DEUS code vocabulary. Query it with SPARQL or LDkit, extend it with N3 rules.
+The quad store (oxigraph over RocksDB) and the rule engine are a Rust Node-API addon,
+[`tools/code-index-native`](../code-index-native) — see
+[`design/NATIVE-BACKEND.md`](./design/NATIVE-BACKEND.md).
 
 - [`design/ONTOLOGY.md`](./design/ONTOLOGY.md) — the vocabulary and document shape (source of truth).
 - [`SPEC.mdl`](./SPEC.mdl) — modules, commit protocol, features and tests.
+
+The addon needs a Rust toolchain ([rustup](https://rustup.rs); the crate's `rust-toolchain.toml`
+pins the version, and building RocksDB needs a C++ compiler and libclang). Build it once, and again
+after the crate changes — `moon run code-index:test` does this itself:
+
+```bash
+moon run code-index-native:cargo-build
+```
 
 ```bash
 bun tools/code-index/bin/code-index.ts index          # incremental pass, closed by the reasoner
@@ -77,8 +87,9 @@ island — is transformed from the working tree with nothing to rebuild first.
 
 `code-index mcp` serves the index to an MCP client (Claude Code, Claude Desktop) over stdio. It is
 read-only: it opens an existing store, never indexes or writes, and takes the same `--root` /
-`--store` flags as every other command. A store records the backend that wrote it, which the server
-adopts; a `CODE_INDEX_BACKEND` naming the other one is refused. Index first, then register it:
+`--store` flags as every other command. A store written by another ontology version or by the
+retired JS backend is refused with a request to run `code-index index`, which rebuilds it. Index
+first, then register it:
 
 ```bash
 bun tools/code-index/bin/code-index.ts index
@@ -107,17 +118,15 @@ one — add it locally):
 | `query`      | `sparql`, `limit`, `timeoutMs` | A SPARQL SELECT as `{ vars, rows }`, capped at `limit` (default 200, at most 2000) with `truncated` reported. |
 | `ask`        | `sparql`, `timeoutMs` | A SPARQL ASK, as a boolean. |
 | `files`      | `prefix`, `language`, `limit` | Indexed files, filtered by path prefix and language. |
-| `stats`      | — | Files, quads and per-reasoner derived counts, and the backend in use. |
+| `stats`      | — | Files, quads and per-reasoner derived counts. |
 | `design`     | `prompt`, `budget`, `threshold` | The files that answer a design question and how they connect, with a mermaid draft (see Design questions). Scored by System One when the server has `TYPESAFE_API_KEY`, by a text/degree baseline otherwise. |
 
 `query` and `ask` declare any known prefix (`deus:`, `file:`, `pkg:`, `module:`, `graph:`, `rdf:`,
 `rdfs:`, `xsd:`, …) a query uses without declaring, and say so in `prefixesInjected`; name a `deus:`
 term the vocabulary lacks in `warnings`, with the closest known terms; and pass the engine's parse
 or evaluation message through on failure. Each query is cancelled after `timeoutMs` (default 30 s,
-at most 120 s) with an error suggesting how to narrow it. On the native backend the query runs on a
-libuv thread and cancellation reaches the evaluator, which stops at its next quad read; on the JS
-backend Comunica cannot be interrupted mid-join, so the abandoned evaluation runs to completion in
-the background while the server keeps answering (and closing the store waits for it).
+at most 120 s) with an error suggesting how to narrow it. The query runs on a libuv thread and
+cancellation reaches the evaluator, which stops at its next quad read.
 
 `vocabulary` and `stats` read counts the last `code-index index` pass recorded in SQLite `meta`;
 counting the graph itself is a scan of every quad (10–15 s on this repository). When the store has
@@ -125,8 +134,8 @@ changed since — a `serve` watcher's passes skip the summary — the first call
 result is kept for the life of the process.
 
 stdout belongs to the protocol; the startup line and every log go to stderr. The store is
-single-writer and neither backend can be read beside a live writer — LevelDB has no read-only mode,
-and oxigraph documents a read-only RocksDB open next to a writer as undefined behaviour — so `mcp`
+single-writer and cannot be read beside a live writer — oxigraph documents a read-only RocksDB
+open next to a writer as undefined behaviour — so `mcp`
 cannot run while `serve`, `index` or another `mcp` holds the store. It fails at startup naming the
 process that does (its PID and which command it is); stop it, or point `--store` at a copy of the
 store directory.
@@ -163,12 +172,13 @@ nodes are one click away. `moon run code-index:design-eval` measures all of it a
 hand-drawn diagrams in `plugin-illustrator/docs/diagrams`.
 
 Tests run on Node under vitest (the CLI runs on Bun; the SQLite driver and the worker platform are
-chosen from the ambient runtime). The sandbox tests spawn the real child process and skip where Bun
-is absent:
+chosen from the ambient runtime), against the addon, which the task builds first. The sandbox tests
+spawn the real child process and skip where Bun is absent:
 
 ```bash
 moon run code-index:test
+moon run code-index-native:cargo-test   # the crate's own engine and store tests
 ```
 
-The store is single-writer (LevelDB or RocksDB), so `serve` and any other `code-index` command,
+The store is single-writer (RocksDB), so `serve` and any other `code-index` command,
 `mcp` included, cannot run at the same time.

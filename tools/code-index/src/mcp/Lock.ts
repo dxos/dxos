@@ -12,13 +12,12 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import * as Native from '../internal/native.ts';
-import * as Quadstore from '../internal/quadstore.ts';
 import * as Store from '../Store.ts';
 
 /**
- * Names the process holding a store open. Both graph backends lock their directory for as long as
- * a writer has it open (LevelDB and RocksDB alike), so a second opener fails, and "locked" alone
- * leaves the user hunting for which `index`, `serve` or `mcp` to stop.
+ * Names the process holding a store open. RocksDB locks its directory for as long as a writer has
+ * it open, so a second opener fails, and "locked" alone leaves the user hunting for which `index`,
+ * `serve` or `mcp` to stop.
  */
 
 export type Holder = {
@@ -26,9 +25,8 @@ export type Holder = {
   readonly command: string;
 };
 
-/** The lock file of each database a store may hold; only the backend in use will exist. */
+/** The lock file of each RocksDB database a store holds. */
 export const lockFiles = (dir: string): string[] => [
-  join(dir, Quadstore.DIR, 'LOCK'),
   join(dir, Native.DIR, 'oxigraph', 'LOCK'),
   join(dir, Native.DIR, 'journal', 'LOCK'),
 ];
@@ -109,7 +107,7 @@ const describeHolder = (holder: Holder): string => {
   return `pid ${holder.pid} (${what === undefined ? holder.command || 'unknown command' : `${what}: ${holder.command}`})`;
 };
 
-/** RocksDB and LevelDB both say "lock" when another process holds the directory. */
+/** RocksDB says "lock" when another process holds the directory. */
 const isLockError = (error: Store.StoreError): boolean => /\block\b|LOCK/.test(error.message);
 
 const ADVICE =

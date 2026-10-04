@@ -450,12 +450,10 @@ export const Stats = readOnly(
   Tool.make('stats', {
     description:
       'Reports the size of the code index: indexed files, total quads, the quads each reasoner derived (one ' +
-      'graph per rules file under graph:derived/ and per JS pass under graph:pass/), and the backend in use ' +
-      '(js or native). Example follow-up — what one rules file concludes: SELECT ?p (COUNT(*) AS ?n) WHERE { ' +
+      'graph per rules file under graph:derived/ and per JS pass under graph:pass/). Example follow-up — what one rules file concludes: SELECT ?p (COUNT(*) AS ?n) WHERE { ' +
       'GRAPH <https://dxos.org/deus/graph/derived/30-compute> { ?s ?p ?o } } GROUP BY ?p',
     parameters: Tool.EmptyParams,
     success: Schema.Struct({
-      backend: Schema.String,
       dir: Schema.String,
       files: Schema.Number,
       quads: Schema.Number,
@@ -729,8 +727,8 @@ export const handlers = (store: Store.Api) =>
     const designCache = yield* Effect.cached(Cache.open(join(store.dir, 'design-cache.jsonl')));
 
     /**
-     * Bounds a store call by the caller's timeout. Interruption reaches the native evaluator, which
-     * stops at its next quad read; the JS backend's evaluation is abandoned to finish on its own.
+     * Bounds a store call by the caller's timeout. Interruption reaches the evaluator, which stops at
+     * its next quad read.
      */
     const bounded = <A>(effect: Effect.Effect<A, Store.StoreError>, timeoutMs: number | undefined) => {
       const ms = clamp(timeoutMs, QUERY_DEFAULT_TIMEOUT_MS, QUERY_MAX_TIMEOUT_MS);
@@ -1033,7 +1031,6 @@ export const handlers = (store: Store.Api) =>
       stats: () =>
         summary.pipe(
           Effect.map(({ files, quads, derived }) => ({
-            backend: store.backend,
             dir: store.dir,
             files,
             quads,
@@ -1068,22 +1065,21 @@ export const INSTRUCTIONS =
 export type RunOptions = {
   /** The store directory to open. */
   readonly dir: string;
-  readonly backend?: Store.Backend;
   readonly version: string;
 };
 
 /** Opens the store read-only for the enclosing scope; a store another process holds fails with that process named. */
-export const open = (dir: string, backend?: Store.Backend) =>
-  Layer.build(Store.layer(dir, backend, { readOnly: true })).pipe(
+export const open = (dir: string) =>
+  Layer.build(Store.layer(dir, { readOnly: true })).pipe(
     Effect.catchTag('code-index/StoreError', (error) => Lock.explain(dir, error)),
     Effect.map((context) => Context.get(context, Store.Store)),
   );
 
 /** Opens the store, before the transport starts so a failure is reported, then serves until stdin closes. */
-export const run = ({ dir, backend, version }: RunOptions) =>
+export const run = ({ dir, version }: RunOptions) =>
   Effect.gen(function* () {
-    const store = yield* open(dir, backend);
-    yield* Effect.logInfo(`code-index mcp: serving ${dir} (${store.backend} backend) over stdio`);
+    const store = yield* open(dir);
+    yield* Effect.logInfo(`code-index mcp: serving ${dir} over stdio`);
     return yield* Layer.launch(
       McpServer.toolkit(CodeIndexToolkit).pipe(
         Layer.provide(CodeIndexToolkit.toLayer(handlers(store))),
