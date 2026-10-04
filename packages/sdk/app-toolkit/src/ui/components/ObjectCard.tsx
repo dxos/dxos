@@ -39,6 +39,7 @@ type ObjectCardHeaderProps = {
   icon?: string;
   /** Overrides the object's label. */
   children?: ReactNode;
+  /** Clamps the title to this many lines; without it the title is one line, truncated. */
   lines?: Card.TitleProps['lines'];
   /** Rendered after the title, in the end rail (e.g., a `Card.Menu` or a `Block rail='end'`). */
   menu?: ReactNode;
@@ -59,7 +60,7 @@ export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps
             <Icon.Icon icon={icon} classNames={iconStyles?.text} />
           </CardIconSlot>
         </Layout.Block>
-        <Card.Title lines={lines}>
+        <Card.Title truncate={lines === undefined} lines={lines}>
           {children ?? (entity && Entity.getLabel(entity, { fallback: 'typename' }))}
         </Card.Title>
         {menu}

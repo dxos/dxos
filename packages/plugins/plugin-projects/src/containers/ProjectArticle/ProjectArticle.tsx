@@ -34,6 +34,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
@@ -332,17 +333,23 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               <Splitter.Panel position='end'>
                 {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
                     trace feed on every trace message, which is pure cost behind a collapsed panel. */}
-                {showPipeline && space && (
-                  <ProjectPipeline
-                    space={space}
-                    project={subject}
-                    tasks={tasks}
-                    axis={axis}
-                    onAxisChange={setAxis}
-                    onSelectTask={openTask}
-                    onSelectChat={handleSelectChat}
-                  />
-                )}
+                {showPipeline &&
+                  space && (
+                    // Lanes outgrow the panel: they scroll vertically here while the chart scrolls time horizontally.
+                    <ScrollArea.Root orientation='vertical' width='thin' classNames='dx-expand'>
+                      <ScrollArea.Viewport>
+                        <ProjectPipeline
+                          space={space}
+                          project={subject}
+                          tasks={tasks}
+                          axis={axis}
+                          onAxisChange={setAxis}
+                          onSelectTask={openTask}
+                          onSelectChat={handleSelectChat}
+                        />
+                      </ScrollArea.Viewport>
+                    </ScrollArea.Root>
+                  )}
               </Splitter.Panel>
             </Splitter.Root>
           )}
