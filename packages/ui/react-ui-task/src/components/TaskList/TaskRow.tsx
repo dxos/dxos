@@ -4,6 +4,7 @@
 
 import React, { type ReactNode } from 'react';
 
+import { Flex } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useTaskListContext } from './TaskListContext.ts';
@@ -57,21 +58,20 @@ export const TaskRow = ({
       {/* The lines under the title come next in the DOM, though placed below it, so Tab runs from the title into its
           description before the trailing controls. Being placed explicitly, they leave the flow to the cells after. */}
       {chips !== undefined && (
-        <div className='col-[title] row-start-2 flex items-center empty:hidden' data-testid='taskList.item.chips'>
+        <Flex align='center' classNames='col-[title] row-start-2 empty:hidden' data-testid='taskList.item.chips'>
           {chips}
-        </div>
+        </Flex>
       )}
       {/* Clears the gutter and the status control, or it reads as belonging to the row above, and stops short of the
           trailing controls so it does not run beneath them. */}
       {description && (
-        <div
-          className={mx(
-            'col-[title/assignee] flex min-w-0 flex-col gap-2',
-            chips !== undefined ? 'row-start-3 pb-1' : 'row-start-2',
-          )}
+        <Flex
+          column
+          gap='sm'
+          classNames={mx('col-[title/assignee] min-w-0', chips !== undefined ? 'row-start-3 pb-1' : 'row-start-2')}
         >
           {description}
-        </div>
+        </Flex>
       )}
       {artifacts || <span />}
       {assignee || <span />}

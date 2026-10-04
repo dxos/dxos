@@ -9,6 +9,8 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import {
   Block,
   Button,
+  Flex,
+  Grid,
   Icon,
   Tag,
   Tooltip,
@@ -550,7 +552,7 @@ const TaskListItem = ({
       status={<TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} />}
       // Inset as the editor's fields are, so a title reads at the x the field below types it.
       title={
-        <div className='inline-flex min-w-0 items-center gap-2 px-(--dx-gap-size)'>
+        <Flex align='center' gap='sm' classNames='min-w-0 px-(--dx-gap-size)'>
           {/* The live task, not the snapshot: only the live object knows its space, which the copied URI names. */}
           {showMnemonics && <TaskMnemonic task={task} />}
           {/* The placeholder is drawn by CSS so the element's text stays the title itself. */}
@@ -561,19 +563,19 @@ const TaskListItem = ({
           >
             {current.title}
           </span>
-        </div>
+        </Flex>
       }
       // On the title line, beside who has the task: the pull request is what the row is scanned for once work is
       // under way, and on a line of its own it pushed the description down.
       artifacts={
-        <div className='flex items-center gap-1 ps-1' data-testid='taskList.item.artifacts'>
+        <Flex align='center' gap='xs' classNames='ps-1' data-testid='taskList.item.artifacts'>
           <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
-        </div>
+        </Flex>
       }
       assignee={
-        <div className='grid place-items-center'>
+        <Grid center grow={false}>
           {showAssignees && current.assignee && <TaskListAssignee assignee={current.assignee} iconOnly />}
-        </div>
+        </Grid>
       }
       estimate={showEstimates && <TaskEstimateControl task={task} />}
       priority={<TaskPriorityIcon task={task} />}

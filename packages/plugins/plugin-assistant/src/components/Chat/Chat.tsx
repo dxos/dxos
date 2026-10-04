@@ -829,8 +829,6 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
   return (
     <TaskList.Root
       tasks={tasks}
-      // The clicked row is highlighted, and the edit strip below edits it rather than creating.
-      selectable
       showGroupLabels={false}
       showOrdinals
       showEstimates
@@ -851,7 +849,8 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
             questions — a row replaying them grew by a line each — but a chat is where the asking
             happened, so the answer is given here rather than in a pane the reader has to open. */}
         <ChatTaskQuestions tasks={tasks} />
-        <TaskList.Editor />
+        {/* Only creates: a task is changed through its own row controls, not by selecting it into the strip. */}
+        <TaskList.Editor createOnly />
       </div>
     </TaskList.Root>
   );
