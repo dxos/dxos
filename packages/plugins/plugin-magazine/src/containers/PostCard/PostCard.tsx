@@ -58,12 +58,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
       )}
       {(feedName || published) && (
         <Card.Row>
-          <Grid
-            cols={['minmax(0, 1fr)', 'auto']}
-            gap='sm'
-            align='center'
-            classNames='text-sm text-fg-muted overflow-hidden'
-          >
+          <Grid cols={['fill', 'auto']} gap='sm' align='center' classNames='text-sm text-fg-muted overflow-hidden'>
             <span className='truncate'>{feedName ?? ''}</span>
             <span className='text-end shrink-0'>{published ?? ''}</span>
           </Grid>

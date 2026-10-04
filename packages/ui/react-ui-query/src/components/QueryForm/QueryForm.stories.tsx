@@ -32,7 +32,7 @@ const tags = Tag.createTagList({
 });
 
 const meta = {
-  title: 'ui/react-ui-components/QueryForm',
+  title: 'ui/react-ui-query/QueryForm',
   component: QueryForm,
   render: (args: QueryFormProps) => {
     const [query, setQuery] = useState<Query.Any>(Query.select(Filter.nothing()));

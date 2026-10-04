@@ -50,7 +50,7 @@ const DefaultStory = (args: QueryEditorProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-components/QueryEditor',
+  title: 'ui/react-ui-query/QueryEditor',
   component: QueryEditor,
   render: (args: QueryEditorProps) => <DefaultStory {...args} />,
   decorators: [

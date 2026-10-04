@@ -66,10 +66,10 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-components"
+      "path": "../../ui/react-ui-graph"
     },
     {
-      "path": "../../ui/react-ui-graph"
+      "path": "../../ui/react-ui-query"
     },
     {
       "path": "../../ui/ui-theme"
