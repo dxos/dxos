@@ -116,6 +116,13 @@ export const apply = (state: State, entry: Events.Entry): State => {
       return { ...state, seq, canvas: [] };
     case 'TitleSet':
       return { ...state, seq, title: event.title };
+    case 'StepRetried':
+      // Shown, but the turn stays open: the agent is about to try again.
+      return {
+        ...state,
+        seq,
+        turns: [...state.turns, { role: 'assistant', text: `⚠ ${event.message} Retrying.` }],
+      };
     case 'TurnEnded':
       // A boundary marker; the transcript already holds everything the turn produced.
       return { ...state, seq, ...closeTurn(state, event.turnId) };
