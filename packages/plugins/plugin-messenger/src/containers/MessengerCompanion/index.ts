@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { MessengerCompanion as default } from './MessengerCompanion.tsx';
+export { type MessengerCompanionProps, MessengerCompanion as default } from './MessengerCompanion.tsx';

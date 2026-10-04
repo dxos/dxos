@@ -2,6 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ComponentType, lazy } from 'react';
+import { type ComponentType, type LazyExoticComponent, lazy } from 'react';
 
-export const MessengerCompanion: ComponentType<any> = lazy(() => import('./MessengerCompanion/index.ts'));
+import type { MessengerCompanionProps } from './MessengerCompanion/index.ts';
+
+export const MessengerCompanion: LazyExoticComponent<ComponentType<MessengerCompanionProps>> = lazy(
+  () => import('./MessengerCompanion/index.ts'),
+);
