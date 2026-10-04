@@ -38,9 +38,13 @@ const FILES: Record<string, string> = {
     "const proxyFetchLegacy = vi.fn();\ndescribe('render', () => proxyFetchLegacy());\n",
   'packages/commerce/src/render.stories.tsx':
     'const proxyFetchLegacy = () => 2;\nexport const Story = proxyFetchLegacy();\n',
+  'packages/widget/package.json': JSON.stringify({ name: '@test/widget', version: '1.0.0' }),
+  'packages/widget/src/index.ts': "export { Thing } from './thing.ts';\n",
+  'packages/widget/src/thing.ts': 'export class Thing {}\n',
 };
 
 const EXPORTED = Ontology.symbolIri('packages/edge/src/cors-proxy.ts', 'proxyFetchLegacy').value;
+const THING = Ontology.symbolIri('packages/widget/src/thing.ts', 'Thing').value;
 
 describe('Declarations', () => {
   let root: string;
@@ -61,12 +65,12 @@ describe('Declarations', () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  const find = (name: string) =>
+  const find = (name: string, options?: { limit?: number }) =>
     EffectEx.runPromise(
       Effect.scoped(
         Effect.provide(
           Effect.gen(function* () {
-            return yield* Declarations.find(yield* Store.Store, name);
+            return yield* Declarations.find(yield* Store.Store, name, options);
           }),
           Store.layer(dir),
         ),
@@ -81,6 +85,18 @@ describe('Declarations', () => {
       { path: 'packages/commerce/src/render.test.ts', exported: false, role: 'test', pkg: '@test/commerce' },
     ]);
     expect(found[0].iri).toBe(EXPORTED);
+  });
+
+  test('the store ranks before it limits, so a capped lookup still keeps the definition', async ({ expect }) => {
+    const [only, ...rest] = await find('proxyFetchLegacy', { limit: 1 });
+    expect(only.iri).toBe(EXPORTED);
+    expect(rest).toEqual([]);
+  });
+
+  test('a barrel re-export that sorts ahead of the definition does not take the only slot', async ({ expect }) => {
+    const [only, ...rest] = await find('Thing', { limit: 1 });
+    expect(only?.iri).toBe(THING);
+    expect(rest).toEqual([]);
   });
 
   test('a dotted name falls back to its last segment, and an unknown name finds nothing', async ({ expect }) => {
