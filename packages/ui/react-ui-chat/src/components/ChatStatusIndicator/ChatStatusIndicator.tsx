@@ -39,7 +39,7 @@ export const ChatStatusIndicator = ({ classNames, preset, processing, error, ...
       />
       {error && (
         <Tooltip.Trigger asChild content={error.message}>
-          <div className='dx-fullscreen' />
+          <div className='dx-cover' />
         </Tooltip.Trigger>
       )}
     </div>

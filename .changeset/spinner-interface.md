@@ -8,3 +8,5 @@ Spinners share one interface: `SpinnerProps` with an `ActivityState` of `'ready'
 **Breaking:** `Spinner` is now `ShapeSpinner`, and its states are renamed (`pulse` → `ready`, `spin` → `thinking`, `flash` → `alert`). `Matrix` moves from `@dxos/react-ui-components` to `@dxos/react-ui-experimental`. `Html` (with `emailDialect`, the colour-scheme transforms and `HtmlSrcResolver`) moves from `@dxos/react-ui-components` to the new `@dxos/react-ui-html`.
 
 `QueryEditor`, `QueryForm` and `useQueryBuilder` move from `@dxos/react-ui-components` to the new `@dxos/react-ui-query`, with their translations (`@dxos/react-ui-query/translations`), so `@dxos/react-ui-components` no longer carries CodeMirror or `@dxos/echo-query`. Its `./Spinner` subpath is removed; import spinners from the package root.
+
+The `dx-fullscreen` utility is renamed `dx-cover` (`absolute inset-0`): it covers the nearest positioned ancestor, not the screen.

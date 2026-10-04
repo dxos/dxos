@@ -11,7 +11,10 @@ import { ChatStatusIndicator } from './ChatStatusIndicator.tsx';
 const meta = {
   title: 'ui/react-ui-chat/ChatStatusIndicator',
   component: ChatStatusIndicator,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'centered', classNames: 'grid w-20 h-20 place-items-center rounded' }),
+  ],
   parameters: {
     layout: 'centered',
   },
