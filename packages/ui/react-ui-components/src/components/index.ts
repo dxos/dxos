@@ -6,7 +6,6 @@ export * from './AnimatedBorder/index.ts';
 export * from './HtmlViewer/index.ts';
 export * from './NumericTabs/index.ts';
 export * from './ProgressMeter/index.ts';
-export * from './Pulse/index.ts';
 export * from './QueryEditor/index.ts';
 export * from './QueryForm/index.ts';
 export * from './Shimmer/index.ts';

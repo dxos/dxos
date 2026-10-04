@@ -31,7 +31,7 @@ const DefaultStory = (props: PulseProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-components/Pulse',
+  title: 'ui/react-ui-experimental/Pulse',
   component: Pulse,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
