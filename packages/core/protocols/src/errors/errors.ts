@@ -168,3 +168,13 @@ registerError('UnknownModelError', (_, context) => {
 export class AuthorizationError extends BaseError.extend('AuthorizationError') {}
 
 registerErrorMessageContext('AuthorizationError', AuthorizationError);
+
+/**
+ * An inbox message whose encoded envelope exceeds what EDGE accepts; large content belongs in the linked object.
+ */
+export class InboxPayloadTooLargeError extends BaseError.extend(
+  'InboxPayloadTooLargeError',
+  'The inbox message is too large to send.',
+) {}
+
+registerErrorMessageContext('InboxPayloadTooLargeError', InboxPayloadTooLargeError);

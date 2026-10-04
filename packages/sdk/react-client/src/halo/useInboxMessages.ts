@@ -8,9 +8,9 @@ import { useMulticastObservable } from '@dxos/react-hooks';
 import { useClient } from '../client/index.ts';
 
 /**
- * Pending verified inbox notices for the local identity; not filtered by sender.
+ * Pending verified inbox messages for the local identity; not filtered by sender.
  */
-export const useInboxNotices = (): readonly InboxService.Notice[] => {
+export const useInboxMessages = (): readonly InboxService.InboxMessage[] => {
   const client = useClient();
-  return useMulticastObservable(client.halo.inbox.notices);
+  return useMulticastObservable(client.halo.inbox.messages);
 };

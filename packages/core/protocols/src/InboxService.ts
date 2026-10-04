@@ -10,56 +10,59 @@ import * as Schema from 'effect/Schema';
 
 import { serviceError } from './service-rpc.ts';
 import { mutableArray, protoTimestamp, publicKey } from './service-schemas.ts';
-import { SpaceMemberRole } from './SpacesService.ts';
+
+/** Payload type of an `org.dxos.type.message` Message, JSON-encoded with its Effect Schema. */
+export const INBOX_MESSAGE_TYPE = 'org.dxos.inbox.message';
 
 //
 // RPC message schemas.
 //
 
-export const SendRequest = Schema.Struct({
+export const SendMessageRequest = Schema.Struct({
   recipientIdentityKey: publicKey,
-  spaceKey: publicKey,
-  role: SpaceMemberRole,
+  /** Reverse-DNS payload type (e.g., {@link INBOX_MESSAGE_TYPE}). */
+  type: Schema.String,
+  payload: Schema.String,
 });
-export interface SendRequest extends Schema.Schema.Type<typeof SendRequest> {}
+export interface SendMessageRequest extends Schema.Schema.Type<typeof SendMessageRequest> {}
 
 /**
- * A space invitation notice whose signature, sender, recipient and age have been verified.
+ * A message whose signature, sender, recipient and age have been verified.
  */
-export const Notice = Schema.Struct({
-  /** Credential id of the signed notice; the dedupe key and the handle passed to `ack`. */
+export const InboxMessage = Schema.Struct({
+  /** Digest of the signed envelope; the dedupe key and the handle passed to `ack`. */
   id: Schema.String,
   senderIdentityKey: publicKey,
-  spaceKey: publicKey,
-  role: SpaceMemberRole,
+  type: Schema.String,
+  payload: Schema.String,
   sentAt: protoTimestamp,
 });
-export interface Notice extends Schema.Schema.Type<typeof Notice> {}
+export interface InboxMessage extends Schema.Schema.Type<typeof InboxMessage> {}
 
 /**
- * The full set of pending notices; emitted whole so an ack on another device removes entries too.
+ * The full set of pending messages; emitted whole so an ack on another device removes entries too.
  */
-export const Notices = Schema.Struct({
-  notices: mutableArray(Notice),
+export const Messages = Schema.Struct({
+  messages: mutableArray(InboxMessage),
 });
-export interface Notices extends Schema.Schema.Type<typeof Notices> {}
+export interface Messages extends Schema.Schema.Type<typeof Messages> {}
 
 export const AckRequest = Schema.Struct({
-  /** Notice ids ({@link Notice.id}). */
+  /** Message ids ({@link InboxMessage.id}). */
   ids: mutableArray(Schema.String),
 });
 export interface AckRequest extends Schema.Schema.Type<typeof AckRequest> {}
 
 /**
- * Effect RPC definitions for the client inbox service: user-to-user notices relayed through EDGE.
+ * Effect RPC definitions for the client inbox service: user-to-user messages relayed through EDGE.
  */
 export class Rpcs extends RpcGroup.make(
-  Rpc.make('send', {
-    payload: SendRequest,
+  Rpc.make('sendMessage', {
+    payload: SendMessageRequest,
     error: serviceError,
   }),
   Rpc.make('subscribe', {
-    success: Notices,
+    success: Messages,
     error: serviceError,
     stream: true,
   }),

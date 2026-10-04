@@ -72,18 +72,18 @@ export class HaloProxy implements Halo {
   private readonly _devicesChanged = new Event<Device[]>();
   private readonly _contactsChanged = new Event<Contact[]>();
   private readonly _credentialsChanged = new Event<Credential[]>();
-  private readonly _inboxChanged = new Event<readonly InboxService.Notice[]>();
+  private readonly _inboxChanged = new Event<readonly InboxService.InboxMessage[]>();
 
   private readonly _identity = MulticastObservable.from(this._identityChanged, null);
   private readonly _devices = MulticastObservable.from(this._devicesChanged, []);
   private readonly _contacts = MulticastObservable.from(this._contactsChanged, []);
   private readonly _credentials = MulticastObservable.from(this._credentialsChanged, []);
   private readonly _inbox: HaloInbox = {
-    notices: MulticastObservable.from(this._inboxChanged, []),
-    send: (request) =>
-      runServiceCall(this._runtime, this._serviceProvider.rpc['InboxService.send'](request), {
+    messages: MulticastObservable.from(this._inboxChanged, []),
+    sendMessage: (request) =>
+      runServiceCall(this._runtime, this._serviceProvider.rpc['InboxService.sendMessage'](request), {
         timeout: RPC_TIMEOUT,
-        label: 'InboxService.send',
+        label: 'InboxService.sendMessage',
       }),
     ack: (ids) =>
       runServiceCall(this._runtime, this._serviceProvider.rpc['InboxService.ack']({ ids: [...ids] }), {
@@ -254,7 +254,7 @@ export class HaloProxy implements Halo {
 
     this._streamSubscriptions.add(
       subscribeStream(this._runtime, this._serviceProvider.rpc['InboxService.subscribe'](undefined), {
-        onData: (data) => this._inboxChanged.emit(data.notices),
+        onData: (data) => this._inboxChanged.emit(data.messages),
         // The inbox is optional: an unreachable EDGE must not affect the rest of HALO.
         onError: (error) => log.warn('inbox stream failed', { error }),
       }),

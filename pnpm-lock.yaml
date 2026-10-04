@@ -19124,6 +19124,9 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../common/random-access-storage
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -19311,6 +19314,9 @@ importers:
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../common/tracing
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

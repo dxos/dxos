@@ -7,7 +7,7 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
-import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { InboxService } from '@dxos/protocols/rpc';
 
 import { Client } from '../client/index.ts';
 import { TestBuilder } from '../testing/index.ts';
@@ -24,14 +24,14 @@ describe('Halo inbox', () => {
     const [snapshot] = await EffectEx.runPromise(
       client.services.rpc['InboxService.subscribe'](undefined).pipe(Stream.take(1), Stream.runCollect),
     );
-    expect(snapshot.notices).toEqual([]);
-    expect(client.halo.inbox.notices.get()).toEqual([]);
+    expect(snapshot.messages).toEqual([]);
+    expect(client.halo.inbox.messages.get()).toEqual([]);
 
     await expect(
-      client.halo.inbox.send({
+      client.halo.inbox.sendMessage({
         recipientIdentityKey: PublicKey.random(),
-        spaceKey: PublicKey.random(),
-        role: SpaceMember_Role.EDITOR,
+        type: InboxService.INBOX_MESSAGE_TYPE,
+        payload: '{}',
       }),
     ).rejects.toThrow();
   });
