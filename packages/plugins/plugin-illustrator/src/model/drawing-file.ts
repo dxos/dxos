@@ -8,12 +8,12 @@
 // opened as an image anywhere and imported back as an editable drawing.
 //
 
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { DxSvg } from '@dxos/diagram';
 import { Database, Obj } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { EntityId } from '@dxos/keys';
 
 import { Drawing } from '#types';
@@ -95,7 +95,10 @@ export const fromDxSvg = (svg: string): Effect.Effect<Payload | undefined, Schem
 };
 
 /** The SVG cannot be imported as a drawing. */
-export class ImportError extends Data.TaggedError('DrawingFileImportError')<{ message: string }> {}
+export class ImportError extends BaseError.extend(
+  'DrawingFileImportError',
+  'The SVG cannot be imported as a drawing.',
+) {}
 
 /** Adds a `.dx.svg`'s objects to the database under fresh ids and returns the drawing to open. */
 export const importDxSvg = Effect.fn('DrawingFile.importDxSvg')(function* (svg: string) {
