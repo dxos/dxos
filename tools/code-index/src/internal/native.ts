@@ -44,7 +44,8 @@ interface NativeStore {
   removeQuads(nquads: string): void;
   /** Six strings per quad; see `fromRows`. */
   match(subject?: string | null, predicate?: string | null, object?: string | null, graph?: string | null): string[];
-  query(sparql: string): { kind: 'results' | 'quads'; body: string };
+  /** Off the event loop; rejects with a `cancelled` error once `cancel` is cancelled. */
+  query(sparql: string, cancel: QueryCancel): Promise<{ kind: 'results' | 'quads'; body: string }>;
   reason(graph: string, rules: string, materialize: boolean): string;
   reasonAll(strata: { graph: string; rules: string }[]): Outcome[];
   quadCount(): number;
@@ -55,8 +56,13 @@ interface NativeStore {
   close(): void;
 }
 
+interface QueryCancel {
+  cancel(): void;
+}
+
 interface Addon {
   NativeStore: { open(dir: string): NativeStore };
+  QueryCancel: new () => QueryCancel;
 }
 
 export const isAvailable = (): boolean => existsSync(ADDON_PATH);
@@ -273,25 +279,42 @@ export const make = <E>(
         ),
       );
     }
+    const addon = load();
     // RocksDB holds a lock on its directory, so the store is closed with the scope rather than left
     // to the garbage collector — a reopen in the same process would otherwise fail.
     const native = yield* Effect.acquireRelease(
-      attempt('Failed to open native store', () => load().NativeStore.open(join(dir, DIR))),
+      attempt('Failed to open native store', () => addon.NativeStore.open(join(dir, DIR))),
       (store) => Effect.sync(() => store.close()),
     );
 
-    const query = (sparql: string) => native.query(sparql);
-    const results = (sparql: string): JsonResults => JSON.parse(query(sparql).body);
-    const rows = (sparql: string): Row[] =>
-      (results(sparql).results?.bindings ?? []).map(
+    const toRows = (parsed: JsonResults): Row[] =>
+      (parsed.results?.bindings ?? []).map(
         (row) => new Row(new Map(Object.entries(row).map(([key, term]) => [key, fromJson(term)]))),
       );
-    const quadsOf = (sparql: string): RDF.Quad[] => parseQuads(query(sparql).body, 'N-Triples');
+
+    /**
+     * A query on a libuv thread, cancelled when the fiber is interrupted (a timeout, a closed
+     * client): oxigraph checks the token at every quad it reads, so an abandoned evaluation stops
+     * within one read instead of holding a thread until it completes.
+     */
+    const query = <A>(message: string, sparql: string, decode: (body: string) => A): Effect.Effect<A, E> =>
+      Effect.callback<A, E>((resume) => {
+        const cancel = new addon.QueryCancel();
+        native.query(sparql, cancel).then(
+          (result) =>
+            resume(Effect.try({ try: () => decode(result.body), catch: fail(`${message}: unreadable result`) })),
+          (cause) => resume(Effect.fail(fail(message)(cause))),
+        );
+        return Effect.sync(() => cancel.cancel());
+      });
+
+    // LDkit's reads are not bounded by a caller, so they get a token nobody cancels.
+    const unbounded = async (sparql: string) => (await native.query(sparql, new addon.QueryCancel())).body;
 
     const engine: IQueryEngine = {
-      queryBindings: async (sparql) => new Results(rows(sparql)),
-      queryBoolean: async (sparql) => results(sparql).boolean === true,
-      queryQuads: async (sparql) => new Results(quadsOf(sparql)),
+      queryBindings: async (sparql) => new Results(toRows(JSON.parse(await unbounded(sparql)))),
+      queryBoolean: async (sparql) => JSON.parse(await unbounded(sparql)).boolean === true,
+      queryQuads: async (sparql) => new Results(parseQuads(await unbounded(sparql), 'N-Triples')),
       queryVoid: async () => {
         throw new Error('The code index is read-only through LDkit.');
       },
@@ -327,13 +350,19 @@ export const make = <E>(
         ),
 
       select: (sparql) =>
-        attempt('Failed to run SPARQL SELECT', (): Binding[] =>
-          rows(sparql).map((row) => Object.fromEntries([...row].map(([key, term]) => [key.value, term.value]))),
+        query('Failed to run SPARQL SELECT', sparql, (body): Binding[] =>
+          toRows(JSON.parse(body)).map((row) =>
+            Object.fromEntries([...row].map(([key, term]) => [key.value, term.value])),
+          ),
         ),
 
-      ask: (sparql) => attempt('Failed to run SPARQL ASK', () => results(sparql).boolean === true),
+      ask: (sparql) =>
+        query('Failed to run SPARQL ASK', sparql, (body) => {
+          const parsed: JsonResults = JSON.parse(body);
+          return parsed.boolean === true;
+        }),
 
-      construct: (sparql) => attempt('Failed to run SPARQL CONSTRUCT', () => quadsOf(sparql)),
+      construct: (sparql) => query('Failed to run SPARQL CONSTRUCT', sparql, (body) => parseQuads(body, 'N-Triples')),
 
       // LDkit insists on a source; the engine answers every query itself, so this one is a label.
       lens: (schema) => createLens(schema, { engine, sources: ['urn:code-index:native'] }),

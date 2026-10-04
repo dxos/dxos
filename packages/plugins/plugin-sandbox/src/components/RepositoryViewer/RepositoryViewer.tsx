@@ -92,7 +92,7 @@ export const RepositoryViewer = ({
             onLoadMore={onLoadMoreCommits}
           />
         ) : (
-          <Grid cols={['18rem', '1fr']} classNames='divide-x divide-separator'>
+          <Grid grow cols={['18rem', '1fr']} classNames='divide-x divide-separator'>
             <div
               role='region'
               aria-label={t('files-pane.label')}

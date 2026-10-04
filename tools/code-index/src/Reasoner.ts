@@ -12,6 +12,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { basename, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import * as ReferenceResolution from './ReferenceResolution.ts';
 import * as Store from './Store.ts';
 import * as TypeBinding from './TypeBinding.ts';
 
@@ -21,8 +22,9 @@ import * as TypeBinding from './TypeBinding.ts';
  * output. Filename order is the only dependency mechanism.
  *
  * Two kinds: N3 rule files, and JS passes (`derive`) for conclusions that need a computation rather
- * than a join — the cross-file type binding (`TypeBinding.ts`) is the first. A pass reads only the
- * file graphs and runs before every rule file, so each rule file sees every pass's graph.
+ * than a join — the cross-file type binding (`TypeBinding.ts`) and reference resolution
+ * (`ReferenceResolution.ts`). A pass reads only the file graphs and runs before every rule file, so
+ * each rule file sees every pass's graph.
  */
 
 export class ReasonerError extends Data.TaggedError('code-index/ReasonerError')<{
@@ -49,7 +51,10 @@ export type Outcome = Store.ReasonOutcome;
 const PASSES_KEY = 'passes';
 
 /** JS passes shipped with the tool. */
-const BUILTIN: readonly Pass[] = [{ name: TypeBinding.NAME, derive: TypeBinding.derive }];
+const BUILTIN: readonly Pass[] = [
+  { name: TypeBinding.NAME, derive: TypeBinding.derive },
+  { name: ReferenceResolution.NAME, derive: ReferenceResolution.derive },
+];
 
 /** The rule files shipped with the tool. */
 export const BUNDLED_DIR = fileURLToPath(new URL('../rules', import.meta.url));

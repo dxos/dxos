@@ -20,6 +20,7 @@ import * as Cache from '../design/Cache.ts';
 import * as Design from '../design/Design.ts';
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
+import * as Summary from '../Summary.ts';
 import * as Events from './Events.ts';
 import * as Log from './Log.ts';
 
@@ -94,42 +95,14 @@ const MAX_ROWS = 500;
 const truncate = (text: string): string =>
   text.length <= MAX_OUTPUT ? text : `${text.slice(0, MAX_OUTPUT)}\n… output truncated (${text.length} chars)`;
 
-/**
- * What the graph actually contains, rather than what the indexer asserts. The distinction matters:
- * the classes and relations an agent most wants — `EffectLayer`, `providesService` — are concluded
- * by the N3 rules and appear nowhere in the JSON-LD context. Reporting the context instead sent the
- * agent brute-forcing predicate names for four turns before it found `providesService` by hand.
- */
-const VOCABULARY_QUERY = `PREFIX deus: <${Ontology.PREFIX}>
-  SELECT ?kind ?term (COUNT(*) AS ?count) WHERE {
-    { ?s a ?term . BIND('class' AS ?kind) }
-    UNION
-    { ?s ?term ?o . BIND('property' AS ?kind) }
-    FILTER(STRSTARTS(STR(?term), '${Ontology.PREFIX}'))
-  } GROUP BY ?kind ?term ORDER BY ?kind DESC(?count)`;
-
-export type VocabularyTerm = { readonly term: string; readonly kind: string; readonly count: number };
-
-/** The `deus:` classes and predicates in the graph, by local name — what `rdf.vocabulary()` returns. */
-export const readVocabulary = (store: Store.Api): Effect.Effect<VocabularyTerm[], Store.StoreError> =>
-  store.select(VOCABULARY_QUERY).pipe(
-    Effect.map((rows) =>
-      rows.map((row) => ({
-        term: row.term.slice(Ontology.PREFIX.length),
-        kind: row.kind,
-        count: Number(row.count),
-      })),
-    ),
-  );
-
 type HostCall = { readonly id: number; readonly method: string; readonly params: Record<string, unknown> };
 
 const make = Effect.gen(function* () {
   const store = yield* Store.Store;
   const log = yield* Log.Log;
 
-  // A whole-graph scan, so it is computed once and shared by every snippet in the process.
-  const vocabulary = yield* Effect.cached(readVocabulary(store));
+  // A whole-graph scan unless the last pass recorded it, so it is read once per process.
+  const vocabulary = yield* Effect.cached(Effect.map(Summary.load(store), (summary) => summary.vocabulary));
 
   // Optional, so the chat runs with no decision model at all; `design.subgraph` then scores by baseline.
   const decisions = yield* Effect.serviceOption(DecisionModel.DecisionModel);
