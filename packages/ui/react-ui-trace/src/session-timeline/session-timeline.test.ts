@@ -889,6 +889,48 @@ describe('buildSessionTimeline', () => {
     expect(timeline.lanes.find((lane) => lane.id === `task:${child.id}`)?.parentId).toBe(`task:${parent.id}`);
   });
 
+  test("a parent task's lane begins no later than its sub-tasks', even when they are not on one checklist", ({
+    expect,
+  }) => {
+    const parent = Task.make({ title: 'Parent', status: 'started' });
+    const child = Task.make({ [Obj.Parent]: parent, title: 'Child', status: 'done' });
+    const grandchild = Task.make({ [Obj.Parent]: child, title: 'Grandchild', status: 'done' });
+    // The parent is not on the checklist, so it is drawn from its edit history alone, unnested.
+    const chat = makeChat('Run', [child, grandchild]);
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [chat.session],
+      tasks: [parent, child, grandchild],
+      taskStatusChanges: new Map([
+        [parent.id, [{ timestamp: 3_000, status: 'started', previousStatus: 'todo' }]],
+        [
+          child.id,
+          [
+            { timestamp: 2_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 4_000, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+        [
+          grandchild.id,
+          [
+            { timestamp: 1_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 2_500, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+      ]),
+    });
+
+    const laneOf = (task: Task.Task) => timeline.lanes.find((lane) => lane.taskId === task.id);
+    expect(laneOf(parent)?.parentId).toBeUndefined();
+    expect(laneOf(parent)?.start).toBe(1_000);
+    expect(laneOf(child)?.start).toBe(1_000);
+    expect(laneOf(grandchild)?.start).toBe(1_000);
+    // Its own nodes stay where they happened; only the bar reaches back.
+    expect(
+      timeline.markers.filter((marker) => marker.laneId === laneOf(parent)?.id).map(({ timestamp }) => timestamp),
+    ).toEqual([3_000]);
+  });
+
   it.effect(
     'draws a status move once when both the trace and the edit history record it',
     Effect.fnUntraced(function* ({ expect }) {
