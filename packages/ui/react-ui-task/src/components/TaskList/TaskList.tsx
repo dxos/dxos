@@ -25,8 +25,9 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
+import { useAssigneeDisplay } from '../../hooks/index.ts';
+import { STATUS_ORDER } from '../../util/status-icons.ts';
 import { type TaskPlacement } from './hierarchy.ts';
-import { STATUS_ORDER } from './status-icons.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
 import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
@@ -40,7 +41,6 @@ import {
   flattenVisibleTasks,
   taskGroupNodeId,
 } from './tree-model.ts';
-import { useAssigneeDisplay } from './useAssigneeDisplay.ts';
 import { usePreviewAnchor } from './usePreviewAnchor.ts';
 
 /** Shared empty set, so a list with nothing in flight does not allocate one per render. */

@@ -10,8 +10,8 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
+import { UNSET_ICON } from '../../util/status-icons.ts';
 import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
-import { UNSET_ICON } from './status-icons.ts';
 
 /**
  * The glyph per event, keyed by the `Task.Event` the entry records — a table rather than a ternary,

@@ -13,8 +13,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
-import { PERSON_ICON, shortDid } from './assignee.ts';
+import { useAssigneeDisplay } from '../../hooks/index.ts';
+import { PERSON_ICON, shortDid } from '../../util/assignee.ts';
 import {
   UNSET_ICON,
   estimateTextStyle,
@@ -22,8 +22,8 @@ import {
   priorityTextStyle,
   statusIcon,
   statusTextStyle,
-} from './status-icons.ts';
-import { useAssigneeDisplay } from './useAssigneeDisplay.ts';
+} from '../../util/status-icons.ts';
+import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
 
 /** The glyph for an estimate, which the list renders as letters and has none of its own. */
 const ESTIMATE_ICON = 'ph--ruler--regular';

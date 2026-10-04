@@ -19,7 +19,7 @@ import {
   priorityTextStyle,
   statusIcon,
   statusTextStyle,
-} from './status-icons.ts';
+} from '../../util/status-icons.ts';
 import { useTaskListContext } from './TaskListContext.ts';
 
 /**
