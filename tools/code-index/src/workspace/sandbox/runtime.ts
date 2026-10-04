@@ -94,6 +94,11 @@ const design = {
   subgraph: (prompt: string, options: Record<string, unknown> = {}) => call('design.subgraph', { ...options, prompt }),
 };
 
+const symbols = {
+  declarations: (name: string) => call('symbols.declarations', { name }),
+  usages: (symbol: string, options: Record<string, unknown> = {}) => call('symbols.usages', { ...options, symbol }),
+};
+
 const dispatch = (line: string): void => {
   const message = JSON.parse(line) as { id: number; result?: unknown; error?: string };
   const waiting = pending.get(message.id);
@@ -122,14 +127,14 @@ const evaluate = async (code: string): Promise<unknown> => {
   const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor as new (
     ...args: string[]
   ) => (...values: unknown[]) => Promise<unknown>;
-  const compile = (body: string) => new AsyncFunction('rdf', 'storage', 'display', 'design', 'print', body);
+  const compile = (body: string) => new AsyncFunction('rdf', 'storage', 'display', 'design', 'symbols', 'print', body);
   let body: (...values: unknown[]) => Promise<unknown>;
   try {
     body = compile(`return (\n${code}\n);`);
   } catch {
     body = compile(code);
   }
-  return body(rdf, storage, display, design, print);
+  return body(rdf, storage, display, design, symbols, print);
 };
 
 const main = async (): Promise<void> => {
