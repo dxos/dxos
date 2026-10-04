@@ -242,9 +242,11 @@ export const TestQueueFull: Story = {
     });
 
     const editor = canvasElement.querySelector<HTMLElement>('[role="group"] .cm-content');
-    await expect(editor).not.toBeNull();
-    await userEvent.click(editor!);
-    await userEvent.type(editor!, 'a fourth');
+    if (!editor) {
+      throw new Error('Prompt editor not rendered.');
+    }
+    await userEvent.click(editor);
+    await userEvent.type(editor, 'a fourth');
 
     // The one control stays Stop rather than turning into Send: the running turn can still be interrupted.
     await expect(canvas.getByTestId('assistant.send')).toHaveAccessibleName('Stop processing');
