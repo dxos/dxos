@@ -199,7 +199,8 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     ),
 
     description: Schema.optional(
-      Format.Text.pipe(
+      Schema.String.pipe(
+        Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
         Schema.annotate({ title: 'Description' }),
         Annotation.GeneratorAnnotation.set({
           generator: 'lorem.paragraphs',

@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOperation } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
 import { Button, Container, Panel, ScrollArea, Toolbar, Typography, useTranslation } from '@dxos/react-ui';
+import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
+import { TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -30,10 +31,10 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * questions, the history and the artifacts, each starting at the same edge with its glyphs in the
  * gutter beside it (see `react-ui-task/docs/DETAIL-LAYOUT.md`).
  *
- * The fields are `TaskEditor` — the same title field and markdown description the list's strip
- * edits, without the strip's create case or its selection, which a pane with a subject has no use
- * for. Edits go through {@link TaskOperation.UpdateTask} rather than writing fields directly, so the
- * article shares the history-writing path with the list and with agents.
+ * The title and description are a form over the task's own schema. Edits go through
+ * {@link TaskOperation.UpdateTask} rather than writing fields directly, so the article shares the
+ * history-writing path with the list and with agents; a field commits when focus leaves it (or on Enter),
+ * so a rename is one history entry rather than one per keystroke.
  *
  * A file dropped or pasted anywhere over the pane is stored and attached (`Task.attachments`), when
  * a plugin that can store files is present.
@@ -49,6 +50,26 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
     { spaceId },
   );
   const { onFiles: handleAttach, pending: pendingAttachments } = useAttachFiles(task);
+
+  // The task as plain values for the form; the article's other parts read the live task.
+  const [snapshot] = useObject(task);
+  const handleSave = useCallback(
+    (values: Task.Task) => {
+      const patch: Task.Edit = {};
+      const title = values.title?.trim() ?? '';
+      // An emptied title is not a rename: the task keeps the one it has.
+      if (title.length > 0 && title !== task.title) {
+        patch.title = title;
+      }
+      if ((values.description ?? '') !== (task.description ?? '')) {
+        patch.description = values.description;
+      }
+      if (Object.keys(patch).length > 0) {
+        handleUpdate(task, patch);
+      }
+    },
+    [task, handleUpdate],
+  );
 
   // Record-only: an agent that asked over the MCP reads the answer back off the task.
   const handleQuestionAnswer = useOperation(
@@ -90,13 +111,19 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
               <Container gutter='md' gap='lg' classNames='py-2'>
                 {/* The task's own fields, not the list's strip: the pane has a subject, so it
                   needs neither the create case nor the selection the strip reads. */}
-                <TaskEditor
-                  task={task}
-                  onUpdate={handleUpdate}
-                  showDescription
-                  descriptionExtensions={descriptionExtensions}
-                  classNames='dx-document'
-                />
+                {/* Keyed by task, so a new subject replaces the text held rather than carrying the previous one's across. */}
+                <Form.Root
+                  key={task.id}
+                  schema={Type.getSchema(Task.Task)}
+                  // The whole task, so the schema's other required fields validate; only the fields shown can change.
+                  values={snapshot}
+                  markdownExtensions={descriptionExtensions}
+                  testId='tasksPlugin.fields'
+                  autoSave
+                  onSave={handleSave}
+                >
+                  <TaskFields untitled={!task.title} />
+                </Form.Root>
 
                 {/* What the task carries, in a flow rather than the row's one scrolling line: the
                   pane has the width to wrap them, and a chip that wraps is a chip the reader can
@@ -175,3 +202,31 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
     </ActionMenu>
   );
 };
+
+/** The form fields the article edits; the rest of the task is shown by its own parts below. */
+const FIELDS = new Set(['title', 'description']);
+
+/**
+ * The task's title and description. Enter in the title commits it, as blur does; an untitled task is one just
+ * added (a sub-task from a row's menu), so its title takes focus.
+ */
+const TaskFields = ({ untitled }: { untitled: boolean }) => {
+  const { form } = useFormContext(TaskFields.displayName);
+  const contentRef = useRef<HTMLDivElement>(null);
+  useSubmitOnEnter(contentRef, () => form.canSave && form.onSave());
+  useEffect(() => {
+    if (untitled) {
+      contentRef.current?.querySelector('input')?.focus();
+    }
+    // Once per mount: the form is keyed by task, and clearing a title while typing must not re-focus it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <Form.Content ref={contentRef}>
+      <Form.Fields filter={(fields) => fields.filter(({ name }) => FIELDS.has(String(name)))} />
+    </Form.Content>
+  );
+};
+
+TaskFields.displayName = 'TaskArticle.Fields';
