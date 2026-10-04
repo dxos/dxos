@@ -49,8 +49,12 @@ export const rank = (left: Declaration, right: Declaration): number =>
   left.path.localeCompare(right.path) ||
   left.iri.localeCompare(right.iri);
 
-/** A name or canonical name as a key; the tail stays inside the pattern because the native evaluator scans a trailing join. */
-const lookup = (key: 'name' | 'canonicalName', value: string): string => `${DEUS}
+/**
+ * A name or canonical name as a key, ordered by {@link rank} before the limit so a name with more
+ * declarations than {@link MAX_ROWS} still keeps its best ones; the tail stays inside the pattern
+ * because the native evaluator scans a trailing join.
+ */
+const lookup = (key: 'name' | 'canonicalName', value: string, limit: number): string => `${DEUS}
   SELECT ?s ?name ?kind ?path ?pkg ?test ?exp ?pub WHERE {
     ?s deus:${key} ${JSON.stringify(value)} .
     ?file deus:declares ?s ; deus:path ?path .
@@ -60,7 +64,14 @@ const lookup = (key: 'name' | 'canonicalName', value: string): string => `${DEUS
     OPTIONAL { ?s deus:packagePublic ?pub }
     OPTIONAL { ?file deus:inPackage ?package . ?package deus:name ?pkg }
     OPTIONAL { ?file deus:testFile ?test }
-  } LIMIT ${MAX_ROWS}`;
+  }
+  ORDER BY
+    DESC(COALESCE(STR(?pub) = "true", false))
+    DESC(COALESCE(STR(?exp) = "true", false))
+    (IF(COALESCE(STR(?test) = "true", false), 2, IF(REGEX(?path, ${JSON.stringify(STORY_FILE.source)}), 1, 0)))
+    (COALESCE(?name = ${JSON.stringify(Ontology.TOP_LEVEL)}, false))
+    ?path ?s
+  LIMIT ${limit}`;
 
 const DOTTED_NAME = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+$/;
 
@@ -88,18 +99,23 @@ const toDeclarations = (rows: readonly Store.Binding[], fallbackName: string): D
 /**
  * Every declaration of `name`, ranked by {@link rank}. A name matches `deus:name` or
  * `deus:canonicalName` (`Order.natural`); a dotted name with neither falls back to its last segment.
+ * `limit` caps the rows read per key (default {@link MAX_ROWS}).
  */
-export const find = (store: Store.Api, name: string): Effect.Effect<Declaration[], Store.StoreError> =>
+export const find = (
+  store: Store.Api,
+  name: string,
+  { limit = MAX_ROWS }: { readonly limit?: number } = {},
+): Effect.Effect<Declaration[], Store.StoreError> =>
   Effect.gen(function* () {
     const trimmed = name.trim();
     const exact = [
-      ...(yield* store.select(lookup('name', trimmed))),
-      ...(yield* store.select(lookup('canonicalName', trimmed))),
+      ...(yield* store.select(lookup('name', trimmed, limit))),
+      ...(yield* store.select(lookup('canonicalName', trimmed, limit))),
     ];
     let found = toDeclarations(exact, trimmed);
     if (found.length === 0 && DOTTED_NAME.test(trimmed)) {
       const segment = trimmed.slice(trimmed.lastIndexOf('.') + 1);
-      found = toDeclarations(yield* store.select(lookup('name', segment)), segment);
+      found = toDeclarations(yield* store.select(lookup('name', segment, limit)), segment);
     }
     // Several kinds of one symbol (a class merged with a namespace) collapse above; the rest are ranked.
     return found.sort(rank);
