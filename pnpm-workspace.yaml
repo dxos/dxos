@@ -197,18 +197,18 @@ catalog:
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/react-virtual': ^3.14.9
   '@tanstack/virtual-core': ^3.17.7
-  '@tauri-apps/api': ^2.11.1
-  '@tauri-apps/cli': ^2.11.4
-  '@tauri-apps/plugin-deep-link': ^2.4.10
-  '@tauri-apps/plugin-dialog': ^2.7.3
-  '@tauri-apps/plugin-fs': ^2.5.2
-  '@tauri-apps/plugin-haptics': ^2.3.3
-  '@tauri-apps/plugin-http': ^2.6.0
-  '@tauri-apps/plugin-opener': ^2.5.5
-  '@tauri-apps/plugin-os': ^2.3.2
-  '@tauri-apps/plugin-process': ^2.3.1
-  '@tauri-apps/plugin-shell': ^2.3.6
-  '@tauri-apps/plugin-updater': ^2.11.0
+  '@tauri-apps/api': ^2.12.1
+  '@tauri-apps/cli': ^2.12.1
+  '@tauri-apps/plugin-deep-link': ^2.6.1
+  '@tauri-apps/plugin-dialog': ^2.8.1
+  '@tauri-apps/plugin-fs': ^2.6.0
+  '@tauri-apps/plugin-haptics': ^2.4.1
+  '@tauri-apps/plugin-http': ^2.8.0
+  '@tauri-apps/plugin-opener': ^2.7.0
+  '@tauri-apps/plugin-os': ^2.4.0
+  '@tauri-apps/plugin-process': ^2.4.0
+  '@tauri-apps/plugin-shell': ^2.4.0
+  '@tauri-apps/plugin-updater': ^2.13.1
   '@testing-library/dom': ^10.4.1
   '@testing-library/jest-dom': ^6.9.1
   '@testing-library/react': ^16.3.2
