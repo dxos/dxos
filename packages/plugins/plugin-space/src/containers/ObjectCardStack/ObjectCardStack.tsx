@@ -52,7 +52,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
               {/* The gutter is the viewport's own, so the banner sits where the first card would. */}
               <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
                 {selectedObjects.length === 0 ? (
-                  <Banner.Root>
+                  <Banner.Root inset={false}>
                     <Banner.Title>{t('row-details-no-selection.label')}</Banner.Title>
                   </Banner.Root>
                 ) : (
