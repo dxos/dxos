@@ -819,6 +819,26 @@ export const buildSessionTimeline = ({
     });
   }
 
+  // A parent task encloses its sub-tasks, so its bar begins no later than the earliest of theirs. Read
+  // from the task tree rather than the lanes' `parentId`, which joins a sub-task to its parent only when
+  // both sit on one checklist: a parent drawn from its edit history alone, or a sub-task worked by
+  // another session, would otherwise begin at its own `started` move, after work it contains.
+  const laneByTaskId = new Map(lanes.flatMap((lane) => (lane.taskId === undefined ? [] : [[lane.taskId, lane]])));
+  for (const lane of lanes) {
+    const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);
+    if (!task || lane.start === undefined) {
+      continue;
+    }
+    const seen = new Set<string>([task.id]);
+    for (let parent = Task.getParentTask(task); parent && !seen.has(parent.id); parent = Task.getParentTask(parent)) {
+      seen.add(parent.id);
+      const parentLane = laneByTaskId.get(parent.id);
+      if (parentLane?.start !== undefined && lane.start < parentLane.start) {
+        parentLane.start = lane.start;
+      }
+    }
+  }
+
   // Hashed from the mnemonic, as the task's mnemonic chip is, so a lane and its chip share a hue.
   for (const lane of lanes) {
     const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);

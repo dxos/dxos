@@ -173,6 +173,10 @@ export const Test: Story = {
     await expect(stripViewport.scrollWidth).toBeGreaterThan(stripViewport.clientWidth);
     await expect(getComputedStyle(stripViewport).overflowY).toBe('hidden');
     await expect(getComputedStyle(stripViewport).scrollSnapType).toBe('x mandatory');
+    // Contained only along its own axis, so a vertical swipe over the strip scrolls whatever encloses it.
+    await expect(getComputedStyle(stripViewport).overscrollBehaviorX).toBe('contain');
+    await expect(getComputedStyle(stripViewport).overscrollBehaviorY).toBe('auto');
+    await expect(getComputedStyle(viewport).overscrollBehaviorY).toBe('contain');
     const stripThumb = await waitFor(() => {
       const element = strip.querySelector<HTMLElement>(':scope > .absolute');
       if (!element) {

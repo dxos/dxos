@@ -14,7 +14,7 @@ import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { Plank } from '#components';
-import { useBreadcrumbs, useDeckSettings } from '#hooks';
+import { useAncestorBreadcrumbs, useDeckSettings } from '#hooks';
 import { DeckSchema } from '#types';
 
 import { focusPane } from '../../util/index.ts';
@@ -70,19 +70,17 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     onScrollIntoView,
   } = useDeckPlank({ id, part, active });
 
-  // In flat mode only the current (last) plank renders; its predecessors in the stack become
-  // breadcrumbs in the heading. Clicking one drops the planks after it (go back), reusing Close.
+  // In flat mode only the current plank renders, so its heading shows where it sits in the tree. Clicking a crumb
+  // goes back to it: an ancestor already open drops the planks after it, any other opens in its place.
   const { flatten } = useDeckSettings();
-  const breadcrumbIds = useMemo(
-    () => (flatten && part === 'main' && active ? active.slice(0, active.indexOf(id)) : []),
-    [flatten, part, active, id],
-  );
-  const breadcrumbs = useBreadcrumbs(breadcrumbIds);
+  const breadcrumbs = useAncestorBreadcrumbs(flatten && part === 'main' ? id : undefined);
   const onSelectBreadcrumb = useCallback(
     (crumbId: string) => {
       const index = active?.indexOf(crumbId) ?? -1;
       if (active && index >= 0 && index < active.length - 1) {
         void invokePromise(LayoutOperation.Close, { subject: active.slice(index + 1) });
+      } else {
+        void invokePromise(LayoutOperation.Open, { subject: [crumbId] });
       }
     },
     [invokePromise, active],

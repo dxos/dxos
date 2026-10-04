@@ -34,7 +34,6 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
@@ -72,7 +71,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const { t } = UiHooks.useTranslation(meta.profile.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
-  const { tab, pipeline: showPipeline, axis = 'time' } = useViewState(ProjectView.aspect, subject.id);
+  const { tab, pipeline: showPipeline, axis = 'time', legend = 'title' } = useViewState(ProjectView.aspect, subject.id);
   const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
   const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
   const invoker = Hooks.useOperationInvoker();
@@ -116,6 +115,10 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // The chart splits the Tasks tab, under the ledger: the rows above name the lanes, so the chart
   // shows only the drawing.
   const setAxis = useCallback((axis: ProjectView.Axis) => updateView((prev) => ({ ...prev, axis })), [updateView]);
+  const setLegend = useCallback(
+    (legend: ProjectView.Legend) => updateView((prev) => ({ ...prev, legend })),
+    [updateView],
+  );
   const togglePipeline = useCallback(
     () => updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: !prev.pipeline })),
     [updateView],
@@ -333,23 +336,20 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               <Splitter.Panel position='end'>
                 {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
                     trace feed on every trace message, which is pure cost behind a collapsed panel. */}
-                {showPipeline &&
-                  space && (
-                    // Lanes outgrow the panel: they scroll vertically here while the chart scrolls time horizontally.
-                    <ScrollArea.Root orientation='vertical' width='thin' classNames='dx-expand'>
-                      <ScrollArea.Viewport>
-                        <ProjectPipeline
-                          space={space}
-                          project={subject}
-                          tasks={tasks}
-                          axis={axis}
-                          onAxisChange={setAxis}
-                          onSelectTask={openTask}
-                          onSelectChat={handleSelectChat}
-                        />
-                      </ScrollArea.Viewport>
-                    </ScrollArea.Root>
-                  )}
+                {/* The chart fills the panel and scrolls both ways itself, so its horizontal bar sits at the panel's foot. */}
+                {showPipeline && space && (
+                  <ProjectPipeline
+                    space={space}
+                    project={subject}
+                    tasks={tasks}
+                    axis={axis}
+                    onAxisChange={setAxis}
+                    legend={legend}
+                    onLegendChange={setLegend}
+                    onSelectTask={openTask}
+                    onSelectChat={handleSelectChat}
+                  />
+                )}
               </Splitter.Panel>
             </Splitter.Root>
           )}

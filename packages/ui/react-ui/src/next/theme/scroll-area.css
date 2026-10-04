@@ -29,10 +29,14 @@
     container-type: normal;
   }
 
+  /*
+   * Contained only on the axis that scrolls: a swipe along the other axis passes to the nearest ancestor that scrolls
+   * it (a horizontal chart inside a vertical panel), where `contain` on both would swallow it.
+   */
   .dx-scroll-viewport {
     min-height: 0;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
   }
   /*
    * A row track with a fixed minimum (`minmax(block, auto)`) grows only into the viewport's free space, so content
@@ -75,11 +79,14 @@
     --dx-scroll-reserve: 0px;
     overflow-x: auto;
     overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
     /* `stable` would still reserve an inline-end gutter for the hidden vertical axis. */
     scrollbar-gutter: auto;
   }
   .dx-scroll-root[data-orientation='all'] > .dx-scroll-viewport {
     overflow: auto;
+    overscroll-behavior: contain;
   }
 
   /* Mandatory snapping on the scrolling axis; the children carry their own `scroll-snap-align`. */

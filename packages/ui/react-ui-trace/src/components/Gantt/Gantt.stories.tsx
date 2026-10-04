@@ -728,9 +728,13 @@ const DefaultStory = ({
       now={now}
       classNames='p-4'
     >
-      {!chartOnly && <Gantt.Legend />}
+      {!chartOnly && (
+        <Gantt.Legend>
+          <Gantt.AxisToggle />
+          <Gantt.LegendToggle />
+        </Gantt.Legend>
+      )}
       <Gantt.Chart />
-      {!chartOnly && <Gantt.Meta />}
     </Gantt.Root>
   );
 
@@ -875,16 +879,14 @@ export const TestOpensAtNewest: Story = {
   },
 };
 
-/** Beside the legend and meta columns the chart takes the remaining width, rather than collapsing to nothing. */
+/** Beside the legend column the chart takes the remaining width, rather than collapsing to nothing. */
 export const TestChartFillsRow: Story = {
   args: { ...ManyLanes.args, inspect: false },
   decorators: [(Story) => <div className='w-[800px]'>{Story()}</div>],
   play: async ({ canvasElement }) => {
     await waitFor(
       async () => {
-        const chart = canvasElement
-          .querySelector<HTMLElement>('svg')
-          ?.closest<HTMLElement>('[data-scope="scroll-area"]');
+        const chart = canvasElement.querySelector<SVGSVGElement>('[data-testid="gantt.chart"]');
         if (!chart) {
           throw new Error('No chart.');
         }
@@ -892,6 +894,137 @@ export const TestChartFillsRow: Story = {
       },
       { timeout: 10_000 },
     );
+  },
+};
+
+/**
+ * The legend's toggle switches its column between the lanes' titles and their stats, and hovering a
+ * title shows the stats it is not showing.
+ *
+ * 1. Hover the first lane's title: its card shows the lane's token count.
+ * 2. Press the legend toggle: the column shows stats instead of titles.
+ * 3. Press it again: the titles are back.
+ */
+export const TestLegendStats: Story = {
+  args: { inspect: false },
+  play: async ({ canvasElement }) => {
+    const { userEvent } = await import('vitest/browser');
+    const title = await waitFor(
+      () => {
+        const element = canvasElement.querySelector<HTMLElement>('[data-testid="gantt.legend.title"]');
+        if (!element) {
+          throw new Error('No legend title.');
+        }
+        return element;
+      },
+      { timeout: 10_000 },
+    );
+    await expect(title).toHaveTextContent('Process A — Plan the release');
+
+    await userEvent.hover(title);
+    await waitFor(
+      () => expect(document.querySelector('[data-testid="gantt.legend.card"]')).toHaveTextContent('15.5k'),
+      { timeout: 5_000 },
+    );
+    await userEvent.unhover(title);
+
+    const toggle = canvasElement.querySelector<HTMLElement>('[data-testid="gantt.legendToggle"]');
+    if (!toggle) {
+      throw new Error('No legend toggle.');
+    }
+    await userEvent.click(toggle);
+    await waitFor(async () => {
+      await expect(canvasElement.querySelector('[data-testid="gantt.legend.title"]')).toBeNull();
+      await expect(canvasElement.querySelector('[data-testid="gantt.legend.stats"]')).toHaveTextContent('15.5k');
+    });
+
+    await userEvent.click(toggle);
+    await waitFor(() => expect(canvasElement.querySelector('[data-testid="gantt.legend.stats"]')).toBeNull());
+  },
+};
+
+/** In a host taller than its lanes the chart fills it, so the horizontal scroll bar is at the host's foot. */
+export const TestScrollerAtFoot: Story = {
+  args: { ...ManyLanes.args, inspect: false },
+  decorators: [
+    (Story) => (
+      <div className='h-[600px] w-[400px] flex flex-col' data-testid='host'>
+        {Story()}
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      async () => {
+        const chart = canvasElement.querySelector<SVGSVGElement>('[data-testid="gantt.chart"]');
+        const viewport = chart?.closest<HTMLElement>('[data-part="viewport"]');
+        // The frame, not the viewport: the overlay bar is pinned to the frame's foot, whatever padding the host gives it.
+        const frame = viewport?.closest<HTMLElement>('[data-part="root"]');
+        const host = canvasElement.querySelector<HTMLElement>('[data-testid="host"]');
+        if (!chart || !viewport || !frame || !host) {
+          throw new Error('No chart.');
+        }
+        // Wider than the frame, so there is a horizontal scroll at all.
+        await expect(viewport.scrollWidth).toBeGreaterThan(viewport.clientWidth);
+        await expect(
+          Math.abs(host.getBoundingClientRect().bottom - frame.getBoundingClientRect().bottom),
+        ).toBeLessThanOrEqual(4);
+        // The lanes stop well short of the foot: the frame, not its content, reaches it.
+        await expect(chart.getBoundingClientRect().bottom).toBeLessThan(viewport.getBoundingClientRect().bottom - 100);
+      },
+      { timeout: 10_000 },
+    );
+  },
+};
+
+/**
+ * The drawing is one keyboard stop that walks its nodes.
+ *
+ * 1. Click the first node of the second lane: the chart takes focus and that node is current.
+ * 2. ArrowRight: the next node along the same lane.
+ * 3. ArrowDown: the nearest node on the lane below.
+ * 4. Space opens the current node's card; Space again closes it.
+ */
+export const TestKeyboardNodes: Story = {
+  args: { ...ManyLanes.args, inspect: false },
+  play: async ({ canvasElement }) => {
+    const { userEvent } = await import('vitest/browser');
+    const chart = await waitFor(
+      () => {
+        const element = canvasElement.querySelector<SVGSVGElement>('[data-testid="gantt.chart"]');
+        if (!element) {
+          throw new Error('No chart.');
+        }
+        return element;
+      },
+      { timeout: 10_000 },
+    );
+    const currentNode = () => {
+      const id = chart.getAttribute('aria-activedescendant');
+      const node = id ? document.getElementById(id) : null;
+      return { marker: node?.getAttribute('data-marker-id'), lane: node?.getAttribute('data-lane-id') };
+    };
+
+    const start = chart.querySelector<SVGCircleElement>('circle[data-marker-id="long:0"]');
+    if (!start) {
+      throw new Error('No node.');
+    }
+    await userEvent.click(start);
+    await expect(chart).toHaveFocus();
+    await waitFor(() => expect(currentNode()).toEqual({ marker: 'long:0', lane: 'long' }));
+
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(currentNode()).toEqual({ marker: 'long:1', lane: 'long' }));
+
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(currentNode().lane).toBe('twice'));
+
+    // Pointer off the drawing, so only the keyboard decides whether a card is open.
+    await userEvent.unhover(start);
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(document.querySelector('[data-testid="gantt.markerCard"]')).not.toBeNull());
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(document.querySelector('[data-testid="gantt.markerCard"]')).toBeNull());
   },
 };
 
