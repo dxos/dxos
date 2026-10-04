@@ -168,6 +168,8 @@ export const TestLongToken: Story = {
     // The editor reaches the frame's foot (less its block padding), rather than ending where its text does.
     const editor = select(notes, '.cm-editor').getBoundingClientRect();
     const frame = notes.getBoundingClientRect();
-    await expect(frame.bottom - editor.bottom).toBeLessThanOrEqual(Number.parseFloat(getComputedStyle(notes).paddingBottom) + 1);
+    await expect(frame.bottom - editor.bottom).toBeLessThanOrEqual(
+      Number.parseFloat(getComputedStyle(notes).paddingBottom) + 1,
+    );
   },
 };

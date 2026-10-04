@@ -29,6 +29,8 @@ const ROWS = 6;
 const fieldTheme = EditorView.theme({
   '&': { minHeight: '100%' },
   '.cm-content': { overflowWrap: 'anywhere' },
+  // Elsewhere inline code is one clipped line (fixed height, no wrapping), which in a field widens the content instead.
+  '& .cm-content .cm-code-inline': { whiteSpace: 'break-spaces', height: 'auto', overflow: 'visible' },
 });
 
 /** The view stretches to the frame's height; the frame aligns its content to the first line for its adornments. */
@@ -87,11 +89,9 @@ type StringMarkdownEditorProps = {
 
 const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
   const { markdownExtensions } = useFormContext('MarkdownField');
-  const extensions = useBasicMarkdownExtensions({
-    placeholder,
-    readonly,
-    extensions: [fieldTheme, ...(markdownExtensions ?? [])],
-  });
+  // Memoised: a new list each render would reconfigure the editor on every keystroke and drop its focus.
+  const fieldExtensions = useMemo(() => [fieldTheme, ...(markdownExtensions ?? [])], [markdownExtensions]);
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   return (
     <ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
@@ -127,11 +127,11 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
     [text, reference],
   );
   const { markdownExtensions } = useFormContext('MarkdownField');
-  const extensions = useBasicMarkdownExtensions({
-    placeholder,
-    readonly,
-    extensions: [fieldTheme, ...dataExtensions, ...(markdownExtensions ?? [])],
-  });
+  const fieldExtensions = useMemo(
+    () => [fieldTheme, ...dataExtensions, ...(markdownExtensions ?? [])],
+    [dataExtensions, markdownExtensions],
+  );
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   if (!text) {
     return null;
   }
