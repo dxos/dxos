@@ -40,15 +40,24 @@ export const derive = (store: Store.Api): Effect.Effect<Quad[], Store.StoreError
   Effect.gen(function* () {
     const kinds = yield* Barrels.readAsserted(store, Ontology.kind);
     const { aliasOf, namespaceOf, reexports, moduleFile } = yield* Barrels.read(store);
-    const kindOf = new Map(kinds.map((quad) => [quad.subject.value, quad.object.value]));
+    // Every kind per IRI, since a declaration merge (`class X` + `namespace X`) asserts two.
+    const kindsOf = new Map<string, string[]>();
+    for (const quad of kinds) {
+      const known = kindsOf.get(quad.subject.value);
+      if (known) {
+        known.push(quad.object.value);
+      } else {
+        kindsOf.set(quad.subject.value, [quad.object.value]);
+      }
+    }
 
     const symbol = (iri: string): SymbolFacts | undefined => {
-      const kind = kindOf.get(iri);
+      const symbolKinds = kindsOf.get(iri);
       const aliases = aliasOf.get(iri);
       const namespaces = namespaceOf.get(iri);
-      return kind === undefined && aliases === undefined && namespaces === undefined
+      return symbolKinds === undefined && aliases === undefined && namespaces === undefined
         ? undefined
-        : { term: undefined, aliasOf: aliases ?? [], namespaceOf: namespaces ?? [], kind };
+        : { term: undefined, aliasOf: aliases ?? [], namespaceOf: namespaces ?? [], kinds: symbolKinds };
     };
     const { declarationOf } = declarations({
       symbol,
@@ -58,7 +67,7 @@ export const derive = (store: Store.Api): Effect.Effect<Quad[], Store.StoreError
 
     // A re-export alias resolves even when nothing references it, so its origin is always known.
     const referenced = (yield* store.select(REFERENCES)).map((row) => row.target);
-    const aliases = [...kindOf].filter(([, kind]) => kind === 'reexport').map(([iri]) => iri);
+    const aliases = [...kindsOf].filter(([, symbolKinds]) => symbolKinds.includes('reexport')).map(([iri]) => iri);
 
     const quads: Quad[] = [];
     for (const reference of new Set([...referenced, ...aliases])) {

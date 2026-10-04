@@ -21,8 +21,8 @@ export type SymbolFacts = {
   readonly aliasOf: readonly string[];
   /** `export * as N from …` — the file a namespace symbol publishes whole. */
   readonly namespaceOf: readonly string[];
-  /** `deus:kind`; `reexport` and `namespace` stand for a declaration elsewhere. */
-  readonly kind?: string;
+  /** Every `deus:kind`, since a class or function merged with a `namespace` declares one IRI twice. */
+  readonly kinds?: readonly string[];
 };
 
 export type Env = {
@@ -185,14 +185,17 @@ export const binder = (env: Env) => {
   return { bind: (type: Term.Type) => bind(type), resolve: (iri: string) => resolveIri(iri, 0) };
 };
 
-/** Kinds that stand for a declaration elsewhere rather than being one. */
-const REFERENCE_KINDS: ReadonlySet<string> = new Set(['reexport', 'namespace']);
+/**
+ * Kinds that stand for a declaration elsewhere rather than being one. Not `namespace`: a TypeScript
+ * `namespace` is a declaration, and an `export * as N` alias is already known by its `namespaceOf`.
+ */
+const REFERENCE_KINDS: ReadonlySet<string> = new Set(['reexport']);
 
-/** Whether the facts are a declaration proper: neither an alias, a namespace, nor a re-export. */
+/** Whether the facts are a declaration proper: neither an alias, a namespace barrel, nor a re-export. */
 export const isDeclaration = (facts: SymbolFacts): boolean =>
   facts.aliasOf.length === 0 &&
   facts.namespaceOf.length === 0 &&
-  (facts.kind === undefined || !REFERENCE_KINDS.has(facts.kind));
+  (facts.kinds === undefined || facts.kinds.length === 0 || facts.kinds.some((kind) => !REFERENCE_KINDS.has(kind)));
 
 /**
  * Resolves a reference IRI as an importer wrote it (`file:<barrel>#X`, `module:<specifier>#X.y`) to
@@ -326,11 +329,13 @@ export const envFromDocuments = (documents: readonly Ontology.FileDocument[]): E
   for (const document of documents) {
     reexports.set(document['@id'], document.reexports);
     for (const symbol of document.declares) {
+      // A declaration merge (`class X` + `namespace X`) lists one IRI twice; keep both halves.
+      const known = symbols.get(symbol['@id']);
       symbols.set(symbol['@id'], {
-        term: symbol.typeTerm === undefined ? undefined : Term.fromJson(JSON.parse(symbol.typeTerm)),
-        aliasOf: symbol.aliasOf,
-        namespaceOf: symbol.namespaceOf ?? [],
-        kind: symbol.kind,
+        term: known?.term ?? (symbol.typeTerm === undefined ? undefined : Term.fromJson(JSON.parse(symbol.typeTerm))),
+        aliasOf: [...(known?.aliasOf ?? []), ...symbol.aliasOf],
+        namespaceOf: [...(known?.namespaceOf ?? []), ...(symbol.namespaceOf ?? [])],
+        kinds: [...(known?.kinds ?? []), symbol.kind],
       });
     }
     for (const node of document['@included'] ?? []) {
