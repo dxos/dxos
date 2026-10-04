@@ -19,6 +19,7 @@ import {
   Button,
   ControlFrame,
   Field,
+  Flex,
   Icon,
   Input,
   SystemButton,
@@ -340,6 +341,51 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     // status column takes the icon, and the title column takes the field — which is what puts the
     // caret where the rows' titles start. Off it, the pane keeps a template of its own.
     const hasDescription = !!(showDescription && (current ? onTaskUpdate : onTaskCreate));
+    const showActions = !!current || draft.trim().length > 0;
+    const actions = (
+      <>
+        <SystemButton.Save
+          variant='primary'
+          data-testid='taskList.edit.save'
+          onClick={handleSave}
+          onMouseDown={(event) => event.preventDefault()}
+        />
+        <SystemButton.Cancel
+          variant='ghost'
+          data-testid='taskList.edit.cancel'
+          onClick={handleCancel}
+          onMouseDown={(event) => event.preventDefault()}
+        />
+      </>
+    );
+    // Editing, the task's own controls; creating, the same pickers over the draft, so a task can be
+    // sized and ranked as it is added.
+    const placement = (track: keyof typeof PICKER_TRACKS) => (grid ? PICKER_TRACKS[track] : undefined);
+    const pickers = showControls && (
+      <>
+        {showEstimates &&
+          (task && current ? (
+            <TaskEstimateControl task={task} classNames={placement('estimate')} />
+          ) : (
+            <TaskEstimatePicker
+              estimate={draftEstimate}
+              onChange={setDraftEstimate}
+              testId='taskList.edit.estimate'
+              classNames={placement('estimate')}
+            />
+          ))}
+        {task && current ? (
+          <TaskPriorityIcon task={task} classNames={placement('priority')} />
+        ) : (
+          <TaskPriorityPicker
+            priority={draftPriority}
+            onChange={setDraftPriority}
+            testId='taskList.edit.priority'
+            classNames={placement('priority')}
+          />
+        )}
+      </>
+    );
 
     return (
       // One grid, not a row of grids: the title and the description line up column for column, and
@@ -356,7 +402,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           'grid w-full min-w-0 shrink-0',
           // The description row only when there is one: an empty second track still takes the row gap,
           // which left the pane a gap taller than a task row.
-          hasDescription ? 'grid-rows-[auto_auto] gap-y-2' : 'grid-rows-[auto]',
+          (hasDescription || (grid && showActions)) && 'gap-y-2',
           // The drop target is the pane itself, marked while files are held over it.
           dragOver && 'ring-2 ring-inset ring-accent-bg',
           // No leading control means no icon track: the title then starts where the host's own
@@ -410,7 +456,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             // (Shown while the field is not focused, which is how a pane holds it open.)
             classNames={mx(
               'text-ellipsis',
-              grid ? 'col-start-[title] -col-end-2' : showControls ? 'col-start-2' : 'col-start-1',
+              grid ? 'col-start-[title] col-end-[assignee]' : showControls ? 'col-start-2' : 'col-start-1',
             )}
             data-testid='taskList.edit.title'
             // A host may name the row ("Add a step"), but the default is the package's own string:
@@ -501,65 +547,46 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             </div>
           )}
 
+        {/* On the list's grid the pickers take the rows' own estimate and priority tracks, and Save and
+            Cancel a line of their own; away from it they share one toolbar after the title. */}
+        {grid && pickers}
+
         {/* Save and Cancel belong to creating: the held-open description has no blur to commit it, so
             the add row needs both. Editing, the fields commit themselves — and a host carrying the
             task's controls in its own toolbar (`showControls` off) has no use for a second bar of
             chrome floating over the title. */}
-        {(showControls || (!current && draft.trim().length > 0)) && (
-          <Toolbar.Root
-            size='sm'
-            classNames={mx(
-              'row-start-1 justify-end p-0 bg-transparent',
-              // `-2` is the icon column once the pane has only two tracks, which would put the
-              // controls where the title goes and squeeze the field into the min-content track.
-              showControls ? 'col-start-[-2]' : 'col-start-2',
+        {grid
+          ? showActions && (
+              // A Flex, not a Toolbar: a Toolbar's frame is the grid item and takes no placement, so it
+              // would be auto-placed into the title line.
+              <Flex
+                justify='end'
+                classNames={mx('col-start-[title] -col-end-1', hasDescription ? 'row-start-3' : 'row-start-2')}
+              >
+                {actions}
+              </Flex>
+            )
+          : (showControls || showActions) && (
+              <Toolbar.Root
+                size='sm'
+                classNames={mx(
+                  'row-start-1 justify-end p-0 bg-transparent',
+                  // `-2` is the icon column once the pane has only two tracks, which would put the
+                  // controls where the title goes and squeeze the field into the min-content track.
+                  showControls ? 'col-start-[-2]' : 'col-start-2',
+                )}
+              >
+                {pickers}
+                {showActions && actions}
+              </Toolbar.Root>
             )}
-          >
-            {/* Editing, the task's own controls; creating, the same pickers over the draft, so a task can be
-                sized and ranked as it is added. */}
-            {showControls &&
-              showEstimates &&
-              (task && current ? (
-                <TaskEstimateControl task={task} />
-              ) : (
-                <TaskEstimatePicker
-                  estimate={draftEstimate}
-                  onChange={setDraftEstimate}
-                  testId='taskList.edit.estimate'
-                />
-              ))}
-            {showControls &&
-              (task && current ? (
-                <TaskPriorityIcon task={task} />
-              ) : (
-                <TaskPriorityPicker
-                  priority={draftPriority}
-                  onChange={setDraftPriority}
-                  testId='taskList.edit.priority'
-                />
-              ))}
-            {(current || draft.trim().length > 0) && (
-              <>
-                <SystemButton.Save
-                  variant='primary'
-                  data-testid='taskList.edit.save'
-                  onClick={handleSave}
-                  onMouseDown={(event) => event.preventDefault()}
-                />
-                <SystemButton.Cancel
-                  variant='ghost'
-                  data-testid='taskList.edit.cancel'
-                  onClick={handleCancel}
-                  onMouseDown={(event) => event.preventDefault()}
-                />
-              </>
-            )}
-          </Toolbar.Root>
-        )}
       </div>
     );
   },
 );
+
+/** Literal so Tailwind finds the classes: the pickers' cells on the list's own template. */
+const PICKER_TRACKS = { estimate: 'row-start-1 col-[estimate]', priority: 'row-start-1 col-[priority]' } as const;
 
 /** Whether a drag carries files from outside the page, rather than an element dragged within it. */
 const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');

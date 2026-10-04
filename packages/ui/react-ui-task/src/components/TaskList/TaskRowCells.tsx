@@ -202,13 +202,14 @@ TaskCheckbox.displayName = 'TaskList.Checkbox';
  * {@link UNSET_ICON} when unset — the same dot the priority column shows, so a row with neither set
  * reads as two empty controls rather than a dash beside a dot.
  */
-export const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
+export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
   return (
     <TaskEstimatePicker
       estimate={task.estimate}
       onChange={onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))}
       testId='taskList.item.estimate'
+      classNames={classNames}
     />
   );
 };
@@ -218,18 +219,19 @@ export type TaskEstimatePickerProps = {
   /** Omitted for a readonly label. */
   onChange?: (estimate: Task.Estimate | undefined) => void;
   testId?: string;
+  classNames?: string;
 };
 
 /** The estimate label and its menu over a bare value, for a row's task or a draft that has none yet. */
-export const TaskEstimatePicker = ({ estimate, onChange, testId }: TaskEstimatePickerProps) => {
+export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: TaskEstimatePickerProps) => {
   const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onChange) {
-    return <Block classNames={estimateTextStyle(estimate)}>{label}</Block>;
+    return <Block classNames={mx(estimateTextStyle(estimate), classNames)}>{label}</Block>;
   }
 
   return (
-    <Block>
+    <Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu
         deferUntilOpen
@@ -266,13 +268,14 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
  * including one with no priority, which shows a dot — so setting a priority never depends on
  * discovering a hover affordance.
  */
-export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
+export const TaskPriorityIcon = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
   return (
     <TaskPriorityPicker
       priority={task.priority ?? undefined}
       onChange={onTaskUpdate && ((priority) => onTaskUpdate(task, { priority: priority ?? null }))}
       testId='taskList.item.priority'
+      classNames={classNames}
     />
   );
 };
@@ -282,10 +285,11 @@ export type TaskPriorityPickerProps = {
   /** Omitted for a readonly glyph. */
   onChange?: (priority: Task.Priority | undefined) => void;
   testId?: string;
+  classNames?: string;
 };
 
 /** The priority glyph and its menu over a bare value, for a row's task or a draft that has none yet. */
-export const TaskPriorityPicker = ({ priority, onChange, testId }: TaskPriorityPickerProps) => {
+export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: TaskPriorityPickerProps) => {
   const { t } = useTranslation(translationKey);
   const icon = priorityIcon(priority);
   const styles = priorityTextStyle(priority);
@@ -294,14 +298,14 @@ export const TaskPriorityPicker = ({ priority, onChange, testId }: TaskPriorityP
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
-      <Block>
+      <Block classNames={classNames}>
         <Icon icon={icon} classNames={mx(styles)} />
       </Block>
     );
   }
 
   return (
-    <Block>
+    <Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu
         deferUntilOpen
