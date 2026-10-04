@@ -98,15 +98,15 @@ export const AutomergeArticle = ({ role, ...props }: ArticleProps & { space?: Sp
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar onChange={setFilter} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <MasterDetailTable properties={properties} data={data} detailsTransform={({ accessor }) => accessor()} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

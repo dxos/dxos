@@ -12,14 +12,14 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { identity } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Reactivity from 'effect/reactivity/Reactivity';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
+import * as Client from 'effect/sql/SqlClient';
+import * as SqlConnection from 'effect/sql/SqlConnection';
+import * as SqlError from 'effect/sql/SqlError';
+import * as Statement from 'effect/sql/Statement';
 import * as Stream from 'effect/Stream';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import * as Client from 'effect/unstable/sql/SqlClient';
-import * as SqlConnection from 'effect/unstable/sql/SqlConnection';
-import * as SqlError from 'effect/unstable/sql/SqlError';
-import * as Statement from 'effect/unstable/sql/Statement';
 
 import { GlobalValue } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -37,7 +37,15 @@ import {
 import { recordSqliteQueryMetrics, summarizeLoggedParams } from './query-log.ts';
 import { readRow } from './row-decode.ts';
 import { instantiateSqliteModule } from './sqlite-module.ts';
-import { instrumentVfs } from './vfs-metrics.ts';
+import {
+  type StatementKind,
+  instrumentVfs,
+  makeCacheSampler,
+  recordStatement,
+  recordStatementError,
+  registerCacheSampler,
+  statementKind,
+} from './vfs-metrics.ts';
 
 export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas.ts';
 
@@ -69,6 +77,8 @@ const initModule = Effect.runSync(Effect.cached(Effect.promise(() => instantiate
 const initEffect = Effect.runSync(Effect.cached(initModule.pipe(Effect.map((module) => WaSqlite.Factory(module)))));
 
 const registeredVfs = GlobalValue.globalValue('@dxos/sql-sqlite/opfs-vfs-registered', () => new Set<string>());
+
+const isWrite = (kind: StatementKind): boolean => kind === 'insert' || kind === 'update' || kind === 'delete';
 
 type Connection = SqlConnection.Connection & {
   export: Effect.Effect<Uint8Array, SqlError.SqlError>;
@@ -141,6 +151,15 @@ export const makeOpfs = (
         (handle) => Effect.sync(() => sqlite3.close(handle)),
       );
 
+      const sampler = makeCacheSampler(yield* initModule, db);
+      if (sampler) {
+        // Released before the connection's own finalizer runs, since scope finalizers run in reverse.
+        yield* Effect.acquireRelease(
+          Effect.sync(() => registerCacheSampler(sampler)),
+          (unregister) => Effect.sync(unregister),
+        );
+      }
+
       yield* Effect.try({
         try: () => applyOpfsPragmas(sqlite3, db, { journalMode, synchronous }),
         catch: (cause) =>
@@ -163,8 +182,10 @@ export const makeOpfs = (
           try: () => {
             const results: Array<any> = [];
             const begin = performance.now();
+            const kind = statementKind(sql);
             for (const stmt of sqlite3.statements(db, sql)) {
               let columns: Array<string> | undefined;
+              const rowsBefore = results.length;
               // wa-sqlite bind_collection is typed for SQLiteCompatibleType[] only.
               sqlite3.bind_collection(stmt, params as any);
               while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
@@ -181,11 +202,13 @@ export const makeOpfs = (
                   results.push(row);
                 }
               }
+              recordStatement(kind, results.length - rowsBefore, isWrite(kind) ? sqlite3.changes(db) : 0);
             }
             recordSqliteQueryMetrics(sql, params, results.length, begin);
             return results;
           },
           catch: (cause) => {
+            recordStatementError();
             log('sqlite error', {
               error: cause,
               sql: sql.replace(/\s+/g, ' ').trim(),
@@ -212,9 +235,11 @@ export const makeOpfs = (
         executeStream: (sql, params, rowTransform) => {
           const stream = function* () {
             const begin = performance.now();
+            const kind = statementKind(sql);
             let resultCount = 0;
             for (const stmt of sqlite3.statements(db, sql)) {
               let columns: Array<string> | undefined;
+              const rowsBefore = resultCount;
               sqlite3.bind_collection(stmt, params as any);
               while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
                 const decoded = readRow(sqlite3, stmt, sql, columns);
@@ -227,6 +252,7 @@ export const makeOpfs = (
                 resultCount++;
                 yield obj;
               }
+              recordStatement(kind, resultCount - rowsBefore, isWrite(kind) ? sqlite3.changes(db) : 0);
             }
             recordSqliteQueryMetrics(sql, params, resultCount, begin);
           };
@@ -239,6 +265,7 @@ export const makeOpfs = (
                   Stream.flattenIterable(Stream.map(Stream.chunks(self), rowTransform))
               : identity,
             Stream.mapError((cause) => {
+              recordStatementError();
               log('sqlite error', {
                 error: cause,
                 sql: sql.replace(/\s+/g, ' ').trim(),

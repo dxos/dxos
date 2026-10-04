@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
@@ -213,7 +213,9 @@ const summarize = Effect.fnUntraced(function* (
     );
     if (text.length > 0) {
       const target = Mailbox.findOrCreateAnnotations(mailbox, db);
-      yield* Feed.append(target, [Mailbox.makeSummary({ message: subject, text, model: model ?? DEFAULT_MODEL })]);
+      yield* Feed.append(target, [Mailbox.makeSummary({ message: subject, text, model: model ?? DEFAULT_MODEL })]).pipe(
+        Effect.provideService(Database.Origin, 'system'),
+      );
       summarized_ += 1;
     }
     reportStatus({ current: summarized_, message: stringProperty(subject, 'subject') });

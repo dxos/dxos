@@ -10,22 +10,14 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
-import {
-  Banner,
-  DensityProvider,
-  Icon,
-  IconButton,
-  ScrollArea,
-  Tabs,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Tree } from '@dxos/react-ui-list';
+import { Button, Empty, Icon, Tabs, toLocalizedString, useMainLandmark, useTranslation } from '@dxos/react-ui';
+import { Tree, type TreeNode } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
 import { meta } from '#meta';
+import { type NavTreeNode } from '#types';
 
 import { NAV_TREE_ITEM } from '../NavTree/index.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
@@ -65,9 +57,11 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
+  // The panel is a focus area of its own, after the rail.
+  const landmark = useMainLandmark(0.5);
 
   return (
-    <Tabs.Panel
+    <Tabs.Content
       key={id}
       value={id}
       classNames={[
@@ -77,6 +71,7 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
         isCurrent && 'grid',
       ]}
       tabIndex={-1}
+      {...(isCurrent && landmark)}
       aria-label={title}
       // An unavailable workspace has no tab in the rail, so the generated `aria-labelledby` would
       // reference a missing element.
@@ -98,23 +93,22 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
             className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
             style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
           >
-            <Icon icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
+            <Icon icon='ph--spinner-gap--regular' size='xl' spin />
           </div>
         ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
           unavailable && (
-            <Banner.Empty
+            <Empty
               key={id}
-              label={t('workspace-unavailable.description')}
-              // Second grid row, so the message clears the rail exactly as the tree does, and
-              // hugging its top rather than stretching to the row's full height.
               classNames='row-start-2 self-start animate-fade-in'
               style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
-            />
+            >
+              {t('workspace-unavailable.description')}
+            </Empty>
           )
         ))}
-    </Tabs.Panel>
+    </Tabs.Content>
   );
 };
 
@@ -146,31 +140,41 @@ const L1PanelContent = ({
   const navTreeContext = useNavTreeContext();
 
   return (
-    <DensityProvider density='md'>
+    <>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
-      <ScrollArea.Root centered padding thin orientation='vertical'>
-        <ScrollArea.Viewport>
-          <Tree
-            classNames='pt-[2px]'
-            model={navTreeContext.model}
-            id={item.id}
-            rootId={item.id}
-            path={path}
-            draggable
-            gridTemplateColumns={`[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
-            renderColumns={NavTreeItemColumns}
-            canDrop={navTreeContext.canDrop}
-            getDropKind={navTreeContext.getDropKind}
-            canSelect={navTreeContext.canSelect}
-            onOpenChange={navTreeContext.onOpenChange}
-            onSelect={navTreeContext.onSelect}
-            onItemHover={navTreeContext.onItemHover}
-          />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </DensityProvider>
+      <Tree.Root
+        model={navTreeContext.model}
+        id={item.id}
+        rootId={item.id}
+        path={path}
+        size='md'
+        draggable
+        columns={COLUMNS}
+        canDrop={navTreeContext.canDrop}
+        getDropKind={navTreeContext.getDropKind}
+        canSelect={navTreeContext.canSelect}
+        onOpenChange={navTreeContext.onOpenChange}
+        onSelect={navTreeContext.onSelect}
+        onItemHover={navTreeContext.onItemHover}
+      >
+        <Tree.Content>{renderRow}</Tree.Content>
+      </Tree.Root>
+    </>
   );
 };
+
+/** Disclosure, icon, label, count, the actions menu, then the late item-end surface. */
+const COLUMNS = `var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) auto min-content minmax(${ITEM_END_SIZE}, min-content)`;
+
+const renderRow = (node: TreeNode<NavTreeNode.NavTreeItemGraphNode>) => (
+  <Tree.Item node={node}>
+    <Tree.ItemIndicator />
+    <Tree.ItemIcon />
+    <Tree.ItemText data-testid='treeItem.heading' />
+    <Tree.ItemCount />
+    {node.item && <NavTreeItemColumns path={node.path} item={node.item} open={node.open} />}
+  </Tree.Item>
+);
 
 /**
  * Header row.
@@ -186,18 +190,18 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
 
   return (
     <div
-      data-tauri-drag-region
-      className='grid w-full items-center dx-app-drag dx-density-lg'
-      // Same late item-end surface as the tree rows below, so the header holds the slot too.
+      data-tauri-drag-region='deep'
+      className='grid w-full items-center px-2 dx-app-drag dx-density-lg'
+      // Same late item-end surface and inline inset as the tree rows below, so its actions and status line up with theirs.
       style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
-        <IconButton
+        <Button
           classNames={[hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--caret-left--regular'
           iconOnly
-          size={4}
+          iconSize='md'
           label={t('button-back.button')}
           data-testid='treeView.primaryTreeButton'
           onClick={() => onBack?.()}
@@ -205,9 +209,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
       ) : (
         <div />
       )}
-      <h2 data-tauri-drag-region className='flex-1 truncate min-w-0'>
-        {title}
-      </h2>
+      <h2 className='flex-1 truncate min-w-0'>{title}</h2>
       <div className='contents dx-app-no-drag'>
         <MenuActions item={item} menuActions={menuActions} onAction={onAction} />
         {ItemEnd && <ItemEnd node={item} open />}
@@ -241,12 +243,12 @@ const MenuActions = ({
 
   if (menuActions.length === 1) {
     return (
-      <IconButton
+      <Button
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
         iconOnly
-        size={4}
+        iconSize='md'
         label={toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}
         onClick={() => onAction(menuActions[0] as AppGraphNode.Action)}
@@ -256,12 +258,12 @@ const MenuActions = ({
 
   return (
     <ActionMenu caller={NAV_TREE_ITEM} onAction={onAction} group={item} actions={menuActions as MenuItem[]}>
-      <IconButton
+      <Button
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon='ph--dots-three-vertical--regular'
         iconOnly
-        size={4}
+        iconSize='md'
         label={t('tree-item-actions.label')}
         data-testid='navtree.treeItem.actionsLevel0'
       />

@@ -5,8 +5,8 @@
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Event as AsyncEvent, type Trigger } from '@dxos/async';
 import { type Config, ConfigService } from '@dxos/config';

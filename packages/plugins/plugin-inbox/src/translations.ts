@@ -6,6 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as cardTranslations } from '@dxos/react-ui-card/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -71,8 +72,7 @@ export const translations = [
 
         'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
-        'message-companion.label': 'Message',
-        'no-message-selected.message': 'Select a message.',
+        'attachment-type.label': 'Attachment',
         'mailbox-account.label': 'Account',
         'mailbox-account.placeholder': 'Select account...',
         'mailbox-sync.label': 'Mailbox Sync',
@@ -192,4 +192,5 @@ export const translations = [
   },
   ...cardTranslations,
   ...componentsTranslations,
+  ...queryTranslations,
 ] as const satisfies Resource[];

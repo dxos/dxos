@@ -61,9 +61,11 @@ export const StoredDeck = Schema.Struct({
   plankSizing: Schema.mutableKey(PlankSizing),
   companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   /**
-   * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave
-   * like a browser tab: opening under a name that is already taken replaces its occupant in place.
-   * Entries are pruned as their plank closes.
+   * Named planks, as name → the plank id holding that name. A name makes a plank behave like a browser
+   * tab: opening under a name that is already taken replaces its holder in place. A plank's detail is
+   * the plank holding its detail name (see `detailName`); a flattened deck shows that one in the
+   * companion rather than opening it, so detail names outlive their holder's plank and are pruned only
+   * once no open plank reaches them. Other names are pruned as their plank closes.
    */
   plankNames: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
 });

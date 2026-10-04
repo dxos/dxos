@@ -7,9 +7,16 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps, slottable } from '@dxos/react-ui';
-import { type MenuActions } from '@dxos/react-ui-menu';
+import {
+  Button,
+  Toolbar,
+  type ToolbarRootProps,
+  composable,
+  composableProps,
+  slottable,
+  useTranslation,
+} from '@dxos/react-ui';
+import type { MenuActions } from '@dxos/react-ui-menu';
 import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
@@ -111,7 +118,7 @@ export const PipelineToolbar = composable<HTMLDivElement, ToolbarRootProps>(({ c
 
   return (
     <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-      <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('add-column.label')} onClick={onAddColumn} />
+      <Button icon='ph--plus--regular' iconOnly label={t('add-column.label')} onClick={onAddColumn} />
     </Toolbar.Root>
   );
 });

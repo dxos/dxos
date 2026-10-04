@@ -16,7 +16,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, Field, Flex, Icon, Menu, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Flex, Input, Menu, Switch, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -96,7 +96,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         );
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Field.Input
+            <Input
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
@@ -131,14 +131,18 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       // Read-only: the membership policy is written into the genesis credential at creation.
       private: ({ label, getValue }) => (
         <Form.Field label={label} description={t('private.description')}>
-          <Field.Switch checked={getValue()} disabled classNames='justify-self-end' />
+          <Switch checked={getValue()} disabled classNames='justify-self-end' />
         </Form.Field>
       ),
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
           <Form.Field label={label} description={t('edge-replication.description')}>
-            <Field.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
+            <Switch
+              checked={getValue()}
+              onCheckedChange={({ checked }) => handleChange(checked)}
+              classNames='justify-self-end'
+            />
           </Form.Field>
         );
       },
@@ -201,26 +205,22 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
           <Form.FieldSet label={t('space-controls.title')} description={t('space-controls.description')}>
             <Form.Field standalone label={t('space-id.title')} description={t('space-id.description')}>
-              <Flex gap='sm' align='center'>
-                <Field.Root>
-                  <Field.Input value={space.id} disabled classNames='flex-1 font-mono text-xs' />
-                </Field.Root>
-                <SystemIconButton.Clipboard iconOnly label={t('copy-space-id.label')} value={space.id} />
-              </Flex>
+              <Input value={space.id} disabled variant='mono' copyable aria-label={t('space-id.title')} />
             </Form.Field>
             <Form.Field standalone label={t('backup-space.title')} description={t('backup-space.description')}>
               <Menu.Root>
                 <Menu.Trigger asChild>
-                  <Button>
-                    {t('download-backup.label')}
-                    <Icon icon='ph--caret-down--regular' size={4} classNames='ms-2' />
-                  </Button>
+                  <Button caretDown>{t('download-backup.label')}</Button>
                 </Menu.Trigger>
                 <Menu.Content>
-                  <Menu.Viewport>
-                    <Menu.Item onClick={handleBackupBinary}>{t('download-backup-binary.label')}</Menu.Item>
-                    <Menu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</Menu.Item>
-                  </Menu.Viewport>
+                  <Menu.Item
+                    onClick={handleBackupBinary}
+                    item={{ value: t('download-backup-binary.label'), label: t('download-backup-binary.label') }}
+                  />
+                  <Menu.Item
+                    onClick={handleBackupJson}
+                    item={{ value: t('download-backup-json.label'), label: t('download-backup-json.label') }}
+                  />
                 </Menu.Content>
               </Menu.Root>
             </Form.Field>
@@ -240,36 +240,32 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
               label={t('delete-space.title')}
               description={isDefaultSpace ? t('delete-default-space.description') : t('delete-space.description')}
             >
-              <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+              <Dialog.Root open={deleteConfirmOpen} onOpenChange={({ open }) => setDeleteConfirmOpen(open)}>
                 <Dialog.Trigger asChild>
                   <Button variant='destructive' disabled={isDefaultSpace} data-testid='spaceSettings.deleteSpace'>
                     {t('delete-space.label')}
                   </Button>
                 </Dialog.Trigger>
-                <Dialog.Portal>
-                  <Dialog.Overlay>
-                    <Dialog.Content>
-                      <Dialog.Header>
-                        <Dialog.Title>{t('delete-space-confirm.title')}</Dialog.Title>
-                      </Dialog.Header>
-                      <Dialog.Body>
-                        <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
-                        <Flex gap='sm' justify='end' classNames='mt-4'>
-                          <Dialog.Close asChild>
-                            <Button>{t('cancel.label')}</Button>
-                          </Dialog.Close>
-                          <Button
-                            variant='destructive'
-                            onClick={handleDelete}
-                            data-testid='spaceSettings.deleteSpaceConfirm'
-                          >
-                            {t('delete-space.label')}
-                          </Button>
-                        </Flex>
-                      </Dialog.Body>
-                    </Dialog.Content>
-                  </Dialog.Overlay>
-                </Dialog.Portal>
+                <Dialog.Content>
+                  <Dialog.Header>
+                    <Dialog.Title>{t('delete-space-confirm.title')}</Dialog.Title>
+                  </Dialog.Header>
+                  <Dialog.Body>
+                    <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
+                    <Flex gap='sm' justify='end' classNames='mt-4'>
+                      <Dialog.CloseTrigger asChild>
+                        <Button>{t('cancel.label')}</Button>
+                      </Dialog.CloseTrigger>
+                      <Button
+                        variant='destructive'
+                        onClick={handleDelete}
+                        data-testid='spaceSettings.deleteSpaceConfirm'
+                      >
+                        {t('delete-space.label')}
+                      </Button>
+                    </Flex>
+                  </Dialog.Body>
+                </Dialog.Content>
               </Dialog.Root>
             </Form.Field>
           </Form.FieldSet>

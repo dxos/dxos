@@ -17,8 +17,6 @@ on:
         type: string
         default: ''
       version:
-        # Computed once by deploy-apps' `version` job so the web bundle embedded here and the native
-        # build report the same version. Required — there is no sensible local fallback.
         description: Version to build.
         type: string
         required: true
@@ -221,19 +219,40 @@ jobs:
             exit 1
           fi
 
+      # A channel with its own App ID has its profile in its own secret; any other build embeds
+      # production's. The app is signed under whichever App ID the embedded profile grants, so the two
+      # cannot disagree.
       - name: Install macOS Provisioning Profile
         if: matrix.os == 'depot-macos-latest'
+        working-directory: ./packages/apps/composer-app/src-tauri
         env:
+          ENVIRONMENT: ${{ inputs.environment }}
           MACOS_PROVISION_PROFILE: ${{ secrets.MACOS_PROVISION_PROFILE }}
+          MACOS_PROVISION_PROFILE_DEV: ${{ secrets.MACOS_PROVISION_PROFILE_DEV }}
+          MACOS_PROVISION_PROFILE_PREVIEW: ${{ secrets.MACOS_PROVISION_PROFILE_PREVIEW }}
         run: |
-          if [ -z "$MACOS_PROVISION_PROFILE" ]; then
-            echo "Error: MACOS_PROVISION_PROFILE secret is not set"
+          case "$ENVIRONMENT" in
+            dev) profile_secret=MACOS_PROVISION_PROFILE_DEV ;;
+            preview) profile_secret=MACOS_PROVISION_PROFILE_PREVIEW ;;
+            *) profile_secret=MACOS_PROVISION_PROFILE ;;
+          esac
+          if [ -z "${!profile_secret}" ]; then
+            echo "Error: $profile_secret secret is not set"
             exit 1
           fi
-          echo "$MACOS_PROVISION_PROFILE" | base64 --decode > packages/apps/composer-app/src-tauri/embedded.provisionprofile
-          if [ ! -s packages/apps/composer-app/src-tauri/embedded.provisionprofile ]; then
-            echo "Error: Provisioning profile is empty after decoding"
+          echo "${!profile_secret}" | base64 --decode > embedded.provisionprofile
+          if [ ! -s embedded.provisionprofile ]; then
+            echo "Error: Provisioning profile is empty"
             exit 1
+          fi
+          app_id=$(security cms -D -i embedded.provisionprofile | plutil -extract Entitlements.com\\.apple\\.application-identifier raw -)
+          plutil -replace com\\.apple\\.application-identifier -string "$app_id" Entitlements.plist
+          echo "signed identity -> $app_id"
+          # Native passkeys need the signed App ID to name the app's own bundle (DX-1324). Checked before
+          # the build so a missing channel profile fails in seconds; staging has no App ID of its own yet.
+          bundle=$(jq -r .identifier tauri.conf.json)
+          if [ "$ENVIRONMENT" != staging ] && [ "${app_id#*.}" != "$bundle" ]; then
+            echo "::error::$bundle would be signed as $app_id; check $profile_secret" && exit 1
           fi
 
       - name: Set environment variables from secrets and env files
@@ -248,19 +267,33 @@ jobs:
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
-      # The Tauri build doesn't run deploy-env.mjs (which performs this mapping for
-      # the web deploy), so reproduce it here before the Vite bundle runs.
-      - name: Export DX_POSTHOG_API_KEY for Tauri bundle
-        run: echo "DX_POSTHOG_API_KEY=$COMPOSER_APP_POSTHOG_API_KEY" >> $GITHUB_ENV
+      - name: Stamp the Composer version
+        run: |
+          jq --arg version "$VERSION" '.version = $version' packages/apps/composer-app/package.json > version.tmp
+          mv version.tmp packages/apps/composer-app/package.json
+        env:
+          VERSION: ${{ inputs.version }}
 
-      # Reuse the web bundle built once by deploy-apps.yml's build-bundle job. Normally always present (the
-      # tauri job only runs when build-bundle succeeded); the moon fallback below is defensive.
-      - name: Download Composer bundle
+      - name: Build Composer bundle
+        run: .github/workflows/scripts/bundle-env.mjs "$ENVIRONMENT" composer
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          NODE_ENV: production
+          DX_TAURI: 'true'
+
+      - name: Upload source maps to PostHog
+        if: env.POSTHOG_CLI_API_KEY != ''
         continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: composer-bundle
-          path: packages/apps/composer-app/out/composer
+        working-directory: packages/apps/composer-app
+        env:
+          POSTHOG_CLI_HOST: https://eu.posthog.com
+          POSTHOG_CLI_PROJECT_ID: ${{ env.COMPOSER_APP_POSTHOG_PROJECT_ID }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: >-
+          pnpm dlx @posthog/cli@0.16.0 sourcemap process
+          --directory out/composer
+          --release-name composer
+          --release-version "$RELEASE_VERSION"
 
       - name: Fetch Ollama runtime
         run: (cd packages/apps/composer-app && node scripts/fetch-ollama.mjs --packaged)
@@ -294,17 +327,8 @@ jobs:
             packages/apps/composer-app/src-tauri/sandbox/dx-sandbox
 
       - name: Build Tauri app
-        # With a prebuilt bundle: `tauri build` bare (no moon) — beforeBuildCommand is empty, so it embeds
-        # the downloaded out/composer and only does the native compile (+ the desktop ollama sidecar).
-        # Without one: fall back to `moon run` (which builds the bundle + sidecar via task deps).
-        run: |
-          if [ -f packages/apps/composer-app/out/composer/index.html ]; then
-            echo "Using prebuilt Composer bundle — tauri build bare (no moon)."
-            ( cd packages/apps/composer-app && pnpm exec tauri build )
-          else
-            echo "No prebuilt bundle (unexpected) — falling back to moon."
-            moon run composer-app:tauri-build
-          fi
+        run: pnpm exec tauri build
+        working-directory: ./packages/apps/composer-app
         env:
           # The following environment variables are only set when building on macOS runners (depot-macos-latest).
           # This ensures that Apple-specific signing and notarization steps are only attempted on macOS,
@@ -348,6 +372,38 @@ jobs:
             fi
           done
 
+      # macOS kills an app at launch when its signed application identifier is not the one its embedded
+      # profile grants, or when the profile does not list the certificate it was signed with. The channel
+      # profiles outlive the certificate, so rotating MACOS_CERTIFICATE means regenerating them.
+      - name: Verify app signature matches its provisioning profile
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          app=$(ls -d packages/apps/composer-app/src-tauri/target/release/bundle/macos/*.app)
+          profile="$RUNNER_TEMP/embedded-profile.plist"
+          security cms -D -i "$app/Contents/embedded.provisionprofile" > "$profile"
+          signed=$(codesign -d --entitlements - --xml "$app" 2>/dev/null | plutil -extract com\\.apple\\.application-identifier raw -)
+          granted=$(plutil -extract Entitlements.com\\.apple\\.application-identifier raw "$profile")
+          echo "signed: $signed, profile: $granted"
+          if [ "$signed" != "$granted" ]; then
+            echo "::error::app is signed as $signed but its profile grants $granted" && exit 1
+          fi
+          codesign -d --extract-certificates="$RUNNER_TEMP/signing-cert" "$app"
+          if [ ! -s "$RUNNER_TEMP/signing-cert0" ]; then
+            echo "::error::app carries no signing certificate" && exit 1
+          fi
+          signing=$(shasum -a 256 < "$RUNNER_TEMP/signing-cert0" | cut -d' ' -f1)
+          listed=false
+          i=0
+          while cert=$(plutil -extract "DeveloperCertificates.$i" raw "$profile" 2>/dev/null); do
+            if [ "$(echo "$cert" | base64 --decode | shasum -a 256 | cut -d' ' -f1)" = "$signing" ]; then
+              listed=true
+            fi
+            i=$((i + 1))
+          done
+          if [ "$listed" != true ]; then
+            echo "::error::the embedded profile does not list the signing certificate; regenerate the channel profiles" && exit 1
+          fi
+
       - name: Upload assets
         timeout-minutes: 30
         uses: ./.github/actions/cn-release
@@ -361,7 +417,7 @@ jobs:
       # The web deploy is a sibling job that ships independently, so a red run here reads as "the release
       # failed" when only the desktop half did — announce which half, as build_tauri_ios already does.
       - name: Notify Discord on desktop build failure
-        if: failure() || cancelled()
+        if: failure() && !cancelled()
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           REF_NAME: ${{ inputs.environment }}
@@ -394,9 +450,13 @@ jobs:
           filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
-      # The only tool ios-init.sh needs that the runner image does not ship.
-      - name: Install xcodegen
-        run: brew install xcodegen
+      # Pre-install what `tauri ios init` would `brew reinstall`: brew exits 1 on this runner when a dependency's
+      # post-install hook fails, even though the formula installed, so trust the binaries over the exit code.
+      - name: Install iOS build tools
+        run: |
+          brew install xcodegen libimobiledevice || true
+          command -v pod > /dev/null || brew install cocoapods || true
+          command -v xcodegen idevicesyslog pod
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
@@ -455,7 +515,9 @@ jobs:
       - name: Set environment variables from secrets and env files
         run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
         env:
-          ENVIRONMENT: ${{ inputs.environment }}
+          # Testers sign in with production accounts, so every TestFlight build talks to production EDGE, hub and
+          # telemetry, tagged `testflight` (see env/testflight); the CrabNebula channel still follows the deploy.
+          ENVIRONMENT: testflight
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
@@ -475,30 +537,6 @@ jobs:
           ./scripts/ios-init.sh
         working-directory: ./packages/apps/composer-app
 
-      # No artifact reuse here, unlike the desktop job: the shared `composer-bundle` is built for this
-      # workflow's environment (iOS only builds from `dev`), so it carries the full plugin catalog. iOS
-      # ships the curated production set, so the bundle is always built here — `tauri-ios-build` carries
-      # `DX_PLUGIN_SET=production` on its `bundle` dep. iOS embeds the frontend but needs no ollama sidecar.
-      # TODO(wittjosiah): Restore the artifact reuse once iOS is deployed on production deploys — the
-      # shared bundle is the production set there, so rebuilding it here would be pure duplicated work.
-      # Previous approach, kept here to restore verbatim when that day comes:
-      #
-      # - name: Download Composer bundle
-      #   continue-on-error: true
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: composer-bundle
-      #     path: packages/apps/composer-app/out/composer
-      #
-      # - name: Build Tauri app for iOS
-      #   run: |
-      #     if [ -f packages/apps/composer-app/out/composer/index.html ]; then
-      #       echo "Using prebuilt Composer bundle — tauri ios build bare (no moon)."
-      #       ( cd packages/apps/composer-app && pnpm exec tauri ios build --export-method=app-store-connect )
-      #     else
-      #       echo "No prebuilt bundle (unexpected) — falling back to moon."
-      #       moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
-      #     fi
       - name: Build Tauri app for iOS
         run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
         env:
@@ -509,6 +547,72 @@ jobs:
           IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
           NODE_ENV: production
+
+      # With API-key credentials the Tauri CLI archives unsigned and carries entitlements into the export through
+      # app_iOS.entitlements, which is empty on the runner by then, so the IPA gets only the profile's
+      # (tauri-apps/tauri#15663). Re-sign with the profile's and the committed declaration before uploading.
+      - name: Restore the app's entitlements in the IPA
+        working-directory: ./packages/apps/composer-app/src-tauri/gen/apple
+        env:
+          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/ios-resign"
+          rm -rf "$work" && mkdir -p "$work"
+          ipa="build/arm64/Composer.ipa"
+          unzip -q "$ipa" -d "$work/ipa"
+          app="$work/ipa/Payload/Composer.app"
+
+          keychain="$work/signing.keychain-db"
+          password="$(openssl rand -hex 16)"
+          searched=()
+          while IFS= read -r entry; do
+            entry="${entry//\"/}"
+            entry="${entry#"${entry%%[![:space:]]*}"}"
+            [[ -n "$entry" ]] && searched+=("$entry")
+          done < <(security list-keychains -d user)
+          trap 'security list-keychains -d user -s "${searched[@]}"; security delete-keychain "$keychain" || true' EXIT
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          echo "$IOS_CERTIFICATE" | base64 --decode > "$work/certificate.p12"
+          security import "$work/certificate.p12" -k "$keychain" -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" > /dev/null
+          # codesign only finds identities in keychains on the search list, `--keychain` notwithstanding.
+          security list-keychains -d user -s "$keychain" "${searched[@]}"
+          identity="$(security find-identity -v -p codesigning "$keychain" | awk '/Apple Distribution/ { print $2; exit }')"
+          test -n "$identity" || { echo "::error::No Apple Distribution identity in IOS_CERTIFICATE"; exit 1; }
+
+          cp ../../ios/app_iOS.entitlements "$work/declared.plist"
+
+          codesign -d --entitlements - --xml "$app" > "$work/entitlements.plist"
+          python3 - "$work/entitlements.plist" "$work/declared.plist" <<'EOF'
+          import plistlib, sys
+          with open(sys.argv[1], 'rb') as signed, open(sys.argv[2], 'rb') as declared:
+              entitlements = plistlib.load(signed)
+              entitlements.update(plistlib.load(declared))
+          with open(sys.argv[1], 'wb') as out:
+              plistlib.dump(entitlements, out)
+          EOF
+
+          codesign --force --sign "$identity" --keychain "$keychain" --generate-entitlement-der \
+            --entitlements "$work/entitlements.plist" "$app"
+          codesign --verify --strict --verbose=2 "$app"
+          codesign -d --entitlements - --xml "$app" > "$work/signed.plist"
+          plutil -p "$work/signed.plist"
+          python3 - "$work/signed.plist" "$work/declared.plist" <<'EOF'
+          import plistlib, sys
+          signed, declared = (plistlib.load(open(path, 'rb')) for path in sys.argv[1:])
+          if not declared:
+              sys.exit('::error::ios/app_iOS.entitlements declares no entitlements')
+          missing = sorted(key for key, value in declared.items() if signed.get(key) != value)
+          if missing:
+              sys.exit(f'::error::The signed app lacks declared entitlements: {missing}')
+          EOF
+
+          rm "$ipa"
+          (cd "$work/ipa" && zip -qr --symlinks "$OLDPWD/$ipa" .)
 
       - name: Upload assets to CN
         timeout-minutes: 30
@@ -535,7 +639,7 @@ jobs:
           APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Notify Discord on iOS build failure
-        if: failure() || cancelled()
+        if: failure() && !cancelled()
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           REF_NAME: ${{ inputs.environment }}

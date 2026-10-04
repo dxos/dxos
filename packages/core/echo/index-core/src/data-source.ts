@@ -3,7 +3,7 @@
 //
 
 import type * as Effect from 'effect/Effect';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';

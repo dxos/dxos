@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { SessionConfig } from '@dxos/ai';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { ArchivableAnnotation } from '@dxos/schema';
 import { Outline, Repo, TaskSet } from '@dxos/types';
 
@@ -28,7 +29,7 @@ export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
 export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.6.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Format.Text),
 
     /** Work-stream lifecycle state. */
     status: Schema.optional(ProjectStatus),
@@ -63,10 +64,13 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
      */
     // TODO(burdon): Change to array? Move into taskSet?
     repo: Schema.optional(Ref.Ref(Repo.Repo).annotate({ title: 'Repository' })),
+
+    /** The default configuration (model, ...) for the sessions this project starts; a chat's own overrides it. */
+    session: Schema.optional(SessionConfig.SessionConfig.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Schema.annotate({ title: 'Project' }),
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'sky' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
     ArchivableAnnotation.set(true),
     // Only the project skill: filing created objects into `artifacts` is what a project-scoped
     // session structurally needs; artifact-type skills are enabled on demand. Plain dotted key, so

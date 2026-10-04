@@ -135,7 +135,7 @@ export const Test: Story = {
     // a proper multi-row match set — the end-to-end proof that FTS + ranking + rendering are wired.
     await waitFor(
       async () => {
-        const rows = canvas.queryAllByRole('listitem');
+        const rows = canvas.queryAllByRole('option');
         await expect(rows.length).toBeGreaterThanOrEqual(2);
       },
       { timeout: 15_000 },
@@ -146,8 +146,8 @@ export const Test: Story = {
     await expect(matchingMark).toBeTruthy();
 
     // Each row's metadata cell shows the sender's name (populated by `enrichResult`).
-    const rows = canvas.getAllByRole('listitem');
-    const metadataCells = rows.map((row) => row.querySelector('span.text-description'));
+    const rows = canvas.getAllByRole('option');
+    const metadataCells = rows.map((row) => row.querySelector('span.text-fg-muted'));
     await expect(metadataCells.every((cell) => cell?.textContent)).toBe(true);
   },
 };

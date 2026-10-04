@@ -3,11 +3,11 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { memo, useMemo } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   ActionToolbar,
@@ -64,11 +64,7 @@ export type EditorToolbarProps = ThemedClassName<
 export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, ...props }: EditorToolbarProps) => {
   const menuActions = useMarkdownMenuActions(props);
 
-  return (
-    <ElevationProvider elevation={role === SECTION_ROLE ? 'positioned' : 'base'}>
-      <ActionToolbar {...menuActions} attendableId={attendableId} onAction={onAction} classNames={classNames} />
-    </ElevationProvider>
-  );
+  return <ActionToolbar {...menuActions} attendableId={attendableId} onAction={onAction} classNames={classNames} />;
 });
 
 type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> &

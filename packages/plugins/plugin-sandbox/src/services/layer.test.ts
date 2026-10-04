@@ -5,20 +5,21 @@
 import { afterEach, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { Client, ClientService } from '@dxos/client';
 
 import { SandboxCapabilities, SandboxService, type Settings } from '#types';
 
 import { SANDBOX_BACKEND_ENV, layer, layerFromCapabilities } from './layer.ts';
 
-// The EDGE backend only reads the client when a call is made, so an uninitialized one suffices.
-const TestLayer = layer.pipe(Layer.provide(Layer.sync(ClientService, () => new Client())));
+// The EDGE backend only reads the client when a call is made, so a manager without one suffices.
+const TestLayer = layer.pipe(
+  Layer.provide(Layer.sync(Capability.Service, () => CapabilityManager.make({ registry: AtomRegistry.make() }))),
+);
 
 describe('SandboxService layer', () => {
   afterEach(() => {
@@ -62,6 +63,7 @@ describe('SandboxService layer from capabilities', () => {
       readFileBytes: () => Effect.die('unused'),
       writeFile: () => Effect.die('unused'),
       listFiles: () => Effect.die('unused'),
+      exposePort: () => Effect.die('unused'),
     };
     manager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, implementation: registry });
     manager.contribute({ module: 'test', interface: SandboxCapabilities.Settings, implementation: settings });
@@ -70,10 +72,7 @@ describe('SandboxService layer from capabilities', () => {
       interface: SandboxCapabilities.LocalLauncher,
       implementation: { backend: Effect.succeed(launcher) },
     });
-    const layer = layerFromCapabilities.pipe(
-      Layer.provide(Layer.sync(ClientService, () => new Client())),
-      Layer.provide(Layer.succeed(Capability.Service, manager)),
-    );
+    const layer = layerFromCapabilities.pipe(Layer.provide(Layer.succeed(Capability.Service, manager)));
     return { layer, registry, settings, launched };
   };
 

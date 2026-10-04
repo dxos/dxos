@@ -15,6 +15,7 @@ import {
   ReplicatorCard,
   ReplicatorMessagesCard,
   StatsPanel,
+  useQueryMetrics,
   useStats,
 } from '@dxos/devtools';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
@@ -46,6 +47,7 @@ export const Main = () => {
   const [showDevTools, setShowDevTools] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [stats, refreshStats] = useStats();
+  const { queries } = useQueryMetrics();
 
   const [view, setView] = useState<DataView>();
   const [type, setType] = useState<string>();
@@ -240,7 +242,7 @@ export const Main = () => {
                 <DatabaseCard database={stats.database} />
                 <ReplicatorCard database={stats.database} />
                 <ReplicatorMessagesCard database={stats.database} />
-                <QueriesCard queries={stats.queries} />
+                <QueriesCard queries={queries} />
               </StatsPanel>
             </div>
           )}

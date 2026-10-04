@@ -14,6 +14,8 @@ export const translations = [
         'zoom-out-icon.button': 'Zoom out',
         'start-icon.button': 'Start',
         'toggle-icon.button': 'Toggle',
+        'show-globe.button': 'Show globe',
+        'show-map.button': 'Show map',
       },
     },
   },

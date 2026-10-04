@@ -4,14 +4,13 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { ReactNode } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, defaultTx } from '@dxos/react-ui';
 import { ACCENT_HUES, type AccentHue, applyAccent } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -95,12 +94,10 @@ export default Capability.makeModule(
         return (
           <ThemeProvider {...{ tx: propsTx, themeMode, platform }}>
             <Toast.Provider>
-              <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
-                {children}
-                {/* Toasts render in the viewport, not where their roots sit, and their close button is a
+              {children}
+              {/* Toasts render in the viewport, not where their roots sit, and their close button is a
                     tooltip trigger, which throws without a provider above it. */}
-                <Toast.Viewport />
-              </Tooltip.Provider>
+              <Toast.Toaster />
             </Toast.Provider>
           </ThemeProvider>
         );

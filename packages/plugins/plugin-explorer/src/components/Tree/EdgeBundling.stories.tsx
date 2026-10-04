@@ -106,7 +106,7 @@ const meta = {
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(() =>
-                generateConnectedOrgs(defaultSpace, generator, {
+                generateConnectedOrgs(defaultSpace.db, generator, {
                   organizationCount: 16,
                   personCount: 24,
                   connectionCount: 22,

@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@atproto/api": "catalog:",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
     "@types/turndown": "catalog:",
     "turndown": "catalog:"

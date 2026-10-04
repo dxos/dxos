@@ -73,7 +73,7 @@ const Tool = ({ type, icon }: ToolProps) => {
   // TODO(burdon): Tooltip.
   return (
     <div ref={ref} className='flex' title={type}>
-      <Icon icon={icon} size={6} />
+      <Icon icon={icon} size='xl' />
     </div>
   );
 };

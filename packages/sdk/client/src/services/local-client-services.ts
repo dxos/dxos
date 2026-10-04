@@ -6,9 +6,9 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Reactivity from 'effect/reactivity/Reactivity';
 import * as Scope from 'effect/Scope';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlClient from 'effect/sql/SqlClient';
 
 import { Event, synchronized } from '@dxos/async';
 import {

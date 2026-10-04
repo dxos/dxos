@@ -8,24 +8,18 @@ import { type SpaceId } from '@dxos/keys';
 import {
   type FeedSyncState,
   type PeerSyncState,
-  type Space,
-  SpaceState,
   useFeedSyncState,
   useSpaces,
   useSyncState,
 } from '@dxos/react-client/echo';
+
+import { getSpaceDisplayName } from './getSpaceDisplayName.ts';
 
 export type SyncRow = {
   spaceId: string;
   name: string;
   state: PeerSyncState;
   feedState?: FeedSyncState;
-};
-
-// TODO(wittjosiah): Factor out (copied from plugin-space).
-const getSpaceDisplayName = (space: Space): string => {
-  const name = space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
-  return name && name.length > 0 ? name : 'New space';
 };
 
 /** One sync row per space the client knows, named for display, plus a raw-state copy action. */

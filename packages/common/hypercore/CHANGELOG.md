@@ -1,5 +1,39 @@
 # @dxos/hypercore
 
+## 0.12.0
+
+### Minor Changes
+
+- f654860: Rename the hypercore-specific `feed` naming to `hypercore`, so that `feed` is left to the unrelated ECHO feed concept.
+
+  **Breaking:** `@dxos/feed-store` renames every export. `FeedStore` → `HypercoreStore`, `FeedWrapper` → `HypercoreWrapper`, `FeedFactory` → `HypercoreFactory`, `FeedQueue` → `HypercoreQueue`, `FeedIterator` / `FeedSetIterator` → `HypercoreIterator` / `HypercoreSetIterator`, `FeedWriter` → `HypercoreWriter`, `FeedBlock` → `HypercoreBlock`, `FeedIndex` → `HypercoreIndex`, `FeedOptions` → `HypercoreCreateOptions`, along with the Effect services and layers, and the `openFeed` / `createFeed` / `addFeed` / `hasFeed` / `getFeed` methods. There are no compatibility re-exports.
+
+  `@dxos/hypercore` renames `HypercoreFactory` to `RawHypercoreFactory`, freeing the unqualified name for the store-level factory.
+
+  Stored data and the wire protocol are untouched: protobuf messages, credential assertions and serialized property names such as `feedKey` keep their names.
+
+- 4bac701: **Breaking:** `createCodecEncoding` now takes a structural `ValueCodec<T>` (`encode`/`decode`) and no longer accepts a second `EncodingOptions` argument, which only ever carried protobuf.js's `preserveAny`. Pass any object with `encode`/`decode`; no caller passed the options argument. `@dxos/hypercore`, `@dxos/feed-store` and `@dxos/client-services` no longer depend on `@dxos/codec-protobuf`.
+
+  Devtools and mesh presence move further onto buf: `PeerState` is now produced as a buf message by the gossip extension, `SignalResponse`, `SubscribeToSpacesResponse`, `LogEntry` and `QueryLogsRequest` are exposed as buf types, and the last top-level protobuf enum imports (`EdgeReplicationSetting`, `ConnectionState`) move with them. Wire formats are unchanged.
+
+### Patch Changes
+
+- Updated dependencies [967b130]
+- Updated dependencies [ce194c0]
+- Updated dependencies [9d2466a]
+- Updated dependencies [e8088ea]
+- Updated dependencies [1a3de22]
+- Updated dependencies [4da1052]
+  - @dxos/util@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/random-access-storage@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/crypto@0.12.0
+  - @dxos/vendor-hypercore@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/typings@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

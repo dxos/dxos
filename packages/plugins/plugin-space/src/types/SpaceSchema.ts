@@ -172,4 +172,8 @@ export const SpaceForm = Schema.Struct({
   template: Schema.optional(
     Schema.String.annotate({ title: 'Template' }).pipe(Annotation.FormInputAnnotation.set(false)),
   ),
+  /** Overrides the invoker's `Database.Origin` for the `space.create` event, e.g. `system` for seeded spaces. */
+  origin: Schema.optional(
+    Schema.Literals(['user', 'system', 'unknown']).pipe(Annotation.FormInputAnnotation.set(false)),
+  ),
 });

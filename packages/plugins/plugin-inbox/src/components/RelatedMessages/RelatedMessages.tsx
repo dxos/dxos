@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Card, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, useTranslation } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -65,14 +65,19 @@ export const RelatedMessages = ({ messages, summaries, onMessageClick }: Related
   return (
     <Card.Section title={t('related-messages.title')}>
       {conversations.map((message) => (
-        <Card.Action
+        <Card.Row
           key={message.id}
-          label={messageDigest(message, summaries) ?? ''}
-          annotation={message.created ? formatAge(new Date(message.created), now) : undefined}
           icon='ph--envelope-simple--regular'
-          actionIcon='ph--arrow-right--regular'
+          trailing={
+            <>
+              {message.created && <Card.Text variant='muted'>{formatAge(new Date(message.created), now)}</Card.Text>}
+              <Icon icon='ph--arrow-right--regular' />
+            </>
+          }
           onClick={() => onMessageClick?.(message)}
-        />
+        >
+          <Card.Text>{messageDigest(message, summaries) ?? ''}</Card.Text>
+        </Card.Row>
       ))}
     </Card.Section>
   );

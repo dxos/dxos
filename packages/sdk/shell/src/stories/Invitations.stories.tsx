@@ -7,6 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -15,7 +16,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { ButtonGroup, IconButton } from '@dxos/react-ui';
+import { Button, Group } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -67,9 +68,9 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
     default: {
       // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
       const controls = (
-        <ButtonGroup classNames='mb-4'>
+        <Group classNames='mb-4'>
           {/* <Tooltip content='Create Space'> */}
-          <IconButton
+          <Button
             icon='ph--plus-circle--regular'
             label='Create Space'
             iconOnly
@@ -78,7 +79,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
           />
           {/* </Tooltip>
           <Tooltip content='Join Space'> */}
-          <IconButton
+          <Button
             icon='ph--sign-in--fill'
             label='Join Space'
             iconOnly
@@ -86,7 +87,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
             data-testid='invitations.open-join-space'
           />
           {/* </Tooltip> */}
-        </ButtonGroup>
+        </Group>
       );
 
       const header = (
@@ -101,13 +102,11 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         <div>
           <h1>{header}</h1>
           {spaces.length > 0 ? (
-            <Listbox.Root>
-              <Listbox.Content aria-label='Spaces'>
-                {spaces.map((space) => (
-                  <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
-                ))}
-              </Listbox.Content>
-            </Listbox.Root>
+            <ul aria-label='Spaces'>
+              {spaces.map((space) => (
+                <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
+              ))}
+            </ul>
           ) : (
             <div className='text-center'>No spaces</div>
           )}
@@ -139,9 +138,9 @@ const Invitations = () => {
 
   // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
   const controls = (
-    <ButtonGroup classNames='mb-4'>
+    <Group classNames='mb-4'>
       {/* <Tooltip content='Create Identity'> */}
-      <IconButton
+      <Button
         icon='ph--plus--regular'
         label='Create Identity'
         iconOnly
@@ -153,7 +152,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='Join Existing Identity'> */}
-      <IconButton
+      <Button
         icon='ph--qr-code--fill'
         label='Join Existing Identity'
         iconOnly
@@ -163,7 +162,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='Devices'> */}
-      <IconButton
+      <Button
         icon='ph--laptop--fill'
         label='Devices'
         iconOnly
@@ -173,7 +172,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='List Spaces'> */}
-      <IconButton
+      <Button
         icon='ph--planet--fill'
         label='List Spaces'
         iconOnly
@@ -183,7 +182,7 @@ const Invitations = () => {
       />
       {/* </Tooltip> */}
       {/* <ToolTip content='Toggle Network'> */}
-      <IconButton
+      <Button
         icon={networkStatus === ConnectionState.ONLINE ? 'ph--wifi-high--fill' : 'ph--wifi-slash--fill'}
         label='Toggle Network'
         iconOnly
@@ -195,7 +194,7 @@ const Invitations = () => {
         data-testid='invitations.toggle-network'
       />
       {/* </ToolTip> */}
-    </ButtonGroup>
+    </Group>
   );
 
   return (
@@ -203,7 +202,14 @@ const Invitations = () => {
       <div className='dx-base-surface rounded-sm p-2 mb-2'>
         <div data-testid='invitations.identity-header'>{controls}</div>
         {identity ? (
-          <Listbox.Root>
+          <Listbox.Root
+            items={[
+              {
+                value: requirePublicKey(identity.identityKey).toHex(),
+                label: identity.profile?.displayName ?? '',
+              },
+            ]}
+          >
             <Listbox.Content aria-label='Identity'>
               <IdentityListItem
                 identity={identity}

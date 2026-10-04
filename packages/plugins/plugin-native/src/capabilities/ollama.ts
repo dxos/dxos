@@ -9,14 +9,15 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type AiModelResolver, Provider } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';
@@ -324,14 +325,20 @@ const OllamaSidecarLive = Layer.effect(
       }
     });
     command.on('error', (error) => log.error('Ollama error', { error }));
-    const child = yield* Effect.promise(() => command.spawn());
-    yield* Effect.addFinalizer(
-      Effect.fn(function* () {
-        stopping = true;
-        yield* Effect.promise(() => child.kill());
-      }),
+    // Only macOS builds bundle the launcher, and a defect here fails every model resolver materialized beside it.
+    const child = yield* Effect.tryPromise({ try: () => command.spawn(), catch: formatError }).pipe(
+      Effect.tapError((error) => Effect.sync(() => log.warn('ollama not started', { error }))),
+      Effect.option,
     );
-    log.info('Running ollama', { pid: child.pid });
+    if (Option.isSome(child)) {
+      yield* Effect.addFinalizer(
+        Effect.fn(function* () {
+          stopping = true;
+          yield* Effect.promise(() => child.value.kill());
+        }),
+      );
+      log.info('Running ollama', { pid: child.value.pid });
+    }
 
     return {
       endpoint: OLLAMA_HOST,

@@ -257,7 +257,9 @@ const invokeDefinition = (context: BindingsContext, key: string, input: unknown,
  */
 const registrySnapshot = (db: Database.Database): SandboxInit['types'] =>
   db.registry.list().flatMap((entity) => {
-    if (!Type.isType(entity)) {
+    // A relation's kind and endpoints do not survive the JSON-schema round trip — the worker would
+    // rebuild it as an object type — so it stays out of the worker rather than resolving as the wrong kind.
+    if (!Type.isType(entity) || Type.isRelation(entity)) {
       return [];
     }
     const typename = Type.getTypename(entity);

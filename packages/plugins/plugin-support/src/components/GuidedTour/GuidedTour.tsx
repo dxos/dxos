@@ -9,15 +9,7 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import type * as Tour from '@dxos/app-toolkit/Tour';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import {
-  Button,
-  Icon,
-  IconButton,
-  Tour as TourComponent,
-  type TourStepDetails,
-  useTour,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, Icon, type TourStepDetails, Tour as UiTour, useTour, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -145,75 +137,66 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
         stop: () => setRunning(false),
       }}
     >
-      <TourComponent.Root tour={tour}>
-        <TourComponent.Portal>
-          <TourComponent.Spotlight />
-          <TourComponent.Positioner>
-            <TourComponent.Content
-              classNames='w-60 min-h-40 gap-0 p-2 border-accent-bg bg-accent-bg text-accent-fg'
-              data-testid='helpPlugin.tooltip'
-            >
-              <TourComponent.Arrow classNames='[--arrow-background:var(--color-accent-bg)] [&>[data-part=arrow-tip]]:border-accent-bg' />
-              <div className='flex items-start'>
-                <TourComponent.Title
-                  classNames='grow px-2 py-1 text-accent-fg'
-                  data-testid='helpPlugin.tooltip.title'
+      <UiTour.Root tour={tour}>
+        <UiTour.Content
+          classNames='w-60 min-h-40 gap-0 p-2 border-accent-bg bg-accent-bg text-accent-fg'
+          data-testid='helpPlugin.tooltip'
+        >
+          <div className='flex items-start'>
+            <UiTour.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
+            <UiTour.CloseTrigger asChild ref={closeRef}>
+              <Button
+                size='md'
+                icon='ph--x--bold'
+                iconOnly
+                label={t('tour-close.label')}
+                iconSize='md'
+                variant='primary'
+                data-testid='helpPlugin.tooltip.close'
+              />
+            </UiTour.CloseTrigger>
+          </div>
+          <UiTour.Description classNames='grow px-4 my-2 text-accent-fg' />
+          <UiTour.Control>
+            <Button
+              classNames={[!tour.hasPrevStep && 'invisible']}
+              icon='ph--caret-left--regular'
+              iconOnly
+              label={t('tour-back.label')}
+              onClick={() => tour.prev()}
+              variant='primary'
+              data-testid='helpPlugin.tooltip.back'
+            />
+            <div className='flex grow justify-center'>
+              {Array.from({ length: tour.totalSteps }).map((_, index) => (
+                <Icon
+                  key={index}
+                  icon={stepIndex === index ? 'ph--circle--fill' : 'ph--circle--regular'}
+                  size='xs'
+                  classNames='mx-1'
                 />
-                <TourComponent.Close asChild ref={closeRef}>
-                  <IconButton
-                    density='md'
-                    icon='ph--x--bold'
-                    iconOnly
-                    label={t('tour-close.label')}
-                    size={4}
-                    variant='primary'
-                    data-testid='helpPlugin.tooltip.close'
-                  />
-                </TourComponent.Close>
-              </div>
-              <TourComponent.Description classNames='grow px-4 my-2 text-accent-fg' />
-              <TourComponent.Control>
-                <IconButton
-                  classNames={[!tour.hasPrevStep && 'invisible']}
-                  icon='ph--caret-left--regular'
-                  iconOnly
-                  label={t('tour-back.label')}
-                  onClick={() => tour.prev()}
-                  variant='primary'
-                  data-testid='helpPlugin.tooltip.back'
-                />
-                <div className='flex grow justify-center'>
-                  {Array.from({ length: tour.totalSteps }).map((_, index) => (
-                    <Icon
-                      key={index}
-                      icon={stepIndex === index ? 'ph--circle--fill' : 'ph--circle--regular'}
-                      size={2}
-                      classNames='mx-1'
-                    />
-                  ))}
-                </div>
-                {last ? (
-                  <TourComponent.Close asChild>
-                    <Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
-                      {t('tour-done.label')}
-                    </Button>
-                  </TourComponent.Close>
-                ) : (
-                  <IconButton
-                    icon='ph--caret-right--regular'
-                    iconOnly
-                    label={t('tour-next.label')}
-                    onClick={() => tour.next()}
-                    size={6}
-                    variant='primary'
-                    data-testid='helpPlugin.tooltip.next'
-                  />
-                )}
-              </TourComponent.Control>
-            </TourComponent.Content>
-          </TourComponent.Positioner>
-        </TourComponent.Portal>
-      </TourComponent.Root>
+              ))}
+            </div>
+            {last ? (
+              <UiTour.CloseTrigger asChild>
+                <Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
+                  {t('tour-done.label')}
+                </Button>
+              </UiTour.CloseTrigger>
+            ) : (
+              <Button
+                icon='ph--caret-right--regular'
+                iconOnly
+                label={t('tour-next.label')}
+                onClick={() => tour.next()}
+                iconSize='xl'
+                variant='primary'
+                data-testid='helpPlugin.tooltip.next'
+              />
+            )}
+          </UiTour.Control>
+        </UiTour.Content>
+      </UiTour.Root>
     </TourContext.Provider>
   );
 };

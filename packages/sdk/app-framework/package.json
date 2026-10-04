@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -144,6 +144,7 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -168,7 +169,6 @@
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@effect/atom-react": "catalog:",
