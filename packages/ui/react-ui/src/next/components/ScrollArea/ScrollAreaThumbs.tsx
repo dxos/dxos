@@ -21,27 +21,30 @@ type ThumbGeometry = {
 const HIDDEN: ThumbGeometry = { visible: false, offset: 0, length: 0 };
 
 /**
- * Project scroll state onto a track of `viewportLength`, inset by `padding` at both ends.
+ * Project scroll state onto a track of `viewportLength`, inset by `padding` at both ends and starting `start` in.
  */
 export const measure = (
   scrollOffset: number,
   scrollLength: number,
   viewportLength: number,
   padding: number,
+  start = 0,
 ): ThumbGeometry => {
   const overflow = scrollLength - viewportLength;
   if (overflow <= 1) {
     return HIDDEN;
   }
 
-  const track = viewportLength - padding * 2;
+  const track = viewportLength - start - padding * 2;
   // A viewport too short to seat the minimum thumb would otherwise place it past the far edge.
   if (track <= MIN_THUMB) {
     return HIDDEN;
   }
 
-  const length = Math.min(track, Math.max(MIN_THUMB, (viewportLength / scrollLength) * track));
-  const offset = padding + (scrollOffset / overflow) * (track - length);
+  // The share of the scrolling region in view: a sticky `start` column is neither, so it leaves both lengths.
+  const visible = (viewportLength - start) / (scrollLength - start);
+  const length = Math.min(track, Math.max(MIN_THUMB, visible * track));
+  const offset = start + padding + (scrollOffset / overflow) * (track - length);
   return { visible: true, offset, length };
 };
 
@@ -50,6 +53,8 @@ type ScrollAreaThumbsProps = {
   orientation: AllowedAxis;
   density: ScrollbarDensity;
   autoHide: boolean;
+  /** Pixels at the start of the horizontal track the thumb keeps clear of, e.g. a sticky column it does not scroll. */
+  trackStart?: number;
   /** Called when a thumb appears or disappears, i.e. when the viewport starts or stops overflowing on that axis. */
   onOverflowChange?: (overflow: { vertical: boolean; horizontal: boolean }) => void;
 };
@@ -64,6 +69,7 @@ export const ScrollAreaThumbs = ({
   orientation,
   density,
   autoHide,
+  trackStart = 0,
   onOverflowChange,
 }: ScrollAreaThumbsProps) => {
   const [vertical, setVertical] = useState<ThumbGeometry>(HIDDEN);
@@ -81,10 +87,10 @@ export const ScrollAreaThumbs = ({
     );
     setHorizontal(
       showHorizontal
-        ? measure(viewport.scrollLeft, viewport.scrollWidth, viewport.clientWidth, density.padding)
+        ? measure(viewport.scrollLeft, viewport.scrollWidth, viewport.clientWidth, density.padding, trackStart)
         : HIDDEN,
     );
-  }, [viewport, showVertical, showHorizontal, density.padding]);
+  }, [viewport, showVertical, showHorizontal, density.padding, trackStart]);
 
   useEffect(() => {
     // Observe the scrolled content too, since content growth does not resize the viewport; the
@@ -143,7 +149,7 @@ export const ScrollAreaThumbs = ({
       const viewportLength = isVertical ? viewport.clientHeight : viewport.clientWidth;
       const scrollLength = isVertical ? viewport.scrollHeight : viewport.scrollWidth;
       const thumb = isVertical ? verticalRef.current : horizontalRef.current;
-      const track = viewportLength - density.padding * 2 - thumb.length;
+      const track = viewportLength - (isVertical ? 0 : trackStart) - density.padding * 2 - thumb.length;
       if (track <= 0) {
         return;
       }
@@ -156,7 +162,7 @@ export const ScrollAreaThumbs = ({
         viewport.scrollLeft = scroll;
       }
     },
-    [viewport, density.padding],
+    [viewport, density.padding, trackStart],
   );
 
   // Also bound to pointercancel and lostpointercapture: without them an interrupted drag leaves

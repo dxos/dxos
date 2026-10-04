@@ -16,6 +16,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import { join } from 'node:path';
 
+import * as Declarations from '../Declarations.ts';
 import * as Cache from '../design/Cache.ts';
 import * as Design from '../design/Design.ts';
 import * as Ontology from '../Ontology.ts';
@@ -501,11 +502,7 @@ const meaning = (term: Terms.Term | undefined) => ({
 // Usages.
 //
 
-const STORY_FILE = /\.stories\.[cm]?[jt]sx?$/;
-
-type Role = 'impl' | 'test' | 'story';
-
-const roleOf = (path: string, test: boolean): Role => (test ? 'test' : STORY_FILE.test(path) ? 'story' : 'impl');
+type Role = Declarations.Role;
 
 /** The repository-relative path of a `file:` IRI's file, which `Ontology.fileIri` escaped. */
 const pathOfFileIri = (iri: string): string | undefined => {
@@ -579,7 +576,7 @@ const groupUsages = (
     if (row.user === declaration) {
       continue;
     }
-    const role = roleOf(row.path, row.test === 'true');
+    const role = Declarations.roleOf(row.path, row.test === 'true');
     if (role === 'test' && !options.includeTests) {
       continue;
     }

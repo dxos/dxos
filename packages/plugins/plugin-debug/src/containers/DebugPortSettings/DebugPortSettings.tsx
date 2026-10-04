@@ -5,7 +5,7 @@
 import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { Field, Flex, Switch, SystemButton, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, Input, Switch, useTranslation } from '@dxos/react-ui';
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
 
@@ -76,14 +76,13 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
             label={t('settings.debug-port.session.label')}
             description={t('settings.debug-port.session.description')}
           >
-            <Flex gap='sm' align='center'>
-              <span className='grow truncate font-mono text-sm'>{status.session}</span>
-              <SystemButton.Clipboard
-                iconOnly
-                label={t('settings.debug-port.copy-session.label')}
-                value={status.session ?? ''}
-              />
-            </Flex>
+            <Input
+              value={status.session ?? ''}
+              disabled
+              variant='mono'
+              copyable
+              aria-label={t('settings.debug-port.session.label')}
+            />
           </Form.Field>
 
           <Form.Field standalone label={t('settings.debug-port.log.label')}>

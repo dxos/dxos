@@ -39,6 +39,11 @@ type CardRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
    * Off by default: the card is a padded column, and rows lay their icon, text and trailing cells out inline.
    */
   grid?: boolean;
+  /**
+   * The rails' width in a `grid` card: one block (`rail`, the default), or a gutter step for a card whose rows should
+   * sit further in. Rows and their icons follow the rails; a Header lays out by blocks, so wider rails suit row headers.
+   */
+  gutter?: 'rail' | 'md' | 'lg';
   /** Sizes the card's rows, blocks and controls (its `data-size` scope), whatever its host's size. */
   size?: Size;
 };
@@ -50,7 +55,7 @@ type CardRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * menus stop their clicks reaching it.
  */
 const CardRoot = composable<HTMLDivElement, Omit<CardRootProps, keyof ThemedClassName<{}>>>(
-  ({ border = true, selected, grid = false, size, onClick, onKeyDown, ...props }, forwardedRef) => {
+  ({ border = true, selected, grid = false, gutter = 'rail', size, onClick, onKeyDown, ...props }, forwardedRef) => {
     // Composable, so the card can be an `asChild` host's child (a Mosaic tile, a Focus item) and take its props.
     const { className, ...rest } = composableProps<HTMLDivElement>(props, {
       classNames: [recipes.cardRoot(), onClick && recipes.cardClickable()],
@@ -72,7 +77,7 @@ const CardRoot = composable<HTMLDivElement, Omit<CardRootProps, keyof ThemedClas
       />
     );
     return grid ? (
-      <Container asChild gutter='rail' level='+1'>
+      <Container asChild gutter={gutter} level='+1'>
         {card}
       </Container>
     ) : (
@@ -287,8 +292,18 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
    * which an icon-only action fills, and a wider one extends back into the content track.
    */
   trailing?: ReactNode;
+  /**
+   * Content centred in the card's end rail (an icon-only action, a unit), mirroring `leading` in the start rail; unlike
+   * `trailing` it never extends back into the content track, so every row's end column lines up.
+   */
+  end?: ReactNode;
   /** The chosen row of a set (`aria-current`). */
   current?: boolean;
+  /**
+   * How far the row's text runs in a `grid` card: `full` across both rails (content with nothing to align beside it,
+   * such as a snippet), `end` on through the end rail when there is no trailing cell. The content track by default.
+   */
+  span?: 'full' | 'end';
 };
 
 /**
@@ -297,7 +312,10 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * it), as the current `Card.Action` row was.
  */
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
-  ({ classNames, icon, leading, trailing, current, onClick, onKeyDown, children, ...props }, forwardedRef) => (
+  (
+    { classNames, icon, leading, trailing, end, current, span, onClick, onKeyDown, children, ...props },
+    forwardedRef,
+  ) => (
     <div
       {...props}
       {...clickableProps(onClick, onKeyDown)}
@@ -305,6 +323,7 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
       data-scope='card'
       data-part='row'
       data-trailing={trailing != null ? '' : undefined}
+      data-span={span}
       className={mx(recipes.cardRow(), onClick && recipes.cardClickable(), classNames)}
       ref={forwardedRef}
     >
@@ -319,6 +338,7 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
           </div>
         )}
       </div>
+      {end != null && <Block rail='end'>{end}</Block>}
     </div>
   ),
 );
