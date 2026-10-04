@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
@@ -20,6 +21,18 @@ import { presentationFor } from '../presentation.tsx';
 
 /** The editor's minimum height in lines, as the current field's `min-h-[6lh]`. */
 const ROWS = 6;
+
+/**
+ * Fits the editor to the field: a long unbroken token (an inline-code URL) breaks anywhere rather than widening the
+ * content, and the editor fills the frame's height, so its scroller ends at the frame's foot instead of mid-field.
+ */
+const fieldTheme = EditorView.theme({
+  '&': { minHeight: '100%' },
+  '.cm-content': { overflowWrap: 'anywhere' },
+});
+
+/** The view stretches to the frame's height; the frame aligns its content to the first line for its adornments. */
+const VIEW_CLASSNAMES = 'self-stretch min-w-0';
 
 /**
  * A markdown value in a CodeMirror editor framed by a multi-line `ControlFrame`. The value is either a string
@@ -74,11 +87,20 @@ type StringMarkdownEditorProps = {
 
 const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
   const { markdownExtensions } = useFormContext('MarkdownField');
-  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: markdownExtensions });
+  const extensions = useBasicMarkdownExtensions({
+    placeholder,
+    readonly,
+    extensions: [fieldTheme, ...(markdownExtensions ?? [])],
+  });
   return (
     <ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
-        <Editor.View extensions={extensions} value={value} onChange={readonly ? undefined : onChange} />
+        <Editor.View
+          classNames={VIEW_CLASSNAMES}
+          extensions={extensions}
+          value={value}
+          onChange={readonly ? undefined : onChange}
+        />
       </Editor.Root>
     </ControlFrame>
   );
@@ -108,7 +130,7 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
   const extensions = useBasicMarkdownExtensions({
     placeholder,
     readonly,
-    extensions: [...dataExtensions, ...(markdownExtensions ?? [])],
+    extensions: [fieldTheme, ...dataExtensions, ...(markdownExtensions ?? [])],
   });
   if (!text) {
     return null;
@@ -117,7 +139,7 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
   return (
     <ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
-        <Editor.View extensions={extensions} />
+        <Editor.View classNames={VIEW_CLASSNAMES} extensions={extensions} />
       </Editor.Root>
     </ControlFrame>
   );

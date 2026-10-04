@@ -29,10 +29,15 @@ const NoteSchema = Schema.Struct({
 type NoteValues = Schema.Schema.Type<typeof NoteSchema>;
 
 /** Editors framed by `ControlFrame`: a markdown field (multi-line) and the reference editor (one line). */
-const DefaultStory = (_: PaneArgs) => {
+type StoryArgs = PaneArgs & {
+  /** The markdown field's initial value. */
+  notes?: string;
+};
+
+const DefaultStory = ({ notes = '# Agenda' }: StoryArgs) => {
   const { space } = useClientStory();
   const people = useQuery(space?.db, Filter.type(Person.Person));
-  const [values, setValues] = useState<NoteValues>({ title: 'Kickoff', notes: '# Agenda' });
+  const [values, setValues] = useState<NoteValues>({ title: 'Kickoff', notes });
   const [recipients, setRecipients] = useState('');
   return (
     <Panel.Root>
@@ -91,7 +96,7 @@ const meta = {
     }),
   ],
   parameters: { layout: 'fullscreen', translations: nextTranslations },
-} satisfies Meta<PaneArgs>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
@@ -142,5 +147,27 @@ export const Test: Story = {
     await userEvent.keyboard('hello');
     await waitFor(() => expect(readValues(canvasElement).recipients).toContain('hello'));
     await expect(getComputedStyle(attendees).outlineStyle).toBe('solid');
+  },
+};
+
+/**
+ * A long unbroken token (an inline-code URL) wraps rather than scrolling the field sideways, and the editor fills the
+ * frame, so nothing scrolls in the middle of the field.
+ */
+export const TestLongToken: Story = {
+  args: {
+    notes:
+      'Fetch it with `curl -fsSL https://raw.githubusercontent.com/dxos/dxos/2e8c75a6bd9cdc9b641b6/docs/plugins.md -o guide.md`: it is the guide for the version of Composer this app was built with.',
+  },
+  play: async ({ canvasElement }) => {
+    const notes = await waitFor(() => select(canvasElement, '[data-scope="control-frame"][data-rows]'));
+    const scroller = await waitFor(() => select(notes, '.cm-scroller'));
+    await waitFor(() => expect(select(notes, '.cm-content')).toHaveTextContent('raw.githubusercontent'));
+    // Wrapped: the editor never scrolls sideways.
+    await expect(scroller.scrollWidth).toBeLessThanOrEqual(scroller.clientWidth + 1);
+    // The editor reaches the frame's foot (less its block padding), rather than ending where its text does.
+    const editor = select(notes, '.cm-editor').getBoundingClientRect();
+    const frame = notes.getBoundingClientRect();
+    await expect(frame.bottom - editor.bottom).toBeLessThanOrEqual(Number.parseFloat(getComputedStyle(notes).paddingBottom) + 1);
   },
 };
