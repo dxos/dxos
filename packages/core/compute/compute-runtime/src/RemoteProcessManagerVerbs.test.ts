@@ -13,6 +13,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -215,7 +216,7 @@ const remoteManager = Effect.gen(function* () {
   }
   return {
     spawn: <I, O, Rpcs extends Rpc.Any>(
-      definition: Process.Process<I, O, any, Rpcs>,
+      definition: Operation.Durable<I, O, any, Rpcs>,
       options?: Omit<RemoteProcessManager.SpawnOptions, 'spaceId' | 'key' | 'definition'>,
     ) => spawn<I, O, Rpcs>({ spaceId: TEST_SPACE, key: definition.key, definition, ...options }),
     list: (options?: Omit<RemoteProcessManager.ListOptions, 'spaceId'>) => list({ spaceId: TEST_SPACE, ...options }),
@@ -232,7 +233,7 @@ const remoteLayer = (control: RemoteProcessManager.Control) =>
     RemoteProcessManager.Service,
     Effect.gen(function* () {
       const registry = yield* Registry.AtomRegistry;
-      const processTreeAtom = Atom.make<readonly Process.Info[]>([]);
+      const processTreeAtom = Atom.make<readonly Process.Process[]>([]);
       registry.mount(processTreeAtom);
       return {
         processTree: Effect.sync(() => registry.get(processTreeAtom)),
@@ -248,13 +249,13 @@ const annotations = (value: unknown): Annotation.Dictionary =>
   Schema.decodeUnknownSync(Annotation.Dictionary)({ 'example.com/test': value });
 
 const TEST_KEY = 'dxos.org/process/echo-test';
-// A real id: the adapter passes the space through untouched, but `Process.Info` decodes it as a
+// A real id: the adapter passes the space through untouched, but `Process.Process` decodes it as a
 // branded `SpaceId`.
 const TEST_SPACE = SpaceId.random();
 const TEST_PID = Schema.decodeUnknownSync(Process.ID)('pid-1');
 
 /** Input/output codecs are the only part of the definition the remote path uses. */
-const EchoProcess = Process.make(
+const EchoProcess = Operation.makeDurable(
   {
     key: TEST_KEY,
     input: Schema.String,

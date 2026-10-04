@@ -41,7 +41,7 @@ export interface ProcessParams {
   annotations: Record<string, unknown>;
 }
 
-/** Wire form of `Process.Info`. */
+/** Wire form of `Process.Process`. */
 export interface ProcessInfo {
   pid: string;
   parentPid: string | null;
@@ -68,7 +68,7 @@ export interface ProcessInfo {
 }
 
 /**
- * Spawn a process from the host's built-in registry. `key` is a `Process.Process.key`; the host
+ * Spawn a process from the host's built-in registry. `key` is an `Operation.Durable.key`; the host
  * rejects a key it does not host, since a process definition cannot be sent over the wire.
  */
 export interface SpawnProcessRequest {

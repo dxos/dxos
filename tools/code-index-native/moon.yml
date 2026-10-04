@@ -1,5 +1,4 @@
-# A Rust crate with no package.json: CI's setup action installs no Rust toolchain, so these tasks
-# are run locally and kept out of CI (see `tools/code-index/design/NATIVE-BACKEND.md` § CI).
+# A Rust crate with no package.json; CI's setup action installs the toolchain `rust-toolchain.toml` pins.
 layer: tool
 language: rust
 
@@ -11,10 +10,9 @@ tasks:
       - build.rs
       - Cargo.toml
       - Cargo.lock
+      - rust-toolchain.toml
     outputs:
       - code-index-native.node
-    options:
-      runInCI: false
   cargo-test:
     command: cargo test
     inputs:
@@ -23,9 +21,13 @@ tasks:
       - tests/fixtures/*.n3
       - Cargo.toml
       - Cargo.lock
+      - rust-toolchain.toml
       - /tools/code-index/rules/*.n3
-    options:
-      runInCI: false
+  # What CI's `:test` sweep selects; the crate's tests are `cargo-test`.
+  test:
+    command: noop
+    deps:
+      - cargo-test
   # The synthetic engine benchmark; CODE_INDEX_BENCH_FILES scales it.
   cargo-bench:
     command: cargo bench
