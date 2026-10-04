@@ -58,21 +58,24 @@ const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeader
     <Block>
       <Icon icon={icon} classNames={hue && getStyles(hue).text} />
     </Block>
-    <Flex align='center' gap='sm' classNames='min-w-0'>
+    {/* Takes the row between the rails, so the info ends at the trailing rail rather than trailing the title. */}
+    <Flex align='center' justify='between' gap='sm' classNames='min-w-0 grow'>
       <Card.Title>{title}</Card.Title>
       {info !== undefined && <span className='shrink-0 font-mono text-xs text-fg-muted'>{info}</span>}
     </Flex>
     {action && <Block rail='end'>{action}</Block>}
     {menu && (
-      <Card.Menu label={title}>
-        {menu.map((item) => (
-          <Menu.Item
-            key={item.label}
-            item={{ value: item.label, label: item.label, icon: item.icon }}
-            onClick={item.onClick}
-          />
-        ))}
-      </Card.Menu>
+      <Block rail='end'>
+        <Card.Menu label={title}>
+          {menu.map((item) => (
+            <Menu.Item
+              key={item.label}
+              item={{ value: item.label, label: item.label, icon: item.icon }}
+              onClick={item.onClick}
+            />
+          ))}
+        </Card.Menu>
+      </Block>
     )}
   </Card.Header>
 );

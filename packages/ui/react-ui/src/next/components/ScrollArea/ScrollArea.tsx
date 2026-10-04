@@ -41,6 +41,8 @@ export type ScrollAreaRootProps = {
   snap?: boolean;
   /** `false` scrolls without any visible bar, overlay or native. */
   scrollbars?: boolean;
+  /** Pixels at the start of the horizontal bar's track left clear, so the bar spans only what scrolls past a sticky column. */
+  trackStart?: number;
 };
 
 /** Tailwind group names the overlay thumbs' `autoHide` hover rule targets (`ScrollAreaThumbs`). */
@@ -64,6 +66,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
       autoHide = true,
       snap = false,
       scrollbars = true,
+      trackStart,
       ...props
     },
     forwardedRef,
@@ -106,6 +109,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
               orientation={orientation}
               density={width === 'thin' ? scrollbar.md : scrollbar.lg}
               autoHide={autoHide}
+              trackStart={trackStart}
               onOverflowChange={handleOverflowChange}
             />
           )}
