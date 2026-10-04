@@ -407,8 +407,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               // too, but that path returns in milliseconds and the turn settling clears the line.
               yield* Trace.emitRequestPhase('preparing');
 
-              for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
+              const skipped = dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid));
+              for (const pid of skipped) {
                 log.info('skip tool result that was reported synchronously', { pid });
+              }
+              // A result queued after its turn persisted would otherwise survive in storage, and the
+              // reload reconcile would un-report it and replay it.
+              if (skipped.length > 0) {
+                yield* ToolResultsCell.set(toolResults);
               }
 
               // Undelivered tool results drain first; then the feed queue, then a due alarm.
@@ -658,27 +664,24 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   return yield* Effect.failCause(attachExit.cause).pipe(Effect.orDie);
                 }
                 const fiber = attachExit.value;
-                const exit = yield* fiber.await.pipe(Effect.orDie);
-                // The turn that made the call already handed the model this result; queueing it as
-                // well would wake the agent for a turn about a result it has seen.
-                if (toolCallManager.isReported(event.pid)) {
-                  log('childEvent skipped (result reported within its turn)', { pid: event.pid });
-                  return;
-                }
-                const result = Exit.match(exit, {
-                  onSuccess: (value): ToolResultEvent => ({
-                    _tag: 'tool_result',
-                    pid: event.pid,
-                    result: value,
-                    isError: false,
-                  }),
-                  onFailure: (cause): ToolResultEvent => ({
-                    _tag: 'tool_result',
-                    pid: event.pid,
-                    result: Cause.pretty(cause),
-                    isError: true,
-                  }),
-                });
+                const result = yield* fiber.await.pipe(Effect.orDie).pipe(
+                  Effect.map(
+                    Exit.match({
+                      onSuccess: (value): ToolResultEvent => ({
+                        _tag: 'tool_result',
+                        pid: event.pid,
+                        result: value,
+                        isError: false,
+                      }),
+                      onFailure: (cause): ToolResultEvent => ({
+                        _tag: 'tool_result',
+                        pid: event.pid,
+                        result: Cause.pretty(cause),
+                        isError: true,
+                      }),
+                    }),
+                  ),
+                );
                 toolResults.push(result);
                 log('agent onChildEvent persisted tool result', { depth: toolResults.length, childPid: event.pid });
                 yield* ToolResultsCell.set(toolResults);
