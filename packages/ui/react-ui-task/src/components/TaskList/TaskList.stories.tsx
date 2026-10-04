@@ -739,8 +739,7 @@ const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] })
 };
 
 /** The row's title cell: the grid track that the mnemonic chip and the title text share. */
-const titleCell = (row: Element): HTMLElement =>
-  row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!.parentElement!;
+const titleCell = (row: Element): HTMLElement => row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!;
 
 const meta = {
   title: 'ui/react-ui-task/TaskList',
@@ -890,8 +889,9 @@ const assertDescriptionClamp: Story['play'] = async ({ canvasElement }) => {
   });
 
   const lineHeight = parseFloat(getComputedStyle(description).lineHeight);
+  // Awaited: the description is found as soon as it mounts, before the row's columns have given it its width.
+  await waitFor(() => expect(description.scrollHeight).toBeGreaterThan(description.clientHeight));
   const box = description.getBoundingClientRect();
-  await expect(description.scrollHeight).toBeGreaterThan(description.clientHeight);
   await expect(Math.abs(box.height - lineHeight * 3)).toBeLessThan(1);
 
   // Text rects only: an element's border box spans its padding, which is not a line of text.

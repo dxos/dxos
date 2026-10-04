@@ -246,7 +246,7 @@ export const TaskTreeNode = ({
         onTaskMove(task, placement);
       }
     },
-    [onTaskMove, tasks, selected, onTaskSelect],
+    [tasks, selected, onTaskMove, onTaskSelect],
   );
 
   // The drop half of the gesture; the placement is resolved here because only the list knows the

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Block, Button, Checkbox, Field, Icon, SystemButton, Tag, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Checkbox, Field, Icon, Tooltip, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
@@ -115,51 +115,71 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
 
 TaskStatusControl.displayName = 'TaskList.StatusControl';
 
-/**
- * The task's mnemonic, as a chip that copies a reference to it.
- *
- * Copies the task's full `echo://<space>/<id>` URI rather than the mnemonic it shows: a mnemonic is
- * only unique enough to read, while the URI resolves the task from anywhere it is pasted — a prompt,
- * an MCP call, another space.
- */
-export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => (
-  <SystemButton.Clipboard
-    classNames='font-mono'
-    size='sm'
-    // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
-    hue={getHashHue(Obj.getMnemonic(task))}
-    label={Obj.getMnemonic(task)}
-    onCopy={() => Obj.getURI(task, { prefer: 'absolute' }).toString()}
-    data-testid='taskList.item.mnemonic'
-    onClick={(event) => event.stopPropagation()}
-  />
-);
-
-TaskMnemonic.displayName = 'TaskList.Mnemonic';
-
-export type TaskOrdinalProps = {
-  task: Task.Task;
-  ordinal: number;
+export type TaskMnemonicProps = {
+  task: Obj.Unknown | Obj.Snapshot;
+  /** The row's number down the list, shown in place of the clipboard until the button is hovered. */
+  ordinal?: number;
   classNames?: string;
 };
 
-/** The gutter's ordinal, in the task's mnemonic hue, so the number and the mnemonic read as the same task. */
-export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => {
-  // Hashed from the mnemonic, as the mnemonic chip (and the task's Gantt lane) are.
-  const hue = getHashHue(Obj.getMnemonic(task));
+/**
+ * The task's reference: a button in the task's mnemonic hue that copies it. With an ordinal it shows the number, and
+ * the clipboard only on hover; without one, the clipboard. At least as wide as the clipboard button, so a one-digit
+ * number does not make a narrower target.
+ *
+ * Copies the task's full `echo://<space>/<id>` URI rather than the mnemonic it names: a mnemonic is only unique enough
+ * to read, while the URI resolves the task from anywhere it is pasted — a prompt, an MCP call, another space.
+ */
+export const TaskMnemonic = ({ task, ordinal, classNames }: TaskMnemonicProps) => {
+  const mnemonic = Obj.getMnemonic(task);
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // The pending reset would otherwise set state on an unmounted component.
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+  // Confirmed only once the write resolves: `writeText` rejects when the document is unfocused or permission is
+  // refused, and a check shown before that would report a copy that never happened.
+  const handleClick = (event: MouseEvent) => {
+    event.stopPropagation();
+    void navigator.clipboard
+      .writeText(Obj.getURI(task, { prefer: 'absolute' }).toString())
+      .then(() => {
+        setCopied(true);
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setCopied(false), 1_000);
+      })
+      .catch(() => setCopied(false));
+  };
+
+  const icon = <Icon icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'} />;
   return (
-    // The same square every other cell in the row occupies, so the badge centres under the pane's
-    // column rather than hugging the track's start.
-    <Block aria-hidden={false} data-testid='taskList.item.ordinal' classNames={classNames}>
-      {/* Inline-sized: a count, not a control, so it sits smaller than the row's icons. */}
-      <Tag hue={hue} classNames='dx-tag-inline tabular-nums'>
-        {ordinal}
-      </Tag>
-    </Block>
+    <Tooltip.Trigger asChild content={mnemonic}>
+      <Button
+        size='sm'
+        compact
+        // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
+        hue={getHashHue(mnemonic)}
+        aria-label={mnemonic}
+        data-testid='taskList.item.mnemonic'
+        classNames={mx('group justify-center min-w-(--dx-control-size) font-mono tabular-nums', classNames)}
+        onClick={handleClick}
+      >
+        {ordinal === undefined || copied ? (
+          icon
+        ) : (
+          <>
+            <span data-testid='taskList.item.ordinal' className='group-hover:hidden'>
+              {ordinal}
+            </span>
+            <span className='hidden group-hover:contents'>{icon}</span>
+          </>
+        )}
+      </Button>
+    </Tooltip.Trigger>
   );
 };
 
-TaskOrdinal.displayName = 'TaskList.Ordinal';
+TaskMnemonic.displayName = 'TaskList.Mnemonic';
 
 export type TaskCheckboxProps = {
   classNames?: string;

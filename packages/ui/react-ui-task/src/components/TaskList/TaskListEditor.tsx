@@ -38,7 +38,6 @@ import { translationKey } from '#translations';
 
 import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
-import { TaskRow } from './TaskRow.tsx';
 import {
   TaskEstimateControl,
   TaskEstimatePicker,
@@ -46,6 +45,7 @@ import {
   TaskPriorityPicker,
   TaskStatusControl,
 } from './TaskRowCells.tsx';
+import { TRACK } from './tracks.ts';
 
 export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
@@ -99,7 +99,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     const { t } = useTranslation(translationKey);
     const { className, ...rest } = composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
-    const { tasks, selected, gridTemplateColumns, showEstimates, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
+    const { tasks, selected, columns, showEstimates, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
       useTaskListContext('TaskList.Editor');
 
     const task = useMemo(
@@ -352,7 +352,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         // `--dx-col` is reset the way `ScrollArea.Viewport` resets it: inside a host `Column` the variable says "the
         // content track", and `Field.Root` hands it to the field it wraps — which in THIS grid names a different
         // column, and put the title in the controls' track.
-        style={{ gridTemplateColumns, '--dx-col': 'auto' } as CSSProperties}
+        style={{ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties}
         data-testid='taskList.edit'
         {...(takesFiles && {
           onDragEnterCapture: handleDragEnter,
@@ -363,117 +363,114 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         })}
         ref={forwardedRef}
       >
-        <TaskRow
-          // Editing, the row's own status control — the same glyph and menu, so status is set where the task is read.
+        {/* Each cell placed by its track's name, as the rows' are. In the DOM the description follows the title, though
+            the pickers sit beside it, so Tab runs from the title into the description before the trailing controls. */}
+        {editing ? (
+          // The row's own status control — the same glyph and menu, so status is set where the task is read.
+          <TaskStatusControl task={task} classNames={mx(TRACK.status, 'self-start')} onTaskUpdate={onTaskUpdate} />
+        ) : (
           // Creating, there is no task to carry a status yet.
-          status={
-            editing ? (
-              <TaskStatusControl task={task} classNames='self-start' onTaskUpdate={onTaskUpdate} />
-            ) : (
-              <span className='flex items-center justify-center h-(--dx-control) self-start'>
-                <Icon icon='ph--plus--regular' tone='subtle' />
-              </span>
-            )
-          }
-          title={
-            <Field.Root>
-              <Input
-                // An input clips its overflow rather than wrapping it, so a long title ends mid-word against the
-                // trailing controls with nothing to say it continues; the ellipsis says so.
-                classNames='text-ellipsis'
-                data-testid='taskList.edit.title'
-                // A host may name the row ("Add a step"), but the default is the package's own string: an English
-                // literal in the component is a string no translation can reach.
-                placeholder={current ? t('task-title.placeholder') : (placeholder ?? t('add-task.placeholder'))}
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                onKeyDown={handleTitleKeyDown}
-                onBlur={handleTitleBlur}
-                // Only when there is something valid to save. `false` rather than nothing, so the field keeps its frame (and
-                // its test id) either way.
-                end={
-                  canSave && (
-                    <SystemButton.Save
-                      variant='primary'
-                      data-testid='taskList.edit.save'
-                      // Out of the tab order: Enter in the field saves, and Tab goes on to the description.
-                      tabIndex={-1}
-                      onClick={handleSave}
-                      onMouseDown={(event) => event.preventDefault()}
-                    />
-                  )
-                }
-              />
-            </Field.Root>
-          }
-          estimate={
-            editing ? (
-              <TaskEstimateControl task={task} />
-            ) : (
-              <TaskEstimatePicker
-                estimate={draftEstimate}
-                onChange={setDraftEstimate}
-                testId='taskList.edit.estimate'
-              />
-            )
-          }
-          priority={
-            editing ? (
-              <TaskPriorityIcon task={task} />
-            ) : (
-              <TaskPriorityPicker
-                priority={draftPriority}
-                onChange={setDraftPriority}
-                testId='taskList.edit.priority'
-              />
-            )
-          }
-          // In the rows' menu column: the way out of the pane, there while it holds something to throw away.
-          actions={
-            canCancel && (
-              <SystemButton.Cancel
-                variant='ghost'
-                data-testid='taskList.edit.cancel'
-                onClick={handleCancel}
-                onMouseDown={(event) => event.preventDefault()}
-              />
-            )
-          }
-          description={
-            hasDescription && (
-              // A control frame, as the title's Input is: the well, and the focus ring while the editor has focus.
-              <ControlFrame rows={2} data-testid='taskList.edit.description' classNames='min-w-0'>
-                {/* A description is markdown, so it is edited as markdown. `editing` is held open — the pane IS the
-                    editor, so there is nothing to click into — and the key remounts it per task, since a field held
-                    open never re-reads its subject. Creating, the field is uncontrolled: there is no task to read a
-                    value from, so it holds the draft itself until the create collects it. */}
-                <MarkdownEditable
-                  key={current?.id ?? `create-${createEpoch}`}
-                  ref={descriptionRef}
-                  // A long description scrolls within the field rather than growing the pane past the list it edits
-                  // from: eight lines, with the scroller's line-height set to the lines' (CodeMirror's base theme
-                  // gives it a smaller one) so `lh` measures a real line.
-                  classNames='[&_.cm-scroller]:!leading-normal [&_.cm-scroller]:max-h-[8lh] [&_.cm-scroller]:overflow-y-auto'
-                  editing
-                  multiline
-                  placeholder={descriptionPlaceholder ?? t('task-description.placeholder')}
-                  extensions={extensions}
-                  // Held open, so it must not pull focus: selecting a row by keyboard would otherwise land the reader
-                  // in the description instead of the list.
-                  autoFocus={false}
-                  {...(current && { value: current.description ?? '' })}
-                  onValueChange={(description) => {
-                    if (task && current) {
-                      onTaskUpdate?.(task, { description });
-                    } else {
-                      draftDescription.current = description;
-                    }
-                  }}
+          <span className={mx(TRACK.status, 'flex items-center justify-center h-(--dx-control) self-start')}>
+            <Icon icon='ph--plus--regular' tone='subtle' />
+          </span>
+        )}
+        {/* The field's root is the grid item, so it takes the placement. */}
+        <Field.Root classNames='row-start-1 col-start-[title] col-end-[assignee] min-w-0'>
+          <Input
+            // An input clips its overflow rather than wrapping it, so a long title ends mid-word against the trailing
+            // controls with nothing to say it continues; the ellipsis says so.
+            classNames='grow text-ellipsis'
+            data-testid='taskList.edit.title'
+            // A host may name the row ("Add a step"), but the default is the package's own string: an English literal
+            // in the component is a string no translation can reach.
+            placeholder={current ? t('task-title.placeholder') : (placeholder ?? t('add-task.placeholder'))}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={handleTitleKeyDown}
+            onBlur={handleTitleBlur}
+            // Only when there is something valid to save. `false` rather than nothing, so the field keeps its frame (and
+            // its test id) either way.
+            end={
+              canSave && (
+                <SystemButton.Save
+                  variant='primary'
+                  data-testid='taskList.edit.save'
+                  // Out of the tab order: Enter in the field saves, and Tab goes on to the description.
+                  tabIndex={-1}
+                  onClick={handleSave}
+                  onMouseDown={(event) => event.preventDefault()}
                 />
-              </ControlFrame>
-            )
-          }
-        />
+              )
+            }
+          />
+        </Field.Root>
+        {hasDescription && (
+          // A control frame, as the title's Input is: the well, and the focus ring while the editor has focus.
+          <ControlFrame
+            rows={2}
+            data-testid='taskList.edit.description'
+            classNames='row-start-2 col-[title/assignee] min-w-0'
+          >
+            {/* A description is markdown, so it is edited as markdown. `editing` is held open — the pane IS the editor,
+                so there is nothing to click into — and the key remounts it per task, since a field held open never
+                re-reads its subject. Creating, the field is uncontrolled: there is no task to read a value from, so it
+                holds the draft itself until the create collects it. */}
+            <MarkdownEditable
+              key={current?.id ?? `create-${createEpoch}`}
+              ref={descriptionRef}
+              // A long description scrolls within the field rather than growing the pane past the list it edits from:
+              // eight lines, with the scroller's line-height set to the lines' (CodeMirror's base theme gives it a
+              // smaller one) so `lh` measures a real line.
+              classNames='[&_.cm-scroller]:!leading-normal [&_.cm-scroller]:max-h-[8lh] [&_.cm-scroller]:overflow-y-auto'
+              editing
+              multiline
+              placeholder={descriptionPlaceholder ?? t('task-description.placeholder')}
+              extensions={extensions}
+              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise land the reader in
+              // the description instead of the list.
+              autoFocus={false}
+              {...(current && { value: current.description ?? '' })}
+              onValueChange={(description) => {
+                if (task && current) {
+                  onTaskUpdate?.(task, { description });
+                } else {
+                  draftDescription.current = description;
+                }
+              }}
+            />
+          </ControlFrame>
+        )}
+        {showEstimates &&
+          (editing ? (
+            <TaskEstimateControl task={task} classNames={TRACK.estimate} />
+          ) : (
+            <TaskEstimatePicker
+              estimate={draftEstimate}
+              onChange={setDraftEstimate}
+              testId='taskList.edit.estimate'
+              classNames={TRACK.estimate}
+            />
+          ))}
+        {editing ? (
+          <TaskPriorityIcon task={task} classNames={TRACK.priority} />
+        ) : (
+          <TaskPriorityPicker
+            priority={draftPriority}
+            onChange={setDraftPriority}
+            testId='taskList.edit.priority'
+            classNames={TRACK.priority}
+          />
+        )}
+        {canCancel && (
+          // In the rows' menu column: the way out of the pane, there while it holds something to throw away.
+          <SystemButton.Cancel
+            variant='ghost'
+            classNames={TRACK.actions}
+            data-testid='taskList.edit.cancel'
+            onClick={handleCancel}
+            onMouseDown={(event) => event.preventDefault()}
+          />
+        )}
 
         {takesFiles &&
           files.length > 0 && (
