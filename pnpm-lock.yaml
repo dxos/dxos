@@ -828,9 +828,6 @@ catalogs:
     cjs-module-lexer:
       specifier: ^2.2.0
       version: 2.2.0
-    classic-level:
-      specifier: ^3.0.0
-      version: 3.0.0
     classnames:
       specifier: ^2.3.2
       version: 2.3.2
@@ -948,9 +945,6 @@ catalogs:
     extensionless:
       specifier: ^1.9.9
       version: 1.9.9
-    eyereasoner:
-      specifier: ^21.1.20
-      version: 21.1.24
     fast-check:
       specifier: ^3.19.0
       version: 3.23.2
@@ -1278,12 +1272,6 @@ catalogs:
     pwa-asset-generator:
       specifier: ^6.4.0
       version: 6.4.0
-    quadstore:
-      specifier: ^15.4.1
-      version: 15.4.1
-    quadstore-comunica:
-      specifier: ^6.3.1
-      version: 6.3.1
     quickjs-emscripten:
       specifier: 0.31.0
       version: 0.31.0
@@ -7039,10 +7027,10 @@ importers:
         version: 1.6.3
       '@opentui/core':
         specifier: 'catalog:'
-        version: 0.1.61(web-tree-sitter@0.25.10(@types/emscripten@1.41.6))
+        version: 0.1.61(web-tree-sitter@0.25.10)
       '@opentui/solid':
         specifier: 'catalog:'
-        version: 0.1.61(solid-js@1.9.11)(web-tree-sitter@0.25.10(@types/emscripten@1.41.6))
+        version: 0.1.61(solid-js@1.9.11)(web-tree-sitter@0.25.10)
       effect:
         specifier: 4.0.0
         version: 4.0.0
@@ -7054,7 +7042,7 @@ importers:
         version: 1.9.11
       web-tree-sitter:
         specifier: 'catalog:'
-        version: 0.25.10(@types/emscripten@1.41.6)
+        version: 0.25.10
       wtfnode:
         specifier: 'catalog:'
         version: 0.10.0
@@ -24463,21 +24451,12 @@ importers:
       '@vitejs/plugin-react':
         specifier: 'catalog:'
         version: 6.0.5(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
-      classic-level:
-        specifier: 'catalog:'
-        version: 3.0.0
       d3-force:
         specifier: 'catalog:'
         version: 3.0.0
       effect:
         specifier: 4.0.0
         version: 4.0.0
-      eyereasoner:
-        specifier: 'catalog:'
-        version: 21.1.24(@rdfjs/types@2.0.1)
-      jsonld-streaming-parser:
-        specifier: 'catalog:'
-        version: 5.0.1
       ldkit:
         specifier: 'catalog:'
         version: 2.9.0
@@ -24493,12 +24472,6 @@ importers:
       oxc-resolver:
         specifier: 'catalog:'
         version: 11.19.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
-      quadstore:
-        specifier: 'catalog:'
-        version: 15.4.1
-      quadstore-comunica:
-        specifier: 'catalog:'
-        version: 6.3.1(asynciterator@3.10.0)(quadstore@15.4.1)
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -24542,6 +24515,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      jsonld-streaming-parser:
+        specifier: 'catalog:'
+        version: 5.0.1
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -32666,9 +32642,6 @@ packages:
   '@types/draco3d@1.4.10':
     resolution: {integrity: sha512-AX22jp8Y7wwaBgAixaSvkoG4M/+PlAcm3Qs4OW8yT9DM4xUpWKeFhLueTAyZF39pviAdcDdeJoACapiAceqNcw==}
 
-  '@types/emscripten@1.41.6':
-    resolution: {integrity: sha512-uN+9i8bFT5CUcZfyIEYDrSueACEyKGbUs5kC/72DGlZZoinh84sJfVV0i8UOJD1asdzkvLPBRrKs41kZ8MdEXg==}
-
   '@types/esrecurse@4.3.1':
     resolution: {integrity: sha512-xJBAbDifo5hpffDBuHl0Y8ywswbiAp/Wi7Y/GtAgSlZyIABppyurxVueOPE8LUQOxdlgi6Zqce7uoEpqNTeiUw==}
 
@@ -33013,10 +32986,6 @@ packages:
     resolution: {integrity: sha512-Fd3/QjmFV2sKmvv3Mrj8r6N8CryYiCS8Wdb/6/rgOXAWGcFuc+VkQuG28uk/4kVNVZBQuuDHEDUpo/pQ32zsIQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript-eslint/tsconfig-utils@8.64.0':
-    resolution: {integrity: sha512-2yo8rRNKuzbVWQp5kslhANqZ2uDAeROQHBRZNPu8JDsHmeFNj/XJJhX/FhNUWmkHHvoNsKa6+tHJiig87EzsQw==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
   '@typescript-eslint/tsconfig-utils@8.71.0':
     resolution: {integrity: sha512-Z1UlWHADEK2Mlb9NpWfDeSjqoZ5EyrOv4R3eQpbkzqn/EwaIdOpXXupEA1+0ZIOSJSZZDBHG0BrQyN8zUG6Pwg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -33027,10 +32996,6 @@ packages:
 
   '@typescript-eslint/types@8.62.0':
     resolution: {integrity: sha512-KvAclkktORPvM54TgLgA4z9HIV1M8zOgw9ZVNXl9f/8dLYfXYX1wkMXP7qmabpijQRV5bHJLOmoyGQbLMaUYeg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-eslint/types@8.64.0':
-    resolution: {integrity: sha512-qjhfuTfLXjA4IOzXvz0rTjT01BqEiIgPoUeMwiEjnaHKJMTNo8rH5pYW1a2L/0Dnux2fPC85AeyJoWaGa8WxTA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@typescript-eslint/types@8.71.0':
@@ -33971,10 +33936,6 @@ packages:
 
   abstract-extension@3.1.1:
     resolution: {integrity: sha512-qmUIqQEh6ZZBKN6JfysKgCEBqI4qVexE6/N/MUJjqtQhhuGR8a16GKnK6SGFKv/n1cAlbYxLDXbtyhkxSnVYRQ==}
-
-  abstract-level@3.1.1:
-    resolution: {integrity: sha512-CW2gKbJFTuX1feMvOrvsVMmijAOgI9kg2Ie9Dq3gOcMt/dVVoVmqNlLcEUCT13NxHFMEajcUcVBIplbyDroDiw==}
-    engines: {node: '>=18'}
 
   abstract-logging@2.0.1:
     resolution: {integrity: sha512-2BjRTZxTPvheOvGbBslFSYOUkr+SjPtOnrLP33f+VIWLzezQpZcqVg7ja3L4dBXmzzgwT+a029jRx5PCi3JuiA==}
@@ -34973,10 +34934,6 @@ packages:
 
   classcat@5.0.5:
     resolution: {integrity: sha512-JhZUT7JFcQy/EzW605k/ktHtncoo9vnyW/2GspNYwFlN1C/WmjuV/xtS04e9SOkL2sTdw0VAZ2UGCcQ9lR6p6w==}
-
-  classic-level@3.0.0:
-    resolution: {integrity: sha512-yGy8j8LjPbN0Bh3+ygmyYvrmskVita92pD/zCoalfcC9XxZj6iDtZTAnz+ot7GG8p9KLTG+MZ84tSA4AhkgVZQ==}
-    engines: {node: '>=18'}
 
   classnames@2.3.2:
     resolution: {integrity: sha512-CSbhY4cFEJRe6/GQzIk5qXZ4Jeg5pcsP7b5peFSDpffpe1cqjASH/n9UTjBwOp6XpMSTwQ8Za2K5V02ueA7Tmw==}
@@ -36535,13 +36492,6 @@ packages:
     resolution: {integrity: sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==}
     engines: {node: '>= 10.17.0'}
     hasBin: true
-
-  eyereasoner@21.1.24:
-    resolution: {integrity: sha512-4TXqzJZE8vCvQ5D508B5DxdaCuQB6rjuYutSAtiLlTfh3QN1lKN5sFQrLThhKD9aR4qz3r+MG7/+t/OUzCsKjQ==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
-    peerDependencies:
-      '@rdfjs/types': ^1.1.0
 
   falafel@2.2.5:
     resolution: {integrity: sha512-HuC1qF9iTnHDnML9YZAdCDQwT0yKl/U55K4XSUXqGAA2GLoafFgWRqdAbhWJxXaYD4pyoVxAJ8wH670jMpI9DQ==}
@@ -38284,9 +38234,6 @@ packages:
     resolution: {integrity: sha512-X2BB11YZtrRqY4EnQcLX5Rh373zbK4alC1FW7D7MBhL2gtcC17cTnr6DmfHZeS0s2rTHjUTMMHfG7gO8SSdw+g==}
     engines: {node: '>=0.10.0'}
 
-  js-sorted-set@0.7.0:
-    resolution: {integrity: sha512-NGTSMeoLNYR2BoTLhQ6w+u7Ox4PO34omb/0OBCy4gyedWeXolMGv948Ato0/Of6tfxsAjeySDymCkAj93/xkeA==}
-
   js-tokens@10.0.0:
     resolution: {integrity: sha512-lM/UBzQmfJRo9ABXbPWemivdCW8V2G8FHaHdypQaIy523snUjog0W71ayWXTjiR+ixeMyVHN2XcpnTd/liPg/Q==}
 
@@ -38549,14 +38496,6 @@ packages:
     peerDependencies:
       react: ~19.2.7
       react-dom: ~19.2.7
-
-  level-supports@6.2.0:
-    resolution: {integrity: sha512-QNxVXP0IRnBmMsJIh+sb2kwNCYcKciQZJEt+L1hPCHrKNELllXhvrlClVHXBYZVT+a7aTSM6StgNXdAldoab3w==}
-    engines: {node: '>=16'}
-
-  level-transcoder@1.0.1:
-    resolution: {integrity: sha512-t7bFwFtsQeD8cl8NIoQ2iwxA0CL/9IFw7/9gAjOonH0PWTTiRfY7Hq+Ejbsxh86tXobDQ6IOiddjNYIfOBs06w==}
-    engines: {node: '>=12'}
 
   leven@3.1.0:
     resolution: {integrity: sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A==}
@@ -39059,10 +38998,6 @@ packages:
   mathml-to-latex@1.5.0:
     resolution: {integrity: sha512-rrWn0eEvcEcdMM4xfHcSGIy+i01DX9byOdXTLWg+w1iJ6O6ohP5UXY1dVzNUZLhzfl3EGcRekWLhY7JT5Omaew==}
 
-  maybe-combine-errors@1.0.0:
-    resolution: {integrity: sha512-eefp6IduNPT6fVdwPp+1NgD0PML1NU5P6j1Mj5nz1nidX8/sWY7119WL8vTAHgqfsY74TzW0w1XPgdYEKkGZ5A==}
-    engines: {node: '>=10'}
-
   md5-hex@5.0.0:
     resolution: {integrity: sha512-18TKd0nxBzMLflLBSCM/I9n50izl7NQGuujgbKjVUs/9acY+a5uzpDUVd4wV130vaK67TzDnPin2gze88u+e4Q==}
     engines: {node: '>=18'}
@@ -39521,10 +39456,6 @@ packages:
 
   module-details-from-path@1.0.4:
     resolution: {integrity: sha512-EGWKgxALGMgzvxYF1UyGTy0HXX/2vHLkw6+NvDKW2jypWbHpjQuj4UMcqQWXHERJhVGKikolT06G3bcKe4fi7w==}
-
-  module-error@1.0.2:
-    resolution: {integrity: sha512-0yuvsqSCv8LbaOKhnsQ/T5JhyFlCYLPXK3U2sgV10zoKQwzs/MyfuQUOZQ1V/6OCOJsK/TRgNVrPuPDqtdMFtA==}
-    engines: {node: '>=10'}
 
   module-lookup-amd@9.0.4:
     resolution: {integrity: sha512-DWJEuLVvjxh5b8wrvJC5wr2a7qo7pOWXIgdCBNazU416kcIyzO4drxvlqKhsHzYwxcC4cWuhoK+MiWCKCGnv7A==}
@@ -40706,17 +40637,6 @@ packages:
   qs@6.15.0:
     resolution: {integrity: sha512-mAZTtNCeetKMH+pSjrb76NAM8V9a05I9aBZOHztWy/UqcJdQYNsf59vrRKWnojAT9Y+GbIvoTBC++CPHqpDBhQ==}
     engines: {node: '>=0.6'}
-
-  quadstore-comunica@6.3.1:
-    resolution: {integrity: sha512-Jvgq+g1hoSe6erneRY12T5TH9vQQUqMCmx1jGJwIC8eS3L5lk8mR0Gv3YoHEBOzx5fxZJgR2Eq9pMOCp9LwyGA==}
-    engines: {node: '>=16.0.0'}
-    peerDependencies:
-      asynciterator: ^3.9.0
-      quadstore: ^15.4.0
-
-  quadstore@15.4.1:
-    resolution: {integrity: sha512-Gqm50CqkEPzD1sZGh6IiDdBwANVnlRRWNjo6Znrn5FeCqUbsd9/z577PToHs92w9HvzWIc7ccRLuOAx1A7anqg==}
-    engines: {node: '>=18.0.0'}
 
   quansync@1.0.0:
     resolution: {integrity: sha512-5xZacEEufv3HSTPQuchrvV6soaiACMFnq1H8wkVioctoH3TRha9Sz66lOxRwPK/qZj7HPiSveih9yAyh98gvqA==}
@@ -42293,10 +42213,6 @@ packages:
 
   svgpath@2.6.0:
     resolution: {integrity: sha512-OIWR6bKzXvdXYyO4DK/UWa1VA1JeKq8E+0ug2DG98Y/vOmMpfZNj+TIG988HjfYSqtcy/hFOtZq/n/j5GSESNg==}
-
-  swipl-wasm@7.0.10:
-    resolution: {integrity: sha512-eyM2Dq39tYM7lFNnT76CdhklTmmzp84FGzuJehWeBiuQSJBbFs75aoT2dbAE9zd5AFR2WXQPdM8Sey3nOjQvDA==}
-    hasBin: true
 
   swr@2.3.6:
     resolution: {integrity: sha512-wfHRmHWk/isGNMwlLGlZX5Gzz/uTgo0o2IRuTMcf4CPuPFJZlq0rDaKUx+ozB5nBOReNV1kiOyzMfj+MBMikLw==}
@@ -50980,12 +50896,12 @@ snapshots:
 
   '@opentui/core-win32-x64@0.1.61': {}
 
-  '@opentui/core@0.1.61(web-tree-sitter@0.25.10(@types/emscripten@1.41.6))':
+  '@opentui/core@0.1.61(web-tree-sitter@0.25.10)':
     dependencies:
       bun-ffi-structs: 0.1.2
       diff: 8.0.3
       jimp: 1.6.0
-      web-tree-sitter: 0.25.10(@types/emscripten@1.41.6)
+      web-tree-sitter: 0.25.10
       yoga-layout: 3.2.1
     optionalDependencies:
       '@dimforge/rapier2d-simd-compat': 0.17.3
@@ -51001,11 +50917,11 @@ snapshots:
     transitivePeerDependencies:
       - stage-js
 
-  '@opentui/solid@0.1.61(solid-js@1.9.11)(web-tree-sitter@0.25.10(@types/emscripten@1.41.6))':
+  '@opentui/solid@0.1.61(solid-js@1.9.11)(web-tree-sitter@0.25.10)':
     dependencies:
       '@babel/core': 7.28.0
       '@babel/preset-typescript': 7.27.1(@babel/core@7.28.0)
-      '@opentui/core': 0.1.61(web-tree-sitter@0.25.10(@types/emscripten@1.41.6))
+      '@opentui/core': 0.1.61(web-tree-sitter@0.25.10)
       babel-plugin-module-resolver: 5.0.2
       babel-preset-solid: 1.9.9(@babel/core@7.28.0)(solid-js@1.9.11)
       s-js: 0.4.9
@@ -54182,8 +54098,6 @@ snapshots:
 
   '@types/draco3d@1.4.10': {}
 
-  '@types/emscripten@1.41.6': {}
-
   '@types/esrecurse@4.3.1': {}
 
   '@types/estree-jsx@1.0.0':
@@ -54539,8 +54453,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.39.0':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.64.0
-      '@typescript-eslint/types': 8.64.0
+      '@typescript-eslint/tsconfig-utils': 8.71.0
+      '@typescript-eslint/types': 8.71.0
       debug: 4.4.3(supports-color@5.5.0)
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -54564,10 +54478,6 @@ snapshots:
     dependencies:
       typescript: 6.0.3
 
-  '@typescript-eslint/tsconfig-utils@8.64.0':
-    dependencies:
-      typescript: 6.0.3
-
   '@typescript-eslint/tsconfig-utils@8.71.0':
     dependencies:
       typescript: 6.0.3
@@ -54575,8 +54485,6 @@ snapshots:
   '@typescript-eslint/types@8.39.0': {}
 
   '@typescript-eslint/types@8.62.0': {}
-
-  '@typescript-eslint/types@8.64.0': {}
 
   '@typescript-eslint/types@8.71.0': {}
 
@@ -55876,15 +55784,6 @@ snapshots:
     dependencies:
       codecs: 2.2.0
 
-  abstract-level@3.1.1:
-    dependencies:
-      buffer: 6.0.3
-      is-buffer: 2.0.5
-      level-supports: 6.2.0
-      level-transcoder: 1.0.1
-      maybe-combine-errors: 1.0.0
-      module-error: 1.0.2
-
   abstract-logging@2.0.1: {}
 
   accepts@2.0.0:
@@ -57095,13 +56994,6 @@ snapshots:
   cjs-module-lexer@2.2.0: {}
 
   classcat@5.0.5: {}
-
-  classic-level@3.0.0:
-    dependencies:
-      abstract-level: 3.1.1
-      module-error: 1.0.2
-      napi-macros: 2.2.2
-      node-gyp-build: 4.8.4
 
   classnames@2.3.2: {}
 
@@ -58968,12 +58860,6 @@ snapshots:
       '@types/yauzl': 2.10.3
     transitivePeerDependencies:
       - supports-color
-
-  eyereasoner@21.1.24(@rdfjs/types@2.0.1):
-    dependencies:
-      '@rdfjs/types': 2.0.1
-      n3: 2.1.0
-      swipl-wasm: 7.0.10
 
   falafel@2.2.5:
     dependencies:
@@ -61043,8 +60929,6 @@ snapshots:
 
   js-levenshtein@1.1.6: {}
 
-  js-sorted-set@0.7.0: {}
-
   js-tokens@10.0.0: {}
 
   js-tokens@4.0.0: {}
@@ -61388,13 +61272,6 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
-
-  level-supports@6.2.0: {}
-
-  level-transcoder@1.0.1:
-    dependencies:
-      buffer: 6.0.3
-      module-error: 1.0.2
 
   leven@3.1.0: {}
 
@@ -61877,8 +61754,6 @@ snapshots:
     dependencies:
       '@xmldom/xmldom': 0.8.10
     optional: true
-
-  maybe-combine-errors@1.0.0: {}
 
   md5-hex@5.0.0:
     dependencies:
@@ -62779,8 +62654,6 @@ snapshots:
 
   module-details-from-path@1.0.4: {}
 
-  module-error@1.0.2: {}
-
   module-lookup-amd@9.0.4:
     dependencies:
       commander: 12.1.0
@@ -62879,7 +62752,8 @@ snapshots:
 
   napi-build-utils@2.0.0: {}
 
-  napi-macros@2.2.2: {}
+  napi-macros@2.2.2:
+    optional: true
 
   napi-postinstall@0.3.4: {}
 
@@ -64226,21 +64100,6 @@ snapshots:
   qs@6.15.0:
     dependencies:
       side-channel: 1.1.0
-
-  quadstore-comunica@6.3.1(asynciterator@3.10.0)(quadstore@15.4.1):
-    dependencies:
-      '@rdfjs/types': 2.0.1
-      asynciterator: 3.10.0
-      quadstore: 15.4.1
-      sparqlalgebrajs: 5.0.2
-      sparqljs: 3.7.4
-
-  quadstore@15.4.1:
-    dependencies:
-      '@rdfjs/types': 2.0.1
-      abstract-level: 3.1.1
-      asynciterator: 3.10.0
-      js-sorted-set: 0.7.0
 
   quansync@1.0.0: {}
 
@@ -66306,10 +66165,6 @@ snapshots:
 
   svgpath@2.6.0: {}
 
-  swipl-wasm@7.0.10:
-    dependencies:
-      '@types/emscripten': 1.41.6
-
   swr@2.3.6(react@19.2.7):
     dependencies:
       dequal: 2.0.3
@@ -67770,9 +67625,7 @@ snapshots:
 
   web-streams-polyfill@3.2.1: {}
 
-  web-tree-sitter@0.25.10(@types/emscripten@1.41.6):
-    optionalDependencies:
-      '@types/emscripten': 1.41.6
+  web-tree-sitter@0.25.10: {}
 
   web-vitals@5.3.0: {}
 

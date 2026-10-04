@@ -15,7 +15,6 @@ import { EffectEx } from '@dxos/effect';
 
 import * as Crawler from './Crawler.ts';
 import * as Indexer from './Indexer.ts';
-import * as Native from './internal/native.ts';
 import * as Ontology from './Ontology.ts';
 import * as Store from './Store.ts';
 
@@ -181,8 +180,8 @@ describe('Indexer', () => {
     const result = await index();
     // b no longer imports c, so the conclusion drawn from that edge is gone with it.
     expect(result).toMatchObject({ indexed: 1, derived: 1 });
-    // The native backend maintains the derived graphs from this pass's changes rather than recomputing.
-    expect(result.reasoners.every((outcome) => outcome.incremental)).toBe(Store.defaultBackend() === 'native');
+    // The derived graphs are maintained from this pass's changes rather than recomputed.
+    expect(result.reasoners.every((outcome) => outcome.incremental)).toBe(true);
 
     const reachable = await withStore((store) =>
       store.select(`
@@ -248,34 +247,6 @@ describe('Indexer', () => {
     await utimes(join(root, 'src', 'b.ts'), later, new Date(later.getTime() + 1000));
     expect(await index()).toMatchObject({ indexed: 1, touched: 0 });
   }, 60_000);
-
-  test.skipIf(!Native.isAvailable())(
-    'switching backend over one store reindexes into the new backend',
-    async () => {
-      const switched = await mkdtemp(join(tmpdir(), 'code-index-switch-'));
-      const indexWith = (backend: Store.Backend) =>
-        EffectEx.runPromise(
-          Effect.scoped(
-            Effect.provide(
-              Effect.zip(
-                Indexer.run({ root, workers: 1 }),
-                Effect.flatMap(Store.Store, (store) => store.stats()),
-              ),
-              Store.layer(switched, backend),
-            ),
-          ),
-        );
-      try {
-        const [first] = await indexWith('js');
-        const [second, stats] = await indexWith('native');
-        expect(second.indexed).toEqual(first.scanned);
-        expect(stats.quads).toBeGreaterThan(0);
-      } finally {
-        await rm(switched, { recursive: true, force: true });
-      }
-    },
-    60_000,
-  );
 
   test('every snippet the index holds is valid TypeScript', async () => {
     const snippets = await withStore((store) => store.match(undefined, Ontology.snippet));
