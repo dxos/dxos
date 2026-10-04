@@ -505,7 +505,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
                 }
               />
             ) : (
-              <div className={mx('dx-fullscreen flex items-center justify-center text-neutral-500 text-sm')}>
+              <div className={mx('dx-cover flex items-center justify-center text-neutral-500 text-sm')}>
                 <Flex column gap='sm' align='center'>
                   <Icon icon='ph--music-notes--regular' size='xl' />
                   <span>Add a track to begin.</span>

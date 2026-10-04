@@ -4,6 +4,7 @@
 // @import-as-namespace
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as McpProtocol from 'effect/ai/McpProtocol';
 import * as McpServer from 'effect/ai/McpServer';
 import * as Tool from 'effect/ai/Tool';
@@ -15,33 +16,21 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import { join } from 'node:path';
 
+import * as Declarations from '../Declarations.ts';
 import * as Cache from '../design/Cache.ts';
 import * as Design from '../design/Design.ts';
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
 import * as Summary from '../Summary.ts';
-import * as Term from '../worker/types/Term.ts';
+import * as Models from '../workspace/Models.ts';
 import * as Lock from './Lock.ts';
+import * as Sparql from './Sparql.ts';
 import * as Terms from './Terms.ts';
 
 /**
  * `code-index mcp`: a read-only MCP server over stdio, so an MCP client can query the index the
  * way the workspace agent does. It opens an existing store and never indexes or writes.
  */
-
-/** The namespaces of `design/ONTOLOGY.md`; a query using one without declaring it gets the declaration. */
-export const NAMESPACES: Readonly<Record<string, string>> = {
-  deus: Ontology.PREFIX,
-  file: Ontology.FILE_BASE,
-  pkg: Ontology.PACKAGE_BASE,
-  module: Ontology.MODULE_BASE,
-  graph: Ontology.GRAPH_BASE,
-  type: Ontology.TYPE_BASE,
-  lib: Term.LIB_BASE,
-  rdf: Ontology.prefixes.rdf,
-  rdfs: Ontology.prefixes.rdfs,
-  xsd: Ontology.prefixes.xsd,
-};
 
 const DEUS = `PREFIX deus: <${Ontology.PREFIX}>`;
 
@@ -69,27 +58,11 @@ const MAX_MATCHES = 500;
 const clamp = (value: number | undefined, fallback: number, max: number): number =>
   Math.min(Math.max(1, Math.floor(value ?? fallback)), max);
 
-/**
- * Bounds a SELECT at the store: the backends materialise every row, so an unbounded query against
- * millions of quads must be cut off by the engine, not by slicing afterwards. A trailing LIMIT is
- * lowered to the cap; with none, one is appended on its own line so a trailing comment cannot
- * swallow it.
- */
-export const boundQuery = (sparql: string, limit: number): string => {
-  const trailing = /((?:\s+(?:LIMIT|OFFSET)\s+\d+)+)\s*$/i.exec(sparql);
-  const modifiers = trailing?.[1] ?? '';
-  if (!/LIMIT/i.test(modifiers)) {
-    return `${sparql}\nLIMIT ${limit}`;
-  }
-  const lowered = modifiers.replace(/LIMIT\s+(\d+)/i, (_, value: string) => `LIMIT ${Math.min(Number(value), limit)}`);
-  return `${sparql.slice(0, trailing?.index ?? sparql.length)}${lowered}`;
-};
-
 /** Only names SPARQL accepts as a prefixed name's local part are compacted, so output pastes back into a query. */
 const LOCAL_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
 export const compact = (iri: string): string => {
-  for (const [prefix, base] of Object.entries(NAMESPACES)) {
+  for (const [prefix, base] of Object.entries(Sparql.NAMESPACES)) {
     if (iri.startsWith(base) && LOCAL_NAME.test(iri.slice(base.length))) {
       return `${prefix}:${iri.slice(base.length)}`;
     }
@@ -97,7 +70,7 @@ export const compact = (iri: string): string => {
   return iri;
 };
 
-/** A full IRI, `<…>` or a `prefix:` name over {@link NAMESPACES}; anything else is a name to resolve. */
+/** A full IRI, `<…>` or a `prefix:` name over {@link Sparql.NAMESPACES}; anything else is a name to resolve. */
 export const expand = (target: string): string | undefined => {
   const trimmed = target.trim();
   if (trimmed.startsWith('<') && trimmed.endsWith('>')) {
@@ -108,7 +81,7 @@ export const expand = (target: string): string | undefined => {
   }
   const colon = trimmed.indexOf(':');
   if (colon > 0) {
-    const base = NAMESPACES[trimmed.slice(0, colon)];
+    const base = Sparql.NAMESPACES[trimmed.slice(0, colon)];
     if (base !== undefined) {
       return `${base}${trimmed.slice(colon + 1)}`;
     }
@@ -120,55 +93,6 @@ export const expand = (target: string): string | undefined => {
 const literal = (value: string): string => JSON.stringify(value);
 
 const INVALID_IRI = /[<>"{}|^`\\\s]/;
-
-//
-// Query preprocessing.
-//
-
-/**
- * The query with string literals, IRIs and comments blanked, so a scan for prefixed names sees only
- * syntax: `"deus:x"` and `<urn:deus:x>` are not uses of the `deus:` prefix.
- */
-const syntaxOnly = (sparql: string): string =>
-  sparql
-    .replace(/"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'/g, ' ')
-    .replace(/<[^<>"{}|^`\\\s]*>/g, ' ')
-    .replace(/#[^\n]*/g, ' ');
-
-/**
- * Prepends a PREFIX declaration for every {@link NAMESPACES} prefix the query uses without
- * declaring, which is the most common reason an agent's first query fails to parse.
- */
-export const withPrefixes = (sparql: string): { readonly sparql: string; readonly injected: readonly string[] } => {
-  const syntax = syntaxOnly(sparql);
-  const declared = new Set([...syntax.matchAll(/PREFIX\s+([A-Za-z][\w.-]*)?\s*:/gi)].map((match) => match[1] ?? ''));
-  const used = new Set([...syntax.matchAll(/(?<![\w?$:.-])([A-Za-z][\w-]*):/g)].map((match) => match[1]));
-  const injected = [...used].filter((prefix) => !declared.has(prefix) && NAMESPACES[prefix] !== undefined).sort();
-  if (injected.length === 0) {
-    return { sparql, injected };
-  }
-  const declarations = injected.map((prefix) => `PREFIX ${prefix}: <${NAMESPACES[prefix]}>`).join('\n');
-  return { sparql: `${declarations}\n${sparql}`, injected };
-};
-
-/** The `deus:` local names a query mentions, prefixed or as full IRIs. */
-export const deusTerms = (sparql: string): string[] => {
-  const prefixed = [...syntaxOnly(sparql).matchAll(/(?<![\w?$:.-])deus:([A-Za-z_][\w-]*)/g)].map((match) => match[1]);
-  const escaped = Ontology.PREFIX.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
-  const full = [...sparql.matchAll(new RegExp(`<${escaped}([A-Za-z_][\\w-]*)>`, 'g'))].map((match) => match[1]);
-  return [...new Set([...prefixed, ...full])];
-};
-
-/** A warning per `deus:` term the vocabulary lacks, naming the closest known ones — a typo otherwise returns `[]`. */
-export const unknownTermWarnings = (sparql: string, known: ReadonlySet<string>): string[] =>
-  deusTerms(sparql)
-    .filter((term) => !known.has(term))
-    .map((term) => {
-      const near = Terms.closest(term, known);
-      return near.length > 0
-        ? `deus:${term} is not in the vocabulary; did you mean ${near.map((name) => `deus:${name}`).join(', ')}?`
-        : `deus:${term} is not in the vocabulary; call \`vocabulary\` for the terms that exist.`;
-    });
 
 const timeoutMessage = (ms: number): string =>
   `The query timed out after ${ms} ms and was cancelled. Narrow it: bind the subject or the predicate, add a ` +
@@ -450,12 +374,10 @@ export const Stats = readOnly(
   Tool.make('stats', {
     description:
       'Reports the size of the code index: indexed files, total quads, the quads each reasoner derived (one ' +
-      'graph per rules file under graph:derived/ and per JS pass under graph:pass/), and the backend in use ' +
-      '(js or native). Example follow-up — what one rules file concludes: SELECT ?p (COUNT(*) AS ?n) WHERE { ' +
+      'graph per rules file under graph:derived/ and per JS pass under graph:pass/). Example follow-up — what one rules file concludes: SELECT ?p (COUNT(*) AS ?n) WHERE { ' +
       'GRAPH <https://dxos.org/deus/graph/derived/30-compute> { ?s ?p ?o } } GROUP BY ?p',
     parameters: Tool.EmptyParams,
     success: Schema.Struct({
-      backend: Schema.String,
       dir: Schema.String,
       files: Schema.Number,
       quads: Schema.Number,
@@ -468,9 +390,11 @@ export const Stats = readOnly(
 export const DesignTool = readOnly(
   Tool.make('design', {
     description:
-      'Answers a design question with the files that matter and how they connect: explores the index from the ' +
-      "prompt, scores every candidate file's relevance (System One blended with a text/degree baseline when the " +
-      'server has TYPESAFE_API_KEY, the baseline alone otherwise), prunes to `budget` files (default 30) and ' +
+      'Answers a design question with the files that matter and how they connect. With an Anthropic key the ' +
+      'server has a small model run SPARQL queries for the prompt and selects from their union (tests, stories, ' +
+      'generated and file-local code hidden unless asked for; System One relevance boosted by connectivity; kept ' +
+      'connected); without one it walks from text-matched seeds and scores by System One blended with a ' +
+      'text/degree baseline (the baseline alone without TYPESAFE_API_KEY). It prunes to `budget` files (default 30) and ' +
       'returns them best first with their edges, plus a compact mermaid draft of at most 14 boxes with a ' +
       '`%% ref <id> <path>` line per box. Takes a few seconds. Example: { "prompt": "how does the agent runtime ' +
       'wire its services?" }',
@@ -578,11 +502,7 @@ const meaning = (term: Terms.Term | undefined) => ({
 // Usages.
 //
 
-const STORY_FILE = /\.stories\.[cm]?[jt]sx?$/;
-
-type Role = 'impl' | 'test' | 'story';
-
-const roleOf = (path: string, test: boolean): Role => (test ? 'test' : STORY_FILE.test(path) ? 'story' : 'impl');
+type Role = Declarations.Role;
 
 /** The repository-relative path of a `file:` IRI's file, which `Ontology.fileIri` escaped. */
 const pathOfFileIri = (iri: string): string | undefined => {
@@ -656,7 +576,7 @@ const groupUsages = (
     if (row.user === declaration) {
       continue;
     }
-    const role = roleOf(row.path, row.test === 'true');
+    const role = Declarations.roleOf(row.path, row.test === 'true');
     if (role === 'test' && !options.includeTests) {
       continue;
     }
@@ -729,8 +649,8 @@ export const handlers = (store: Store.Api) =>
     const designCache = yield* Effect.cached(Cache.open(join(store.dir, 'design-cache.jsonl')));
 
     /**
-     * Bounds a store call by the caller's timeout. Interruption reaches the native evaluator, which
-     * stops at its next quad read; the JS backend's evaluation is abandoned to finish on its own.
+     * Bounds a store call by the caller's timeout. Interruption reaches the evaluator, which stops at
+     * its next quad read.
      */
     const bounded = <A>(effect: Effect.Effect<A, Store.StoreError>, timeoutMs: number | undefined) => {
       const ms = clamp(timeoutMs, QUERY_DEFAULT_TIMEOUT_MS, QUERY_MAX_TIMEOUT_MS);
@@ -745,8 +665,8 @@ export const handlers = (store: Store.Api) =>
 
     /** Prefixes declared and unknown terms flagged, as fields omitted when there is nothing to say. */
     const prepare = (sparql: string) => {
-      const prepared = withPrefixes(sparql);
-      const warnings = unknownTermWarnings(sparql, known);
+      const prepared = Sparql.withPrefixes(sparql);
+      const warnings = Sparql.unknownTermWarnings(sparql, known);
       return {
         sparql: prepared.sparql,
         notes: {
@@ -845,7 +765,7 @@ export const handlers = (store: Store.Api) =>
           const cap = clamp(limit, QUERY_DEFAULT_LIMIT, QUERY_MAX_LIMIT);
           const prepared = prepare(sparql);
           // One row past the cap is what tells a full page from a truncated one.
-          const rows = yield* bounded(store.select(boundQuery(prepared.sparql, cap + 1)), timeoutMs);
+          const rows = yield* bounded(store.select(Sparql.boundQuery(prepared.sparql, cap + 1)), timeoutMs);
           const vars = [...new Set(rows.flatMap((row) => Object.keys(row)))];
           return { vars, rows: rows.slice(0, cap), limit: cap, truncated: rows.length > cap, ...prepared.notes };
         }),
@@ -878,7 +798,7 @@ export const handlers = (store: Store.Api) =>
               (left, right) =>
                 left.kind.localeCompare(right.kind) || right.count - left.count || left.term.localeCompare(right.term),
             );
-            return { prefixes: { ...NAMESPACES }, terms };
+            return { prefixes: { ...Sparql.NAMESPACES }, terms };
           }),
           Effect.mapError(toFailure),
         ),
@@ -1019,21 +939,30 @@ export const handlers = (store: Store.Api) =>
         }).pipe(Effect.mapError(toFailure)),
 
       design: ({ prompt, budget, threshold }) =>
-        designCache.pipe(
-          Effect.flatMap((cache) =>
-            Design.answer(store, cache, {
-              prompt,
-              budget: budget === undefined ? undefined : clamp(budget, DESIGN_DEFAULT_BUDGET, DESIGN_MAX_BUDGET),
-              threshold: threshold === undefined ? undefined : Math.min(1, Math.max(0, threshold)),
-            }),
+        Effect.all([designCache, Effect.serviceOption(LanguageModel.LanguageModel)]).pipe(
+          Effect.flatMap(([cache, explorer]) =>
+            Design.answer(
+              store,
+              cache,
+              {
+                prompt,
+                budget: budget === undefined ? undefined : clamp(budget, DESIGN_DEFAULT_BUDGET, DESIGN_MAX_BUDGET),
+                threshold: threshold === undefined ? undefined : Math.min(1, Math.max(0, threshold)),
+              },
+              explorer,
+            ),
           ),
+          // The server has no chat model; an Anthropic key buys the query explorer, else the walk runs.
+          (effect) =>
+            Models.hasAnthropicKey()
+              ? Effect.provide(effect, Models.layer({ provider: 'anthropic', model: Models.DEFAULT_EXPLORER_MODEL }))
+              : effect,
           Effect.mapError(toFailure),
         ),
 
       stats: () =>
         summary.pipe(
           Effect.map(({ files, quads, derived }) => ({
-            backend: store.backend,
             dir: store.dir,
             files,
             quads,
@@ -1068,22 +997,21 @@ export const INSTRUCTIONS =
 export type RunOptions = {
   /** The store directory to open. */
   readonly dir: string;
-  readonly backend?: Store.Backend;
   readonly version: string;
 };
 
 /** Opens the store read-only for the enclosing scope; a store another process holds fails with that process named. */
-export const open = (dir: string, backend?: Store.Backend) =>
-  Layer.build(Store.layer(dir, backend, { readOnly: true })).pipe(
+export const open = (dir: string) =>
+  Layer.build(Store.layer(dir, { readOnly: true })).pipe(
     Effect.catchTag('code-index/StoreError', (error) => Lock.explain(dir, error)),
     Effect.map((context) => Context.get(context, Store.Store)),
   );
 
 /** Opens the store, before the transport starts so a failure is reported, then serves until stdin closes. */
-export const run = ({ dir, backend, version }: RunOptions) =>
+export const run = ({ dir, version }: RunOptions) =>
   Effect.gen(function* () {
-    const store = yield* open(dir, backend);
-    yield* Effect.logInfo(`code-index mcp: serving ${dir} (${store.backend} backend) over stdio`);
+    const store = yield* open(dir);
+    yield* Effect.logInfo(`code-index mcp: serving ${dir} over stdio`);
     return yield* Layer.launch(
       McpServer.toolkit(CodeIndexToolkit).pipe(
         Layer.provide(CodeIndexToolkit.toLayer(handlers(store))),

@@ -74,7 +74,7 @@ export default Capability.makeModule(
     // Tracks the last-seen state per process so we only toast on transitions.
     const lastState = new Map<Process.ID, Process.State>();
 
-    const handleProcesses = (processes: readonly Process.Info[]) => {
+    const handleProcesses = (processes: readonly Process.Process[]) => {
       const seen = new Set<Process.ID>();
       for (const process of processes) {
         seen.add(process.pid);

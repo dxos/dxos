@@ -117,7 +117,7 @@ const RoleDetail = ({ group }: { group: RoleGroup }) => (
 );
 
 /** Role takes the slack; fixed count, average and maximum tracks line the figures up as a grid. */
-const ROW_TRACKS = ['1fr', '2rem', '2rem', '2rem'];
+const ROW_TRACKS = ['fill', '2rem', '2rem', '2rem'] as const;
 
 export const SurfaceProfilerCard = ({
   stats = [],

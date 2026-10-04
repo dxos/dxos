@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useContext, useEffect } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -226,6 +226,33 @@ export const TestSendWhileRunning: Story = {
 
     await expect(canvas.getByTestId('assistant.send')).toHaveAccessibleName('Send');
     await expect(canvas.getByTestId('assistant.send')).toBeEnabled();
+  },
+};
+
+/**
+ * A full queue (the default three prompts behind a running turn) takes no more: with text typed the control stays
+ * Stop rather than offering Send, and Enter leaves the text in the editor rather than queueing a fourth.
+ */
+export const TestQueueFull: Story = {
+  args: { running: true, queued: ['First', 'Second', 'Third'] },
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByTestId('assistant.queued-message')).toHaveLength(3), {
+      timeout: 30_000,
+    });
+
+    const editor = canvasElement.querySelector<HTMLElement>('[role="group"] .cm-content');
+    if (!editor) {
+      throw new Error('Prompt editor not rendered.');
+    }
+    await userEvent.click(editor);
+    await userEvent.type(editor, 'a fourth');
+
+    // The one control stays Stop rather than turning into Send: the running turn can still be interrupted.
+    await expect(canvas.getByTestId('assistant.send')).toHaveAccessibleName('Stop processing');
+    await userEvent.keyboard('{Enter}');
+    await expect(editor).toHaveTextContent('a fourth');
+    await expect(canvas.getAllByTestId('assistant.queued-message')).toHaveLength(3);
   },
 };
 

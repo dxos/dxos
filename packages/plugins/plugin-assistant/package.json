@@ -274,6 +274,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-chat": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-ui-experimental": "workspace:*",
     "@dxos/react-ui-feed": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

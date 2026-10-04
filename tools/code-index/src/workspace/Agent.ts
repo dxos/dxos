@@ -18,6 +18,7 @@ import * as Docs from './Docs.ts';
 import * as Events from './Events.ts';
 import * as Fold from './Fold.ts';
 import * as Log from './Log.ts';
+import * as Models from './Models.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /**
@@ -70,6 +71,8 @@ export type TurnOptions = {
   readonly text: string;
   /** Replaces the chat system prompt, for a turn with a dedicated job (e.g. the design explorer). */
   readonly system?: string;
+  /** The id the turn's events carry; the sender passes its own so it can recognise the echo. */
+  readonly turnId?: string;
 };
 
 export interface Api {
@@ -93,7 +96,8 @@ const promptOf = (state: Fold.State, system: string = Docs.systemPrompt()): Prom
 const fail = (message: string) => (cause: unknown) => new AgentError({ message, cause });
 
 const describe = (cause: unknown): string =>
-  cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : JSON.stringify(cause);
+  Models.explainFailure(cause) ??
+  (cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : JSON.stringify(cause));
 
 const make = Effect.gen(function* () {
   const log = yield* Log.Log;
@@ -129,9 +133,11 @@ const make = Effect.gen(function* () {
       }),
     });
 
-  const turn: Api['turn'] = ({ projectId, text, system }) =>
+  const turn: Api['turn'] = ({ projectId, text, system, turnId = Events.newTurnId() }) =>
     Effect.gen(function* () {
-      yield* log.append(projectId, new Events.UserMessage({ text })).pipe(Effect.mapError(fail('Cannot record turn')));
+      yield* log
+        .append(projectId, new Events.UserMessage({ text, turnId }))
+        .pipe(Effect.mapError(fail('Cannot record turn')));
       const entries = yield* log.read(projectId).pipe(Effect.mapError(fail('Cannot read project log')));
       const handlers = handlerLayer(projectId);
 
@@ -153,7 +159,7 @@ const make = Effect.gen(function* () {
         }
         if (response.toolCalls.length === 0) {
           return yield* log
-            .append(projectId, new Events.TurnEnded({ steps: step + 1 }))
+            .append(projectId, new Events.TurnEnded({ steps: step + 1, turnId }))
             .pipe(Effect.asVoid, Effect.mapError(fail('Cannot close turn')));
         }
         // The calls and their results go back verbatim; the tool events are already in the log.
@@ -188,7 +194,14 @@ const make = Effect.gen(function* () {
       // A failed turn is a recorded fact, not a lost one: the transcript says what went wrong and
       // the next turn starts from a consistent log.
       Effect.tapError((error) =>
-        log.append(projectId, new Events.TurnFailed({ message: error.message })).pipe(Effect.ignore),
+        log.append(projectId, new Events.TurnFailed({ message: error.message, turnId })).pipe(Effect.ignore),
+      ),
+      // An interrupted turn (the server shutting down) is closed too: only a `TurnFailed` or
+      // `TurnEnded` clears `running`, so a reload would otherwise show it working forever.
+      Effect.onInterrupt(() =>
+        log
+          .append(projectId, new Events.TurnFailed({ message: 'Interrupted before the turn finished.', turnId }))
+          .pipe(Effect.ignore),
       ),
     );
 

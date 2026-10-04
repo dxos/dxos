@@ -237,5 +237,19 @@
     "vitest": {
       "typecheck": false
     }
-  }
+  },
+  "overrides": [
+    {
+      "files": ["packages/ui/react-ui/src/next/recipes.ts"],
+      "rules": {
+        "perfectionist/sort-objects": [
+          "error",
+          {
+            "order": "asc",
+            "type": "natural"
+          }
+        ]
+      }
+    }
+  ]
 }

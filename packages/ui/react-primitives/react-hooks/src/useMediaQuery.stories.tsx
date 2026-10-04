@@ -39,7 +39,7 @@ const MediaQueryDemo = ({ query }: MediaQueryDemoProps) => {
   const width = useWindowWidth();
 
   return (
-    <div className='dx-fullscreen grid place-items-center'>
+    <div className='dx-cover grid place-items-center'>
       <div className='flex flex-col gap-4 p-4 border border-separator rounded'>
         <div className='grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 max-w-md'>
           <span className='text-fg-muted'>query</span>

@@ -27,6 +27,9 @@ const failure = (message: string) => new Protocol.RequestFailed({ message });
 export const layer = (options: { readonly root: string; readonly model: Models.Selection }) =>
   Protocol.Rpcs.toLayer(
     Effect.gen(function* () {
+      // Turns are forked into the layer's scope, so shutdown interrupts a running one before the
+      // store it queries is closed under it.
+      const scope = yield* Effect.scope;
       const store = yield* Store.Store;
       const log = yield* Log.Log;
       const agent = yield* Agent.Agent;
@@ -79,15 +82,15 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
 
         Dispatch: ({ projectId, event }: { projectId: string; event: Events.Event }) =>
           event._tag === 'UserMessage'
-            ? // The turn appends the user's message itself, and runs detached: a request that waited
-              // for it would hold the connection open for a minute of tool calls. Detached but not
+            ? // The turn appends the user's message itself, and runs apart from the request: a request
+              // that waited would hold the connection open for a minute of tool calls. Detached but not
               // unordered — it takes the project's turn gate first, so a prompt sent while another
               // turn is running waits for it rather than interleaving with it.
               gateFor(projectId).pipe(
                 Effect.flatMap((gate) =>
                   agent
-                    .turn({ projectId, text: event.text })
-                    .pipe(Semaphore.withPermits(gate, 1), Effect.forkDetach, Effect.asVoid),
+                    .turn({ projectId, text: event.text, turnId: event.turnId })
+                    .pipe(Semaphore.withPermits(gate, 1), Effect.forkIn(scope), Effect.asVoid),
                 ),
               )
             : log.append(projectId, event).pipe(

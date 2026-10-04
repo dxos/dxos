@@ -184,7 +184,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               icon={iconKey}
             />
 
-            <Grid cols={['1fr', 'min-content']} classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'>
+            <Grid cols={['fill', 'min']} classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'>
               <div className='flex items-center gap-2'>
                 <h2 className='text-xl'>{name}</h2>
                 {failure && <PluginFailureBadge failure={failure} size='lg' />}

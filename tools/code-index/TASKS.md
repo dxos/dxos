@@ -80,9 +80,7 @@ that raised it.
   - Deliberately not fixed by changing the ledger's type and the graph IRI shape mid-PR.
 - [ ] **Exercise the Ollama path against a live model**
   - Wired and typed but never run: this sandbox cannot host a 20B model. Everything else was verified end to end on Anthropic.
-- [ ] **`commit` is the bottleneck** (~369s cold, 634s summed over 8 workers on a `--force` re-index)
-  - Quads are written one file at a time through LevelDB, and the cost scales with what is already in the store.
-  - Batching across files is the obvious lever; not measured yet.
+- [x] **`commit` is the bottleneck** — the native backend (`design/NATIVE-BACKEND.md`), the only one, bulk-loads each commit off the event loop.
 
 ## Phase 5: type propagation
 

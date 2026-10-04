@@ -101,7 +101,7 @@ const DefaultStory = (props: GraphCanvasProps) => {
   }
 
   return (
-    <div className='dx-fullscreen flex'>
+    <div className='dx-cover flex'>
       <Editor.Root id='story' graph={graph}>
         <GraphCanvas {...props} />
       </Editor.Root>
