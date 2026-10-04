@@ -5,7 +5,7 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
@@ -16,12 +16,15 @@ type StoryArgs = SizeArgs & Pick<ScrollContainerRootProps, 'pin'>;
 
 const DefaultStory = ({ pin }: StoryArgs) => {
   const [rows, setRows] = useState(() => Array.from({ length: 100 }, (_, index) => `Entry ${index + 1}`));
+  const handleAdd = useCallback(() => {
+    setRows((rows) => [...rows, `Entry ${rows.length + 1}`]);
+  }, [setRows]);
 
   return (
     <Panel.Root>
       <Panel.Header asChild>
         <Toolbar.Root>
-          <Button label='Add entry' onClick={() => setRows((rows) => [...rows, `Entry ${rows.length + 1}`])} />
+          <Button label='Add entry' onClick={handleAdd} />
         </Toolbar.Root>
       </Panel.Header>
       <ScrollContainer.Root pin={pin}>
@@ -63,6 +66,11 @@ export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const viewport = canvas.getByTestId('viewport');
+
+    // A header that is the toolbar (`asChild`) keeps the toolbar's row: its first button starts at the panel's edge.
+    const add = canvas.getByRole('button', { name: 'Add entry' }).getBoundingClientRect();
+    const panel = viewport.closest<HTMLElement>('.dx-panel')?.getBoundingClientRect();
+    await expect(panel != null && add.left - panel.left < 16).toBe(true);
     const fade = canvas.getByTestId('frame').querySelector<HTMLElement>('[data-part="fade"][data-edge="top"]');
     const fadeEnd = canvas.getByTestId('frame').querySelector<HTMLElement>('[data-part="fade"][data-edge="bottom"]');
     const button = canvas.getByTestId('frame').querySelector<HTMLElement>('.dx-scroll-container-scroll-down');
