@@ -1052,6 +1052,8 @@ export const collectSubtree = (task: Task): Effect.Effect<Task[], never, Databas
   Effect.gen(function* () {
     const subtree: Task[] = [];
     const seen = new Set<string>();
+    // Built on the first rejected `child-of` query and used for the rest of the walk.
+    let childrenByParent: Map<string, Task[]> | undefined;
     const queue: Task[] = [task];
     for (let index = 0; index < queue.length; index++) {
       const current = queue[index];
@@ -1061,15 +1063,40 @@ export const collectSubtree = (task: Task): Effect.Effect<Task[], never, Databas
       seen.add(current.id);
       subtree.push(current);
       const listed = yield* Effect.forEach(current.subtasks ?? [], loadOrUndefined, { concurrency: 16 });
-      // The EDGE query service rejects `child-of` ("Query too complex"), and `.run` surfaces a
-      // rejected query as a defect, so only a defect catch lets the walk fall back to the lists.
-      const edged = yield* Database.query(
-        Query.select(Filter.and(Filter.type(Task), Filter.childOf(current, { transitive: false }))),
-      ).run.pipe(Effect.catchDefect(() => Effect.succeed<Task[]>([])));
+      // The EDGE query service rejects `child-of` ("Query too complex") and `.run` surfaces that as a
+      // defect; the type scan it falls back to is answered everywhere, and its own failure propagates
+      // so the walk never returns a tree that is silently missing edge-only children.
+      const edged = childrenByParent
+        ? (childrenByParent.get(current.id) ?? [])
+        : yield* Database.query(
+            Query.select(Filter.and(Filter.type(Task), Filter.childOf(current, { transitive: false }))),
+          ).run.pipe(
+            Effect.catchDefect(() =>
+              Effect.map(groupByParentTask, (byParent) => {
+                childrenByParent = byParent;
+                return byParent.get(current.id) ?? [];
+              }),
+            ),
+          );
       queue.push(...dedupeById([...listed, ...edged]).filter((child) => parentTaskId(child) === current.id));
     }
     return subtree;
   });
+
+/** Every task in the space keyed by the id of its parent task; roots are left out. */
+const groupByParentTask: Effect.Effect<Map<string, Task[]>, never, Database.Service> = Effect.map(
+  Database.query(Filter.type(Task)).run,
+  (tasks) => {
+    const byParent = new Map<string, Task[]>();
+    for (const candidate of tasks) {
+      const parentId = parentTaskId(candidate);
+      if (parentId) {
+        byParent.set(parentId, [...(byParent.get(parentId) ?? []), candidate]);
+      }
+    }
+    return byParent;
+  },
+);
 
 /** How long one cold ref may take to resolve: an unresolvable ref waits out the resolver's own 30s timeout. */
 const REF_LOAD_TIMEOUT = Duration.seconds(5);

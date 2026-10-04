@@ -4,8 +4,9 @@
 
 import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
-import { Blob, Database, Obj, Ref } from '@dxos/echo';
+import { Blob, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EntityId } from '@dxos/echo/Key';
 
@@ -180,16 +181,32 @@ describe('collectSubtree', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('falls back to the listed sub-tasks when the index rejects the parent-edge query', () =>
+  it.effect('still reaches an edge-only sub-task when the index rejects the parent-edge query', () =>
     Effect.gen(function* () {
       const { root, child, grandchild } = yield* seedTree();
+      const stray = yield* Database.add(Task.make({ [Obj.Parent]: root, title: 'stray', status: 'todo' }));
+      yield* Database.flush();
       const { db } = yield* Database.Service;
 
       const subtree = yield* Task.collectSubtree(root).pipe(
-        Effect.provideService(Database.Service, Database.makeService(rejectingQueries(db))),
+        Effect.provideService(Database.Service, Database.makeService(rejectingQueries(db, { childOfOnly: true }))),
       );
 
-      expect(subtree.map((task) => task.id)).toEqual([root.id, child.id, grandchild.id]);
+      expect(subtree.map((task) => task.id).sort()).toEqual([root.id, child.id, grandchild.id, stray.id].sort());
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('fails rather than return a partial tree when the index cannot answer at all', () =>
+    Effect.gen(function* () {
+      const { root } = yield* seedTree();
+      const { db } = yield* Database.Service;
+
+      const exit = yield* Task.collectSubtree(root).pipe(
+        Effect.provideService(Database.Service, Database.makeService(rejectingQueries(db))),
+        Effect.exit,
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -531,14 +548,20 @@ describe('history', () => {
 
 const testLayer = () => TestDatabaseLayer({ types: [Blob.Blob, File.File, Milestone.Milestone, Task.Task] });
 
-/** `db` whose queries reject on `run`, as the EDGE query service does for `child-of` ("Query too complex"). */
-const rejectingQueries = (db: Database.Database): Database.Database =>
+/**
+ * `db` whose queries reject on `run` as the EDGE query service does: every query, or with
+ * `childOfOnly` just those with a `child-of` clause ("Query too complex").
+ */
+const rejectingQueries = (db: Database.Database, { childOfOnly = false } = {}): Database.Database =>
   new Proxy(db, {
     get: (target, property) => {
-      if (property === 'query') {
-        return () => ({ run: () => Promise.reject(new Error('Query too complex')) });
-      }
       const value = Reflect.get(target, property, target);
+      if (property === 'query') {
+        return (query: Query.Any | Filter.Any) =>
+          !childOfOnly || JSON.stringify(query.ast).includes('"child-of"')
+            ? { run: () => Promise.reject(new Error('Query too complex')) }
+            : value.call(target, query);
+      }
       return typeof value === 'function' ? value.bind(target) : value;
     },
   });

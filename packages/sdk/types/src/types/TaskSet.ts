@@ -175,9 +175,8 @@ const heldBy = (holder: Holder, task: Task.Task): boolean => {
 export const findTaskSet = (task: Task.Task): Effect.Effect<TaskSet | undefined, never, Database.Service> =>
   Effect.gen(function* () {
     const root = yield* Task.collectRoot(task);
-    // `.run` surfaces a rejected query as a defect, not a failure, so the fallback must catch that.
     const sets = yield* Database.query(Query.select(Filter.id(root.id)).referencedBy(TaskSet, 'tasks')).run.pipe(
-      Effect.catchDefect(() => Effect.succeed<TaskSet[]>([])),
+      Effect.orElseSucceed(() => []),
     );
     if (sets[0]) {
       return sets[0];
@@ -241,7 +240,7 @@ export const findMilestoneTaskSet = (
   Effect.gen(function* () {
     const sets = yield* Database.query(
       Query.select(Filter.id(milestone.id)).referencedBy(TaskSet, 'milestones'),
-    ).run.pipe(Effect.catchDefect(() => Effect.succeed<TaskSet[]>([])));
+    ).run.pipe(Effect.orElseSucceed(() => []));
     return sets[0];
   });
 
