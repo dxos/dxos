@@ -28,21 +28,36 @@ One PR (#13701) on this branch: Phases 1–3 together (stack dropped 2026-10-04)
 
 ## Phase 2: plugin-messenger
 
-- [ ] Package skeleton (private), registered in `plugin-defs.core.tsx`.
-- [ ] `Notifications` container + feed in default space.
-- [ ] `InboxMaterializer` (contact filter, meta-key dedupe, ack after write, invitation toast) + tests.
-- [ ] `MessengerCapabilities.Sender` + `MessengerOperation.Send`.
-- [ ] plugin-deck companion `badge`.
-- [ ] Deck companion, `NotificationsPanel`, `NotificationTile`, filters.
-- [ ] `PLUGIN.mdl`, README, translations.
+- [x] Package skeleton (private), registered in `plugin-defs.core.tsx`.
+- [x] `Notifications` container + feed in default space.
+- [x] `InboxMaterializer` (contact filter, meta-key dedupe, ack after write, invitation toast) + tests.
+- [x] `MessengerCapabilities.Sender` + `MessengerOperation.Send`.
+- [x] plugin-deck companion `badge`.
+- [x] Deck companion, `NotificationsPanel`, `NotificationTile`, filters.
+- [x] `PLUGIN.mdl`, README, translations.
 
 ## Phase 3: storybook
 
-- [ ] `Messenger/TwoUsers` two-column story with play test.
+- [x] `Messenger/TwoUsers` two-column story with play test.
+
+Decisions taken while building (beyond the spec):
+
+- `badge` lives in the deck-companion node's `properties` (next to `mount`/`joyride`), not `data`,
+  which is the surface subject; rendered as a `data-badge` pseudo-element because an icon-only
+  `Button` renders no children.
+- Unread count and the panel's container come from `MessengerCapabilities.NotificationsContainer`, an atom
+  the materializer module contributes once the default space is ready.
+- Concurrent first writes from two devices can create two containers; readers pick the lowest id.
+- The panel's per-space filter is deferred (all / unread / invitations only).
+- `TwoUsers` composes the components and `startInboxMaterializer` per client directly (no plugin
+  manager per client); Bob stores notifications in a space of his own, and the deck badge is mirrored
+  by a story-local pill.
 
 ## Follow-ups
 
+- [ ] Per-space filter in the panel (by the linked object's space).
+- [ ] QA demo recording of `QA-1` against the running app (autocue).
 - [ ] Delete the legacy credential receive path after the TTL window.
-- [ ] Changeset for Phase 1 when the PR is opened.
+- [x] Changeset for Phase 1 when the PR is opened.
 - [ ] Shared message tile for plugin-inbox + plugin-messenger.
 - [ ] Retention/pruning of the feed and `readIds`.
