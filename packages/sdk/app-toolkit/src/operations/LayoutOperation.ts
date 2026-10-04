@@ -241,7 +241,7 @@ export const setNotifyOverride = (override: NotifyOverride): { notifyOverride: N
   notifyOverride: override,
 });
 
-/** Extracts a {@link NotifyOverride} from a failed process's `error` (`Process.Info.error`, a `SerializedError` whose `context` carries it), if present. */
+/** Extracts a {@link NotifyOverride} from a failed process's `error` (`Process.Process.error`, a `SerializedError` whose `context` carries it), if present. */
 export const getNotifyOverride = (failure: unknown): NotifyOverride | null => {
   if (!Predicate.isObject(failure) || !Predicate.isObject(failure.context)) {
     return null;
