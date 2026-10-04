@@ -78,8 +78,9 @@ export const readVocabulary = (store: Store.Api): Effect.Effect<VocabularyCount[
   );
 
 /**
- * Every fact write advances the generation and every reasoning pass rewrites the `reasoned` marker,
- * so the pair changes whenever any count could.
+ * Every fact write that can change a count advances the generation (`Store.touchFiles` writes only
+ * `deus:mtime` facts and does not) and every reasoning pass rewrites the `reasoned` marker, so the
+ * pair changes whenever any count could.
  */
 const stamp = (store: Store.Api): Effect.Effect<string, Store.StoreError> =>
   Effect.gen(function* () {

@@ -298,7 +298,7 @@ module mcp/Server
     store opened with `{ readOnly: true }`. Tool descriptions carry the namespace prefixes and an
     example each, because a model reads them. `mcp/Lock` names the process holding a locked store.
   api:
-    CodeIndexToolkit: Toolkit                 # query, ask, vocabulary, describe, files, stats.
+    CodeIndexToolkit: Toolkit                 # query, ask, vocabulary, describe, usages, files, stats, design.
     handlers: (Store.Api) => Effect<handlers> # what the toolkit layer is built from (and tests drive).
     open: (dir, backend?) => Effect<Store.Api, StoreError, Scope>  # read-only; names a lock holder.
     run: ({ dir, backend?, version }) => Effect<never>             # opens, then serves until stdin closes.
@@ -420,6 +420,7 @@ feat F-10: Types without a checker
   req F-10.1: Where it answers, it agrees with `tsc` — the agreement harness has no disagreements on its fixtures.
   req F-10.2: A position it cannot type is absent, never approximated; a reference `tsc` might narrow is unknown.
   req F-10.3: The type step costs well under a millisecond per file.
+  req F-10.4: A function or static method typed to return `Layer<…>` is a `deus:EffectLayerFactory`, providing and requiring what its returned layer does.
 ```
 
 ```mdl
@@ -445,19 +446,22 @@ feat F-6: Derived relations are rules, recomputed with the index
   req F-6.6: Premises are narrowed to the predicates the rules name; an unbound predicate disables the narrowing.
   req F-6.5: `--no-reason` skips the phase; the derived graph is then only as fresh as the last pass that ran it.
   req F-6.7: On the JS backend the premises reach EYE deduplicated and split across input files of at most 100k facts, every fact naming a blank node in one file, so a whole repository's facts parse within EYE's stack.
+  req F-6.8: The `resolve-refs` pass links each reference IRI to the declaration it denotes (`deus:resolvesTo`), through barrels and aliases.
+  req F-6.9: `deus:usesDeprecated` links a symbol to each `deus:deprecated` declaration it depends on, directly or through `deus:resolvesTo`.
 ```
 
 ```mdl
 feat F-11: An MCP server over the index
   desc: |
     `code-index mcp` serves the store to an MCP client over stdio. It opens an existing store
-    read-only and never indexes or writes; six tools cover SPARQL (`query`, `ask`), discovery
-    (`vocabulary`, `describe`) and the ledger (`files`, `stats`).
+    read-only and never indexes or writes; eight tools cover SPARQL (`query`, `ask`), discovery
+    (`vocabulary`, `describe`, `usages`), the ledger (`files`, `stats`) and design questions (`design`).
   req F-11.1: stdout carries only JSON-RPC; every log and banner goes to stderr.
   req F-11.2: Opening skips migration, version reset and reconcile; a missing or stale store fails with a hint.
   req F-11.3: A store another process holds fails at startup, naming that process, rather than hanging.
   req F-11.4: A SELECT is capped at the engine (default 200 rows, at most 2000) and reports truncation.
   req F-11.5: `stats` counts derived graphs with a grouped SPARQL count, never by materialising quads.
+  req F-11.6: `usages` finds every symbol that uses a declaration, through barrels, re-exports, namespaces and bare specifiers, grouped by package.
 
 feat F-12: `serve` keeps the index current
   desc: |
