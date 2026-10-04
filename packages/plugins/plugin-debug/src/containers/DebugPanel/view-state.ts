@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ViewState } from '@dxos/react-ui-attention';
+import { ViewState } from '@dxos/react-ui-attention/types';
 
 // Kept out of `DebugPanel.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a non-component export beside them forces a full page reload on every edit.

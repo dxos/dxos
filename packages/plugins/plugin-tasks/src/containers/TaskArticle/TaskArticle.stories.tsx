@@ -276,7 +276,7 @@ export const UntitledTaskFocus: Story = {
   play: async ({ canvasElement }) => {
     const title = await waitFor(
       () => {
-        const found = canvasElement.querySelector<HTMLInputElement>('[data-testid="taskEditor.title"]');
+        const found = canvasElement.querySelector<HTMLInputElement>('[data-testid="tasksPlugin.fields"] input');
         if (!found) {
           throw new Error('Title field not rendered.');
         }
@@ -312,7 +312,7 @@ export const Plain: Story = {
     await expect(canvas.queryByTestId('tasksPlugin.artifacts')).toBeNull();
     // The creation time the database records for the task.
     const created = await canvas.findByTestId('taskList.property.created', undefined, { timeout: 10_000 });
-    await expect(created.querySelector('time[data-testid="timestamp"]')?.getAttribute('dateTime')).toBeTruthy();
+    await expect(created.querySelector('time[data-scope="timestamp"]')?.getAttribute('dateTime')).toBeTruthy();
   },
 };
 

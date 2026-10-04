@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
 import { afterAll, expect } from 'vitest';
 
-import type { MakeTurnProducer } from '@dxos/agent-runtime';
+import { AgentService as AgentSessions, type MakeTurnProducer } from '@dxos/agent-runtime';
 import { AiService, Model } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -19,16 +19,19 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
+import { AiContext } from '@dxos/assistant';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { EDGE_URLS } from '@dxos/config';
-import { Database, Feed, Filter, Obj, Ref, Tag, type Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Registry, Tag, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -209,6 +212,79 @@ const runInstructions = <I>(
   );
 
 /**
+ * Runs the instructions as an agent session (`AgentService`) rather than through `RunInstructions`,
+ * which always drives its own `AiSession` and so never consults a contributed turn engine. The
+ * session's process picks the engine from `AssistantCapabilities.AgentTurnProducer`, so a variant's
+ * `makeTurnProducer` is what actually produces its turns. There is no `completeJob` in this path:
+ * the agent's output is its final reply, and the scorers grade the space it left.
+ */
+const runAgentSession = <I>(
+  harness: TestHarness,
+  instructions: Instructions.Instructions,
+  model: DXN.DXN,
+  spaceId: SpaceId,
+  input: I,
+  seededChat?: Ref.Ref<Chat.Chat>,
+) =>
+  harness.runPromise(
+    Effect.gen(function* () {
+      yield* seedInstructions(instructions);
+      const textDoc = yield* Database.load(instructions.text);
+      const prompt = [
+        SYSTEM_INSTRUCTIONS,
+        Template.process(textDoc.content, typeof input === 'object' && input !== null ? input : undefined),
+        ...(input === undefined || input === null ? [] : [`<input>${JSON.stringify(input)}</input>`]),
+      ].join('\n\n');
+
+      const context = [...(instructions.objects ?? [])];
+      const agent = seededChat
+        ? yield* sessionOnChat(yield* Database.load(seededChat), instructions.skills, context, model)
+        : yield* AgentSessions.createSession({
+            skills: yield* Effect.forEach(instructions.skills, (ref) => Database.load(ref)),
+            model,
+            context,
+          });
+      yield* agent.submitPrompt(prompt);
+      yield* agent.waitForCompletion();
+
+      const transcript = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+      return transcript
+        .filter((message) => message.sender.role === 'assistant')
+        .map(Message.extractText)
+        .filter((text) => text.length > 0)
+        .at(-1);
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(
+        ServiceResolver.provide({ space: spaceId }, Database.Service, AgentService.AgentService, Registry.Service),
+      ),
+    ),
+  );
+
+/**
+ * A session on a chat the seed provided, bound the way `createSession` binds a fresh one: chat-scoped
+ * tools then see the seeded chat and its state rather than a new one.
+ */
+const sessionOnChat = (
+  chat: Chat.Chat,
+  skills: readonly Ref.Ref<Skill.Skill>[],
+  objects: Ref.Ref<Obj.Unknown>[],
+  model: DXN.DXN,
+) =>
+  Effect.gen(function* () {
+    const feed = yield* Database.load(chat.feed);
+    const runtime = yield* Effect.context<Database.Service>();
+    const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+    yield* Effect.promise(() => binder.bind({ skills: [...skills], objects: [...objects, Ref.make(chat)] }));
+    if (!chat.session?.model) {
+      Obj.update(chat, (chat) => {
+        chat.session = { ...chat.session, model };
+      });
+    }
+    return yield* AgentService.getSession(chat);
+  });
+
+/**
  * The run's chat, as JSON records: the seeded one, else the chat the run provisioned. Undefined for
  * a run with no chat, whose transcript could not reproduce its requests.
  */
@@ -261,6 +337,12 @@ export interface CreateEvalRunnerOptions<I, O> {
    * is how a matrix eval compares engines over one set of tasks.
    */
   makeTurnProducer?: MakeTurnProducer;
+  /**
+   * Runs every variant as an agent session rather than through `RunInstructions` (see
+   * {@link runAgentSession}), so variants that differ only in their turn engine are otherwise run
+   * identically. Implied by a `makeTurnProducer`, which `RunInstructions` would ignore.
+   */
+  agentSession?: boolean;
   plugins?: Plugin.Plugin[];
   /**
    * Provisions a {@link Chat} on the session feed so planning and other chat-scoped tools work
@@ -447,9 +529,18 @@ export function createEvalRunner<I, O>(
           }
         }
 
+        const asSession = options.agentSession === true || makeTurnProducer !== undefined;
         const agentStep = Effect.tryPromise({
-          try: () =>
-            runInstructions(harness, instructions, model, defaultSpace.id, input, options.sessionChat, seeded.chat),
+          try: (): Promise<O> =>
+            asSession
+              ? runAgentSession(harness, instructions, model, defaultSpace.id, input, seeded.chat).then((reply) => {
+                  // The reply is free text, so only a scenario whose output admits a string can run this way.
+                  if (!Schema.is(options.output)(reply)) {
+                    throw new Error(`Agent reply does not match the eval's output schema: ${String(reply)}`);
+                  }
+                  return reply;
+                })
+              : runInstructions(harness, instructions, model, defaultSpace.id, input, options.sessionChat, seeded.chat),
           catch: (cause) => new AgentRunFailure({ cause }),
         });
         // Read before grading, while the harness is certain to be open.

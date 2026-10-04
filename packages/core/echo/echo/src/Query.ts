@@ -70,6 +70,8 @@ export interface Query<T> {
    * Filter the current selection based on a filter.
    * @param filter - Filter to select the objects.
    * @returns Query for the selected objects.
+   *
+   * @performance O(1) for a filter, O(p) for a props map; wraps the AST without executing anything.
    */
   select(filter: Filter.Filter<T>): Query<T>;
   select(props: Filter.Props<T>): Query<T>;
@@ -80,6 +82,8 @@ export interface Query<T> {
    * semi-join. The subquery is resolved once at execution time. A projection is a terminal
    * value, not a `Query`, so it cannot be chained further.
    * @param property - Property path to project.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   project<K extends RefPropKey<T>>(property: K): Projection<T[K]>;
 
@@ -87,6 +91,8 @@ export interface Query<T> {
    * Traverse an outgoing reference.
    * @param key - Property path inside T that is a reference or optional reference.
    * @returns Query for the target of the reference.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   reference<K extends RefPropKey<T>>(key: K): Query<ReferenceTraversalTarget<T[K]>>;
 
@@ -95,6 +101,8 @@ export interface Query<T> {
    * @param target - Schema of the referencing object. If not provided, matches any type.
    * @param key - Property path inside the referencing object that is a reference. If not provided, matches any property.
    * @returns Query for the referencing objects.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   // TODO(dmaretskyi): any way to enforce `Ref.Target<Schema.Schema.Type<S>[key]> == T`?
   // TODO(dmaretskyi): Ability to go through arrays of references.
@@ -110,6 +118,8 @@ export interface Query<T> {
    * @returns Query for the relation objects.
    * @param relation - Schema of the relation.
    * @param predicates - Predicates to filter the relation objects.
+   *
+   * @performance O(1) plus O(p) for predicates; builds the AST without executing anything.
    */
   sourceOf<R extends Type$.AnyRelation>(
     relation?: R | URI.URI,
@@ -121,6 +131,8 @@ export interface Query<T> {
    * @returns Query for the relation objects.
    * @param relation - Type entity of the relation.
    * @param predicates - Predicates to filter the relation objects.
+   *
+   * @performance O(1) plus O(p) for predicates; builds the AST without executing anything.
    */
   targetOf<R extends Type$.AnyRelation>(
     relation?: R | URI.URI,
@@ -130,24 +142,32 @@ export interface Query<T> {
   /**
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   source(): Query<Relation.SourceOf<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   target(): Query<Relation.TargetOf<T>>;
 
   /**
    * Get the parent object of the current selection.
    * @returns Query for the parent objects.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   parent(): Query<any>;
 
   /**
    * Get all child objects of the current selection.
    * @returns Query for the child objects.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   children(): Query<any>;
 
@@ -161,6 +181,8 @@ export interface Query<T> {
    * that aggregate).
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
+   *
+   * @performance O(k) in the number of orders; builds the AST without executing anything.
    */
   orderBy(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
 
@@ -192,6 +214,8 @@ export interface Query<T> {
    * `skip` may follow.
    * @param aggregates - Record of aggregate declarations keyed by result field name.
    * @returns Query whose flat result records carry the named aggregates as fields.
+   *
+   * @performance O(k) in the number of aggregates; builds the AST without executing anything.
    */
   aggregate<const A extends Record<string, Aggregate.Aggregate<T, any>>>(
     aggregates: A,
@@ -201,6 +225,8 @@ export interface Query<T> {
    * Limit the number of results.
    * @param limit - Maximum number of results to return.
    * @returns Query for the limited results.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   limit(limit: number): Query<T>;
 
@@ -209,6 +235,8 @@ export interface Query<T> {
    * (paginated) read.
    * @param skip - Number of leading results to skip.
    * @returns Query for the remaining results.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   skip(skip: number): Query<T>;
 
@@ -222,6 +250,8 @@ export interface Query<T> {
    * ```
    *
    * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
+   *
+   * @performance O(k) in the number of sources; builds the AST without executing anything.
    */
   from(database: Database.Database | Database.Database[], options?: { includeFeeds?: boolean }): Query<T>;
 
@@ -234,6 +264,7 @@ export interface Query<T> {
    * Query.select(Filter.type(Person)).from(feed);
    * ```
    *
+   * @performance O(k) in the number of sources; builds the AST without executing anything.
    */
   from(feeds: Feed.Feed | Feed.Feed[]): Query<T>;
 
@@ -247,6 +278,8 @@ export interface Query<T> {
    * ```
    *
    * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   from(allSpaces: 'all-accessible-spaces', options?: { includeFeeds?: boolean }): Query<T>;
 
@@ -259,6 +292,8 @@ export interface Query<T> {
    * ```ts
    * Query.type(Person).from(feed);
    * ```
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   from(dataset: Dataset.Dataset): Query<T>;
 
@@ -270,6 +305,8 @@ export interface Query<T> {
    * ```ts
    * Query.select(Filter.props({ foo: 'foo' })).from(Query.select(Filter.type(Contact)).reference('org'));
    * ```
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   from(query: Any): Query<T>;
 
@@ -281,21 +318,29 @@ export interface Query<T> {
    * ```ts
    * Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
    * ```
+   *
+   * @performance O(k) in the number of scopes; builds the AST without executing anything.
    */
   from(...scopes: QueryAST.Scope[]): Query<T>;
 
   /**
    * Query from a raw scope or array of scopes.
+   *
+   * @performance O(k) in the number of scopes; builds the AST without executing anything.
    */
   from(scope: QueryAST.Scope | QueryAST.Scope[]): Query<T>;
 
   /**
    * Add options to a query.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   options(options: QueryAST.QueryOptions): Query<T>;
 
   /**
    * Attach a diagnostic label for logs and tooling (execution semantics unchanged).
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   debugLabel(label: string): Query<T>;
 }
@@ -599,11 +644,20 @@ class QueryClass implements Any {
   }
 }
 
+/**
+ * Type guard for queries.
+ *
+ * @performance O(1) brand check; no allocation.
+ */
 export const is = (value: unknown): value is Any => {
   return typeof value === 'object' && value !== null && QueryTypeId in value;
 };
 
-/** Construct a query from an ast. */
+/**
+ * Construct a query from an ast.
+ *
+ * @performance O(1); wraps the AST without copying it.
+ */
 export const fromAst = (ast: QueryAST.Query): Any => {
   return new QueryClass(ast);
 };
@@ -612,6 +666,8 @@ export const fromAst = (ast: QueryAST.Query): Any => {
  * Select objects based on a filter.
  * @param filter - Filter to select the objects.
  * @returns Query for the selected objects.
+ *
+ * @performance O(1); wraps the current AST in a new immutable node without executing anything.
  */
 export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> => {
   return new QueryClass({
@@ -627,6 +683,8 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  * @returns Query for the objects.
  *
  * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
+ *
+ * @performance O(1) plus O(p) for predicates; builds the AST without executing anything.
  */
 export const type: {
   <T extends Type$.AnyEntity>(type: T, predicates?: Filter.Props<Type$.InstanceType<T>>): Query<Type$.InstanceType<T>>;
@@ -653,6 +711,8 @@ export const type: {
  * @param query - Query to project.
  * @param property - Property path to project.
  * @returns Projection for use in `Filter.in`.
+ *
+ * @performance O(1); wraps the current AST in a new immutable node without executing anything.
  */
 export const project = <T, K extends RefPropKey<T>>(query: Query<T>, property: K): Projection<T[K]> =>
   internal.makeProjection<T[K]>(query.ast, property);
@@ -661,6 +721,8 @@ export const project = <T, K extends RefPropKey<T>>(query: Query<T>, property: K
  * Combine results of multiple queries.
  * @param queries - Queries to combine.
  * @returns Query for the combined results.
+ *
+ * @performance O(k) in the number of queries; builds the AST without executing anything.
  */
 // TODO(dmaretskyi): Rename to `combine` or `union`.
 export const all: {
@@ -684,6 +746,8 @@ export const all: {
  * @param source - Query to subtract from.
  * @param exclude - Query to subtract.
  * @returns Query for the results of the source query minus the results of the exclude query.
+ *
+ * @performance O(1); wraps the current AST in a new immutable node without executing anything.
  */
 export const without = <T>(source: Query<T>, exclude: Query<T>): Query<T> => {
   return new QueryClass({
@@ -699,6 +763,8 @@ export const without = <T>(source: Query<T>, exclude: Query<T>): Query<T> => {
  *
  * @param source - Data source: database, feed, 'all-accessible-spaces', or another query.
  * @returns Query scoped to the given source.
+ *
+ * @performance O(k) in the number of sources; builds the AST without executing anything.
  */
 export const from = (
   ...args:
@@ -741,5 +807,7 @@ const _isRawScope = (value: unknown): value is QueryAST.Scope => {
 
 /**
  * Returns a human-readable string representation of a Query AST.
+ *
+ * @performance O(AST size) string build; meant for logs and tooling, not hot paths.
  */
 export const pretty = (query: Any): string => internal.prettyQuery(query.ast);

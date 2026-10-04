@@ -16,6 +16,10 @@ import { type StyleSet } from './render.ts';
 const POINT_COLOR = 'rgb(220, 38, 38)';
 const LINE_COLOR = 'rgba(220, 38, 38, 0.5)';
 
+// The selected point is larger and ringed, so it reads at a glance among the others.
+const SELECTED_COLOR = 'rgb(14, 165, 233)';
+const SELECTED_RING = 'rgba(255, 255, 255, 0.9)';
+
 export const globeStyles = (themeMode: ThemeMode): StyleSet =>
   themeMode === 'dark'
     ? {
@@ -38,8 +42,14 @@ export const globeStyles = (themeMode: ThemeMode): StyleSet =>
           strokeStyle: LINE_COLOR,
         },
         point: {
-          radius: 0.2,
+          pointRadius: 4.5,
           fillStyle: POINT_COLOR,
+        },
+        selected: {
+          pointRadius: 8,
+          fillStyle: SELECTED_COLOR,
+          strokeStyle: SELECTED_RING,
+          lineWidth: 2,
         },
       }
     : {
@@ -56,7 +66,13 @@ export const globeStyles = (themeMode: ThemeMode): StyleSet =>
           strokeStyle: LINE_COLOR,
         },
         point: {
-          radius: 0.2,
+          pointRadius: 4.5,
           fillStyle: POINT_COLOR,
+        },
+        selected: {
+          pointRadius: 8,
+          fillStyle: SELECTED_COLOR,
+          strokeStyle: SELECTED_RING,
+          lineWidth: 2,
         },
       };

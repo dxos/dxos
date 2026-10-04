@@ -56,15 +56,15 @@ const DebugPanelDrawerContent = () => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root density='sm'>
+      <Panel.Header>
+        <Toolbar.Root size='sm'>
           <Toolbar.Text classNames='grow'>{t('debug-panel.title')}</Toolbar.Text>
           <DebugPanelHeader mode={mode} onModeChange={handleModeChange} onClose={handleClose} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid'>
+      </Panel.Header>
+      <Panel.Body classNames='grid'>
         <DebugPanel.Body />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

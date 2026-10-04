@@ -4,7 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -353,21 +353,21 @@ const MarkdownArticleImpl = forwardRef<
             {binding.overlays}
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
-                <Panel.Toolbar>
+                <Panel.Header>
                   <MarkdownEditor.Toolbar
                     classNames='dx-document'
                     customActions={customActions}
                     viewModes={viewModes}
                   />
-                </Panel.Toolbar>
+                </Panel.Header>
               )}
-              <Panel.Content classNames='flex flex-col'>
+              <Panel.Body classNames='flex flex-col'>
                 {binding.banner}
                 <MarkdownEditor.Content initialValue={binding.initialValue} />
                 <Editor.Blocks />
                 {/* Developer diagnostics panel (live editor state), gated behind the debug setting. */}
                 {settings.debug && <Editor.Diagnostics />}
-              </Panel.Content>
+              </Panel.Body>
             </Panel.Root>
           </Editor.Root>
         )}

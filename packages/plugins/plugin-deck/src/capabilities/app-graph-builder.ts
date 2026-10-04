@@ -3,6 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -16,7 +18,10 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { DeckCapabilities, DeckSchema } from '#types';
+import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
+
+import { currentNavigation, navigateDeck } from '../url/index.ts';
+import { detailName } from '../util/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -25,6 +30,22 @@ export default Capability.makeModule(
     const attentionAtom = yield* Capability.atom(AttentionCapabilities.Attention);
     const deckStateAtom = yield* Capability.atom(DeckCapabilities.State);
     const deckEphemeralAtom = yield* Capability.atom(DeckCapabilities.EphemeralState);
+    const deckSettingsAtom = yield* Capability.atom(DeckCapabilities.Settings);
+    const platformAtom = yield* Capability.atom(DeckCapabilities.Platform);
+    const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
+
+    const detailOf = Atom.family((id: string) =>
+      Atom.make((get): string | undefined => {
+        const [stateAtom] = get(deckStateAtom);
+        const [settingsAtom] = get(deckSettingsAtom);
+        const [platform] = get(platformAtom);
+        if (!stateAtom || !settingsAtom || platform === 'mobile' || !get(settingsAtom).flatten) {
+          return undefined;
+        }
+        const state = get(stateAtom);
+        return state.decks[state.activeDeck]?.plankNames[detailName(id)];
+      }),
+    );
 
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
@@ -64,8 +85,12 @@ export default Capability.makeModule(
               data: Effect.fnUntraced(function* () {
                 const deck = yield* DeckCapabilities.getDeck();
                 const attended = attention.getCurrent().at(-1);
-                const ids = deck.active.filter((id: string) => id !== attended) ?? [];
-                yield* Operation.invoke(LayoutOperation.Close, { subject: ids });
+                const { workspace } = yield* currentNavigation();
+                yield* navigateDeck({
+                  workspace,
+                  active: deck.active.filter((id: string) => id === attended),
+                  companionPlanks: deck.companionPlanks,
+                });
               }),
               properties: {
                 label: ['close-others.label', { ns: meta.profile.key }],
@@ -115,6 +140,28 @@ export default Capability.makeModule(
 
             return open.active.length !== 1 ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
           }).pipe(Effect.orDie),
+      }),
+
+      AppGraphBuilder.createExtension({
+        id: 'detailCompanion',
+        relation: AppNode.companion,
+        match: (node, get) => {
+          const detail = get(detailOf(node.id));
+          return detail ? Option.some(detail) : Option.none();
+        },
+        connector: (detail, get) => {
+          const [appGraph] = get(appGraphAtom);
+          const node = appGraph ? Option.getOrUndefined(get(appGraph.graph.node(detail))) : undefined;
+          return Effect.succeed([
+            AppNode.makeCompanion<CompanionViewState.DetailData>({
+              variant: CompanionViewState.DETAIL_VARIANT,
+              label: (node && AppNode.getTypeLabel(node)) ?? ['detail-companion.label', { ns: meta.profile.key }],
+              icon: node?.properties.icon ?? 'ph--article--regular',
+              data: { detail },
+              position: Position.first,
+            }),
+          ]);
+        },
       }),
     ]);
 

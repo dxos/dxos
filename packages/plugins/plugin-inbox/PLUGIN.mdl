@@ -236,11 +236,11 @@ The sync action appears only when an external `Cursor` targets the mailbox/calen
 ```mdl
 deck MailboxDeck
   desc: |
-    Declared on the Mailbox schema (DeckAnnotation). Reading a mailbox is a chain: opening a
-    message replaces the message plank rather than growing the deck, and picking a different
-    message drops the attachment that belonged to the last one. Meta/ctrl-click opts out and
-    opens a free plank. The attachment level is declared but not yet opened by any container.
-  chain: MailboxPlank > MessagePlank > AttachmentPlank  # AttachmentPlank: declared level, no plank yet
+    Reading a mailbox is a chain of details: a message opens as the mailbox plank's detail, and an
+    attachment as the message's. A flattened deck shows the detail in a companion tab, and opening
+    an attachment moves the message into the main plank. A new message replaces the last one and
+    drops its attachment. Meta/ctrl-click opts out and opens a free plank.
+  chain: MailboxPlank > MessagePlank > AttachmentPlank
 ```
 
 ```mdl
@@ -264,9 +264,8 @@ every-object contributors: plugin-space (properties/info), plugin-assistant (cha
 plugin-routine (automations — consuming this plugin's Routine templates), plugin-debug. The
 mailbox's create-topic action reveals a `topic` companion contributed externally.
 
-What this plugin does handle is **companion-mode rendering**: `MessageArticle`/`EventArticle`
-accept `companionTo` (the scoping mailbox/calendar, resolved from the graph) and show an
-"open as primary" toolbar action.
+The message or event shown beside a mailbox or calendar is the deck's detail tab, not a companion
+this plugin contributes: rows open with `LayoutOperation.Open` and `disposition: 'detail'`.
 
 ## Surfaces
 

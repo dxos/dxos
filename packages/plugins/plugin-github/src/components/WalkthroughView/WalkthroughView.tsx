@@ -4,11 +4,12 @@
 
 import React, { useMemo } from 'react';
 
-import { Banner, Button, Flex, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Button, Empty, Flex, useThemeMode, useTranslation } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
 
 import { meta } from '#meta';
 
+import { spaceHeadings } from '../../walkthrough/headings.ts';
 import { type DiffDocumentOptions, diffDocumentExtensions } from './extensions.ts';
 
 export type WalkthroughViewProps = Omit<DiffDocumentOptions, 'themeMode'> & {
@@ -21,15 +22,20 @@ export type WalkthroughViewProps = Omit<DiffDocumentOptions, 'themeMode'> & {
  * single fence. Either way the chunks are the walkthrough's own, so a file reads the same in both.
  */
 export const WalkthroughView = ({ value, sidebar, layout, onLineComment }: WalkthroughViewProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () => diffDocumentExtensions({ themeMode, sidebar, layout, onLineComment }),
     [themeMode, sidebar, layout, onLineComment],
   );
 
+  // Walkthroughs stored before generation spaced their headings still read with a blank line above each.
+  const markdown = useMemo(() => spaceHeadings(value), [value]);
+
   // Only CodeMirror's own scroller may scroll: it carries the editor's themed scrollbar, whereas an
   // overflowing host would draw the browser's.
-  return <TextEditor value={value} extensions={extensions} focusable={false} classNames='dx-expand overflow-hidden' />;
+  return (
+    <TextEditor value={markdown} extensions={extensions} focusable={false} classNames='dx-expand overflow-hidden' />
+  );
 };
 
 export type WalkthroughPlaceholderProps = {
@@ -42,7 +48,7 @@ export const WalkthroughPlaceholder = ({ generating, onGenerate }: WalkthroughPl
   const { t } = useTranslation(meta.profile.key);
   return (
     <Flex column center gap='md' classNames='dx-expand'>
-      <Banner.Empty label={t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')} />
+      <Empty>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</Empty>
       {!generating && (
         <Button variant='primary' onClick={onGenerate}>
           {t('generate-walkthrough.label')}

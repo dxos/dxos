@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
@@ -60,6 +60,8 @@ export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryAr
     const manager = usePluginManager();
     const { invoke } = useOperationInvoker();
     const { entries, loading, error } = useRegistryPlugins();
+    // Reloaded on every visit, so a plugin published since boot (a private one in particular) shows up.
+    useEffect(() => manager.pluginRegistry.refresh(), [manager]);
     const plugins = useAtomValue(manager.plugins);
     const installedIds = useMemo(() => plugins.map((plugin) => plugin.meta.profile.key), [plugins]);
     const extraTagsById = useAutoTags(entries);
@@ -174,11 +176,11 @@ export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryAr
     );
 
     const empty = error ? (
-      <div className='p-4 text-description'>{t('registry.error.label', { message: error.message })}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.error.label', { message: error.message })}</div>
     ) : loading ? (
-      <div className='p-4 text-description'>{t('registry.loading.label')}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.loading.label')}</div>
     ) : (
-      <div className='p-4 text-description'>{t('registry.empty.label')}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.empty.label')}</div>
     );
 
     return (

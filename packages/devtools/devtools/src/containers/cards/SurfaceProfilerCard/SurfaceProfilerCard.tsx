@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
-import { Field, Flex, Grid, IconButton, SystemIconButton, Tooltip } from '@dxos/react-ui';
+import { Button, Container, Flex, Grid, Switch, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -106,18 +106,18 @@ const RoleDetail = ({ group }: { group: RoleGroup }) => (
       {group.ids.length} mounted · {group.totalRenders} renders · {group.errors} errors
     </span>
     {group.trouble && <span className='text-error-text'>unstable data or errors</span>}
-    <Flex column>
+    <Container gutter='none'>
       {group.ids.map((id) => (
         <span key={id} className='font-mono text-info-text truncate'>
           {surfaceId(id)}
         </span>
       ))}
-    </Flex>
+    </Container>
   </Flex>
 );
 
 /** Role takes the slack; fixed count, average and maximum tracks line the figures up as a grid. */
-const ROW_TRACKS = ['1fr', '2rem', '2rem', '2rem'];
+const ROW_TRACKS = ['fill', '2rem', '2rem', '2rem'] as const;
 
 export const SurfaceProfilerCard = ({
   stats = [],
@@ -138,22 +138,22 @@ export const SurfaceProfilerCard = ({
         title='Surfaces'
         action={
           onClear && (
-            <IconButton iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
+            <Button iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
           )
         }
       />
       {onDebugChange && (
         <StatCard.Row
           label='Highlight surfaces'
-          action={<Field.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
+          action={<Switch checked={!!debug} onCheckedChange={({ checked }) => onDebugChange(checked)} />}
         />
       )}
       {groups.length === 0 && <StatCard.Row span label='No surfaces mounted.' />}
       {groups.length > 0 && (
         <StatCard.Row unit='ms'>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>
+          <Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>role</span>
-            <span>×</span>
+            <span>#</span>
             <span>avg</span>
             <span>max</span>
           </Grid>
@@ -169,6 +169,7 @@ export const SurfaceProfilerCard = ({
           onClick={onSelect && (() => onSelect(group.roleId === selected ? undefined : group.roleId))}
         >
           <Grid
+            grow
             cols={ROW_TRACKS}
             gap='sm'
             classNames={mx('font-mono tabular-nums text-end', group.avgActualDuration > SLOW_TIME && 'text-error-text')}
@@ -176,7 +177,7 @@ export const SurfaceProfilerCard = ({
             <Tooltip.Trigger asChild content={<RoleDetail group={group} />}>
               <span className='truncate text-start'>{group.role}</span>
             </Tooltip.Trigger>
-            <span className='text-description'>{group.ids.length}</span>
+            <span className='text-fg-muted'>{group.ids.length}</span>
             <span>{group.totalRenders > 0 ? group.avgActualDuration.toFixed(1) : '–'}</span>
             <span>{group.totalRenders > 0 ? group.maxActualDuration.toFixed(1) : '–'}</span>
           </Grid>
@@ -186,18 +187,16 @@ export const SurfaceProfilerCard = ({
         <>
           {/* One block per surface: the stringifier folds repeated references into back-references,
               and sibling surfaces routinely share their `data`. */}
+          {/* A content block, not a label row: a row's content is one truncated line, which clips the JSON to nothing. */}
           {detail.map((surface, index) => (
-            <StatCard.Row
-              key={surface.id ?? index}
-              label={selectedGroup.role}
-              control={<SystemIconButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
-            >
+            <StatCard.Content key={surface.id ?? index}>
               <JsonHighlighter
-                classNames='text-sm'
+                classNames='text-xs'
                 data={surface}
                 replacer={{ maxDepth: 5, maxArrayLen: 10, maxStringLen: 120 }}
+                copyButton
               />
-            </StatCard.Row>
+            </StatCard.Content>
           ))}
         </>
       )}

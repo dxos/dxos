@@ -33,7 +33,8 @@ export const rootCollectionRule: AppCapabilities.DefaultParent = {
         return yield* Database.load<Collection.Collection>(ref);
       }
 
-      const root = yield* Database.add(Collection.make());
+      const { db } = yield* Database.Service;
+      const root = AppAnnotation.addRootCollection(db);
       Obj.update(properties, (properties) => {
         Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(root));
       });

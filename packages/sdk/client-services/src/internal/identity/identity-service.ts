@@ -5,8 +5,8 @@
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';

@@ -5,7 +5,7 @@
 import React, { useContext, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
@@ -20,12 +20,14 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
   const [slide, setSlide] = useState(0);
   const { running } = useContext(PresenterContext);
   const handleExit = useExitPresenter(collection);
+  const layout = useLayout();
+  const fullscreen = layout.mode === 'solo--fullscreen';
   const [liveCollection] = useObject(collection);
 
   return (
     <Panel.Root role={role} classNames='relative'>
-      <Panel.Content asChild>
-        <PresentationShell onExit={handleExit}>
+      <Panel.Body asChild>
+        <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
           <PresenterLayout
             bottomRight={<PageNumber index={slide} count={liveCollection.objects.length} />}
             bottomLeft={
@@ -41,7 +43,7 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
             />
           </PresenterLayout>
         </PresentationShell>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

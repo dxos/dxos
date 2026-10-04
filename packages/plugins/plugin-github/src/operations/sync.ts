@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Semaphore from 'effect/Semaphore';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';

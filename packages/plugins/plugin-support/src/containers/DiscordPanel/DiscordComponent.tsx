@@ -7,7 +7,7 @@
 import React, { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import { IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -138,7 +138,7 @@ const Header = () => {
         <DXOSHorizontalType className='h-10 w-auto fill-current' />
       </a>
 
-      <div className='text-xs text-description'>
+      <div className='text-xs text-fg-muted'>
         {unavailable
           ? t('discord-unavailable.message')
           : data
@@ -156,7 +156,7 @@ const Channels = () => {
   }
 
   return (
-    <nav className='border-b border-subdued-separator'>
+    <nav className='border-b border-separator-subtle'>
       <ul className='flex flex-col p-1'>
         {channels.map((channel) => (
           <li key={channel.id}>
@@ -166,7 +166,7 @@ const Channels = () => {
               rel='noopener noreferrer'
               className='flex items-center gap-1 px-2 py-1 rounded-sm text-sm hover:bg-hover-surface'
             >
-              <span className='text-description'>#</span>
+              <span className='text-fg-muted'>#</span>
               <span className='truncate'>{channel.name}</span>
             </a>
           </li>
@@ -225,9 +225,7 @@ const Content = () => {
           {teamMembers.map((member) => (
             <MemberRow key={`${member.id}-${member.username}`} member={member} />
           ))}
-          {hasSeparator && (
-            <li role='separator' aria-hidden='true' className='my-1 border-t border-subdued-separator' />
-          )}
+          {hasSeparator && <li role='separator' aria-hidden='true' className='my-1 border-t border-separator-subtle' />}
           {otherMembers.map((member) => (
             <MemberRow key={`${member.id}-${member.username}`} member={member} />
           ))}
@@ -245,7 +243,7 @@ const StatusBar = () => {
   }
 
   return (
-    <IconButton
+    <Button
       icon='ph--discord-logo--regular'
       label={t('join-discord.button')}
       variant='primary'

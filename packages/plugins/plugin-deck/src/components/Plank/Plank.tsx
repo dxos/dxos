@@ -14,7 +14,16 @@ import React, {
 import { Surface } from '@dxos/app-framework/ui';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
-import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { useComposedRefs } from '@dxos/react-hooks';
+import {
+  Breadcrumb,
+  Icon,
+  Popover,
+  type ThemedClassName,
+  toLocalizedString,
+  useMainLandmark,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -103,6 +112,9 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
   ) => {
     const { t } = useTranslation(meta.profile.key);
     const attentionAttrs = useAttentionAttributes(attendableId);
+    // Each plank is a focus area of the shell; its companion follows it.
+    const landmark = useMainLandmark(1, onKeyDown);
+    const ref = useComposedRefs<HTMLDivElement>(forwardedRef, landmark.ref);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
     const label = toLocalizedString(
@@ -125,14 +137,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
 
     return (
-      <Pane.Root
-        ref={forwardedRef}
-        classNames={classNames}
-        tabIndex={0}
-        onKeyDown={onKeyDown}
-        {...attentionAttrs}
-        data-testid='deck.plank'
-      >
+      <Pane.Root {...landmark} ref={ref} classNames={classNames} {...attentionAttrs} data-testid='deck.plank'>
         {!headless && (
           <Pane.Toolbar>
             <ActionRoot>
@@ -168,34 +173,34 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                 <Breadcrumb.List classNames='gap-1'>
                   {breadcrumbs.map((crumb) => (
                     <Fragment key={crumb.id}>
-                      <Breadcrumb.ListItem asChild>
+                      <Breadcrumb.Item asChild>
                         <button
                           type='button'
-                          className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
+                          className='shrink-0 whitespace-nowrap text-fg-muted hover:text-fg'
                           onClick={() => onSelectBreadcrumb?.(crumb.id)}
                         >
                           {crumb.label}
                         </button>
-                      </Breadcrumb.ListItem>
+                      </Breadcrumb.Item>
                       <Breadcrumb.Separator />
                     </Fragment>
                   ))}
-                  <Breadcrumb.ListItem>
+                  <Breadcrumb.Item>
                     <Pane.Title
                       attendableId={attendableId}
                       related={related}
-                      classNames={[pending && 'text-description', 'w-auto grow-0']}
+                      classNames={[pending && 'text-fg-muted', 'w-auto grow-0']}
                     >
                       {label}
                     </Pane.Title>
-                  </Breadcrumb.ListItem>
+                  </Breadcrumb.Item>
                 </Breadcrumb.List>
               </Breadcrumb.Root>
             ) : (
               <Pane.Title
                 attendableId={attendableId}
                 related={related}
-                classNames={pending && ['text-description', 'animate-fade-in']}
+                classNames={pending && ['text-fg-muted', 'animate-fade-in']}
                 style={pending ? pendingStyle : undefined}
               >
                 {label}

@@ -15,9 +15,8 @@ the `is*` guards, `isOptional`, `resolve*`, `toEncoded`/`toType`, `mapOrSame`, `
 
 The facade re-expresses the missing pieces on public API (`annotate` via
 `Schema.make(ast).annotate()`, mutability via `ast.context`, `omit`/`pick` by rebuilding `Objects`).
-Reaching into the AST is tolerated but unsupported, and `effect/unstable/*` carries no semver
-guarantee even after GA — so the exposure has to stay in one module that can absorb a break. It was
-80 files before the migration; keep it at one.
+Reaching into the AST is tolerated but unsupported, so the exposure has to stay in one module that
+can absorb a break. It was 80 files before the migration; keep it at one.
 
 ## Read annotations through `resolveAnnotations`, never `ast.annotations`
 
@@ -131,7 +130,7 @@ describes it. These are the migration notes it does not carry, now on
 
 ## Bundling: watch for dynamic imports in `export *` chains
 
-`effect/unstable/sql/Migrator` includes `fromFileSystem`, whose template-literal `import()` no static
+`effect/sql/Migrator` includes `fromFileSystem`, whose template-literal `import()` no static
 module loader can resolve. Any `export *` chain materializes the whole namespace and rides it into
 the bundle; workerd then rejects the entire worker with `ERR_MODULE_DYNAMIC_SPEC`. Re-export the
 members you need by name — see `packages/common/sql-sqlite/src/SqliteMigrator.ts`.

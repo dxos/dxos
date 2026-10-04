@@ -45,14 +45,14 @@ const DefaultStory = ({ text, layout, sidebar = 'full', comments }: StoryArgs) =
 
   return (
     <Panel.Root>
-      <Panel.Content>
+      <Panel.Body>
         <WalkthroughView
           value={text}
           layout={layout}
           sidebar={sidebar}
           onLineComment={comments ? handleLineComment : undefined}
         />
-      </Panel.Content>
+      </Panel.Body>
       <LineCommentPopover
         open={!!target}
         anchorRef={anchorRef}

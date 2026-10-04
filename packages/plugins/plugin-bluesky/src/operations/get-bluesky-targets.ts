@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
@@ -31,7 +31,7 @@ const SELF_TARGETS = [
 const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTargets.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ connection: connectionRef }) {
-      const client = yield* Capability.get(ClientCapabilities.Client);
+      const config = yield* Capability.get(ClientCapabilities.Config);
       const connection = yield* Database.load(connectionRef);
       if (!Obj.getDatabase(connection)) {
         return yield* Effect.fail(new SyncDatabaseMissingError());
@@ -42,7 +42,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       // fall back to self-targets so the user always has something to pick
       // from.
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
-        Effect.provide(Layer.provideMerge(BlueskyApi.fromConnection(connectionRef, client), FetchHttpClient.layer)),
+        Effect.provide(Layer.provideMerge(BlueskyApi.fromConnection(connectionRef, config), FetchHttpClient.layer)),
         Effect.catch((error) =>
           Effect.sync(() => {
             log.warn('failed to load Bluesky saved feeds', { error });

@@ -29,7 +29,7 @@ export const TaskDescription = ({ content, components, classNames }: TaskDescrip
   <MarkdownView
     data-testid='taskList.item.description'
     content={content}
-    classNames={mx('text-sm text-description line-clamp-3', classNames)}
+    classNames={mx('text-sm text-fg-muted line-clamp-3', classNames)}
     // Every block at the row's line height, so the clamp ends on a whole line.
     uniformLineHeight
     // The row supplies the type scale and the clamp, so the description renders as one inline run

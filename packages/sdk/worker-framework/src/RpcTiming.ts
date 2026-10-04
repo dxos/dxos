@@ -6,12 +6,12 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Headers from 'effect/http/Headers';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Headers from 'effect/unstable/http/Headers';
-import type * as Rpc from 'effect/unstable/rpc/Rpc';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
-import * as RpcMiddleware from 'effect/unstable/rpc/RpcMiddleware';
+import type * as Rpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as RpcMiddleware from 'effect/rpc/RpcMiddleware';
 
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -106,6 +106,14 @@ const ZERO_TOTALS: Totals = {
 
 const totals: Totals = { ...ZERO_TOTALS };
 
+/**
+ * Calls served per method (`rpc._tag`), cumulative like {@link totals}.
+ *
+ * Kept here rather than as a tagged metric: the reader is the perf harness, which differences two
+ * readings, so a method costs one map entry rather than a series per histogram bucket.
+ */
+const callsByMethod: Record<string, number> = {};
+
 const QUEUE_WAIT_METRIC = 'dxos.rpc.queueWait.duration';
 const SERVICE_METRIC = 'dxos.rpc.service.duration';
 const ROUND_TRIP_METRIC = 'dxos.rpc.roundTrip.duration';
@@ -131,6 +139,7 @@ const publishMetrics = (sample: Sample): void => {
 export const recordSample = (sample: Sample): void => {
   publishMetrics(sample);
   totals.calls += 1;
+  callsByMethod[sample.tag] = (callsByMethod[sample.tag] ?? 0) + 1;
   totals.queueWaitSumMs += sample.queueWaitMs ?? 0;
   totals.serviceSumMs += sample.serviceMs;
   totals.queueWaitMaxMs = Math.max(totals.queueWaitMaxMs, sample.queueWaitMs ?? 0);
@@ -176,6 +185,7 @@ export const RPC_TIMING_GLOBAL = '__dxosRpcTiming';
 
 /** Everything a reader gets in one evaluation: the running totals plus the samples behind them. */
 export type Readout = Totals & {
+  readonly callsByMethod: Readonly<Record<string, number>>;
   readonly samples: ReadonlyArray<Sample>;
   readonly clientSamples: ReadonlyArray<ClientSample>;
 };
@@ -183,6 +193,7 @@ export type Readout = Totals & {
 /** Everything this realm has recorded: the running totals, plus copies of both sample rings. */
 export const getReadout = (): Readout => ({
   ...totals,
+  callsByMethod: { ...callsByMethod },
   samples: [...timingSamples],
   clientSamples: [...clientSamples],
 });
@@ -197,6 +208,9 @@ export const resetStats = (): void => {
   timingSamples.length = 0;
   clientSamples.length = 0;
   Object.assign(totals, ZERO_TOTALS);
+  for (const method of Object.keys(callsByMethod)) {
+    delete callsByMethod[method];
+  }
 };
 
 const DEFAULT_MIN_LOG_MS = 100;

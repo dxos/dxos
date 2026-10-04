@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
-import { Button, Dialog, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { useCreateAndDeployScriptTemplates } from '#hooks';
 import { meta } from '#meta';
@@ -70,9 +70,9 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('deployment-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <p>
@@ -86,10 +86,10 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
           })}
         </ul>
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
           <Button disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Button>
-        </Dialog.Close>
+        </Dialog.CloseTrigger>
         <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
           {status === 'pending'
             ? t('deployment-dialog-deploy-functions-pending-button.label', {
@@ -99,7 +99,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
                 count: scriptTemplates.length,
               })}
         </Button>
-      </Dialog.ActionBar>
+      </Dialog.Footer>
     </Dialog.Content>
   );
 };

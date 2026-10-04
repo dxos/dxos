@@ -118,19 +118,19 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
       {tab === 'call' && callData && (
-        <Panel.Content>
+        <Panel.Body>
           <Surface.Surface type={AppSurface.Article} data={callData} limit={1} />
-        </Panel.Content>
+        </Panel.Body>
       )}
       {tab !== 'call' && articleData && (
-        <Panel.Content>
+        <Panel.Body>
           <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
-        </Panel.Content>
+        </Panel.Body>
       )}
     </Panel.Root>
   );

@@ -40,7 +40,7 @@ describe('SearchResultList', () => {
     render(<SearchResultList results={results} query='invoice' />, { wrapper: Wrapper });
     // `getByText` throws if no match is found, which is assertion enough that the row rendered.
     expect(screen.getByText(/Sprint planning notes/)).toBeTruthy();
-    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    expect(screen.getAllByRole('option')).toHaveLength(2);
   });
 
   test('highlights the query term in both title and snippet', () => {
@@ -58,6 +58,6 @@ describe('SearchResultList', () => {
 
   test('renders no rows for an empty result set', () => {
     render(<SearchResultList results={[]} query='invoice' />, { wrapper: Wrapper });
-    expect(screen.queryAllByRole('listitem')).toHaveLength(0);
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
   });
 });

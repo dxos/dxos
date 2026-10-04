@@ -164,9 +164,12 @@ export default Capability.makeModule(
           if (!manager) {
             return Effect.succeed([]);
           }
-          const installedIds = new Set(manager.getPlugins().map((plugin) => plugin.meta.profile.key));
+          // Through the atom, so a plugin loaded after startup (by URL) gets its detail node at once
+          // rather than after a reload.
+          const plugins = get(manager.plugins);
+          const installedIds = new Set(plugins.map((plugin) => plugin.meta.profile.key));
 
-          const installedNodes = manager.getPlugins().map((plugin) =>
+          const installedNodes = plugins.map((plugin) =>
             AppGraphNode.make({
               id: plugin.meta.profile.key,
               type: 'org.dxos.plugin',

@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { type DependencyList, useCallback, useContext, useEffect, useLayoutEffect, useMemo } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';

@@ -7,8 +7,8 @@
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema$ from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
