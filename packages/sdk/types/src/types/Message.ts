@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
@@ -93,4 +94,29 @@ export const make = ({
 
 export const extractText = (message: Message): string => {
   return message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n');
+};
+
+/** A message's fields without an ECHO identity, as carried between identities. */
+export type Data = Obj.MakeProps<typeof Message>;
+
+const MessageSchema = Type.getSchema(Message);
+
+/**
+ * Encodes a message as JSON with its Effect Schema, for transport (e.g., an inbox payload).
+ */
+export const encodeJson = (message: Message): string =>
+  JSON.stringify(Schema.encodeUnknownSync(MessageSchema)(message));
+
+/**
+ * Decodes {@link encodeJson} output into message data; the sender's object id is dropped, since
+ * the recipient stores its own copy.
+ */
+export const decodeJson = (json: string): Option.Option<Data> => {
+  let value: unknown;
+  try {
+    value = JSON.parse(json);
+  } catch {
+    return Option.none();
+  }
+  return Schema.decodeUnknownOption(MessageSchema)(value).pipe(Option.map(({ id: _id, ...data }) => data));
 };
