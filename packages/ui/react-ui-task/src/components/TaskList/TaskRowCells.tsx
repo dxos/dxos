@@ -151,7 +151,8 @@ export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => 
     // The same square every other cell in the row occupies, so the badge centres under the pane's
     // column rather than hugging the track's start.
     <Block aria-hidden={false} data-testid='taskList.item.ordinal' classNames={classNames}>
-      <Tag hue={hue} classNames='tabular-nums'>
+      {/* Inline-sized: a count, not a control, so it sits smaller than the row's icons. */}
+      <Tag hue={hue} classNames='dx-tag-inline tabular-nums'>
         {ordinal}
       </Tag>
     </Block>

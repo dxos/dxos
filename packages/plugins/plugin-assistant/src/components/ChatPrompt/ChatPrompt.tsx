@@ -211,23 +211,11 @@ export const ChatPrompt = ({
         />
       </div>
 
-      {db && settings && (
-        <div className='flex items-center overflow-hidden p-1.5'>
-          <ChatOptions
-            db={db}
-            chat={chat}
-            registry={processor?.registry}
-            context={processor?.context}
-            preset={preset}
-            presets={presets}
-            onPresetChange={onPresetChange}
-          />
-
-          <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
-            {processor && <ChatReferences db={db} context={processor.context} />}
-          </div>
-
+      {db &&
+        settings && (
+          // One toolbar for the row: the options and context chips lead, the chips' track takes the slack, the actions end it.
           <ChatActions
+            classNames='p-1.5'
             attendableId={attendableId}
             customActions={customActions}
             // `active`, not `streaming`: a turn parked in a tool call streams nothing,
@@ -237,9 +225,24 @@ export const ChatPrompt = ({
             tasksVisible={tasksVisible}
             onSend={handleSend}
             onEvent={handleEvent}
+            leading={
+              <>
+                <ChatOptions
+                  db={db}
+                  chat={chat}
+                  registry={processor?.registry}
+                  context={processor?.context}
+                  preset={preset}
+                  presets={presets}
+                  onPresetChange={onPresetChange}
+                />
+                <div className='flex h-6 grow min-w-0 overflow-x-auto scrollbar-none'>
+                  {processor && <ChatReferences db={db} context={processor.context} />}
+                </div>
+              </>
+            }
           />
-        </div>
-      )}
+        )}
     </div>
   );
 };

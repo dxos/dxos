@@ -3,7 +3,7 @@
 //
 
 import type * as Atom from 'effect/reactivity/Atom';
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { Button, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
@@ -22,6 +22,8 @@ const TOUCH_TARGET = 'max-md:size-11 pointer-coarse:size-11';
 
 export type ChatActionsProps = ThemedClassName<
   PropsWithChildren<{
+    /** Content before the actions in the same toolbar (the prompt's options and context chips). */
+    leading?: ReactNode;
     /** The prompt's graph node, which is what contributed actions are filed under. */
     attendableId?: string;
     /**
@@ -45,6 +47,7 @@ export type ChatActionsProps = ThemedClassName<
 export const ChatActions = ({
   classNames,
   children,
+  leading,
   attendableId,
   customActions,
   processing,
@@ -107,11 +110,14 @@ export const ChatActions = ({
 
   // One toolbar for the whole row, so the contributed actions and the prompt's own controls share its roving focus.
   return customActions ? (
-    <ContributedActions actions={customActions} attendableId={attendableId} classNames={classNames}>
+    <ContributedActions actions={customActions} attendableId={attendableId} start={leading} classNames={classNames}>
       {controls}
     </ContributedActions>
   ) : (
-    <Toolbar.Root classNames={classNames}>{controls}</Toolbar.Root>
+    <Toolbar.Root classNames={classNames}>
+      {leading}
+      {controls}
+    </Toolbar.Root>
   );
 };
 
@@ -125,17 +131,19 @@ export const ChatActions = ({
 const ContributedActions = ({
   actions,
   attendableId,
+  start,
   classNames,
   children,
 }: ThemedClassName<
   PropsWithChildren<{
     actions: Atom.Atom<ActionGraphProps>;
     attendableId?: string;
+    start?: ReactNode;
   }>
 >) => {
   const menuActions = useMenuActions(actions);
   return (
-    <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive classNames={classNames}>
+    <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive start={start} classNames={classNames}>
       {children}
     </ActionToolbar>
   );
