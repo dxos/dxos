@@ -4,10 +4,10 @@
 
 // @import-as-namespace
 
-import { HomeSection as HomeSectionParts } from './ui/components/HomeSection/index.ts';
+import { HomeSection as HomeSectionParts } from './ui/components/HomeSection.tsx';
 
 export const { Root, Header } = HomeSectionParts;
 export type {
   HomeSectionHeaderProps as HeaderProps,
   HomeSectionRootProps as RootProps,
-} from './ui/components/HomeSection/index.ts';
+} from './ui/components/HomeSection.tsx';

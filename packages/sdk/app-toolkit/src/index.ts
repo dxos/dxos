@@ -13,6 +13,8 @@ export * from './types/index.ts';
 export * as AttentionSigil from './AttentionSigil.ts';
 export * as CardSlot from './CardSlot.ts';
 export * as Hooks from './Hooks.ts';
+export * as HomeSection from './HomeSection.ts';
+export * as NamePopover from './NamePopover.ts';
 export * as NotFoundArticle from './NotFoundArticle.ts';
 export * as ObjectCard from './ObjectCard.ts';
 export * as PluginRegistryButton from './PluginRegistryButton.ts';

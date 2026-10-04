@@ -4,10 +4,10 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import * as HomeSection from '@dxos/app-framework/HomeSection';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as HomeSection from '@dxos/app-toolkit/HomeSection';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';

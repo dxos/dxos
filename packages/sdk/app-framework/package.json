@@ -133,20 +133,10 @@
       "types": "./dist/types/src/App.d.ts",
       "import": "./dist/lib/ns/App.mjs"
     },
-    "./HomeSection": {
-      "source": "./src/HomeSection.ts",
-      "types": "./dist/types/src/HomeSection.d.ts",
-      "import": "./dist/lib/ns/HomeSection.mjs"
-    },
     "./Hooks": {
       "source": "./src/Hooks.ts",
       "types": "./dist/types/src/Hooks.d.ts",
       "import": "./dist/lib/ns/Hooks.mjs"
-    },
-    "./NamePopover": {
-      "source": "./src/NamePopover.ts",
-      "types": "./dist/types/src/NamePopover.d.ts",
-      "import": "./dist/lib/ns/NamePopover.mjs"
     },
     "./PluginManagerProvider": {
       "source": "./src/PluginManagerProvider.ts",
@@ -196,7 +186,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
@@ -210,6 +199,7 @@
   "devDependencies": {
     "@dxos/brand": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",

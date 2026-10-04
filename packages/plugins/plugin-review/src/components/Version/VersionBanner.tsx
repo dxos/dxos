@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import * as NamePopover from '@dxos/app-framework/NamePopover';
+import * as NamePopover from '@dxos/app-toolkit/NamePopover';
 import { Button, Icon, Tag, ToggleGroup, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
