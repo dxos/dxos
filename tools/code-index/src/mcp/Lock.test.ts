@@ -97,6 +97,29 @@ describe('Lock', () => {
     expect(stats.quads).toBe(0);
   });
 
+  test('an open interrupted mid-build releases what it acquired', async () => {
+    let released = false;
+    const stalled = Layer.effect(
+      Store.Store,
+      Effect.flatMap(
+        Effect.addFinalizer(() =>
+          Effect.sync(() => {
+            released = true;
+          }),
+        ),
+        () => Effect.never,
+      ),
+    );
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const opening = yield* Effect.forkChild(Effect.scoped(Layer.build(Lock.layer(dir, () => stalled))));
+        yield* Effect.sleep('100 millis');
+        yield* Fiber.interrupt(opening);
+      }),
+    );
+    expect(released).toBe(true);
+  });
+
   test('a store nobody holds opens at once', async () => {
     const stats = await EffectEx.runPromise(statsVia(Lock.layer(dir, () => Store.layer(dir))));
     expect(stats.files).toBe(0);

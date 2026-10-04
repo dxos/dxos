@@ -20,6 +20,7 @@ import * as Store from '../Store.ts';
 import * as Summary from '../Summary.ts';
 import { indexFixture, indexUsageFixture, writeFixture, writeUsageFixture } from './fixture.ts';
 import * as Server from './Server.ts';
+import * as Sparql from './Sparql.ts';
 
 describe('mcp Server', () => {
   let root: string;
@@ -104,10 +105,10 @@ describe('mcp Server', () => {
   });
 
   test('withPrefixes ignores prefixed names inside strings, IRIs and comments', () => {
-    expect(Server.withPrefixes('SELECT * WHERE { ?s ?p "pkg:x" . ?s ?q <urn:file:y> } # rdfs:label').injected).toEqual(
+    expect(Sparql.withPrefixes('SELECT * WHERE { ?s ?p "pkg:x" . ?s ?q <urn:file:y> } # rdfs:label').injected).toEqual(
       [],
     );
-    const { sparql, injected } = Server.withPrefixes('ASK { ?s a deus:File ; deus:inPackage pkg:@test/fixture }');
+    const { sparql, injected } = Sparql.withPrefixes('ASK { ?s a deus:File ; deus:inPackage pkg:@test/fixture }');
     expect(injected).toEqual(['deus', 'pkg']);
     expect(sparql).toContain(`PREFIX pkg: <${Ontology.PACKAGE_BASE}>`);
   });
@@ -122,7 +123,7 @@ describe('mcp Server', () => {
 
     const asked = await call(Server.Ask.successSchema, toolkit.handle('ask', { sparql: 'ASK { ?s deus:importz ?o }' }));
     expect(asked.warnings?.[0]).toContain('deus:imports');
-    expect(Server.deusTerms(`SELECT * WHERE { ?s <${Ontology.PREFIX}pathh> ?o ; deus:name "deus:nope" }`)).toEqual([
+    expect(Sparql.deusTerms(`SELECT * WHERE { ?s <${Ontology.PREFIX}pathh> ?o ; deus:name "deus:nope" }`)).toEqual([
       'name',
       'pathh',
     ]);
@@ -149,18 +150,18 @@ describe('mcp Server', () => {
   });
 
   test('boundQuery caps a query at the engine', () => {
-    expect(Server.boundQuery('SELECT * WHERE { ?s ?p ?o }', 11)).toBe('SELECT * WHERE { ?s ?p ?o }\nLIMIT 11');
-    expect(Server.boundQuery('SELECT * WHERE { ?s ?p ?o } LIMIT 5000', 11)).toBe(
+    expect(Sparql.boundQuery('SELECT * WHERE { ?s ?p ?o }', 11)).toBe('SELECT * WHERE { ?s ?p ?o }\nLIMIT 11');
+    expect(Sparql.boundQuery('SELECT * WHERE { ?s ?p ?o } LIMIT 5000', 11)).toBe(
       'SELECT * WHERE { ?s ?p ?o } LIMIT 11',
     );
-    expect(Server.boundQuery('SELECT * WHERE { ?s ?p ?o } LIMIT 3 OFFSET 2', 11)).toBe(
+    expect(Sparql.boundQuery('SELECT * WHERE { ?s ?p ?o } LIMIT 3 OFFSET 2', 11)).toBe(
       'SELECT * WHERE { ?s ?p ?o } LIMIT 3 OFFSET 2',
     );
-    expect(Server.boundQuery('SELECT * WHERE { ?s ?p ?o } OFFSET 2', 11)).toBe(
+    expect(Sparql.boundQuery('SELECT * WHERE { ?s ?p ?o } OFFSET 2', 11)).toBe(
       'SELECT * WHERE { ?s ?p ?o } OFFSET 2\nLIMIT 11',
     );
     // A subquery's LIMIT is not the outer query's.
-    expect(Server.boundQuery('SELECT * WHERE { { SELECT ?s WHERE { ?s ?p ?o } LIMIT 1 } }', 11)).toBe(
+    expect(Sparql.boundQuery('SELECT * WHERE { { SELECT ?s WHERE { ?s ?p ?o } LIMIT 1 } }', 11)).toBe(
       'SELECT * WHERE { { SELECT ?s WHERE { ?s ?p ?o } LIMIT 1 } }\nLIMIT 11',
     );
   });
@@ -309,8 +310,10 @@ describe('mcp Server', () => {
   });
 
   test('design returns the pruned graph and a mermaid draft, scored by baseline without a key', async () => {
-    // Tests never call System One; without a key the tool scores by text and degree alone.
+    // Tests never call System One or Anthropic; without keys the tool walks and scores by text and degree.
     vi.stubEnv('TYPESAFE_API_KEY', '');
+    vi.stubEnv('DX_ANTHROPIC_API_KEY', '');
+    vi.stubEnv('ANTHROPIC_API_KEY', '');
     try {
       const result = await call(
         Server.DesignTool.successSchema,
