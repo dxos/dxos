@@ -3,4 +3,3 @@
 //
 
 export * from './NotificationsPanel/index.ts';
-export * from './NotificationTile/index.ts';

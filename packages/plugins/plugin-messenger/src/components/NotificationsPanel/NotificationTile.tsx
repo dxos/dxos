@@ -34,7 +34,7 @@ export type NotificationTileData = {
 export type NotificationTileProps = Pick<MosaicTileProps<NotificationTileData>, 'data' | 'location' | 'current'>;
 
 /**
- * One notification: subject and time, then either the invitation surface or the sender and text.
+ * One notification: subject and time, then either the invitation surface or the sender, text and links.
  * Clicking it opens it; its menu toggles read state and deletes it.
  */
 export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps>(
@@ -122,6 +122,7 @@ export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps
                   <Card.Text variant='muted'>{body}</Card.Text>
                 </Card.Row>
               )}
+              <Row.Attachments attachments={message.attachments} />
             </>
           )}
         </Card.Body>

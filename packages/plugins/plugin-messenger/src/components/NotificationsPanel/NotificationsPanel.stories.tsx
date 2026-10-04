@@ -14,7 +14,7 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Card } from '@dxos/react-ui';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Message } from '@dxos/types';
+import { Message, Organization } from '@dxos/types';
 
 import { translations } from '#translations';
 import { Notifications } from '#types';
@@ -51,14 +51,15 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Feed.Feed, Message.Message, Notifications.Notifications],
+      types: [Feed.Feed, Message.Message, Notifications.Notifications, Organization.Organization],
       onCreateSpace: async ({ space }) => {
+        const linked = space.db.add(Organization.make({ name: 'Q3 planning' }));
         const notifications = space.db.add(Notifications.make());
         await space.db.flush();
         const feed = await notifications.feed.load();
-        const messages = makeNotificationMessages();
+        const { messages, read } = makeNotificationMessages({ linked });
         await EffectEx.runPromise(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(space.db))));
-        Notifications.markRead([notifications], [messages[2]]);
+        Notifications.markRead([notifications], read);
       },
     }),
   ],

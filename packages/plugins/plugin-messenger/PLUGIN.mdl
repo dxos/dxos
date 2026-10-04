@@ -82,7 +82,7 @@ component InboxMaterializer
 
 ```mdl
 component NotificationTile
-  desc: Mosaic tile — unread dot, subject, time; invitation surface or sender + text; menu.
+  desc: Mosaic tile (in the NotificationsPanel folder) — unread dot, subject, time; invitation surface or sender + text + links; menu.
   props:
     message: Message
     read: boolean

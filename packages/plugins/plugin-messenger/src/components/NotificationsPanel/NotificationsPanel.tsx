@@ -24,7 +24,7 @@ import {
   type NotificationActionHandler,
   NotificationTile,
   type NotificationTileData,
-} from '../NotificationTile/index.ts';
+} from './NotificationTile.tsx';
 
 export const NOTIFICATION_FILTERS = ['all', 'unread', 'invitations'] as const;
 
