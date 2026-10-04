@@ -194,11 +194,12 @@ That needs the `webcredentials:composer.space` associated domain:
   has one App ID for every channel, so there is nothing to register per channel.
 - **Profile:** the `org.dxos.composer` App ID has Associated Domains enabled, and the App Store profile in
   `IOS_MOBILE_PROVISION` allows any domain.
-- **Declaration:** `gen/apple/project.yml` declares the domain, and `xcodegen` writes it into
-  `gen/apple/app_iOS/app_iOS.entitlements`.
+- **Declaration:** `ios/app_iOS.entitlements` declares the domain. `gen/apple/project.yml` only names the
+  file, as Tauri's template does, so `xcodegen` writes it empty; `scripts/ios-init.sh` copies the
+  declaration in after `xcodegen`, which also covers a clean `tauri ios init`.
 - **Signing:** with App Store Connect API-key credentials, the Tauri CLI exports the IPA without the app's
   entitlements (tauri-apps/tauri#15663). The deploy workflow's "Restore the app's entitlements in the IPA"
-  step re-signs the app with the profile's entitlements plus the committed declaration, and fails the job
+  step re-signs the app with the profile's entitlements plus `ios/app_iOS.entitlements`, and fails the job
   if any declared entitlement is missing.
 
 TestFlight builds use the `testflight` environment (`.github/workflows/env/testflight`): production EDGE,

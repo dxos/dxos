@@ -52,12 +52,8 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         CFBundleShortVersionString: 0.10.5
         CFBundleVersion: "0.10.5"
-    # xcodegen writes the entitlements file from these properties on every run.
     entitlements:
       path: app_iOS/app_iOS.entitlements
-      properties:
-        com.apple.developer.associated-domains:
-          - webcredentials:composer.space
     scheme:
       environmentVariables:
         RUST_BACKTRACE: full

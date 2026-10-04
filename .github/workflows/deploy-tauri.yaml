@@ -584,7 +584,7 @@ jobs:
           identity="$(security find-identity -v -p codesigning "$keychain" | awk '/Apple Distribution/ { print $2; exit }')"
           test -n "$identity" || { echo "::error::No Apple Distribution identity in IOS_CERTIFICATE"; exit 1; }
 
-          git show HEAD:./app_iOS/app_iOS.entitlements > "$work/declared.plist"
+          cp ../../ios/app_iOS.entitlements "$work/declared.plist"
 
           codesign -d --entitlements - --xml "$app" > "$work/entitlements.plist"
           python3 - "$work/entitlements.plist" "$work/declared.plist" <<'EOF'
@@ -605,7 +605,7 @@ jobs:
           import plistlib, sys
           signed, declared = (plistlib.load(open(path, 'rb')) for path in sys.argv[1:])
           if not declared:
-              sys.exit('::error::app_iOS.entitlements declares no entitlements')
+              sys.exit('::error::ios/app_iOS.entitlements declares no entitlements')
           missing = sorted(key for key, value in declared.items() if signed.get(key) != value)
           if missing:
               sys.exit(f'::error::The signed app lacks declared entitlements: {missing}')
