@@ -381,8 +381,10 @@ describe('mcp usages', () => {
     expect(result.packages).toEqual([
       {
         package: '@test/app',
-        counts: { impl: 1, test: 1, story: 1 },
+        counts: { impl: 1, test: 2, story: 1 },
         files: [
+          // From a top-level `describe(…)`, carried by the file's top-level symbol.
+          { path: 'packages/app/src/suite.test.ts', role: 'test', symbols: [Ontology.TOP_LEVEL], via: 'barrel' },
           // Through the alias `old`.
           { path: 'packages/app/src/use.stories.tsx', role: 'story', symbols: ['Story'], via: 'barrel' },
           { path: 'packages/app/src/use.test.ts', role: 'test', symbols: ['tested'], via: 'barrel' },
@@ -397,7 +399,7 @@ describe('mcp usages', () => {
       },
     ]);
     expect(result.reexportedBy).toEqual(['packages/lib/src/index.ts']);
-    expect(result.total).toEqual({ symbols: 5, files: 4, packages: 2, impl: 2, test: 1, story: 1 });
+    expect(result.total).toEqual({ symbols: 6, files: 5, packages: 2, impl: 2, test: 2, story: 1 });
     expect(result.truncated).toBe(false);
   });
 

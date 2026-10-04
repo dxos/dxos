@@ -1431,8 +1431,11 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
   const scopedLocal = (name: string): string | undefined =>
     scope.map((namespace) => locals.get(`${namespace}.${name}`)).find((iri) => iri !== undefined);
 
-  /** IRIs a reference stands for, marking the binding's value use on the way. */
-  const targetsOf = (reference: Reference): string[] => {
+  /**
+   * IRIs a reference stands for, marking the binding's value use on the way. `countUnresolved` is off
+   * for top-level statements, whose callback locals would otherwise inflate `unresolvedReferences`.
+   */
+  const targetsOf = (reference: Reference, countUnresolved = true): string[] => {
     const inner = scopedLocal(reference.name);
     if (inner) {
       return [inner];
@@ -1451,7 +1454,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     if (local) {
       return [local];
     }
-    if (!ES_GLOBALS.has(reference.name)) {
+    if (countUnresolved && !ES_GLOBALS.has(reference.name)) {
       unresolved++;
     }
     return [];
@@ -1626,7 +1629,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
   });
 
   // A statement declaring nothing (`describe(…)`, `registerX()`) runs at load time, so a binding it
-  // references is a value import even though no symbol carries the edge.
+  // references is a value import, and the file's `top-level` symbol carries the edge so `usages` finds it.
   const markValueUse = (name: string): void => {
     const binding = bindings.get(name);
     const entry = binding && specifiers.get(binding.specifier);
@@ -1635,6 +1638,11 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     }
   };
   const declaringStatements = new Set<Node>(declared.map((declaration) => declaration.statement));
+  const topLevelApi = new Set<string>();
+  const topLevelImpl = new Set<string>();
+  let topLevelLine: number | undefined;
+  // The declaration walk left `scope` at its last declaration's namespaces; these statements sit in none.
+  scope = [];
   for (const statement of (body as readonly unknown[]).filter(isNode)) {
     if (declaringStatements.has(statement)) {
       continue;
@@ -1665,12 +1673,22 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
         !name ||
         isBindingPosition(node, parent) ||
         isParameterBinding(node, parent) ||
-        inTypePosition(ancestors, node) ||
-        !chainOf(node, ancestors)
+        (node.type === 'JSXIdentifier' && !/^[A-Z]/.test(name) && parent?.type !== 'JSXMemberExpression')
       ) {
         return undefined;
       }
-      markValueUse(name);
+      const chain = chainOf(node, ancestors);
+      if (!chain) {
+        return undefined;
+      }
+      const type = inTypePosition(ancestors, node);
+      const targets = targetsOf({ name, path: chain.path, type }, false);
+      for (const target of targets) {
+        (type ? topLevelApi : topLevelImpl).add(target);
+      }
+      if (targets.length > 0) {
+        topLevelLine ??= lineOf(source, statement.start);
+      }
       return undefined;
     });
   }
@@ -1737,6 +1755,28 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'namespaceOf': [namespace.module],
     }));
 
+  const topLevelSymbols: Ontology.SymbolNode[] =
+    topLevelLine === undefined
+      ? []
+      : [
+          {
+            '@id': Ontology.symbolIri(path, Ontology.TOP_LEVEL).value,
+            '@type': 'Symbol',
+            'name': Ontology.TOP_LEVEL,
+            'kind': Ontology.TOP_LEVEL,
+            'exported': false,
+            'line': topLevelLine,
+            'extends': [],
+            'constructedBy': [],
+            'pipedThrough': [],
+            'derivedFrom': [],
+            'argument': [],
+            'apiDependsOn': [...topLevelApi],
+            'implDependsOn': [...topLevelImpl],
+            'aliasOf': [],
+          },
+        ];
+
   return {
     ...base,
     imports: [...imports],
@@ -1744,7 +1784,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     importsModule: [...importsModule],
     reexports: [...reexports],
     unresolvedReferences: unresolved,
-    declares: [...symbols, ...aliasSymbols, ...namespaceSymbols],
+    declares: [...symbols, ...aliasSymbols, ...namespaceSymbols, ...topLevelSymbols],
     ...((nodes) => (nodes.length > 0 ? { '@included': nodes } : {}))([
       ...types.nodes(),
       ...[...modules].map(([specifier, file]): Ontology.ModuleNode => ({

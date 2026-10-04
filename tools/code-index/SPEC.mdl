@@ -407,6 +407,9 @@ feat F-8: Structure now, meaning later
     as written and ordinal — never by line.
   req F-8.6: Call-site literals are bounded: 8 positions, 3 object keys deep, 16 array elements,
     256 characters with no newline, 32 literals per site and 2000 sites per file.
+  req F-8.7: A reference from a top-level statement that declares nothing (`describe(…)`) is a
+    dependency of the file's `top-level` symbol, so `usages` finds a test that uses a declaration
+    only there.
 ```
 
 ```mdl
