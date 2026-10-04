@@ -45,13 +45,13 @@ describe('dropReportedToolResults', () => {
     expect(queue).toHaveLength(1);
   });
 
-  // Only the head is stale after a reload; a reported result behind an unreported one belongs to a
-  // turn that has not run yet, and dropping it would reorder delivery.
-  it('stops at the first unreported result', ({ expect }) => {
+  // A replayed turn queues its own calls' results behind the result it is replaying; were only the
+  // head dropped, the backlog would grow by one per turn and the agent would never go idle.
+  it('drops reported results behind an unreported one', ({ expect }) => {
     const queue = [toolResult('1'), toolResult('2'), toolResult('3')];
     const dropped = dropReportedToolResults(queue, (pid) => pid !== Process.ID.make('2'));
-    expect(dropped).toEqual([Process.ID.make('1')]);
-    expect(queue.map((item) => item.pid)).toEqual([Process.ID.make('2'), Process.ID.make('3')]);
+    expect(dropped).toEqual([Process.ID.make('1'), Process.ID.make('3')]);
+    expect(queue.map((item) => item.pid)).toEqual([Process.ID.make('2')]);
   });
 });
 

@@ -320,8 +320,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const maybeCompleteWith = (state: PendingState) =>
           Effect.gen(function* () {
             // A result reported inside the turn it belongs to is still sitting in the queue; it is
-            // not outstanding work, and counting it as such keeps the agent from ever completing —
-            // the head-drop at the top of `onAlarm` cannot help, because nothing arms another wake.
+            // not outstanding work, and counting it as such keeps the agent from ever completing.
             for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
               log('drop tool result reported within its turn', { pid });
             }
@@ -550,6 +549,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 );
               log('end request');
               turnRan = true;
+              // Persisted only once pruned: the reload reconcile un-reports every queued result, so a
+              // delivered result left here is replayed as a fresh turn after the next reload.
+              for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
+                log('drop tool result reported within its turn', { pid });
+              }
               yield* ToolResultsCell.set(toolResults);
 
               // Ack only now: the turn is what the queue entry was for, so a process that dies before
@@ -654,24 +658,27 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   return yield* Effect.failCause(attachExit.cause).pipe(Effect.orDie);
                 }
                 const fiber = attachExit.value;
-                const result = yield* fiber.await.pipe(Effect.orDie).pipe(
-                  Effect.map(
-                    Exit.match({
-                      onSuccess: (value): ToolResultEvent => ({
-                        _tag: 'tool_result',
-                        pid: event.pid,
-                        result: value,
-                        isError: false,
-                      }),
-                      onFailure: (cause): ToolResultEvent => ({
-                        _tag: 'tool_result',
-                        pid: event.pid,
-                        result: Cause.pretty(cause),
-                        isError: true,
-                      }),
-                    }),
-                  ),
-                );
+                const exit = yield* fiber.await.pipe(Effect.orDie);
+                // The turn that made the call already handed the model this result; queueing it as
+                // well would wake the agent for a turn about a result it has seen.
+                if (toolCallManager.isReported(event.pid)) {
+                  log('childEvent skipped (result reported within its turn)', { pid: event.pid });
+                  return;
+                }
+                const result = Exit.match(exit, {
+                  onSuccess: (value): ToolResultEvent => ({
+                    _tag: 'tool_result',
+                    pid: event.pid,
+                    result: value,
+                    isError: false,
+                  }),
+                  onFailure: (cause): ToolResultEvent => ({
+                    _tag: 'tool_result',
+                    pid: event.pid,
+                    result: Cause.pretty(cause),
+                    isError: true,
+                  }),
+                });
                 toolResults.push(result);
                 log('agent onChildEvent persisted tool result', { depth: toolResults.length, childPid: event.pid });
                 yield* ToolResultsCell.set(toolResults);
@@ -869,11 +876,11 @@ export const isAgentWorkPending = ({
   toolCallManager.hasPendingToolResults();
 
 /**
- * Discards tool results at the head of the queue whose values already reached the agent.
+ * Discards every queued tool result whose value already reached the agent, wherever it sits.
  *
- * A tool that returned inside its turn is reported synchronously AND left queued; after a reload the
- * queue is replayed, so without this the model would be handed a result it has already seen. Only the
- * head is examined: a result further back belongs to a turn that has not run yet.
+ * A tool that returned inside its turn is reported synchronously AND may be left queued. The whole
+ * queue is scanned because a replayed turn queues its own results behind the one it replays, so a
+ * head-only drop lets one unreported result pin the backlog and wake the agent forever.
  *
  * Mutates `queue` and returns the pids dropped, so the caller owns the logging.
  */
@@ -881,14 +888,10 @@ export const dropReportedToolResults = (
   queue: ToolResultEvent[],
   isReported: (pid: Process.ID) => boolean,
 ): readonly Process.ID[] => {
-  const dropped: Process.ID[] = [];
-  while (queue.length > 0) {
-    const head = queue[0];
-    if (!isReported(head.pid)) {
-      break;
-    }
-    queue.shift();
-    dropped.push(head.pid);
+  const dropped = queue.filter((item) => isReported(item.pid)).map((item) => item.pid);
+  if (dropped.length > 0) {
+    const kept = queue.filter((item) => !isReported(item.pid));
+    queue.splice(0, queue.length, ...kept);
   }
   return dropped;
 };
