@@ -706,8 +706,9 @@ export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dx
  * must call this factory with the same variant id so they agree on the dispatch NSID.
  *
  * Variant ids must be camelCase alphanumeric (DXN rule: no hyphens in the final segment).
+ * The deck passes the companion's graph node `id`, which is the surface's attendable id.
  */
-export const deckCompanion = (variant: string): Role.Role<{ subject?: any }> => {
+export const deckCompanion = (variant: string): Role.Role<{ id?: string; subject?: any }> => {
   if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(variant)) {
     throw new Error(
       `Invalid deck companion variant id: "${variant}". Must be camelCase alphanumeric (no hyphens or underscores).`,

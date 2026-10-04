@@ -28,7 +28,12 @@ const renderInvitation: InvitationRenderer = ({ data, sender }) => (
  * The notifications deck companion: binds the panel to the default space's container, renders
  * invitations through plugin-client's surface, and opens a message's first linked object.
  */
-export const MessengerCompanion = () => {
+export type MessengerCompanionProps = {
+  /** The companion's graph node id, which the deck passes as the surface's `id`. */
+  attendableId?: string;
+};
+
+export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useCapability(ClientCapabilities.Client);
@@ -69,6 +74,7 @@ export const MessengerCompanion = () => {
   return (
     <NotificationsPanel
       role={AppSurface.deckCompanion(MESSENGER_COMPANION).role}
+      attendableId={attendableId}
       containers={containers}
       renderInvitation={renderInvitation}
       onOpen={handleOpen}

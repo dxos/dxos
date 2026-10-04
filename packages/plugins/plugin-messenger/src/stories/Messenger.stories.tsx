@@ -19,6 +19,7 @@ import { useSpace } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Block, Button, Checkbox, Empty, Flex, Icon, Input, Panel, Select, Toolbar } from '@dxos/react-ui';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization } from '@dxos/types';
@@ -212,7 +213,7 @@ const ReceiverColumn = () => {
       </Panel.Header>
       <Panel.Body>
         {containers.length > 0 ? (
-          <NotificationsPanel containers={containers} onOpen={handleOpen} />
+          <NotificationsPanel attendableId='notifications-panel' containers={containers} onOpen={handleOpen} />
         ) : (
           <Empty>No notifications yet.</Empty>
         )}
@@ -241,6 +242,7 @@ const meta = {
         space.db.add(Organization.make({ name: LINKED_OBJECT_NAME }));
       },
     }),
+    withAttention(),
     withMosaic(),
     withLayout({ layout: 'fullscreen' }),
     withTheme(),

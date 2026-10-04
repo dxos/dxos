@@ -12,6 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import { useSpace } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Card } from '@dxos/react-ui';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization } from '@dxos/types';
@@ -21,6 +22,9 @@ import { Notifications } from '#types';
 
 import { makeNotificationMessages } from '../../testing/fixtures.ts';
 import { NotificationsPanel } from './NotificationsPanel.tsx';
+
+/** Stands in for the deck companion's node id, so the toolbar takes attention like it does in the deck. */
+const ATTENDABLE_ID = 'notifications-panel';
 
 const DefaultStory = () => {
   const { spaceId } = useClientStory();
@@ -32,6 +36,7 @@ const DefaultStory = () => {
 
   return (
     <NotificationsPanel
+      attendableId={ATTENDABLE_ID}
       containers={containers}
       renderInvitation={({ data, sender }) => (
         <Card.Text>{`${sender.name} invited you to ${data.spaceName}.`}</Card.Text>
@@ -46,6 +51,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
+    withAttention(),
     withMosaic(),
     withLayout({ layout: 'column' }),
     withClientProvider({

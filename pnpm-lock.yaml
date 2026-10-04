@@ -13424,6 +13424,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../ui/react-ui-card
@@ -13442,6 +13445,9 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
+      date-fns:
+        specifier: 'catalog:'
+        version: 3.6.0
       effect:
         specifier: 4.0.0
         version: 4.0.0

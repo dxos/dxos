@@ -12,6 +12,7 @@ import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { type Message, SpaceInvitationMessage } from '@dxos/types';
@@ -49,6 +50,7 @@ const matchesFilter = (filter: NotificationFilter, message: Message.Message, rea
 
 export type NotificationsPanelProps = {
   role?: string;
+  /** Makes the panel attendable, so its toolbar takes attention styling and contributed actions target it. */
   attendableId?: string;
   /** The containers whose feeds are listed, the one to write read state to first (see `Notifications.order`). */
   containers: readonly Notifications.Notifications[];
@@ -70,6 +72,7 @@ export const NotificationsPanel = ({
   const { t } = useTranslation(meta.profile.key);
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
+  const attentionAttributes = useAttentionAttributes(attendableId);
   const viewAtom = useMemo(() => Atom.make((get) => Notifications.deriveView(get, containers)), [containers]);
   const { messages, read } = useAtomValue(viewAtom);
   const unread = useMemo(() => messages.filter((message) => !read.has(message.id)), [messages, read]);
@@ -169,7 +172,7 @@ export const NotificationsPanel = ({
   const getItemId = useCallback((item: NotificationTileData) => item.message.id, []);
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} {...attentionAttributes}>
       <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>

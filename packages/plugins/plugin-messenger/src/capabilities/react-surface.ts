@@ -19,6 +19,7 @@ export default Capability.makeModule(() =>
         id: 'notificationsPanel',
         filter: Surface.makeFilter(AppSurface.deckCompanion(MESSENGER_COMPANION)),
         component: MessengerCompanion,
+        props: ({ data }) => ({ attendableId: data.id }),
       }),
     ]),
   ),
