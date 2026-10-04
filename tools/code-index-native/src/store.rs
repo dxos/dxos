@@ -811,8 +811,9 @@ impl NativeStore {
     /// One rule file over the base and every *other* derived graph, from nothing — the contract of
     /// the JS backend's `reason`. Returns the conclusions not already among the premises.
     pub fn reason(&self, graph: &str, rules_text: &str, materialize: bool) -> Result<Vec<Quad>> {
-        // Held from the first read, so what is materialized is concluded from the facts it replaces.
-        let _writer = materialize.then(|| self.write_lock()).transpose()?;
+        // Held from the first read even when not materializing: each graph is read through its own
+        // iterator, so a concurrent `reason_all` commit could otherwise mix two store versions.
+        let _writer = self.write_lock()?;
         let dict = Dict::default();
         let rules = rules::compile(rules_text, &dict)?;
         let base = BaseFacts {
