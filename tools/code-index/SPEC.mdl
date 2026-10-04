@@ -40,7 +40,7 @@ The following extension dialects are used in this document.
 | Reasoning          | `eyereasoner` (EYE, N3)                 | Forward-chaining rules over an N3 serialization of the asserted facts; conclusions land in one replaceable graph. Reachability is left to SPARQL property paths. |
 | Parsing            | `oxc-parser`, `oxc-resolver`            | Real module records and real resolution, not regex. |
 | Manifests          | `yaml`, `JSON.parse`                    | `moon.yml` layers and `package.json` identity, entries and workspace deps. |
-| Concurrency        | `effect/rpc` over worker threads | Batches of paths in, JSON-LD documents out. |
+| Concurrency        | `effect/rpc` over worker threads | Batches of paths in, N-Triples documents out. |
 | CLI                | `effect/cli`, `@effect/platform-bun` | Subcommands, flags and help from the same Effect runtime as the library. |
 
 ## Layout
@@ -62,13 +62,17 @@ containing the working directory, so any command run anywhere inside the repo fi
 2. **Diff** — compare against `files.mtime` in the ledger. Unchanged files are skipped entirely;
    files gone from the working tree have their graph and row removed.
 3. **Dispatch** — changed paths are batched (64 by default) and sent to the worker pool.
-4. **Analyze** (worker) — an analyzer chosen by filename reads the file and returns its JSON-LD
-   document plus the mtime actually read: TypeScript (declarations, references, snippets),
+4. **Analyze** (worker) — an analyzer chosen by filename reads the file, builds its JSON-LD
+   document and returns it encoded as N-Triples, plus the mtime actually read: TypeScript (declarations, references, snippets),
    `package.json` (the `Package` node), `moon.yml` (its layer), `.mdl` (spec blocks).
-5. **Upsert** (main thread) — one commit per file: swap its named graph, then advance its ledger row.
-6. **Reason** — if anything changed, the N3 rules run over the asserted facts and `graph:derived` is
-   replaced with the result. A pass that indexed and removed nothing skips this phase, since it would
-   derive exactly what is already stored. The reasoner is fed only the facts whose predicate the
+5. **Upsert** (main thread) — one commit per 512 files, gathered from several worker batches:
+   announce every file's new graph, swap the files' named graphs in one backend write, then advance
+   every ledger row (see the commit protocol below).
+6. **Reason** — the N3 rules run over the asserted facts and each reasoner's graph is replaced with
+   the result. The phase is skipped only when the ledger records that this exact set of reasoners
+   (a signature over their names and rules) already ran over the store's current write generation:
+   a pass after `--no-reason`, or after one interrupted before reasoning, catches up even though it
+   indexed nothing. The reasoner is fed only the facts whose predicate the
    rules name — the narrowing is dropped if a rule leaves a predicate unbound — which on this repo
    is the difference between a 30s phase and a 4s one.
 
@@ -83,6 +87,12 @@ the graph write is made idempotent:
 1. `files.pending_graph` is set to the new graph IRI (`graph:file/<path>#<mtime>`) — the announcement.
 2. The old graph's quads and the new graph's quads are swapped in **one** Quadstore batch.
 3. The row is updated: `graph` becomes the new IRI and `pending_graph` is cleared — the commit.
+
+An indexing pass commits a worker batch at a time: step 1 for every file of the batch in one SQLite
+transaction, the per-file swaps, then step 3 for every file in another. SQLite runs in WAL mode
+with `synchronous=NORMAL`, which survives a process crash at any point; an OS crash can lose the
+last commits, but the quad stores never fsync their own writes, so the graphs were never durable
+against one either.
 
 A crash before step 3 leaves the previous revision live and the new graph reachable only through
 `pending_graph`; `reconcile` (run whenever the store opens) deletes exactly those graphs. Because
@@ -117,6 +127,7 @@ module Store
 
     # Commits
     putDocument: (FileDocument) => Effect<void>       # graph swap + ledger advance (see above).
+    putDocuments: (FileDocument[]) => Effect<void>    # the same for a batch, one transaction a step.
     removeFile: (path) => Effect<void>
     reconcile: () => Effect<number>                   # drops graphs left by an interrupted commit.
 
@@ -127,7 +138,12 @@ module Store
     dump / load                               # N3 text in and out.
     reason: (reasoner, rules, { materialize? }) => Effect<Quad[]>  # premises exclude the reasoner's
                                                                    # own graph; materialize replaces it.
+    reasonAll: (rules) => Effect<Outcome[]>   # every rule file in order, maintained natively.
     derived: (reasoner?) => Effect<Quad[]>    # what a reasoner (or every reasoner) concluded.
+    derivedCount: () => Effect<number>        # the same, counted in the store.
+    generation: () => Effect<number>          # advanced by every write to the facts.
+    recordReasoned: (signature, generation, derived)  # what `Reasoner.run` ran, over which facts.
+    reasoned: (signature) => Effect<number | undefined>  # what they derived, if current; else undefined.
     stats / clear
 ```
 
@@ -184,7 +200,7 @@ module worker/Protocol
   desc: The RPC contract between the main thread and the parsing workers.
   api:
     FileRef: { path, mtime }
-    AnalyzedFile: { path, mtime, document }   # document is JSON-LD text on the wire.
+    AnalyzedFile: { path, mtime, language, size, hash, triples }   # the document as N-Triples.
     SkippedFile: { path, reason }
     Rpcs: RpcGroup                            # AnalyzeBatch(root, files) -> { analyzed, skipped }.
 ```
@@ -248,7 +264,7 @@ module worker/analyzers/package
 
 ```mdl
 module worker/analyzers/spec
-  desc: `.mdl` documents — one `SpecBlock` per fenced block; linking them to symbols is a reasoner's job.
+  desc: `.mdl` documents — frontmatter, Extensions table, and one `SpecBlock` per block with its field tree; linking them to code is a reasoner's job.
   api:
     analyzeMdl: (context) => FileDocument
 ```
@@ -282,7 +298,7 @@ module mcp/Server
     store opened with `{ readOnly: true }`. Tool descriptions carry the namespace prefixes and an
     example each, because a model reads them. `mcp/Lock` names the process holding a locked store.
   api:
-    CodeIndexToolkit: Toolkit                 # query, ask, vocabulary, describe, files, stats.
+    CodeIndexToolkit: Toolkit                 # query, ask, vocabulary, describe, usages, files, stats, design.
     handlers: (Store.Api) => Effect<handlers> # what the toolkit layer is built from (and tests drive).
     open: (dir, backend?) => Effect<Store.Api, StoreError, Scope>  # read-only; names a lock holder.
     run: ({ dir, backend?, version }) => Effect<never>             # opens, then serves until stdin closes.
@@ -334,17 +350,21 @@ feat F-2: One graph per file revision
 
 ```mdl
 feat F-3: Incremental by mtime
-  desc: The crawl compares mtimes against the ledger; unchanged files are never read or parsed.
+  desc: |
+    The crawl compares mtimes against the ledger; unchanged files are never read or parsed. A file
+    whose mtime moved is hashed first, and one whose content still matches the ledger's hash only has
+    its mtime recorded.
   req F-3.1: A second pass over an unchanged tree indexes nothing.
-  req F-3.2: Touching one file reindexes exactly that file.
+  req F-3.2: Editing one file reindexes exactly that file.
   req F-3.3: `--force` reindexes everything regardless of mtime.
   req F-3.4: A file deleted from the working tree is removed from both databases.
+  req F-3.5: A touch that leaves the content unchanged reindexes nothing and does not rerun the reasoners.
 ```
 
 ```mdl
 feat F-4: Off-thread parsing
   desc: |
-    Workers receive batches of paths and return JSON-LD documents; they never open a database. The
+    Workers receive batches of paths and return N-Triples documents; they never open a database. The
     mtime returned is the one actually read, so a file written mid-crawl is reindexed next pass
     rather than recorded as current.
   req F-4.1: A file that cannot be read is reported as skipped, not as a failure of the pass.
@@ -382,6 +402,14 @@ feat F-8: Structure now, meaning later
   req F-8.3: Every stored snippet is valid TypeScript, or absent.
   req F-8.4: IRIs are written as the path or specifier reads (`module:@dxos/compute/Operation#make`);
     only characters an IRI cannot carry, `#`, `?`, `%` and `.`/`..` segments are percent-encoded.
+  req F-8.5: Every call to a resolvable callee that carries a literal or a configuration object, and
+    every call such a call is an argument of, is a `deus:CallSite`, keyed by enclosing symbol, callee
+    as written and ordinal — never by line.
+  req F-8.6: Call-site literals are bounded: 8 positions, 3 object keys deep, 16 array elements,
+    256 characters with no newline, 32 literals per site and 2000 sites per file.
+  req F-8.7: A reference from a top-level statement that declares nothing (`describe(…)`) is a
+    dependency of the file's `top-level` symbol, so `usages` finds a test that uses a declaration
+    only there.
 ```
 
 ```mdl
@@ -392,12 +420,15 @@ feat F-10: Types without a checker
   req F-10.1: Where it answers, it agrees with `tsc` — the agreement harness has no disagreements on its fixtures.
   req F-10.2: A position it cannot type is absent, never approximated; a reference `tsc` might narrow is unknown.
   req F-10.3: The type step costs well under a millisecond per file.
+  req F-10.4: A function or static method typed to return `Layer<…>` is a `deus:EffectLayerFactory`, providing and requiring what its returned layer does.
 ```
 
 ```mdl
 feat F-9: Specs are facts
-  desc: A `.mdl` document yields one `SpecBlock` per fenced block, with its fields and the identifiers it mentions.
+  desc: A `.mdl` document yields one `SpecBlock` per block — several per fence, `req` nested in `feat` — with its fields as a tree, its body, its line and the identifiers it mentions.
   req F-9.1: Block ids and names come from the header; two blocks sharing a key are disambiguated in order.
+  req F-9.2: The parser never fails on a `.mdl` in the repository.
+  req F-9.3: Blocks are classified, linked to code and to each other, and checked against their `ext` schema by rules (`rules/70-specs.n3`, `rules/80-gaps.n3`), on both backends.
 ```
 
 ```mdl
@@ -411,22 +442,36 @@ feat F-6: Derived relations are rules, recomputed with the index
              was removed. `rules/50-example.n3` says so in its header; keep derivations small.
   req F-6.2: A conclusion never outlives its premises — retracting an import retracts what it entailed.
   req F-6.3: Conclusions are never premises: a pass reads the file graphs only.
-  req F-6.4: A pass that indexed and removed nothing skips reasoning and leaves the derived graph as is.
+  req F-6.4: A pass skips reasoning, leaving the derived graphs as they are, only when the same reasoners already ran over the facts the store holds now.
   req F-6.6: Premises are narrowed to the predicates the rules name; an unbound predicate disables the narrowing.
   req F-6.5: `--no-reason` skips the phase; the derived graph is then only as fresh as the last pass that ran it.
+  req F-6.7: On the JS backend the premises reach EYE deduplicated and split across input files of at most 100k facts, every fact naming a blank node in one file, so a whole repository's facts parse within EYE's stack.
+  req F-6.8: The `resolve-refs` pass links each reference IRI to the declaration it denotes (`deus:resolvesTo`), through barrels and aliases.
+  req F-6.9: `deus:usesDeprecated` links a symbol to each `deus:deprecated` declaration it depends on, directly or through `deus:resolvesTo`.
 ```
 
 ```mdl
 feat F-11: An MCP server over the index
   desc: |
     `code-index mcp` serves the store to an MCP client over stdio. It opens an existing store
-    read-only and never indexes or writes; six tools cover SPARQL (`query`, `ask`), discovery
-    (`vocabulary`, `describe`) and the ledger (`files`, `stats`).
+    read-only and never indexes or writes; eight tools cover SPARQL (`query`, `ask`), discovery
+    (`vocabulary`, `describe`, `usages`), the ledger (`files`, `stats`) and design questions (`design`).
   req F-11.1: stdout carries only JSON-RPC; every log and banner goes to stderr.
   req F-11.2: Opening skips migration, version reset and reconcile; a missing or stale store fails with a hint.
   req F-11.3: A store another process holds fails at startup, naming that process, rather than hanging.
   req F-11.4: A SELECT is capped at the engine (default 200 rows, at most 2000) and reports truncation.
   req F-11.5: `stats` counts derived graphs with a grouped SPARQL count, never by materialising quads.
+  req F-11.6: `usages` finds every symbol that uses a declaration, through barrels, re-exports, namespaces and bare specifiers, grouped by package.
+
+feat F-12: `serve` keeps the index current
+  desc: |
+    The server holds the store, and the store admits one process, so no other command can refresh
+    it while the server runs. `serve` indexes on its own instead: an incremental pass at startup,
+    then one after every burst of changes (`src/Watch.ts`), unless `--no-watch`.
+  req F-12.1: Each directory holding an indexed file, and its ancestors, is watched on its own; a recursive watch would register every directory under `node_modules`.
+  req F-12.2: A directory created under a watched one is watched at once, so files written into it later are seen.
+  req F-12.3: A new watch is followed by one more pass, which sees a file written before the watch began.
+  req F-12.4: A failed pass is reported and the watch goes on.
 ```
 
 ## Tests
@@ -450,6 +495,9 @@ test T-1: Store
     - dump serializes and load restores
     - raw quads still round-trip
     - an interrupted commit is reconciled when the store reopens
+    - a batch commits every document in it
+    - a batch interrupted between its swaps is reconciled file by file
+    - any write after reasoning marks the conclusions stale, across reopening
     - clear empties both databases
 ```
 
@@ -469,6 +517,8 @@ test T-2: Indexer
     - an import removed from a file retracts what it entailed
     - a pass that changed nothing does not run the rules
     - --no-reason leaves the derived graph untouched
+    - the next pass with rules catches up, though no file changed
+    - a changed rule set reruns over unchanged files
     - every snippet the index holds is valid TypeScript
 ```
 
@@ -490,6 +540,16 @@ test T-3: TypeScript analyzer
     - snippets abbreviate implementation and stay valid TypeScript
     - an anonymous default export is named default
     - a parse failure still yields a file node
+    - call sites carry callee, enclosing symbol, line and flattened literals
+    - nested call sites point at the call they are an argument of
+    - IRIs are keyed by enclosing symbol, callee and ordinal, not line
+    - file-level calls are enclosed by the file
+    - only resolvable callees, and only sites that carry something
+    - curried chains are one site, arguments numbered across the chain
+    - literals are capped in length, count and array size
+    - a file stops at 2000 call sites
+    - a same-file string const is read as its value
+    - a surface carries its id and the plugin that registers its module (src/Reasoner.test.ts)
 ```
 
 ```mdl
@@ -509,9 +569,12 @@ test T-5: Spec documents
   file: src/Mdl.test.ts
   covers: F-9
   cases:
-    - frontmatter is read as flat strings
-    - every fenced block yields a header, fields and mentions
-    - the spec analyzer turns blocks into SpecBlock nodes
+    - frontmatter is read as YAML, lists kept
+    - a fence holds several blocks, and req blocks nest in their feat
+    - flow maps and lists become children, a map left open runs to its closer
+    - the spec analyzer emits the file facts, block nodes and the field tree
+    - every tracked .mdl parses without error and yields its blocks
+    - specs link to code and to each other, and the gaps are found (src/Reasoner.test.ts)
 ```
 
 ```mdl

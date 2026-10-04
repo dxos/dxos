@@ -139,12 +139,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           />
         )}
       </Toolbar.Root>
-      <Grid
-        cols={TRACKS}
-        gap='sm'
-        grow={false}
-        classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted'
-      >
+      <Grid cols={TRACKS} gap='sm' classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted'>
         {COLUMNS.map((column, index) => (
           <Tooltip.Trigger key={column.id} asChild content={column.title}>
             <button
@@ -172,7 +167,6 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
                   cols={TRACKS}
                   gap='sm'
                   align='center'
-                  grow={false}
                   classNames={[
                     'w-full px-2 py-0.5 font-mono text-xs tabular-nums text-end hover:bg-hover-surface',
                     open && 'bg-hover-surface',

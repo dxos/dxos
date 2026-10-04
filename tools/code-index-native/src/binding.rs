@@ -6,10 +6,13 @@
 //! which keeps the binding free of per-term object allocation on either side.
 
 use std::str::FromStr;
+use std::sync::Arc;
 
-use napi::{Error, Result};
+use napi::bindgen_prelude::AsyncTask;
+use napi::{Env, Error, Result, Task};
 use napi_derive::napi;
-use oxigraph::model::{GraphName, NamedNode, NamedOrBlankNode, Term};
+use oxigraph::model::{GraphName, NamedNode, NamedOrBlankNode, Quad, Term};
+use oxigraph::sparql::CancellationToken;
 
 use crate::store;
 
@@ -28,6 +31,14 @@ fn term(text: &str) -> Result<Term> {
 pub struct Stratum {
     pub graph: String,
     pub rules: String,
+}
+
+#[napi(object)]
+pub struct DocumentWrite {
+    pub graph: String,
+    pub drop: Vec<String>,
+    /// N-Triples; every triple lands in `graph`.
+    pub triples: String,
 }
 
 #[napi(object)]
@@ -50,7 +61,74 @@ pub struct QueryResult {
 #[napi]
 pub struct NativeStore {
     /// `None` once closed; RocksDB's directory lock is released when the store drops.
-    store: Option<store::NativeStore>,
+    store: Option<Arc<store::NativeStore>>,
+}
+
+/// A batch's graph swap on a libuv thread, so the event loop keeps handing parsed batches out while
+/// RocksDB writes.
+pub struct PutDocuments {
+    store: Arc<store::NativeStore>,
+    writes: Vec<store::DocumentWrite>,
+}
+
+impl Task for PutDocuments {
+    type Output = usize;
+    type JsValue = u32;
+
+    fn compute(&mut self) -> Result<usize> {
+        self.store.put_documents(&self.writes).map_err(error)
+    }
+
+    fn resolve(&mut self, _env: Env, output: usize) -> Result<u32> {
+        Ok(count(output))
+    }
+}
+
+/// A query on a libuv thread, so a slow one neither blocks the event loop nor other queries.
+pub struct Query {
+    store: Arc<store::NativeStore>,
+    sparql: String,
+    token: CancellationToken,
+}
+
+impl Task for Query {
+    type Output = (&'static str, String);
+    type JsValue = QueryResult;
+
+    fn compute(&mut self) -> Result<Self::Output> {
+        self.store
+            .query_cancellable(&self.sparql, self.token.clone())
+            .map_err(error)
+    }
+
+    fn resolve(&mut self, _env: Env, (kind, body): Self::Output) -> Result<QueryResult> {
+        Ok(QueryResult {
+            kind: kind.to_owned(),
+            body,
+        })
+    }
+}
+
+/// Cancels the queries it was passed to; each stops at the next quad it reads.
+#[napi]
+pub struct QueryCancel {
+    token: CancellationToken,
+}
+
+#[napi]
+impl QueryCancel {
+    #[napi(constructor)]
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        Self {
+            token: CancellationToken::new(),
+        }
+    }
+
+    #[napi]
+    pub fn cancel(&self) {
+        self.token.cancel();
+    }
 }
 
 fn count(value: usize) -> u32 {
@@ -63,11 +141,11 @@ impl NativeStore {
     #[napi(factory)]
     pub fn open(dir: String) -> Result<Self> {
         Ok(Self {
-            store: Some(store::NativeStore::open(dir).map_err(error)?),
+            store: Some(Arc::new(store::NativeStore::open(dir).map_err(error)?)),
         })
     }
 
-    fn inner(&self) -> Result<&store::NativeStore> {
+    fn inner(&self) -> Result<&Arc<store::NativeStore>> {
         self.store
             .as_ref()
             .ok_or_else(|| Error::from_reason("the native store is closed"))
@@ -79,12 +157,21 @@ impl NativeStore {
         self.store = None;
     }
 
-    #[napi]
-    pub fn put_document(&self, graph: String, drop: Vec<String>, json_ld: String) -> Result<u32> {
-        self.inner()?
-            .put_document(&graph, &drop, &json_ld)
-            .map(count)
-            .map_err(error)
+    /// Resolves once the batch is written; a write in flight keeps the store open until it finishes.
+    #[napi(ts_return_type = "Promise<number>")]
+    pub fn put_documents(&self, writes: Vec<DocumentWrite>) -> Result<AsyncTask<PutDocuments>> {
+        let writes: Vec<store::DocumentWrite> = writes
+            .into_iter()
+            .map(|write| store::DocumentWrite {
+                graph: write.graph,
+                drop: write.drop,
+                triples: write.triples,
+            })
+            .collect();
+        Ok(AsyncTask::new(PutDocuments {
+            store: Arc::clone(self.inner()?),
+            writes,
+        }))
     }
 
     #[napi]
@@ -102,7 +189,8 @@ impl NativeStore {
         self.inner()?.remove_quads(&nquads).map_err(error)
     }
 
-    /// Quads matching the pattern, as N-Quads. A term is N-Triples syntax; `graph` may be `DEFAULT`.
+    /// Quads matching the pattern, as `QUAD_ROW` strings each (see `rows`). A term is N-Triples
+    /// syntax; `graph` may be `DEFAULT`.
     #[napi(js_name = "match")]
     pub fn match_quads(
         &self,
@@ -110,17 +198,17 @@ impl NativeStore {
         predicate: Option<String>,
         object: Option<String>,
         graph: Option<String>,
-    ) -> Result<String> {
+    ) -> Result<Vec<String>> {
         let subject = match subject.as_deref().map(term).transpose()? {
             None => None,
             Some(Term::NamedNode(node)) => Some(NamedOrBlankNode::NamedNode(node)),
             Some(Term::BlankNode(node)) => Some(NamedOrBlankNode::BlankNode(node)),
-            Some(Term::Literal(_)) => return Ok(String::new()),
+            Some(Term::Literal(_)) => return Ok(Vec::new()),
         };
         let predicate = match predicate.as_deref().map(term).transpose()? {
             None => None,
             Some(Term::NamedNode(node)) => Some(node),
-            Some(_) => return Ok(String::new()),
+            Some(_) => return Ok(Vec::new()),
         };
         let object = object.as_deref().map(term).transpose()?;
         let graph = match graph.as_deref() {
@@ -129,23 +217,24 @@ impl NativeStore {
             Some(text) => match term(text)? {
                 Term::NamedNode(node) => Some(GraphName::NamedNode(node)),
                 Term::BlankNode(node) => Some(GraphName::BlankNode(node)),
-                Term::Literal(_) => return Ok(String::new()),
+                Term::Literal(_) => return Ok(Vec::new()),
             },
         };
         let quads = self
             .inner()?
             .match_quads(subject, predicate, object, graph)
             .map_err(error)?;
-        store::NativeStore::to_nquads(&quads).map_err(error)
+        Ok(rows(&quads))
     }
 
-    #[napi]
-    pub fn query(&self, sparql: String) -> Result<QueryResult> {
-        let (kind, body) = self.inner()?.query(&sparql).map_err(error)?;
-        Ok(QueryResult {
-            kind: kind.to_owned(),
-            body,
-        })
+    /// Runs off the event loop; `cancel` aborts it, after which it rejects with a `cancelled` error.
+    #[napi(ts_return_type = "Promise<QueryResult>")]
+    pub fn query(&self, sparql: String, cancel: &QueryCancel) -> Result<AsyncTask<Query>> {
+        Ok(AsyncTask::new(Query {
+            store: Arc::clone(self.inner()?),
+            sparql,
+            token: cancel.token.clone(),
+        }))
     }
 
     /// One rule file evaluated from nothing; returns its conclusions as N-Quads in `graph`.
@@ -189,6 +278,11 @@ impl NativeStore {
     }
 
     #[napi]
+    pub fn graph_length(&self, graph: String) -> Result<u32> {
+        self.inner()?.graph_len(&graph).map(count).map_err(error)
+    }
+
+    #[napi]
     pub fn journal_length(&self) -> Result<u32> {
         Ok(count(self.inner()?.journal_len()))
     }
@@ -202,4 +296,43 @@ impl NativeStore {
     pub fn clear(&self) -> Result<()> {
         self.inner()?.clear().map_err(error)
     }
+}
+
+/// Strings per quad in `match`'s result.
+const QUAD_ROW: usize = 6;
+
+/// Quads as plain strings — subject, predicate, object kind (`I`, `B` or `L`), object value, the
+/// literal's `@language` or datatype, graph — which JS turns into terms several times faster than
+/// it parses the same quads as N-Quads. A blank node is `_:id`, the default graph `""`.
+fn rows(quads: &[Quad]) -> Vec<String> {
+    let mut rows = Vec::with_capacity(quads.len() * QUAD_ROW);
+    for quad in quads {
+        rows.push(match &quad.subject {
+            NamedOrBlankNode::NamedNode(node) => node.as_str().to_owned(),
+            NamedOrBlankNode::BlankNode(node) => format!("_:{}", node.as_str()),
+        });
+        rows.push(quad.predicate.as_str().to_owned());
+        match &quad.object {
+            Term::NamedNode(node) => {
+                rows.extend(["I".to_owned(), node.as_str().to_owned(), String::new()]);
+            }
+            Term::BlankNode(node) => {
+                rows.extend(["B".to_owned(), node.as_str().to_owned(), String::new()]);
+            }
+            Term::Literal(literal) => {
+                rows.push("L".to_owned());
+                rows.push(literal.value().to_owned());
+                rows.push(match literal.language() {
+                    Some(language) => format!("@{language}"),
+                    None => literal.datatype().as_str().to_owned(),
+                });
+            }
+        }
+        rows.push(match &quad.graph_name {
+            GraphName::NamedNode(node) => node.as_str().to_owned(),
+            GraphName::BlankNode(node) => format!("_:{}", node.as_str()),
+            GraphName::DefaultGraph => String::new(),
+        });
+    }
+    rows
 }

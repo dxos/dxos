@@ -7,10 +7,12 @@
 import type { Quad } from '@rdfjs/types';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
+import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import * as ReferenceResolution from './ReferenceResolution.ts';
 import * as Store from './Store.ts';
 import * as TypeBinding from './TypeBinding.ts';
 
@@ -20,8 +22,9 @@ import * as TypeBinding from './TypeBinding.ts';
  * output. Filename order is the only dependency mechanism.
  *
  * Two kinds: N3 rule files, and JS passes (`derive`) for conclusions that need a computation rather
- * than a join — the cross-file type binding (`TypeBinding.ts`) is the first. A pass reads only the
- * file graphs and runs before every rule file, so each rule file sees every pass's graph.
+ * than a join — the cross-file type binding (`TypeBinding.ts`) and reference resolution
+ * (`ReferenceResolution.ts`). A pass reads only the file graphs and runs before every rule file, so
+ * each rule file sees every pass's graph.
  */
 
 export class ReasonerError extends Data.TaggedError('code-index/ReasonerError')<{
@@ -48,7 +51,10 @@ export type Outcome = Store.ReasonOutcome;
 const PASSES_KEY = 'passes';
 
 /** JS passes shipped with the tool. */
-const BUILTIN: readonly Pass[] = [{ name: TypeBinding.NAME, derive: TypeBinding.derive }];
+const BUILTIN: readonly Pass[] = [
+  { name: TypeBinding.NAME, derive: TypeBinding.derive },
+  { name: ReferenceResolution.NAME, derive: ReferenceResolution.derive },
+];
 
 /** The rule files shipped with the tool. */
 export const BUNDLED_DIR = fileURLToPath(new URL('../rules', import.meta.url));
@@ -76,10 +82,24 @@ export const loadFile = (path: string): Effect.Effect<RuleFile[], ReasonerError>
     try: async () => [{ name: basename(path, extname(path)), rules: await readFile(path, 'utf8') }],
   });
 
-/** Run each reasoner in order, replacing (or, natively, maintaining) its graph. Returns what each concluded. */
+/**
+ * Identifies a set of reasoners by their ordered names and rule texts, so a changed rule file makes
+ * the stored conclusions stale. A pass is identified by name: its code ships with the tool.
+ */
+export const signature = (reasoners: readonly Reasoner[]): string =>
+  createHash('sha256')
+    .update(JSON.stringify(reasoners.map((reasoner) => [reasoner.name, 'rules' in reasoner ? reasoner.rules : null])))
+    .digest('hex');
+
+/**
+ * Run each reasoner in order, replacing (or, natively, maintaining) its graph, and record the facts
+ * they ran over (`Store.reasoned`). Returns what each concluded.
+ */
 export const run = (reasoners: readonly Reasoner[]): Effect.Effect<Outcome[], Store.StoreError, Store.Store> =>
   Effect.gen(function* () {
     const store = yield* Store.Store;
+    // Read first: a pass writes its own graph, which is a conclusion and not a change to the facts.
+    const generation = yield* store.generation();
     const outcomes: Outcome[] = [];
     for (const reasoner of reasoners) {
       if (!('derive' in reasoner)) {
@@ -103,5 +123,12 @@ export const run = (reasoners: readonly Reasoner[]): Effect.Effect<Outcome[], St
     }
     yield* store.setMeta(PASSES_KEY, ran.join('\n'));
     const rules = reasoners.filter((reasoner): reasoner is RuleFile => 'rules' in reasoner);
-    return [...outcomes, ...(yield* store.reasonAll(rules))];
+    const ruled = yield* store.reasonAll(rules);
+    const all = [...outcomes, ...ruled];
+    yield* store.recordReasoned(
+      signature(reasoners),
+      generation,
+      all.reduce((total, outcome) => total + outcome.derived, 0),
+    );
+    return all;
   });

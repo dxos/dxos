@@ -4,7 +4,8 @@
 
 /**
  * Benchmarks both store backends on a real repository, through the CLI exactly as a user runs it:
- * a cold index into an empty store, then a warm pass after touching one file, then the store's size.
+ * a cold index into an empty store, a warm pass after touching one file, a pass with nothing changed,
+ * then the store's size.
  * Prints a markdown table, or with `--json` the raw results instead.
  *
  *   bun scripts/bench.ts [--root <repo>] [--backends js,native] [--touch <repo-relative file>] [--json]
@@ -27,7 +28,15 @@ const CLI = fileURLToPath(new URL('../bin/code-index.ts', import.meta.url));
 type Pass = {
   readonly indexed: number;
   readonly derived: number;
-  readonly timings: { scanMs: number; parseMs: number; commitMs: number; reasonMs: number; totalMs: number };
+  readonly timings: {
+    scanMs: number;
+    parseMs: number;
+    analyzeMs?: number;
+    encodeMs?: number;
+    commitMs: number;
+    reasonMs: number;
+    totalMs: number;
+  };
   readonly reasoners: readonly { name: string; derived: number; durationMs: number; incremental?: boolean }[];
 };
 
@@ -35,6 +44,7 @@ type Result = {
   readonly backend: string;
   readonly cold: Pass;
   readonly warm: Pass;
+  readonly unchanged: Pass;
   readonly bytes: number;
   readonly quads: number;
 };
@@ -86,13 +96,16 @@ for (const backend of values.backends.split(',')) {
     const before = await stat(touched);
     await utimes(touched, before.atime, new Date());
     let warm: Pass;
+    let unchanged: Pass;
     try {
       warm = await index();
+      // Before the mtime is restored, which would itself be a change.
+      unchanged = await index();
     } finally {
       await utimes(touched, before.atime, before.mtime);
     }
     const stats = JSON.parse(await cli(backend, ['stats', '--root', root, '--store', store, '--json']));
-    results.push({ backend, cold, warm, bytes: await size(store), quads: stats.quads });
+    results.push({ backend, cold, warm, unchanged, bytes: await size(store), quads: stats.quads });
   } finally {
     await rm(store, { recursive: true, force: true });
   }
@@ -103,15 +116,22 @@ const rows: [string, (result: Result) => string][] = [
   ['files indexed (cold)', (result) => String(result.cold.indexed)],
   ['quads', (result) => String(result.quads)],
   ['cold: total (wall)', (result) => seconds(result.cold.timings.totalMs)],
+  ['cold: parse (summed over batches)', (result) => seconds(result.cold.timings.parseMs)],
+  ['cold: of which analyze (in workers)', (result) => seconds(result.cold.timings.analyzeMs ?? 0)],
+  ['cold: of which encode (in workers)', (result) => seconds(result.cold.timings.encodeMs ?? 0)],
   ['cold: commit (summed over batches)', (result) => seconds(result.cold.timings.commitMs)],
   ['cold: reason', (result) => seconds(result.cold.timings.reasonMs)],
   ['warm, one file: total', (result) => seconds(result.warm.timings.totalMs)],
+  ['warm, one file: scan', (result) => seconds(result.warm.timings.scanMs)],
+  ['warm, one file: parse', (result) => seconds(result.warm.timings.parseMs)],
   ['warm, one file: commit', (result) => seconds(result.warm.timings.commitMs)],
   ['warm, one file: reason', (result) => seconds(result.warm.timings.reasonMs)],
   [
     'warm reasoning incremental',
     (result) => String(result.warm.reasoners.every((outcome) => outcome.incremental === true)),
   ],
+  ['no change: total', (result) => seconds(result.unchanged.timings.totalMs)],
+  ['no change: derived reported', (result) => String(result.unchanged.derived)],
   ['derived quads', (result) => String(result.warm.derived)],
   ['store size', (result) => `${(result.bytes / 1e6).toFixed(0)} MB`],
 ];

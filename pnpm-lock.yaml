@@ -510,6 +510,9 @@ catalogs:
     '@types/d3':
       specifier: ^7.4.3
       version: 7.4.3
+    '@types/d3-force':
+      specifier: ^3.0.10
+      version: 3.0.10
     '@types/deep-equal':
       specifier: ^1.0.4
       version: 1.0.4
@@ -876,6 +879,9 @@ catalogs:
     d3:
       specifier: ^7.9.0
       version: 7.9.0
+    d3-force:
+      specifier: ~3.0.0
+      version: 3.0.0
     date-fns:
       specifier: ^3.6.0
       version: 3.6.0
@@ -17092,6 +17098,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/display-name':
+        specifier: workspace:*
+        version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -24515,6 +24524,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../packages/core/compute/ai
+      '@dxos/diagram':
+        specifier: workspace:*
+        version: link:../../packages/common/diagram
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../packages/core/echo/echo
@@ -24542,6 +24554,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../packages/sdk/types
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../packages/ui/ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/ui-theme
@@ -24576,6 +24591,9 @@ importers:
         specifier: 'catalog:'
         version: 6.0.5(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       classic-level:
+        specifier: 'catalog:'
+        version: 3.0.0
+      d3-force:
         specifier: 'catalog:'
         version: 3.0.0
       effect:
@@ -24636,6 +24654,9 @@ importers:
       '@rdfjs/types':
         specifier: 'catalog:'
         version: 2.0.1
+      '@types/d3-force':
+        specifier: 'catalog:'
+        version: 3.0.10
       '@types/n3':
         specifier: 'catalog:'
         version: 1.26.1
@@ -32693,6 +32714,9 @@ packages:
 
   '@types/d3-fetch@3.0.1':
     resolution: {integrity: sha512-toZJNOwrOIqz7Oh6Q7l2zkaNfXkfR7mFSJvGvlD/Ciq/+SQ39d5gynHJZ/0fjt83ec3WL7+u3ssqIijQtBISsw==}
+
+  '@types/d3-force@3.0.10':
+    resolution: {integrity: sha512-ZYeSaCF3p73RdOKcjj+swRlZfnYpK1EbaDiYICEEp5Q6sUiqFaFQ9qgoshp5CzIyyb/yD09kD9o2zEltCexlgw==}
 
   '@types/d3-force@3.0.3':
     resolution: {integrity: sha512-z8GteGVfkWJMKsx6hwC3SiTSLspL98VNpmvLpEFJQpZPq6xpA1I8HNBDNSpukfK0Vb0l64zGFhzunLgEAcBWSA==}
@@ -54184,6 +54208,8 @@ snapshots:
   '@types/d3-fetch@3.0.1':
     dependencies:
       '@types/d3-dsv': 3.0.0
+
+  '@types/d3-force@3.0.10': {}
 
   '@types/d3-force@3.0.3': {}
 

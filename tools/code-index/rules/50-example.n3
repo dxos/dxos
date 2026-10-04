@@ -1,4 +1,4 @@
-# Rules run over the WHOLE graph at the end of every indexing pass that changed something, and
+# Rules run over the WHOLE graph at the end of every indexing pass whose facts moved, and
 # their conclusions replace `graph:derived` wholesale. Two consequences worth internalizing before
 # adding a rule here:
 #
@@ -21,18 +21,19 @@
 #      single predicate, joins that introduce new vocabulary, and conclusions other rules build on.
 #      Keep the output small — it is recomputed from scratch every pass.
 #
-# The rule below is a linear scan with a handful of conclusions: which non-test files pull in a
-# test file, which is a lint the import graph cannot express as a path.
+# The rule below is a join with a handful of conclusions: which non-test files pull in a test file,
+# which is a lint the import graph cannot express as a path. The analyzer states `deus:testFile`, so
+# the rule matches no path against a pattern: a builtin over every import edge cost the rule a scan.
 
 @prefix deus: <https://dxos.org/vocab/deus#>.
-@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
 
 {
+  ?imported deus:testFile true .
   ?importer deus:imports ?imported .
-  ?imported deus:path ?path .
-  ?path string:matches "^.*\\.(test|spec)\\.[tj]sx?$" .
-  ?importer deus:path ?importerPath .
-  ?importerPath string:notMatches "^.*\\.(test|spec)\\.[tj]sx?$" .
+  (?importer { ?importer deus:testFile true } ?tests) log:collectAllIn ?scope .
+  ?tests list:length 0 .
 } => {
   ?importer deus:importsTestFile ?imported .
 }.

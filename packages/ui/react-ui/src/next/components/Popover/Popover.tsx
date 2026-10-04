@@ -22,7 +22,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/index.ts';
-import { Container } from '../Container/index.ts';
+import { Container, DefaultGutterProvider } from '../Container/index.ts';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
 import { popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
@@ -213,7 +213,10 @@ type PopoverBodyProps = ThemedClassName<Pick<ScrollAreaRootProps, 'mode' | 'widt
 const PopoverBody = forwardRef<HTMLDivElement, PopoverBodyProps>(({ classNames, children, ...props }, forwardedRef) => (
   <ScrollArea.Root {...props} classNames={mx(recipes.popoverBody(), classNames)} ref={forwardedRef}>
     <ScrollArea.Viewport asChild>
-      <Container gutter='inset'>{children}</Container>
+      <Container gutter='inset'>
+        {/* Its direct content (a form's Viewport) joins these rails rather than nesting a second inset. */}
+        <DefaultGutterProvider gutter='inherit'>{children}</DefaultGutterProvider>
+      </Container>
     </ScrollArea.Viewport>
   </ScrollArea.Root>
 ));

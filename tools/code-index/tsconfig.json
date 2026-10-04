@@ -13,6 +13,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/common/diagram"
+    },
+    {
       "path": "../../packages/common/effect"
     },
     {
@@ -41,6 +44,9 @@
     },
     {
       "path": "../../packages/ui/react-ui-feed"
+    },
+    {
+      "path": "../../packages/ui/ui-editor"
     },
     {
       "path": "../../packages/ui/ui-theme"

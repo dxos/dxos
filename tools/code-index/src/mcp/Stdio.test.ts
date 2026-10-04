@@ -120,9 +120,11 @@ describe.skipIf(bun === undefined)('code-index mcp over stdio', () => {
       expect(listed.result.tools.map((tool) => tool.name).sort()).toEqual([
         'ask',
         'describe',
+        'design',
         'files',
         'query',
         'stats',
+        'usages',
         'vocabulary',
       ]);
       for (const tool of listed.result.tools) {
@@ -144,10 +146,16 @@ describe.skipIf(bun === undefined)('code-index mcp over stdio', () => {
         truncated: true,
       });
 
+      // Every result must be JSON on the wire, which an in-process call cannot check: no `undefined` fields.
+      const vocabulary = await server.request<Called>('tools/call', { name: 'vocabulary', arguments: {} });
+      expect(vocabulary.result.isError).not.toBe(true);
+      expect(vocabulary.result.structuredContent).toMatchObject({ prefixes: { deus: Ontology.PREFIX } });
+
       // A second server cannot open the store this one holds, and says which process holds it.
       const second = start(bun ?? 'bun', root);
       expect(await second.exited).not.toBe(0);
       expect(second.stderr()).toContain(`pid ${server.child.pid}`);
+      expect(second.stderr()).toContain('another `code-index mcp`');
       expect(second.lines).toEqual([]);
 
       // Closing stdin is how a client stops a server; effect's stdio protocol answers it by interrupting
