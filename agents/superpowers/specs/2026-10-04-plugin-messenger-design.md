@@ -166,14 +166,8 @@ materializer, so it cannot be optional.
 
 ## Shipping
 
-Stacked PRs, landed together:
-
-1. Transport, envelope and invitations as messages: the `InboxService`/`HaloInbox` changes,
-   `SpaceInvitationMessage`, plugin-space sending, plugin-client's surface and removals, and
-   `MemoryEdgeInbox` in testing. It builds on its own, but nothing announces invitations until
-   PR 2 lands, so it must not land alone.
-2. plugin-messenger and the deck badge.
-3. The two-column storybook, as a follow-up PR.
+One PR (#13701) carrying all three phases: transport and invitations, plugin-messenger with the
+deck badge, and the two-user storybook. Phase 1 alone would leave invitations unannounced.
 
 ## Testing
 

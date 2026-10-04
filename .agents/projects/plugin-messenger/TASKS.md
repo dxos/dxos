@@ -12,8 +12,7 @@ Design: [`agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`](../..
 
 ## Shipping
 
-Stacked PRs: Phase 1 (this branch) → Phase 2 (child branch, `gh stack link`), landed together —
-Phase 1 alone leaves invitations unannounced. Phase 3 follows.
+One PR (#13701) on this branch: Phases 1–3 together (stack dropped 2026-10-04).
 
 ## Phase 1: transport + invitations as messages
 
