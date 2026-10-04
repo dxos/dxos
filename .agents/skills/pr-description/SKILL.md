@@ -29,8 +29,9 @@ That base is `origin/main` for a standalone or bottom-of-stack PR, and the paren
 for a stacked child, so the parent's changes do not pick templates for this PR:
 
 ```bash
-git diff --stat origin/main...HEAD             # standalone or bottom of stack
-git diff --stat origin/<parent-branch>...HEAD  # stacked child
+BASE=origin/main                   # standalone or bottom of stack
+# BASE=origin/feature-parent-pr    # stacked child: substitute the parent PR's head branch
+git diff --stat "$BASE"...HEAD
 ```
 
 - **Bugfix**: the branch exists because something was broken. A refactor that happens to fix a bug

@@ -15,8 +15,11 @@ and what the user saw: the error text, the wrong value, the hang. Quote the log 
 
 <The test that reproduces it: file path and test name. State that it fails without the fix and
 passes with it, and how you checked (`moon run <pkg>:test -- <file>`). A test this PR adds does not
-exist on the base, so show the failure by reverting only the fix with the test kept (for example
-`git checkout origin/main -- <fixed files>`), or by an existing test or manual steps on the base.
+exist on the base, so show the failure by reverse-applying only the fix's hunks against the PR's
+base (the same base used to pick templates) with the test and every other edit kept, for example
+`git diff "$BASE"...HEAD -- "$FIX_FILE" | git apply -R` when the fix has a file to itself, or
+`git revert --no-commit "$FIX_COMMIT"` when it has a commit to itself. An existing test or manual
+steps on the base also count.
 If no automated test can reproduce it, say why and give the manual steps instead.>
 
 ### Root cause
