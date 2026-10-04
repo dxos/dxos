@@ -12,6 +12,8 @@ import { type Actor, Message, SpaceInvitationMessage } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import { formatTime } from './format-time.ts';
+
 export type NotificationAction =
   /** Clicked: mark read and go to what the message links to. */
   | { type: 'open'; messageId: string }
@@ -27,6 +29,8 @@ export type InvitationRenderer = (props: { data: SpaceInvitationMessage.Data; se
 export type NotificationTileData = {
   message: Message.Message;
   read: boolean;
+  /** The panel's clock (ms), so relative times refresh together from one ticker. */
+  now: number;
   renderInvitation?: InvitationRenderer;
   onAction?: NotificationActionHandler;
 };
@@ -39,7 +43,7 @@ export type NotificationTileProps = Pick<MosaicTileProps<NotificationTileData>, 
  */
 export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { message, read, renderInvitation, onAction } = data;
+    const { message, read, now, renderInvitation, onAction } = data;
     const { t } = useTranslation(meta.profile.key);
     const { setCurrentId } = useMosaicContainer('NotificationTile');
     const invitation = useMemo(() => Option.getOrUndefined(SpaceInvitationMessage.match(message)), [message]);
@@ -53,10 +57,7 @@ export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps
       const [first = '', ...rest] = text.split('\n');
       return { title: first, body: rest.join('\n').trim() };
     }, [message]);
-    const time = useMemo(
-      () => new Date(message.created).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }),
-      [message.created],
-    );
+    const time = useMemo(() => formatTime(message.created, now), [message.created, now]);
 
     const handleCurrentChange = useCallback(() => {
       setCurrentId(message.id);

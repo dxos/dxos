@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -48,6 +48,18 @@ const matchesFilter = (filter: NotificationFilter, message: Message.Message, rea
   }
 };
 
+const MINUTE_MS = 60_000;
+
+/** The wall clock, refreshed every `interval`; one per panel, so tiles' relative times move together. */
+const useNow = (interval: number): number => {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), interval);
+    return () => clearInterval(timer);
+  }, [interval]);
+  return now;
+};
+
 export type NotificationsPanelProps = {
   role?: string;
   /** Makes the panel attendable, so its toolbar takes attention styling and contributed actions target it. */
@@ -72,6 +84,7 @@ export const NotificationsPanel = ({
   const { t } = useTranslation(meta.profile.key);
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
+  const now = useNow(MINUTE_MS);
   const attentionAttributes = useAttentionAttributes(attendableId);
   const viewAtom = useMemo(() => Atom.make((get) => Notifications.deriveView(get, containers)), [containers]);
   const { messages, read } = useAtomValue(viewAtom);
@@ -163,10 +176,11 @@ export const NotificationsPanel = ({
         .map((message): NotificationTileData => ({
           message,
           read: read.has(message.id),
+          now,
           renderInvitation,
           onAction: handleAction,
         })),
-    [messages, filter, read, renderInvitation, handleAction],
+    [messages, filter, read, now, renderInvitation, handleAction],
   );
 
   const getItemId = useCallback((item: NotificationTileData) => item.message.id, []);
