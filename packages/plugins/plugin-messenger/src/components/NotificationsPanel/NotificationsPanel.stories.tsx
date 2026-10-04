@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
+import { fn } from 'storybook/test';
 
 import { Database, Feed, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -21,12 +22,12 @@ import { translations } from '#translations';
 import { Notifications } from '#types';
 
 import { makeNotificationMessages } from '../../testing/fixtures.ts';
-import { NotificationsPanel } from './NotificationsPanel.tsx';
+import { NotificationsPanel, type NotificationsPanelProps } from './NotificationsPanel.tsx';
 
 /** Stands in for the deck companion's node id, so the toolbar takes attention like it does in the deck. */
 const ATTENDABLE_ID = 'notifications-panel';
 
-const DefaultStory = () => {
+const DefaultStory = ({ onOpen }: Pick<NotificationsPanelProps, 'onOpen'>) => {
   const { spaceId } = useClientStory();
   const space = useSpace(spaceId);
   const containers = useQuery(space?.db, Filter.type(Notifications.Notifications));
@@ -41,7 +42,7 @@ const DefaultStory = () => {
       renderInvitation={({ data, sender }) => (
         <Card.Text>{`${sender.name} invited you to ${data.spaceName}.`}</Card.Text>
       )}
-      onOpen={(message) => console.log('open', message.id)}
+      onOpen={onOpen}
     />
   );
 };
@@ -72,6 +73,9 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     translations,
+  },
+  args: {
+    onOpen: fn(),
   },
 } satisfies Meta<typeof DefaultStory>;
 

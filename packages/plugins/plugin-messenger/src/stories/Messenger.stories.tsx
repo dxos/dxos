@@ -197,12 +197,8 @@ const UnreadBadge = ({ containers }: { containers: readonly Notifications.Notifi
   ) : null;
 };
 
-const ReceiverColumn = () => {
-  const client = useClient();
-  const space = useOwnSpace();
-  const containers = useQuery(space?.db, Filter.type(Notifications.Notifications));
-  const [opened, setOpened] = useState<string>();
-
+/** Runs the inbox materializer into `space` for as long as the caller is mounted. */
+const useInboxMaterializer = (client: Client, space: Space | undefined) => {
   useEffect(() => {
     if (!space) {
       return;
@@ -211,6 +207,14 @@ const ReceiverColumn = () => {
     const { stop } = startInboxMaterializer({ client, getSpace: () => space });
     return stop;
   }, [client, space]);
+};
+
+const ReceiverColumn = () => {
+  const client = useClient();
+  const space = useOwnSpace();
+  const containers = useQuery(space?.db, Filter.type(Notifications.Notifications));
+  const [opened, setOpened] = useState<string>();
+  useInboxMaterializer(client, space);
 
   const handleOpen = useCallback(
     (message: Message.Message) => {
@@ -236,10 +240,8 @@ const ReceiverColumn = () => {
           </Block>
           <span>Bob</span>
           <Toolbar.Separator variant='gap' />
-          <div className='flex items-center gap-2 px-2'>
-            {containers.length > 0 && <UnreadBadge containers={containers} />}
-            {opened && <span className='text-sm text-fg-muted'>{`Opened “${opened}”`}</span>}
-          </div>
+          {containers.length > 0 && <UnreadBadge containers={containers} />}
+          {opened && <span className='text-sm text-fg-muted'>{`Opened “${opened}”`}</span>}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
@@ -351,14 +353,12 @@ const InviteeColumn = () => {
           </Block>
           <span>Bob</span>
           <Toolbar.Separator variant='gap' />
-          <div className='flex items-center gap-2 px-2'>
-            {containers && containers.length > 0 && <UnreadBadge containers={containers} />}
-            {joined && (
-              <span className='text-sm text-fg-muted' data-testid='messenger.joined'>
-                {`Member of “${INVITED_SPACE_NAME}”`}
-              </span>
-            )}
-          </div>
+          {containers && containers.length > 0 && <UnreadBadge containers={containers} />}
+          {joined && (
+            <span className='text-sm text-fg-muted' data-testid='messenger.joined'>
+              {`Member of “${INVITED_SPACE_NAME}”`}
+            </span>
+          )}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
