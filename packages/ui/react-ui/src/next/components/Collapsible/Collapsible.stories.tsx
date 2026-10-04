@@ -8,31 +8,33 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
-import { sizeRow } from '../../testing.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
+import { realHover, realUnhover, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Collapsible, Field, Input, Switch, Typography } from '../index.ts';
 
 const DefaultStory = () => (
-  <Next.Collapsible.Root>
-    <Next.Collapsible.Trigger>Advanced settings</Next.Collapsible.Trigger>
-    <Next.Collapsible.Content data-testid='content'>
-      <Next.Typography>These settings change how your space syncs.</Next.Typography>
-      <Next.Field.Root>
-        <Next.Field.Header>
-          <Next.Field.Label>Sync interval</Next.Field.Label>
-        </Next.Field.Header>
-        <Next.Input defaultValue='30s' />
-      </Next.Field.Root>
-      <Next.Switch label='Sync over cellular' />
-    </Next.Collapsible.Content>
-  </Next.Collapsible.Root>
+  <Collapsible.Root>
+    <Collapsible.Trigger>Advanced settings</Collapsible.Trigger>
+    <Collapsible.Content data-testid='content'>
+      <Typography>These settings change how your space syncs.</Typography>
+      <Field.Root>
+        <Field.Header>
+          <Field.Label>Sync interval</Field.Label>
+        </Field.Header>
+        <Input defaultValue='30s' />
+      </Field.Root>
+      <Switch label='Sync over cellular' />
+    </Collapsible.Content>
+  </Collapsible.Root>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/collapsible',
+  title: 'ui/react-ui-core/components/Collapsible',
   render: DefaultStory,
-  decorators: [withSizes(), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -44,15 +46,24 @@ export const Default: Story = {};
 
 /** The trigger toggles the section by pointer and keyboard; the story ends open. */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const canvas = within(sizeRow(canvasElement, 'md'));
     const trigger = canvas.getByRole('button', { name: 'Advanced settings' });
     const content = canvas.getByTestId('content');
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    // Hover recolours the text and leaves the row unfilled.
+    const rest = getComputedStyle(trigger);
+    const [restColor, restBackground] = [rest.color, rest.backgroundColor];
+    await realHover(trigger);
+    await waitFor(() => expect(getComputedStyle(trigger).color).not.toBe(restColor));
+    await expect(getComputedStyle(trigger).backgroundColor).toBe(restBackground);
+    await realUnhover(trigger);
     await expect(content).not.toBeVisible();
 
     // The trigger is a block row.
-    const block = parseFloat(getComputedStyle(trigger).getPropertyValue('--nx-block-size')) * 16;
+    const block = parseFloat(getComputedStyle(trigger).getPropertyValue('--dx-block-size')) * 16;
     await expect(trigger.getBoundingClientRect().height).toBeCloseTo(block, 0);
 
     await userEvent.click(trigger);

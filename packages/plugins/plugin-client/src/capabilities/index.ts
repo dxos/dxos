@@ -113,7 +113,7 @@ export const NavigationTargetLoader = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.contactPicker', 'org.dxos.role.dialog'],
   props: ({
     shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
     invitationPath = '/',

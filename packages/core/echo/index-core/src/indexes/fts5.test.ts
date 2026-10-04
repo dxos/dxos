@@ -4,7 +4,7 @@
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Effect from 'effect/Effect';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as Reactivity from 'effect/reactivity/Reactivity';
 import { describe, expect, it } from 'vitest';
 
 describe('FTS5', () => {

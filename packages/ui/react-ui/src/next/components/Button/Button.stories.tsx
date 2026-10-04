@@ -8,10 +8,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
 import {
   GEOMETRY,
   byTestId,
@@ -24,9 +22,20 @@ import {
   realHover,
   sizeRow,
 } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import {
+  Button,
+  type ButtonHue,
+  type ButtonValence,
+  type ButtonVariant,
+  Group,
+  Toggle,
+  ToggleGroup,
+  Toolbar,
+} from '../index.ts';
 
 /** Every variant, with the `valence` variant once bare and once per valence. */
-const VARIANTS: { name: string; variant: Next.ButtonVariant; valence?: Next.ButtonValence }[] = [
+const VARIANTS: { name: string; variant: ButtonVariant; valence?: ButtonValence }[] = [
   { name: 'default', variant: 'default' },
   { name: 'primary', variant: 'primary' },
   { name: 'ghost', variant: 'ghost' },
@@ -40,11 +49,9 @@ const VARIANTS: { name: string; variant: Next.ButtonVariant; valence?: Next.Butt
   })),
 ];
 
-const HUES: Next.ButtonHue[] = ['neutral', 'red', 'amber', 'emerald', 'sky', 'error'];
+const HUES: ButtonHue[] = ['neutral', 'red', 'amber', 'emerald', 'sky', 'error'];
 
 type StoryArgs = SizeArgs & {
-  variant?: Next.ButtonVariant;
-  valence?: Next.ButtonValence;
   /** Also show every variant, icon-only then as text. */
   variants?: boolean;
 };
@@ -52,51 +59,28 @@ type StoryArgs = SizeArgs & {
 /**
  * A toolbar of icon-only, text, disabled, leading-icon and trailing-icon buttons over a row with a rail Block, so the
  * first button's icon can be compared with the rail's; then caret, compact, tooltip-side and hue buttons.
- * `variant`/`valence` apply to the default buttons.
  */
-const DefaultStory = ({ size, variant, valence, variants }: StoryArgs) => (
+const DefaultStory = ({ size, variants }: StoryArgs) => (
   <>
-    <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Next.Button
-        icon='ph--plus--regular'
-        label={`Add ${size}`}
-        iconOnly
-        variant={variant}
-        valence={valence}
-        data-testid={`add-${size}`}
-      />
-      <Next.Button
-        icon='ph--minus--regular'
-        label={`Remove ${size}`}
-        iconOnly
-        variant={variant}
-        valence={valence}
-        data-testid={`remove-${size}`}
-      />
-      <Next.Button icon='ph--trash--regular' label={`Delete ${size}`} iconOnly disabled />
-      <Next.Button variant={variant} valence={valence} data-testid={`button-${size}`}>
-        Save
-      </Next.Button>
-      <Next.Button variant='primary' data-testid={`primary-${size}`}>
+    <Toolbar.Root data-testid={`toolbar-${size}`}>
+      <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+      <Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
+      <Button icon='ph--trash--regular' label='Delete' iconOnly disabled />
+      <Button data-testid={`button-${size}`}>Save</Button>
+      <Button variant='primary' data-testid={`primary-${size}`}>
         Publish
-      </Next.Button>
-      <Next.Button disabled data-testid={`disabled-${size}`}>
+      </Button>
+      <Button disabled data-testid={`disabled-${size}`}>
         Archive
-      </Next.Button>
-      <Next.Button icon='ph--share--regular' label={`Share ${size}`} data-testid={`share-${size}`} />
-      <Next.Button iconEnd='ph--caret-down--regular' label={`More ${size}`} data-testid={`more-${size}`} />
-    </Next.Toolbar.Root>
-    <Next.Container gutter='rail' layout='row'>
-      <Next.Block rail='start' data-testid={`rail-${size}`}>
-        <Next.Icon icon='ph--circle--regular' />
-      </Next.Block>
-      <Next.Typography>Row {size}</Next.Typography>
-    </Next.Container>
+      </Button>
+      <Button icon='ph--share--regular' label='Share' data-testid={`share-${size}`} />
+      <Button iconEnd='ph--caret-down--regular' label='More' data-testid={`more-${size}`} />
+    </Toolbar.Root>
     {variants && (
-      <Next.Group>
+      <Group>
         {VARIANTS.map(({ name, variant, valence }) => (
-          <Next.Group key={name}>
-            <Next.Button
+          <Group key={name}>
+            <Button
               icon='ph--star--regular'
               label={name}
               iconOnly
@@ -104,59 +88,56 @@ const DefaultStory = ({ size, variant, valence, variants }: StoryArgs) => (
               valence={valence}
               data-testid={`icon-variant-${name}-${size}`}
             />
-            <Next.Button variant={variant} valence={valence} data-testid={`variant-${name}-${size}`}>
+            <Button variant={variant} valence={valence} data-testid={`variant-${name}-${size}`}>
               {name}
-            </Next.Button>
-          </Next.Group>
+            </Button>
+          </Group>
         ))}
-      </Next.Group>
+      </Group>
     )}
-    <Next.Group>
-      <Next.Button caretDown data-testid={`caret-${size}`}>
+    <Toolbar.Root>
+      <Button caretDown data-testid={`caret-${size}`}>
         Format
-      </Next.Button>
-      <Next.Button
-        icon='ph--text-aa--regular'
-        label={`Style ${size}`}
-        iconOnly
-        caretDown
-        data-testid={`icon-caret-${size}`}
-      />
-      <Next.Button compact data-testid={`compact-${size}`}>
+      </Button>
+      <Button icon='ph--text-aa--regular' label='Style' iconOnly caretDown data-testid={`icon-caret-${size}`} />
+      <Button compact data-testid={`compact-${size}`}>
         1
-      </Next.Button>
-      <Next.Button
-        icon='ph--caret-left--regular'
-        label={`Previous ${size}`}
-        iconOnly
-        compact
-        data-testid={`icon-compact-${size}`}
-      />
-      <Next.Button
-        icon='ph--info--regular'
-        label={`Details ${size}`}
-        iconOnly
-        tooltipSide='right'
-        data-testid={`side-${size}`}
-      />
+      </Button>
+      <Button icon='ph--caret-left--regular' label='Previous' iconOnly compact data-testid={`icon-compact-${size}`} />
+      <Button icon='ph--info--regular' label='Details' iconOnly tooltipSide='right' data-testid={`side-${size}`} />
       {HUES.map((hue) => (
-        <Next.Button key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
+        <Button key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
           {hue}
-        </Next.Button>
+        </Button>
       ))}
-    </Next.Group>
+    </Toolbar.Root>
+    <Group fill>
+      <Button align='start' icon='ph--file--regular' data-testid={`align-start-${size}`}>
+        Packed at the start
+      </Button>
+    </Group>
+    <Group>
+      <Button icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`}>
+        Saving
+      </Button>
+      <Button icon='ph--star--regular' label='Large icon' iconOnly iconSize='lg' data-testid={`icon-size-${size}`} />
+      <Button
+        icon='ph--check-circle--regular'
+        iconClassNames='text-success-text'
+        label='Synced'
+        data-testid={`icon-class-${size}`}
+      />
+    </Group>
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/button',
+  title: 'ui/react-ui-core/components/Button',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[48rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[48rem]' }), withTheme()],
   parameters: { layout: 'centered' },
-  argTypes: {
-    variant: { control: 'select', options: VARIANTS.map(({ variant }) => variant) },
-    valence: { control: 'select', options: ['neutral', 'info', 'success', 'warning', 'error'] },
-  },
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
 } satisfies Meta<StoryArgs>;
 
 export default meta;
@@ -175,12 +156,20 @@ export const Default: Story = {};
  * change background and text, ghost and outline drop the fill (outline keeps a border), each valence has its own
  * colour, and every variant has a hover state. `caretDown` adds a smaller trailing caret (an icon-only button then
  * widens to fit it), `compact` pads by one inset, `tooltipSide` moves the label Tooltip, and `hue` fills with a Tag's
- * hue, shifting brightness on hover. The story ends with a tooltip open.
+ * hue, shifting brightness on hover. `align='start'` packs a stretched button's content at its start, `spin` spins the
+ * leading icon, `iconSize` takes another size's icon scale, and `iconClassNames` styles the leading icon. The story ends with a tooltip open.
  */
 export const Test: Story = {
-  args: { variants: true },
+  args: { allSizes: true, variants: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    // A label never wraps: squeezed to a sliver, a button stays one control tall.
+    const sample = canvasElement.querySelector<HTMLElement>('.dx-button:not([data-square])');
+    if (sample) {
+      const height = sample.getBoundingClientRect().height;
+      sample.style.maxWidth = '2rem';
+      await expect(sample.getBoundingClientRect().height).toBeCloseTo(height, 0);
+      sample.style.maxWidth = '';
+    }
 
     // Geometry.
     for (const size of SIZES) {
@@ -207,17 +196,18 @@ export const Test: Story = {
       }
 
       const add = byTestId(canvasElement, `add-${size}`).getBoundingClientRect();
-      await expect(add.left - inset, `add-${size} cell`).toBeCloseTo(toolbar.left, 0);
-      const buttonIcon = byTestId(canvasElement, `add-${size}`).querySelector('svg')?.getBoundingClientRect();
-      const railIcon = byTestId(canvasElement, `rail-${size}`).querySelector('svg')?.getBoundingClientRect();
-      await expect(buttonIcon?.left, `add-${size} icon x`).toBeCloseTo(railIcon?.left ?? Number.NaN, 0);
+      // The cell starts after the toolbar's inline padding.
+      const toolbarPadding = parseFloat(
+        getComputedStyle(byTestId(canvasElement, `add-${size}`).closest('.dx-toolbar') ?? canvasElement).paddingLeft,
+      );
+      await expect(add.left - inset, `add-${size} cell`).toBeCloseTo(toolbar.left + toolbarPadding, 0);
 
       // A leading icon then the label, spaced by the gap and padded like a text button; a trailing icon mirrors it.
       const share = byTestId(canvasElement, `share-${size}`);
-      await expect(share).toHaveTextContent(`Share ${size}`);
+      await expect(share).toHaveTextContent('Share');
       await expect(share).toBeVisible();
       await expect(share).not.toHaveAttribute('aria-label');
-      await expect(canvas.getByRole('button', { name: `Share ${size}` })).toBe(share);
+      await expect(within(sizeRow(canvasElement, size)).getByRole('button', { name: 'Share' })).toBe(share);
       const shareRect = share.getBoundingClientRect();
       await expect(shareRect.height, size).toBeCloseTo(add.height, 0);
       await expect(shareRect.width, size).toBeGreaterThan(shareRect.height);
@@ -242,11 +232,11 @@ export const Test: Story = {
     const publish = md.getAllByRole('button', { name: 'Publish' })[0];
     await expect(publish).toHaveAttribute('data-variant', 'primary');
     await expect(getComputedStyle(publish).backgroundColor).not.toBe(getComputedStyle(save).backgroundColor);
-    const addMd = md.getByRole('button', { name: 'Add md' });
+    const addMd = md.getByRole('button', { name: 'Add' });
     await expect(addMd).toBe(byTestId(canvasElement, 'add-md'));
     await expect(addMd).not.toHaveAttribute('title');
     await expect(addMd).toHaveAttribute('type', 'button');
-    await expect(md.getByRole('button', { name: 'Delete md' })).toBeDisabled();
+    await expect(md.getByRole('button', { name: 'Delete' })).toBeDisabled();
     await expectDecorativeIconsHidden(canvasElement);
     await expectScoped(canvasElement);
 
@@ -261,19 +251,19 @@ export const Test: Story = {
     await userEvent.tab();
     const addXs = byTestId(canvasElement, 'add-xs');
     await expect(addXs).toHaveFocus();
-    await expectTooltip(addXs, 'Add xs');
-    await expect(addXs).toHaveAccessibleDescription('Add xs');
+    await expectTooltip(addXs, 'Add');
+    await expect(addXs).toHaveAccessibleDescription('Add');
 
     await userEvent.keyboard('{ArrowRight}');
     const removeXs = byTestId(canvasElement, 'remove-xs');
     await expect(removeXs).toHaveFocus();
-    await expectTooltip(removeXs, 'Remove xs');
+    await expectTooltip(removeXs, 'Remove');
     await new Promise((resolve) => setTimeout(resolve, 400));
     await expect(body.getAllByRole('tooltip')).toHaveLength(1);
 
     const addLg = byTestId(canvasElement, 'add-lg');
     await userEvent.hover(addLg);
-    await expectTooltip(addLg, 'Add lg');
+    await expectTooltip(addLg, 'Add');
     await expect(addLg).not.toHaveAttribute('title');
     await userEvent.unhover(addLg);
     removeXs.blur();
@@ -345,11 +335,38 @@ export const Test: Story = {
         caret.getBoundingClientRect().right - parseFloat(getComputedStyle(caret).paddingRight),
         0,
       );
+      // The caret sits a full gap after a label.
+      const gap = parseFloat(getComputedStyle(caret).columnGap);
+      // The label is a text node, so measure it through a Range.
+      const text = Array.from(caret.childNodes).find(
+        (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+      );
+      const range = document.createRange();
+      if (text) {
+        range.selectNodeContents(text);
+      }
+      await expect((caretIcon?.left ?? 0) - range.getBoundingClientRect().right, `caret-${size} gap`).toBeCloseTo(
+        gap,
+        0,
+      );
       const iconCaret = byTestId(canvasElement, `icon-caret-${size}`);
       await expect(iconCaret.querySelectorAll('svg')).toHaveLength(2);
+      const [leading, trailing] = Array.from(iconCaret.querySelectorAll('svg')).map((svg) =>
+        svg.getBoundingClientRect(),
+      );
+      // With no label the icon keeps its square's padding, the caret follows a narrow gap, and its end padding matches.
+      const box = iconCaret.getBoundingClientRect();
+      const halfBlock = (controlSize(size) + 2 * inset) / 2;
+      const padding = (controlSize(size) - leading.width) / 2;
+      await expect(leading.left - box.left, `icon-caret-${size} padding`).toBeCloseTo(padding, 0);
+      await expect(trailing.left - leading.right, `icon-caret-${size} gap`).toBeCloseTo(
+        (halfBlock - trailing.width) / 2,
+        0,
+      );
+      await expect(box.right - trailing.right, `icon-caret-${size} end padding`).toBeCloseTo(padding, 0);
       await expect(iconCaret.getBoundingClientRect().height, `icon-caret-${size}`).toBeCloseTo(controlSize(size), 0);
       await expect(iconCaret.getBoundingClientRect().width).toBeGreaterThan(iconCaret.getBoundingClientRect().height);
-      await expect(iconCaret).toHaveAttribute('aria-label', `Style ${size}`);
+      await expect(iconCaret).toHaveAttribute('aria-label', 'Style');
       await expect(parseFloat(getComputedStyle(byTestId(canvasElement, `compact-${size}`)).paddingLeft)).toBeCloseTo(
         inset,
         0,
@@ -374,8 +391,96 @@ export const Test: Story = {
     await userEvent.unhover(side);
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
 
+    const aligned = byTestId(canvasElement, 'align-start-md');
+    const alignedIcon = aligned.querySelector('svg')?.getBoundingClientRect();
+    await expect(aligned.getBoundingClientRect().width).toBeGreaterThan(300);
+    await expect((alignedIcon?.left ?? 0) - aligned.getBoundingClientRect().left).toBeCloseTo(
+      parseFloat(getComputedStyle(aligned).paddingLeft),
+      0,
+    );
+    const spinner = byTestId(canvasElement, 'spin-md').querySelector('svg');
+    await expect(spinner && getComputedStyle(spinner).animationName).toBe('dx-spin');
+    await expect(byTestId(canvasElement, 'icon-class-md').querySelector('svg')).toHaveClass('text-success-text');
+    for (const size of SIZES) {
+      const glyph = byTestId(canvasElement, `icon-size-${size}`).querySelector('svg')?.getBoundingClientRect();
+      await expect(glyph?.width, size).toBeCloseTo(GEOMETRY.lg.icon, 0);
+    }
+
     // Rest on an open tooltip.
     await userEvent.hover(addLg);
-    await expectTooltip(addLg, 'Add lg');
+    await expectTooltip(addLg, 'Add');
+
+    // The focus ring takes the theme's own focus slot, not a hard-coded hue.
+    const probe = (color: string) => {
+      const element = canvasElement.ownerDocument.createElement('span');
+      element.style.color = color;
+      canvasElement.append(element);
+      const resolved = getComputedStyle(element).color;
+      element.remove();
+      return resolved;
+    };
+    await expect(probe('var(--dx-focus-ring-color)')).toBe(probe('var(--color-focus)'));
+    await expect(probe('var(--color-focus)')).not.toBe(probe('var(--color-secondary-border)'));
+  },
+};
+
+/** One md scope holding a text, an icon-only, a compact, an `iconSize`d button, a Toggle and a ToggleGroup item per `size`. */
+const SizesStory = () => (
+  <>
+    {SIZES.map((size) => (
+      <Group key={size}>
+        <Button size={size} icon='ph--share--regular' data-testid={`sized-${size}`}>
+          {size}
+        </Button>
+        <Button size={size} icon='ph--plus--regular' label='Add' iconOnly data-testid={`sized-icon-${size}`} />
+        <Button size={size} compact data-testid={`sized-compact-${size}`}>
+          1
+        </Button>
+        <Button
+          size={size}
+          icon='ph--star--regular'
+          label='Star'
+          iconOnly
+          iconSize='lg'
+          data-testid={`sized-icon-size-${size}`}
+        />
+        <Toggle size={size} icon='ph--push-pin--regular' label='Pin' iconOnly data-testid={`sized-toggle-${size}`} />
+        <ToggleGroup.Root type='single'>
+          <ToggleGroup.Item size={size} value='bold' data-testid={`sized-toggle-group-${size}`}>
+            Bold
+          </ToggleGroup.Item>
+        </ToggleGroup.Root>
+      </Group>
+    ))}
+  </>
+);
+
+/**
+ * `size` scopes one button inside an md scope: each is its size's control height, an icon-only button is a square of
+ * it inset by its size's inset with its size's icon, compact pads by its size's inset, `iconSize` still overrides the
+ * icon, and Toggle and ToggleGroup items take `size` as Buttons do.
+ */
+export const Sizes: Story = {
+  render: () => <SizesStory />,
+  play: async ({ canvasElement }) => {
+    for (const size of SIZES) {
+      const { inset, icon } = GEOMETRY[size];
+      for (const part of ['sized', 'sized-icon', 'sized-compact', 'sized-toggle', 'sized-toggle-group']) {
+        const button = byTestId(canvasElement, `${part}-${size}`);
+        await expect(button).toHaveAttribute('data-size', size);
+        await expect(button.getBoundingClientRect().height, `${part}-${size} height`).toBeCloseTo(controlSize(size), 0);
+      }
+      const square = byTestId(canvasElement, `sized-icon-${size}`);
+      await expect(square.getBoundingClientRect().width, `sized-icon-${size} width`).toBeCloseTo(controlSize(size), 0);
+      await expect(parseFloat(getComputedStyle(square).marginTop), `sized-icon-${size} inset`).toBeCloseTo(inset, 0);
+      await expect(square.querySelector('svg')?.getBoundingClientRect().width, `sized-icon-${size} icon`).toBeCloseTo(
+        icon,
+        0,
+      );
+      const compact = getComputedStyle(byTestId(canvasElement, `sized-compact-${size}`));
+      await expect(parseFloat(compact.paddingLeft), `sized-compact-${size} padding`).toBeCloseTo(inset, 0);
+      const glyph = byTestId(canvasElement, `sized-icon-size-${size}`).querySelector('svg')?.getBoundingClientRect();
+      await expect(glyph?.width, `sized-icon-size-${size} icon`).toBeCloseTo(GEOMETRY.lg.icon, 0);
+    }
   },
 };

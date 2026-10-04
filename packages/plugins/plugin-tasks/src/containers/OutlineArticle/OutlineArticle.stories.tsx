@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Panel, useThemeContext } from '@dxos/react-ui';
+import { Panel, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
@@ -124,8 +124,8 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
 
   return (
     <Panel.Root>
-      <Panel.Toolbar />
-      <Panel.Content>
+      <Panel.Header />
+      <Panel.Body>
         <TaskList.Root
           tasks={filtered}
           onTaskCreate={handleCreate}
@@ -133,16 +133,16 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
           getTaskActions={getTaskActions}
         >
           <TaskList.Content />
-          <TaskList.Editor grid />
+          <TaskList.Editor />
         </TaskList.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
 
 /** Editable plain-markdown view of the same text, without the outliner extension. */
 const SourceView = ({ text }: { text: Text.Text }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const { parentRef } = useTextEditor(
     () => ({
       id: `${text.id}-source`,
@@ -158,10 +158,10 @@ const SourceView = ({ text }: { text: Text.Text }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar />
-      <Panel.Content asChild>
+      <Panel.Header />
+      <Panel.Body asChild>
         <div ref={parentRef} className='overflow-auto text-sm p-trim-md' />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

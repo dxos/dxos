@@ -16,7 +16,7 @@ import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
@@ -41,7 +41,7 @@ type EditorProps = ThemedClassName<{
 }>;
 
 const Editor = ({ classNames, source, messenger, identity, autoFocus }: EditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const { parentRef } = useTextEditor(
     () => ({
       autoFocus,
@@ -72,10 +72,10 @@ const DefaultStory = () => {
 
   return (
     <div className='dx-expand grid grid-cols-2 gap-3 p-3'>
-      <div className='dx-expand overflow-hidden p-2 dx-base-surface rounded-md border border-subdued-separator'>
+      <div className='dx-expand overflow-hidden p-2 dx-base-surface rounded-md border border-separator-subtle'>
         <Editor source={source} autoFocus />
       </div>
-      <div className='dx-expand overflow-hidden p-2 dx-base-surface rounded-md border border-subdued-separator'>
+      <div className='dx-expand overflow-hidden p-2 dx-base-surface rounded-md border border-separator-subtle'>
         <Editor source={source} />
       </div>
     </div>
@@ -100,7 +100,7 @@ const EchoStory = () => {
 
   return (
     <div className='dx-fill flex flex-col overflow-hidden'>
-      <pre className='p-2 text-xs text-subdued'>
+      <pre className='p-2 text-xs text-fg-subtle'>
         {JSON.stringify({ index, identity: toPublicKey(identity?.identityKey)?.truncate(), spaceId, objects }, null, 2)}
       </pre>
       {identity && source ? (

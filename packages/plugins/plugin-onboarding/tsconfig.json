@@ -119,6 +119,9 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-routine"
+    },
+    {
       "path": "../plugin-sheet"
     },
     {

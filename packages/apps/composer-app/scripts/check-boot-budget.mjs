@@ -39,7 +39,7 @@ import path from 'node:path';
 const MAX_PRELOAD_ENTRIES = 25;
 
 /**
- * Total on-disk size of those chunks. 4.25 MB today.
+ * Total on-disk size of those chunks. 4.45 MB today.
  *
  * Re-baselined 2026-08-13 (was 6.00 MB) after two independent cuts: the Effect 3 -> 4 migration
  * (5.73 -> 4.97 MB) and the `./plugin` -> `XPlugin` namespace split, which evicted the operation
@@ -77,12 +77,23 @@ const MAX_PRELOAD_ENTRIES = 25;
  * `@radix-ui` bytes left in the graph: the Zag machines are the new floor, ~186 KB above the
  * 2026-08-31 figure, so the ceiling stays where the Phase 3 re-baseline put it.
  *
+ * Re-baselined 2026-10-02 (was 4.60 MB, a same-day stopgap over 4.55 MB). `main` crossed 4.55 MB at
+ * 4,771,466 bytes, 446 over, on 735 bytes of accepted growth from the observability metric batching
+ * (#13595). Attributed through the boot chunks' sourcemaps, the real leak was older:
+ * `@dxos/index-core`'s migration modules imported `SqlMigrations` from the `@dxos/sql-sqlite`
+ * barrel, whose `OpfsWorker` re-export put wa-sqlite in the eager graph via echo-client's query
+ * planner. Moving every migration module to the `@dxos/sql-sqlite/SqlMigrations` subpath evicted
+ * `@dxos/wa-sqlite` (81,894 bytes), the `sql-sqlite` dist (16,461) and the effect
+ * `SynchronizedRef`/`ScopedRef` modules only it used (2,576). Measured at 4,670,093 bytes. The
+ * ceiling banks half the win: the remaining ~48 KB is under the ~98 KB that leak cost, so a
+ * regression of it trips this.
+ *
  * This constant is code-owned: raising it needs a strong, written motivation for the growth being
  * accepted, not a passing build.
  *
  * TODO(wittjosiah): Bring this back to at least 4.25 MB, the lowest ceiling this budget has held.
  */
-const MAX_PRELOAD_BYTES = 4.55 * 1024 * 1024;
+const MAX_PRELOAD_BYTES = 4.5 * 1024 * 1024;
 
 const buildDir = path.join(process.cwd(), 'out');
 const outDir = path.join(buildDir, 'composer');

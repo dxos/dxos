@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type ComponentProps,
   type ComponentPropsWithoutRef,
   type Dispatch,
   type ReactNode,
@@ -11,14 +12,14 @@ import React, {
 } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { Button, type ButtonProps, Icon, IconButton, Menu, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, type ButtonProps, Icon, Menu, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
 
 // TODO(burdon): Move to react-ui.
 
-export type LargeButtonProps = ButtonProps & {
+export type LargeButtonProps = ComponentProps<typeof Button> & {
   isFull?: boolean;
 };
 
@@ -90,8 +91,8 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
       </Button>
       <Menu.Root>
         <Menu.Trigger asChild>
-          <IconButton
-            size={4}
+          <Button
+            iconSize='md'
             label={t('invite-options.label')}
             icon='ph--caret-down--regular'
             iconOnly
@@ -101,39 +102,35 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
           />
         </Menu.Trigger>
         {/* TODO(thure): Putting `Menu.Portal` here breaks highlighting and focus. Why? */}
-        <Menu.Portal>
-          <Menu.Content>
-            <Menu.Viewport>
-              {Object.entries(actions).map(([id, action]) => {
-                return (
-                  <Menu.CheckboxItem
-                    key={id}
-                    aria-labelledby={`${id}__label`}
-                    aria-describedby={`${id}__description`}
-                    checked={activeActionKey === id}
-                    onCheckedChange={(checked) => checked && setActiveAction(id)}
-                    classNames='gap-2'
-                    data-testid={action.testId}
-                  >
-                    {action.icon && <Icon icon={action.icon} />}
-                    <div className='flex-1 min-w-0 space-b-1'>
-                      <p id={`${id}__label`}>{action.label}</p>
-                      {action.description && (
-                        <p id={`${id}__description`} className='text-description'>
-                          {action.description}
-                        </p>
-                      )}
-                    </div>
-                    <Menu.ItemIndicator asChild>
-                      <Icon icon='ph--check--regular' size={4} />
-                    </Menu.ItemIndicator>
-                  </Menu.CheckboxItem>
-                );
-              })}
-            </Menu.Viewport>
-            <Menu.Arrow />
-          </Menu.Content>
-        </Menu.Portal>
+        <Menu.Content>
+          {Object.entries(actions).map(([id, action]) => {
+            return (
+              <Menu.CheckboxItem
+                key={id}
+                item={{ value: id, label: action.label, icon: action.icon }}
+                aria-labelledby={`${id}__label`}
+                aria-describedby={`${id}__description`}
+                checked={activeActionKey === id}
+                onCheckedChange={(checked) => checked && setActiveAction(id)}
+                classNames='gap-2'
+                data-testid={action.testId}
+              >
+                {action.icon && <Icon icon={action.icon} />}
+                <div className='flex-1 min-w-0 space-b-1'>
+                  <p id={`${id}__label`}>{action.label}</p>
+                  {action.description && (
+                    <p id={`${id}__description`} className='text-fg-muted'>
+                      {action.description}
+                    </p>
+                  )}
+                </div>
+                <Menu.ItemIndicator asChild>
+                  <Icon icon='ph--check--regular' size='md' />
+                </Menu.ItemIndicator>
+              </Menu.CheckboxItem>
+            );
+          })}
+        </Menu.Content>
       </Menu.Root>
     </div>
   );

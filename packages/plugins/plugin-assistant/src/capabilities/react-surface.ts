@@ -42,6 +42,9 @@ import {
   TriggerStatusSurface,
 } from './AssistantSurfaces.tsx';
 
+const isUnprovisionedAssistantCompanion = (data: { subject?: unknown; variant?: unknown }) =>
+  data.subject == null && data.variant === ASSISTANT_COMPANION_VARIANT;
+
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
@@ -96,7 +99,9 @@ export default Capability.makeModule(() =>
         id: 'companionChat',
         filter: Surface.makeFilter(
           AppSurface.Article,
-          (data) => Obj.isObject(data.companionTo) && Obj.instanceOf(Chat.Chat, data.subject),
+          (data) =>
+            Obj.isObject(data.companionTo) &&
+            (Obj.instanceOf(Chat.Chat, data.subject) || isUnprovisionedAssistantCompanion(data)),
         ),
         component: ChatCompanion,
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({

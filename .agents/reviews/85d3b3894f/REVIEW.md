@@ -12,6 +12,22 @@ reviewId: 85d3b3894f
 
 _3 error(s), 6 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- 85d3b3894f-1 - ignored - flat-layer-composition - packages/core/compute/agent-runtime/src/agent-service/AgentService.test.ts:168
+- 85d3b3894f-2 - ignored - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant-toolkit/src/types/Chat.test.ts:372
+- 85d3b3894f-3 - ignored - effect-fn-not-hand-wrapped-gen - packages/core/compute/assistant/src/types/Chat.ts:265
+- 85d3b3894f-4 - ignored - errors-extend-base-error - packages/plugins/plugin-assistant/src/processor/processor.ts:105
+- 85d3b3894f-5 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.tsx:122
+- 85d3b3894f-6 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-list/src/components/Tree/Tree.stories.tsx:269
+- 85d3b3894f-7 - ignored - no-casts - packages/ui/react-ui-list/src/components/Tree/Tree.stories.tsx:658
+- 85d3b3894f-8 - ignored - no-casts - packages/ui/react-ui-list/src/components/Tree/Tree.tsx:340
+- 85d3b3894f-9 - ignored - extract-non-rendering-logic-from-component - packages/ui/react-ui-list/src/components/Tree/Tree.tsx:574
+
+## Issues
+
 # WARN 85d3b3894f-1 flat-layer-composition `packages/core/compute/agent-runtime/src/agent-service/AgentService.test.ts:168`
 
 System One judges this a likely violation of `flat-layer-composition` (Compose Effect layers flatly, as module-level values, with a single provide), p=0.82. The likeliest place is lines 168-184 (`const assistantTestLayerOptions = {`, location confidence 0.42). This is a single-shot classifier: confirm against the rule before acting.
@@ -47,3 +63,19 @@ System One judges this a likely violation of `no-casts` (No casts to silence the
 # WARN 85d3b3894f-9 extract-non-rendering-logic-from-component `packages/ui/react-ui-list/src/components/Tree/Tree.tsx:574`
 
 System One judges this a likely violation of `extract-non-rendering-logic-from-component` (Move derived-state and lifecycle logic out of the component body into a hook or function), p=0.81. The likeliest place is lines 574-597 (`: undefined;`, location confidence 0.25). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `b70909be74ea682e03cc3529bc17a081614c421b`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 9 violations written to fragments, 204 uncertain, 561 clean, 0 unanswered
+
+```text
+requests: 381 (128 verdicts re-asked with context the model requested)
+estimated input tokens: 4269051
+billed input tokens: 4005154 (cost $0.1682)
+measured chars per token: 3.20
+```

@@ -125,7 +125,7 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
               from: start,
               to: end,
               decoration: Decoration.mark({
-                class: mx('dx-tag--blue', tagPadding),
+                class: mx('dx-tag dx-tag-inline dx-tag-blue', tagPadding),
               }),
             });
           }
@@ -140,7 +140,7 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
             decorations.push({
               from: start,
               to: end,
-              decoration: Decoration.mark({ class: 'text-subdued' }),
+              decoration: Decoration.mark({ class: 'text-fg-subtle' }),
             });
           }
         }
@@ -227,7 +227,7 @@ class DXNWidget extends WidgetType {
         return part;
       })
       .join(':');
-    return Domino.of('span').classNames(mx('font-mono dx-tag--blue', tagPadding)).text(text).root;
+    return Domino.of('span').classNames(mx('font-mono dx-tag dx-tag-inline dx-tag-blue', tagPadding)).text(text).root;
   }
 }
 

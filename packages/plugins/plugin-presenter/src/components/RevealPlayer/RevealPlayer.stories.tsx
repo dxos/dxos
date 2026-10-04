@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { Grid, useThemeContext } from '@dxos/react-ui';
+import { Grid, type GridTrack, useThemeMode } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -67,8 +67,8 @@ const typeAtLineEnd = async (canvasElement: HTMLElement, line: string, text: str
   await userEvent.keyboard(`${index > 0 ? `{ArrowDown>${index}/}` : ''}{End}${text}`);
 };
 
-const EditorStory = ({ columnWidth, ...props }: RevealProps & { columnWidth?: string }) => {
-  const { themeMode } = useThemeContext();
+const EditorStory = ({ columnWidth, ...props }: RevealProps & { columnWidth?: GridTrack }) => {
+  const themeMode = useThemeMode();
   const [content, setContent] = useState(props.content);
   const extensions = useMemo(
     () => [createBasicExtensions(), createThemeExtensions({ themeMode }), createMarkdownExtensions()],
@@ -76,7 +76,7 @@ const EditorStory = ({ columnWidth, ...props }: RevealProps & { columnWidth?: st
   );
 
   return (
-    <Grid cols={[columnWidth ?? 'minmax(0, 1fr)', columnWidth ?? 'minmax(0, 1fr)']}>
+    <Grid grow cols={[columnWidth ?? 'fill', columnWidth ?? 'fill']}>
       <div className='overflow-y-auto border-e border-separator'>
         <Editor.Root extensions={extensions}>
           <Editor.View classNames='p-4' value={content} onChange={setContent} />

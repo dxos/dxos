@@ -125,7 +125,8 @@ export const makeRoot = (properties: Obj.Any): Root['Service'] => {
         return cached;
       }
       if (Option.isNone(Annotation.get(properties, AppAnnotation.RootCollectionAnnotation))) {
-        const collection = yield* Database.add(Collection.make());
+        const { db } = yield* Database.Service;
+        const collection = AppAnnotation.addRootCollection(db);
         Obj.update(properties, (properties) => {
           Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
         });

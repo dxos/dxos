@@ -36,3 +36,41 @@ export const toPullRequestProps = (
   additions: pull.additions,
   deletions: pull.deletions,
 });
+
+/** Fields a re-sync may overwrite; the coordinates and URL name the pull request and never drift. */
+const SYNCED_FIELDS = [
+  'title',
+  'state',
+  'author',
+  'description',
+  'baseBranch',
+  'headBranch',
+  'additions',
+  'deletions',
+] as const;
+
+type SyncedField = (typeof SYNCED_FIELDS)[number];
+
+export type PullRequestChanges = Partial<Pick<PullRequest.PullRequest, SyncedField>>;
+
+/**
+ * The fields where GitHub's payload differs from the stored pull request, so a re-sync writes only
+ * what changed and an unchanged pull request costs no mutation.
+ *
+ * A field GitHub's payload leaves out is kept rather than cleared: an absent value is unknown, not empty.
+ */
+export const pullRequestChanges = (
+  pullRequest: PullRequest.PullRequest,
+  pull: GitHubApi.GitHubPull,
+): PullRequestChanges => {
+  const next = toPullRequestProps(pullRequest, pull);
+  const changes: PullRequestChanges = {};
+  const copy = <Field extends SyncedField>(field: Field) => {
+    const value = next[field];
+    if (value !== undefined && value !== pullRequest[field]) {
+      changes[field] = value;
+    }
+  };
+  SYNCED_FIELDS.forEach(copy);
+  return changes;
+};

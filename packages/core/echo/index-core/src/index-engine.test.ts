@@ -2,12 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
@@ -19,14 +16,11 @@ import { IndexEngine, type IndexingResult } from './index-engine.ts';
 import { type IndexCursor } from './index-tracker.ts';
 import { type DocumentActivity, EntityMetaIndex, type IndexerObject } from './indexes/index.ts';
 import { ORIGIN_AUTOMERGE } from './registry-keys.ts';
+import { TestSqliteLayer as TestLayer } from './testing/index.ts';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
 const TYPE_B = DXN.make('com.example.type.TypeB', '0.1.0');
-
-const TestLayer = SqliteClient.layer({
-  filename: ':memory:',
-}).pipe(Layer.provideMerge(Reactivity.layer));
 
 class MockIndexDataSource implements IndexDataSource {
   readonly sourceName = 'mock-source';
@@ -183,6 +177,37 @@ describe('IndexEngine', () => {
       legacySource.push([makeObject('doc-4')]);
       const legacy = yield* engine.update(Context.default(), legacySource, { spaceId: null, limit: 2 });
       expect(legacy).toMatchObject({ done: false, drained: false });
+    }, Effect.provide(TestLayer)),
+  );
+
+  // Each transaction rewrites every page it dirties, so a second stamp per pass doubled the writes.
+  it.effect(
+    'stamps each object once per pass while the snapshot and reverse-ref legs share a position',
+    Effect.fnUntraced(function* () {
+      const { engine, metaIndex } = yield* setup;
+      const dataSource = new MockIndexDataSource();
+      const spaceId = SpaceId.random();
+      const object: IndexerObject = {
+        spaceId,
+        documentId: 'doc-1',
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        origin: ORIGIN_AUTOMERGE,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Hello' },
+      };
+
+      dataSource.push([object]);
+      yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      const [created] = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
+      expect(created.seq).toBe(1);
+
+      dataSource.push([{ ...object, data: { ...object.data, title: 'Hello World' } }]);
+      yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      const [updated] = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
+      expect(updated.seq).toBe(2);
     }, Effect.provide(TestLayer)),
   );
 

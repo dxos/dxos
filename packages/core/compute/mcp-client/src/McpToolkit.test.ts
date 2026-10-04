@@ -3,12 +3,12 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Chat from 'effect/ai/Chat';
+import type * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as Chat from 'effect/unstable/ai/Chat';
-import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { AiService, type OpaqueToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';

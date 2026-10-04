@@ -8,7 +8,7 @@ import { generateName } from '@dxos/display-name';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { Avatar, type ThemedClassName, useId } from '@dxos/react-ui';
+import { Avatar, type ThemedClassName, toAvatarHue, useId } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { keyToFallback } from '@dxos/util';
 
@@ -21,8 +21,8 @@ type IdentityListItemProps = {
 };
 
 export const IdentityListItem = forwardRef<
-  HTMLLIElement,
-  ThemedClassName<ComponentPropsWithoutRef<'li'>> & IdentityListItemProps
+  HTMLDivElement,
+  ThemedClassName<ComponentPropsWithoutRef<'div'>> & IdentityListItemProps
 >(({ identity, presence, onClick, classNames, ...props }, forwardedRef) => {
   const identityKey = requirePublicKey(identity.identityKey);
   const fallbackValue = keyToFallback(identityKey);
@@ -37,15 +37,16 @@ export const IdentityListItem = forwardRef<
       data-testid='identity-list-item'
       ref={forwardedRef}
     >
-      <Avatar.Root labelId={labelId}>
-        <Avatar.Content
-          status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inactive'}
-          hue={profileString(identity, 'hue') ?? fallbackValue.hue}
-          fallback={profileString(identity, 'emoji') ?? fallbackValue.emoji}
-          classNames='place-self-center'
-        />
-        <Avatar.Label classNames='text-sm truncate px-2'>{displayName}</Avatar.Label>
-      </Avatar.Root>
+      <Avatar.Root
+        aria-labelledby={labelId}
+        status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inactive'}
+        hue={toAvatarHue(profileString(identity, 'hue') ?? fallbackValue.hue)}
+        fallback={profileString(identity, 'emoji') ?? fallbackValue.emoji}
+        classNames='place-self-center'
+      />
+      <span id={labelId} className='text-sm truncate px-2'>
+        {displayName}
+      </span>
     </Listbox.Item>
   );
 });

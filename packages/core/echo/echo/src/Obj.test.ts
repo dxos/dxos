@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';

@@ -24,6 +24,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     name: 'story',
-    children: <div className='p-4 text-base-fg'>Themed content inside the Root wrapper.</div>,
+    children: <div className='p-4 text-fg'>Themed content inside the Root wrapper.</div>,
   },
 };

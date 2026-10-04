@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { beforeAll, describe, test } from 'vitest';
 
 import { Aggregate, Filter, Query } from '@dxos/echo';
@@ -61,6 +61,7 @@ let testDeps: {
   runtime: typeof testRuntime;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
+  sql: SqlClient.SqlClient;
 };
 
 beforeAll(async () => {
@@ -71,6 +72,7 @@ beforeAll(async () => {
     runtime: testRuntime,
     automergeHost: new AutomergeHost({ runtime: testRuntime }),
     spaceStateManager: new SpaceStateManager({ runtime: testRuntime }),
+    sql,
   };
   return () => dispose();
 });
@@ -479,5 +481,40 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
     // Hint with a different queue → no match.
     const nonMatchingHint = makeHint({ queueIds: makeObjectSet(EntityId.random()) });
     expect(executor.matchesHint(nonMatchingHint)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// QueryExecutor.matchesHint — compiled (sql) plan
+// ---------------------------------------------------------------------------
+
+// The compiled path folds the plan into one `SqlStep`; scope analysis must still see the steps it
+// absorbed, or every compiled query matches every hint and re-runs on every write.
+describe('QueryExecutor.matchesHint — compiled (sql) plan', () => {
+  const makeSqlExecutor = (query: { ast: QueryAST.Query }): QueryExecutor =>
+    new QueryExecutor({
+      ...testDeps,
+      queryId: 'test',
+      query: query.ast,
+      reactivity: QueryReactivity.REACTIVE,
+      executor: 'sql',
+    });
+
+  test('space query does NOT match when hint typenames are disjoint', ({ expect }) => {
+    const executor = makeSqlExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
+    expect(executor.compiled).toBe(true);
+    const disjoint = makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet(ORG_TYPENAME) });
+    expect(executor.matchesHint(disjoint)).toBe(false);
+    expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_TYPENAME) }))).toBe(true);
+  });
+
+  test('feed query does NOT match a space write of an unrelated type', ({ expect }) => {
+    const executor = makeSqlExecutor(
+      Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: QUEUE_DXN }]),
+    );
+    expect(executor.compiled).toBe(true);
+    const spaceWrite = makeHint({ spaceIds: makeSpaceSet(QUEUE_SPACE_ID), typenames: makeTypeSet(ORG_TYPENAME) });
+    expect(executor.matchesHint(spaceWrite)).toBe(false);
+    expect(executor.matchesHint(makeHint({ queueIds: makeObjectSet(QUEUE_ID) }))).toBe(true);
   });
 });

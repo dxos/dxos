@@ -5,10 +5,10 @@
 // A standalone entrypoint, not a barrel namespace: it binds `node:http`, which the workerd hosts
 // importing `@dxos/mcp-server` must never pull in.
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from 'node:http';
 

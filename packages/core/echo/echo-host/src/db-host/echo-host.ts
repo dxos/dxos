@@ -12,9 +12,9 @@ import {
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
-import { DeferredTask, scheduleTask, sleep, synchronized } from '@dxos/async';
+import { scheduleTask, sleep, synchronized } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -35,6 +35,7 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
+import { countWork } from '@dxos/util';
 
 import {
   AutomergeHost,
@@ -54,9 +55,10 @@ import { DataServiceImpl } from './data-service.ts';
 import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
 import { FeedDataSource } from './feed-data-source.ts';
+import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
-import { QueryServiceImpl } from './query-service.ts';
+import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
 import { RegistryDataSource, type RegistryEntry } from './registry-data-source.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
 
@@ -76,24 +78,6 @@ const AUTOMATIC_GARBAGE_COLLECTION = false;
  */
 const FTS_FLUSH_IDLE_MS = 1_000;
 const FTS_FLUSH_MAX_DELAY_MS = 10_000;
-
-/**
- * Every path that can start an indexing run. Logged on each run so an idle-churn loop is
- * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
- * data-driven pass and a self-sustaining invalidation cycle.
- */
-export type IndexRunReason =
-  | 'open'
-  | 'feed-blocks'
-  | 'documents-saved'
-  | 'batch-continuation'
-  | 'registry-update'
-  | 'rpc-update-indexes'
-  | 'feed-scoped-query'
-  | 'epoch';
-
-/** Requests that drive the indexer directly, as opposed to the events that schedule it. */
-export type IndexRequestReason = Extract<IndexRunReason, 'rpc-update-indexes' | 'feed-scoped-query' | 'epoch'>;
 
 import { type QueryExecutorMode } from '../query/index.ts';
 
@@ -118,6 +102,9 @@ const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMo
 export type EchoHostProps = {
   /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the compiled SQL executor. */
   queryExecutor?: QueryExecutorMode;
+
+  /** Overrides how live queries are debounced in proportion to their cost; see {@link QueryDebounceOptions}. */
+  queryDebounce?: Partial<QueryDebounceOptions>;
 
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
@@ -198,38 +185,23 @@ export class EchoHost extends Resource {
   private _registryReconciled = false;
 
   /**
-   * Whether a registry pass is outstanding — set when a snapshot changes the buffer, cleared by
-   * the pass that indexes it. What lets an unchanged re-push tell "nothing to wait for" apart from
-   * "someone else's change is still in flight".
+   * Whether a registry pass is outstanding. `IndexScheduler.waitForIndexed` waits on every pending
+   * input, so awaiting it unconditionally would put the whole indexer on the critical path of a
+   * client's open — which is a stall, not a wait for this snapshot.
    */
   #registryIndexOwed = false;
 
   /** Bumped by every snapshot that owes a pass, so a pass cannot clear a debt it never read. */
   #registryGeneration = 0;
 
-  private _updateIndexes!: DeferredTask;
-
   /**
-   * Why the pending index run was scheduled, counted per reason. `DeferredTask` coalesces
-   * overlapping `schedule()` calls into one run, so attributing a run needs the full multiset of
-   * reasons that accumulated before it started — a single "last caller" field would misattribute
-   * every coalesced run.
+   * Whether a registry pass is outstanding — set when a snapshot changes the buffer, cleared by
+   * the pass that indexes it. What lets an unchanged re-push tell "nothing to wait for" apart from
+   * "someone else's change is still in flight".
    */
-  private readonly _pendingIndexReasons = new Map<IndexRunReason, number>();
+  private readonly _indexScheduler: IndexScheduler;
 
   private _feedService: FeedService.Handlers;
-
-  /**
-   * Bumped by every change that needs indexing (not by a pass continuing its own backlog), so a
-   * caller can wait for the inputs that existed when it asked rather than for the index to go idle.
-   */
-  #inputGeneration = 0;
-
-  /** The newest input generation a drained pass has fully indexed. */
-  #indexedGeneration = 0;
-
-  /** Whether the last pass found nothing to index. */
-  #lastPassIdle = false;
 
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
@@ -249,6 +221,7 @@ export class EchoHost extends Resource {
     getSpaceKeyByRootDocumentId,
     runtime,
     queryExecutor,
+    queryDebounce,
     assignQueuePositions = false,
     useSubduction,
   }: EchoHostProps) {
@@ -274,6 +247,11 @@ export class EchoHost extends Resource {
       feedStore: this._feedStore,
       runtime: this._runtime,
       getSpaceIds: () => this._spaceStateManager.spaceIds,
+    });
+    this._indexScheduler = new IndexScheduler({
+      feedBlocks: this._feedStore.onNewBlocks,
+      documentsSaved: this._automergeHost.documentsSaved,
+      runPass: (ctx, reasons) => this._runIndexPass(ctx, reasons),
     });
     this._feedService = new LocalFeedServiceImpl(runtime, this._feedStore, {
       // Read the mutable slot lazily so a handler wired after construction takes effect;
@@ -303,6 +281,7 @@ export class EchoHost extends Resource {
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
       updateRegistry: (clientId, entries, opts) => this.updateRegistry(clientId, entries, opts),
       executor: resolveQueryExecutorMode(queryExecutor),
+      debounce: queryDebounce,
       sql: () => {
         invariant(this._sql, 'EchoHost is not open.');
         return this._sql;
@@ -425,8 +404,8 @@ export class EchoHost extends Resource {
       runtime: this._runtime,
       listPersisted: () => this.indexEngine.listRegistryDigests(),
     });
-    // Reset alongside the source they describe: a reopened host gets an empty buffer and a fresh
-    // session id, and carrying the old flags over would skip the reconciliation that reclaims the
+    // Reset alongside the source it describes: a reopened host gets an empty buffer and a fresh
+    // session id, and carrying the old flag over would skip the reconciliation that reclaims the
     // rows no client came back for.
     this._registryReconciled = false;
     this.#registryIndexOwed = false;
@@ -434,7 +413,6 @@ export class EchoHost extends Resource {
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());
     log('echo-host: index engine migration done');
-    this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
 
     log('echo-host: running feed store migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
@@ -453,10 +431,6 @@ export class EchoHost extends Resource {
     log('echo-host: opening space state manager...');
     await this._spaceStateManager.open(ctx);
     log('echo-host: space state manager opened');
-    this._feedStore.onNewBlocks.on(this._ctx, () => {
-      this.#scheduleIndexRun('feed-blocks');
-    });
-
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       const previous = this._spaceDocumentIds.get(e.spaceId);
       this._spaceDocumentIds.set(e.spaceId, new Set(e.documentIds));
@@ -486,23 +460,13 @@ export class EchoHost extends Resource {
         }
       }
     });
-    this._automergeHost.documentsSaved.on(this._ctx, () => {
-      this.#scheduleIndexRun('documents-saved');
-    });
-    this.#scheduleIndexRun('open');
+    // Opened on the host's context, so the scheduler stops subscribing the moment the host starts closing.
+    await this._indexScheduler.open(this._ctx);
     log('echo-host: open complete');
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    // Drain any in-flight indexer task before the Resource base disposes
-    // `this._ctx`. Without this, an in-flight `DataServiceImpl.updateIndexes`
-    // RPC handler's `runBlocking` loop can hit a disposed ctx on its next
-    // iteration and throw `ContextDisposedError` — which escapes as an
-    // unhandled rejection because the originating client `flush()` is
-    // fire-and-forget at the test layer. `#releaseIndexWaiters` inside
-    // `_runUpdateIndexes` lets the loop exit cleanly once the current
-    // iteration finishes.
-    await this._updateIndexes?.join();
+    await this._indexScheduler.close();
 
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
@@ -536,18 +500,17 @@ export class EchoHost extends Resource {
 
     const changed = await this._acceptRegistrySnapshot(clientId, entries, opts);
 
-    // Outside the lock above: an index pass runs until the whole index is quiet, which under a
+    // Scheduled outside the lock above: a pass runs until the whole index is quiet, which under a
     // concurrent writer is unbounded, and every client's close waits on a release through that
     // same lock. Holding it here would serialize one client's teardown behind another client's
     // indexing.
     if (changed) {
-      this.#scheduleIndexRun('registry-update');
+      this._indexScheduler.schedule('registry-update');
     }
 
     // A releasing client is closing and will never query, so it does not wait the pass out — the
-    // deferred task above runs it either way. Waiting here would hold the client's teardown open
-    // for as long as the host's indexer is busy, which is long enough to reorder the rest of its
-    // shutdown.
+    // scheduled pass runs either way. Waiting here would hold the client's teardown open for as
+    // long as the host's indexer is busy, which is long enough to reorder the rest of its shutdown.
     if (opts?.releasing) {
       return;
     }
@@ -557,12 +520,12 @@ export class EchoHost extends Resource {
     // returning here would let its caller query rows the indexer has not written yet.
     //
     // Conversely, a snapshot that changed nothing with no pass owed has nothing to wait for, and
-    // `updateIndexes` is a pass over the whole index rather than the registry alone — running one
-    // per re-push would put the host's entire indexer on the critical path of every client's open.
+    // `waitForIndexed` waits on every pending input rather than the registry alone — awaiting it
+    // per re-push would put the host's whole indexer on the critical path of every client's open.
     if (!this.#registryIndexOwed) {
       return;
     }
-    await this.updateIndexes();
+    await this._indexScheduler.waitForIndexed();
   }
 
   /**
@@ -673,26 +636,9 @@ export class EchoHost extends Resource {
     if (this._ctx.disposed) {
       return;
     }
-    // Waits for the inputs that existed on entry, not for the index to go idle: writes arriving faster
-    // than a pass completes never leave the empty batch that idleness needs.
-    const target = this.#inputGeneration;
-    while (this.#indexedGeneration < target) {
-      if (reason) {
-        this.#noteIndexRunReason(reason);
-      }
-      await this._updateIndexes.runBlocking();
-      if (this._ctx.disposed) {
-        return;
-      }
-    }
-    // One more pass when the last still found work, as the old wait-for-idle ended: under a quiet
-    // index it is empty and gives the results the last pass invalidated time to reach their clients,
-    // which callers that flush then read depend on. One, so a stream still cannot hold the caller.
-    if (!this.#lastPassIdle) {
-      await this._updateIndexes.runBlocking();
-      if (this._ctx.disposed) {
-        return;
-      }
+    await this._indexScheduler.waitForIndexed(reason);
+    if (this._ctx.disposed) {
+      return;
     }
     // A pass invalidates queries as it ends and they re-run on their own task; callers flushing the
     // index expect those results too.
@@ -1382,19 +1328,6 @@ export class EchoHost extends Resource {
     return this.openSpaceRoot(this._ctx, spaceId);
   }
 
-  /** Records why a run is wanted without scheduling it — for callers that drive the task directly. */
-  #noteIndexRunReason(reason: IndexRunReason): void {
-    this._pendingIndexReasons.set(reason, (this._pendingIndexReasons.get(reason) ?? 0) + 1);
-  }
-
-  #scheduleIndexRun(reason: IndexRunReason): void {
-    if (reason !== 'batch-continuation') {
-      this.#inputGeneration++;
-    }
-    this.#noteIndexRunReason(reason);
-    this._updateIndexes.schedule();
-  }
-
   /**
    * Debounces the deferred full-text re-tokenization, bounded by {@link FTS_FLUSH_MAX_DELAY_MS} so
    * a stream of writes that never pauses still makes progress.
@@ -1425,45 +1358,6 @@ export class EchoHost extends Resource {
       Math.max(0, Math.min(FTS_FLUSH_IDLE_MS, deadline - now)),
     );
   }
-
-  /** Drains the pending reasons so each run reports only the requests that produced it. */
-  #takeIndexRunReasons(): Record<string, number> {
-    const reasons = Object.fromEntries(this._pendingIndexReasons);
-    this._pendingIndexReasons.clear();
-    return reasons;
-  }
-
-  /**
-   * Lets every `updateIndexes` caller return: a closing host indexes nothing more, and a waiter left
-   * looping would call `runBlocking` again, which throws on the disposed context.
-   */
-  #releaseIndexWaiters(): void {
-    this.#indexedGeneration = this.#inputGeneration;
-  }
-
-  private _runUpdateIndexes = async (): Promise<void> => {
-    if (this._ctx.disposed || !this.isOpen) {
-      this.#releaseIndexWaiters();
-      return;
-    }
-
-    // Derived and disposed per pass: `@trace.span` derives a child of whatever ctx it is handed,
-    // and a child stays on its parent's dispose list until disposed -- at three passes a second,
-    // parenting those on `this._ctx` is an unbounded leak.
-    const passCtx = this._ctx.derive();
-    try {
-      // Read before the pass reads its sources, so an input landing mid-pass is left to the next one.
-      const generation = this.#inputGeneration;
-      // Drained here rather than inside the pass so the span can report what triggered it.
-      const outcome = await this._runIndexPass(passCtx, this.#takeIndexRunReasons());
-      this.#lastPassIdle = outcome?.done ?? false;
-      if (outcome?.drained) {
-        this.#indexedGeneration = Math.max(this.#indexedGeneration, generation);
-      }
-    } finally {
-      await passCtx.dispose();
-    }
-  };
 
   /**
    * One indexing pass over both data sources.
@@ -1497,6 +1391,9 @@ export class EchoHost extends Resource {
     }),
   })
   private async _runIndexPass(ctx: Context, reasons: Record<string, number>): Promise<IndexPassOutcome | undefined> {
+    if (this._ctx.disposed || !this.isOpen) {
+      return undefined;
+    }
     const startedAt = performance.now();
 
     try {
@@ -1551,8 +1448,7 @@ export class EchoHost extends Resource {
         });
       }
       if (this._ctx.disposed || !this.isOpen) {
-        this.#releaseIndexWaiters();
-        return;
+        return undefined;
       }
 
       {
@@ -1576,8 +1472,7 @@ export class EchoHost extends Resource {
       }
 
       if (this._ctx.disposed || !this.isOpen) {
-        this.#releaseIndexWaiters();
-        return;
+        return undefined;
       }
 
       {
@@ -1596,8 +1491,11 @@ export class EchoHost extends Resource {
         }
       }
 
-      // After the registry leg, not before it: registry entities land in the FTS snapshot store
-      // like anything else, so a pass that only indexed the registry still owes a flush.
+      countWork('echo.indexPasses');
+      countWork('echo.indexedObjects', combinedResult.updated);
+      // The FTS flush is scheduled after the registry leg, not before it: registry entities land
+      // in the FTS snapshot store like anything else, so a pass that only indexed the registry
+      // still owes a flush.
       if (combinedResult.updated > 0) {
         this.#scheduleFtsFlush();
       }
@@ -1619,9 +1517,6 @@ export class EchoHost extends Resource {
         objects: combinedResult.objects.size,
       });
       await sleep(1);
-      if (!combinedResult.done) {
-        this.#scheduleIndexRun('batch-continuation');
-      }
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       if (hint) {
         this._queryService.invalidateQueries(hint);
@@ -1637,8 +1532,7 @@ export class EchoHost extends Resource {
       };
     } catch (err) {
       if (this._ctx.disposed || !this.isOpen) {
-        this.#releaseIndexWaiters();
-        return;
+        return undefined;
       }
       log.catch(err);
       // Failsafe: prevent queries from freezing if the indexer faults.
@@ -1720,7 +1614,12 @@ export type CreatedSpace = {
 
 export type EchoHostLayerOptions = Pick<
   EchoHostProps,
-  'peerIdProvider' | 'getSpaceKeyByRootDocumentId' | 'assignQueuePositions' | 'useSubduction' | 'queryExecutor'
+  | 'peerIdProvider'
+  | 'getSpaceKeyByRootDocumentId'
+  | 'assignQueuePositions'
+  | 'useSubduction'
+  | 'queryExecutor'
+  | 'queryDebounce'
 >;
 
 /**

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
+import { ToggleGroup, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type RelatedType } from '#hooks';
@@ -30,7 +30,7 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
   }
 
   return (
-    <ToggleGroup
+    <ToggleGroup.Root
       type='multiple'
       aria-label={t('type-filter.label')}
       // Gapped, so each type reads as its own control rather than one segmented bar; grouped
@@ -39,20 +39,20 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
       value={types.filter(({ visible }) => visible).map(({ typename }) => typename)}
     >
       {types.map(({ typename, label, icon, count }) => (
-        <ToggleGroupIconItem
+        <ToggleGroup.Item
           key={typename}
           iconOnly
           value={typename}
           icon={icon}
           // Selection reads off the icon alone: the pressed fill is pinned to the resting one so
-          // the chip itself never changes, leaving `text-subdued` to mark a type as hidden.
-          classNames='aria-pressed:bg-input-bg aria-[pressed=false]:text-subdued'
+          // the chip itself never changes, leaving `text-fg-subtle` to mark a type as hidden.
+          classNames='aria-pressed:bg-input-bg aria-[pressed=false]:text-fg-subtle'
           // Carries the count to the tooltip; the type's label is already localized.
           label={`${label} (${count})`}
           onClick={() => onToggle(typename)}
         />
       ))}
-    </ToggleGroup>
+    </ToggleGroup.Root>
   );
 };
 

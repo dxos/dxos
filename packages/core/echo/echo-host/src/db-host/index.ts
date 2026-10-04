@@ -6,6 +6,7 @@ export * from './automerge-data-source.ts';
 export * from './data-service.ts';
 export * from './documents-synchronizer.ts';
 export * from './echo-host.ts';
+export * from './index-scheduler.ts';
 export * from './sqlite-health-check.ts';
 export * from './database-root.ts';
 export * from './invalidation-hint.ts';

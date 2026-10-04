@@ -43,28 +43,22 @@ export const PostCard = ({ subject }: PostCardProps) => {
 
   return (
     <Card.Body>
-      {imageUrl && <Card.Poster alt={post.title ?? ''} image={imageUrl} fit='cover' classNames='rounded-t-xs' />}
+      {imageUrl && <Card.Poster alt={post.title ?? ''} src={imageUrl} fit='cover' classNames='rounded-t-xs' />}
       {post.title && (
         <Card.Row>
-          <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title>
+          <Card.Title lines={2}>{post.title}</Card.Title>
         </Card.Row>
       )}
       {snippet && (
         <Card.Row>
-          <Card.Text variant='description' classNames='line-clamp-3'>
+          <Card.Text variant='muted' classNames='line-clamp-3'>
             {snippet}
           </Card.Text>
         </Card.Row>
       )}
       {(feedName || published) && (
         <Card.Row>
-          <Grid
-            cols={['minmax(0, 1fr)', 'auto']}
-            grow={false}
-            gap='sm'
-            align='center'
-            classNames='text-sm text-description overflow-hidden'
-          >
+          <Grid cols={['fill', 'auto']} gap='sm' align='center' classNames='text-sm text-fg-muted overflow-hidden'>
             <span className='truncate'>{feedName ?? ''}</span>
             <span className='text-end shrink-0'>{published ?? ''}</span>
           </Grid>

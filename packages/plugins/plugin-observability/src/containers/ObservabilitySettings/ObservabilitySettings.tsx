@@ -39,9 +39,7 @@ export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) =
             actions={<SettingsScope prefix={meta.profile.key} />}
           >
             <Banner.Root valence='info'>
-              <Banner.Content>
-                <Banner.Body>{t('observability.description')}</Banner.Body>
-              </Banner.Content>
+              <Banner.Body>{t('observability.description')}</Banner.Body>
             </Banner.Root>
             <Form.Fields />
           </Form.FieldSet>

@@ -14,6 +14,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, useSpaces } from '@dxos/react-client/echo';
 
 import { getSpaceDisplayName } from './getSpaceDisplayName.ts';
+import { countUnindexed } from './indexer-heads.ts';
 
 /** Polled rather than subscribed: the indexer has no push channel to the client. */
 const POLL_INTERVAL = 5_000;
@@ -26,23 +27,16 @@ export type IndexerRow = {
   error?: string;
 };
 
-const sameHeads = (left: readonly string[] = [], right: readonly string[] = []): boolean =>
-  left.length === right.length && [...left].sort().join() === [...right].sort().join();
-
 /** Diffs the client's local document heads against the EDGE indexer's last-indexed heads. */
 const compareHeads = (
   space: Space,
   local: Record<string, readonly string[]>,
   remote: IndexerHeadsResponse,
-): IndexerRow => {
-  const indexedHeads = new Map(remote.documents.map(({ documentId, heads }) => [documentId, heads]));
-  return {
-    spaceId: space.id,
-    name: getSpaceDisplayName(space),
-    unindexed: Object.keys(local).filter((documentId) => !sameHeads(local[documentId], indexedHeads.get(documentId)))
-      .length,
-  };
-};
+): IndexerRow => ({
+  spaceId: space.id,
+  name: getSpaceDisplayName(space),
+  unindexed: countUnindexed(local, remote),
+});
 
 /** One row per ready space comparing local document heads with the EDGE indexer's, polled, plus a raw copy action. */
 export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; copy: () => void } => {

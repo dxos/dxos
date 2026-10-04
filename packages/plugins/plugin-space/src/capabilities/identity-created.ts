@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
+import { Annotation, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
@@ -25,7 +25,11 @@ export default Capability.makeModule(
 
     // Create root collection structure.
     Obj.update(defaultSpace.properties, (properties) => {
-      Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(Collection.make()));
+      Annotation.set(
+        properties,
+        AppAnnotation.RootCollectionAnnotation,
+        Ref.make(AppAnnotation.addRootCollection(defaultSpace.db)),
+      );
       if (Migrations.targetVersion) {
         Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
       }

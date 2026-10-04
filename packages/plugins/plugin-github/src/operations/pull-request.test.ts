@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { summarizeCheckRuns, toCheckRun } from './pull-request.ts';
+import { summarizeCheckRuns, summarizeReviews, toCheckRun } from './pull-request.ts';
 
 describe('summarizeCheckRuns', () => {
   test('no runs is none', () => {
@@ -73,6 +73,48 @@ describe('toCheckRun', () => {
       url: 'https://depot.dev/orgs/acme/workflows/abc?job=1',
       startedAt: '2026-09-23T12:47:05Z',
       completedAt: '2026-09-23T12:51:13Z',
+    });
+  });
+});
+
+describe('summarizeReviews', () => {
+  const review = (id: number, login: string, state: string) => ({ id, state, user: { login } });
+
+  test('no reviews is none', () => {
+    expect(summarizeReviews([])).toEqual({ review: 'none', approvals: 0 });
+  });
+
+  test('a comment alone is no verdict', () => {
+    expect(summarizeReviews([review(1, 'alice', 'COMMENTED')])).toEqual({ review: 'none', approvals: 0 });
+  });
+
+  test('approvals are counted per reviewer', () => {
+    expect(
+      summarizeReviews([review(1, 'alice', 'APPROVED'), review(2, 'alice', 'APPROVED'), review(3, 'bob', 'APPROVED')]),
+    ).toEqual({ review: 'approved', approvals: 2 });
+  });
+
+  test('an outstanding request for changes outweighs approvals', () => {
+    expect(summarizeReviews([review(1, 'alice', 'APPROVED'), review(2, 'bob', 'CHANGES_REQUESTED')])).toEqual({
+      review: 'changes_requested',
+      approvals: 1,
+    });
+  });
+
+  test("a reviewer's later approval clears their request, and a later comment does not undo it", () => {
+    expect(
+      summarizeReviews([
+        review(1, 'bob', 'CHANGES_REQUESTED'),
+        review(2, 'bob', 'APPROVED'),
+        review(3, 'bob', 'COMMENTED'),
+      ]),
+    ).toEqual({ review: 'approved', approvals: 1 });
+  });
+
+  test('a dismissed review withdraws the verdict', () => {
+    expect(summarizeReviews([review(1, 'bob', 'APPROVED'), review(2, 'bob', 'DISMISSED')])).toEqual({
+      review: 'none',
+      approvals: 0,
     });
   });
 });

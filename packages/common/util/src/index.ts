@@ -66,4 +66,5 @@ export * from './uint8array.ts';
 export * from './unit.ts';
 export * from './url.ts';
 export * from './wasm-metrics.ts';
+export * from './work-counters.ts';
 export * from './weak.ts';

@@ -61,12 +61,12 @@ export const VocabularyArticle = ({ role, subject, attendableId }: VocabularyArt
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild classNames='dx-expand'>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attentionId} />
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <WordList words={sorted} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

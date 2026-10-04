@@ -3,11 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as HttpBody from 'effect/http/HttpBody';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Schema from 'effect/Schema';
-import * as HttpBody from 'effect/unstable/http/HttpBody';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { FreeqAuthError } from '../errors.ts';
 

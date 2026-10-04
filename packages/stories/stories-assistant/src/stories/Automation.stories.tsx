@@ -131,7 +131,6 @@ export const WithPrompt: Story = {
       space.db.add(
         Instructions.make({
           name: 'Research',
-          description: 'Research organization',
           text: 'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           skills: [Ref.make(WebSearchSkill.make())],
         }),

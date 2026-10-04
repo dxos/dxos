@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { IconButton, createContext, useTranslation } from '@dxos/react-ui';
+import { Button, createContext, useTranslation } from '@dxos/react-ui';
 import {
   type FeedModel,
   MessageList,
@@ -216,11 +216,11 @@ const ScrollToBottom = () => {
   const hidden = atEnd || following;
 
   return (
-    <IconButton
+    <Button
       variant='primary'
       icon='ph--arrow-line-down--regular'
       iconOnly
-      density='sm'
+      size='sm'
       label={t('scroll-to-bottom.label')}
       disabled={hidden}
       aria-hidden={hidden}

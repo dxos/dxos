@@ -17,14 +17,7 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import {
-  Avatar,
-  IconButton,
-  type ThemedClassName,
-  useOnTransition,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Avatar, Button, type ThemedClassName, useOnTransition, useThemeMode, useTranslation } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
@@ -37,7 +30,7 @@ import { command } from '../command.ts';
 import { useThreadContext } from '../context.ts';
 import { type MessageMetadata } from '../types.ts';
 
-const avatarSize = 7;
+const avatarSize = 'md';
 
 const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 const buttonClassNames = 'p-1! transition-opacity';
@@ -66,30 +59,28 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     },
     forwardedRef,
   ) => {
-    // Must wrap the message since Avatar.Label may be used in the content.
     // Columns mirror Thread.Header (avatar/rail · content · controls) so trailing
     // controls align with the thread header's controls.
     return (
-      <Avatar.Root>
-        <div
-          data-testid='thread.message'
-          {...rootProps}
-          className={mx('grid grid-cols-[var(--dx-rail-size)_1fr_min-content] w-full', classNames)}
-          ref={forwardedRef}
-        >
-          <div className='flex flex-col items-center gap-2 pt-1'>
-            <Avatar.Content
-              size={avatarSize}
-              hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
-              fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
-              {...(authorImgSrc && { imgSrc: authorImgSrc })}
-            />
-            {continues && <div className='w-px grow bg-separator' />}
-          </div>
-          <div className='py-1 min-w-0'>{children}</div>
-          {controls && <div className='self-start'>{controls}</div>}
+      <div
+        data-testid='thread.message'
+        {...rootProps}
+        className={mx('grid grid-cols-[var(--dx-rail-size)_1fr_min-content] w-full', classNames)}
+        ref={forwardedRef}
+      >
+        <div className='flex flex-col items-center gap-2 pt-1'>
+          <Avatar.Root
+            size={avatarSize}
+            hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
+            fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
+            src={authorImgSrc}
+            label={authorName}
+          />
+          {continues && <div className='w-px grow bg-separator' />}
         </div>
-      </Avatar.Root>
+        <div className='py-1 min-w-0'>{children}</div>
+        {controls && <div className='self-start'>{controls}</div>}
+      </div>
     );
   },
 );
@@ -122,9 +113,7 @@ export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
 const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Avatar.Label classNames='block truncate min-w-0 shrink text-sm text-subdued'>
-      {authorName ?? t('anonymous.label')}
-    </Avatar.Label>
+    <span className='block truncate min-w-0 shrink text-sm text-fg-subtle'>{authorName ?? t('anonymous.label')}</span>
   );
 };
 
@@ -136,7 +125,7 @@ const MessageTime = ({ timestamp }: MessageTimeProps) => {
   const { dtLocale } = useTranslation(translationKey);
   const dt = timestamp ? new Date(timestamp) : undefined;
   return (
-    <time className='shrink-0 text-subdued text-xs' dateTime={dt?.toISOString()}>
+    <time className='shrink-0 text-fg-subtle text-xs' dateTime={dt?.toISOString()}>
       {dt ? format(dt, 'p', { locale: dtLocale }) : ''}
     </time>
   );
@@ -206,7 +195,7 @@ const TextBlock = ({
   editing?: boolean;
   onSave?: (text: string) => void;
 }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const inMemoryContentRef = useRef(block.text);
 
   const handleDocumentChange = useCallback((next: string) => {
@@ -407,7 +396,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     showEdit || showAccept || showAcceptChange || showRejectChange || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <IconButton
+          <Button
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -418,7 +407,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAccept && (
-          <IconButton
+          <Button
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -429,7 +418,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAcceptChange && (
-          <IconButton
+          <Button
             data-testid='thread.message.accept-change'
             variant='ghost'
             icon='ph--check--regular'
@@ -440,7 +429,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showRejectChange && (
-          <IconButton
+          <Button
             data-testid='thread.message.reject-change'
             variant='ghost'
             icon='ph--x--regular'
@@ -451,7 +440,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showDelete && (
-          <IconButton
+          <Button
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'
@@ -541,7 +530,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
     showEdit || showAccept || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <IconButton
+          <Button
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -552,7 +541,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showAccept && (
-          <IconButton
+          <Button
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -563,7 +552,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showDelete && (
-          <IconButton
+          <Button
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'

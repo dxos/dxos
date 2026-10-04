@@ -77,9 +77,9 @@ rule no-invented-theme-tokens: Color classes come from the theme's custom proper
   (`bg-base-surface`, `bg-card-surface`, `bg-modal-surface`,
   `bg-toolbar-surface`, `bg-sidebar-surface`, `bg-deck-surface`,
   `bg-group-surface`, `bg-input-surface`, `bg-hover-surface`,
-  `bg-attention-surface`, `bg-accent-bg`), the text tokens (`text-base-fg`,
-  `text-description`, `text-subdued`, `text-placeholder`, `text-accent-text`)
-  and the separators (`border-separator`, `border-subdued-separator`,
+  `bg-attention-surface`, `bg-accent-bg`), the text tokens (`text-fg`,
+  `text-fg-muted`, `text-fg-subtle`, `text-placeholder`, `text-accent-text`)
+  and the separators (`border-separator`, `border-separator-subtle`,
   `border-primary-separator`, `border-active-separator`, `border-focus-ring`).
   Functional layout hints (`p-4`, `space-y-4`, `@container`) are NOT violations.
   scope: repo

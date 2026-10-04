@@ -12,6 +12,16 @@ reviewId: a73270543e
 
 _0 error(s), 3 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- a73270543e-1 - ignored - namespace-export-with-internal-hiding - packages/plugins/plugin-deck/src/index.ts:6
+- a73270543e-2 - resolved - refactor-must-preserve-behavior - packages/plugins/plugin-tasks/src/containers/TaskSetArticle/TaskSetArticle.tsx:314:9
+- a73270543e-3 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-tasks/src/containers/TaskSetArticle/TaskSetArticle.tsx:317
+
+## Issues
+
 # WARN a73270543e-1 namespace-export-with-internal-hiding `packages/plugins/plugin-deck/src/index.ts:6`
 
 `export * from './seed/index.ts';` is a blanket wildcard re-export rather than an explicit named export, the pattern `namespace-export-with-internal-hiding` flags. `seed/index.ts` itself already names its one export (`export * as DeckSeed from './DeckSeed.ts'`), so the top-level barrel should re-export that name explicitly too — `export * as DeckSeed from './seed/index.ts';` — instead of wildcarding the sub-barrel's contents into the package's public surface.

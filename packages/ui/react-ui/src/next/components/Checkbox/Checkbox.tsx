@@ -9,6 +9,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
+import { useFieldsetDisabled } from '../Fieldset/index.ts';
 import { Icon } from '../Icon/index.ts';
 
 export type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.RootProps, 'children'>> & {
@@ -19,8 +20,13 @@ export type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.RootProps, 'c
 
 /** Ark checkbox with its box at control size; the root is a block-tall row so it lines up with other controls. */
 export const Checkbox = forwardRef<HTMLLabelElement, CheckboxProps>(
-  ({ classNames, label, 'aria-label': ariaLabel, ...props }, forwardedRef) => (
-    <CheckboxPrimitive.Root {...props} className={mx(recipes.checkbox(), classNames)} ref={forwardedRef}>
+  ({ classNames, label, 'aria-label': ariaLabel, disabled, ...props }, forwardedRef) => (
+    <CheckboxPrimitive.Root
+      {...props}
+      disabled={useFieldsetDisabled(disabled)}
+      className={mx(recipes.checkbox(), classNames)}
+      ref={forwardedRef}
+    >
       <CheckboxPrimitive.Control className={recipes.checkboxControl()}>
         <CheckboxPrimitive.Indicator>
           <Icon icon='ph--check--bold' />
@@ -35,4 +41,4 @@ export const Checkbox = forwardRef<HTMLLabelElement, CheckboxProps>(
   ),
 );
 
-Checkbox.displayName = 'Next.Checkbox';
+Checkbox.displayName = 'Checkbox';

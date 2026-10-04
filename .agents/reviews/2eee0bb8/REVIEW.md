@@ -10,4 +10,10 @@ rules: [avoid-full-collection-scans, barrel-imports-not-internal-paths, bounded-
 reviewId: 2eee0bb8
 ---
 
-<!-- no diagnostics: clean -->
+_Clean: no issues._
+
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+<!-- no issues -->

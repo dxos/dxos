@@ -6,8 +6,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as Reactivity from 'effect/reactivity/Reactivity';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { BaseError } from '@dxos/errors';
 

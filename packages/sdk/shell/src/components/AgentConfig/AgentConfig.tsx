@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Avatar, Button, Icon, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, Icon, Link, Tooltip, Trans, useId, useTranslation } from '@dxos/react-ui';
 import { getSize, mx, textValence } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -19,9 +19,10 @@ export const AgentConfig = ({
   onAgentRefresh,
 }: Omit<AgentFormProps, 'agentHostingEnabled'>) => {
   const { t } = useTranslation(translationKey);
+  const labelId = useId('agentConfig__label');
   return (
     <div className='p-1'>
-      <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent.heading')}</h2>
+      <h2 className={mx('text-fg-muted', 'text-center mt-2')}>{t('agent.heading')}</h2>
       {validationMessage && (
         <p role='alert' className={mx(textValence('error'), 'my-2')}>
           {validationMessage}
@@ -37,28 +38,27 @@ export const AgentConfig = ({
             className='my-2 flex gap-2 items-center'
             aria-describedby='devices-panel.create-agent.description'
           >
-            <Avatar.Root>
-              <Avatar.Content
-                status={agentStatus === 'created' ? 'warning' : 'inactive'}
-                variant='square'
-                classNames={['place-self-center', agentStatus !== 'created' && 'opactiy-50']}
-                icon='ph--database--duotone'
-              />
-              <Avatar.Label classNames='flex-1 text-sm truncate'>
-                {t(
-                  agentStatus === 'created'
-                    ? 'agent requested label'
-                    : agentStatus === 'creating'
-                      ? 'creating agent label'
-                      : agentStatus === 'destroying'
-                        ? 'destroying agent label'
-                        : 'getting agent label',
-                )}
-              </Avatar.Label>
-            </Avatar.Root>
+            <Avatar.Root
+              aria-labelledby={labelId}
+              status={agentStatus === 'created' ? 'warning' : 'inactive'}
+              variant='square'
+              classNames={['place-self-center', agentStatus !== 'created' && 'opactiy-50']}
+              icon='ph--database--duotone'
+            />
+            <span id={labelId} className='flex-1 text-sm truncate'>
+              {t(
+                agentStatus === 'created'
+                  ? 'agent requested label'
+                  : agentStatus === 'creating'
+                    ? 'creating agent label'
+                    : agentStatus === 'destroying'
+                      ? 'destroying agent label'
+                      : 'getting agent label',
+              )}
+            </span>
             {agentStatus === 'created' && (
               <Tooltip.Trigger asChild content={t('destroy-agent.label')} side='bottom'>
-                <IconButton
+                <Button
                   variant='ghost'
                   classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid='agent.destroy'
@@ -71,7 +71,7 @@ export const AgentConfig = ({
             )}
           </div>
           {agentStatus === 'created' && (
-            <p id='devices-panel.create-agent.description' className={mx('text-description', 'my-2')}>
+            <p id='devices-panel.create-agent.description' className={mx('text-fg-muted', 'my-2')}>
               {t('agent-requested.description')}
             </p>
           )}
@@ -87,9 +87,9 @@ export const AgentConfig = ({
           >
             <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-input-surface grid place-items-center')}>
               {agentStatus === 'creatable' ? (
-                <Icon icon='ph--plus--light' size={6} />
+                <Icon icon='ph--plus--light' size='xl' />
               ) : (
-                <Icon icon='ph--arrows-clockwise--light' size={6} />
+                <Icon icon='ph--arrows-clockwise--light' size='xl' />
               )}
             </div>
             <span className='grow font-medium text-start'>
@@ -98,7 +98,7 @@ export const AgentConfig = ({
           </Button>
           {agentStatus === 'creatable' && (
             <div className='space-y-2' id='devices-panel.create-agent.description'>
-              <p className='text-description'>
+              <p className='text-fg-muted'>
                 <Trans
                   {...{
                     t,
@@ -109,7 +109,7 @@ export const AgentConfig = ({
                   }}
                 />
               </p>
-              <p className='text-description'>{t('create-agent.description')}</p>
+              <p className='text-fg-muted'>{t('create-agent.description')}</p>
             </div>
           )}
         </>

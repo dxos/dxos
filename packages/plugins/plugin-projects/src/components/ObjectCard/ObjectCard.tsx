@@ -5,11 +5,11 @@
 import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
+import { AppSurface, ObjectCard as ObjectCardPrimitive } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useArchiveMenuItem } from '@dxos/plugin-space/hooks';
-import { Card, Icon, Tag, useTranslation } from '@dxos/react-ui';
+import { Card, Menu, Tag, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -29,7 +29,6 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
   const { t } = useTranslation(meta.profile.key);
   const [object] = useObject(objectProp);
   const label = Obj.getLabel(object)?.trim() || t('object-card.untitled.label');
-  const icon = Obj.getIcon(object)?.icon ?? 'ph--file--regular';
   const { archived, item: archiveItem } = useArchiveMenuItem(objectProp);
   const menuItems = [
     ...(onDelete ? [{ label: t('object-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }] : []),
@@ -54,23 +53,32 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
   );
 
   return (
-    <Card.Root
-      fullWidth
+    <ObjectCardPrimitive.Root
       classNames={onClick && 'dx-hover'}
       onClick={onClick}
       onKeyDown={onClick ? handleKeyDown : undefined}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <Card.Header>
-        <Card.Block>
-          <CardIconSlot subject={object}>
-            <Icon icon={icon} />
-          </CardIconSlot>
-        </Card.Block>
-        <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
-        {menuItems.length > 0 && <Card.Menu items={menuItems} />}
-      </Card.Header>
+      <ObjectCardPrimitive.Header
+        subject={object}
+        lines={2}
+        menu={
+          menuItems.length > 0 && (
+            <Card.Menu label={t('object-card.menu.label')}>
+              {menuItems.map((item) => (
+                <Menu.Item
+                  key={item.label}
+                  item={{ value: item.label, label: item.label, icon: item.icon }}
+                  onClick={item.onClick}
+                />
+              ))}
+            </Card.Menu>
+          )
+        }
+      >
+        {label}
+      </ObjectCardPrimitive.Header>
       {archived && (
         <Card.Row>
           <Tag classNames='justify-self-start'>{t('object-card.archived.label')}</Tag>
@@ -80,6 +88,6 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
           a second body would double the card's padding. Nothing renders for a type with no registered
           card surface; the header still identifies it. */}
       <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
-    </Card.Root>
+    </ObjectCardPrimitive.Root>
   );
 };

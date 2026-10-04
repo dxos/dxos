@@ -59,13 +59,13 @@ type StoryArgs = {
 const EditorArticle = (props: MarkdownEditorEditorRootProps) => (
   <Editor.Root {...props}>
     <Panel.Root role='article'>
-      <Panel.Toolbar>
+      <Panel.Header>
         <MarkdownEditor.Toolbar classNames='dx-document' />
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <MarkdownEditor.Content />
         <Editor.Blocks />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   </Editor.Root>
 );

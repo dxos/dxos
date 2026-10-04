@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import { type ComponentProps } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -44,7 +45,7 @@ import {
   OBJECT_FORM_DIALOG,
   RENAME_POPOVER,
 } from '../constants.ts';
-import { TypeInputOptionsAnnotationId } from '../types/SpaceForm.ts';
+import { getTypeInputOptions } from '../types/SpaceForm.ts';
 import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema.ts';
 import { SpaceHomeContent } from '../types/SpaceSurface.ts';
 import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
@@ -213,8 +214,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'typenameFormInput',
         filter: AppSurface.formInput(
-          (data) =>
-            data.prop === 'typename' && !!SchemaEx.findAnnotation(data.schema.ast, TypeInputOptionsAnnotationId),
+          (data) => data.prop === 'typename' && Option.isSome(getTypeInputOptions(data.schema.ast)),
         ),
         component: TypenameField,
       }),

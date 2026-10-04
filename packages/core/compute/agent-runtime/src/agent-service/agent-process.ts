@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
 import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
@@ -12,8 +14,6 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import {
@@ -125,7 +125,7 @@ const MAX_UNSEEN_WRITE_WAKES = 20;
  * The process target is a queue DXN string.
  */
 export const AgentProcess = (options: AgentProcessOptions) =>
-  Process.make(
+  Operation.makeDurable(
     {
       key: AGENT_PROCESS_KEY,
       // Accepts plain text or content blocks.
@@ -189,6 +189,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // `sessionStore`.
         let toolResults: ToolResultEvent[] = [...(yield* ToolResultsCell.get)];
         let ackedEntries: string[] = [...(yield* AckedEntriesCell.get)];
+        let selfWakes = yield* SelfWakesCell.get;
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
@@ -450,15 +451,35 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   log('agent onAlarm handling', { tag: 'message', id: message.id });
                   unseenWriteIds.delete(message.id);
                   unseenWriteWakes = 0;
+                  if (isUserPrompt(message) && selfWakes > 0) {
+                    selfWakes = 0;
+                    yield* SelfWakesCell.set(selfWakes);
+                  }
                   dequeued = message;
                   prompt = [...message.blocks];
                 } else if (dueAlarm !== undefined) {
-                  log('agent onAlarm self-wake', { firedAt: dueAlarm.wakeAt });
                   unseenAlarms.delete(dueAlarm.id);
+                  if (selfWakes >= Alarm.MAX_SELF_WAKES) {
+                    // Spent: acked without a turn, so the loop ends here until the user prompts again.
+                    log.warn('agent self-wake budget spent, dropping alarm', { wakes: selfWakes });
+                    yield* sessionStore.ack(feed, dueAlarm);
+                    ackedEntries = [...ackedEntries, dueAlarm.id];
+                    yield* AckedEntriesCell.set(ackedEntries);
+                    const after = yield* sessionStore.loadPending(feed);
+                    yield* reconcileAlarmWith(after);
+                    yield* maybeCompleteWith(after);
+                    return;
+                  }
+                  selfWakes++;
+                  yield* SelfWakesCell.set(selfWakes);
+                  log('agent onAlarm self-wake', { firedAt: dueAlarm.wakeAt, wakes: selfWakes });
                   dequeued = dueAlarm;
                   prompt = [
                     ContentBlock.Text.make({
-                      text: wakeUpPrompt(dueAlarm.wakeAt, dueAlarm.message ?? null),
+                      text: wakeUpPrompt(dueAlarm.wakeAt, dueAlarm.message ?? null, {
+                        wake: selfWakes,
+                        max: Alarm.MAX_SELF_WAKES,
+                      }),
                       disposition: 'synthetic',
                     }),
                   ];
@@ -728,6 +749,16 @@ const AckedEntriesCell = StorageService.cell(
   'ackedEntries',
 ).pipe(StorageService.withDefault(() => []));
 
+/** Alarms that have woken the agent since the last user prompt; bounded by {@link Alarm.MAX_SELF_WAKES}. */
+const SelfWakesCell = StorageService.cell(Schema.fromJsonString(Schema.Number), 'selfWakes').pipe(
+  StorageService.withDefault(() => 0),
+);
+
+/** A prompt someone typed, as opposed to one the system wrote (a report, a tool result). */
+const isUserPrompt = (message: Message.Message): boolean =>
+  message.sender.role === 'user' &&
+  message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic');
+
 const ToolCallState = Schema.Struct({
   activeCalls: Schema.Array(
     Schema.Struct({
@@ -907,16 +938,21 @@ export const computeAlarmDelay = ({
  * reminder message it is surfaced verbatim, otherwise a generic continuation prompt is used.
  * Exported so the prompt shape stays pinned by tests without spawning an agent.
  */
-export const wakeUpPrompt = (firedAt: number, message: string | null): string =>
-  message != null
-    ? trim`
-      Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
-      ${message}
-    `
-    : trim`
-      Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
-      Continue with whatever you intended to do when you scheduled this wake-up.
-    `;
+export const wakeUpPrompt = (
+  firedAt: number,
+  message: string | null,
+  budget?: { wake: number; max: number },
+): string => {
+  const fired = `Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).`;
+  const body = message ?? 'Continue with whatever you intended to do when you scheduled this wake-up.';
+  const limit =
+    budget == null
+      ? undefined
+      : budget.wake >= budget.max
+        ? `This is self-wake ${budget.wake} of ${budget.max}: further alarms will not wake you until the user writes again, so finish or report where you are now.`
+        : `This is self-wake ${budget.wake} of ${budget.max} before the user must write again.`;
+  return [fired, body, limit].filter((line) => line != null).join('\n');
+};
 
 const ToolExecutionService = ({
   enableBackgrounding,

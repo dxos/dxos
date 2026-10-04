@@ -6,13 +6,12 @@ import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, us
 
 import { Obj } from '@dxos/echo';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { Card, Icon, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, DragHandle, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { getHashStyles } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { Focus } from '../Focus/index.ts';
 import { Mosaic, type MosaicTileProps } from '../Mosaic/index.ts';
 import { useBoardColumn } from './BoardColumnContext.ts';
 import { useBoard } from './BoardContext.ts';
@@ -74,31 +73,31 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
             onClick={(event) => event.currentTarget.focus()}
           >
             <Card.Header>
-              <Card.DragHandle ref={setDragHandle} testId='mosaicBoard.cardDragHandle' />
+              <DragHandle ref={setDragHandle} data-testid='mosaicBoard.cardDragHandle' />
               <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Card.Block end>
+              <Block rail='end'>
                 <ActionMenu disabled={!items?.length} actions={items}>
-                  <IconButton
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             {/* TODO(burdon): Replace with surface. */}
-            <Card.Row classNames='text-description'>
-              <Card.Block>
+            <Card.Row classNames='text-fg-muted'>
+              <Block>
                 <Icon icon='ph--note--regular' />
-              </Card.Block>
+              </Block>
               <Card.Text>{description}</Card.Text>
             </Card.Row>
             <Card.Row>
-              <Card.Block>
+              <Block>
                 <Icon icon='ph--tag--regular' />
-              </Card.Block>
+              </Block>
               {label && (
                 <div className='shrink-0 flex gap-1 items-center text-xs'>
                   <Tag hue={getHashStyles(label).hue}>{label}</Tag>
