@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Scope from 'effect/Scope';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import {
@@ -523,7 +523,7 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     throw new UnsupportedOperationError('deleteFromFeed');
   }
 
-  appendEvents(_obj: Obj.Unknown, _events: EchoEvent.Unknown[]): void {
+  appendEvents(_obj: Obj.Unknown, _events: EchoEvent.Unknown[], _opts?: Database.WriteOptions): void {
     throw new UnsupportedOperationError('appendEvents');
   }
 

@@ -63,6 +63,8 @@ export type MakeProps<T extends Type.AnyEvent> = {
  * const viewed = Event.make(Viewed, { by: 'alice' });
  * Obj.appendEvents(document, [viewed]);
  * ```
+ *
+ * @performance O(n) in props size; validates props against the schema and allocates a reactive proxy.
  */
 export function make<T extends Type.AnyEvent>(type: T, props: NoInfer<MakeProps<T>>): OfShape<Type.InstanceType<T>>;
 export function make(type: Type.AnyEvent, props: any): Unknown {
@@ -87,11 +89,15 @@ export function make(type: Type.AnyEvent, props: any): Unknown {
 
 /**
  * Determine if a value is an ECHO event.
+ *
+ * @performance O(1) brand check; no allocation.
  */
 export const isEvent = (value: unknown): value is Unknown => internal.isEventEntity(value);
 
 /**
  * Test if a value is an event of the given type.
+ *
+ * @performance O(1) type-URI comparison with a typename fallback; no schema validation.
  */
 export const instanceOf = <T extends Type.AnyEvent>(type: T, value: unknown): value is Type.InstanceType<T> => {
   const entityType: Type.AnyEntity = type;
@@ -100,6 +106,8 @@ export const instanceOf = <T extends Type.AnyEvent>(type: T, value: unknown): va
 
 /**
  * Get the event's URI.
+ *
+ * @performance O(1); returns the stored URI, constructing one only when `options.prefer` asks for another form.
  */
 export const getURI = (event: Unknown, options?: internal.GetURIOptions): URI.URI => {
   assertArgument(!Schema.isSchema(event), 'event', 'Event should not be a schema.');
@@ -108,6 +116,8 @@ export const getURI = (event: Unknown, options?: internal.GetURIOptions): URI.UR
 
 /**
  * Get the URI of the event's type.
+ *
+ * @performance O(1) read of the stored type URI.
  */
 export const getTypeURI = (event: Unknown): URI.URI => {
   const type = internal.getTypeURI(event);
@@ -117,6 +127,8 @@ export const getTypeURI = (event: Unknown): URI.URI => {
 
 /**
  * Get the type entity the event was created from.
+ *
+ * @performance O(1) read of the type back-reference.
  */
 export const getType = (event: Unknown): Type.AnyEvent | undefined =>
   internal.getType(event) as Type.AnyEvent | undefined;
@@ -124,12 +136,16 @@ export const getType = (event: Unknown): Type.AnyEvent | undefined =>
 /**
  * @returns The typename of the event's type.
  * @example `com.example.type.viewed`
+ *
+ * @performance O(1); reads the schema type annotation.
  */
 export const getTypename = (event: Unknown): string | undefined => internal.getTypename(event);
 
 /**
  * Get the event's creation time (unix ms), recorded once by {@link make} and never changed.
  * `undefined` only for an event decoded from JSON that predates the timestamp.
+ *
+ * @performance O(1) slot read.
  */
 export const getTimestamp = (event: Unknown): number | undefined => {
   assumeType<{ [internal.EventTimestampId]?: number }>(event);
@@ -139,6 +155,8 @@ export const getTimestamp = (event: Unknown): number | undefined => {
 /**
  * Get the URI of the object whose event feed holds the event.
  * `undefined` until the event is appended with `Obj.appendEvents` or read back from a feed.
+ *
+ * @performance O(1) slot read.
  */
 export const getObjectURI = (event: Unknown): EID.EID | undefined => {
   assumeType<{ [internal.EventOwnerId]?: EID.EID }>(event);
@@ -147,21 +165,29 @@ export const getObjectURI = (event: Unknown): EID.EID | undefined => {
 
 /**
  * Get the database the event belongs to, once appended or read back.
+ *
+ * @performance O(1) slot read.
  */
 export const getDatabase = (event: Unknown): Database.Database | undefined => internal.getDatabase(event);
 
 /**
  * Get the event's meta keys for the given source.
+ *
+ * @performance O(k) in the foreign-key count; allocates a filtered array.
  */
 export const getKeys = (event: Unknown, source: string) => internal.getKeys(event, source);
 
 /**
  * Converts an event to its JSON representation.
+ *
+ * @performance O(n) in event size; serializes the whole event on every call.
  */
 export const toJSON = (event: Unknown): JSON => objInternal.objectToJSON(event);
 
 /**
  * Creates an event from its JSON representation, performing schema validation.
+ *
+ * @performance Async; O(n) schema decode plus resolver round trips for the type.
  */
 export const fromJSON = async (
   json: unknown,

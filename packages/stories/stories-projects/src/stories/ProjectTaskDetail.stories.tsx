@@ -20,10 +20,10 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { type Space } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
-import { Cell, UpdateCompanionStubPlugin, createStoryDecorators } from '@dxos/storybook-testing';
+import { Cell, createStoryDecorators } from '@dxos/storybook-testing';
 import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
-import { ModuleContainer, storyParameters } from '../testing/index.ts';
+import { ModuleContainer, TaskDetail, storyParameters } from '../testing/index.ts';
 
 const TASK_TITLE = 'Ship the tasks section';
 // Carries both reference forms the markdown surfaces linkify: a bare URL and a `#nnn` issue.
@@ -38,11 +38,6 @@ const TASK_OPEN_QUESTION = 'Which spaces count as internal?';
 let generation = 0;
 let seededGeneration: number | undefined;
 
-/**
- * A project with two tasks: one carrying an answered and an open question plus an artifact, and one
- * whose description holds the link forms the task pane decorates. The layout is the deck's
- * master-detail: the project beside its task companion, which shows whichever row is selected.
- */
 const seedProject = async ({ space }: { space: Space }) => {
   const storyGeneration = generation;
   const project = space.db.add(Project.make({ name: 'Project 1' }));
@@ -81,7 +76,7 @@ const seedProject = async ({ space }: { space: Space }) => {
 
   await space.db.flush({ indexes: true });
   seededGeneration = storyGeneration;
-  return [[Cell.article(project)], [Cell.companion(project, 'task')]];
+  return [[Cell.article(project)], [Cell.article(project, { component: TaskDetail })]];
 };
 
 /** Resolves the element `query` finds, failing the play function when it is absent. */
@@ -118,8 +113,6 @@ const meta: Meta<typeof ModuleContainer> = {
       ProjectsPlugin.make(),
       AssistantPlugin.make(),
       RoutinePlugin.make(),
-      // Selecting a row asks the deck to show its companion; the layout here already does.
-      UpdateCompanionStubPlugin(),
       // The `#123` decoration, link chips and the hover-card resolver; the fixture source answers
       // the resolver without the network.
       GitHubPlugin.make(),
@@ -153,7 +146,6 @@ export const Default: Story = {
     // Scoped to the grid rather than the canvas: the ledger row carries a chip with the same text.
     const cards = () => canvasElement.querySelector<HTMLElement>('[data-testid="cardMasonry"]');
     await waitFor(() => expect(cards()).toBeTruthy(), { timeout: 10_000 });
-    // Once only: the companion used to render the same artifacts a second time beneath the article.
     await expect(canvasElement.querySelectorAll('[data-testid="cardMasonry"]')).toHaveLength(1);
     // The answered exchange reads as two lines of the log, with no controls.
     const history = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.history"]');
@@ -177,7 +169,7 @@ export const Default: Story = {
     // The description is edited with the host's contributed extensions live in it: a task opened in
     // the pane decorates `#123` and a pull-request URL rather than showing raw markdown.
     await userEvent.click(await canvas.findByText(LINK_TASK_TITLE, undefined, { timeout: 10_000 }));
-    const editor = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskEditor.description"]');
+    const editor = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasksPlugin.fields"] .cm-editor');
     await waitFor(async () => await expect(editor()?.textContent).toContain('supersedes'), { timeout: 10_000 });
     await waitFor(
       async () =>
@@ -189,7 +181,7 @@ export const Default: Story = {
     await waitFor(
       async () =>
         await expect(
-          [...(editor()?.querySelectorAll('.dx-tag--anchor') ?? [])].map((chip) => chip.textContent),
+          [...(editor()?.querySelectorAll('.dx-tag-anchor') ?? [])].map((chip) => chip.textContent),
         ).toContain('#12752'),
       { timeout: 10_000 },
     );

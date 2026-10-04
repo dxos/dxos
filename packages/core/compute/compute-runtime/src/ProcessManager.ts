@@ -10,18 +10,18 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Queue from 'effect/Queue';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Rpc from 'effect/rpc/Rpc';
+import * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as RpcTest from 'effect/rpc/RpcTest';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import * as Rpc from 'effect/unstable/rpc/Rpc';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
-import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -31,7 +31,7 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Database } from '@dxos/echo';
 import { EffectEx, SpanAttributes } from '@dxos/effect';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -43,6 +43,18 @@ import { createProcessTraceService } from './process-trace.ts';
 import * as ProcessHandle from './ProcessHandle.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 import { layer as storageServiceLayer } from './storage-service-layer.ts';
+
+/**
+ * The origin a process's database writes are attributed to. A process serving a conversation is an agent's work,
+ * not a person's, and its children inherit the conversation; any other process takes the origin it was spawned with.
+ */
+const resolveOrigin = (
+  environment: Process.Environment,
+  requested: Database.Origin | undefined,
+): Database.Origin | undefined => (environment.conversation != null ? 'system' : requested);
+
+const originContext = (origin: Database.Origin | undefined): Context.Context<never> =>
+  origin !== undefined ? Context.make(Database.Origin, origin) : Context.empty();
 
 export {
   type ProcessIdGenerator,
@@ -97,7 +109,7 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
   readonly parentId: Process.ID | null;
 
   /**
-   * Process definition key ({@link Process.Process.key}) for this process.
+   * Process definition key ({@link Operation.Durable.key}) for this process.
    */
   readonly key: string;
 
@@ -174,7 +186,7 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
    * Hydrates a dormant persisted process using the supplied definition.
    * No-op when the handle is already live (returns self).
    */
-  hydrate(definition: Process.Process<_Input, _Output, any, any>): Effect.Effect<Handle<_Input, _Output, _Rpcs>>;
+  hydrate(definition: Operation.Durable<_Input, _Output, any, any>): Effect.Effect<Handle<_Input, _Output, _Rpcs>>;
 
   readonly rpc: RpcClient.RpcClient<_Rpcs>;
 }
@@ -210,6 +222,12 @@ export interface SpawnOptions {
   readonly traceMeta?: Trace.Meta;
 
   readonly environment?: Process.Environment;
+
+  /**
+   * Who the process's database writes are attributed to (see `Database.Origin`); also the origin of every process it
+   * invokes. Persisted with the process, so a restored process keeps it.
+   */
+  readonly origin?: Database.Origin;
 
   /**
    * User-facing notifications requested for this process's lifecycle phases.
@@ -281,7 +299,7 @@ export interface Manager {
    * Spawn a new process from a process definition.
    */
   spawn<I, O, Rpcs extends Rpc.Any = never>(
-    definition: Process.Process<I, O, any, Rpcs>,
+    definition: Operation.Durable<I, O, any, Rpcs>,
     options?: SpawnOptions,
   ): Effect.Effect<Handle<I, O, Rpcs>>;
 
@@ -355,8 +373,8 @@ export class Impl implements Manager {
   readonly #runtimeName: Trace.RuntimeName | undefined;
   readonly #store: ProcessStore;
 
-  readonly #finished: Process.Info[] = [];
-  readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
+  readonly #finished: Process.Process[] = [];
+  readonly #processTreeAtom: Atom.Writable<readonly Process.Process[]>;
   readonly #monitor: Process.Monitor;
   /**
    * Manager-level ephemeral trace hub (DX-1125). Every process's ephemeral messages are fanned out
@@ -376,7 +394,7 @@ export class Impl implements Manager {
     this.#traceSink = opts.traceSink;
     this.#runtimeName = opts.runtimeName;
     this.#store = new ProcessStore(opts.kvStore);
-    this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
+    this.#processTreeAtom = Atom.make<readonly Process.Process[]>([]);
     this.#registry.mount(this.#processTreeAtom);
     const processTree = Effect.sync(() => this.#registry.get(this.#processTreeAtom));
     this.#monitor = {
@@ -446,7 +464,7 @@ export class Impl implements Manager {
     return state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
   }
 
-  #buildProcessTreeSnapshot(): readonly Process.Info[] {
+  #buildProcessTreeSnapshot(): readonly Process.Process[] {
     return [...this.#finished, ...[...this.#handles.values()].map((handle) => handle.snapshotProcessInfo())];
   }
 
@@ -513,7 +531,7 @@ export class Impl implements Manager {
   }
 
   spawn<I, O, _Rpcs extends Rpc.Any>(
-    definition: Process.Process<I, O, any, _Rpcs>,
+    definition: Operation.Durable<I, O, any, _Rpcs>,
     options?: SpawnOptions,
   ): Effect.Effect<Handle<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
@@ -564,7 +582,7 @@ export class Impl implements Manager {
         annotations,
       };
 
-      const ctx: Process.ProcessContext<I, O> = {
+      const ctx: Operation.DurableContext<I, O> = {
         id,
         params,
         succeed: () => {
@@ -582,7 +600,8 @@ export class Impl implements Manager {
       // One controller per run, fired by {@link ProcessHandle.Impl.terminate} — the
       // local counterpart of the EDGE-provided Cancellation service.
       const cancellation = new AbortController();
-      let builtinCtx = Context.empty().pipe(
+      const origin = resolveOrigin(environment, options?.origin);
+      let builtinCtx = originContext(origin).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -610,6 +629,7 @@ export class Impl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          origin,
           tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
@@ -637,7 +657,7 @@ export class Impl implements Manager {
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
 
-      const callbacks = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
+      const handler = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen({ self: this }, function* () {
@@ -669,7 +689,7 @@ export class Impl implements Manager {
         deleteRecord: () => this.#store.deleteProcess(id).pipe(Effect.tap(() => Effect.sync(() => this.#release(id)))),
       };
 
-      // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
+      // Operation.makeDurable spreads opts into the definition object at runtime; cast is safe at this boundary.
       const defRaw = definition as unknown as { input: Schema.Codec<I, any, never> };
       // Fall back to null rather than crashing if the input cannot be persisted. The durable
       // store JSON-serializes this value, and a successful schema encode does not guarantee
@@ -684,12 +704,12 @@ export class Impl implements Manager {
 
       // In-memory RPC control plane: a no-serialization client/server pair bound to the
       // process scope, dispatching to the handlers the process declared via `create()`.
-      const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, callbacks.rpcHandlers, scope);
+      const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, handler.rpcHandlers, scope);
 
       const handle = new ProcessHandle.Impl<I, O, any>(
         id,
         Option.getOrNull(parentOption),
-        callbacks,
+        handler,
         scope,
         fullCtx,
         dispatchContext,
@@ -722,6 +742,7 @@ export class Impl implements Manager {
         params: { name: params.name ?? null, annotations: params.annotations },
         environment: { space: environment.space, conversation: environment.conversation },
         parentId: Option.getOrNull(parentOption),
+        ...(origin !== undefined ? { origin } : {}),
         state: Process.State.RUNNING,
         alarmDueAt: null,
         events: [],
@@ -744,7 +765,7 @@ export class Impl implements Manager {
    */
   #rehydrate(
     record: PersistedProcess,
-    definition: Process.Process<any, any, any, any>,
+    definition: Operation.Durable<any, any, any, any>,
   ): Effect.Effect<ProcessHandle.Impl<any, any, any>> {
     return Effect.gen({ self: this }, function* () {
       const id = record.id;
@@ -777,7 +798,7 @@ export class Impl implements Manager {
         annotations: record.params.annotations,
       };
 
-      const ctx: Process.ProcessContext<any, any> = {
+      const ctx: Operation.DurableContext<any, any> = {
         id,
         params,
         succeed: () => {
@@ -793,7 +814,8 @@ export class Impl implements Manager {
       };
 
       const cancellation = new AbortController();
-      let builtinCtx = Context.empty().pipe(
+      const origin = resolveOrigin(environment, record.origin);
+      let builtinCtx = originContext(origin).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -819,6 +841,7 @@ export class Impl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          origin,
           tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
@@ -845,7 +868,7 @@ export class Impl implements Manager {
       }
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
-      const callbacks = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
+      const handler = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen({ self: this }, function* () {
@@ -871,17 +894,17 @@ export class Impl implements Manager {
         deleteRecord: () => this.#store.deleteProcess(id).pipe(Effect.tap(() => Effect.sync(() => this.#release(id)))),
       };
 
-      // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
+      // Operation.makeDurable spreads opts into the definition object at runtime; cast is safe at this boundary.
       const defRaw = definition as unknown as { input: Schema.Codec<any, any, never> };
       const encodeInput = (input: any): Effect.Effect<unknown> =>
         Schema.encodeEffect(defRaw.input)(input).pipe(Effect.orDie);
 
-      const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, callbacks.rpcHandlers, scope);
+      const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, handler.rpcHandlers, scope);
 
       const handle = new ProcessHandle.Impl<any, any, any>(
         id,
         Option.getOrNull(parentOption),
-        callbacks,
+        handler,
         scope,
         fullCtx,
         dispatchContext,
@@ -929,7 +952,7 @@ export class Impl implements Manager {
 
   #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(
     id: Process.ID,
-    definition: Process.Process<I, O, any, any>,
+    definition: Operation.Durable<I, O, any, any>,
   ): Effect.Effect<Handle<I, O, Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const existing = this.#handles.get(id);
@@ -1104,12 +1127,12 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
   // Dormant handles expose no live RPC surface; the empty client serves no requests. Stored untyped
   // (`RpcClient<any>`) so the dormant handle is assignable to `Handle.Any` (see design spec §4.4).
   readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
-  readonly #rehydrate: (definition: Process.Process<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>;
+  readonly #rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>;
   readonly #discard: () => Effect.Effect<void>;
 
   constructor(
     record: PersistedProcess,
-    rehydrate: (definition: Process.Process<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>,
+    rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>,
     discard: () => Effect.Effect<void>,
   ) {
     this.#rehydrate = rehydrate;
@@ -1135,7 +1158,7 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
     this.alarmDueAt = record.alarmDueAt;
   }
 
-  hydrate = (definition: Process.Process<I, O, any, any>): Effect.Effect<Handle<I, O, any>> =>
+  hydrate = (definition: Operation.Durable<I, O, any, any>): Effect.Effect<Handle<I, O, any>> =>
     this.#rehydrate(definition);
 
   submitInput = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));

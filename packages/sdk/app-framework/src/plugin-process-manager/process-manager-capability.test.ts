@@ -22,24 +22,60 @@ import { ProcessManagerPlugin } from './ProcessManagerPlugin.ts';
 const LateEvent = ActivationEvent.make('org.dxos.test.lateLayerSpec');
 
 class TestService extends Context.Service<TestService, { value: string }>()('org.dxos.test.lateService') {}
+class ProbeService extends Context.Service<ProbeService, { value: string }>()('org.dxos.test.probeService') {}
 
 const lateMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.lateLayerSpec'), name: 'Late LayerSpec' });
 
 const LateSinkEvent = ActivationEvent.make('org.dxos.test.lateTraceSink');
 const lateSinkMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.lateTraceSink'), name: 'Late TraceSink' });
 
-describe('process manager LayerSpec snapshot', () => {
-  it.effect('reports a LayerSpec contributed after the runtime was built', () =>
-    Effect.gen(function* () {
-      const errors: LogEntry[] = [];
-      const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
-        if (entry.level === LogLevel.ERROR) {
-          errors.push(entry);
-        }
-      });
+class OtherService extends Context.Service<OtherService, { value: string }>()('org.dxos.test.otherService') {}
 
-      // Gated on a runtime event rather than Startup, so it contributes AFTER the snapshot — the
-      // mistake the `layerSpec` maker exists to make unrepresentable.
+const otherMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.otherLayerSpec'), name: 'Other LayerSpec' });
+
+/** A manager hosting the process manager, with the framework capabilities a host contributes itself. */
+const makeManager = (opts: { plugins: Plugin.Plugin[]; enabled: string[] }) => {
+  const manager = PluginManager.make({
+    pluginLoader: () => Effect.die(new Error('not implemented')),
+    plugins: [ProcessManagerPlugin(), ...opts.plugins],
+    enabled: opts.enabled,
+  });
+  manager.capabilities.contribute({
+    interface: Capabilities.PluginManager,
+    implementation: manager,
+    module: 'org.dxos.app-framework.plugin-manager',
+  });
+  manager.capabilities.contribute({
+    interface: Capabilities.AtomRegistry,
+    implementation: manager.registry,
+    module: 'org.dxos.app-framework.atom-registry',
+  });
+  return manager;
+};
+
+const resolveWith = <S>(manager: PluginManager.PluginManager, tag: Context.Key<any, S>) =>
+  Effect.gen(function* () {
+    const resolver = yield* manager.capabilities.waitFor(Capabilities.ServiceResolver);
+    return yield* Effect.scoped(resolver.resolve(tag, {}));
+  });
+
+const captureErrors = () => {
+  const errors: LogEntry[] = [];
+  const remove = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
+    if (entry.level === LogLevel.ERROR) {
+      errors.push(entry);
+    }
+  });
+  return { errors, remove };
+};
+
+describe('process manager late LayerSpecs', () => {
+  it.effect('resolves a LayerSpec contributed after the runtime was built', () =>
+    Effect.gen(function* () {
+      const { errors, remove } = captureErrors();
+      let builds = 0;
+
+      // Gated on a runtime event rather than Startup, so it contributes AFTER the stack was built.
       const Late = Plugin.make(
         Plugin.define(lateMeta).pipe(
           Plugin.addModule({
@@ -51,7 +87,10 @@ describe('process manager LayerSpec snapshot', () => {
                 Capability.contribute(
                   Capabilities.LayerSpec,
                   LayerSpec.make({ affinity: 'application', requires: [], provides: [TestService] }, () =>
-                    Layer.succeed(TestService, { value: 'late' }),
+                    Layer.sync(TestService, () => {
+                      builds++;
+                      return { value: 'late' };
+                    }),
                   ),
                 ),
               ]),
@@ -59,34 +98,134 @@ describe('process manager LayerSpec snapshot', () => {
         ),
       );
 
-      const manager = PluginManager.make({
-        pluginLoader: () => Effect.die(new Error('not implemented')),
-        plugins: [ProcessManagerPlugin(), Late()],
-        enabled: [lateMeta.profile.key],
-      });
-
-      // Framework capabilities a host contributes; no module provides them.
-      manager.capabilities.contribute({
-        interface: Capabilities.PluginManager,
-        implementation: manager,
-        module: 'org.dxos.app-framework.plugin-manager',
-      });
-      manager.capabilities.contribute({
-        interface: Capabilities.AtomRegistry,
-        implementation: manager.registry,
-        module: 'org.dxos.app-framework.atom-registry',
-      });
-
+      const manager = makeManager({ plugins: [Late()], enabled: [lateMeta.profile.key] });
       yield* manager.activate(ActivationEvents.Startup);
-      expect(errors.filter((entry) => String(entry.message).includes('LayerSpec contributed after'))).toHaveLength(0);
+
+      // Builds the application slice before the late spec exists.
+      const before = yield* resolveWith(manager, Capability.Service);
+      const missing = yield* Effect.exit(resolveWith(manager, TestService));
+      expect(missing._tag).toBe('Failure');
 
       yield* manager.activate(LateEvent);
 
-      const reported = errors.filter((entry) => String(entry.message).includes('LayerSpec contributed after'));
-      expect(reported).toHaveLength(1);
-      expect(String(reported[0].context?.module)).toContain('late-layer-spec');
+      expect(yield* resolveWith(manager, TestService)).toEqual({ value: 'late' });
+      expect(yield* resolveWith(manager, TestService)).toEqual({ value: 'late' });
+      expect(builds).toBe(1);
+      // Services the slice held before the late spec arrived are the same instances afterwards.
+      expect(yield* resolveWith(manager, Capability.Service)).toBe(before);
+      expect(errors).toHaveLength(0);
 
-      removeProcessor();
+      remove();
+    }),
+  );
+
+  it.effect('makes the services of a plugin enabled after boot available without a reload', () =>
+    Effect.gen(function* () {
+      const { errors, remove } = captureErrors();
+
+      // Same gating as `AppCapability.layerSpec`, on a plugin that is only enabled once the app runs.
+      const Other = Plugin.make(
+        Plugin.define(otherMeta).pipe(
+          Plugin.addModule({
+            id: 'other-layer-spec',
+            activatesOn: ActivationEvents.Startup,
+            provides: [Capabilities.LayerSpec],
+            activate: () =>
+              Effect.succeed([
+                Capability.contribute(
+                  Capabilities.LayerSpec,
+                  // Requires a framework service, as plugin-sandbox's SandboxService spec does.
+                  LayerSpec.make(
+                    { affinity: 'application', requires: [Capability.Service], provides: [OtherService] },
+                    () =>
+                      Layer.effect(
+                        OtherService,
+                        Effect.map(Capability.Service, () => ({ value: 'enabled' })),
+                      ),
+                  ),
+                ),
+              ]),
+          }),
+        ),
+      );
+
+      const manager = makeManager({ plugins: [Other()], enabled: [] });
+      yield* manager.activate(ActivationEvents.Startup);
+      yield* resolveWith(manager, Capability.Service);
+      expect((yield* Effect.exit(resolveWith(manager, OtherService)))._tag).toBe('Failure');
+
+      yield* manager.enable(otherMeta.profile.key);
+
+      expect(yield* resolveWith(manager, OtherService)).toEqual({ value: 'enabled' });
+      expect(errors).toHaveLength(0);
+
+      remove();
+    }),
+  );
+
+  it.effect('rejects a late LayerSpec that closes a cycle and keeps admitting the others', () =>
+    Effect.gen(function* () {
+      const { errors, remove } = captureErrors();
+
+      const Late = Plugin.make(
+        Plugin.define(lateMeta).pipe(
+          Plugin.addModule({
+            id: 'late-layer-spec',
+            activatesOn: LateEvent,
+            provides: [Capabilities.LayerSpec],
+            activate: () =>
+              Effect.succeed([
+                Capability.contribute(
+                  Capabilities.LayerSpec,
+                  LayerSpec.make({ affinity: 'application', requires: [OtherService], provides: [TestService] }, () =>
+                    Layer.succeed(TestService, { value: 'cyclic' }),
+                  ),
+                ),
+                Capability.contribute(
+                  Capabilities.LayerSpec,
+                  LayerSpec.make({ affinity: 'application', requires: [TestService], provides: [OtherService] }, () =>
+                    Layer.succeed(OtherService, { value: 'cyclic' }),
+                  ),
+                ),
+              ]),
+          }),
+        ),
+      );
+      const Other = Plugin.make(
+        Plugin.define(otherMeta).pipe(
+          Plugin.addModule({
+            id: 'other-layer-spec',
+            activatesOn: LateEvent,
+            provides: [Capabilities.LayerSpec],
+            activate: () =>
+              Effect.succeed([
+                Capability.contribute(
+                  Capabilities.LayerSpec,
+                  LayerSpec.make({ affinity: 'application', requires: [], provides: [ProbeService] }, () =>
+                    Layer.succeed(ProbeService, { value: 'fine' }),
+                  ),
+                ),
+              ]),
+          }),
+        ),
+      );
+
+      const manager = makeManager({
+        plugins: [Late(), Other()],
+        enabled: [lateMeta.profile.key, otherMeta.profile.key],
+      });
+      yield* manager.activate(ActivationEvents.Startup);
+      const before = yield* resolveWith(manager, Capability.Service);
+
+      yield* manager.activate(LateEvent);
+
+      expect(yield* resolveWith(manager, ProbeService)).toEqual({ value: 'fine' });
+      expect(yield* resolveWith(manager, Capability.Service)).toBe(before);
+      // The second cyclic spec is the one that closes the cycle; the first is admitted on its own.
+      const rejected = errors.filter((entry) => String(entry.message).includes('LayerSpec rejected'));
+      expect(rejected).toHaveLength(1);
+
+      remove();
     }),
   );
 });

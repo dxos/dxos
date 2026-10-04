@@ -9,8 +9,8 @@ import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, JsonSchema, Type } from '@dxos/echo';
@@ -112,9 +112,9 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
       );
 
     // The definition here is a stand-in carrying only the key: the real one is code that stays on
-    // the host with its handler. It exists so the Effect dialect can bind `ops` and the model can
-    // write `Operation.invoke(ops[key], input)` exactly as in-process; the call itself crosses home
-    // through the forwarding service below, where the conversation it belongs to lives.
+    // the host with its handler. It exists so the Effect dialect's `Database.resolve` can answer the
+    // operation's DXN exactly as in-process; the call itself crosses home through the forwarding
+    // service below, where the conversation it belongs to lives.
     const operations: SandboxOperation[] = init.operations.map(({ key, name, description, parameters }) => ({
       name,
       description,

@@ -15,7 +15,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const CORE = 'effect/unstable/reactivity';
+const CORE = 'effect/reactivity';
 const REACT = '@effect/atom-react';
 
 /** Renamed in the core barrel; aliased back so call sites keep their local binding. */

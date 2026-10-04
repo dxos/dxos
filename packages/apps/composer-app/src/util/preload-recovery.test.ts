@@ -91,6 +91,19 @@ describe('preload recovery', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
+  test('leaves a plugin module from another origin to its importer', () => {
+    const reload = vi.fn();
+    const { target, dispatch } = createTarget();
+    registerPreloadErrorHandler({ target, reload });
+
+    // The failed import of a dev plugin served by its own Vite dev server.
+    const event = dispatch('http://localhost:3967/src/plugin.tsx');
+    expect(reload).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+    expect(sessionStorage.getItem(PRELOAD_RETRY_KEY)).toBeNull();
+    expect(localStorage.getItem(BOOT_ASSET_FAILURE_KEY)).toBeNull();
+  });
+
   test('does not reload when storage is unavailable', () => {
     vi.stubGlobal('sessionStorage', {
       getItem: () => {

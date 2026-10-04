@@ -175,12 +175,14 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     {
       name: 'composer-plugin',
       config: () => ({
+        // Fail on a busy port rather than moving to the next one: Composer's Dev Server setting loads from this one.
         server: {
           port,
+          strictPort: true,
           // Allow the Composer host (different origin) to dynamically import plugin modules.
           cors: true,
         },
-        preview: { port },
+        preview: { port, strictPort: true },
         build: {
           sourcemap: true,
           // Transitively-bundled WASM modules (automerge, tiktoken, …) emit top-level

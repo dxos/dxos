@@ -3,10 +3,10 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiService } from '@dxos/ai';

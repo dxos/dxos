@@ -11,6 +11,7 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
+import { countWork } from '@dxos/util';
 
 import { type AutomergeHost, type DocumentLease } from '../automerge/index.ts';
 
@@ -304,6 +305,8 @@ export class DocumentsSynchronizer extends Resource {
       return;
     }
     syncState.lastSentHead = A.getHeads(doc);
+    countWork('automerge.mutationsSent');
+    countWork('automerge.mutationSentBytes', mutation.length);
     return mutation;
   }
 
@@ -312,6 +315,8 @@ export class DocumentsSynchronizer extends Resource {
       return;
     }
     log('write mutation', { documentId });
+    countWork('automerge.mutationsApplied');
+    countWork('automerge.mutationAppliedBytes', mutation.length);
 
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');

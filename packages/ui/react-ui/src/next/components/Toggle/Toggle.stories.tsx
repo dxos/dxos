@@ -8,44 +8,40 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, controlSize, expectScoped, expectTooltip, realHover, realUnhover, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Toggle, Toolbar, Typography } from '../index.ts';
 
 /** Icon-only toggles (one pressed, one disabled), a labelled toggle, a controlled one, and one with an `activeIcon`. */
 const DefaultStory = ({ size }: SizeArgs) => {
   const [wrap, setWrap] = useState(false);
   return (
-    <Next.Toolbar.Root>
-      <Next.Toggle icon='ph--text-b--regular' label={`Bold ${size}`} iconOnly data-testid={`bold-${size}`} />
-      <Next.Toggle icon='ph--text-italic--regular' label={`Italic ${size}`} iconOnly defaultPressed />
-      <Next.Toggle icon='ph--text-underline--regular' label={`Underline ${size}`} iconOnly disabled />
-      <Next.Toggle icon='ph--eye--regular' label={`Preview ${size}`} data-testid={`preview-${size}`} />
-      <Next.Toggle
+    <Toolbar.Root>
+      <Toggle icon='ph--text-b--regular' label='Bold' iconOnly data-testid={`bold-${size}`} />
+      <Toggle icon='ph--text-italic--regular' label='Italic' iconOnly defaultPressed />
+      <Toggle icon='ph--text-underline--regular' label='Underline' iconOnly disabled />
+      <Toggle icon='ph--eye--regular' label='Preview' data-testid={`preview-${size}`} />
+      <Toggle
         icon='ph--arrows-in-line-horizontal--regular'
-        label={`Wrap lines ${size}`}
+        label='Wrap lines'
         iconOnly
         pressed={wrap}
         onPressedChange={setWrap}
       />
-      <Next.Toggle
-        icon='ph--star--regular'
-        activeIcon='ph--star--fill'
-        label={`Pin ${size}`}
-        iconOnly
-        data-testid={`pin-${size}`}
-      />
-      <Next.Typography data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Next.Typography>
-    </Next.Toolbar.Root>
+      <Toggle icon='ph--star--regular' activeIcon='ph--star--fill' label='Pin' iconOnly data-testid={`pin-${size}`} />
+      <Typography data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Typography>
+    </Toolbar.Root>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/toggle',
+  title: 'ui/react-ui-core/components/Toggle',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[36rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[36rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -61,6 +57,7 @@ export const Default: Story = {};
  * label shows in a Tooltip (left open).
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const canvas = within(sizeRow(canvasElement, 'md'));
     for (const size of SIZES) {
@@ -69,9 +66,9 @@ export const Test: Story = {
       await expect(rect.width, size).toBeCloseTo(controlSize(size), 0);
     }
 
-    const bold = canvas.getByRole('button', { name: 'Bold md' });
+    const bold = canvas.getByRole('button', { name: 'Bold' });
     await expect(bold).toHaveAttribute('aria-pressed', 'false');
-    await expect(canvas.getByRole('button', { name: 'Italic md' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(canvas.getByRole('button', { name: 'Italic' })).toHaveAttribute('aria-pressed', 'true');
     const unpressed = getComputedStyle(bold).backgroundColor;
     await userEvent.click(bold);
     await waitFor(() => expect(bold).toHaveAttribute('aria-pressed', 'true'));
@@ -85,32 +82,32 @@ export const Test: Story = {
     await userEvent.tab();
     await userEvent.tab({ shift: true });
     await expect(bold).toHaveFocus();
-    await expectTooltip(bold, 'Bold md');
+    await expectTooltip(bold, 'Bold');
     bold.blur();
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
     await realHover(bold);
-    await expectTooltip(bold, 'Bold md');
+    await expectTooltip(bold, 'Bold');
     await realUnhover(bold);
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
 
     // Controlled: the caller's state follows the toggle.
-    await userEvent.click(canvas.getByRole('button', { name: 'Wrap lines md' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Wrap lines' }));
     await waitFor(() => expect(canvas.getByTestId('wrap-state-md')).toHaveTextContent('Wrapping'));
-    await expect(canvas.getByRole('button', { name: 'Wrap lines md' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(canvas.getByRole('button', { name: 'Wrap lines' })).toHaveAttribute('aria-pressed', 'true');
 
-    const underline = canvas.getByRole('button', { name: 'Underline md' });
+    const underline = canvas.getByRole('button', { name: 'Underline' });
     await expect(underline).toBeDisabled();
     await expect(underline).not.toHaveAttribute('title');
     await expectScoped(canvasElement);
 
     const preview = byTestId(canvasElement, 'preview-md');
-    await expect(canvas.getByRole('button', { name: 'Preview md' })).toBe(preview);
+    await expect(canvas.getByRole('button', { name: 'Preview' })).toBe(preview);
     await expect(preview).not.toHaveAttribute('aria-label');
     await userEvent.click(preview);
     await waitFor(() => expect(preview).toHaveAttribute('aria-pressed', 'true'));
 
     const pin = byTestId(canvasElement, 'pin-md');
-    const href = () => pin.querySelector('use')?.getAttribute('href') ?? '';
+    const href = () => pin.querySelector('[data-scope="icon"]')?.getAttribute('data-icon') ?? '';
     // The icon's href resolves once the sprite registry has the icon.
     await waitFor(() => expect(href()).toContain('ph--star--regular'));
     await userEvent.click(pin);
@@ -119,8 +116,8 @@ export const Test: Story = {
     await userEvent.click(pin);
     await waitFor(() => expect(href()).toContain('ph--star--regular'));
 
-    const italic = canvas.getByRole('button', { name: 'Italic md' });
+    const italic = canvas.getByRole('button', { name: 'Italic' });
     await userEvent.hover(italic);
-    await expectTooltip(italic, 'Italic md');
+    await expectTooltip(italic, 'Italic');
   },
 };

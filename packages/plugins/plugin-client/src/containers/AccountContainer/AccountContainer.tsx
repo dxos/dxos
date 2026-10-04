@@ -9,7 +9,7 @@ import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
-import { Banner, Button, Field, Flex, Icon, IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Field, Flex, Icon, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -121,18 +121,16 @@ export const AccountContainer = () => {
             {accountState === 'loading' ? null : accountState === 'missing' ? (
               <>
                 <Banner.Root valence='warning'>
-                  <Banner.Content>
-                    <Banner.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Banner.Title>
-                    <Banner.Body>{t('no-edge-access.description')}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Banner.Title>
+                  <Banner.Body>{t('no-edge-access.description')}</Banner.Body>
                 </Banner.Root>
                 <Form.Field standalone label={t('request-access.label')} description={t('request-access.description')}>
                   {requestSubmitted ? (
-                    <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
+                    <span className='text-sm text-fg-muted'>{t('access-request-submitted.message')}</span>
                   ) : (
                     <form onSubmit={handleRequestAccess} className='flex gap-2 items-center justify-end'>
                       <Field.Root>
-                        <Field.Input
+                        <Input
                           type='email'
                           required
                           placeholder={t('access-request-email.placeholder')}
@@ -141,7 +139,7 @@ export const AccountContainer = () => {
                           classNames='w-64 max-w-full min-w-0'
                         />
                       </Field.Root>
-                      <Button type='submit' density='sm'>
+                      <Button type='submit' size='sm'>
                         {t('request-access.label')}
                       </Button>
                     </form>
@@ -150,25 +148,23 @@ export const AccountContainer = () => {
               </>
             ) : accountState === 'error' && !account ? (
               <Banner.Root valence='error'>
-                <Banner.Content>
-                  <Banner.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Banner.Title>
-                  <Banner.Body>{t('account-offline.description')}</Banner.Body>
-                </Banner.Content>
+                <Banner.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Banner.Title>
+                <Banner.Body>{t('account-offline.description')}</Banner.Body>
               </Banner.Root>
             ) : account ? (
               <>
                 <Form.Field standalone label={t('email.label')} description={account.email}>
                   {account.emailVerified ? (
-                    <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text justify-self-end' />
+                    <Icon icon='ph--check-circle--duotone' size='lg' classNames='justify-self-end' valence='success' />
                   ) : (
                     <Flex column gap='xs' align='end'>
-                      <IconButton
+                      <Button
                         icon='ph--paper-plane-tilt--regular'
                         label={t('resend-verification.label')}
                         onClick={handleResend}
-                        density='sm'
+                        size='sm'
                       />
-                      {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
+                      {resendStatus ? <span className='text-xs text-fg-muted'>{resendStatus}</span> : null}
                     </Flex>
                   )}
                 </Form.Field>
@@ -187,7 +183,7 @@ export const AccountContainer = () => {
                 label={t('open-account-page.label')}
                 description={t('open-account-page.description')}
               >
-                <IconButton
+                <Button
                   icon='ph--arrow-square-out--regular'
                   label={t('open-account-page.label')}
                   variant='default'

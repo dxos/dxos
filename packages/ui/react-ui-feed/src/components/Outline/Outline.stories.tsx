@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -56,7 +56,7 @@ const DefaultStory = ({ markers, ...props }: OutlineProps) => {
       </div>
       <div className='flex flex-col gap-3'>
         <label className='flex flex-col gap-1 text-sm'>
-          <span className='text-description'>
+          <span className='text-fg-muted'>
             Visible range: {visibleRange.from}–{visibleRange.to} (drag to scroll)
           </span>
           <input
@@ -67,7 +67,7 @@ const DefaultStory = ({ markers, ...props }: OutlineProps) => {
             onChange={(event) => setStart(Number(event.target.value))}
           />
         </label>
-        <p className='text-sm text-description'>
+        <p className='text-sm text-fg-muted'>
           Hover the rail to see the wave + popover. Ticks intersecting the visible range are brighter.
         </p>
         <p className='text-sm'>Selected: {selected ? selected.title : '(none)'}</p>
@@ -134,6 +134,49 @@ export const Dismissal: Story = {
       focused: canvasElement.ownerDocument.activeElement === tick,
       navigated: rail.dataset.navigated,
     }).toEqual({ focused: true, navigated: '' });
+  },
+};
+
+/**
+ * The card opens beside the tick it describes and follows the pointer along the rail.
+ *
+ * The card mounts after the popover opens (it is keyed to the tick), so it was never measured and sat at the
+ * viewport's top-left corner.
+ */
+export const Placement: Story = {
+  args: { markers: defaultMarkers },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const ticks = canvasElement.querySelectorAll<HTMLElement>('[role="navigation"] button');
+
+    const hover = (index: number) => {
+      const bounds = ticks[index].getBoundingClientRect();
+      ticks[index].dispatchEvent(
+        new PointerEvent('pointerover', {
+          bubbles: true,
+          pointerType: 'mouse',
+          clientX: bounds.x + 4,
+          clientY: bounds.y + 4,
+        }),
+      );
+    };
+
+    // Positioning runs on animation frames after the card mounts, so poll rather than wait a fixed number of frames.
+    const placement = (index: number) => {
+      const bounds = ticks[index].getBoundingClientRect();
+      const card = doc
+        .querySelector<HTMLElement>('[data-scope="popover"][data-part="positioner"]')
+        ?.getBoundingClientRect();
+      return {
+        beside: card != null && card.left >= bounds.right,
+        centred: card != null && Math.abs(card.top + card.height / 2 - (bounds.top + bounds.height / 2)) <= 2,
+      };
+    };
+
+    hover(3);
+    await waitFor(() => expect(placement(3)).toEqual({ beside: true, centred: true }), { timeout: 5_000 });
+    hover(8);
+    await waitFor(() => expect(placement(8)).toEqual({ beside: true, centred: true }), { timeout: 5_000 });
   },
 };
 

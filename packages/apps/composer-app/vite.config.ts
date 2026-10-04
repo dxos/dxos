@@ -3,12 +3,20 @@
 //
 
 import react from '@vitejs/plugin-react';
+import { execFileSync } from 'node:child_process';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { type ConfigEnv, type PluginOption, type Rollup, defineConfig, searchForWorkspaceRoot } from 'vite';
+import {
+  type ConfigEnv,
+  type PluginOption,
+  type Rollup,
+  defaultClientConditions,
+  defineConfig,
+  searchForWorkspaceRoot,
+} from 'vite';
 // import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -47,6 +55,8 @@ const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugi
 // Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
 const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
+// The Tauri CLI sets `TAURI_ENV_PLATFORM` for `beforeDevCommand`.
+const isTauriBuild = isTrue(process.env.DX_TAURI) || Boolean(process.env.TAURI_ENV_PLATFORM);
 
 // Vite's full-bundle dev mode: a Rolldown dev build serves the client graph instead of the
 // per-module transform pipeline, reusing `build.rolldownOptions` verbatim and running no dep
@@ -194,6 +204,47 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // sourcemaps(),
 ];
 
+/** Libraries a plugin shares with the host through its import map, so it must build against the same versions. */
+const PLUGIN_SHARED_PACKAGES = [
+  'effect',
+  'react',
+  'react-dom',
+  '@types/react',
+  '@vitejs/plugin-react',
+  'typescript',
+  'vite',
+];
+
+/**
+ * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (every push to `main` publishes
+ * one) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
+ * commit, for a build of a branch whose own commit was never published, and `DX_PLUGIN_TOOLCHAIN_CLI` the `dx` a
+ * sandbox publishes with, for a CLI change no pkg.pr.new build carries yet. Empty when neither is available.
+ */
+const pluginToolchain = (): string => {
+  let commit = process.env.DX_PLUGIN_TOOLCHAIN_COMMIT;
+  try {
+    commit ??= execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dirname, encoding: 'utf8' }).trim();
+  } catch {
+    return '';
+  }
+  // Read from `node_modules` directly, since not every package exports its `package.json`; the app's own
+  // links first, then the workspace root that pnpm hoists the rest of the toolchain to.
+  const version = (name: string): string => {
+    const [manifest] = [dirname, path.resolve(dirname, '../../..')]
+      .map((dir) => path.join(dir, 'node_modules', name, 'package.json'))
+      .filter((file) => existsSync(file));
+    return manifest ? JSON.parse(readFileSync(manifest, 'utf8')).version : '';
+  };
+  const versions = Object.fromEntries(PLUGIN_SHARED_PACKAGES.map((name) => [name, version(name)]));
+  // A template pinned to an unknown version would install whatever is latest, not what the host shares.
+  if (Object.values(versions).some((value) => !value)) {
+    return '';
+  }
+  const cli = process.env.DX_PLUGIN_TOOLCHAIN_CLI;
+  return JSON.stringify({ commit, versions, ...(cli && { cli }) });
+};
+
 /**
  * https://vitejs.dev/config
  */
@@ -207,13 +258,8 @@ export default defineConfig((env) => ({
     '__DX_DEV_SERVER_BOOT_ID__': JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
     // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
     '__DX_DEBUG_PORT_SESSION__': JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
-    // The tree a desktop dev build's agent builds plugins against (plugin-computer's Composer Plugin template, via
-    // plugin-sandbox); only the desktop app reads it, and it is a path on the building machine, so dev builds only.
-    'import.meta.env.VITE_DX_SOURCE_ROOT': JSON.stringify(
-      env.command === 'serve' || process.env.DX_ENVIRONMENT === 'dev' || isTrue(process.env.DX_DEV)
-        ? path.resolve(dirname, '../../..')
-        : '',
-    ),
+    // Pins the desktop app's Composer Plugin template (plugin-projects) to what this bundle was built from.
+    'import.meta.env.VITE_DX_PLUGIN_TOOLCHAIN': JSON.stringify(pluginToolchain()),
   },
   server: {
     host: true,
@@ -402,6 +448,7 @@ export default defineConfig((env) => ({
     ],
   },
   resolve: {
+    conditions: isTauriBuild ? ['tauri', ...defaultClientConditions] : undefined,
     // NOTE: Under Vite 8 / rolldown, string-keyed aliases are treated as prefix matches, which means
     // a bare `util` alias also rewrites `util/types` → `@dxos/node-std/util/types` (not exported).
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's

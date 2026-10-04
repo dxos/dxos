@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 import { useEffect, useMemo } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';

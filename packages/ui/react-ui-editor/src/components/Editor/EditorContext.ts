@@ -3,7 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import { createContext } from '@dxos/react-hooks';
 import { type WidgetState } from '@dxos/ui-editor';

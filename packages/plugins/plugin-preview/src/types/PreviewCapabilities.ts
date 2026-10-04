@@ -7,14 +7,14 @@
 import type * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Space } from '@dxos/client/echo';
+import { type Database } from '@dxos/echo';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 import { meta } from '#meta';
 
 export type PreviewLinkContext = {
-  /** The space the activating document belongs to, when one is known. */
-  space?: Space;
+  /** The database of the space the activating document belongs to, when one is known. */
+  db?: Database.Database;
 };
 
 /** Decides, synchronously, whether a URL is one this resolver answers — so a renderer can make it an anchor before anyone hovers. */

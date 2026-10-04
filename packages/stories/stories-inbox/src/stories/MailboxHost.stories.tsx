@@ -122,7 +122,7 @@ const HostModule = () => {
     <div className='flex flex-col gap-4 p-4 max-w-[48rem]' data-testid='mailbox-host'>
       <div className='flex flex-col gap-1'>
         <h1 className='text-lg font-medium'>Live mailbox host</h1>
-        <p className='text-sm text-description'>
+        <p className='text-sm text-fg-muted'>
           A persistent, EDGE-dev space seeded with a mailbox. Connect the CLI to this identity, then read the mailbox
           over EDGE replication:
         </p>
@@ -132,15 +132,15 @@ const HostModule = () => {
       </div>
 
       <dl className='grid grid-cols-[8rem_1fr] gap-1 text-sm'>
-        <dt className='text-description'>Identity</dt>
+        <dt className='text-fg-muted'>Identity</dt>
         <dd className='font-mono break-all' data-testid='identity-did'>
           {identity?.did ?? '<none>'}
         </dd>
-        <dt className='text-description'>Space</dt>
+        <dt className='text-fg-muted'>Space</dt>
         <dd className='font-mono break-all' data-testid='space-id'>
           {space?.id ?? '<none>'}
         </dd>
-        <dt className='text-description'>Seeded senders</dt>
+        <dt className='text-fg-muted'>Seeded senders</dt>
         <dd>{SEED_SENDERS.map((sender) => sender.email).join(', ')}</dd>
       </dl>
 
@@ -156,7 +156,7 @@ const HostModule = () => {
           </button>
         </div>
         {status && (
-          <div className='text-xs text-description' data-testid='recovery-status'>
+          <div className='text-xs text-fg-muted' data-testid='recovery-status'>
             {status}
           </div>
         )}
@@ -180,7 +180,7 @@ const HostModule = () => {
         </div>
         {invitation && (
           <>
-            <div className='text-sm text-description'>State: {invitation.state}</div>
+            <div className='text-sm text-fg-muted'>State: {invitation.state}</div>
             {invitation.code && (
               <textarea
                 className='font-mono text-xs rounded border border-separator p-2'

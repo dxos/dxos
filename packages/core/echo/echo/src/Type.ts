@@ -132,6 +132,9 @@ export type AnyObj = Obj<unknown>;
  *   name: Schema.String,
  * })) {}
  * ```
+ *
+ * @performance O(schema size) once at definition time; builds the type entity eagerly, so call it at module scope, not
+ * per use.
  */
 // TODO(burdon): Require { typename, version } in options.
 export const makeObject: {
@@ -182,6 +185,8 @@ type MakeTypeProps = {
  * `jsonSchema` instead of piping through an Effect schema.
  *
  * The returned entity is in-memory; persist it with `db.addType(entity)`.
+ *
+ * @performance O(schema size); validates the JSON schema into a new in-memory type entity, with no database I/O.
  */
 export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInternal.TypeSchema> => {
   const { typename, version, ...data } = props;
@@ -208,6 +213,8 @@ export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInterna
  * `Type.Obj` entity or the well-known `Obj.Unknown` schema.
  *
  * The returned entity is in-memory; persist it with `db.addType(entity)`.
+ *
+ * @performance O(schema size); validates the JSON schema into a new in-memory type entity, with no database I/O.
  */
 export const makeRelationFromJsonSchema = (
   props: MakeTypeProps & {
@@ -299,6 +306,9 @@ export type AnyRelation = Relation<unknown, unknown, unknown>;
  *   { source: Person, target: Company },
  * )(Schema.Struct({ role: Schema.String })) {}
  * ```
+ *
+ * @performance O(schema size) once at definition time; builds the type entity eagerly, so call it at module scope, not
+ * per use.
  */
 export const makeRelation: {
   <Self>(dxn: DXN.DXN): <SourceInstance, TargetInstance>(opts: {
@@ -390,6 +400,9 @@ export type AnyEvent = Event<unknown>;
  *   Schema.Struct({ by: Schema.String }),
  * ) {}
  * ```
+ *
+ * @performance O(schema size) once at definition time; builds the type entity eagerly, so call it at module scope, not
+ * per use.
  */
 export const makeEvent: {
   <Self>(
@@ -419,6 +432,8 @@ export type AnyEntity = AnyObj | AnyRelation | AnyType | AnyEvent;
  * ENTITIES, not instances — use `Obj.isObject` for instances. Raw
  * `Schema.Schema` values (including the branded `Obj.Unknown` companion)
  * are intentionally not accepted; inspect their `TypeAnnotation` directly.
+ *
+ * @performance O(1) brand read.
  */
 export const isObject = (entity: AnyEntity): entity is AnyObj => {
   return internal.getSchemaKind(entity) === internal.EntityKind.Object;
@@ -427,6 +442,8 @@ export const isObject = (entity: AnyEntity): entity is AnyObj => {
 /**
  * Type guard: narrows a `Type.AnyEntity` to a relation-kind entity. Checks
  * ENTITIES, not instances — use `Relation.isRelation` for instances.
+ *
+ * @performance O(1) brand read.
  */
 export const isRelation = (entity: AnyEntity): entity is AnyRelation => {
   return internal.getSchemaKind(entity) === internal.EntityKind.Relation;
@@ -435,6 +452,8 @@ export const isRelation = (entity: AnyEntity): entity is AnyRelation => {
 /**
  * Type guard: narrows a `Type.AnyEntity` to an event-kind entity. Checks
  * ENTITIES, not instances — use `Event.isEvent` for instances.
+ *
+ * @performance O(1) brand read.
  */
 export const isEvent = (entity: AnyEntity): entity is AnyEvent => {
   return internal.getSchemaKind(entity) === internal.EntityKind.Event;
@@ -443,6 +462,8 @@ export const isEvent = (entity: AnyEntity): entity is AnyEvent => {
 /**
  * Type guard: narrows a `Type.AnyEntity` to the type-kind meta-schema
  * (e.g. `Type.Type`). Mirrors {@link isObject} / {@link isRelation}.
+ *
+ * @performance O(1) brand read.
  */
 export const isTypeKind = (entity: AnyEntity): entity is Type => {
   return internal.getSchemaKind(entity) === internal.EntityKind.Type;
@@ -453,25 +474,39 @@ export const isTypeKind = (entity: AnyEntity): entity is Type => {
  * to `AnyObj`, throwing if it describes a relation or the type-kind
  * meta-schema. Use at call sites that need to pass the value to `Obj.make`,
  * `Filter.type`, or other object-only APIs.
+ *
+ * @performance O(1) brand read.
  */
 export const assertObject = (entity: AnyEntity): AnyObj => {
   assertArgument(isObject(entity), 'entity', 'Expected an object-kind Type entity.');
   return entity;
 };
 
-/** Narrow a `Type.AnyEntity` to `AnyRelation`, throwing otherwise. */
+/**
+ * Narrow a `Type.AnyEntity` to `AnyRelation`, throwing otherwise.
+ *
+ * @performance O(1) brand read.
+ */
 export const expectRelation = (entity: AnyEntity): AnyRelation => {
   assertArgument(isRelation(entity), 'entity', 'Expected a relation-kind Type entity.');
   return entity;
 };
 
-/** Narrow a `Type.AnyEntity` to `AnyEvent`, throwing otherwise. */
+/**
+ * Narrow a `Type.AnyEntity` to `AnyEvent`, throwing otherwise.
+ *
+ * @performance O(1) brand read.
+ */
 export const expectEvent = (entity: AnyEntity): AnyEvent => {
   assertArgument(isEvent(entity), 'entity', 'Expected an event-kind Type entity.');
   return entity;
 };
 
-/** Narrow a `Type.AnyEntity` to the `Type.Type` meta-schema, throwing otherwise. */
+/**
+ * Narrow a `Type.AnyEntity` to the `Type.Type` meta-schema, throwing otherwise.
+ *
+ * @performance O(1) brand read.
+ */
 export const expectTypeKind = (entity: AnyEntity): Type => {
   assertArgument(isTypeKind(entity), 'entity', 'Expected a type-kind Type entity.');
   return entity;
@@ -502,6 +537,8 @@ export type AnyRef = Schema.Codec<internal.Ref<any>, EncodedReference>;
  * branded `Obj.Unknown` / `Relation.Unknown` schemas are intentionally not
  * supported — use `internal.getSchemaURI` or the schema's typename annotation
  * directly when working at the schema level.
+ *
+ * @performance O(1); reads the id or schema identifier annotation, allocating a new URI string.
  */
 export const getURI = (input: AnyEntity, options?: internal.GetURIOptions): URI.URI => {
   // For Type entities, route through `getTypeURIFromSpecifier` (id → EID,
@@ -530,6 +567,8 @@ export const getURI = (input: AnyEntity, options?: internal.GetURIOptions): URI.
  * canonical registry-provenance field); unnamed drafts fall back to the
  * entity's object id so the helper always returns a string. Any `dxn:` or
  * `echo:/` prefix is stripped — typename is a bare identifier, not a URI.
+ *
+ * @performance O(1) meta read with `jsonSchema` and id fallbacks.
  */
 // TODO(wittjosiah): For in-database types this should return the object id once the registry
 //   has more robust options for shadowing types (so callers can disambiguate db-stored copies).
@@ -571,6 +610,9 @@ export const getTypename = (input: AnyEntity): string => {
  * semver pre-release tag (`<semver>-<heads>`). In-memory declarations have no
  * heads and surface the bare semver. Read the registry semver alone via
  * `Type.getMeta(input).version`.
+ *
+ * @performance O(h log h) in Automerge heads for database types (sorted into the suffix per call); O(1) for in-memory
+ * types.
  */
 export const getVersion = (input: AnyEntity): string => {
   const meta = internal.getMetaChecked(input);
@@ -615,6 +657,8 @@ const stripTypenamePrefix = (value: string): string => {
  * Use {@link isObject} / {@link isRelation} / {@link isTypeKind}
  * when you need to discriminate further; use {@link getDatabase} when you mean
  * "is this a db-attached type" (vs. an in-memory declaration).
+ *
+ * @performance O(1) brand check; no allocation.
  */
 export const isType = (value: unknown): value is AnyEntity =>
   internal.getEntityKindBrand(value) === internal.EntityKind.Type;
@@ -627,6 +671,8 @@ export const isType = (value: unknown): value is AnyEntity =>
  * Database attachment is the canonical discriminator between in-memory and
  * in-database type entities — both are live reactive `TypeSchema` instances and
  * are otherwise indistinguishable.
+ *
+ * @performance O(1) slot read.
  */
 export const getDatabase = (input: AnyEntity): Database.Database | undefined => internal.getDatabase(input);
 
@@ -662,6 +708,8 @@ export type ReadonlyMeta = internal.ReadonlyMeta;
  * Both persisted and in-memory type entities (`Type.makeObject` /
  * `Type.makeRelation` results) carry their `EntityMeta` via `[MetaId]`, so the
  * lookup is uniform.
+ *
+ * @performance O(1); returns the live (memoized) meta proxy, not a copy.
  */
 export function getMeta(entity: internal.Mutable<AnyEntity>): Meta;
 export function getMeta(entity: Mutable): Meta;
@@ -680,6 +728,8 @@ export function getMeta(entity: AnyEntity | internal.Mutable<AnyEntity> | Mutabl
  * Get the display label of a type entity.
  * Reads the field(s) nominated by the type's {@link LabelAnnotation} (e.g. `name` on persisted schemas).
  * Returns `undefined` if no label field is populated.
+ *
+ * @performance O(label accessors); reads the fields named by the schema `LabelAnnotation`.
  */
 export const getLabel = (entity: AnyEntity, options?: internal.GetLabelOptions): string | undefined =>
   internal.getLabel(entity, options);
@@ -761,6 +811,9 @@ export type InstanceType<T extends AnyEntity> =
  *
  * Only accepts `Type.AnyEntity` — raw `Schema.Schema` values can be used
  * directly without unwrapping.
+ *
+ * @performance O(1) cached read; a persisted type rebuilds its Effect Schema from `jsonSchema` (O(schema size)) on
+ * first access.
  */
 export function getSchema<T extends AnyObj>(type: T): Schema.Codec<InstanceType<T>, unknown>;
 export function getSchema<T extends AnyRelation>(type: T): Schema.Codec<InstanceType<T>, unknown>;
@@ -818,6 +871,8 @@ export interface Mutable {
  * The callback receives a {@link Mutable} view of the type — direct mutation of
  * a `Type.Type` outside `Type.update` throws at runtime, mirroring `Obj.update`.
  * Delegates to the same automerge-transaction primitive `Obj.update(obj, cb)` uses.
+ *
+ * @performance Synchronous; costs the mutations made in the callback plus one batched notification.
  */
 export const update = (type: AnyEntity, callback: (mutable: Mutable) => void): void => {
   // `Type.Type` is an ECHO object; the change machinery is the same as `Obj.update`.
@@ -834,6 +889,8 @@ export const update = (type: AnyEntity, callback: (mutable: Mutable) => void): v
 /**
  * Add fields to a persisted type's schema.
  * @throws if the type is not persisted.
+ *
+ * @performance O(schema size); rebuilds and re-encodes the whole JSON schema, then writes it in one change.
  */
 export const addFields = (type: AnyEntity, fields: Schema.Struct.Fields): void => {
   const extended = typeInternal.addFieldsToSchema(getSchema(type), fields);
@@ -845,6 +902,8 @@ export const addFields = (type: AnyEntity, fields: Schema.Struct.Fields): void =
 /**
  * Replace existing fields on a persisted type's schema.
  * @throws if the type is not persisted.
+ *
+ * @performance O(schema size); rebuilds and re-encodes the whole JSON schema, then writes it in one change.
  */
 export const updateFields = (type: AnyEntity, fields: Schema.Struct.Fields): void => {
   const updated = typeInternal.updateFieldsInSchema(getSchema(type), fields);
@@ -856,6 +915,8 @@ export const updateFields = (type: AnyEntity, fields: Schema.Struct.Fields): voi
 /**
  * Rename a field on a persisted type's schema.
  * @throws if the type is not persisted.
+ *
+ * @performance O(schema size); rebuilds and re-encodes the whole JSON schema, then writes it in one change.
  */
 export const updateFieldPropertyName = (
   type: Type,
@@ -870,6 +931,8 @@ export const updateFieldPropertyName = (
 /**
  * Remove fields from a persisted type's schema.
  * @throws if the type is not persisted.
+ *
+ * @performance O(schema size); rebuilds and re-encodes the whole JSON schema, then writes it in one change.
  */
 export const removeFields = (type: AnyEntity, fieldNames: string[]): void => {
   const removed = typeInternal.removeFieldsFromSchema(getSchema(type), fieldNames);

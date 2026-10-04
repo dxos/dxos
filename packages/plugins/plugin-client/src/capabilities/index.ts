@@ -24,6 +24,16 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 // `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
 // browser command set omits (`account`, `profile`).
 export const Commands = AppCapability.commands(() => import('#commands'));
+export const ClientServices = Capability.lazyModule(
+  'ClientServices',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [ClientCapabilities.Config, ClientCapabilities.EdgeHttpClient, ClientCapabilities.Hypergraph],
+    // `client.config` and `client.edge` are initialized-only.
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./client-services.ts'),
+);
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   {
@@ -47,7 +57,7 @@ export const Client = Capability.lazyModule(
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,
     ],
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./client.ts'),
 );
@@ -89,7 +99,7 @@ export const Migrations = Capability.lazyModule(
     // client initialization to have completed — the same point it ran at when the startup pass
     // awaited initialize.
     activatesOn: ClientEvents.Initialized,
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./migrations.ts'),
 );
@@ -103,7 +113,7 @@ export const NavigationTargetLoader = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.contactPicker', 'org.dxos.role.dialog'],
   props: ({
     shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
     invitationPath = '/',
@@ -123,7 +133,7 @@ export const SchemaDefs = Capability.lazyModule(
   {
     requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
     provides: [ClientCapabilities.SchemaRegistered],
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./schema-defs.ts'),
 );

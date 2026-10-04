@@ -28,10 +28,10 @@ import { beginOAuthFlow, createEdgeHttpClient, oauthRecoveryPendingKey } from '.
 const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAuthRecovery.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (data) {
-      const client = yield* Capability.get(ClientCapabilities.Client);
+      const config = yield* Capability.get(ClientCapabilities.Config);
 
       const provider = data.provider as OAuthProvider;
-      const edgeClient = createEdgeHttpClient(client);
+      const edgeClient = createEdgeHttpClient(config);
       // The recovery finalizer creates an AccessToken ECHO object in the default space under this
       // id, so it must be a valid object id.
       const accessTokenId = EntityId.random();

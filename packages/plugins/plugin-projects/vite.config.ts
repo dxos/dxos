@@ -24,6 +24,7 @@ export default defineConfig({
     ProjectOperation: 'src/types/ProjectOperation.ts',
     ProjectView: 'src/types/ProjectView.ts',
     ProjectsEvents: 'src/types/ProjectsEvents.ts',
+    Settings: 'src/types/Settings.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

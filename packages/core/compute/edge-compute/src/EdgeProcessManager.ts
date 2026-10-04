@@ -6,10 +6,10 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import type * as Scope from 'effect/Scope';
-import type * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
 import { QueuedRemoteControl, RemoteProcessManager, RemoteTraceMonitor } from '@dxos/compute-runtime';
@@ -44,7 +44,7 @@ const makeManager = (
   control?: RemoteProcessManager.Control,
   remoteTrace?: RemoteTraceMonitor.Monitor,
 ): RemoteProcessManager.Manager => {
-  const processTreeAtom = Atom.make<readonly Process.Info[]>([]);
+  const processTreeAtom = Atom.make<readonly Process.Process[]>([]);
   registry.mount(processTreeAtom);
   return {
     processTree: Effect.sync(() => registry.get(processTreeAtom)),

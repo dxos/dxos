@@ -1,10 +1,16 @@
 /*
- * Next theme: rules match only `.nx-*` elements and variables are `--nx-*` (decision 2), so nothing here reaches the
- * current primitives.
+ * The component theme: rules match `.dx-*` elements and variables are `--dx-*` (DESIGN.md decision 2); ui-theme supplies
+ * the tokens, zones and states they read.
  */
 
 @import './size.css';
 @import './container.css';
+@import './panel.css';
+@import './row.css';
+@import './listbox.css';
+@import './empty.css';
+@import './tree.css';
+@import './drag.css';
 @import './scroll-area.css';
 @import './level.css';
 @import './control.css';
@@ -12,6 +18,7 @@
 @import './switch.css';
 @import './fieldset.css';
 @import './image.css';
+@import './banner.css';
 @import './card.css';
 @import './collapsible.css';
 @import './menu.css';
@@ -19,8 +26,35 @@
 @import './arrow.css';
 @import './textarea.css';
 @import './date-input.css';
+@import './field-inputs.css';
 @import './popover.css';
 @import './combobox.css';
 @import './tag.css';
 @import './toggle.css';
+@import './system-button.css';
 @import './separator.css';
+@import './avatar.css';
+@import './tabs.css';
+@import './progress.css';
+@import './splitter.css';
+@import './toast.css';
+@import './main.css';
+@import './error-fallback.css';
+@import './focus.css';
+@import './scroll-container.css';
+@import './carousel.css';
+@import './media-player.css';
+@import './qr-code.css';
+@import './timestamp.css';
+@import './tour.css';
+@import './editable.css';
+@import './hover-card.css';
+@import './slider.css';
+@import './steps.css';
+@import './text-crawl.css';
+@import './accordion.css';
+@import './link.css';
+@import './skeleton.css';
+@import './floating-panel.css';
+@import './attention-glyph.css';
+@import './breadcrumb.css';

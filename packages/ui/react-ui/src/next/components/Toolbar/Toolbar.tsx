@@ -4,25 +4,16 @@
 
 import { ark } from '@ark-ui/react/factory';
 import { useMachine } from '@zag-js/react';
-import React, { type AnchorHTMLAttributes, createContext, forwardRef, useContext, useId } from 'react';
+import React, { type AnchorHTMLAttributes, type HTMLAttributes, forwardRef, useContext, useId } from 'react';
 
 import { composable, composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
 import { ToggleGroup, type ToggleGroupRootProps } from '../ToggleGroup/index.ts';
+import { ToolbarContext, useToolbarItem } from './toolbar-context.ts';
 import * as toolbar from './toolbar-machine.ts';
-
-// Optional by design: a control outside a toolbar renders without roving props.
-const ToolbarContext = createContext<toolbar.ToolbarApi | undefined>(undefined);
-
-/** Roving-focus props for a control inside a Toolbar; empty outside one. */
-export const useToolbarItem = (disabled?: boolean) => {
-  const api = useContext(ToolbarContext);
-  const value = useId();
-  return api?.getItemProps({ value, disabled });
-};
 
 //
 // Root
@@ -35,42 +26,80 @@ type ToolbarRootProps = {
   loop?: boolean;
   /** Disables every control in the toolbar. */
   disabled?: boolean;
+  /**
+   * Dims the controls without disabling them, for a toolbar whose host is not in play (an unattended plank): they stay
+   * operable, so the first press both brings the host into play and acts.
+   */
+  inactive?: boolean;
 };
 
-/** `role=toolbar` with the roving focus that role promises (decision 9). */
+/**
+ * The toolbar element as a composable part, so the ScrollArea viewport slot merges onto it (a plain `ark.div` gets the
+ * dev warning wrapper, which breaks the frame's child rules).
+ */
+const ToolbarElement = composable<HTMLDivElement, HTMLAttributes<HTMLDivElement> & { asChild?: boolean }>(
+  (props, forwardedRef) => <ark.div {...composableProps(props)} ref={forwardedRef} />,
+);
+
+/**
+ * `role=toolbar` with the roving focus that role promises (decision 9); items that overflow scroll along its axis in a
+ * thin ScrollArea whose bar shows on hover, the toolbar itself being the viewport.
+ */
 const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
-  ({ children, asChild, size, orientation = 'horizontal', loop = true, disabled, ...props }, forwardedRef) => {
+  (
+    { children, asChild, size, orientation = 'horizontal', loop = true, disabled, inactive, ...props },
+    forwardedRef,
+  ) => {
     const service = useMachine(toolbar.machine, { id: useId(), orientation, loop, disabled });
     const api = toolbar.connect(service);
     const { className, ...rest } = composableProps(props, { classNames: recipes.toolbar() });
+    const rootProps = api.getRootProps();
     return (
       <ToolbarContext.Provider value={api}>
-        <ark.div
-          asChild={asChild}
-          {...rest}
-          {...api.getRootProps()}
-          data-size={size}
-          className={className}
-          ref={forwardedRef}
-        >
-          {children}
-        </ark.div>
+        <ScrollArea.Root size={size} width='thin' orientation={orientation} classNames={recipes.toolbarScroll()}>
+          <ScrollArea.Viewport asChild>
+            <ToolbarElement
+              asChild={asChild}
+              {...rest}
+              {...rootProps}
+              // A toolbar that is also a landmark (an app bar's `banner`) keeps the role it is given.
+              role={rest.role ?? rootProps.role}
+              data-size={size}
+              data-inactive={inactive ? '' : undefined}
+              classNames={className}
+              ref={forwardedRef}
+            >
+              {children}
+            </ToolbarElement>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </ToolbarContext.Provider>
     );
   },
 );
 
-ToolbarRoot.displayName = 'Next.Toolbar.Root';
+ToolbarRoot.displayName = 'Toolbar.Root';
 
 //
 // Separator
 //
 
-type ToolbarSeparatorProps = Omit<SeparatorProps, 'orientation'>;
+type ToolbarSeparatorProps = Omit<SeparatorProps, 'orientation'> & {
+  /** `gap` is an empty spacer that grows, pushing the items after it to the toolbar's end. */
+  variant?: 'line' | 'gap';
+};
 
-/** A rule across the toolbar's axis (vertical in a horizontal toolbar); not an item, so roving focus skips it. */
-const ToolbarSeparator = composable<HTMLDivElement, ToolbarSeparatorProps>((props, forwardedRef) => {
+/**
+ * A rule across the toolbar's axis (vertical in a horizontal toolbar), or with `variant='gap'` a growing spacer; not an
+ * item, so roving focus skips it.
+ */
+const ToolbarSeparator = composable<HTMLDivElement, ToolbarSeparatorProps>(({ variant, ...props }, forwardedRef) => {
   const api = useContext(ToolbarContext);
+  if (variant === 'gap') {
+    const { className, ...rest } = composableProps(props, { classNames: recipes.toolbarGap() });
+    return <div {...rest} role='none' data-scope='toolbar' data-part='gap' className={className} ref={forwardedRef} />;
+  }
+
   return (
     <Separator
       {...props}
@@ -80,7 +109,7 @@ const ToolbarSeparator = composable<HTMLDivElement, ToolbarSeparatorProps>((prop
   );
 });
 
-ToolbarSeparator.displayName = 'Next.Toolbar.Separator';
+ToolbarSeparator.displayName = 'Toolbar.Separator';
 
 //
 // Text
@@ -98,7 +127,7 @@ const ToolbarText = slottable<HTMLDivElement, ToolbarTextProps>(({ children, asC
   );
 });
 
-ToolbarText.displayName = 'Next.Toolbar.Text';
+ToolbarText.displayName = 'Toolbar.Text';
 
 //
 // Link
@@ -140,41 +169,7 @@ const ToolbarLink = composable<HTMLAnchorElement, ToolbarLinkProps>(
   },
 );
 
-ToolbarLink.displayName = 'Next.Toolbar.Link';
-
-//
-// DragHandle
-//
-
-type DragHandleProps = {
-  /** Names the handle for assistive tech; required, since Next ships no translated defaults (AUDIT 2.10). */
-  'label': string;
-  'data-testid'?: string;
-};
-
-/**
- * A ghost icon-only Button with the six-dot grip for a drag-and-drop source to bind (`Toolbar.DragHandle`,
- * `Card.DragHandle`). It never joins a toolbar's roving focus (dragging is a pointer gesture) and shows no Tooltip.
- */
-export const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
-  ({ label, 'data-testid': testId }, forwardedRef) => (
-    <ToolbarContext.Provider value={undefined}>
-      <Button
-        icon='ph--dots-six-vertical--regular'
-        label={label}
-        iconOnly
-        showTooltip={false}
-        variant='ghost'
-        tabIndex={-1}
-        data-drag-handle=''
-        data-testid={testId}
-        ref={forwardedRef}
-      />
-    </ToolbarContext.Provider>
-  ),
-);
-
-DragHandle.displayName = 'Next.DragHandle';
+ToolbarLink.displayName = 'Toolbar.Link';
 
 //
 // ToggleGroup
@@ -187,23 +182,14 @@ const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((
   <ToggleGroup.Root {...props} rovingFocus={false} ref={forwardedRef} />
 ));
 
-ToolbarToggleGroup.displayName = 'Next.Toolbar.ToggleGroup';
+ToolbarToggleGroup.displayName = 'Toolbar.ToggleGroup';
 
 export const Toolbar = {
   Root: ToolbarRoot,
   Text: ToolbarText,
   Link: ToolbarLink,
-  DragHandle,
   Separator: ToolbarSeparator,
   ToggleGroup: ToolbarToggleGroup,
-  ToggleGroupItem: ToggleGroup.Item,
 };
 
-export type {
-  DragHandleProps,
-  ToolbarLinkProps,
-  ToolbarRootProps,
-  ToolbarSeparatorProps,
-  ToolbarTextProps,
-  ToolbarToggleGroupProps,
-};
+export type { ToolbarLinkProps, ToolbarRootProps, ToolbarSeparatorProps, ToolbarTextProps, ToolbarToggleGroupProps };

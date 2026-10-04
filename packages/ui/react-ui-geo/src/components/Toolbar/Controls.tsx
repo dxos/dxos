@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -19,13 +19,13 @@ export const ZoomControls = ({ classNames, onAction }: ControlProps) => {
 
   return (
     <Toolbar.Root classNames={['gap-2', classNames]}>
-      <IconButton
+      <Button
         icon='ph--plus--regular'
         iconOnly
         label={t('zoom-in-icon.button')}
         onClick={() => onAction?.('zoom-in')}
       />
-      <IconButton
+      <Button
         icon='ph--minus--regular'
         iconOnly
         label={t('zoom-out-icon.button')}
@@ -40,13 +40,8 @@ export const ActionControls = ({ classNames, onAction }: ControlProps) => {
 
   return (
     <Toolbar.Root classNames={['gap-2', classNames]}>
-      <IconButton
-        icon='ph--path--regular'
-        iconOnly
-        label={t('start-icon.button')}
-        onClick={() => onAction?.('start')}
-      />
-      <IconButton
+      <Button icon='ph--path--regular' iconOnly label={t('start-icon.button')} onClick={() => onAction?.('start')} />
+      <Button
         icon='ph--globe-hemisphere-west--regular'
         iconOnly
         label={t('toggle-icon.button')}

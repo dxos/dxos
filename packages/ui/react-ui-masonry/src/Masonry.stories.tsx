@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Card, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Card, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Masonry, type MasonryRootProps } from './Masonry.tsx';
@@ -93,20 +93,20 @@ const StoryItem = ({ data: person }: { data: PersonData }) => {
       <Card.Header>
         <Card.Title>{fullName}</Card.Title>
       </Card.Header>
-      {image && <Card.Poster alt={fullName ?? ''} image={image} />}
+      {image && <Card.Poster alt={fullName ?? ''} src={image} />}
       {role && (
         <Card.Row classNames='px-2'>
-          <Card.Text variant='description'>{role}</Card.Text>
+          <Card.Text variant='muted'>{role}</Card.Text>
         </Card.Row>
       )}
       {emails && emails.length > 0 && (
         <Card.Row classNames='px-2'>
-          <Card.Text variant='description'>{emails.map((email) => email.value).join(', ')}</Card.Text>
+          <Card.Text variant='muted'>{emails.map((email) => email.value).join(', ')}</Card.Text>
         </Card.Row>
       )}
       {notes && (
         <Card.Row classNames='px-2 pb-2'>
-          <Card.Text variant='description'>{notes}</Card.Text>
+          <Card.Text variant='muted'>{notes}</Card.Text>
         </Card.Row>
       )}
     </Card.Root>
@@ -143,25 +143,25 @@ const DefaultStory = (props: MasonryRootProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {ITEM_COUNTS.map((count) => (
-            <Toolbar.Button key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
+            <Button key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
               {count}
-            </Toolbar.Button>
+            </Button>
           ))}
-          <Toolbar.Button onClick={addOne}>Add one</Toolbar.Button>
-          <Toolbar.Button onClick={removeOne}>Remove one</Toolbar.Button>
-          <Toolbar.Button onClick={() => setVisible([])}>Clear</Toolbar.Button>
+          <Button onClick={addOne}>Add one</Button>
+          <Button onClick={removeOne}>Remove one</Button>
+          <Button onClick={() => setVisible([])}>Clear</Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <Masonry.Root {...props} Tile={StoryItem}>
           <Masonry.Content>
             <Masonry.Viewport items={visible} getId={(person) => person.id} />
           </Masonry.Content>
         </Masonry.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

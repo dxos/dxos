@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, type URI } from '@dxos/echo';
 import { RuntimeProvider } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -20,7 +20,8 @@ import {
   renderOperation,
   renderTypes,
 } from './Dialect.ts';
-import { describeInput } from './fields.ts';
+import { type DocEntry, STATIC_DOCS, loadDocs } from './docs/index.ts';
+import { describeInput, describeTypes } from './fields.ts';
 
 /**
  * The repo's own ECHO API, written as an Effect program: `yield* Database.query(Filter.type(...)).run`.
@@ -32,46 +33,41 @@ import { describeInput } from './fields.ts';
  * dialect to an in-process `Sandbox` (see the note there).
  *
  * The model's code is the body of an `Effect.gen`, so `yield*` is available without it having to
- * remember the wrapper.
+ * remember the wrapper. Types and operations are both reached by DXN through `Database.resolve`, and
+ * the detailed reference lives in `DOCS` for the model to read on demand rather than in the prompt.
  */
 export const EffectDialect: Dialect = {
   name: 'effect',
 
-  wrap: (code) => `return await runEffect(Effect.gen(function* () {\n${code}\n}));`,
+  // `DOCS` is assembled ahead of the program so the model reads it as the plain object it is told it is.
+  wrap: (code) =>
+    `const DOCS = Object.freeze({ ...(await runEffect(loadDocs)), ...catalog });\n` +
+    `return await runEffect(Effect.gen(function* () {\n${code}\n}));`,
 
   bindings: ({ runtime, operations, print }: BindingsContext) => ({
     // The namespaces the code is written against, exactly as a module would import them.
     Effect,
-    Database,
+    Database: { ...Database, resolve: resolveWith(operations) },
     Filter,
     Query,
+    Order,
     Obj,
+    Relation,
     Ref,
     Type,
     DXN,
     Operation,
 
-    /** Every registered object type, keyed by typename — what `Obj.make` and `Filter.type` take. */
-    types: Object.fromEntries(
-      Context.get(runtime, Database.Service)
-        .db.registry.list()
-        .filter((entity) => Type.isType(entity) && Type.isObject(entity))
-        .map((type) => [Type.getTypename(type), type]),
-    ),
-
     print: (...values: unknown[]) => Effect.sync(() => print(...values)),
 
-    // The operations themselves, not wrappers: the model invokes one the way a source file does,
-    // `yield* Operation.invoke(ops['<dxn>'], input)`. Keyed by DXN rather than by the tool name the
-    // other dialect uses — that name is derived from the key lossily (kebab-cased, dots to dashes)
-    // and is a model-facing identifier, not something this repo's code ever refers to an operation
-    // by. A tool with no definition behind it (provider-defined, MCP) has nothing to bind here, and
-    // is left out of the reference too.
-    ops: Object.fromEntries(
-      operations.flatMap((operation) =>
-        operation.definition ? [[operationKey(operation.definition), operation.definition]] : [],
-      ),
-    ),
+    /** Supplied by `wrap`, not by the model: the static half of `DOCS`. */
+    loadDocs,
+
+    /** Supplied by `wrap`, not by the model: the half of `DOCS` listing what this turn can resolve. */
+    catalog: renderCatalog({
+      operations,
+      types: describeTypes(Context.get(runtime, Database.Service).db),
+    }),
 
     /** Supplied by `wrap`, not by the model: runs its program against the turn's services. */
     runEffect: RuntimeProvider.runPromise(Effect.succeed(runtime)),
@@ -85,101 +81,136 @@ export const EffectDialect: Dialect = {
     It returns whatever the code printed: a value you do not \`print\` never reaches you. Do not use
     \`import\` or \`require\` — the modules below are already in scope.
 
-    Prefer one \`eval\` call that does the whole job — query, inspect, change, print — over a call
+    Prefer one \`eval\` call that does the whole job — resolve, query, change, print — over a call
     per step. Print the specific values you need to reason about, not whole objects.
 
     ### In scope
 
-    - \`Database\`, \`Filter\`, \`Query\`, \`Obj\`, \`Ref\`, \`Type\`, \`DXN\`, \`Operation\`, \`Effect\` —
-      the DXOS modules, as a source file would import them.
-    - \`types\` — every registered object type, keyed by typename:
-      \`types['example.com/type/Task']\`.
+    - \`Database\`, \`Filter\`, \`Query\`, \`Order\`, \`Obj\`, \`Relation\`, \`Ref\`, \`Type\`, \`DXN\`,
+      \`Operation\`, \`Effect\` — the DXOS modules, as a source file would import them.
     - \`print(...values)\` — an effect: \`yield* print('count', tasks.length)\`. Strings go through
       verbatim, everything else is printed as JSON.
+    - \`DOCS\` — the full reference for this API: a plain object mapping file names to markdown
+      strings. Read the file you need before writing anything this prompt does not show, a long one in
+      slices (\`yield* print(DOCS['queries.md'].slice(0, 1000))\`); \`README.md\` shows how to grep
+      them all. These are all of its entries:
+    ${DOC_ENTRIES.map(({ name, covers }) => `  - \`${name}\` — ${covers}`).join('\n')}
 
-    ### Reading and writing
+    ### Types and operations are resolved by DXN
 
     \`\`\`js
-    const tasks = yield* Database.query(Filter.type(types['example.com/type/Task'], { status: 'open' })).run;
-    yield* print('open', tasks.length);
-
+    const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');
+    const tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;
     Obj.update(tasks[0], (task) => { task.status = 'done'; });
-
-    const created = yield* Database.add(Obj.make(types['example.com/type/Task'], { title: 'New', status: 'open' }));
+    const created = yield* Database.add(Obj.make(Task, { title: 'New', status: 'open' }));
     yield* Database.flush();
     yield* print('created', created.id);
     \`\`\`
 
-    \`Obj.update\` is synchronous and is the only way to change a stored object. \`Database.remove\`
-    deletes one. Call \`Database.flush()\` before printing a final confirmation.
+    \`Obj.update\` is the only way to change a stored object. A \`Ref<typename>\` field takes
+    \`Ref.make(obj)\` of an object you hold — never an id or a URI string. A failed load or operation
+    fails the whole program; \`DOCS['errors.md']\` shows how to contain one.
 
-    ### References
+    Do not guess at a helper this prompt or \`DOCS\` does not show: an unshown name fails as \`is not
+    a function\` and costs a call.
 
-    A \`Ref<typename>\` field takes \`Ref.make(obj)\` of an object you hold — never an id or a URI
-    string. Create the target first, then the object that points at it:
-
-    \`\`\`js
-    const owner = yield* Database.add(Obj.make(types['example.com/type/Person'], { name: 'Ada' }));
-    yield* Database.add(Obj.make(types['example.com/type/Task'], { title: 'Review', status: 'open', owner: Ref.make(owner) }));
-    \`\`\`
-
-    Read a reference back with \`yield* Database.load(task.owner)\`. To fetch an object whose id you
-    hold, query for it: \`const [task] = yield* Database.query(Filter.id(id)).run;\`.
-
-    A ref array can point at objects that were deleted, and one failed load fails the whole
-    program, so load such arrays one ref at a time through \`Effect.result\`. Its value is
-    \`{ _tag: 'Success', success }\` or \`{ _tag: 'Failure', failure }\` — there is no \`value\`:
-
-    \`\`\`js
-    for (const ref of taskSet.tasks) {
-      const loaded = yield* Effect.result(Database.load(ref));
-      if (loaded._tag === 'Failure') { yield* print('missing', ref.uri); continue; }
-      yield* print(loaded.success.title);
-    }
-    \`\`\`
-
-    Do not guess at a helper this reference does not show: an unshown name fails as \`is not a
-    function\` and costs a call.
-
-    ${renderTypes(types)}
+    ${renderTypes(types, ({ dxn }) => dxn)}
 
     ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
   `,
 };
 
-/** The key an operation is bound and documented under: its own DXN, as `Operation.meta.key` holds it. */
+/** The `DOCS` entries generated per evaluation from what the turn can resolve. */
+const CATALOG_DOCS: readonly DocEntry[] = [
+  { name: 'catalog/types.md', covers: 'Every type this workspace can resolve: its DXN, kind and fields.' },
+  { name: 'catalog/operations.md', covers: 'Every operation this turn can resolve: its DXN, description and input.' },
+];
+
+const DOC_ENTRIES: readonly DocEntry[] = [...STATIC_DOCS, ...CATALOG_DOCS];
+
+/**
+ * The catalog files of `DOCS`, from the same renderers as the prompt. Built from the registry the
+ * code runs against, so the list is what `Database.resolve` will actually answer there.
+ */
+const renderCatalog = ({
+  operations,
+  types,
+}: {
+  operations: readonly SandboxOperation[];
+  types: ReturnType<typeof describeTypes>;
+}): Record<string, string> => ({
+  'catalog/types.md': trim`
+    # Types
+
+    Resolve one with \`yield* Database.resolve('<dxn>')\`. \`README.md\` shows how to list every key.
+
+    ${renderTypes(types, ({ dxn }) => dxn)}
+  `,
+  'catalog/operations.md': trim`
+    # Operations
+
+    Resolve one with \`yield* Database.resolve('<dxn>')\` and run it with
+    \`yield* Operation.invoke(op, input)\`. \`README.md\` shows how to list every key.
+
+    ${operations.some((operation) => operation.definition) ? renderOperationList(operations) : NO_OPERATIONS}
+  `,
+});
+
+/** The key an operation is resolved and documented under: its own DXN, as `Operation.meta.key` holds it. */
 const operationKey = (definition: Operation.Definition.Any): string => String(definition.meta.key);
+
+/**
+ * `Database.resolve`, answering the turn's bound operations itself: a definition is code that lives
+ * with its handler rather than an entity the registry holds, so the registry cannot resolve one.
+ * Every other DXN — a type, an object — goes to the real resolver.
+ */
+const resolveWith = (operations: readonly SandboxOperation[]) => {
+  const definitions = new Map(
+    operations.flatMap(({ definition }) => (definition ? [[operationKey(definition), definition] as const] : [])),
+  );
+  return (ref: URI.URI | Ref.Ref<Obj.Unknown>, schema?: Type.AnyEntity) => {
+    const definition = typeof ref === 'string' ? definitions.get(ref) : undefined;
+    if (definition !== undefined) {
+      return Effect.succeed(definition);
+    }
+    return schema === undefined ? Database.resolve(ref) : Database.resolve(ref, schema);
+  };
+};
 
 const renderEffectOperations = (operations: readonly SandboxOperation[]): string => trim`
   ### Operations
 
-  The skills above describe their capabilities as tools; in code mode they are NOT tools. \`ops\`
-  holds the operation definitions themselves, which you invoke the way any other DXOS code does:
+  The skills above describe their capabilities as tools; in code mode they are NOT tools. Resolve an
+  operation by its DXN and invoke it the way any other DXOS code does (\`DOCS['operations.md']\` has
+  the details):
 
   \`\`\`js
-  const result = yield* Operation.invoke(ops['dxn:com.example.operation.example'], { ...input });
+  const Example = yield* Database.resolve('dxn:com.example.operation.example');
+  const result = yield* Operation.invoke(Example, { ...input });
   \`\`\`
 
-  A failed operation fails the effect, so wrap a call you expect to fail in \`Effect.result\` (shape
-  above).
-  Each \`input\` below is the operation's own schema. Where it takes an object or a \`Ref<typename>\`,
-  pass the object you hold (or \`Ref.make(obj)\`) — never an id or a URI string; fetch the object
-  first if all you hold is its id. A skill that spells a reference as a \`{"/": "echo:..."}\` envelope
-  or a URI string is describing the tool form; this reference wins. Most of what an operation does
-  to one object is a line of \`Obj\`/\`Database\` code; prefer that.
+  Each \`input\` below is the operation's own schema: pass objects you hold (or \`Ref.make(obj)\`)
+  where it takes an object or a \`Ref<typename>\`, never an id or a URI string. A skill that spells a
+  reference as a \`{"/": "echo:..."}\` envelope or a URI string is describing the tool form; this
+  reference wins. Most of what an operation does to one object is a line of \`Obj\`/\`Database\`
+  code; prefer that.
 
-  ${operations
+  ${renderOperationList(operations)}
+`;
+
+/** One line per operation backed by a definition, naming the DXN it resolves by. */
+const renderOperationList = (operations: readonly SandboxOperation[]): string =>
+  operations
     .flatMap((operation) => {
       const { definition } = operation;
       return definition
         ? [
             renderOperation(
               operation,
-              () => `yield* Operation.invoke(ops['${operationKey(definition)}'], input)`,
+              () => `yield* Database.resolve('${operationKey(definition)}')`,
               describeInput(definition.input),
             ),
           ]
         : [];
     })
-    .join('\n')}
-`;
+    .join('\n');

@@ -143,6 +143,26 @@ const createProject = (space: Space, storyGeneration: number) => {
     taskSet.tasks = [Ref.make(task), Ref.make(linkTask)];
   });
 
+  // Sub-tasks, two levels deep, so the list reads as the hierarchy it is: each child is in its parent's `subtasks`
+  // and parented to it, as the move verbs leave it.
+  const addSubtask = (parent: Task.Task, title: string, status: Task.Status) => {
+    const subtask = space.db.add(Task.make({ [Obj.Parent]: parent, title, status }));
+    Obj.update(parent, (parent) => {
+      parent.subtasks ??= [];
+      parent.subtasks.push(Ref.make(subtask));
+    });
+    return subtask;
+  };
+  // A task of its own, so the two the delegate story ticks stay leaves: ticking a parent takes its sub-tasks too.
+  const launch = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Plan the launch', status: 'started' }));
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks.push(Ref.make(launch));
+  });
+  addSubtask(launch, 'Write the announcement', 'done');
+  const flag = addSubtask(launch, 'Wire the feature flag', 'started');
+  addSubtask(flag, 'Default it on for internal spaces', 'todo');
+  addSubtask(flag, 'Add the flag to the settings panel', 'todo');
+
   // The third item is what promotion leaves behind: a link to the task in the project's set.
   Obj.update(outline.content.target, (text) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
@@ -266,8 +286,6 @@ const meta = {
         // handler that action runs.
         ProjectsPlugin.make(),
         AssistantPlugin.make(),
-        // For the card stack under the task companion: the surface is plugin-space's, so without it
-        // the companion renders the article alone and the stack silently resolves to nothing.
         SpacePlugin.make({}),
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".

@@ -74,7 +74,7 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
               <div
                 className={mx(
                   'flex justify-center items-center text-xs bg-group-surface hover:bg-hover-surface',
-                  selected === i ? 'bg-input-surface' : 'text-subdued',
+                  selected === i ? 'bg-input-surface' : 'text-fg-subtle',
                   connector && 'rounded-full',
                 )}
                 style={{ width: diameter, height: diameter }}

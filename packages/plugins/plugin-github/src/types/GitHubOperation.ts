@@ -257,6 +257,27 @@ export const AddPullRequestReviewComment = Operation.make({
   types: [PullRequest.PullRequest],
 });
 
+/**
+ * Re-read a stored pull request from GitHub and write back whatever has changed — its title, state,
+ * description, branches and size — so the object in the space does not go stale between syncs.
+ */
+export const SyncPullRequest = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.syncPullRequest'),
+    name: 'Sync Pull Request',
+    description: 'Refresh a stored pull request from GitHub.',
+    icon: 'ph--arrows-clockwise--regular',
+  },
+  input: Schema.Struct({
+    pullRequest: Ref.Ref(PullRequest.PullRequest),
+  }),
+  output: Schema.Struct({
+    /** Names of the fields that changed; empty where the stored pull request was already current. */
+    updated: Schema.Array(Schema.String),
+  }),
+  types: [PullRequest.PullRequest],
+}).pipe(Operation.mutation('write'));
+
 /** Aggregate outcome of a commit's check runs; `none` when the commit has no checks at all. */
 export const CiState = Schema.Literals(['success', 'failure', 'pending', 'none']);
 export type CiState = Schema.Schema.Type<typeof CiState>;
@@ -268,6 +289,13 @@ export const CheckCounts = Schema.Struct({
   pending: Schema.Number,
 });
 export interface CheckCounts extends Schema.Schema.Type<typeof CheckCounts> {}
+
+/**
+ * Where the reviews stand, from each reviewer's latest verdict: any outstanding request for changes
+ * outweighs approvals, and `none` means no reviewer has approved or asked for changes.
+ */
+export const ReviewState = Schema.Literals(['approved', 'changes_requested', 'none']);
+export type ReviewState = Schema.Schema.Type<typeof ReviewState>;
 
 /** How one check run ended, folded to what a reader acts on; `skipped` is neither passing nor failing. */
 export const CheckOutcome = Schema.Literals(['success', 'failure', 'pending', 'skipped', 'neutral']);
@@ -291,7 +319,7 @@ export const GetPullRequestStatus = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.getPullRequestStatus'),
     name: 'Get Pull Request Status',
-    description: "Read a pull request's state and the CI status of its head commit.",
+    description: "Read a pull request's state, its review verdict and the CI status of its head commit.",
     icon: 'ph--git-pull-request--regular',
   },
   input: Schema.Struct({
@@ -306,6 +334,9 @@ export const GetPullRequestStatus = Operation.make({
     ci: CiState,
     checks: CheckCounts,
     runs: Schema.Array(CheckRun),
+    review: ReviewState,
+    /** Reviewers whose latest verdict is an approval. */
+    approvals: Schema.Number,
   }),
   types: [PullRequest.PullRequest],
 });
