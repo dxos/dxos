@@ -53,10 +53,9 @@ export const Commands = {
   /** Resolves once the app has fetched the chunk built from `module` — the idle preload, for a dialog. */
   waitForPreload: async (host: AppManager, module: 'CommandsDialogContent' | 'SearchDialog') => {
     await expect
-      .poll(
-        () => host.requestedScripts().some((url) => new URL(url).pathname.startsWith(`/assets/${module}-`)),
-        { timeout: PRELOAD_TIMEOUT },
-      )
+      .poll(() => [...host.requestedScripts()].some((pathname) => pathname.startsWith(`/assets/${module}-`)), {
+        timeout: PRELOAD_TIMEOUT,
+      })
       .toBe(true);
   },
 

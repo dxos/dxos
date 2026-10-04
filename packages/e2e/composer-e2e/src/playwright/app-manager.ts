@@ -92,9 +92,9 @@ export class AppManager {
   // Rolling tail of console errors: the app reports operation failures generically to the user, and
   // the real cause only reaches `log.catch`.
   private _consoleErrors: string[] = [];
-  // Every script the page requested since it was created; resource timing cannot stand in, since its
-  // buffer fills during boot and drops the idle wave's chunks.
-  private readonly _scripts: string[] = [];
+  // Pathname of every script the page requested since it was created — bounded by the bundle's chunk
+  // count. Resource timing cannot stand in: its buffer fills during boot and drops the idle wave's chunks.
+  private readonly _scripts = new Set<string>();
 
   // prettier-ignore
   constructor(
@@ -115,7 +115,10 @@ export class AppManager {
     this.page = page;
     this._close = close;
     this.page.on('console', (message) => this._onConsoleMessage(message));
-    this.page.on('request', (request) => request.resourceType() === 'script' && this._scripts.push(request.url()));
+    this.page.on(
+      'request',
+      (request) => request.resourceType() === 'script' && this._scripts.add(new URL(request.url()).pathname),
+    );
 
     // Assert boot rather than proceed on a swallowed `false`, so a failed boot fails here instead of as
     // a bare `Test timeout` inside the first action. 30s is ~2x the slowest healthy boot (CI firefox
@@ -763,8 +766,8 @@ export class AppManager {
     await this.page.getByTestId('resetDialog.confirmReset').click();
   }
 
-  /** URLs of every script the page has requested since `init()` navigated it. */
-  requestedScripts(): readonly string[] {
+  /** Pathnames of every script the page has requested since `init()` navigated it. */
+  requestedScripts(): ReadonlySet<string> {
     return this._scripts;
   }
 

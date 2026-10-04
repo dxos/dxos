@@ -286,7 +286,14 @@ const useLateContent = (contentRef: RefObject<HTMLDivElement | null>) => {
       pointerBlocking: modal,
       onEscapeKeyDown: (event) => handlersRef.current.onEscapeKeyDown?.(event),
       onPointerDownOutside: (event) => handlersRef.current.onPointerDownOutside?.(event),
-      onFocusOutside: (event) => handlersRef.current.onFocusOutside?.(event),
+      onFocusOutside: (event) => {
+        handlersRef.current.onFocusOutside?.(event);
+        // The trap pulls focus back, so a modal dialog is not dismissed by focus moving out — a menu
+        // closing behind it restores focus to its trigger just after the dialog opens.
+        if (modal) {
+          event.preventDefault();
+        }
+      },
       onInteractOutside: (event) => {
         handlersRef.current.onInteractOutside?.(event);
         if (role !== 'dialog') {
