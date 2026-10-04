@@ -33,7 +33,8 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
   return (
     <Container.Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.artifacts'>
-        <Typography.Text asChild tone='subtle'>
+        {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
+        <Typography.Text asChild tone='subtle' classNames='dx-label py-0'>
           <h2>{t('task-artifacts.label')}</h2>
         </Typography.Text>
         <CardMasonry.Root objects={artifacts} size='compact' inline />

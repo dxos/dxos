@@ -28,7 +28,7 @@ export const PreviewPopover = Capability.lazyModule(
   () => import('./preview-popover.ts'),
 );
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.cardContent', 'org.dxos.role.article'],
+  roles: ['org.dxos.role.cardContent', 'org.dxos.role.cardIcon', 'org.dxos.role.article'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Translations = AppCapability.translations(translations);

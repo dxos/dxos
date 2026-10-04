@@ -61,7 +61,6 @@ export const PostCard = ({ subject }: PostCardProps) => {
         <Card.Row>
           <Grid.Grid
             cols={['minmax(0, 1fr)', 'auto']}
-            grow={false}
             gap='sm'
             align='center'
             classNames='text-sm text-fg-muted overflow-hidden'

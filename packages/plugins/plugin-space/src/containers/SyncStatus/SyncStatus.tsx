@@ -95,16 +95,16 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
 
       {/* Connection Details */}
       {!isConnected && (
-        <Grid.Grid cols={SYNC_COLS} grow={false} gap='sm'>
+        <Grid.Grid cols={SYNC_COLS} gap='sm'>
           <Icon.Icon icon='ph--cloud-x--regular' />
           <span className='text-fg-muted'>{t('sync-no-connection.label')}</span>
         </Grid.Grid>
       )}
 
       {isConnected && (
-        <Grid.Grid cols={SYNC_COLS} grow={false} gap='sm' classNames='gap-y-1'>
+        <Grid.Grid cols={SYNC_COLS} gap='sm' classNames='gap-y-1'>
           {/* Latency */}
-          <Grid.Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
+          <Grid.Grid cols='subgrid' gap='sm' align='center' classNames='text-sm'>
             <Icon.Icon icon='ph--timer--regular' />
             <span className='text-fg-muted'>{t('sync-latency.label')}</span>
             <div />
@@ -112,7 +112,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
           </Grid.Grid>
 
           {/* Upload Speed */}
-          <Grid.Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
+          <Grid.Grid cols='subgrid' gap='sm' align='center' classNames='text-sm'>
             <Icon.Icon icon='ph--arrow-up--regular' classNames='text-green-500' />
             <span className='text-fg-muted'>{t('sync-upload.label')}</span>
             <UnitValue value={status.messagesSent} format={Unit.Thousand} />
@@ -120,7 +120,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
           </Grid.Grid>
 
           {/* Download Speed */}
-          <Grid.Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
+          <Grid.Grid cols='subgrid' gap='sm' align='center' classNames='text-sm'>
             <Icon.Icon icon='ph--arrow-down--regular' classNames='text-orange-500' />
             <span className='text-fg-muted'>{t('sync-download.label')}</span>
             <UnitValue value={status.messagesReceived} format={Unit.Thousand} />

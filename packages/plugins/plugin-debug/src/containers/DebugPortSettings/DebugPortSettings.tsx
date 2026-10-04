@@ -91,10 +91,10 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
           </Form.Field>
 
           <Form.Field standalone label={t('settings.debug-port.log.label')}>
-            {/* Only the rows: a settings card has no room for the panel's toolbar, levels or filter. */}
+            {/* Only the rows: a settings card has no room for the panel's toolbar, levels or filter, so nothing to check rows for. */}
             <Logger.Root rowFilter={isDebugPortRow}>
               <Logger.Content classNames='max-h-[16lh]'>
-                <Logger.List />
+                <Logger.List checkable={false} />
               </Logger.Content>
             </Logger.Root>
           </Form.Field>

@@ -49,7 +49,7 @@ export type FormViewportProps = PropsWithChildren<{
 /**
  * The gutter Container that owns the form's rails; with `scroll`, the Body of a pane of its own. Composable, so a
  * form component can be the `asChild` child of a host that merges its layout props and ref onto it. The gutter defaults
- * to the enclosing panel's (`sm`, the form inset), else `sm`.
+ * to the host's: a panel's (`sm`, the form inset) or a dialog or popover body's (`inherit`, joining its rails), else `sm`.
  */
 export const FormViewport = Util.composable<HTMLDivElement, FormViewportProps>(
   ({ children, scroll, size, width = 'document', gutter, ...props }, forwardedRef) => {

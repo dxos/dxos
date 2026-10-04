@@ -54,9 +54,6 @@ skill:toolDefinitions deus:computeRole "toolDefinitions".
 compute:Skill.toolDefinitions deus:computeRole "toolDefinitions".
 skillFile:toolDefinitions deus:computeRole "toolDefinitions".
 
-<https://dxos.org/deus/module/@dxos/echo#DXN.make> deus:computeRole "dxn".
-<https://dxos.org/deus/module/@dxos/keys#DXN.make> deus:computeRole "dxn".
-
 skill:make deus:computeRole "skill".
 skill:Definition deus:computeRole "skill".
 compute:Skill.make deus:computeRole "skill".
@@ -119,20 +116,14 @@ skillFile:Skill deus:computeRole "skillObject".
 
 # --- What an operation is defined with --------------------------------------------------------------
 
-# Its key: `meta: { key: 'org.dxos.operation.x' }`, or `meta: { key: DXN.make('org.dxos.operation.x') }`
-# when that is the only DXN the definition builds.
+# Its key: the `meta.key` literal of the `Operation.make` call in its definition — written as a string,
+# or as `DXN.make('org.dxos.operation.x')`, which a call site reads as its one string. `deus:callee` is
+# shared with Argument nodes, hence the CallSite join.
 {
-  ?s rdf:type deus:Operation; deus:passesLiteral ?argument.
-  ?argument deus:callee ?callee; deus:slot "0.meta.key"; deus:literal ?key.
+  ?s rdf:type deus:Operation.
+  ?c deus:enclosedBy ?s; rdf:type deus:CallSite; deus:callee ?callee; deus:literal ?kv.
   ?callee deus:computeRole "operation".
-} => { ?s deus:operationKey ?key }.
-{
-  ?s rdf:type deus:Operation; deus:passesLiteral ?argument.
-  ?argument deus:callee ?callee; deus:slot "0"; deus:literal ?key.
-  ?callee deus:computeRole "dxn".
-  (?other { ?s deus:passesLiteral ?any. ?any deus:callee ?dxn; deus:slot "0"; deus:literal ?other. ?dxn deus:computeRole "dxn" } ?keys)
-    log:collectAllIn ?scope.
-  ?keys list:length 1.
+  (?kv "^meta\\.key=(.*)$") string:scrape ?key.
 } => { ?s deus:operationKey ?key }.
 
 # Its schemas and services, where the definition names them (`input: Input`, `output: Schema.Void`,

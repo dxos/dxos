@@ -9,12 +9,15 @@ import * as Effect from 'effect/Effect';
 import type * as RpcClientError from 'effect/rpc/RpcClientError';
 import type * as Scope from 'effect/Scope';
 import type * as WorkerError from 'effect/workers/WorkerError';
-import { realpath } from 'node:fs/promises';
+import { readFile, realpath, stat } from 'node:fs/promises';
 import { availableParallelism } from 'node:os';
+import { join } from 'node:path';
 
 import * as Crawler from './Crawler.ts';
 import * as Reasoner from './Reasoner.ts';
 import * as Store from './Store.ts';
+import * as Summary from './Summary.ts';
+import { contentHash } from './worker/analyzers/common.ts';
 import * as Pool from './worker/Pool.ts';
 import type * as Protocol from './worker/Protocol.ts';
 
@@ -30,11 +33,18 @@ export type Options = {
   readonly workers?: number;
   /** Files per RPC batch (default 64). */
   readonly batchSize?: number;
+  /** Files committed to the store at once (default 512): one ledger transaction and one graph write. */
+  readonly commitSize?: number;
   /** Reindex every file, ignoring recorded mtimes. */
   readonly force?: boolean;
   readonly extensions?: readonly string[];
   /** Reasoners run once the pass has committed; omitted or empty, the reasoning phase is skipped. */
   readonly reasoners?: readonly Reasoner.Reasoner[];
+  /**
+   * Record the whole-graph counts `vocabulary` and `stats` read (default true). A watcher's passes
+   * opt out: each costs a scan of the whole store, which would dwarf a one-file reindex.
+   */
+  readonly summarize?: boolean;
 };
 
 /**
@@ -44,8 +54,13 @@ export type Options = {
 export type Timings = {
   readonly scanMs: number;
   readonly parseMs: number;
+  /** Of `parseMs`, worker time analyzing files and encoding documents; the rest is transfer and queueing. */
+  readonly analyzeMs: number;
+  readonly encodeMs: number;
   readonly commitMs: number;
   readonly reasonMs: number;
+  /** Recording the summary; zero when it was skipped or already current. */
+  readonly summarizeMs: number;
   readonly totalMs: number;
 };
 
@@ -53,6 +68,8 @@ export type Result = {
   readonly root: string;
   readonly scanned: number;
   readonly indexed: number;
+  /** Files whose mtime moved but whose content did not: recorded without reindexing. */
+  readonly touched: number;
   readonly unchanged: number;
   readonly removed: number;
   readonly skipped: readonly Protocol.SkippedFile[];
@@ -66,6 +83,8 @@ export type Result = {
 };
 
 export const DEFAULT_BATCH_SIZE = 64;
+
+export const DEFAULT_COMMIT_SIZE = 512;
 
 const millis = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<[number, A], E, R> =>
   Effect.map(Effect.timed(effect), ([duration, value]) => [Duration.toMillis(duration), value]);
@@ -85,7 +104,23 @@ const chunk = <T>(items: readonly T[], size: number): T[][] => {
   return batches;
 };
 
-/** Index `root` into the ambient {@link Store.Store}, reusing everything whose mtime is unchanged. */
+/**
+ * The mtime to record for a file whose content still hashes to `hash`, or `undefined` if it changed
+ * (or cannot be read, which the worker then reports). Stat before read, as the worker does: a write
+ * racing the two leaves the recorded mtime older than the file's, so the next pass looks again.
+ */
+const touchedAt = (absolute: string, hash: string): Effect.Effect<number | undefined> =>
+  Effect.tryPromise(async () => {
+    const stats = await stat(absolute);
+    const source = await readFile(absolute, 'utf8');
+    return contentHash(source) === hash ? Math.floor(stats.mtimeMs) : undefined;
+  }).pipe(Effect.orElseSucceed(() => undefined));
+
+/** A rule reading `deus:mtime` would go stale on a touch, which does not advance the generation. */
+const readsMtime = (reasoners: readonly Reasoner.Reasoner[]): boolean =>
+  reasoners.some((reasoner) => 'rules' in reasoner && reasoner.rules.includes('mtime'));
+
+/** Index `root` into the ambient {@link Store.Store}, reusing everything whose mtime or content is unchanged. */
 export const run = (
   options: Options,
 ): Effect.Effect<
@@ -103,19 +138,41 @@ export const run = (
     });
     const workers = options.workers ?? Math.min(availableParallelism(), 8);
     const batchSize = options.batchSize ?? DEFAULT_BATCH_SIZE;
+    const commitSize = options.commitSize ?? DEFAULT_COMMIT_SIZE;
 
     const started = Date.now();
-    const [scanMs, { entries, changed, removed }] = yield* millis(
+    const reasoners = options.reasoners ?? [];
+    const [scanMs, { entries, changed, touches, removed }] = yield* millis(
       Effect.gen(function* () {
         const entries = yield* Crawler.crawl(root, { extensions: options.extensions });
         const states = yield* store.fileStates();
-        const recorded = new Map(states.map((state) => [state.path, state.mtime]));
+        const recorded = new Map(states.map((state) => [state.path, state]));
         const present = new Set(entries.map((entry) => entry.path));
-        return {
-          entries,
-          changed: entries.filter((entry) => options.force || recorded.get(entry.path) !== entry.mtime),
-          removed: states.filter((state) => !present.has(state.path)),
-        };
+        const moved = entries.filter((entry) => options.force || recorded.get(entry.path)?.mtime !== entry.mtime);
+        // A checkout or `touch` moves mtimes without changing content; hashing here is far cheaper
+        // than reparsing, and keeps the reasoners from rerunning over facts that did not change.
+        const hashed =
+          options.force || readsMtime(reasoners)
+            ? moved.map(() => undefined)
+            : yield* Effect.forEach(
+                moved,
+                (entry) => {
+                  const state = recorded.get(entry.path);
+                  return state ? touchedAt(join(root, entry.path), state.hash) : Effect.succeed(undefined);
+                },
+                { concurrency: 16 },
+              );
+        const touches: Store.FileTouch[] = [];
+        const changed: Crawler.Entry[] = [];
+        moved.forEach((entry, index) => {
+          const mtime = hashed[index];
+          if (mtime === undefined) {
+            changed.push(entry);
+          } else {
+            touches.push({ path: entry.path, mtime });
+          }
+        });
+        return { entries, changed, touches, removed: states.filter((state) => !present.has(state.path)) };
       }),
     );
 
@@ -124,10 +181,22 @@ export const run = (
       Effect.forEach(removed, (state) => store.removeFile(state.path), { discard: true }),
     );
     commitMs += removalMs;
+    const [touchMs] = yield* millis(store.touchFiles(touches));
+    commitMs += touchMs;
 
     const skipped: Protocol.SkippedFile[] = [];
     let parseMs = 0;
+    let analyzeMs = 0;
+    let encodeMs = 0;
     let indexed = 0;
+    const pending: Store.EncodedDocument[] = [];
+    const commit = () =>
+      Effect.gen(function* () {
+        const documents = pending.splice(0);
+        const [batchCommitMs] = yield* millis(store.putDocuments(documents));
+        commitMs += batchCommitMs;
+        indexed += documents.length;
+      });
 
     if (changed.length > 0) {
       const batches = chunk(changed, batchSize);
@@ -140,15 +209,20 @@ export const run = (
           Effect.gen(function* () {
             const [batchParseMs, response] = yield* millis(client.AnalyzeBatch({ root, files: batch }));
             parseMs += batchParseMs;
+            analyzeMs += response.analyzeMs;
+            encodeMs += response.encodeMs;
             skipped.push(...response.skipped);
-            // One ledger transaction per batch rather than per file: an interruption costs at most
-            // the batch in flight, which the next pass reindexes.
-            const [batchCommitMs] = yield* millis(store.putDocuments(response.analyzed.map((file) => file.document)));
-            commitMs += batchCommitMs;
-            indexed += response.analyzed.length;
+            pending.push(...response.analyzed);
+            // Documents are committed several batches at a time: one write of the quad store per
+            // commit is what dominates, and it costs less per quad the more it carries. An
+            // interruption costs at most the commit in flight, which the next pass reindexes.
+            if (pending.length >= commitSize) {
+              yield* commit();
+            }
           }),
         { concurrency: poolSize, discard: true },
       );
+      yield* commit();
     }
 
     yield* store.setMeta('root', root);
@@ -159,7 +233,6 @@ export const run = (
     // only when the store records that these rules already ran over exactly these facts — not when
     // this pass changed nothing, which would strand a pass run with `--no-reason` or interrupted
     // before reasoning, reporting stale conclusions until some file changed.
-    const reasoners = options.reasoners ?? [];
     const current = reasoners.length > 0 ? yield* store.reasoned(Reasoner.signature(reasoners)) : undefined;
     const willReason = reasoners.length > 0 && current === undefined;
     const [reasonMs, outcomes] = yield* millis(willReason ? Reasoner.run(reasoners) : Effect.succeed([]));
@@ -167,16 +240,28 @@ export const run = (
       ? outcomes.reduce((total, outcome) => total + outcome.derived, 0)
       : (current ?? (yield* store.derivedCount()));
 
+    const [summarizeMs] = yield* millis(options.summarize === false ? Effect.void : Summary.refresh(store));
+
     return {
       root,
       scanned: entries.length,
       indexed,
-      unchanged: entries.length - changed.length,
+      touched: touches.length,
+      unchanged: entries.length - changed.length - touches.length,
       removed: removed.length,
       skipped,
       derived,
       reasoned: willReason,
       reasoners: outcomes,
-      timings: { scanMs, parseMs, commitMs, reasonMs, totalMs: Date.now() - started },
+      timings: {
+        scanMs,
+        parseMs,
+        analyzeMs,
+        encodeMs,
+        commitMs,
+        reasonMs,
+        summarizeMs,
+        totalMs: Date.now() - started,
+      },
     };
   });

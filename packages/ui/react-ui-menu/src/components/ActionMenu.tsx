@@ -122,7 +122,11 @@ const ActionCheckboxItem = ({ menu, action, group }: ActionItemProps) => {
       onClick={handleClick}
       closeOnSelect={false}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-    />
+    >
+      <ItemIcon menu={menu} action={action} />
+      <Menu.ItemText />
+      <Menu.ItemIndicator />
+    </Menu.CheckboxItem>
   );
 };
 
@@ -134,7 +138,12 @@ const ActionRadioItem = ({ menu, action, group }: ActionItemProps) => {
       item={item}
       onClick={handleClick}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-    />
+    >
+      {/* Composed rather than the default row, so the icon takes the action's classes (a priority's hue). */}
+      <ItemIcon menu={menu} action={action} />
+      <Menu.ItemText />
+      <Menu.ItemIndicator />
+    </Menu.RadioItem>
   );
 };
 
@@ -296,7 +305,6 @@ export const ActionMenu = ({
   );
 
   const [built, setBuilt] = useState(false);
-  const [deferredOpen, setDeferredOpen] = useState(false);
   // Only a menu that owns its open state and renders its own trigger can wait for a click.
   const deferred = !!deferUntilOpen && !virtualRef && open === undefined && defaultOpen === undefined;
   const trigger = isValidElement<{
@@ -309,12 +317,9 @@ export const ActionMenu = ({
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      if (deferred) {
-        setDeferredOpen(next);
-      }
       onOpenChange?.(next);
     },
-    [deferred, onOpenChange],
+    [onOpenChange],
   );
 
   const handleTriggerClick = useCallback(
@@ -342,8 +347,10 @@ export const ActionMenu = ({
 
   return (
     <Menu.Root
-      open={deferred ? deferredOpen : open}
-      defaultOpen={defaultOpen}
+      // A deferred menu mounts on its first click, so it mounts open and owns its state from then on: a controlled
+      // close always refocuses the trigger, which would pull focus back from whatever an outside click focused.
+      open={deferred ? undefined : open}
+      defaultOpen={deferred ? true : defaultOpen}
       onOpenChange={({ open }) => handleOpenChange(open)}
       positioning={positioning}
     >

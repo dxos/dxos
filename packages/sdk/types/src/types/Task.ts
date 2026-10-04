@@ -76,7 +76,7 @@ export type Status = Schema.Schema.Type<typeof Status>;
  * painted in.
  */
 export const StatusOptions: Option<Status>[] = [
-  { id: 'todo', title: 'Todo', color: 'neutral', icon: 'ph--square--regular' },
+  { id: 'todo', title: 'Todo', color: 'neutral', icon: 'ph--check-square-offset--regular' },
   { id: 'backlog', title: 'Backlog', color: 'neutral', icon: 'ph--tray--regular' },
   { id: 'started', title: 'Started', color: 'sky', icon: 'ph--hourglass--regular' },
   { id: 'review', title: 'In Review', color: 'cyan', icon: 'ph--user-sound--regular' },
@@ -200,6 +200,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 
     description: Schema.optional(
       Schema.String.pipe(
+        Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
         Schema.annotate({ title: 'Description' }),
         Annotation.GeneratorAnnotation.set({
           generator: 'lorem.paragraphs',

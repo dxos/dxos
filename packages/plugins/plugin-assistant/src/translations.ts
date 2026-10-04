@@ -142,9 +142,7 @@ export const translations: Theme.Resource[] = [
 
         'no-results.message': 'No results',
 
-        'cancel.button': 'Cancel',
         'cancel-queued.button': 'Remove from queue',
-        'save.button': 'Save',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',
         'chat-history.label': 'Chat History',

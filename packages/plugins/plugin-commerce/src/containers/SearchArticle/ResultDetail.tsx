@@ -37,7 +37,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
 
   return (
     <Flex.Flex column gap='md' classNames='p-3 overflow-y-auto'>
-      <Grid.Grid cols={['minmax(0, 1fr)', 'min-content', 'min-content']} grow={false} gap='sm' align='start'>
+      <Grid.Grid cols={['minmax(0, 1fr)', 'min-content', 'min-content']} gap='sm' align='start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
         <SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={onToggleStar} />
         {onClose && (

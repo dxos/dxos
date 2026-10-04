@@ -253,7 +253,6 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
               cols={['5.5rem', '1fr', '3rem', '2.5rem']}
               gap='sm'
               align='center'
-              grow={false}
               classNames='text-xs'
               data-testid={`scene-view.scorecard.${id}`}
             >
@@ -281,7 +280,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
       </Section>
 
       <Section title='Metrics'>
-        <Grid.Grid cols={['1fr', 'auto']} grow={false} classNames='gap-x-4 font-mono text-xs'>
+        <Grid.Grid cols={['1fr', 'auto']} classNames='gap-x-4 font-mono text-xs'>
           {Object.entries(report.metrics).map(([key, value]) => (
             <Fragment key={key}>
               <span className='text-fg-muted'>{key}</span>
@@ -315,7 +314,7 @@ type EditorProps = { store: SceneStore; root: SceneId; engine?: Objective.Evalua
 const Editor = ({ store, root, engine }: EditorProps) => {
   const atoms = useMemo(() => createSceneViewAtoms(root), [root]);
   return (
-    <Grid.Grid cols={['1fr', '24rem']} grow={false} classNames='dx-fill'>
+    <Grid.Grid cols={['1fr', '24rem']} classNames='dx-fill'>
       <SceneView.Root store={store} root={root} atoms={atoms}>
         <SceneView.Canvas liveDepth={0} />
         <SceneView.Actions />

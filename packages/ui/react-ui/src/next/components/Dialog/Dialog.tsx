@@ -261,7 +261,10 @@ type DialogBodyProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'widt
 const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ classNames, children, ...props }, forwardedRef) => (
   <ScrollArea.Root {...props} classNames={mx(recipes.dialogBody(), classNames)} ref={forwardedRef}>
     <ScrollArea.Viewport asChild>
-      <Container.Container gutter='md'>{children}</Container.Container>
+      <Container.Container gutter='md'>
+        {/* Its direct content (a form's Viewport) joins these rails rather than nesting a second inset. */}
+        <Container.DefaultGutterProvider gutter='inherit'>{children}</Container.DefaultGutterProvider>
+      </Container.Container>
     </ScrollArea.Viewport>
   </ScrollArea.Root>
 ));

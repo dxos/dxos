@@ -67,7 +67,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
       <TemplateEditor id={id} source={template.source} classNames='dx-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
-        <Grid.Grid cols={['10rem', '10rem', '1fr']} grow={false} align='center' classNames='gap-1'>
+        <Grid.Grid cols={['10rem', '10rem', '1fr']} align='center' classNames='gap-1'>
           {template.inputs?.filter(isNonNullable).map((input) => (
             <Fragment key={input.name}>
               <div className='ps-3 text-blue-text'>{input.name}</div>

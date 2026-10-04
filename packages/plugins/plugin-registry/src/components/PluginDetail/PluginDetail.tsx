@@ -171,7 +171,6 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
            */}
           <Grid.Grid
             cols={isMobile ? ['2.5rem', 'minmax(0, 1fr)', '2.5rem'] : ['4rem', 'minmax(0, 1fr)', '4rem']}
-            grow={false}
             align='start'
             classNames='dx-document gap-x-4 p-4'
           >
@@ -182,7 +181,6 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
 
             <Grid.Grid
               cols={['1fr', 'min-content']}
-              grow={false}
               classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'
             >
               <div className='flex items-center gap-2'>

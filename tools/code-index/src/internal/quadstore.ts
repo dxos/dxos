@@ -25,10 +25,24 @@ import type { Graph, ReasonOutcome } from './graph.ts';
 /** The LevelDB directory inside a store. */
 export const DIR = 'graph';
 
+/**
+ * Whether an asynciterator stream has already finished. Comunica resolves `queryBindings` only after
+ * building the stream, so an empty result can emit its one `end` before a caller attaches listeners.
+ */
+const finished = (stream: ResultStream<unknown>): { destroyed: boolean } | undefined =>
+  'done' in stream && stream.done === true
+    ? { destroyed: 'destroyed' in stream && stream.destroyed === true }
+    : undefined;
+
 // Comunica result streams are typed as bare EventEmitters, so they are drained by event rather than
 // through the `toArray` the concrete implementation happens to have.
 const collect = <T>(stream: ResultStream<T>): Promise<T[]> =>
   new Promise((resolve, reject) => {
+    const state = finished(stream);
+    if (state !== undefined) {
+      // Data flows only to a `data` listener, so a stream that ended before one attached was empty.
+      return state.destroyed ? reject(new Error('Result stream was destroyed before it was read')) : resolve([]);
+    }
     const items: T[] = [];
     stream.on('data', (item: T) => items.push(item));
     stream.on('error', reject);
@@ -63,6 +77,52 @@ export const parseJsonLd = (document: Ontology.FileDocument, graph: Quad['graph'
     parser.end();
   });
 
+/**
+ * Premises per EYE input file. EYE's parser holds a whole file's tokens on a 32-bit WASM stack, so
+ * one file of a full repository's facts overflows it (`resource_error(stack)`); the files are loaded
+ * into one knowledge base, so splitting them bounds parsing without changing what is derived.
+ */
+export const DEFAULT_CHUNK_SIZE = 100_000;
+
+export type Options = {
+  /** Premises per EYE input file (default {@link DEFAULT_CHUNK_SIZE}). */
+  readonly chunkSize?: number;
+};
+
+const termKey = (term: Quad['object']): string =>
+  term.termType === 'Literal'
+    ? `L${term.value}\u0000${term.datatype.value}\u0000${term.language}`
+    : `${term.termType[0]}${term.value}`;
+
+/**
+ * Premises as EYE input files of at most `size` facts: one copy of each fact whatever file graphs
+ * assert it, sorted by subject so the writer groups a subject's facts into one statement. A blank
+ * node is scoped to the file it is written in, so every fact naming one goes into a single file.
+ */
+export const premiseChunks = (quads: readonly Quad[], size: number): Quad[][] => {
+  if (!Number.isInteger(size) || size < 1) {
+    throw new RangeError(`chunkSize must be a positive integer, got ${size}`);
+  }
+  const distinct = new Map<string, Quad>();
+  for (const quad of quads) {
+    const key = `${termKey(quad.subject)} ${quad.predicate.value} ${termKey(quad.object)}`;
+    if (!distinct.has(key)) {
+      distinct.set(key, DataFactory.quad(quad.subject, quad.predicate, quad.object));
+    }
+  }
+  const sorted = [...distinct.values()].sort((left, right) =>
+    left.subject.value < right.subject.value ? -1 : left.subject.value > right.subject.value ? 1 : 0,
+  );
+  const blank = (quad: Quad) => quad.subject.termType === 'BlankNode' || quad.object.termType === 'BlankNode';
+  const named = sorted.filter((quad) => !blank(quad));
+  const chunks: Quad[][] = [];
+  for (let index = 0; index < named.length; index += size) {
+    chunks.push(named.slice(index, index + size));
+  }
+  const withBlanks = sorted.filter(blank);
+  return withBlanks.length > 0 ? [...chunks, withBlanks] : chunks;
+};
+
 const serialize = (quads: readonly Quad[]): Promise<string> =>
   new Promise((resolve, reject) => {
     const writer = new Writer({ prefixes: Ontology.prefixes, format: 'text/n3' });
@@ -73,8 +133,10 @@ const serialize = (quads: readonly Quad[]): Promise<string> =>
 export const make = <E>(
   dir: string,
   fail: (message: string) => (cause: unknown) => E,
+  options: Options = {},
 ): Effect.Effect<Graph<E>, E, Scope.Scope> =>
   Effect.gen(function* () {
+    const chunkSize = options.chunkSize ?? DEFAULT_CHUNK_SIZE;
     const attempt = <A>(message: string, thunk: () => Promise<A>): Effect.Effect<A, E> =>
       Effect.tryPromise({ try: thunk, catch: fail(message) });
 
@@ -146,9 +208,11 @@ export const make = <E>(
     ): Effect.Effect<Quad[], E> =>
       Effect.gen(function* () {
         const premises = yield* facts(rules, graph.value, hidden);
-        const data = yield* attempt('Failed to serialize graph', () => serialize(premises));
+        const data = yield* Effect.forEach(premiseChunks(premises, chunkSize), (chunk) =>
+          attempt('Failed to serialize graph', () => serialize(chunk)),
+        );
         const derived = yield* attempt('Reasoning failed', () =>
-          n3reasoner([data, rules].join('\n'), undefined, { output: 'derivations' }),
+          n3reasoner([rules, ...data], undefined, { output: 'derivations' }),
         );
         const parsed = yield* Effect.try({
           try: () => new Parser({ format: 'text/n3' }).parse(typeof derived === 'string' ? derived : ''),
@@ -166,12 +230,20 @@ export const make = <E>(
     const reason: Graph<E>['reason'] = (graph, rules, materialize) => reasonWith(graph, rules, materialize, new Set());
 
     const graph: Graph<E> = {
-      swap: (clear, target, document) =>
+      swap: (writes) =>
         Effect.gen(function* () {
-          const quads = yield* attempt('Failed to parse document', () => parseJsonLd(document, target));
+          const quads: Quad[] = [];
           const stale: Quad[] = [];
-          for (const name of clear) {
-            stale.push(...(yield* ofGraph(name)));
+          for (const { clear, graph, triples } of writes) {
+            const target = DataFactory.namedNode(graph);
+            const parsed = yield* Effect.try({
+              try: () => new Parser({ format: 'N-Triples' }).parse(triples),
+              catch: fail('Failed to parse document'),
+            });
+            quads.push(...parsed.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, target)));
+            for (const name of clear) {
+              stale.push(...(yield* ofGraph(name)));
+            }
           }
           yield* patch(stale, quads);
         }),

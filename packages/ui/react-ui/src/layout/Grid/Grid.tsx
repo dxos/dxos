@@ -28,7 +28,7 @@ export type GridProps = {
   align?: Align;
   /** Center children on both axes (`place-items-center`). */
   center?: boolean;
-  /** Fill and clip the parent (`dx-expand`). */
+  /** Fill and clip the parent (`dx-expand`); off by default, as `Flex`'s is, so a grid sizes to its content. */
   grow?: boolean;
   /**
    * Collapse the wrapper to `display: contents`, so children join the parent grid directly. For a
@@ -36,13 +36,6 @@ export type GridProps = {
    */
   contents?: boolean;
 };
-
-const trackList = (tracks: GridTracks): string =>
-  typeof tracks === 'number'
-    ? `repeat(${tracks}, 1fr)`
-    : tracks === 'subgrid'
-      ? 'subgrid'
-      : tracks.map((track) => (typeof track === 'number' ? `${track}fr` : track)).join(' ');
 
 /**
  * CSS grid container.
@@ -68,7 +61,7 @@ const trackList = (tracks: GridTracks): string =>
  */
 export const Grid = slottable<HTMLDivElement, GridProps>(
   (
-    { children, asChild, style, role, cols, rows, gap, align, center, grow = true, contents, ...props },
+    { children, asChild, style, role, cols, rows, gap, align, center, grow = false, contents, ...props },
     forwardedRef,
   ) => {
     const { className, ...rest } = composableProps<HTMLDivElement>(props);
@@ -110,3 +103,10 @@ export const Grid = slottable<HTMLDivElement, GridProps>(
     );
   },
 );
+
+const trackList = (tracks: GridTracks): string =>
+  typeof tracks === 'number'
+    ? `repeat(${tracks}, 1fr)`
+    : tracks === 'subgrid'
+      ? 'subgrid'
+      : tracks.map((track) => (typeof track === 'number' ? `${track}fr` : track)).join(' ');

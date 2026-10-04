@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
 import { useObject } from '@dxos/echo-react';
-import * as Container from '@dxos/react-ui/Container';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
@@ -55,9 +55,11 @@ const DefaultStory = ({ seed = seedTask }: { seed?: () => Task.Task }) => {
   const [history] = useObject(task, 'history');
 
   return (
-    <Container.Container gutter='md' classNames='w-[32rem] py-2'>
-      <TaskHistory entries={history ?? []} limit={10} />
-    </Container.Container>
+    <ScrollArea.Root>
+      <ScrollArea.Viewport>
+        <TaskHistory entries={history ?? []} limit={10} />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

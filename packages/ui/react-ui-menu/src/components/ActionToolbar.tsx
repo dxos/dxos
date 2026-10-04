@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ButtonHTMLAttributes, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+  type ButtonHTMLAttributes,
+  type ReactNode,
+  forwardRef,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { useAttention } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
@@ -353,6 +361,8 @@ export type ActionToolbarProps = Partial<MenuActions> &
     /** The toolbar is dimmed (still operable) while this attendable lacks attention, unless `alwaysActive`. */
     attendableId?: string;
     alwaysActive?: boolean;
+    /** Hand-written controls before the graph's items (the children follow them). */
+    start?: ReactNode;
   };
 
 /**
@@ -362,7 +372,7 @@ export type ActionToolbarProps = Partial<MenuActions> &
  */
 export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>(
   (
-    { items, contributions, onAction, caller, iconSize, attendableId, alwaysActive, children, ...props },
+    { items, contributions, onAction, caller, iconSize, attendableId, alwaysActive, start, children, ...props },
     forwardedRef,
   ) => {
     // Called unconditionally (hooks), used only when no source was spread in.
@@ -385,6 +395,7 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
         inactive={!alwaysActive && !hasAttention}
         ref={forwardedRef}
       >
+        {start}
         <ActionToolbarItems menu={menu} />
         {children}
       </Toolbar.Root>

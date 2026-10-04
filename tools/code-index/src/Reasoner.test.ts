@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Term } from '@rdfjs/types';
+import type { Quad, Term } from '@rdfjs/types';
 import * as Effect from 'effect/Effect';
 import { DataFactory } from 'n3';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -15,6 +15,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Ontology from './Ontology.ts';
 import * as Reasoner from './Reasoner.ts';
+import * as ReferenceResolution from './ReferenceResolution.ts';
 import * as Store from './Store.ts';
 import * as TypeBinding from './TypeBinding.ts';
 import { analyze } from './worker/analyze.ts';
@@ -23,8 +24,8 @@ import { analyzeTypeScript } from './worker/analyzers/typescript.ts';
 
 /**
  * The rule files as shipped, run against a real store — a paraphrase of a rule in a test proves the
- * paraphrase. `60-canonical.n3` is the one with a property worth guarding: exactly one canonical
- * name per symbol, which its scoped negation is what secures.
+ * paraphrase. `60-canonical.n3` is the one with a property worth guarding: a canonical name is
+ * stated only where it differs from the declared one.
  */
 
 const CANONICAL = join(Reasoner.BUNDLED_DIR, '60-canonical.n3');
@@ -91,9 +92,10 @@ describe('bundled rules', () => {
       }).pipe(Effect.provide(Store.layer(join(dir, `store-${documents.length}-${Math.random()}`))), Effect.scoped),
     );
 
-  test('an identifier imported directly is its own canonical name', async () => {
+  test('an identifier imported directly is not restated', async () => {
+    // Its canonical name is its `deus:name`; a query reads `COALESCE(?canonical, ?name)`.
     const names = await canonicalNames([document('src/plain.ts', [symbol('src/plain.ts', 'helper')])]);
-    expect(names).toEqual([`${Ontology.symbolIri('src/plain.ts', 'helper').value} = helper`]);
+    expect(names).toEqual([]);
   });
 
   test('a namespaced module qualifies its identifiers, and only that', async () => {
@@ -112,8 +114,6 @@ describe('bundled rules', () => {
     expect(names).toEqual([
       `${Ontology.symbolIri('src/Ontology.ts', 'fileIri').value} = Ontology.fileIri`,
       `${Ontology.symbolIri('src/Ontology.ts', 'symbolIri').value} = Ontology.symbolIri`,
-      // The namespace is imported by name from the barrel, so it is its own canonical name.
-      `${Ontology.symbolIri('src/index.ts', 'Ontology').value} = Ontology`,
     ]);
   });
 
@@ -123,6 +123,30 @@ describe('bundled rules', () => {
       document('src/private.ts', [symbol('src/private.ts', 'internal', { exported: false })]),
     ]);
     expect(names).toEqual([]);
+  });
+
+  test('a non-test file importing a test file is flagged, and a test importing a test is not', async () => {
+    const testScript = (path: string, imports: string[]): Ontology.FileDocument => ({
+      ...document(path, []),
+      testFile: true,
+      imports: imports.map((each) => Ontology.fileIri(each).value),
+    });
+    const derived = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        yield* store.putDocument(testScript('src/a.test.ts', ['src/b.test.ts']));
+        yield* store.putDocument(testScript('src/b.test.ts', []));
+        yield* store.putDocument({
+          ...document('src/lib.ts', []),
+          imports: [Ontology.fileIri('src/b.test.ts').value],
+        });
+        const [reasoner] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '50-example.n3'));
+        return yield* store.reason(reasoner.name, reasoner.rules);
+      }).pipe(Effect.provide(Store.layer(join(dir, `store-example-${Math.random()}`))), Effect.scoped),
+    );
+    expect(derived.map((quad) => `${quad.subject.value} ${quad.predicate.value} ${quad.object.value}`)).toEqual([
+      `${Ontology.fileIri('src/lib.ts').value} ${Ontology.importsTestFile.value} ${Ontology.fileIri('src/b.test.ts').value}`,
+    ]);
   });
 });
 
@@ -183,6 +207,58 @@ describe('type rules', () => {
       'storeLayer providesService Store',
     ]);
   });
+
+  test('both backends conclude the same once restated premises are set aside', async () => {
+    const root = join(fileURLToPath(new URL('.', import.meta.url)), '..');
+    const path = 'src/worker/types/fixtures/effect.ts';
+    const document = analyzeTypeScript({
+      root,
+      path,
+      source: await readFile(join(root, path), 'utf8'),
+      mtime: 1,
+      resolve: createResolver(root),
+      packageOf: () => '@dxos/code-index',
+    });
+    const { backend, restated, concluded } = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        yield* store.putDocument(document);
+        const effect = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '10-effect.n3'));
+        const types = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '15-types.n3'));
+        yield* Reasoner.run([...effect, ...types]);
+        const local = (iri: string) => iri.slice(iri.lastIndexOf('#') + 1);
+        const key = (quad: Quad) =>
+          `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`;
+        // `15-types` sees the file graph and `10-effect`'s graph; a head matching either restates a premise.
+        const files = (yield* store.match()).filter((quad) => !Ontology.isDerivedGraph(quad.graph.value));
+        const premises = new Set([...files, ...(yield* store.derived(effect[0].name))].map(key));
+        const derived = (yield* store.derived(types[0].name)).map(key);
+        return {
+          backend: store.backend,
+          restated: derived.filter((fact) => premises.has(fact)),
+          concluded: derived.filter((fact) => !premises.has(fact)).sort(),
+        };
+      }).pipe(Effect.provide(Store.layer(join(dir, 'restated'))), Effect.scoped),
+    );
+    // EYE's `derivations` output drops a restated premise and the native engine keeps it (NATIVE-BACKEND.md).
+    expect(restated).toEqual(backend === 'native' ? expect.arrayContaining(['clockLayer providesService Clock']) : []);
+    expect(concluded).toEqual([
+      'discarded layerRequires Clock',
+      'merged layerRequires Clock',
+      'merged providesService Logger',
+      'merged providesService Store',
+      'mergedTwo layerRequires Clock',
+      'mergedTwo providesService Clock',
+      'mergedTwo providesService Store',
+      'provided providesService Store',
+      'providedDirect providesService Store',
+      'providedMerge providesService Clock',
+      'providedMerge providesService Store',
+      'providedMergeDirect providesService Clock',
+      'providedMergeDirect providesService Store',
+      'storeLayer layerRequires Clock',
+    ]);
+  });
 });
 
 describe('effect rules', () => {
@@ -211,7 +287,8 @@ describe('effect rules', () => {
     'layers.ts': [
       "import * as Effect from 'effect/Effect';",
       "import * as Layer from 'effect/Layer';",
-      "import * as SqlClient from 'effect/unstable/sql/SqlClient';",
+      "import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';",
+      "import * as SqlClient from 'effect/sql/SqlClient';",
       "import { Clock, Store } from './index';",
       'export const storeLayer = Layer.succeed(Store, { n: 1 });',
       'export const clockLayer = Layer.succeed(Clock, { now: 0 });',
@@ -222,6 +299,18 @@ describe('effect rules', () => {
       'export const sql = Layer.succeed(SqlClient.SqlClient, undefined as never);',
       'export const reading = Layer.effect(Store, Effect.gen(function* () { const clock = yield* Clock; return { n: clock.now }; }));',
       'export const makeLayer = () => Layer.succeed(Store, { n: 1 });',
+      'export const makeSql = (): Layer.Layer<SqlClient.SqlClient> => Layer.succeed(SqlClient.SqlClient, undefined as never);',
+      'export const fromFactory = makeSql().pipe(Layer.provideMerge(clockLayer));',
+      "export const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(clockLayer));",
+      'export class Db {',
+      '  static layer(): Layer.Layer<Store, never, SqlClient.SqlClient> { throw new Error(); }',
+      '}',
+    ].join('\n'),
+    'reexport.ts': "export { makeSql } from './layers';",
+    'aliased.ts': [
+      "import * as Layer from 'effect/Layer';",
+      "import { makeSql } from './reexport';",
+      'export const viaAlias = makeSql().pipe(Layer.orDie);',
     ].join('\n'),
     'consumer.ts': [
       "import * as Layer from 'effect/Layer';",
@@ -247,6 +336,10 @@ describe('effect rules', () => {
         for (const each of documents) {
           yield* store.putDocument(each);
         }
+        // The pass that resolves every reference and alias, which the rule files read.
+        yield* Reasoner.run(
+          (yield* Reasoner.load(Reasoner.BUNDLED_DIR)).filter((reasoner) => reasoner.name === ReferenceResolution.NAME),
+        );
         const conclusions: string[] = [];
         // In filename order, each seeing the conclusions of the ones before it.
         for (const name of ['10-effect', '15-types', '90-aliases']) {
@@ -266,19 +359,32 @@ describe('effect rules', () => {
         return [...new Set(conclusions)].sort();
       }).pipe(Effect.provide(Store.layer(join(root, '.store'))), Effect.scoped),
     );
+    // References resolve in the pass, so the rule files restate none; names below are declarations.
     expect(facts).toEqual([
-      // A member under a bare specifier, paired with the import's `file:` reference.
-      '@test/svc#Clock resolvesTo svc/store.ts#Clock',
-      '@test/svc#Store resolvesTo svc/store.ts#Store',
+      // Built by a repo factory through a barrel's alias of it, which the pass resolves.
+      'aliased.ts#viaAlias a EffectLayer',
+      'aliased.ts#viaAlias providesService effect/sql/SqlClient#SqlClient',
       'consumer.ts#needs a EffectLayer',
       'consumer.ts#needs layerRequires svc/store.ts#Clock',
       'consumer.ts#needs providesService svc/store.ts#Store',
-      // Through two `export *` barrels.
-      'index.ts#Clock resolvesTo svc/store.ts#Clock',
-      'index.ts#Store resolvesTo svc/store.ts#Store',
+      // A static method returning a layer: a factory, described by the layer it returns.
+      'layers.ts#Db.layer a EffectLayerFactory',
+      'layers.ts#Db.layer layerRequires effect/sql/SqlClient#SqlClient',
+      'layers.ts#Db.layer providesService svc/store.ts#Store',
+      // A listed library constructor, through a pipeline that keeps its output.
+      'layers.ts#TestLayer a EffectLayer',
+      'layers.ts#TestLayer providesService @effect/sql-sqlite-node/SqliteClient#SqliteClient',
+      'layers.ts#TestLayer providesService effect/sql/SqlClient#SqlClient',
       'layers.ts#clockLayer a EffectLayer',
       'layers.ts#clockLayer providesService svc/store.ts#Clock',
       'layers.ts#fromEffect a EffectLayer',
+      // Built by a repo factory whose own call type is not inferred.
+      'layers.ts#fromFactory a EffectLayer',
+      'layers.ts#fromFactory providesService effect/sql/SqlClient#SqlClient',
+      // A function returning a layer, whatever its type arguments say.
+      'layers.ts#makeLayer a EffectLayerFactory',
+      'layers.ts#makeSql a EffectLayerFactory',
+      'layers.ts#makeSql providesService effect/sql/SqlClient#SqlClient',
       'layers.ts#nothing a EffectLayer',
       // Carried over from the piped layer: the imported key leaves its type unknown here.
       'layers.ts#provided a EffectLayer',
@@ -288,15 +394,17 @@ describe('effect rules', () => {
       'layers.ts#reading requiresService svc/store.ts#Clock',
       // A library key, named by its member.
       'layers.ts#sql a EffectLayer',
-      'layers.ts#sql providesService effect/unstable/sql/SqlClient#SqlClient',
+      'layers.ts#sql providesService effect/sql/SqlClient#SqlClient',
       'layers.ts#storeLayer a EffectLayer',
       'layers.ts#storeLayer providesService svc/store.ts#Store',
+      // The alias carries the class (`rules/90-aliases.n3`).
+      'reexport.ts#makeSql a EffectLayerFactory',
       'svc/store.ts#Clock a EffectService',
       'svc/store.ts#Store a EffectService',
       'svc/store.ts#Verbose a EffectService',
     ]);
-    // `launched` is an `Effect` (a `Layer.launch` stage) and `makeLayer` a function returning a layer.
-    expect(facts.filter((fact) => /#(launched|makeLayer) /.test(fact))).toEqual([]);
+    // `launched` is an `Effect` (a `Layer.launch` stage).
+    expect(facts.filter((fact) => /#launched /.test(fact))).toEqual([]);
   });
 });
 
@@ -494,6 +602,113 @@ describe('plugin rules', () => {
       'src/plugin.ts#DemoPlugin deus#addsModule src/capabilities/state.ts#State',
       'src/plugin.ts#DemoPlugin deus#pluginId org.example.plugin.demo',
       'src/plugin.ts#DemoPlugin deus#pluginMeta src/meta.ts#meta',
+    ]);
+  });
+});
+
+describe('surface rules', () => {
+  let root: string;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), 'code-index-surfaces-'));
+    await mkdir(join(root, 'src', 'capabilities'), { recursive: true });
+  });
+
+  afterAll(async () => {
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const sources: Record<string, string> = {
+    'src/meta.ts': [
+      "import * as Plugin from '@dxos/app-framework/Plugin';",
+      "export const meta = Plugin.makeMeta({ key: 'org.example.plugin.demo' });",
+    ].join('\n'),
+    'src/capabilities/react-surface.ts': [
+      "import * as Effect from 'effect/Effect';",
+      "import * as Capabilities from '@dxos/app-framework/Capabilities';",
+      "import * as Capability from '@dxos/app-framework/Capability';",
+      "import { Surface } from '@dxos/app-framework/ui';",
+      "import { Article, Dialog } from '../components';",
+      "const DIALOG = 'dialog';",
+      'export default Capability.makeModule(() =>',
+      '  Effect.succeed(',
+      '    Capability.contribute(Capabilities.ReactSurface, [',
+      "      Surface.create({ id: 'article', component: Article }),",
+      '      Surface.create({ id: DIALOG, component: Dialog }),',
+      '    ]),',
+      '  ),',
+      ');',
+    ].join('\n'),
+    'src/capabilities/index.ts': [
+      "import * as Capability from '@dxos/app-framework/Capability';",
+      "export const ReactSurface = Capability.lazyModule('ReactSurface', { provides: [] }, () => import('./react-surface'));",
+    ].join('\n'),
+    // Reached by no module the plugin adds, so only the one-plugin-per-package fallback places it.
+    'src/capabilities/orphan.ts': [
+      "import * as Capability from '@dxos/app-framework/Capability';",
+      "import { Surface } from '@dxos/app-framework/ui';",
+      "export const Orphan = Capability.makeModule(() => [Surface.create({ id: 'orphan' })]);",
+    ].join('\n'),
+    'src/plugin.ts': [
+      "import * as Plugin from '@dxos/app-framework/Plugin';",
+      "import { ReactSurface } from './capabilities';",
+      "import { meta } from './meta';",
+      'export const DemoPlugin = Plugin.define(meta).pipe(Plugin.addModule(ReactSurface), Plugin.make);',
+    ].join('\n'),
+    // A story's fixture plugin is not one the package ships, so the fallback still finds one plugin.
+    'src/demo.stories.tsx': [
+      "import * as Plugin from '@dxos/app-framework/Plugin';",
+      "import { Surface } from '@dxos/app-framework/ui';",
+      "import { meta } from './meta';",
+      "export const Story = () => Surface.create({ id: 'story' });",
+      'export const StoryPlugin = Plugin.define(meta).pipe(Plugin.make);',
+    ].join('\n'),
+  };
+
+  test('a surface carries its id and the plugin that registers its module', async () => {
+    const resolve = createResolver(root);
+    for (const [path, source] of Object.entries(sources)) {
+      await writeFile(join(root, path), source);
+    }
+    const documents = Object.entries(sources).map(([path, source]) =>
+      analyzeTypeScript({ root, path, source, mtime: 1, resolve, packageOf: () => '@dxos/test' }),
+    );
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        for (const document of documents) {
+          yield* store.putDocument(document);
+        }
+        const [composer] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '40-composer.n3'));
+        yield* store.reason(composer.name, composer.rules, { materialize: true });
+        const [surfaces] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '42-surfaces.n3'));
+        const derived = yield* store.reason(surfaces.name, surfaces.rules);
+        const local = (iri: string) =>
+          decodeURIComponent(
+            /^https:\/\/dxos\.org\/deus\/file\//.test(iri)
+              ? iri.replace(/^https:\/\/dxos\.org\/deus\/file\//, '')
+              : iri.slice(iri.lastIndexOf('#') + 1),
+          );
+        return derived
+          .map((quad) => `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`)
+          .sort();
+      }).pipe(Effect.provide(Store.layer(join(root, 'store'))), Effect.scoped),
+    );
+    expect(facts).toEqual([
+      'src/capabilities/orphan.ts#Orphan/call/Surface.create/0 providedBy src/plugin.ts#DemoPlugin',
+      'src/capabilities/orphan.ts#Orphan/call/Surface.create/0 surfaceId orphan',
+      'src/capabilities/orphan.ts#Orphan/call/Surface.create/0 type Surface',
+      // Reached through the lazy module that loads the file the module is declared in.
+      'src/capabilities/react-surface.ts#default/call/Surface.create/0 providedBy src/plugin.ts#DemoPlugin',
+      'src/capabilities/react-surface.ts#default/call/Surface.create/0 surfaceId article',
+      'src/capabilities/react-surface.ts#default/call/Surface.create/0 type Surface',
+      'src/capabilities/react-surface.ts#default/call/Surface.create/1 providedBy src/plugin.ts#DemoPlugin',
+      // A same-file string constant.
+      'src/capabilities/react-surface.ts#default/call/Surface.create/1 surfaceId dialog',
+      'src/capabilities/react-surface.ts#default/call/Surface.create/1 type Surface',
+      // A story builds its own fixture plugin, so the package's plugin is not its provider.
+      'src/demo.stories.tsx#Story/call/Surface.create/0 surfaceId story',
+      'src/demo.stories.tsx#Story/call/Surface.create/0 type Surface',
     ]);
   });
 });
@@ -832,6 +1047,112 @@ describe('cross-file type binding', () => {
   });
 });
 
+describe('reference resolution pass', () => {
+  let root: string;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), 'code-index-refs-'));
+  });
+
+  afterAll(async () => {
+    await rm(root, { recursive: true, force: true });
+  });
+
+  // `@test/lib` is a path alias, so its imports are members of a bare specifier that resolves in the root.
+  const sources: Record<string, string> = {
+    'tsconfig.json': JSON.stringify({ compilerOptions: { baseUrl: '.', paths: { '@test/lib': ['./lib/index.ts'] } } }),
+    'lib/impl.ts': ['/** @deprecated Use fresh. */', 'export const legacy = () => 1;', 'export const fresh = 2;'].join(
+      '\n',
+    ),
+    'lib/order.ts': 'export const natural = 1;',
+    'lib/services/source.ts': 'export const sourceLayer = 3;',
+    'lib/services/index.ts': "export { sourceLayer } from './source';",
+    'lib/index.ts': [
+      "export * from './impl';",
+      "export * as Order from './order';",
+      "export { sourceLayer as layer } from './services';",
+    ].join('\n'),
+    'app/use.ts': [
+      "import { layer, legacy, Order } from '@test/lib';",
+      'export const usesLegacy = legacy();',
+      'export const usesOrder = Order.natural;',
+      'export const usesLayer = layer;',
+    ].join('\n'),
+    'app/direct.ts': ["import { legacy } from '../lib/impl';", 'export const direct = legacy();'].join('\n'),
+    'app/barrel.ts': ["import { fresh } from '../lib/index';", 'export const viaBarrel = fresh;'].join('\n'),
+  };
+
+  const local = (iri: string) =>
+    decodeURIComponent(iri.replace(/^https:\/\/dxos\.org\/(deus\/file\/|deus\/module\/|vocab\/deus#)/, ''));
+
+  const run = (names: readonly string[]) =>
+    Effect.gen(function* () {
+      for (const [path, source] of Object.entries(sources)) {
+        yield* Effect.promise(async () => {
+          await mkdir(dirname(join(root, path)), { recursive: true });
+          await writeFile(join(root, path), source);
+        });
+      }
+      const resolve = createResolver(root);
+      const store = yield* Store.Store;
+      for (const path of Object.keys(sources).filter((path) => path.endsWith('.ts'))) {
+        yield* store.putDocument(
+          analyzeTypeScript({ root, path, source: sources[path], mtime: 1, resolve, packageOf: () => '@test/lib' }),
+        );
+      }
+      const reasoners = (yield* Reasoner.load(Reasoner.BUNDLED_DIR)).filter((reasoner) =>
+        names.includes(reasoner.name),
+      );
+      yield* Reasoner.run(reasoners);
+      return store;
+    });
+
+  test('every reference through barrels, aliases, namespaces and bare specifiers resolves', async () => {
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* run([ReferenceResolution.NAME]);
+        const quads = yield* store.match(
+          undefined,
+          undefined,
+          undefined,
+          Ontology.passGraphIri(ReferenceResolution.NAME),
+        );
+        return quads
+          .map((quad) => `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`)
+          .sort();
+      }).pipe(Effect.provide(Store.layer(join(root, '.store-pass'))), Effect.scoped),
+    );
+    expect(facts).toEqual([
+      // A namespace member under a bare specifier.
+      '@test/lib#Order.natural resolvesTo lib/order.ts#natural',
+      // An alias of an alias.
+      '@test/lib#layer resolvesTo lib/services/source.ts#sourceLayer',
+      '@test/lib#legacy resolvesTo lib/impl.ts#legacy',
+      // Through the `export *` barrel, and each alias whether or not anything references it.
+      'lib/index.ts#fresh resolvesTo lib/impl.ts#fresh',
+      'lib/index.ts#layer resolvesTo lib/services/source.ts#sourceLayer',
+      'lib/index.ts#legacy resolvesTo lib/impl.ts#legacy',
+      'lib/services/index.ts#sourceLayer resolvesTo lib/services/source.ts#sourceLayer',
+    ]);
+  });
+
+  test('a deprecated declaration used through a barrel is a use of the declaration', async () => {
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* run([ReferenceResolution.NAME, '67-usage']);
+        const quads = yield* store.derived('67-usage');
+        return quads
+          .map((quad) => `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`)
+          .sort();
+      }).pipe(Effect.provide(Store.layer(join(root, '.store-usage'))), Effect.scoped),
+    );
+    expect(facts).toEqual([
+      'app/direct.ts#direct usesDeprecated lib/impl.ts#legacy',
+      'app/use.ts#usesLegacy usesDeprecated lib/impl.ts#legacy',
+    ]);
+  });
+});
+
 describe('ordered reasoners', () => {
   let dir: string;
 
@@ -942,7 +1263,7 @@ version: 0.1.0
 \`\`\`mdl
 op create
   key: org.dxos.operation.x.create
-  desc: Creates an \`X.Document\`.
+  desc: Creates an \`X.Document\` with \`helper\`.
   bogus: not in the schema
 
 op ghost
@@ -1070,8 +1391,11 @@ ext type
       'Orphan operationKey "org.dxos.operation.x.orphan"',
     ]);
     expect(having('specifies')).toEqual(['op:create specifies Create', 'type:Document specifies Document']);
-    // The mention `X.Document` is the canonical name of `Document`, published as a namespace.
-    expect(having('describes')).toEqual(expect.arrayContaining(['op:create describes Document']));
+    // The mention `X.Document` is the canonical name of `Document`, published as a namespace; `helper`
+    // has none, so its declared name is what an importer writes.
+    expect(having('describes')).toEqual(
+      expect.arrayContaining(['op:create describes Document', 'op:create describes helper']),
+    );
     expect(having('covers')).toEqual(['scenario:T-1 covers req:F-1.1', 'test:QA-1 covers feat:F-1']);
     expect(having('includesTest')).toEqual(['suite:smoke includesTest test:QA-1']);
     expect(having('automatedBy')).toEqual(['test:QA-1 automatedBy basic.spec.ts']);
@@ -1079,11 +1403,7 @@ ext type
 
     expect(having('phantom')).toEqual(['op:ghost phantom true', 'type:Phantom phantom true']);
     expect(having('unspecified')).toEqual(['Orphan unspecified true']);
-    expect(having('undocumented')).toEqual([
-      'Orphan undocumented true',
-      'helper undocumented true',
-      'view undocumented true',
-    ]);
+    expect(having('undocumented')).toEqual(['Orphan undocumented true', 'view undocumented true']);
     expect(having('unknownField')).toEqual(['op:create unknownField "bogus"']);
     expect(having('missingField')).toEqual(['type:Phantom missingField "fields"']);
 

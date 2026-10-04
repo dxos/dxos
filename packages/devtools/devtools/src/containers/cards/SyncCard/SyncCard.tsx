@@ -52,7 +52,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
       {spaces.length === 0 && <StatCard.Row span label='No spaces.' />}
       {spaces.length > 0 && (
         <StatCard.Row>
-          <Grid.Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
+          <Grid.Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>space</span>
             <span>automerge</span>
             <span>feed</span>
@@ -69,7 +69,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
             icon={syncing ? 'ph--arrows-down-up--regular' : 'ph--check-circle--regular'}
             iconClassNames={syncing ? 'text-warning-text' : 'text-success-text'}
           >
-            <Grid.Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
+            <Grid.Grid grow cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
               <Tooltip.Trigger asChild content={row.name}>
                 <SystemButton.Clipboard
                   size='sm'

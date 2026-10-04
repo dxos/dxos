@@ -33,7 +33,7 @@ export const AuthorizingDeviceDialog = () => {
       }}
     >
       <Flex.Flex column gap='2xl' classNames='z-10 p-8 md:px-16 h-full'>
-        <span className='font-["Poiret One"] text-[80px]' style={{ fontFamily: 'Poiret One' }}>
+        <span className='font-["Poiret One"] text-[80px] leading-[1.5]' style={{ fontFamily: 'Poiret One' }}>
           composer
         </span>
 

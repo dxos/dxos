@@ -8,7 +8,7 @@ import { type Actor } from '@dxos/types';
 
 import { translationKey } from '#translations';
 
-import { type AssigneeDisplay, PERSON_ICON, getAssigneeDisplay } from './assignee.ts';
+import { type AssigneeDisplay, PERSON_ICON, getAssigneeDisplay } from '../util/assignee.ts';
 
 /**
  * The label and glyph for a task's assignee, resolving its contact and subject refs — shared by the

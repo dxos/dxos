@@ -163,7 +163,7 @@ export const SurfaceProfilerCard = ({
       {groups.length === 0 && <StatCard.Row span label='No surfaces mounted.' />}
       {groups.length > 0 && (
         <StatCard.Row unit='ms'>
-          <Grid.Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
+          <Grid.Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>role</span>
             <span>×</span>
             <span>avg</span>
@@ -181,6 +181,7 @@ export const SurfaceProfilerCard = ({
           onClick={onSelect && (() => onSelect(group.roleId === selected ? undefined : group.roleId))}
         >
           <Grid.Grid
+            grow
             cols={ROW_TRACKS}
             gap='sm'
             classNames={mx('font-mono tabular-nums text-end', group.avgActualDuration > SLOW_TIME && 'text-error-text')}

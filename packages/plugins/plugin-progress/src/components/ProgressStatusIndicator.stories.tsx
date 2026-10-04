@@ -105,7 +105,7 @@ const LiveStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-progress/ProgressStatusIndicator',
+  title: 'plugins/plugin-progress/components/ProgressStatusIndicator',
   component: ProgressStatusIndicator,
   render: DefaultStory,
   decorators: [withTheme(), withPluginManager({ plugins: [ProgressPlugin()] })],

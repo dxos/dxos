@@ -51,7 +51,9 @@ export const FormFieldSet = ({
     <Fieldset.Legend size={nested ? undefined : 'md'} variant={nested ? undefined : 'section'}>
       {label}
       {actions}
-      {canCollapse && <SystemButton.Disclosure label={label} expanded={open} onExpandedChange={setOpen} />}
+      {canCollapse && (
+        <SystemButton.Disclosure variant='ghost' label={label} expanded={open} onExpandedChange={setOpen} />
+      )}
     </Fieldset.Legend>
   );
 
