@@ -13,9 +13,10 @@
   .dx-row[data-selectable] {
     cursor: pointer;
   }
+  /* A row is a large target, so it takes the subtle region hover rather than a control's. */
   .dx-row[data-selectable]:hover,
   .dx-row[data-highlighted] {
-    background: var(--color-hover-surface);
+    background: var(--color-hover-surface-subtle);
   }
   /* `data-selected` too: a tree branch's `aria-selected` lands on its `display: contents` wrapper, not the row. */
   .dx-row:is([aria-selected='true'], [data-selected]) {
@@ -39,6 +40,11 @@
   }
   [role='listbox']:focus-visible > .dx-row[data-highlighted],
   [role='listbox']:focus-visible > * > .dx-row[data-highlighted] {
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
+  }
+  /* The current row is the one the list's keys act on, so it is ringed whenever the list has focus, a click included. */
+  [role='listbox']:focus-within > .dx-row[aria-current='true'],
+  [role='listbox']:focus-within > * > .dx-row[aria-current='true'] {
     box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
   }
 

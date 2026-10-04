@@ -15,6 +15,7 @@ import { EffectEx } from '@dxos/effect';
 
 import * as Crawler from './Crawler.ts';
 import * as Indexer from './Indexer.ts';
+import * as Native from './internal/native.ts';
 import * as Ontology from './Ontology.ts';
 import * as Store from './Store.ts';
 
@@ -226,6 +227,56 @@ describe('Indexer', () => {
     expect(await index({ reasoners: [{ ...REASONER, rules }] })).toMatchObject({ indexed: 0, reasoned: true });
     expect(await index({ reasoners: [{ ...REASONER, rules }] })).toMatchObject({ indexed: 0, reasoned: false });
   }, 60_000);
+  test('a touch that leaves the content alone records the mtime without reindexing or reasoning', async () => {
+    // Settle the conclusions the previous test computed with another rule set.
+    await index();
+    const later = new Date(Date.now() + 60_000);
+    await utimes(join(root, 'src', 'b.ts'), later, later);
+
+    const result = await index();
+    expect(result).toMatchObject({ indexed: 0, touched: 1, unchanged: 2, reasoned: false });
+    const mtime = Math.floor(later.getTime() / 1000) * 1000;
+    const [record, facts] = await withStore((store) =>
+      Effect.all([store.getFile('src/b.ts'), store.match(Ontology.fileIri('src/b.ts'), Ontology.mtime)]),
+    );
+    expect(record?.mtime).toBeGreaterThanOrEqual(mtime);
+    expect(facts.map((quad) => Number(quad.object.value))).toEqual([record?.mtime]);
+
+    expect(await index()).toMatchObject({ indexed: 0, touched: 0, unchanged: 3 });
+    // An edit is still an edit, whatever mtime it lands at.
+    await writeFile(join(root, 'src', 'b.ts'), 'export const b = 2;\n');
+    await utimes(join(root, 'src', 'b.ts'), later, new Date(later.getTime() + 1000));
+    expect(await index()).toMatchObject({ indexed: 1, touched: 0 });
+  }, 60_000);
+
+  test.skipIf(!Native.isAvailable())(
+    'switching backend over one store reindexes into the new backend',
+    async () => {
+      const switched = await mkdtemp(join(tmpdir(), 'code-index-switch-'));
+      const indexWith = (backend: Store.Backend) =>
+        EffectEx.runPromise(
+          Effect.scoped(
+            Effect.provide(
+              Effect.zip(
+                Indexer.run({ root, workers: 1 }),
+                Effect.flatMap(Store.Store, (store) => store.stats()),
+              ),
+              Store.layer(switched, backend),
+            ),
+          ),
+        );
+      try {
+        const [first] = await indexWith('js');
+        const [second, stats] = await indexWith('native');
+        expect(second.indexed).toEqual(first.scanned);
+        expect(stats.quads).toBeGreaterThan(0);
+      } finally {
+        await rm(switched, { recursive: true, force: true });
+      }
+    },
+    60_000,
+  );
+
   test('every snippet the index holds is valid TypeScript', async () => {
     const snippets = await withStore((store) => store.match(undefined, Ontology.snippet));
     expect(snippets.length).toBeGreaterThan(0);

@@ -16,7 +16,7 @@ use oxigraph::model::{
     Term, Triple,
 };
 use oxigraph::sparql::results::{QueryResultsFormat, QueryResultsSerializer};
-use oxigraph::sparql::{QueryResults, SparqlEvaluator};
+use oxigraph::sparql::{CancellationToken, QueryResults, SparqlEvaluator};
 use oxigraph::store::Store;
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -641,7 +641,19 @@ impl NativeStore {
     /// Runs SPARQL with the default graph as the union of all graphs. Returns `(kind, body)`:
     /// SPARQL JSON results for SELECT/ASK, N-Triples for CONSTRUCT/DESCRIBE.
     pub fn query(&self, sparql: &str) -> Result<(&'static str, String)> {
-        let mut prepared = SparqlEvaluator::new().parse_query(sparql)?;
+        self.query_cancellable(sparql, CancellationToken::new())
+    }
+
+    /// [`Self::query`], abandoned with a `cancelled` error at the next quad it reads once `token`
+    /// is cancelled — how a caller bounds a query whose evaluation it cannot predict.
+    pub fn query_cancellable(
+        &self,
+        sparql: &str,
+        token: CancellationToken,
+    ) -> Result<(&'static str, String)> {
+        let mut prepared = SparqlEvaluator::new()
+            .with_cancellation_token(token)
+            .parse_query(sparql)?;
         prepared.dataset_mut().set_default_graph_as_union();
         match prepared.on_store(&self.store).execute()? {
             QueryResults::Graph(triples) => {

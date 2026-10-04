@@ -169,7 +169,8 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
               [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
                 createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
                   label: t(`priority-${id}.label`),
-                  icon,
+                  // `None` takes the unset glyph, so every option has an icon and the labels align.
+                  icon: icon ?? UNSET_ICON,
                   iconClassNames: priorityTextStyle(id),
                   checked: (priority ?? 'none') === id,
                 }),

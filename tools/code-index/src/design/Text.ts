@@ -14,7 +14,7 @@ const STOPWORDS = new Set(
   (
     'a an and are as at be by does do for from how in into is it its of on or that the their them this to ' +
     'what when where which who why with wire wires wired work works show me explain between through via ' +
-    'there these those does each all any can about'
+    'there these those does each other all any can about'
   ).split(' '),
 );
 
