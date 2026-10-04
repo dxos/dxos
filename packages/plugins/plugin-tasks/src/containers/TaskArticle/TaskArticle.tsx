@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOperation } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { generateName } from '@dxos/display-name';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
@@ -84,7 +85,18 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
   // Everyone in the space, the owner included, as assignees the picker can offer by identity.
   const spaceMembers = useMembers(Obj.getDatabase(task)?.spaceId);
   const members = useMemo(
-    () => spaceMembers.flatMap((member) => (member.did ? [{ did: member.did, name: member.displayName }] : [])),
+    () =>
+      spaceMembers.flatMap((member) =>
+        member.did
+          ? [
+              {
+                did: member.did,
+                // A member with no profile name gets the generated one the rest of the app shows for it.
+                name: member.displayName ?? (member.identityKey ? generateName(member.identityKey) : undefined),
+              },
+            ]
+          : [],
+      ),
     [spaceMembers],
   );
 

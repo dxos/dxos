@@ -111,6 +111,8 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
             (() => [
               createMenuAction('assignee-none', () => onTaskUpdate(task, { assignee: null }), {
                 label: t('assignee-none.label'),
+                // The unset glyph, as the priority picker's `None` takes, so every option's label aligns.
+                icon: UNSET_ICON,
                 checked: !assignee,
               }),
               // An assignee the people list cannot show — an agent, or an actor with no contact — is
