@@ -92,7 +92,7 @@ export const signature = (reasoners: readonly Reasoner[]): string =>
     .digest('hex');
 
 /**
- * Run each reasoner in order, replacing (or, natively, maintaining) its graph, and record the facts
+ * Run each reasoner in order, replacing or incrementally maintaining its graph, and record the facts
  * they ran over (`Store.reasoned`). Returns what each concluded.
  */
 export const run = (reasoners: readonly Reasoner[]): Effect.Effect<Outcome[], Store.StoreError, Store.Store> =>

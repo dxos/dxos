@@ -73,7 +73,7 @@ export const unknownTermWarnings = (sparql: string, known: ReadonlySet<string>):
     });
 
 /**
- * Bounds a SELECT at the store: the backends materialise every row, so an unbounded query against
+ * Bounds a SELECT at the store: the store materialises every row, so an unbounded query against
  * millions of quads must be cut off by the engine, not by slicing afterwards. A trailing LIMIT is
  * lowered to the cap; with none, one is appended on its own line so a trailing comment cannot
  * swallow it.

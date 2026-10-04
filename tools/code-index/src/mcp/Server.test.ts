@@ -130,12 +130,8 @@ describe('mcp Server', () => {
   });
 
   test('a query past its timeout is cancelled, and the server keeps answering', async () => {
-    // The native evaluator stops at its next quad read, so a query that would never finish is safe to
-    // abandon there. Comunica cannot be stopped mid-join, so the JS backend gets one that ends in a second.
-    const expensive =
-      Store.defaultBackend() === 'native'
-        ? 'SELECT (COUNT(*) AS ?n) WHERE { ?a ?b ?c . ?d ?e ?f . ?g ?h ?i . ?j ?k ?l }'
-        : 'SELECT (COUNT(*) AS ?n) WHERE { ?a ?b ?c . ?d ?e ?f . ?g deus:path ?h }';
+    // The evaluator stops at its next quad read, so a query that would never finish is safe to abandon there.
+    const expensive = 'SELECT (COUNT(*) AS ?n) WHERE { ?a ?b ?c . ?d ?e ?f . ?g ?h ?i . ?j ?k ?l }';
     const started = Date.now();
     const error = await failure(toolkit.handle('query', { sparql: expensive, timeoutMs: 10 }));
     expect(error.message).toContain('timed out after 10 ms');
@@ -303,7 +299,7 @@ describe('mcp Server', () => {
 
   test('stats counts files, quads and derived graphs', async () => {
     const stats = await call(Server.Stats.successSchema, toolkit.handle('stats', {}));
-    expect(stats).toMatchObject({ backend: Store.defaultBackend(), dir, files: 5 });
+    expect(stats).toMatchObject({ dir, files: 5 });
     expect(stats.quads).toBeGreaterThan(0);
     expect(stats.derived).toContainEqual({ graph: Ontology.derivedGraphIri('test').value, quads: 2 });
     expect(stats.derived).toContainEqual({ graph: Ontology.derivedGraphIri('names').value, quads: 5 });
