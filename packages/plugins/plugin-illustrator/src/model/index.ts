@@ -3,3 +3,4 @@
 //
 
 export * from './builder.ts';
+export * as DrawingFile from './drawing-file.ts';
