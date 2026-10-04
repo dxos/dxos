@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { I18nProvider } from 'react-aria-components';
 
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
@@ -154,10 +154,33 @@ const Transcript = ({ items, busy, onSend }: ThreadIslandProps) => {
  * The island's root. The providers live here rather than in the Solid shell: they are React
  * context, so they cannot be hoisted out of the island even though they wrap the whole of it.
  */
-export const ThreadIsland = (props: ThreadIslandProps) => (
-  <I18nProvider locale='en-US'>
-    <ThemeProvider tx={defaultTx} themeMode='dark' resourceExtensions={[...assistantTranslations, ...chatTranslations]}>
-      <Transcript {...props} />
-    </ThemeProvider>
-  </I18nProvider>
-);
+export const ThreadIsland = (props: ThreadIslandProps) => {
+  const themeMode = useDocumentThemeMode();
+  return (
+    <I18nProvider locale='en-US'>
+      <ThemeProvider
+        tx={defaultTx}
+        themeMode={themeMode}
+        resourceExtensions={[...assistantTranslations, ...chatTranslations]}
+      >
+        <Transcript {...props} />
+      </ThemeProvider>
+    </I18nProvider>
+  );
+};
+
+const subscribeToDocumentClass = (onChange: () => void) => {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributeFilter: ['class'] });
+  return () => observer.disconnect();
+};
+
+const documentThemeMode = (): 'dark' | 'light' =>
+  document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+
+/**
+ * The mode the page is actually drawn in. `@dxos/ui-theme` toggles `html.dark` from the OS preference,
+ * and components that pick colours from `useThemeMode` (the tool panel's code highlighter) must agree
+ * with it, or dark-theme token colours land on a light background and vanish.
+ */
+const useDocumentThemeMode = () => useSyncExternalStore(subscribeToDocumentClass, documentThemeMode);
