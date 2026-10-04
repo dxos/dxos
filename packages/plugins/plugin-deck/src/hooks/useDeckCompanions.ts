@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Atom from 'effect/reactivity/Atom';
 import { useEffect } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -26,6 +27,8 @@ export type DeckCompanion = AppGraphNode.Node<
     position?: Position.Position;
     joyride?: string;
     mount?: AppNode.DeckCompanionMount;
+    /** Count shown on the rail tab while greater than zero. */
+    badge?: Atom.Atom<number | undefined>;
   }
 >;
 
