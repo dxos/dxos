@@ -43,10 +43,33 @@ export type State = {
    * same answer as the tab that sent the prompt.
    */
   readonly running: boolean;
+  /**
+   * The ids of the turns opened and not yet closed; `running` is whether this is non-empty. Kept by
+   * id so an end event closes only its own turn — a boolean would let any `TurnEnded` close
+   * whichever turn happens to be open.
+   */
+  readonly openTurns: readonly string[];
   readonly seq: number;
 };
 
-export const empty: State = { title: 'Untitled', turns: [], calls: [], canvas: [], running: false, seq: 0 };
+export const empty: State = {
+  title: 'Untitled',
+  turns: [],
+  calls: [],
+  canvas: [],
+  running: false,
+  openTurns: [],
+  seq: 0,
+};
+
+/** A message written before turn ids existed opens a turn keyed by its own position. */
+const openedTurnId = (entry: Events.Entry, turnId: string | undefined): string => turnId ?? `seq:${entry.seq}`;
+
+/** Closes `turnId`, or — for an end event written before turn ids existed — every open turn. */
+const closeTurn = (state: State, turnId: string | undefined): Pick<State, 'running' | 'openTurns'> => {
+  const openTurns = turnId === undefined ? [] : state.openTurns.filter((open) => open !== turnId);
+  return { running: openTurns.length > 0, openTurns };
+};
 
 /** Applies one entry. Unknown-to-the-fold events advance `seq` and change nothing else. */
 export const apply = (state: State, entry: Events.Entry): State => {
@@ -54,8 +77,14 @@ export const apply = (state: State, entry: Events.Entry): State => {
   const event = entry.event;
   switch (event._tag) {
     case 'UserMessage':
-      // A user message opens a turn; only `TurnEnded` or `TurnFailed` closes one.
-      return { ...state, seq, running: true, turns: [...state.turns, { role: 'user', text: event.text }] };
+      // A user message opens a turn; only a `TurnEnded` or `TurnFailed` with the same id closes it.
+      return {
+        ...state,
+        seq,
+        running: true,
+        openTurns: [...state.openTurns, openedTurnId(entry, event.turnId)],
+        turns: [...state.turns, { role: 'user', text: event.text }],
+      };
     case 'AssistantMessage':
       return { ...state, seq, turns: [...state.turns, { role: 'assistant', text: event.text }] };
     case 'ToolCall':
@@ -80,12 +109,12 @@ export const apply = (state: State, entry: Events.Entry): State => {
       return { ...state, seq, title: event.title };
     case 'TurnEnded':
       // A boundary marker; the transcript already holds everything the turn produced.
-      return { ...state, seq, running: false };
+      return { ...state, seq, ...closeTurn(state, event.turnId) };
     case 'TurnFailed':
       return {
         ...state,
         seq,
-        running: false,
+        ...closeTurn(state, event.turnId),
         turns: [...state.turns, { role: 'assistant', text: `⚠ ${event.message}` }],
       };
   }

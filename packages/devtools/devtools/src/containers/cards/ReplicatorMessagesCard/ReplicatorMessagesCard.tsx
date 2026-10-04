@@ -17,7 +17,7 @@ export type ReplicatorMessagesCardProps = {
 type MessageRow = { type: string; sent: number; received: number; size?: number };
 
 /** Type takes the slack; fixed size, received and sent tracks make the rows a table. */
-const ROW_TRACKS = ['1fr', '4rem', '3.5rem', '3.5rem'];
+const ROW_TRACKS = ['fill', '4rem', '3.5rem', '3.5rem'] as const;
 
 export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps) => {
   const replicator = database?.dataStats?.replicator;

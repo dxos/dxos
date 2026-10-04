@@ -13,7 +13,7 @@ import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
 import { Button, Panel, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
-import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
+import { type EditorController, QueryEditor } from '@dxos/react-ui-query';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 

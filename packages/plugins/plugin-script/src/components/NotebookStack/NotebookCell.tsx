@@ -12,8 +12,8 @@ import { useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-routine/components';
 import { useThemeMode, useTranslation } from '@dxos/react-ui';
-import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
+import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-query';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,

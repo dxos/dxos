@@ -63,7 +63,7 @@ const Transcript = ({ turns, busy, onSend }: ThreadIslandProps) => {
     <ChatThread.Root model={model} viewType='thinking'>
       <div className='flex flex-col dx-grow overflow-hidden'>
         <div className='dx-expand relative'>
-          <ChatThread.Viewport classNames='dx-fullscreen' />
+          <ChatThread.Viewport classNames='dx-cover' />
         </div>
         {/* The composer needs a testid of its own: the feed renders every message through
             codemirror as well, so `.cm-content` alone matches message bodies too. */}
