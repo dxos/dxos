@@ -4,12 +4,19 @@
 
 import React from 'react';
 
-import { IconButton, type IconButtonProps } from '@dxos/react-ui';
+import { Button, type ButtonVariant } from '@dxos/react-ui';
 
 export const TEST_ID = 'test';
 
-export type TestProps = IconButtonProps;
+export type TestProps = {
+  'icon': string;
+  'label': string;
+  'variant'?: ButtonVariant;
+  'onClick'?: () => void;
+  'id'?: string;
+  'data-testid'?: string;
+};
 
 export const Test = (props: TestProps) => {
-  return <IconButton {...props} />;
+  return <Button {...props} />;
 };

@@ -39,19 +39,23 @@ describe('Tidepool template', () => {
   // runner with coverage instrumentation does not finish inside the 15s default.
   test('files every sub-task under a parent, at two levels', { timeout: 120_000 }, async ({ expect }) => {
     const { json } = await EffectEx.runPromise(buildArchive(TidepoolSpace.make()));
-    const objects: Array<{ '@type'?: string; 'id': string; 'title'?: string; 'parentTask'?: unknown }> =
+    const objects: Array<{ '@type'?: string; 'id': string; 'title'?: string; 'subtasks'?: unknown }> =
       JSON.parse(json).objects;
     const tasks = objects.filter((object) => object['@type']?.includes('type.task:'));
-    const children = tasks.filter((task) => task.parentTask !== undefined);
+    // Refs serialize as an envelope, so a parent's `subtasks` are matched by id within it.
+    const childrenOf = (parent: (typeof tasks)[number] | undefined) => {
+      const listed = JSON.stringify(parent?.subtasks ?? []);
+      return tasks.filter((task) => listed.includes(task.id));
+    };
+    const children = tasks.flatMap((task) => childrenOf(task));
 
-    expect(tasks.filter((task) => task.parentTask === undefined)).toHaveLength(6);
+    expect(tasks.filter((task) => !children.includes(task))).toHaveLength(6);
     expect(children).toHaveLength(11);
 
     // The migration sub-task has children of its own — the level Bramble's flat task set never
-    // exercised. Refs serialize as an envelope, so the parent is matched by id within it.
+    // exercised.
     const migration = tasks.find((task) => task.title?.startsWith('Migrate notes written'));
     expect(migration?.id).toBeDefined();
-    const grandchildren = children.filter((task) => JSON.stringify(task.parentTask).includes(String(migration?.id)));
-    expect(grandchildren).toHaveLength(3);
+    expect(childrenOf(migration)).toHaveLength(3);
   });
 });

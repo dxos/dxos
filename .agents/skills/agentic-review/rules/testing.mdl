@@ -88,6 +88,7 @@ rule test-asserts-real-behavior: A test must run and assert the real outcome, ne
     - packages/**/*.test.tsx
   unit: file
   system-one: on
+  context: test
   severity: warn
 ```
 

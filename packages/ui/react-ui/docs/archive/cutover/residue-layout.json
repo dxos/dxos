@@ -1,0 +1,1658 @@
+{
+  "generated": "2026-10-01T14:58:09.763Z",
+  "paths": ["packages"],
+  "changed": [
+    "packages/devtools/devtools/src/containers/cards/SurfaceProfilerCard/SurfaceProfilerCard.tsx",
+    "packages/plugins/plugin-assistant/src/containers/SpaceHomeSuggestions/SpaceHomeSuggestions.tsx",
+    "packages/plugins/plugin-assistant/src/containers/TriggerStatus/TriggerStatus.tsx",
+    "packages/plugins/plugin-atproto/src/containers/AtprotoCompanion/AtprotoCompanion.tsx",
+    "packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.tsx",
+    "packages/plugins/plugin-client/src/containers/ContactPickerContainer/ContactPickerContainer.tsx",
+    "packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx",
+    "packages/plugins/plugin-debug/src/containers/StatsPanel/StatsPanel.tsx",
+    "packages/plugins/plugin-mobile/src/components/MobileLayout/MobileLayout.stories.tsx",
+    "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+    "packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.tsx",
+    "packages/plugins/plugin-routine/src/containers/RoutineTraceCompanion/RoutineTraceCompanion.tsx",
+    "packages/plugins/plugin-sidekick/src/containers/SidekickArticle/SidekickArticle.tsx",
+    "packages/ui/ui-template/src/react/renderer.tsx"
+  ],
+  "transforms": [
+    {
+      "transform": "layout",
+      "filesScanned": 12375,
+      "filesChanged": 14,
+      "rules": {
+        "Flex column → Next.Container gutter='none'": 23,
+        "Column.Root → Next.Container": 1,
+        "Column.Center → div": 1
+      },
+      "residue": [
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/components/StatCard/StatCard.tsx",
+          "line": 68,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex align='center' gap='sm' classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/components/StatCard/StatCard.tsx",
+          "line": 157,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex align='center' justify='between' gap='sm' classNames={['min-w-0 text-xs', span && !trailing && '[grid-column-en..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/components/StatCard/StatCard.tsx",
+          "line": 212,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column grow={false} classNames={['min-w-0 text-xs [grid-column-end:span_2]', classNames]}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/StatsPanel/StatsPanel.tsx",
+          "line": 51,
+          "column": 13,
+          "reason": "Flex not converted: a child is a computed value",
+          "snippet": "<Flex column gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/cards/EdgeCard/EdgeCard.tsx",
+          "line": 105,
+          "column": 3,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='xs' classNames='max-w-64 text-xs'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/cards/IndexerCard/IndexerCard.tsx",
+          "line": 55,
+          "column": 13,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/cards/QueriesCard/QueriesCard.tsx",
+          "line": 42,
+          "column": 15,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/cards/ReplicatorMessagesCard/ReplicatorMessagesCard.tsx",
+          "line": 41,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/cards/ReplicatorMessagesCard/ReplicatorMessagesCard.tsx",
+          "line": 51,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={ROW_TRACKS} gap='sm' classNames='font-mono tabular-nums text-end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/cards/SurfaceProfilerCard/SurfaceProfilerCard.tsx",
+          "line": 105,
+          "column": 3,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='xs' classNames='max-w-64 text-xs'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/cards/SurfaceProfilerCard/SurfaceProfilerCard.tsx",
+          "line": 155,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/cards/SurfaceProfilerCard/SurfaceProfilerCard.tsx",
+          "line": 172,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={ROW_TRACKS} gap='sm' classNames={mx('font-mono tabular-nums text-end', group.avgActualDuration > SLOW_TIM..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/cards/SyncCard/SyncCard.tsx",
+          "line": 50,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/devtools/devtools/src/containers/cards/SyncCard/SyncCard.tsx",
+          "line": 67,
+          "column": 13,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatOptions.tsx",
+          "line": 350,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='xs' classNames='p-form-chrome' data-testid='assistant.mcp-servers'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatOptions.tsx",
+          "line": 406,
+          "column": 7,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex align='center' gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatOptions.tsx",
+          "line": 411,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column grow classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/AssistantSettings/OllamaModels.tsx",
+          "line": 121,
+          "column": 19,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/AssistantSettings/OllamaModels.tsx",
+          "line": 145,
+          "column": 21,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='sm' align='center' classNames='text-sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/AssistantSettings/OllamaModels.tsx",
+          "line": 164,
+          "column": 19,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.tsx",
+          "line": 137,
+          "column": 21,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex align='center' classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.tsx",
+          "line": 140,
+          "column": 21,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex justify='end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/IntegrationPrompt/IntegrationPrompt.tsx",
+          "line": 51,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/IntegrationPrompt/IntegrationPrompt.tsx",
+          "line": 52,
+          "column": 7,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/IntegrationPrompt/IntegrationPrompt.tsx",
+          "line": 54,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/IntegrationPrompt/IntegrationPrompt.tsx",
+          "line": 76,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex justify='end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/PluginPrompt/PluginPrompt.tsx",
+          "line": 74,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/PluginPrompt/PluginPrompt.tsx",
+          "line": 75,
+          "column": 7,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/PluginPrompt/PluginPrompt.tsx",
+          "line": 77,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/PluginPrompt/PluginPrompt.tsx",
+          "line": 91,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex justify='end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/PluginUrlPrompt/PluginUrlPrompt.tsx",
+          "line": 70,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex role='group' column gap='sm' // Inline-size containment: rendered as a CodeMirror widget, whose line sizes to i..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/PluginUrlPrompt/PluginUrlPrompt.tsx",
+          "line": 79,
+          "column": 7,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/PluginUrlPrompt/PluginUrlPrompt.tsx",
+          "line": 81,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/PluginUrlPrompt/PluginUrlPrompt.tsx",
+          "line": 93,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex justify='end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-assistant/src/containers/TriggerStatus/TriggerStatus.tsx",
+          "line": 111,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='sm' classNames='p-2 w-[240px]'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-atproto/src/containers/AtprotoCompanion/AtprotoCompanion.tsx",
+          "line": 211,
+          "column": 13,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='md' classNames='p-3'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-atproto/src/containers/AtprotoCompanion/AtprotoCompanion.tsx",
+          "line": 243,
+          "column": 21,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='sm' classNames='pt-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.tsx",
+          "line": 215,
+          "column": 13,
+          "reason": "Flex not converted: a child has self-start",
+          "snippet": "<Flex column gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-bookmarks/src/containers/BookmarkArticle/BookmarkArticle.tsx",
+          "line": 88,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex justify='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-chess-com/src/containers/ChessGameArticle/ChessGameArticle.tsx",
+          "line": 69,
+          "column": 11,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex center classNames='h-full text-subdued text-sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-chess/src/components/Chessboard/Info.tsx",
+          "line": 143,
+          "column": 9,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid key={index} cols={['3rem', '1fr', '1fr', '1rem']} grow={false} gap='sm' classNames='ps-4'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-chess/src/components/Chessboard/Info.tsx",
+          "line": 183,
+          "column": 5,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={['var(--dx-rail-item)', '1fr', 'var(--dx-rail-item)']} grow={false} gap='sm' align='center' classNames='h..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/AccountContainer/AccountContainer.tsx",
+          "line": 160,
+          "column": 21,
+          "reason": "Flex not converted: align or justify other than the grid default",
+          "snippet": "<Flex column gap='xs' align='end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/ContactPickerContainer/ContactPickerContainer.tsx",
+          "line": 76,
+          "column": 7,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex align='center' gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/ContactPickerContainer/ContactPickerContainer.tsx",
+          "line": 109,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/DevicesContainer/DevicesContainer.tsx",
+          "line": 259,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex justify='center' classNames='py-4'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/DevicesContainer/DevicesContainer.tsx",
+          "line": 272,
+          "column": 7,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex justify='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/DevicesContainer/DevicesContainer.tsx",
+          "line": 273,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/InvitationsContainer/InvitationsContainer.tsx",
+          "line": 120,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/InvitationsContainer/InvitationsContainer.tsx",
+          "line": 133,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/ProfileContainer/ProfileContainer.tsx",
+          "line": 172,
+          "column": 13,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex classNames='justify-self-end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/RecoveryCodeDialog/RecoveryCodeDialog.tsx",
+          "line": 29,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='sm' classNames='py-4'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/RecoveryCodeDialog/RecoveryCodeDialog.tsx",
+          "line": 33,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='sm' align='center' classNames='pb-4'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/RecoveryCodeDialog/RecoveryCodeDialog.tsx",
+          "line": 58,
+          "column": 7,
+          "reason": "Grid not converted: align other than 'center' (a Container row centres its cells)",
+          "snippet": "<Grid cols={4} grow={false} data-testid='recoveryCode.code' data-code={code}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-client/src/containers/RecoveryCodeDialog/RecoveryCodeDialog.tsx",
+          "line": 60,
+          "column": 11,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex key={i} gap='sm' align='center' classNames='p-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-code/src/containers/CodeArticle/CodeArticle.tsx",
+          "line": 228,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={['30rem', '1fr']} classNames='divide-x divide-separator'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-code/src/containers/CodeArticle/CodeArticle.tsx",
+          "line": 229,
+          "column": 13,
+          "reason": "Grid not converted: rows (a person decides the layout)",
+          "snippet": "<Grid rows={[1, 2]} classNames='divide-y divide-subdued-separator'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-commerce/src/containers/ProviderArticle/ProviderArticle.tsx",
+          "line": 77,
+          "column": 15,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex key={field.key} gap='sm' align='baseline' justify='between'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx",
+          "line": 68,
+          "column": 11,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='xs' classNames='min-w-0 py-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-commerce/src/containers/SearchArticle/ResultDetail.tsx",
+          "line": 33,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='md' classNames='p-3 overflow-y-auto'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-commerce/src/containers/SearchArticle/ResultDetail.tsx",
+          "line": 34,
+          "column": 7,
+          "reason": "Grid not converted: align other than 'center' (a Container row centres its cells)",
+          "snippet": "<Grid cols={['minmax(0, 1fr)', 'min-content', 'min-content']} grow={false} gap='sm' align='start'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-conductor/src/containers/CanvasArticle/CanvasArticle.tsx",
+          "line": 114,
+          "column": 41,
+          "reason": "Flex not converted: spread props",
+          "snippet": "<Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-connector/src/containers/SyncTargetsDialog/SyncTargetsDialog.tsx",
+          "line": 118,
+          "column": 11,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='sm' classNames='py-form-gap'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-crx/src/containers/CrxSettings/CrxSettings.tsx",
+          "line": 67,
+          "column": 13,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-crx/src/containers/CrxSettings/CrxSettings.tsx",
+          "line": 76,
+          "column": 15,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-debug/src/containers/DebugPortSettings/DebugPortSettings.tsx",
+          "line": 57,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='md' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-debug/src/containers/DebugPortSettings/DebugPortSettings.tsx",
+          "line": 76,
+          "column": 13,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-debug/src/containers/DebugSpaceObjectsPanel/DebugSpaceObjectsPanel.tsx",
+          "line": 38,
+          "column": 9,
+          "reason": "Grid not converted: rows (a person decides the layout)",
+          "snippet": "<Grid rows={2} classNames='divide-y divide-subdued-separator'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-debug/src/containers/SpaceGenerator/SpaceGenerator.tsx",
+          "line": 345,
+          "column": 7,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-debug/src/containers/Wireframe/Wireframe.tsx",
+          "line": 27,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='sm' classNames='absolute inset-2 overflow-hidden font-mono'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-debug/src/containers/Wireframe/Wireframe.tsx",
+          "line": 28,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex justify='between'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-deck/src/components/Plank/PlankLoading.tsx",
+          "line": 11,
+          "column": 35,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex center classNames='dx-attention-surface' />"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx",
+          "line": 228,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column center classNames='p-8 relative dx-deck-surface' data-testid='layoutPlugin.firstRunMessage'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-deck/src/containers/Deck/PlankFallback.tsx",
+          "line": 29,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex center role='alert' data-testid='plank-content-error' classNames='dx-attention-surface overflow-y-auto p-8'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-deck/src/containers/Deck/PlankFallback.tsx",
+          "line": 30,
+          "column": 7,
+          "reason": "Flex not converted: align or justify other than the grid default",
+          "snippet": "<Flex column gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-devtools/src/containers/GithubPanel/GithubComponent.tsx",
+          "line": 139,
+          "column": 5,
+          "reason": "Flex not converted: asChild (layout classes need a person)",
+          "snippet": "<Flex asChild align='start' gap='sm' classNames='px-trim-sm py-trim-xs rounded-sm hover:bg-hover-surface'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-devtools/src/containers/GithubPanel/GithubComponent.tsx",
+          "line": 142,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='min-w-0 flex-1'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-doctor/src/containers/DiagnosticsPanel/DiagnosticsPanel.tsx",
+          "line": 156,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='sm' classNames='p-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-doctor/src/containers/DiagnosticsPanel/DiagnosticsPanel.tsx",
+          "line": 173,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='sm' classNames='p-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-doctor/src/containers/DiagnosticsPanel/DiagnosticsPanel.tsx",
+          "line": 219,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='xs' classNames='text-xs min-w-0 flex-1'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-excalidraw/src/containers/ExcalidrawArticle/ExcalidrawArticle.tsx",
+          "line": 219,
+          "column": 3,
+          "reason": "Flex not converted: spread props",
+          "snippet": "<Flex {...composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })} ref={forwardedRef} />"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-github/src/components/CommentComposer/CommentComposer.tsx",
+          "line": 60,
+          "column": 7,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex justify='end' gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-github/src/components/CommentComposer/CommentComposer.tsx",
+          "line": 72,
+          "column": 3,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='sm' classNames='p-3 border-b border-separator'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-github/src/components/PullRequestFiles/PullRequestFiles.tsx",
+          "line": 60,
+          "column": 5,
+          "reason": "Grid not converted: it grows to fill its parent (Grid grow defaults to true)",
+          "snippet": "<Grid cols={['minmax(0, 1fr)', '18rem']} data-testid='pull-request.files'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-github/src/components/WalkthroughView/WalkthroughView.tsx",
+          "line": 50,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column center gap='md' classNames='dx-expand'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-github/src/containers/PullRequestArticle/PullRequestArticle.tsx",
+          "line": 508,
+          "column": 11,
+          "reason": "Flex not converted: a child spreads props",
+          "snippet": "<Flex column>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-ibkr/src/containers/InstrumentArticle/InstrumentArticle.tsx",
+          "line": 65,
+          "column": 17,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='xs' classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-illustrator/src/containers/DrawingScores/DrawingScores.tsx",
+          "line": 63,
+          "column": 15,
+          "reason": "Flex not converted: asChild (layout classes need a person)",
+          "snippet": "<Flex column gap='md' asChild classNames='p-3 text-sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-illustrator/src/containers/DrawingScores/DrawingScores.tsx",
+          "line": 65,
+          "column": 19,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex align='baseline' gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-illustrator/src/containers/DrawingScores/DrawingScores.tsx",
+          "line": 84,
+          "column": 25,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex align='center' gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-inbox/src/components/EditMessage/EditMessage.tsx",
+          "line": 214,
+          "column": 11,
+          "reason": "Column.Root not converted: spread props",
+          "snippet": "<Column.Root {...composableProps(props, { // The editor row uses `minmax(8lh,1fr)` (not `1fr`) so its minimum height ..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-inbox/src/containers/CalendarProperties/CalendarProperties.tsx",
+          "line": 46,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='xs'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-inbox/src/containers/MailboxProperties/MailboxProperties.tsx",
+          "line": 47,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-inbox/src/containers/MessageCard/MessageCard.tsx",
+          "line": 22,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='md' align='center' justify='between' classNames='col-span-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-inbox/src/containers/SaveFilterPopover/SaveFilterPopover.tsx",
+          "line": 29,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='sm' classNames='p-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-library/src/containers/BookArticle/BookInfo.tsx",
+          "line": 140,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='lg' classNames='mx-auto max-w-[48rem] p-4'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-library/src/containers/BookArticle/BookInfo.tsx",
+          "line": 146,
+          "column": 15,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input-surface'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-library/src/containers/BookArticle/BookInfo.tsx",
+          "line": 150,
+          "column": 13,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='sm' classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-library/src/containers/BookArticle/BookInfo.tsx",
+          "line": 157,
+          "column": 15,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='xs' align='center' wrap>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-library/src/containers/BookArticle/BookInfo.tsx",
+          "line": 180,
+          "column": 17,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='xs' wrap>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-library/src/containers/BookArticle/BookReader.tsx",
+          "line": 35,
+          "column": 3,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex center classNames='h-full text-description'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-library/src/containers/BookArticle/BookReader.tsx",
+          "line": 203,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex center classNames='h-full p-4'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-library/src/containers/BookArticle/BookReader.tsx",
+          "line": 239,
+          "column": 3,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='md' center classNames='h-full p-4 text-center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-library/src/containers/BookArticle/EpubReader.tsx",
+          "line": 135,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex center gap='sm' classNames='h-full p-4 text-center text-description'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-magazine/src/containers/FeedProperties/FeedProperties.tsx",
+          "line": 84,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineArticle.tsx",
+          "line": 101,
+          "column": 11,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex center classNames='h-full text-subdued text-sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-magazine/src/containers/PostCard/PostCard.tsx",
+          "line": 61,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={['minmax(0, 1fr)', 'auto']} grow={false} gap='sm' align='center' classNames='text-sm text-description ove..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-map/src/containers/MapArticle/MapArticle.tsx",
+          "line": 167,
+          "column": 41,
+          "reason": "Flex not converted: spread props",
+          "snippet": "<Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx",
+          "line": 81,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex align='center' justify='end' classNames='px-2 min-h-[3rem]'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-mobile/src/components/MobileLayout/MobileLayout.stories.tsx",
+          "line": 25,
+          "column": 9,
+          "reason": "Column.Root not converted: classNames (layout classes need a person)",
+          "snippet": "<Column.Root gutter='sm' classNames='py-form-chrome'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/components/AuthorizingDeviceDialog/AuthorizingDeviceDialog.tsx",
+          "line": 33,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='2xl' classNames='z-10 p-8 md:px-16 h-full'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/components/AuthorizingDeviceDialog/AuthorizingDeviceDialog.tsx",
+          "line": 38,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column align='center' justify='center' gap='lg' classNames='flex-1'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/components/AuthorizingDeviceDialog/AuthorizingDeviceDialog.tsx",
+          "line": 43,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='z-[11] mt-auto'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/components/AuthorizingDeviceDialog/AuthorizingDeviceDialog.tsx",
+          "line": 45,
+          "column": 13,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='xs' center classNames='text-sm pr-3 pb-1 opacity-70'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 383,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='2xl' classNames='z-10 p-8 md:px-16'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 418,
+          "column": 19,
+          "reason": "Flex not converted: gap='xl' has no Container step",
+          "snippet": "<Flex column gap='xl'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 446,
+          "column": 19,
+          "reason": "Flex not converted: gap='xl' has no Container step",
+          "snippet": "<Flex column gap='xl'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 470,
+          "column": 19,
+          "reason": "Flex not converted: gap='xl' has no Container step",
+          "snippet": "<Flex column gap='xl'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 539,
+          "column": 11,
+          "reason": "Flex not converted: gap='2xl' has no Container step",
+          "snippet": "<Flex column gap='2xl'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 552,
+          "column": 11,
+          "reason": "Flex not converted: gap='2xl' has no Container step",
+          "snippet": "<Flex column gap='2xl'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 560,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='z-[11] mt-auto'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 562,
+          "column": 13,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='xs' center classNames='text-sm pr-3 pb-1 opacity-70'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 749,
+          "column": 5,
+          "reason": "Flex not converted: gap='xl' has no Container step",
+          "snippet": "<Flex column gap='xl'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 914,
+          "column": 3,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='md' align='center' classNames='text-xs text-description'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-payments/src/containers/PaymentsSettings/PaymentsSettings.tsx",
+          "line": 103,
+          "column": 13,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='sm' classNames='my-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-presenter/src/components/RevealPlayer/RevealPlayer.stories.tsx",
+          "line": 79,
+          "column": 5,
+          "reason": "Grid not converted: cols is missing, computed or subgrid",
+          "snippet": "<Grid cols={[columnWidth ?? 'minmax(0, 1fr)', columnWidth ?? 'minmax(0, 1fr)']}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.tsx",
+          "line": 379,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-registry/src/components/PluginDetail/PluginDetail.tsx",
+          "line": 167,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={isMobile ? ['2.5rem', 'minmax(0, 1fr)', '2.5rem'] : ['4rem', 'minmax(0, 1fr)', '4rem']} grow={false} alig..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-registry/src/components/PluginDetail/PluginDetail.tsx",
+          "line": 179,
+          "column": 13,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={['1fr', 'min-content']} grow={false} classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1' >"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-registry/src/containers/LoadPluginDialog/LoadPluginDialog.tsx",
+          "line": 49,
+          "column": 9,
+          "reason": "Flex not converted: gap='lg' has no Container step",
+          "snippet": "<Flex column gap='lg'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-registry/src/containers/LoadPluginDialog/LoadPluginDialog.tsx",
+          "line": 69,
+          "column": 11,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex justify='end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-review/src/testing/ReviewStoryLayout.tsx",
+          "line": 55,
+          "column": 5,
+          "reason": "Grid not converted: spread props",
+          "snippet": "<Grid cols={[3, 2]} {...attentionAttrs}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-review/src/testing/ReviewStoryLayout.tsx",
+          "line": 57,
+          "column": 7,
+          "reason": "Grid not converted: rows (a person decides the layout)",
+          "snippet": "<Grid rows={companionData.map(() => 'minmax(0, 1fr)')} grow={false} classNames='min-h-0 divide-y divide-subdued-separ..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-routine/src/components/TemplateEditor/TemplateForm.tsx",
+          "line": 66,
+          "column": 9,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={['10rem', '10rem', '1fr']} grow={false} align='center' classNames='gap-1'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-sandbox/src/components/RepositoryViewer/RepositoryViewer.tsx",
+          "line": 95,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={['18rem', '1fr']} classNames='divide-x divide-separator'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-script/src/components/TestPanel/TestPanel.tsx",
+          "line": 162,
+          "column": 13,
+          "reason": "Grid not converted: cols is missing, computed or subgrid",
+          "snippet": "<Grid key={i} cols={MESSAGE_COLS} grow={false}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-script/src/components/TestPanel/TestPanel.tsx",
+          "line": 171,
+          "column": 13,
+          "reason": "Grid not converted: cols is missing, computed or subgrid",
+          "snippet": "<Grid cols={MESSAGE_COLS} grow={false}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-script/src/containers/ScriptProperties/FunctionPublishing.tsx",
+          "line": 99,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='py-form-gap'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-script/src/containers/ScriptProperties/FunctionPublishing.tsx",
+          "line": 103,
+          "column": 11,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex classNames='pt-form-gap'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-script/src/containers/ScriptProperties/FunctionPublishing.tsx",
+          "line": 110,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm' justify='end'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx",
+          "line": 456,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex classNames='h-full min-h-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx",
+          "line": 508,
+          "column": 17,
+          "reason": "Flex not converted: align or justify other than the grid default",
+          "snippet": "<Flex column gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/components/CreateObjectPanel/CreateObjectPanel.tsx",
+          "line": 201,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='sm' justify='end' classNames='pt-form-padding'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/ImportSpaceDialog/ImportSpaceDialog.tsx",
+          "line": 70,
+          "column": 11,
+          "reason": "Flex not converted: asChild (layout classes need a person)",
+          "snippet": "<Flex align='center' justify='center' gap='sm' asChild role='status' classNames='my-4 p-8 border-2 border-dashed bord..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/RecordArticle/RecordArticle.tsx",
+          "line": 80,
+          "column": 13,
+          "reason": "Flex not converted: gap='form' has no Container step",
+          "snippet": "<Flex column gap='form'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SpaceHomeArticle/SpaceHomeArticle.tsx",
+          "line": 49,
+          "column": 9,
+          "reason": "Column.Root not converted: style (layout classes need a person)",
+          "snippet": "<Column.Root gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SpaceHomeArticle/SpaceHomeArticle.tsx",
+          "line": 52,
+          "column": 15,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='lg' classNames='dx-document pb-trim-2xl'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SpaceSettingsContainer/SpaceSettingsContainer.tsx",
+          "line": 205,
+          "column": 15,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SpaceSettingsContainer/SpaceSettingsContainer.tsx",
+          "line": 254,
+          "column": 21,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='sm' justify='end' classNames='mt-4'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
+          "line": 79,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='sm' classNames='w-[240px] p-2' style={iconSize(4)}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
+          "line": 81,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='sm' align='center' classNames='mb-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
+          "line": 93,
+          "column": 9,
+          "reason": "Grid not converted: cols is missing, computed or subgrid",
+          "snippet": "<Grid cols={SYNC_COLS} grow={false} gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
+          "line": 100,
+          "column": 9,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={SYNC_COLS} grow={false} gap='sm' classNames='gap-y-1'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
+          "line": 102,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
+          "line": 110,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
+          "line": 118,
+          "column": 11,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-spacetime/src/containers/SceneArticle/SceneArticle.tsx",
+          "line": 29,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex classNames='aspect-square w-full max-h-full min-h-0'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-status-bar/src/containers/StatusBarActions/StatusBarActions.tsx",
+          "line": 15,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex gap='sm' align='center' classNames='h-full px-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-status-bar/src/containers/VersionNumber/VersionNumber.tsx",
+          "line": 35,
+          "column": 5,
+          "reason": "Flex not converted: align or justify other than the grid default",
+          "snippet": "<Flex column gap='xs' align='start'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-studio/src/containers/GalleryArticle/GalleryArticle.tsx",
+          "line": 131,
+          "column": 11,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex role='status' center classNames='h-full text-subdued'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/FileUrlField.tsx",
+          "line": 83,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex classNames='items-center gap-1'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx",
+          "line": 300,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='xs' classNames='pt-3 px-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactVariants.tsx",
+          "line": 198,
+          "column": 13,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex role='status' center classNames='h-full text-subdued'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-support/src/containers/HelpMenu/HelpMenu.tsx",
+          "line": 96,
+          "column": 11,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='ps-8 pe-2 pb-2 text-xs text-description'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-support/src/containers/SupportArticle/SupportArticle.tsx",
+          "line": 82,
+          "column": 9,
+          "reason": "Column.Root not converted: a child other than Column.Center / Column.Row (Column places it in a gutter track)",
+          "snippet": "<Column.Root>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-support/src/containers/SupportArticle/SupportArticle.tsx",
+          "line": 105,
+          "column": 15,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex gap='sm' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-support/src/containers/SupportHomeCompanion/SupportHomeCompanion.tsx",
+          "line": 70,
+          "column": 5,
+          "reason": "Flex not converted: align or justify other than the grid default",
+          "snippet": "<Flex column gap='lg' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskArticle.tsx",
+          "line": 91,
+          "column": 15,
+          "reason": "Column.Root not converted: classNames (layout classes need a person)",
+          "snippet": "<Column.Root gutter='md' gap='lg' classNames='py-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskArticle.tsx",
+          "line": 121,
+          "column": 19,
+          "reason": "Column.Section → an inheriting Container, by hand",
+          "snippet": "<Column.Section label={t('task-questions.label')} data-testid='tasksPlugin.questions'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskArtifacts.tsx",
+          "line": 32,
+          "column": 5,
+          "reason": "Column.Section → an inheriting Container, by hand",
+          "snippet": "<Column.Section label={t('task-artifacts.label')} data-testid='tasksPlugin.artifacts'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskAttachments.tsx",
+          "line": 273,
+          "column": 5,
+          "reason": "Column.Section → an inheriting Container, by hand",
+          "snippet": "<Column.Section label={t('task-attachments.label')} data-testid='tasksPlugin.attachments'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-tldraw/src/containers/TldrawArticle/TldrawArticle.tsx",
+          "line": 83,
+          "column": 5,
+          "reason": "Flex not converted: spread props",
+          "snippet": "<Flex {...composableProps(props, { classNames: [fill ? 'dx-fill' : 'aspect-square', 'overflow-hidden'] })} ref={forwa..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-trip/src/containers/BookingSearch/BookingSearch.tsx",
+          "line": 194,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='dx-expand'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-video/src/containers/TranscriptSection/TranscriptSection.tsx",
+          "line": 84,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column center classNames='w-full p-4 text-description'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-video/src/containers/TranscriptSection/TranscriptSection.tsx",
+          "line": 91,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column center gap='sm' classNames='w-full p-4 text-description'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/plugins/plugin-zen/src/containers/ZenArticle/ZenArticle.tsx",
+          "line": 24,
+          "column": 9,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='p-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-canvas/src/components/SceneView/Scored.stories.tsx",
+          "line": 221,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap='lg' classNames='p-3 overflow-y-auto text-sm border-l border-separator' data-testid='scene-view.scor..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-canvas/src/components/SceneView/Scored.stories.tsx",
+          "line": 228,
+          "column": 9,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex align='baseline' gap='sm'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-canvas/src/components/SceneView/Scored.stories.tsx",
+          "line": 250,
+          "column": 13,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid key={id} cols={['5.5rem', '1fr', '3rem', '2.5rem']} gap='sm' align='center' grow={false} classNames='text-xs' d..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-canvas/src/components/SceneView/Scored.stories.tsx",
+          "line": 283,
+          "column": 9,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={['1fr', 'auto']} grow={false} classNames='gap-x-4 font-mono text-xs'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-canvas/src/components/SceneView/Scored.stories.tsx",
+          "line": 317,
+          "column": 5,
+          "reason": "Grid not converted: classNames (a person decides the layout)",
+          "snippet": "<Grid cols={['1fr', '24rem']} grow={false} classNames='dx-fill'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx",
+          "line": 618,
+          "column": 13,
+          "reason": "Column.Root not converted: a computed gutter or gap",
+          "snippet": "<Column.Root gutter={gutter}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-feed/src/testing/MessageWindow.tsx",
+          "line": 100,
+          "column": 11,
+          "reason": "Column.Root not converted: a computed gutter or gap",
+          "snippet": "<Column.Root gutter={gutter}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-form/src/components/Form/FormControls.tsx",
+          "line": 126,
+          "column": 9,
+          "reason": "Column.Root not converted: spread props",
+          "snippet": "<Column.Root {...composableProps(props, { classNames: ['dx-expand', span, styles.viewport()] })} gutter={gutter} ref=..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-form/src/components/Form/FormControls.tsx",
+          "line": 139,
+          "column": 7,
+          "reason": "Column.Root not converted: spread props",
+          "snippet": "<Column.Root {...composableProps(props, { classNames: ['w-full min-w-0', span, styles.viewport()] })} gutter={gutter}..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-geo/src/components/WorldMap/WorldMap.stories.tsx",
+          "line": 33,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='h-full'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-geo/src/components/WorldMap/WorldMap.stories.tsx",
+          "line": 34,
+          "column": 7,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex grow>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-geo/src/components/WorldMap/WorldMap.stories.tsx",
+          "line": 37,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex wrap gap='sm' classNames='p-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-list/src/components/MasterDetail/MasterDetail.tsx",
+          "line": 124,
+          "column": 5,
+          "reason": "Column.Root not converted: classNames (layout classes need a person)",
+          "snippet": "<Column.Root gutter='sm' classNames={classNames}>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-list/src/components/Picker/Picker.stories.tsx",
+          "line": 71,
+          "column": 5,
+          "reason": "Column.Root not converted: classNames (layout classes need a person)",
+          "snippet": "<Column.Root gutter='sm' classNames='border border-separator rounded-md py-form-gap'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-task/src/components/TaskList/TaskHistory.stories.tsx",
+          "line": 58,
+          "column": 5,
+          "reason": "Column.Root not converted: classNames (layout classes need a person)",
+          "snippet": "<Column.Root gutter='md' classNames='w-[32rem] py-2'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-task/src/components/TaskList/TaskHistory.tsx",
+          "line": 117,
+          "column": 5,
+          "reason": "Column.Section → an inheriting Container, by hand",
+          "snippet": "<Column.Section role='list' label={t('task-history.label')} aria-label={t('task-history.label')} data-testid='taskLis..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/react-ui-task/src/components/TaskList/TaskProperties.tsx",
+          "line": 70,
+          "column": 5,
+          "reason": "Column.Section → an inheriting Container, by hand",
+          "snippet": "<Column.Section label={t('task-properties.label')} gap='sm' classNames={classNames} data-testid='taskList.properties' >"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/ui-template/src/react/renderer.tsx",
+          "line": 88,
+          "column": 7,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column gap={gap} classNames={mx( 'dx-expand overflow-hidden ring-2 ring-separator rounded-sm', id && attended =..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/ui-template/src/react/renderer.tsx",
+          "line": 139,
+          "column": 9,
+          "reason": "Grid not converted: rows (a person decides the layout)",
+          "snippet": "<Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} grow={false} classNames='dx-expand'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/ui-template/src/react/renderer.tsx",
+          "line": 145,
+          "column": 9,
+          "reason": "Flex not converted: spread props",
+          "snippet": "<Flex key={path} {...flexProps(props)} classNames='dx-expand'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/ui-template/src/react/renderer.tsx",
+          "line": 260,
+          "column": 11,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex key={asText(itemField(node, scope, item, 'id') ?? index)} role='listitem' align='center'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/ui-template/src/react/renderer.tsx",
+          "line": 343,
+          "column": 5,
+          "reason": "Flex not converted: a row (Group pads and wraps, a Container row needs columns)",
+          "snippet": "<Flex key={path} align='center' role='toolbar'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/ui-template/src/react/renderer.tsx",
+          "line": 379,
+          "column": 5,
+          "reason": "Flex not converted: wrap, grow or center",
+          "snippet": "<Flex key={path} column grow>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/ui-template/src/react/testing/Workbench.tsx",
+          "line": 41,
+          "column": 3,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex classNames='dx-expand grid grid-cols-2 divide-x divide-separator' align='stretch'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/ui-template/src/react/testing/Workbench.tsx",
+          "line": 42,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column grow classNames='dx-expand grid divide-y divide-separator' style={{ gridTemplateRows: panes.map((pane) =..."
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/ui-template/src/react/testing/Workbench.tsx",
+          "line": 69,
+          "column": 3,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column classNames='dx-expand'>"
+        },
+        {
+          "transform": "layout",
+          "file": "packages/ui/ui-template/src/react/testing/Workbench.tsx",
+          "line": 71,
+          "column": 5,
+          "reason": "Flex not converted: classNames (layout classes need a person)",
+          "snippet": "<Flex column grow classNames='dx-expand'>"
+        }
+      ]
+    }
+  ]
+}

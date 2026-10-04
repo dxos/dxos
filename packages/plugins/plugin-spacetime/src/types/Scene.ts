@@ -24,6 +24,7 @@ export class Scene extends Type.makeObject<Scene>(DXN.make('org.dxos.type.spacet
     Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' }),
     // Opts the type into card-content previews (the masonry tile renders the CardContent surface).
     CardAnnotation.set(true),
+    Annotation.UserType.set(),
   ),
 ) {}
 

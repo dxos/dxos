@@ -12,10 +12,22 @@ import { ViewState } from '@dxos/react-ui-attention/types';
 export const Tab = Schema.Literals(['overview', 'tasks']);
 export type Tab = Schema.Schema.Type<typeof Tab>;
 
+/** The pipeline chart's axis: `time` fits the run to the pane, `unit` steps per event and scrolls. */
+export const Axis = Schema.Literals(['time', 'unit']);
+export type Axis = Schema.Schema.Type<typeof Axis>;
+
+/** What the pipeline chart's first column shows per lane: its title, or its token and tool counts. */
+export const Legend = Schema.Literals(['title', 'stats']);
+export type Legend = Schema.Schema.Type<typeof Legend>;
+
 export const State = Schema.Struct({
   tab: Tab,
   /** Whether the pipeline chart is shown under the ledger. */
   pipeline: Schema.Boolean,
+  /** Optional so state persisted before the toggle existed still decodes; absent reads as `time`. */
+  axis: Schema.optional(Axis),
+  /** Optional for the same reason as `axis`; absent reads as `title`. */
+  legend: Schema.optional(Legend),
 });
 export type State = Schema.Schema.Type<typeof State>;
 

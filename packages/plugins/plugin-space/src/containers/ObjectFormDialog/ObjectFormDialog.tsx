@@ -20,8 +20,9 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { CollectionItemAnnotation, FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
+import { Button, Dialog, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { useSubmitOnEnter } from '@dxos/react-ui-form';
+import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
@@ -50,7 +51,21 @@ export type ObjectFormDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typ
  * unmount rather than off the cancel button because escape, the overlay, and the close affordance
  * never reach a handler and each of them is a cancel.
  */
-export const ObjectFormDialog = ({
+/**
+ * The dialog's Content; its body (and the draft it creates) lives inside it, so closing the dialog unmounts the body and
+ * a dismissal settles the handle.
+ */
+export const ObjectFormDialog = (props: ObjectFormDialogProps) => (
+  // A click outside must not dismiss: this dialog holds unsaved form input, and a stray click on
+  // the overlay would discard it with no undo. Escape and the close button remain.
+  <Dialog.Content closeOnInteractOutside={false}>
+    <ObjectFormDialogBody {...props} />
+  </Dialog.Content>
+);
+
+ObjectFormDialog.displayName = 'ObjectFormDialog';
+
+const ObjectFormDialogBody = ({
   target: initialTarget,
   typename: initialTypename,
   mode = 'draft',
@@ -140,23 +155,18 @@ export const ObjectFormDialog = ({
     return set;
   }, [typeByTypename]);
 
-  // Types eligible to live inside a collection: collections themselves, plus types carrying
-  // CollectionItemAnnotation. Used to filter the create dialog when targeting a collection.
+  // Creating into a collection offers only the types made to live there; any other user type joins a
+  // collection from the object itself.
   const collectionItemTypenames = useMemo(() => {
     const set = new Set<string>();
-    const collectionTypename = Type.getTypename(Collection.Collection);
     for (const [name, type] of typeByTypename) {
-      if (
-        name === collectionTypename ||
-        CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false))
-      ) {
+      if (TypeOptions.hasUserTypeTag(type, Collection.ItemTag)) {
         set.add(name);
       }
     }
     return set;
   }, [typeByTypename]);
 
-  // When creating into a collection, offer only collection-eligible types (mirrors the `views` filter).
   const collectionTarget = Collection.isCollection(target);
 
   const options = useMemo<CreateObjectOption[]>(
@@ -169,6 +179,11 @@ export const ObjectFormDialog = ({
               ? collectionItemTypenames.has(entry.id)
               : true,
         )
+        // Only object types opt in; the entry that creates a new type is itself the meta-schema.
+        .filter((entry) => {
+          const type = typeByTypename.get(entry.id);
+          return type === undefined || !Type.isObject(type) || TypeOptions.isUserType(type);
+        })
         .map((entry) => {
           const type = typeByTypename.get(entry.id);
           const schema = type && Type.getSchema(type);
@@ -275,20 +290,27 @@ export const ObjectFormDialog = ({
 
     // NOTE: Must close before navigating or attention won't follow object.
     closeRef.current?.click();
-    void Effect.gen(function* () {
-      // The object is already persisted; this only hands it to its parent.
-      yield* Operation.invoke(SpaceOperation.AddObject, { object, target: parent }, { spaceId: db?.spaceId });
-      yield* navigateTo(object);
-    }).pipe(
-      Effect.provideService(Capability.Service, manager.capabilities),
-      Effect.provideService(Operation.Service, operationInvoker),
-      EffectEx.runAndForwardErrors,
+    // Detached: the dialog has already unmounted, so a teardown interrupting the hand-off is not an error.
+    EffectEx.runDetached(
+      Effect.gen(function* () {
+        // The object is already persisted; this only hands it to its parent.
+        yield* Operation.invoke(SpaceOperation.AddObject, { object, target: parent }, { spaceId: db?.spaceId });
+        yield* navigateTo(object);
+      }).pipe(
+        Effect.provideService(Capability.Service, manager.capabilities),
+        Effect.provideService(Operation.Service, operationInvoker),
+      ),
     );
   }, [object, target, parent, db, navigateTo, handle, manager.capabilities, operationInvoker]);
+
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useSubmitOnEnter(bodyRef, handleConfirm, { disabled: !object });
 
   //
   // Draft mode.
   //
+
+  const handleCancel = useCallback(() => closeRef.current?.click(), []);
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
     ({ metadata, data = {} }) =>
@@ -328,20 +350,18 @@ export const ObjectFormDialog = ({
   );
 
   return (
-    // A click outside must not dismiss: this dialog holds unsaved form input, and a stray click on
-    // the overlay would discard it with no undo. Escape and the close button remain.
-    <Dialog.Content onInteractOutside={(event) => event.preventDefault()}>
+    <>
       <Dialog.Header>
         <Dialog.Title>
           {t('create-object-dialog.title', {
             object: t('typename.label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
         </Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' ref={closeRef} />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close ref={closeRef} />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
-      <Dialog.Body>
+      <Dialog.Body ref={bodyRef}>
         <CreateObjectPanel
           options={options}
           spaces={spaces}
@@ -354,31 +374,30 @@ export const ObjectFormDialog = ({
           initialFormValues={defaults}
           resolve={resolve}
           onCreateObject={handleCreateObject}
+          onCancel={handleCancel}
           onTargetChange={setTarget}
           onTypenameChange={setTypename}
         />
       </Dialog.Body>
       {object ? (
-        <Dialog.ActionBar>
-          <Dialog.Close asChild>
+        <Dialog.Footer>
+          <Dialog.CloseTrigger asChild>
             <Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button>
-          </Dialog.Close>
+          </Dialog.CloseTrigger>
           <Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
             {t('object-form-confirm.label')}
           </Button>
-        </Dialog.ActionBar>
+        </Dialog.Footer>
       ) : (
         showTypeSelector &&
         registryAvailable && (
-          <Dialog.ActionBar>
-            <Dialog.Close asChild>
+          <Dialog.Footer>
+            <Dialog.CloseTrigger asChild>
               <PluginRegistryButton />
-            </Dialog.Close>
-          </Dialog.ActionBar>
+            </Dialog.CloseTrigger>
+          </Dialog.Footer>
         )
       )}
-    </Dialog.Content>
+    </>
   );
 };
-
-ObjectFormDialog.displayName = 'ObjectFormDialog';

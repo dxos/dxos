@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, type ReactNode, forwardRef } from 'react
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useComputeContext } from '../../hooks/compute-context.ts';
@@ -44,7 +44,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
           <Icon icon={icon} classNames='mx-2' />
           <div className='grow text-sm truncate'>{debug ? shape.type : (name ?? shape.text ?? title)}</div>
           {nodeId && (
-            <IconButton
+            <Button
               classNames='p-1 text-green-500'
               variant='ghost'
               icon='ph--play--regular'
@@ -63,7 +63,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
         <div className='flex shrink-0 w-full justify-between items-center h-[32px] dx-input-surface'>
           <div className='grow px-2 text-sm truncate'>{debug ? shape.id : status}</div>
           {openable && (
-            <IconButton
+            <Button
               classNames='p-1'
               variant='ghost'
               icon={open ? 'ph--caret-up--regular' : 'ph--caret-down--regular'}

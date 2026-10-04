@@ -6,7 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -15,11 +15,11 @@ import { Annotation, Filter, Obj, Query, Ref, Registry, Type } from '@dxos/echo'
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { type TreeData } from '@dxos/react-ui-list';
+import { ArchivedAnnotation } from '@dxos/schema';
 import { Position, inferObjectOrder } from '@dxos/util';
 
 import { AppNodeMatcher } from '../app-graph/index.ts';
 import { AppNode } from '../app-graph/index.ts';
-import { type DeckSpec } from '../app-graph/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
 import * as ContainerModel from '../types/ContainerModel.ts';
 
@@ -45,9 +45,14 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
   (space, typename) => `${typename}:${space.id}`,
 );
 
-/** The objects a type section lists: those without a parent, an owned object being reached through its owner. */
+/**
+ * The objects a type section lists: unarchived ones without a parent, an owned object being reached
+ * through its owner.
+ */
 export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
-  Query.select(Filter.and(Filter.type(type), Filter.hasParent(false)));
+  Query.select(
+    Filter.and(Filter.type(type), Filter.hasParent(false), Filter.not(Filter.annotation(ArchivedAnnotation, true))),
+  );
 
 /**
  * Creates a graph extension that surfaces all objects of an ECHO type under
@@ -122,13 +127,6 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
      * only accepts objects of its own type, as reorders.
      */
     dropInto?: (object: Type.InstanceType<T>) => ContainerModel.Container;
-    /**
-     * How the deck behaves when one of this section's objects is its root — the same answer
-     * {@link AppAnnotation.DeckAnnotation} gives, for a type that cannot carry it: the annotation lives
-     * in `@dxos/app-toolkit`, which a type defined below it (`@dxos/types`, `@dxos/compute`) cannot
-     * import. A type that can annotate itself should, so the answer travels with the type.
-     */
-    deck?: DeckSpec.DeckSpec;
   },
 ): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -186,7 +184,6 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
           get,
           db: space.db,
           object,
-          deck: options.deck,
           ...(dropInto ? { dropInto: dropInto(object), blockInstruction } : {}),
         }),
       )

@@ -25,32 +25,49 @@ export type ChatRequestTiming = {
   endedAt: number | null;
 };
 
+/**
+ * What the chat's parts act through: handles that hold still for the life of the chat. Kept apart
+ * from {@link ChatThreadContextValue}, which changes with every streamed block — a consumer
+ * re-renders whenever its context does, so the toolbar, the composer and the checklist re-rendered
+ * per block of every turn when the two were one context.
+ */
 export type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
   db?: Database.Database;
   chat?: ChatModule.Chat;
+  /** Removes a queued message or a pending alarm from the feed. */
+  onCancel: (item: Message.Message | Alarm.Alarm) => void;
+  /** Undefined while the processor is still opening; the chat renders from the feed meanwhile. */
+  processor?: AiChatProcessor;
+  /** How many prompts wait behind the running turn; a count, so it changes per enqueue rather than per block. */
+  queueSize: number;
+  setController: (controller: ChatThreadController | null) => void;
+  setVisibleRange: (range: MessageRange | undefined) => void;
+};
+
+/** What the chat currently shows: the projected thread and the state that moves with it. */
+export type ChatThreadContextValue = {
   messages: Message.Message[];
   /** Queued input the agent has not taken up yet, in append order. */
   queued: Message.Message[];
   /** Alarms still waiting to fire, earliest first. */
   alarms: Alarm.Alarm[];
-  /** Removes a queued message or a pending alarm from the feed. */
-  onCancel: (item: Message.Message | Alarm.Alarm) => void;
-  processor: AiChatProcessor;
+  /** Alarms that have woken the agent since the last user prompt. */
+  selfWakes: number;
   requestTiming: ChatRequestTiming | null;
   /** The thread's controller, shared between `Chat.Thread` and `Chat.Outline`. */
   controller: ChatThreadController | null;
-  setController: (controller: ChatThreadController | null) => void;
   /** The visible index range, published by `Chat.Thread` as the reader scrolls. */
   visibleRange?: MessageRange;
-  setVisibleRange: (range: MessageRange | undefined) => void;
 };
 
 // Internal: not re-exported from `Chat/index.ts`. Accessed by sibling components in this
 // package (e.g. `ChatStreamStatus`) without dragging in `Chat.tsx`'s heavy transitive
 // imports (transcription, etc.).
 export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
+
+export const [ChatThreadContextProvider, useChatThreadContext] = createContext<ChatThreadContextValue>('ChatThread');
 
 /**
  * Report path for agent-requested surfaces rendered inside the thread (`<surface>` blocks): a

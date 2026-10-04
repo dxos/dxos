@@ -5,8 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -26,7 +26,7 @@ const ACTIVE_PROCESS_STATES = new Set<Process.State>([Process.State.RUNNING, Pro
 export const isTerminalActivityLine = (line: string): boolean =>
   line.endsWith(' - Success') || line.endsWith(' - Error') || line === 'Agent completed request';
 
-const collectDescendantPids = (processes: readonly Process.Info[], rootPid: string): Set<string> => {
+const collectDescendantPids = (processes: readonly Process.Process[], rootPid: string): Set<string> => {
   const pids = new Set([rootPid]);
   let expanded = true;
   while (expanded) {
@@ -43,7 +43,7 @@ const collectDescendantPids = (processes: readonly Process.Info[], rootPid: stri
   return pids;
 };
 
-const resolveSubscribePids = (agentPid: Process.ID, processes: readonly Process.Info[]): Process.ID[] => {
+const resolveSubscribePids = (agentPid: Process.ID, processes: readonly Process.Process[]): Process.ID[] => {
   const rootPid = String(agentPid);
   const descendants = collectDescendantPids(processes, rootPid);
   const activePids = processes

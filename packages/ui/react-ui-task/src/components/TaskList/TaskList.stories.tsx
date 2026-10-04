@@ -4,19 +4,29 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Blob, Obj, Ref } from '@dxos/echo';
+import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
+import {
+  Block,
+  Card,
+  DX_ANCHOR_ACTIVATE,
+  DxAnchorActivate,
+  Flex,
+  Grid,
+  Icon,
+  Popover,
+  virtualAnchor,
+} from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { File, PullRequest, Task } from '@dxos/types';
+import { File, PullRequest, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
 import { type TaskPlacement } from './hierarchy.ts';
-import { TaskList } from './TaskList.tsx';
+import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
 
 random.seed(1);
 
@@ -59,15 +69,16 @@ const seedFlat = (): Task.Task[] => [
     priority: 'high',
     description:
       'Target a 12 minute development window; log every profile so the next batch can be reproduced from the notes rather than from memory.',
-    // Longer than the pane shows, so the "newest first, capped" behaviour is exercised.
+    // Longer than the pane shows, and all of it about the work: a text edit writes no entry, so a
+    // seeded "Description updated" would be history this app never produces.
     history: seedHistory(
       3,
       'Created this task',
-      'Description updated',
+      'Assigned to Scout',
       'Priority changed from medium to high',
       'Status changed from todo to started',
       'Estimate set to m',
-      'Description updated',
+      'Unassigned',
     ),
   }),
   Task.make({
@@ -125,6 +136,13 @@ const seedMany = (n = 40): Task.Task[] =>
     }),
   );
 
+/** Lists `children` under `parent`, which also makes it their parent (`subtasks` owns its entries). */
+const adopt = (parent: Task.Task, ...children: Task.Task[]): void => {
+  Obj.update(parent, (parent) => {
+    parent.subtasks?.push(...children.map((child) => Ref.make(child)));
+  });
+};
+
 /**
  * A full tree: every node down to `depth` has `children` sub-tasks, so the seed exercises what a
  * two-level fixture cannot — indentation compounding past the second level, a branch under a
@@ -141,8 +159,10 @@ const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
       status: statuses[(path.length + path[path.length - 1]) % statuses.length],
       description: when(path[path.length - 1] === 2, () => random.lorem.paragraph()),
       estimate: when(path.length === depth, () => random.helpers.arrayElement([...Task.Estimate.literals])),
-      ...(parent && { parentTask: Ref.make(parent) }),
     });
+    if (parent) {
+      adopt(parent, task);
+    }
     tasks.push(task);
     if (path.length < depth) {
       for (let index = 1; index <= children; index++) {
@@ -157,9 +177,9 @@ const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
 };
 
 /**
- * Two roots with sub-tasks two levels deep. Array order is sibling order only, so the seed
- * deliberately interleaves the two branches — a list that walked the array instead of the tree
- * would render them out of order, which is the bug this story exists to catch.
+ * Two roots with sub-tasks two levels deep. The flat list deliberately interleaves the two branches
+ * — a list that walked it instead of the tree would render them out of order, which is the bug this
+ * story exists to catch.
  */
 const seedHierarchy = (): Task.Task[] => {
   const task1 = Task.make({
@@ -174,29 +194,27 @@ const seedHierarchy = (): Task.Task[] => {
   const task3 = Task.make({
     title: 'Write the tasting notes',
     status: 'todo',
-    parentTask: Ref.make(task1),
     description: 'One paragraph per lot, in the order they are poured.',
   });
   const task4 = Task.make({
     title: 'Sample the Ethiopian lots',
     status: 'done',
-    parentTask: Ref.make(task2),
   });
   const task5 = Task.make({
     title: 'Approve the label art',
     status: 'todo',
-    parentTask: Ref.make(task1),
   });
   const task6 = Task.make({
     title: 'Log every profile',
     status: 'started',
-    parentTask: Ref.make(task2),
   });
   const task7 = Task.make({
     title: 'Proofread the back label',
     status: 'todo',
-    parentTask: Ref.make(task5),
   });
+  adopt(task1, task3, task5);
+  adopt(task2, task4, task6);
+  adopt(task5, task7);
 
   return [task1, task2, task3, task4, task5, task6, task7];
 };
@@ -207,8 +225,9 @@ const seedHierarchy = (): Task.Task[] => {
  */
 const seedDrag = (): Task.Task[] => {
   const a = Task.make({ title: 'A', status: 'todo' });
-  const b = Task.make({ title: 'B', status: 'todo', parentTask: Ref.make(a) });
-  const c = Task.make({ title: 'C', status: 'todo', parentTask: Ref.make(a) });
+  const b = Task.make({ title: 'B', status: 'todo' });
+  const c = Task.make({ title: 'C', status: 'todo' });
+  adopt(a, b, c);
   return [a, b, c];
 };
 
@@ -387,12 +406,12 @@ const iconFor = (artifact: Obj.Unknown): string =>
 const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequest }) => (
   <>
     <Card.Row>
-      <Card.Text variant='description'>
+      <Card.Text variant='muted'>
         {PullRequest.reference(pullRequest)} · {pullRequest.state} · {pullRequest.headBranch} → {pullRequest.baseBranch}
       </Card.Text>
     </Card.Row>
     <Card.Row>
-      <Card.Text variant='description' data-testid='artifact-preview.pullRequest'>
+      <Card.Text variant='muted' data-testid='artifact-preview.pullRequest'>
         +{pullRequest.additions ?? 0} −{pullRequest.deletions ?? 0}
       </Card.Text>
     </Card.Row>
@@ -402,24 +421,36 @@ const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequ
 /**
  * Answers the card request an artifact tag dispatches, standing in for PreviewPlugin so the story
  * shows what each artifact is without the plugin layers. The event does not bubble, so it is caught
- * in the capture phase on `window`, as the app's own host does.
+ * in the capture phase on `window`, as the app's own host does. Opening an object is recorded on
+ * `artifact-opened` in place of navigating.
  */
 const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifacts: Obj.Unknown[] }>) => {
   const triggerRef = useRef<HTMLElement | null>(null);
   const [artifact, setArtifact] = useState<Obj.Unknown>();
   const [open, setOpen] = useState(false);
+  const [opened, setOpened] = useState<string>();
 
   const handleActivate = useCallback(
     (event: Event) => {
       if (!(event instanceof DxAnchorActivate)) {
         return;
       }
-      const match = artifacts.find((artifact) => String(Obj.getURI(artifact)) === event.eid);
-      if (match) {
-        triggerRef.current = event.trigger;
-        setArtifact(match);
-        setOpen(true);
+      if (event.state === false) {
+        setOpen(false);
+        return;
       }
+      const match = artifacts.find((artifact) => String(Obj.getURI(artifact)) === event.eid);
+      if (!match) {
+        return;
+      }
+      if (event.navigate) {
+        setOpen(false);
+        setOpened(Obj.getLabel(match));
+        return;
+      }
+      triggerRef.current = event.trigger;
+      setArtifact(match);
+      setOpen(true);
     },
     [artifacts],
   );
@@ -430,37 +461,70 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
   }, [handleActivate]);
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.VirtualTrigger virtualRef={triggerRef} />
+    <Popover.Root
+      open={open}
+      onOpenChange={({ open }) => setOpen(open)}
+      positioning={virtualAnchor(triggerRef)}
+      autoFocus={false}
+    >
       {children}
+      <output className='sr-only' data-testid='artifact-opened'>
+        {opened}
+      </output>
       {artifact && (
-        <Popover.Portal>
-          <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-            <Popover.Viewport classNames='dx-card-popover-width'>
-              <Card.Root border={false} data-testid='artifact-preview'>
-                <Card.Header>
-                  <Card.Block>
-                    <Icon icon={iconFor(artifact)} />
-                  </Card.Block>
-                  <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
-                </Card.Header>
-                {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
-                {Obj.instanceOf(File.File, artifact) && (
-                  <Card.Row>
-                    <FilePreview file={artifact} />
-                  </Card.Row>
-                )}
-              </Card.Root>
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content>
+          <Popover.Body classNames='dx-card-popover-width'>
+            <Card.Root border={false} data-testid='artifact-preview'>
+              <Card.Header>
+                <Block>
+                  <Icon icon={iconFor(artifact)} />
+                </Block>
+                <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
+              </Card.Header>
+              {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
+              {Obj.instanceOf(File.File, artifact) && (
+                <Card.Row>
+                  <FilePreview file={artifact} />
+                </Card.Row>
+              )}
+            </Card.Root>
+          </Popover.Body>
+        </Popover.Content>
       )}
     </Popover.Root>
   );
 };
 
 /** The default story under a preview host that knows the seed's artifacts. */
+/** {@link seedArtifacts} with tags on most rows, so tags sit beside artifact and assignee chips. */
+const seedTagged = (): Task.Task[] => {
+  const tags = {
+    launch: Tag.make({ label: 'launch', hue: 'rose' }),
+    design: Tag.make({ label: 'design', hue: 'sky' }),
+    frontend: Tag.make({ label: 'frontend', hue: 'violet' }),
+    content: Tag.make({ label: 'content', hue: 'lime' }),
+  };
+  const byTitle: Record<string, Tag.Tag[]> = {
+    'Choose the launch roast': [tags.launch],
+    'Render artifacts in the task list': [tags.frontend],
+    'Design the new label': [tags.design, tags.launch],
+    'Prepare the launch post': [tags.content, tags.launch],
+  };
+  const tasks = seedArtifacts();
+  for (const task of tasks) {
+    Obj.update(task, (task) => {
+      for (const tag of byTitle[task.title] ?? []) {
+        Obj.addTag(task, Ref.make(tag));
+      }
+      // A tagged row with a description, so the story shows the chips sitting between the two.
+      if (task.title === 'Design the new label') {
+        task.description = 'Two variants for the spring blend.';
+      }
+    });
+  }
+  return tasks;
+};
+
 const ArtifactsStory = (props: Parameters<typeof DefaultStory>[0]) => {
   const tasks = useMemo(() => (props.seed ?? seedArtifacts)(), [props.seed]);
   const artifacts = useMemo(
@@ -488,8 +552,7 @@ const DefaultStory = ({
   showOrdinals,
   showDescription = true,
   showEstimates,
-  debug,
-  framed = true,
+  acceptFiles = false,
 }: {
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
@@ -509,13 +572,12 @@ const DefaultStory = ({
   showOrdinals?: boolean;
   showDescription?: boolean;
   showEstimates?: boolean;
-  /** Paint every row's drop bands, so the zones are visible without holding a drag. */
-  debug?: boolean;
-  /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
-      columns against a row's, which the inset would offset. */
-  framed?: boolean;
+  /** Let the create pane take dropped files, recording what each create was handed. */
+  acceptFiles?: boolean;
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(seed);
+  // Stands in for the host's attach: the names of the files each create was handed.
+  const [attached, setAttached] = useState<string[]>([]);
 
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
@@ -544,20 +606,25 @@ const DefaultStory = ({
     [],
   );
 
-  const handleCreate = useCallback(({ title, ...props }: Task.Draft) => {
+  // Stands in for the host: a title starting `fail` is refused, one starting `slow` lands late, and
+  // store-and-attach fails for any file named `fail…`.
+  const handleCreate = useCallback<TaskCreateHandler>(async ({ title, ...props }, files) => {
+    if (title.startsWith('fail')) {
+      return { error: new Error('Refused.') };
+    }
+    if (title.startsWith('slow')) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
     setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
+    const attachable = (files ?? []).filter((file) => !file.name.startsWith('fail'));
+    setAttached((attached) => [...attached, ...attachable.map((file) => `${title}:${file.name}`)]);
+    return { rejectedFiles: (files ?? []).filter((file) => file.name.startsWith('fail')) };
   }, []);
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
     Obj.update(task, (task) => {
       Object.assign(task, patch);
     });
-    setTasks((tasks) => [...tasks]);
-  }, []);
-
-  // Stands in for the `AnswerQuestion` operation, minus the resume: the answer lands in the history.
-  const handleQuestionAnswer = useCallback((task: Task.Task, questionId: string, answer: string) => {
-    Task.answer(task, questionId, answer, { actor: { name: 'Rich', role: 'user' } });
     setTasks((tasks) => [...tasks]);
   }, []);
 
@@ -568,13 +635,20 @@ const DefaultStory = ({
   // Stands in for the `MoveTask` verb: re-parent and reposition in one step, since that is the
   // contract the list is written against.
   const handleMove = useCallback((task: Task.Task, { parentTask, before }: TaskPlacement) => {
-    Obj.update(task, (task) => {
-      if (parentTask) {
-        task.parentTask = Ref.make(parentTask);
-      } else {
-        delete task.parentTask;
-      }
-    });
+    const previous = Task.getParentTask(task);
+    if (previous) {
+      Obj.update(previous, (previous) => {
+        TaskSet.removeRefsInPlace(previous.subtasks ?? [], new Set([task.id]));
+      });
+    }
+    if (parentTask) {
+      Obj.update(parentTask, (parentTask) => {
+        parentTask.subtasks ??= [];
+        TaskSet.insertInPlace(parentTask.subtasks, Ref.make(task), before?.id);
+      });
+    }
+    Obj.setParent(task, parentTask ?? undefined);
+    // Root order is the list's own array order, as the set's `tasks` is for the real verb.
     setTasks((tasks) => {
       const rest = tasks.filter(({ id }) => id !== task.id);
       const anchor = before ? rest.findIndex(({ id }) => id === before.id) : -1;
@@ -584,7 +658,6 @@ const DefaultStory = ({
 
   return (
     <TaskList.Root
-      debug={debug}
       tasks={tasks}
       selected={selected}
       hierarchical={hierarchical}
@@ -600,28 +673,73 @@ const DefaultStory = ({
       onTaskCheck={checkable ? handleCheck : undefined}
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
-      onQuestionAnswer={readonly ? undefined : handleQuestionAnswer}
     >
-      <TaskList.Viewport>
-        <TaskList.Content />
-      </TaskList.Viewport>
-      {framed ? (
-        <div className='p-2'>
-          <TaskList.Edit
+      <Grid grow rows={['fill', 'min']}>
+        <TaskList.Viewport>
+          <TaskList.Content />
+        </TaskList.Viewport>
+        <Flex classNames='p-3'>
+          <TaskList.Editor
             showDescription={showDescription}
+            acceptFiles={acceptFiles}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
-        </div>
-      ) : (
-        <TaskList.Edit grid showDescription={showDescription} />
-      )}
+          {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
+        </Flex>
+      </Grid>
     </TaskList.Root>
   );
 };
 
+/**
+ * The list beside the task's detail, as a project lays them out with its `~task` companion: the rows
+ * carry each question as one line, and the detail — its own root holding just the selected task, as
+ * `TaskArticle` does — carries the open ones in full, with the controls to answer them.
+ */
+const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] }) => {
+  const [tasks] = useState<Task.Task[]>(seed);
+  const [selected, setSelected] = useState<string | undefined>(() => tasks[0]?.id);
+  const task = tasks.find(({ id }) => id === selected);
+
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
+    Obj.update(task, (task) => {
+      Object.assign(task, patch);
+    });
+  }, []);
+
+  // Stands in for the `AnswerQuestion` operation: the answer lands in the history.
+
+  return (
+    <div className='grid grid-cols-[1fr_24rem] dx-fill divide-x divide-separator dx-base-surface'>
+      <div className='flex flex-col min-w-0 min-h-0' data-testid='story.list'>
+        <TaskList.Root
+          tasks={tasks}
+          selected={selected}
+          selectable
+          showGroupLabels={false}
+          onTaskUpdate={handleUpdate}
+          onTaskSelect={(task) => setSelected(task?.id)}
+        >
+          <TaskList.Viewport>
+            <TaskList.Content />
+          </TaskList.Viewport>
+        </TaskList.Root>
+      </div>
+      <div className='flex flex-col overflow-y-auto' data-testid='story.detail'>
+        {task ? (
+          <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
+            <TaskList.Editor showDescription classNames='p-2' />
+          </TaskList.Root>
+        ) : (
+          <p className='p-4 text-fg-subtle'>No task selected.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /** The row's title cell: the grid track that the mnemonic chip and the title text share. */
-const titleCell = (row: Element): HTMLElement =>
-  row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!.parentElement!;
+const titleCell = (row: Element): HTMLElement => row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!;
 
 const meta = {
   title: 'ui/react-ui-task/TaskList',
@@ -635,6 +753,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** No description line, as the chat's checklist shows it: the add row is exactly one task row tall. */
+export const WithoutDescription: Story = {
+  args: {
+    showDescription: false,
+  },
+};
 
 /** A list long enough to scroll, group and number into double digits. */
 export const ManyTasks: Story = {
@@ -688,39 +813,141 @@ export const WithQuestions: Story = {
   },
 };
 
-/** Picking an option records it as the answer, and the row collapses to the question and its answer. */
-export const TestAnswerQuestion: Story = {
+/**
+ * A task's questions live on the detail surface, not in the list: a row carries its title and its
+ * description, and the strip below carries the fields. Answering is `TaskArticle`'s, and is covered
+ * where it happens — plugin-projects' `ProjectArticle` › Task Detail story.
+ */
+export const TestNoQuestionsInList: Story = {
   args: {
     seed: seedQuestions,
     showGroupLabels: false,
   },
   play: async ({ canvasElement }) => {
-    const answers = () =>
-      [...canvasElement.querySelectorAll('[data-testid="task-question.answer"]')].map((answer) => answer.textContent);
+    const canvas = within(canvasElement);
+    // The seeded tasks all carry questions, answered and open alike.
+    await expect(canvas.findByText('Draft the refund reply', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('Pick the house roast', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
-    await waitFor(async () => {
-      await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
-    });
-    const option = canvasElement.querySelector<HTMLButtonElement>('[data-testid="task-question.option"]');
-    if (!option) {
-      throw new Error('the open question has no options');
-    }
-    await userEvent.click(option);
-    await waitFor(async () => {
-      await expect(answers()).toContain('30 days');
-    });
+    // None of it reaches the rows: no question line, no answer line, and nothing to answer with.
+    await expect(canvasElement.querySelector('[data-testid="task-question"]')).toBeNull();
+    await expect(canvasElement.querySelector('[data-testid="task-question.answer"]')).toBeNull();
+    await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).toBeNull();
+    // Nor does the log: the strip below the rows is the fields.
+    await expect(canvasElement.querySelector('[data-testid="taskList.history"]')).toBeNull();
 
-    // Typing in the free-form field must not reach the row: its keys would move the selection.
-    const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="task-question.input"]');
-    if (!input) {
-      throw new Error('the open question has no answer field');
-    }
-    await userEvent.type(input, 'Tuesday{Enter}');
+    // Selecting a row opens it for editing, and still shows neither.
+    await userEvent.click(canvas.getByText('Draft the refund reply'));
     await waitFor(async () => {
-      await expect(answers()).toContain('Tuesday');
+      await expect(canvasElement.querySelector('[data-testid="taskList.edit.title"]')).not.toBeNull();
     });
-    await expect(canvasElement.querySelectorAll('[data-testid="task-question.option"]')).toHaveLength(0);
+    await expect(canvasElement.querySelector('[data-testid="task-question"]')).toBeNull();
+    await expect(canvasElement.querySelector('[data-testid="taskList.history"]')).toBeNull();
   },
+};
+
+export const TestListAndDetail: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  render: () => <ListDetailStory />,
+  play: async ({ canvasElement }) => {
+    const list = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.list"]');
+    const detail = () => canvasElement.querySelector<HTMLElement>('[data-testid="story.detail"]');
+
+    // The detail pane edits the selected task: its title is a field, not a line of text.
+    await waitFor(async () => {
+      await expect(detail()?.querySelector('[data-testid="taskList.edit.title"]')).not.toBeNull();
+    });
+    await expect(detail()?.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')?.value).toEqual(
+      'Draft the refund reply',
+    );
+
+    // Neither side carries the task's questions or its log — both belong to the article surface,
+    // which is what a host mounts in place of this strip when it has the room for them.
+    for (const pane of [list(), detail()]) {
+      await expect(pane?.querySelector('[data-testid="task-question"]')).toBeNull();
+      await expect(pane?.querySelector('[data-testid="taskList.history"]')).toBeNull();
+    }
+  },
+};
+
+/** A single-task list whose description runs past the row's three-line clamp. */
+const seedDescription = (description: string) => () => [
+  Task.make({ title: 'Plan the cupping', status: 'todo', description }),
+];
+
+/**
+ * The row shows exactly three whole lines of the description and no sliver of a fourth: the box is
+ * three line-heights tall, and every line of text is wholly inside it or wholly below it.
+ */
+const assertDescriptionClamp: Story['play'] = async ({ canvasElement }) => {
+  const description = await waitFor(() => {
+    const found = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item.description"]');
+    if (!found) {
+      throw new Error('Task description not rendered.');
+    }
+    return found;
+  });
+
+  const lineHeight = parseFloat(getComputedStyle(description).lineHeight);
+  // Awaited: the description is found as soon as it mounts, before the row's columns have given it its width.
+  await waitFor(() => expect(description.scrollHeight).toBeGreaterThan(description.clientHeight));
+  const box = description.getBoundingClientRect();
+  await expect(Math.abs(box.height - lineHeight * 3)).toBeLessThan(1);
+
+  // Text rects only: an element's border box spans its padding, which is not a line of text.
+  const walker = document.createTreeWalker(description, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent?.trim()) {
+      continue;
+    }
+    range.selectNodeContents(node);
+    for (const rect of range.getClientRects()) {
+      const inside = rect.bottom <= box.bottom + 0.5;
+      const outside = rect.top >= box.bottom - 0.5;
+      await expect(inside || outside).toBe(true);
+    }
+  }
+};
+
+/** Every block the default renderer pads or rescales — heading, code, quote, list — inside the clamp. */
+export const TestDescriptionClamp: Story = {
+  args: {
+    seed: seedDescription(
+      [
+        '# Cupping plan',
+        '',
+        '```',
+        'roast --profile city',
+        '```',
+        '',
+        '> Book the roaster first.',
+        '',
+        '- Ethiopian Guji',
+        '- Colombian Huila',
+      ].join('\n'),
+    ),
+    showGroupLabels: false,
+  },
+  play: assertDescriptionClamp,
+};
+
+/** A paragraph run into a list, so the clamp falls between two list items. */
+export const TestDescriptionClampList: Story = {
+  args: {
+    seed: seedDescription(
+      [
+        'Line up the samples before the roaster is booked.',
+        '',
+        '- Ethiopian Guji',
+        '- Colombian Huila',
+        '- Kenyan Nyeri',
+        '- Sumatra Mandheling',
+      ].join('\n'),
+    ),
+    showGroupLabels: false,
+  },
+  play: assertDescriptionClamp,
 };
 
 export const Hierarchical: Story = {
@@ -753,22 +980,8 @@ export const HierarchicalDraggable: Story = {
   },
 };
 
-/** The drop bands painted on every row, so the zones can be seen without holding a drag. */
-export const DragDebug: Story = {
-  args: {
-    seed: seedHierarchy,
-    hierarchical: true,
-    draggable: true,
-    showOrdinals: true,
-    showDescription: true,
-    debug: true,
-    framed: false,
-  },
-};
-
 /**
- * The minimal `A > B, C` shape TREE.md reasons the six landing places about, with the bands painted.
- * Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
+ * The minimal `A > B, C` shape TREE.md reasons the six landing places about. Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
  * check a hitbox change against.
  */
 export const DropZones: Story = {
@@ -777,8 +990,6 @@ export const DropZones: Story = {
     hierarchical: true,
     draggable: true,
     showDescription: false,
-    debug: true,
-    framed: false,
   },
 };
 
@@ -817,10 +1028,10 @@ export const TestAgentSpinner: Story = {
 };
 
 /**
- * A long artifact tag takes at most half the row: the chips cell scrolls what does not fit and the
- * title truncates instead of collapsing to nothing.
+ * A row shows no artifact other than a pull request: a task whose only artifact is a document holds
+ * no chips line, and its title keeps the row's width.
  */
-export const TestLongArtifactTag: Story = {
+export const TestArtifactsHiddenInRow: Story = {
   args: {
     showGroupLabels: false,
     seed: () => [
@@ -842,19 +1053,17 @@ export const TestLongArtifactTag: Story = {
       { timeout: 10_000 },
     );
     const title = row.querySelector<HTMLElement>('span.truncate')!;
-    const chips = row.querySelector<HTMLElement>('.col-\\[chips\\]')!;
     await waitFor(async () => {
-      await expect(chips.getBoundingClientRect().width).toBeLessThanOrEqual(row.getBoundingClientRect().width / 2);
-      await expect(chips.scrollWidth).toBeGreaterThan(chips.clientWidth);
-      await expect(title.getBoundingClientRect().width).toBeGreaterThan(0);
+      await expect(row.querySelector('[data-testid="taskList.item.chips"] > *')).toBeNull();
+      await expect(title.getBoundingClientRect().width).toBeGreaterThan(row.getBoundingClientRect().width / 2);
     });
   },
 };
 
 /**
  * Tasks whose artifacts are a GitHub pull request, an image and a video (each a `File` owning a
- * `Blob`), beside a task blocked on a question in its history. Clicking a tag opens a preview of the
- * artifact it names.
+ * `Blob`), beside a task blocked on a question in its history. The row shows only the pull request,
+ * whose pill opens its preview.
  */
 export const WithArtifacts: Story = {
   render: ArtifactsStory,
@@ -865,7 +1074,74 @@ export const WithArtifacts: Story = {
   },
 };
 
-/** Each artifact kind opens its own preview: the pull request's summary, the image, the video. */
+/**
+ * Tags render as chips with the task's artifacts — a line of their own under the title, starting
+ * where the title cell does and above the description — while the assignee stays on the title line,
+ * right-aligned before the trailing controls.
+ */
+export const WithTags: Story = {
+  render: ArtifactsStory,
+  args: {
+    seed: seedTagged,
+    showGroupLabels: false,
+    showDescription: true,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(async () => {
+      await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.tag"]')).toHaveLength(6);
+    });
+
+    const rows = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')];
+    const tagged = rows.filter((row) => row.querySelector('[data-testid="taskList.item.tag"]'));
+    await expect(tagged.length).toBeGreaterThan(0);
+    for (const row of tagged) {
+      const title = titleCell(row).getBoundingClientRect();
+      const chips = row.querySelector<HTMLElement>('[data-testid="taskList.item.chips"]');
+      await expect(chips).toBeTruthy();
+      const box = chips!.getBoundingClientRect();
+      await expect(box.top).toBeGreaterThanOrEqual(title.bottom - 0.5);
+      await expect(Math.abs(box.left - title.left)).toBeLessThan(1);
+      const description = row.querySelector<HTMLElement>('[data-testid="taskList.item.description"]');
+      if (description) {
+        await expect(description.getBoundingClientRect().top).toBeGreaterThanOrEqual(box.bottom - 0.5);
+      }
+    }
+    await expect(tagged.some((row) => row.querySelector('[data-testid="taskList.item.description"]'))).toBe(true);
+
+    const assigned = rows.filter((row) => row.querySelector('[data-testid="taskList.item.assignee"]'));
+    await expect(assigned.length).toBeGreaterThan(0);
+    for (const row of assigned) {
+      const assignee = row.querySelector<HTMLElement>('[data-testid="taskList.item.assignee"]')!;
+      await expect(
+        row.querySelector('[data-testid="taskList.item.chips"] [data-testid="taskList.item.assignee"]'),
+      ).toBeNull();
+      const title = titleCell(row).getBoundingClientRect();
+      const box = assignee.getBoundingClientRect();
+      const centre = (rect: DOMRect) => rect.top + rect.height / 2;
+      // On the title's line, after it, and flush against the trailing controls.
+      await expect(Math.abs(centre(box) - centre(title))).toBeLessThan(2);
+      await expect(box.left).toBeGreaterThanOrEqual(title.right - 0.5);
+      const priority = row
+        .querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!
+        .getBoundingClientRect();
+      await expect(priority.left - box.right).toBeLessThan(40);
+    }
+
+    // A row with nothing to show as a chip holds no empty line for them.
+    const untagged = rows.find(
+      (row) =>
+        !row.querySelector('[data-testid="taskList.item.chips"] > *') &&
+        !row.querySelector('[data-testid="taskList.item.description"]'),
+    );
+    if (untagged) {
+      await expect(Math.round(untagged.getBoundingClientRect().height)).toBeLessThanOrEqual(
+        Math.round(titleCell(untagged).getBoundingClientRect().height) + 8,
+      );
+    }
+  },
+};
+
+/** A pull request, the one artifact a row shows, shows its summary on hover and opens on click. */
 export const TestArtifactPreviews: Story = {
   render: ArtifactsStory,
   args: {
@@ -875,10 +1151,13 @@ export const TestArtifactPreviews: Story = {
   },
   play: async ({ canvasElement }) => {
     const findTag = (label: string) =>
-      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"] .col-\\[chips\\] *')].find(
-        (element) => element.textContent === label,
-      );
+      [
+        ...canvasElement.querySelectorAll<HTMLElement>(
+          '[data-testid="taskList.item.chips"] *, [data-testid="taskList.item.artifacts"] *',
+        ),
+      ].find((element) => element.textContent === label);
     const preview = () => document.querySelector<HTMLElement>('[data-testid="artifact-preview"]');
+    const opened = () => document.querySelector<HTMLElement>('[data-testid="artifact-opened"]');
 
     const open = async (label: string, testId: string) => {
       const tag = await waitFor(
@@ -891,19 +1170,40 @@ export const TestArtifactPreviews: Story = {
         },
         { timeout: 10_000 },
       );
-      await userEvent.click(tag);
+      await userEvent.hover(tag);
       await waitFor(async () => expect(preview()?.querySelector(`[data-testid="${testId}"]`)).toBeTruthy(), {
         timeout: 5_000,
       });
       await expect(preview()?.textContent).toContain(label);
-      await userEvent.keyboard('{Escape}');
+      await userEvent.unhover(tag);
       await waitFor(async () => expect(preview()).toBeNull());
+
+      await userEvent.click(tag);
+      await waitFor(async () => expect(opened()?.textContent).not.toBe(''));
+      await expect(preview()).toBeNull();
     };
 
     // The pull request's tag is its `#number` pill; the preview names it by its full reference.
+    // The pull request sits on the title line, not the chips line under it.
+    const pill = await waitFor(
+      () => {
+        const pill = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item.artifacts"] button');
+        const row = pill?.closest<HTMLElement>('[data-testid="taskList.item"]');
+        if (!pill || !row) {
+          throw new Error('Pull request pill not on a row.');
+        }
+        return { pill, row };
+      },
+      { timeout: 10_000 },
+    );
+    const { row } = pill;
+    const centre = (rect: DOMRect) => rect.top + rect.height / 2;
+    await expect(
+      Math.abs(centre(pill.pill.getBoundingClientRect()) - centre(titleCell(row).getBoundingClientRect())),
+    ).toBeLessThan(4);
+
     await open('#12752', 'artifact-preview.pullRequest');
-    await open('label-v2.png', 'artifact-preview.image');
-    await open('roast-timelapse.webm', 'artifact-preview.video');
+    await expect(findTag('label-v2.png')).toBeUndefined();
   },
 };
 
@@ -927,7 +1227,7 @@ export const TestCheckboxSelection: Story = {
 
     await waitFor(async () => expect(boxes().length).toBeGreaterThan(1));
     // Checkbox and ordinal are mutually exclusive: the box takes the gutter cell, so no row numbers.
-    await expect(canvasElement.querySelectorAll('.tabular-nums').length).toBe(0);
+    await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.ordinal"]').length).toBe(0);
 
     const before = statuses();
     await userEvent.click(boxes()[0]);
@@ -960,7 +1260,7 @@ export const TestEdit: Story = {
       throw new Error('Task edit pane not found.');
     }
     const title = () => {
-      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input');
       if (!input) {
         throw new Error('Task edit title input not found.');
       }
@@ -984,12 +1284,16 @@ export const TestEdit: Story = {
     // ...and offers no Save/Cancel: with nothing typed there is nothing to save and nothing to
     // cancel, and two dead controls read as a form to fill in rather than a place to type.
     const save = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]');
+    const cancel = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]');
     await expect(save()).toBeNull();
+    await expect(cancel()).toBeNull();
     await userEvent.click(title());
     await userEvent.keyboard('Something');
     await waitFor(async () => expect(save()).not.toBeNull());
+    await expect(cancel()).not.toBeNull();
     await userEvent.clear(title());
     await waitFor(async () => expect(save()).toBeNull());
+    await expect(cancel()).toBeNull();
 
     // A half-typed title that loses focus creates nothing: leaving the field is not a decision to
     // add a task. Enter and Save are the deliberate acts, and they still work.
@@ -1003,6 +1307,15 @@ export const TestEdit: Story = {
     await waitFor(async () => expect(title()).not.toEqual(document.activeElement));
     await expect(rows()).toHaveLength(before);
     await userEvent.clear(title());
+
+    // The mnemonic chip copies the task's reference; it does not select the row it sits in.
+    const mnemonic = rows()[0].querySelector<HTMLElement>('[data-testid="taskList.item.mnemonic"]');
+    if (!mnemonic) {
+      throw new Error('Task mnemonic not found.');
+    }
+    await userEvent.click(mnemonic);
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    await expect(title().value).toEqual('');
 
     // Selecting a task fills the pane with it.
     const first = rows()[0];
@@ -1036,7 +1349,11 @@ export const TestEdit: Story = {
     if (!descriptionLine) {
       throw new Error('Description editor line not found.');
     }
-    await expect(left(descriptionLine)).toEqual(left(title()));
+    // The title is a standard (padded) Input, so its text starts at its padding edge, not its box's.
+    const titleText = Math.round(
+      title().getBoundingClientRect().left + parseFloat(getComputedStyle(title()).paddingLeft),
+    );
+    await expect(left(descriptionLine)).toEqual(titleText);
 
     // Tab moves from the title into the description's TEXT. The editor otherwise puts its tab stop
     // on a wrapper that needs a further Enter to get into, so the caret was two keys away.
@@ -1099,6 +1416,95 @@ export const TestEdit: Story = {
  * Creating with a description: the pane's description field is present with nothing selected, and
  * what is typed into it reaches `onTaskCreate` as part of the same draft as the title.
  */
+/**
+ * A create the host refuses keeps the draft, so nothing typed is lost; one that lands late does not
+ * clear text typed while it was pending.
+ */
+export const TestCreateFailureKeepsDraft: Story = {
+  args: {
+    showGroupLabels: false,
+  },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
+    const titles = () =>
+      [...canvasElement.querySelectorAll('[data-testid="taskList.item.title"]')].map((element) => element.textContent);
+
+    await userEvent.click(title());
+    await userEvent.keyboard('fail to file{Enter}');
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(title().value).toEqual('fail to file');
+    await expect(titles()).not.toContain('fail to file');
+
+    await userEvent.clear(title());
+    await userEvent.keyboard('slow to land{Enter}');
+    await userEvent.keyboard(' and more');
+    await waitFor(async () => expect(titles()).toContain('slow to land'), { timeout: 5_000 });
+    await expect(title().value).toEqual('slow to land and more');
+  },
+};
+
+/**
+ * Files dropped on the create pane are held there, one chip each, until the task is created — then
+ * they are handed over with it, for the host to store and attach. A chip can be taken back first.
+ */
+export const TestCreateWithAttachments: Story = {
+  args: {
+    showGroupLabels: false,
+    acceptFiles: true,
+  },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
+    const chips = () => [...pane.querySelectorAll<HTMLElement>('[data-testid="taskList.edit.file"]')];
+
+    const dataTransfer = new DataTransfer();
+    for (const name of ['notes.txt', 'draft.txt']) {
+      dataTransfer.items.add(new globalThis.File(['text'], name, { type: 'text/plain' }));
+    }
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer }));
+    }
+    await waitFor(async () =>
+      expect(chips().map((chip) => chip.querySelector('[data-testid="taskList.edit.file.name"]')?.textContent)).toEqual(
+        ['notes.txt', 'draft.txt'],
+      ),
+    );
+
+    await userEvent.click(chips()[1].querySelector<HTMLElement>('button')!);
+    await waitFor(async () => expect(chips()).toHaveLength(1));
+
+    await userEvent.click(title());
+    await userEvent.keyboard('Read the notes{Enter}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelector('[data-testid="story.attached"]')).toHaveTextContent(
+        'Read the notes:notes.txt',
+      ),
+    );
+    // Handed over with the task, so the pane starts the next one empty.
+    await waitFor(async () => expect(chips()).toHaveLength(0));
+
+    // A file the host could not attach stays on the pane, so it is not lost and can be retried.
+    const failing = new DataTransfer();
+    failing.items.add(new globalThis.File(['text'], 'fail.txt', { type: 'text/plain' }));
+    failing.items.add(new globalThis.File(['text'], 'plan.txt', { type: 'text/plain' }));
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      pane.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: failing }));
+    }
+    await waitFor(async () => expect(chips()).toHaveLength(2));
+    await userEvent.click(title());
+    await userEvent.keyboard('Plan the week{Enter}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelector('[data-testid="story.attached"]')).toHaveTextContent('Plan the week:plan.txt'),
+    );
+    await waitFor(async () =>
+      expect(chips().map((chip) => chip.querySelector('[data-testid="taskList.edit.file.name"]')?.textContent)).toEqual(
+        ['fail.txt'],
+      ),
+    );
+  },
+};
+
 export const TestCreateWithDescription: Story = {
   args: {
     showGroupLabels: false,
@@ -1106,7 +1512,7 @@ export const TestCreateWithDescription: Story = {
   },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
@@ -1150,7 +1556,7 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
   },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
@@ -1186,6 +1592,75 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
 };
 
 /**
+ * Cmd/Ctrl-Enter in the description saves, as the Save button does: for an edit it writes the
+ * pending text and leaves, and for a create it adds the task — without CodeMirror inserting a line
+ * first. With no title to create from, the key does nothing.
+ */
+export const TestSaveDescriptionWithModEnter: Story = {
+  args: {
+    showGroupLabels: false,
+    showDescription: true,
+  },
+  play: async ({ canvasElement }) => {
+    const found = <T extends Element>(element: T | null | undefined, name: string): T => {
+      if (!element) {
+        throw new Error(`${name} not found.`);
+      }
+      return element;
+    };
+    const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Edit pane');
+    const title = () =>
+      found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title');
+    const content = () =>
+      found(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"] .cm-content'), 'Description');
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0));
+
+    // Editing: Cmd-Enter writes the description and drops the pane back to creating.
+    const first = rows()[0];
+    first.click();
+    await waitFor(async () => expect(first.getAttribute('aria-selected')).toEqual('true'));
+    const lines = () => content().querySelectorAll('.cm-line').length;
+    await userEvent.click(content());
+    const linesBefore = lines();
+    await userEvent.keyboard(' SAVED{Meta>}{Enter}{/Meta}');
+    await waitFor(async () => expect(title().value).toEqual(''));
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    first.click();
+    await waitFor(async () => expect(content().textContent).toContain('SAVED'));
+    // No line was inserted: the save binding outranks the markdown keymap's own Mod-Enter.
+    await expect(lines()).toEqual(linesBefore);
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await waitFor(async () => expect(title().value).toEqual(''));
+
+    // Creating: Ctrl-Enter (the binding off macOS) adds the task with its description.
+    const before = rows().length;
+    await userEvent.click(title());
+    await userEvent.keyboard('Keyed task');
+    await userEvent.click(content());
+    await userEvent.keyboard('From the keyboard{Control>}{Enter}{/Control}');
+    await waitFor(async () => expect(rows()).toHaveLength(before + 1));
+    const created = found(
+      rows().find((row) => row.textContent?.includes('Keyed task')),
+      'Created row',
+    );
+    await expect(created.textContent).toContain('From the keyboard');
+    await expect(title().value).toEqual('');
+
+    // With no title there is nothing to create: the key does nothing, but still inserts no line.
+    const count = rows().length;
+    await userEvent.click(content());
+    const untitledLines = lines();
+    await userEvent.keyboard('Untitled{Control>}{Enter}{/Control}{Meta>}{Enter}{/Meta}');
+    await expect(rows()).toHaveLength(count);
+    await expect(content().textContent).toContain('Untitled');
+    await expect(lines()).toEqual(untitledLines);
+  },
+};
+
+/**
  * With `showDescription` off the pane is title-only, even for a selected task the list can update —
  * which is what a host with no room for a markdown field (the chat strip) renders.
  */
@@ -1196,7 +1671,7 @@ export const TestEditWithoutDescription: Story = {
   },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
@@ -1218,6 +1693,124 @@ export const TestEditWithoutDescription: Story = {
 };
 
 /**
+ * `Tab` indents the focused task under its previous sibling and `Shift+Tab` outdents it to follow its
+ * parent — the outliner keys — and `Shift+ArrowUp`/`Down` move it among its siblings. `Tab` from a
+ * control inside the row still moves focus, and a `Tab` that cannot indent leaves focus to travel.
+ */
+export const TestTabIndent: Story = {
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    draggable: true,
+  },
+  play: async ({ canvasElement }) => {
+    const rows = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map((row) => ({
+        row,
+        title: row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '',
+        level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
+      }));
+    const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
+    const row = (title: string): HTMLElement => {
+      const found = rows().find((entry) => entry.title === title)?.row;
+      if (!found) {
+        throw new Error(`Row not found: ${title}`);
+      }
+      return found;
+    };
+    const press = (target: HTMLElement, key: string, shiftKey = false) => {
+      target.focus();
+      const event = new KeyboardEvent('keydown', { key, shiftKey, bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+
+    await waitFor(async () =>
+      expect(shape()).toEqual([
+        'Ship the spring release:1',
+        'Write the tasting notes:2',
+        'Approve the label art:2',
+        'Proofread the back label:3',
+        'Dial in the roast:1',
+        'Sample the Ethiopian lots:2',
+        'Log every profile:2',
+      ]),
+    );
+
+    // Tab: under the previous sibling, carrying its own sub-task along.
+    await expect(press(row('Approve the label art'), 'Tab')).toBe(true);
+    await waitFor(async () =>
+      expect(shape().slice(0, 4)).toEqual([
+        'Ship the spring release:1',
+        'Write the tasting notes:2',
+        'Approve the label art:3',
+        'Proofread the back label:4',
+      ]),
+    );
+
+    // Shift+Tab: back out, as the peer that follows its parent.
+    await expect(press(row('Approve the label art'), 'Tab', true)).toBe(true);
+    await waitFor(async () =>
+      expect(shape().slice(0, 4)).toEqual([
+        'Ship the spring release:1',
+        'Write the tasting notes:2',
+        'Approve the label art:2',
+        'Proofread the back label:3',
+      ]),
+    );
+
+    // Shift+ArrowUp: ahead of its previous sibling.
+    await expect(press(row('Approve the label art'), 'ArrowUp', true)).toBe(true);
+    await waitFor(async () =>
+      expect(shape().slice(1, 3)).toEqual(['Approve the label art:2', 'Proofread the back label:3']),
+    );
+
+    // Consecutive moves with no refocus in between: the moved row keeps focus as it re-renders under
+    // its new parent, so the next key reaches it.
+    const pressFocused = (key: string, shiftKey = false) => {
+      const target = document.activeElement;
+      if (!(target instanceof HTMLElement)) {
+        throw new Error('Nothing focused.');
+      }
+      target.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey, bubbles: true, cancelable: true }));
+    };
+    const focusedTitle = () =>
+      document.activeElement?.closest('[data-object-id]')?.querySelector('[data-testid="taskList.item.title"]')
+        ?.textContent;
+    row('Log every profile').focus();
+    pressFocused('ArrowRight', true);
+    await waitFor(async () => expect(shape()).toContain('Log every profile:3'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('ArrowLeft', true);
+    await waitFor(async () => expect(shape()).toContain('Log every profile:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('Tab');
+    await waitFor(async () => expect(shape()).toContain('Log every profile:3'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('Tab', true);
+    await waitFor(async () => expect(shape()).toContain('Log every profile:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('ArrowUp', true);
+    await waitFor(async () => expect(shape().at(-1)).toEqual('Sample the Ethiopian lots:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+    pressFocused('ArrowDown', true);
+    await waitFor(async () => expect(shape().at(-1)).toEqual('Log every profile:2'));
+    await waitFor(async () => expect(focusedTitle()).toEqual('Log every profile'));
+
+    // Nothing to indent under, so the key is not taken and focus is free to leave the list.
+    await expect(press(row('Ship the spring release'), 'Tab')).toBe(false);
+
+    // From a control inside the row, Tab is the control's, not a move.
+    const status = row('Log every profile').querySelector<HTMLElement>('[data-testid="taskList.item.status"]');
+    if (!status) {
+      throw new Error('Status control not found.');
+    }
+    await expect(press(status, 'Tab')).toBe(false);
+    await expect(shape().at(-1)).toEqual('Log every profile:2');
+  },
+};
+
+/**
  * Status grouping reorders rows against the set's array, so the gutter has to number what is on
  * screen: 1..N from the top, with no gaps and nothing out of sequence.
  */
@@ -1229,7 +1822,7 @@ export const TestOrdinalsAreLinear: Story = {
   play: async ({ canvasElement }) => {
     const ordinals = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map(
-        (row) => row.querySelector('.tabular-nums')?.textContent ?? '',
+        (row) => row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
       );
 
     await waitFor(async () => expect(ordinals().length).toBeGreaterThan(1));
@@ -1253,7 +1846,6 @@ export const TestHierarchy: Story = {
     draggable: true,
     showOrdinals: true,
     showDescription: true,
-    framed: false,
   },
   // The tree is what the walk produces, not what the array holds; and restructuring is driven from
   // the keyboard, which is the half of the gesture set that CAN be synthesized (a native HTML5 drag
@@ -1261,19 +1853,19 @@ export const TestHierarchy: Story = {
   play: async ({ canvasElement }) => {
     const rows = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'))
-        // A collapsed branch HIDES its descendants rather than unmounting them, so presence in the
-        // DOM is not visibility — the flat list dropped them from the walk instead.
+        // Unwindowed, a collapsed branch HIDES its descendants rather than unmounting them, so
+        // presence in the DOM is not visibility.
         .filter((row) => !row.closest('[hidden]'))
         .map((row) => ({
           row,
           title: row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '',
-          // A leaf IS the `treeitem`, but a branch's `treeitem` is a `display: contents` wrapper
-          // around the focusable row — so the level is read from whichever of the two carries it.
+          // A leaf IS the `treeitem`, but a branch's `treeitem` is a wrapper around the focusable
+          // row — so the level is read from whichever of the two carries it.
           level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
-          ordinal: row.querySelector('.tabular-nums')?.textContent ?? '',
+          ordinal: row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
         }));
     const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
-    const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+    const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-part="branch-trigger"]')!;
     const press = (row: HTMLElement, key: string) => {
       row.focus();
       row.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: true, bubbles: true }));
@@ -1350,8 +1942,7 @@ export const TestHierarchy: Story = {
     await userEvent.keyboard('{ArrowUp}');
     await waitFor(async () => expect(focusedRow()).toContain(rows()[0].title));
 
-    // Moving a parent carries its sub-tasks: only the parent's own parentTask is written, so the
-    // descendants' refs still point at it wherever it lands.
+    // Moving a parent carries its sub-tasks: they stay listed in its `subtasks` wherever it lands.
     const release = rows().find(({ title }) => title === 'Ship the spring release')!;
     press(release.row, 'ArrowDown');
     await waitFor(async () =>
@@ -1368,9 +1959,6 @@ export const TestHierarchy: Story = {
     press(rows().find(({ title }) => title === 'Ship the spring release')!.row, 'ArrowUp');
     await waitFor(async () => expect(rows()[0].title).toEqual('Ship the spring release'));
 
-    // Each row is findable by task id. In the tree the attribute is `data-object-id`, stamped by
-    // `Tree` itself — the flat row's own `data-task-id` is what its drag preview reads to collect a
-    // subtree to clone, and that path is unchanged.
     await expect(canvasElement.querySelectorAll('[data-object-id]')).toHaveLength(7);
 
     // The pane carries its own columns rather than the list's: it is a card below the list, so it
@@ -1394,7 +1982,7 @@ export const TestHierarchy: Story = {
 
     // The disclosure toggle sits on the title's centreline whether or not a description follows.
     for (const { row } of rows()) {
-      const toggle = row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]');
+      const toggle = row.querySelector<HTMLElement>('[data-part="branch-trigger"]');
       const rowTitle = row.querySelector<HTMLElement>('.truncate');
       if (toggle && rowTitle) {
         const centre = (element: HTMLElement) => {
@@ -1411,56 +1999,7 @@ export const TestHierarchy: Story = {
     const description = described.row.querySelector<HTMLElement>('.line-clamp-3')!;
     const textStart = (element: HTMLElement) =>
       Math.round(element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingInlineStart));
-    await expect(textStart(description)).toEqual(Math.round(titleCell(described.row).getBoundingClientRect().left));
-  },
-};
-
-export const Test: Story = {
-  args: {
-    framed: false,
-  },
-  // The status toggle and the add-`+` share one row grid; assert their icon gutters actually line
-  // up, since only geometry (not the DOM) shows the misalignment.
-  play: async ({ canvasElement }) => {
-    const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
-    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
-    if (!row || !create) {
-      throw new Error('Task rows not found.');
-    }
-
-    const center = (element: Element) => {
-      const { left, width } = element.getBoundingClientRect();
-      return left + width / 2;
-    };
-
-    // `:not([data-focus-sentinel])`: a focus group inserts zero-size boundary elements as its first
-    // and last children, so the first *rendered* cell is not the first element child.
-    const firstCell = (element: HTMLElement) => element.querySelector(':scope > *:not([data-focus-sentinel])');
-    // A tree row leads with its disclosure toggle and carries the status control inside the
-    // heading, where the pane — which has no disclosure — leads with the status column itself.
-    const rowIcon = row.querySelector<HTMLElement>('[data-testid="taskList.item.status"]');
-    // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
-    // child — the same column a row's status toggle occupies.
-    const createIcon = firstCell(create);
-    // The title cell, not the title text: the mnemonic chip leads the text within the cell.
-    const rowLabel = titleCell(row);
-    // The title input itself: its field root takes no box, so a positional pick would measure nothing.
-    const createLabel = create.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]');
-    // Guarded together: indexing a NodeList yields `undefined` for a missing cell, and reading
-    // geometry off it would throw a TypeError instead of failing the alignment assertion.
-    if (!rowIcon || !createIcon || !rowLabel || !createLabel) {
-      throw new Error('Row icons or label cells not found.');
-    }
-
-    // Same icon column ⇒ same horizontal centre (sub-pixel tolerance for rounding).
-    await expect(Math.abs(center(rowIcon) - center(createIcon))).toBeLessThan(1);
-    // ...and the labels start at the same x.
-    await expect(
-      Math.abs(rowLabel.getBoundingClientRect().left - createLabel.getBoundingClientRect().left),
-    ).toBeLessThan(1);
-
-    // The row spans the full width, so trailing actions sit at the far edge.
-    await expect(row.getBoundingClientRect().width).toBeGreaterThan(create.getBoundingClientRect().width * 0.9);
+    await expect(textStart(description)).toEqual(textStart(titleCell(described.row)));
   },
 };
 

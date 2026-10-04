@@ -14,7 +14,7 @@ import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { Grid, Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Grid, Panel, useThemeMode, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -215,7 +215,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
 
     return (
       <Panel.Root classNames='dx-expand' role={role} ref={forwardedRef}>
-        <Panel.Toolbar>
+        <Panel.Header>
           <CodeToolbar
             attendableId={attendableId}
             role={role}
@@ -223,10 +223,10 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
             onBuild={handleBuild}
             onRun={handleRun}
           />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <Grid cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
-            <Grid rows={[1, 2]} classNames='divide-y divide-subdued-separator'>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <Grid grow cols={['30rem', 'fill']} classNames='divide-x divide-separator'>
+            <Grid grow rows={[1, 2]} classNames='divide-y divide-separator-subtle'>
               <div role='region' aria-label={t('browse-pane.label')} className='dx-expand grid overflow-auto'>
                 <FileTree
                   files={fileEntries}
@@ -243,7 +243,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
               {selected ? <FileEditor file={selected} role={role} /> : null}
             </div>
           </Grid>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },
@@ -255,7 +255,7 @@ type FileEditorProps = {
 };
 
 const FileEditor = ({ file, role }: FileEditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const identity = useIdentity();
   const space = getSpace(file);
 

@@ -4,11 +4,10 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Block, Card, Focus, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
 
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '../../index.ts';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '../../index.ts';
 
 export type SearchStackAction = {
   type: 'select';
@@ -55,7 +54,7 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
-          <ScrollArea.Root orientation='vertical' padding centered thin>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SearchTile}
@@ -113,15 +112,15 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
       current={current}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root fullWidth ref={forwardedRef}>
+        <Card.Root ref={forwardedRef}>
           <Card.Header>
-            <Card.Block />
+            <Block />
             <Card.Title>{result.label}</Card.Title>
           </Card.Header>
           {result.snippet && (
             <Card.Body>
               <Card.Row>
-                <Card.Text variant='description'>{result.snippet}</Card.Text>
+                <Card.Text variant='muted'>{result.snippet}</Card.Text>
               </Card.Row>
             </Card.Body>
           )}

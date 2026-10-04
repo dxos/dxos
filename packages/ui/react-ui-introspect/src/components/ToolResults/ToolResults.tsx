@@ -13,9 +13,20 @@
 
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Banner, Field, Panel, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import {
+  Banner,
+  Empty,
+  Field,
+  Input,
+  Panel,
+  ScrollArea,
+  type ThemedClassName,
+  Toolbar,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 import { translationKey } from '#translations';
@@ -44,16 +55,14 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
     const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
       <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
-        {state === 'loading' && <p className='p-3 text-sm text-description'>{t('calling-tool.message')}</p>}
+        {state === 'loading' && <p className='p-3 text-sm text-fg-muted'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
           <Banner.Root valence='error'>
-            <Banner.Content classNames='m-form-padding'>
-              {error instanceof Error && <Banner.Title>{error.name}</Banner.Title>}
-              <Banner.Body>{error instanceof Error ? error.message : String(error)}</Banner.Body>
-            </Banner.Content>
+            {error instanceof Error && <Banner.Title>{error.name}</Banner.Title>}
+            <Banner.Body>{error instanceof Error ? error.message : String(error)}</Banner.Body>
           </Banner.Root>
         )}
-        {state === 'empty' && <Empty label={t('no-result.message')} />}
+        {state === 'empty' && <Empty>{t('no-result.message')}</Empty>}
         {state === 'result' &&
           (debug ? (
             <Syntax.Root data={tryParseMcpEnvelope(result)}>
@@ -110,13 +119,13 @@ const ResultTable = ({ data }: { data: unknown }) => {
   // both columns and uses `grid-cols-subgrid` to inherit them, so a
   // `KeyValueTable` can emit plain `<div>` cells as direct grid items.
   return (
-    <Listbox.Root>
+    <Listbox.Root items={filtered.map((item) => ({ value: item.id, label: item.id }))}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <Field.Root>
               <Field.Label srOnly>{t('filter-results.placeholder')}</Field.Label>
-              <Field.Input
+              <Input
                 ref={filterInputRef}
                 autoFocus
                 placeholder={t('filter-results.placeholder')}
@@ -125,29 +134,27 @@ const ResultTable = ({ data }: { data: unknown }) => {
               />
             </Field.Root>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root thin>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
             <ScrollArea.Viewport>
               {filtered.length === 0 ? (
-                <Empty label={t('no-matching-rows.message')} />
+                <Empty>{t('no-matching-rows.message')}</Empty>
               ) : (
-                <Listbox.Viewport>
-                  <Listbox.Content
-                    aria-label={t('tool-result.label')}
-                    classNames='grid grid-cols-[max-content_1fr] gap-x-3'
-                  >
-                    {filtered.map((item) => (
-                      <Listbox.Item key={item.id} id={item.id} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
-                        <KeyValueTable record={item.value} />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Viewport>
+                <Listbox.Content
+                  aria-label={t('tool-result.label')}
+                  classNames='grid grid-cols-[max-content_1fr] gap-x-3'
+                >
+                  {filtered.map((item) => (
+                    <Listbox.Item key={item.id} id={item.id} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
+                      <KeyValueTable record={item.value} />
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
               )}
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Listbox.Root>
   );
@@ -182,14 +189,14 @@ const KeyValueTable = ({ record }: { record: unknown }) => {
 
   const entries = Object.entries(record as Record<string, unknown>).filter(([key]) => !SKIP_KEYS.has(key));
   if (entries.length === 0) {
-    return <div className='col-span-2 text-sm italic text-description'>{t('no-displayable-fields.message')}</div>;
+    return <div className='col-span-2 text-sm italic text-fg-muted'>{t('no-displayable-fields.message')}</div>;
   }
 
   return (
     <>
       {entries.map(([key, value]) => (
         <Fragment key={key}>
-          <div className='flex items-center justify-end font-mono text-xs text-description'>{key}</div>
+          <div className='flex items-center justify-end font-mono text-xs text-fg-muted'>{key}</div>
           <div className='text-sm truncate'>{formatValue(value)}</div>
         </Fragment>
       ))}

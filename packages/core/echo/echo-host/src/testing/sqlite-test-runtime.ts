@@ -5,7 +5,7 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { RuntimeProvider } from '@dxos/effect';
 

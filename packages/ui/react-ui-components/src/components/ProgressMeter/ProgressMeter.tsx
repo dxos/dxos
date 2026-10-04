@@ -6,14 +6,13 @@ import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } fro
 
 import { Progress as ProgressModel } from '@dxos/progress';
 import {
-  IconButton,
+  Button,
   Progress,
   Steps,
   TextCrawl,
   type ThemedClassName,
   composable,
   composableProps,
-  stepCount,
   useTranslation,
 } from '@dxos/react-ui';
 
@@ -167,7 +166,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
     // rather than dropping it: a button that vanishes on completion takes its width with it and
     // slides the readout beside it sideways, at the exact moment the reader is looking at it.
     const cancellable = failed || (state.cancellable === true && active);
-    const stages = stepCount(state.phases);
+    const stages = state.phases ?? 0;
     // The crawl is the meter's only text now, so it opens with the run's name: without it a list of
     // meters would say what each is doing and never which task it is.
     const lines = useNotes(label ?? name, note, state.startedAt);
@@ -192,9 +191,9 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             <div className='min-w-0 flex-1 text-error-text truncate'>{error}</div>
           ) : (
             /* What the run is and what it is doing, in its own words, crawling as it moves through its phases. */
-            <TextCrawl classNames='min-w-0 flex-1' textClassNames='text-xs text-description' lines={lines} greedy />
+            <TextCrawl classNames='min-w-0 flex-1 text-xs text-fg-muted' lines={lines} greedy />
           )}
-          <div className='flex items-center gap-1 shrink-0 text-description'>
+          <div className='flex items-center gap-1 shrink-0 text-fg-muted'>
             <span className='tabular-nums'>
               {indeterminate
                 ? active && elapsedMs >= SECOND_MS
@@ -203,13 +202,13 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
                 : progress(current, total)}
             </span>
             {!indeterminate && etaMs !== undefined && etaMs >= SECOND_MS && status === 'running' && (
-              <span className='text-description'>({formatDuration(etaMs)})</span>
+              <span className='text-fg-muted'>({formatDuration(etaMs)})</span>
             )}
             {onCancel && (
-              <IconButton
-                density='sm'
+              <Button
+                size='sm'
                 variant='ghost'
-                size={3}
+                iconSize='xs'
                 icon='ph--x--regular'
                 iconOnly
                 disabled={!cancellable}
@@ -236,12 +235,12 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
         ) : (
           <Progress
             classNames='w-full self-center'
-            progress={fraction}
+            value={fraction}
             // Uncounted while it runs, and still uncounted when it fails — that is what fills the
             // bar red rather than emptying it. A run that simply ended has nothing left to sweep.
             indeterminate={indeterminate && (active || failed)}
             error={failed}
-            aria-label={label ?? name}
+            label={label ?? name}
           />
         )}
       </div>

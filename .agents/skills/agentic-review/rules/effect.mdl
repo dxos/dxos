@@ -129,6 +129,7 @@ rule service-via-shared-factory: Construct an Effect service via the shared Tag+
   grep: Context\.Tag\(
   unit: file
   system-one: on
+  context: imports
   severity: warn
 ```
 

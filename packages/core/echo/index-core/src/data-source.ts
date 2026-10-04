@@ -3,7 +3,7 @@
 //
 
 import type * as Effect from 'effect/Effect';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
@@ -51,13 +51,16 @@ export interface IndexDataSource {
    * document (the activity index's input). Both are relative to the same cursors, so a source
    * reporting a change once per cursor advance reports it exactly once. `opts.objects === false`
    * asks for the activity alone, so an activity-only caller does not pay for object extraction.
+   *
+   * `more` says whether `opts.limit` cut the read short. A source that omits it is read as possibly
+   * truncated whenever it returned anything, since only then does an empty batch prove it caught up.
    */
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number; activity?: boolean; objects?: boolean },
   ): Effect.Effect<
-    { objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[] },
+    { objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[]; more?: boolean },
     SqlError.SqlError
   >;
 }

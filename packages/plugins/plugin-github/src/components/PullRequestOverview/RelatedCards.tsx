@@ -2,73 +2,83 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode } from 'react';
+import React, { useMemo } from 'react';
 
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
+import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '#meta';
 
 import { type ArtifactLink, type PullRequestBody } from '../../pull-request-body.ts';
 import { ArtifactMedia, artifactIcon } from './ArtifactPill.tsx';
 
-export type RelatedCardsProps = Pick<PullRequestBody, 'artifacts' | 'claudeCode' | 'previewUrl'> & {
-  url?: string;
-  baseBranch?: string;
-  headBranch?: string;
+/** One tile of the related grid: a demo artifact, or a link out of the pull request. */
+export type RelatedItem =
+  | { kind: 'artifact'; id: string; artifact: ArtifactLink }
+  | { kind: 'link'; id: string; icon: string; iconClassNames?: string; title: string; href?: string; detail?: string };
+
+export type RelatedCardsProps = Pick<PullRequestBody, 'artifacts' | 'claudeCode' | 'previewUrl'>;
+
+/** What {@link RelatedCards} would show; empty when the pull request links to nothing beyond its diff. */
+export const useRelatedItems = ({ artifacts, claudeCode, previewUrl }: RelatedCardsProps): RelatedItem[] => {
+  const { t } = useTranslation(meta.profile.key);
+  return useMemo(() => {
+    const items: RelatedItem[] = artifacts.map((artifact) => ({ kind: 'artifact', id: artifact.url, artifact }));
+    if (previewUrl) {
+      items.push({
+        kind: 'link',
+        id: 'preview',
+        icon: 'ph--rocket-launch--regular',
+        iconClassNames: 'text-success-text',
+        title: t('preview-deployment.label'),
+        href: previewUrl,
+        detail: hostOf(previewUrl),
+      });
+    }
+    if (claudeCode) {
+      items.push({
+        kind: 'link',
+        id: 'claude',
+        icon: 'px--anthropic--regular',
+        iconClassNames: 'text-warning-text',
+        title: claudeCode.sessionUrl ? t('claude-session.label') : t('claude-generated.label'),
+        href: claudeCode.sessionUrl,
+        detail: claudeCode.sessionUrl?.split('/').at(-1),
+      });
+    }
+    return items;
+  }, [artifacts, claudeCode, previewUrl, t]);
 };
 
 /**
- * What the pull request points at beyond its diff, one card each: its demo media, the preview
- * deployment built from it, and the session that wrote it.
+ * What the pull request points at beyond its diff, one card each — its demo media, the preview
+ * deployment built from it, and the session that wrote it — in the masonry grid related objects
+ * use everywhere else. Renders inside its host's scroller rather than owning one.
  */
-export const RelatedCards = ({ artifacts, claudeCode, previewUrl, url, baseBranch, headBranch }: RelatedCardsProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const sessionId = claudeCode?.sessionUrl?.split('/').at(-1);
+export const RelatedCards = ({ items }: { items: readonly RelatedItem[] }) => (
+  <Masonry.Root Tile={RelatedCard} centered={false}>
+    <Masonry.Viewport items={items} getId={(item: RelatedItem) => item.id} scroll={false} />
+  </Masonry.Root>
+);
 
-  return (
-    <div
-      className='grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] items-start gap-3'
-      data-testid='pull-request.related'
-    >
-      {artifacts.map((artifact) => (
-        <ArtifactCard key={artifact.url} artifact={artifact} />
-      ))}
-      {previewUrl && (
-        <LinkCard
-          icon='ph--rocket-launch--regular'
-          iconClassNames='text-green-500'
-          title={t('preview-deployment.label')}
-          href={previewUrl}
-          detail={hostOf(previewUrl)}
-          testId='pull-request.related.preview'
-        />
-      )}
-      {claudeCode && (
-        <LinkCard
-          icon='px--anthropic--regular'
-          iconClassNames='text-amber-500'
-          title={claudeCode.sessionUrl ? t('claude-session.label') : t('claude-generated.label')}
-          href={claudeCode.sessionUrl}
-          detail={sessionId}
-          testId='pull-request.related.claude'
-        />
-      )}
-      {headBranch && (
-        <LinkCard
-          icon='ph--git-branch--regular'
-          title={t('branches.label')}
-          href={url}
-          detail={baseBranch ? `${headBranch} → ${baseBranch}` : headBranch}
-          testId='pull-request.related.branches'
-        />
-      )}
-    </div>
-  );
-};
-
-/** A demo video or screenshot, playable in the card itself. */
-const ArtifactCard = ({ artifact }: { artifact: ArtifactLink }) => {
+const RelatedCard = ({ data: item }: { data: RelatedItem }) => {
   const { t } = useTranslation(meta.profile.key);
+  if (item.kind === 'link') {
+    return (
+      <Card.Root data-testid={`pull-request.related.${item.id}`}>
+        <CardHeading icon={item.icon} iconClassNames={item.iconClassNames} title={item.title} href={item.href} />
+        {item.detail && (
+          <Card.Row>
+            <Card.Text variant='muted' truncate>
+              {item.detail}
+            </Card.Text>
+          </Card.Row>
+        )}
+      </Card.Root>
+    );
+  }
+
+  const { artifact } = item;
   return (
     <Card.Root data-testid='pull-request.related.artifact'>
       <CardHeading
@@ -77,7 +87,7 @@ const ArtifactCard = ({ artifact }: { artifact: ArtifactLink }) => {
         href={artifact.url}
       />
       <Card.Row>
-        <Card.Text variant='description' truncate>
+        <Card.Text variant='muted' truncate>
           {artifact.name}
         </Card.Text>
       </Card.Row>
@@ -90,28 +100,6 @@ const ArtifactCard = ({ artifact }: { artifact: ArtifactLink }) => {
     </Card.Root>
   );
 };
-
-type LinkCardProps = {
-  icon: string;
-  iconClassNames?: string;
-  title: string;
-  href?: string;
-  detail?: ReactNode;
-  testId?: string;
-};
-
-const LinkCard = ({ icon, iconClassNames, title, href, detail, testId }: LinkCardProps) => (
-  <Card.Root data-testid={testId}>
-    <CardHeading icon={icon} iconClassNames={iconClassNames} title={title} href={href} />
-    {detail && (
-      <Card.Row>
-        <Card.Text variant='description' truncate>
-          {detail}
-        </Card.Text>
-      </Card.Row>
-    )}
-  </Card.Root>
-);
 
 const CardHeading = ({
   icon,
@@ -127,16 +115,20 @@ const CardHeading = ({
   const { t } = useTranslation(meta.profile.key);
   return (
     <Card.Header>
-      <Card.Block>
+      <Block>
         <Icon icon={icon} classNames={iconClassNames} />
-      </Card.Block>
+      </Block>
       <Card.Title>{title}</Card.Title>
       {href && (
-        <Card.Block end>
-          <a href={href} target='_blank' rel='noopener noreferrer' aria-label={t('open-link.label')} title={href}>
-            <Icon icon='ph--arrow-square-out--regular' size={4} />
-          </a>
-        </Card.Block>
+        <Block rail='end'>
+          <Button
+            iconOnly
+            variant='ghost'
+            icon='ph--arrow-square-out--regular'
+            label={t('open-link.label')}
+            onClick={() => window.open(href, '_blank', 'noopener,noreferrer')}
+          />
+        </Block>
       )}
     </Card.Header>
   );

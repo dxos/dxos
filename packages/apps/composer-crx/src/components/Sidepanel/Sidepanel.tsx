@@ -7,7 +7,7 @@ import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
-import { ErrorBoundary, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, ErrorBoundary, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { getConfig } from '../../config.ts';
@@ -96,11 +96,11 @@ const SidepanelContent = () => {
   const showChat = !thumbnailUrl && !!host;
 
   return (
-    <Panel.Root classNames='dx-fullscreen dx-fill'>
+    <Panel.Root classNames='dx-cover dx-fill'>
       {/* App controls that are not chat-specific (clip, page actions, launch) live here, not inside Chat. */}
-      <Panel.Toolbar>
+      <Panel.Header>
         <Toolbar.Root>
-          <IconButton
+          <Button
             variant='ghost'
             icon='ph--paperclip--regular'
             iconOnly
@@ -110,14 +110,14 @@ const SidepanelContent = () => {
           />
           {pageActions}
           <Toolbar.Separator />
-          <IconButton
+          <Button
             variant='ghost'
             icon='ph--gear--regular'
             iconOnly
             label={t('settings.button')}
             onClick={handleOpenSettings}
           />
-          <IconButton
+          <Button
             variant='ghost'
             icon='ph--arrow-square-out--regular'
             iconOnly
@@ -125,33 +125,33 @@ const SidepanelContent = () => {
             onClick={handleLaunchComposer}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content classNames={mx('grid grid-rows-[minmax(0,1fr)] min-h-0', thumbnailUrl && 'grid-cols-[auto_1fr]')}>
+      <Panel.Body classNames={mx('grid grid-rows-[minmax(0,1fr)] min-h-0', thumbnailUrl && 'grid-cols-[auto_1fr]')}>
         {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
         {showChat && (
           <ErrorBoundary
             name='sidepanel/chat'
             fallbackRender={() => (
-              <div className='grid place-items-center p-4 text-sm text-description'>{t('chat.error.label')}</div>
+              <div className='grid place-items-center p-4 text-sm text-fg-muted'>{t('chat.error.label')}</div>
             )}
           >
             <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} />
           </ErrorBoundary>
         )}
-      </Panel.Content>
+      </Panel.Body>
 
       {/* Status bar: chat-agent errors surface here (the connection state is shown by the chat input's
           status indicator), otherwise the tab URL. */}
-      <Panel.Statusbar classNames='flex items-center px-2'>
+      <Panel.Footer classNames='flex items-center px-2'>
         {chatError ? (
           <span className='text-xs text-error-text truncate' title={chatError.message}>
             {chatError.message}
           </span>
         ) : (
-          <span className='text-xs text-description truncate'>{tabUrl}</span>
+          <span className='text-xs text-fg-muted truncate'>{tabUrl}</span>
         )}
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

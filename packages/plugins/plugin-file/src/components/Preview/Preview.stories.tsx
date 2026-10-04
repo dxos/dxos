@@ -21,12 +21,12 @@ const PNG_URL =
 const DefaultStory = ({ type, url, name, size }: { type: string; url: string; name?: string; size?: number }) => (
   <Panel.Root>
     <Preview.Root type={type} url={url} name={name} size={size}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Preview.Toolbar />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Preview.Content />
-      </Panel.Content>
+      </Panel.Body>
     </Preview.Root>
   </Panel.Root>
 );

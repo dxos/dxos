@@ -22,7 +22,7 @@ import {
 } from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 

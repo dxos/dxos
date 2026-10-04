@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { CollectionItemAnnotation, Text } from '@dxos/schema';
+import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Text } from '@dxos/schema';
 
 import * as Task from './Task.ts';
 
@@ -22,7 +22,7 @@ export class Outline extends Type.makeObject<Outline>(DXN.make('org.dxos.type.ou
     content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set()),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--tree-structure--regular', hue: 'indigo' }),
-    CollectionItemAnnotation.set(true),
+    Annotation.UserType.set({ tags: [Collection.ItemTag] }),
   ),
 ) {}
 

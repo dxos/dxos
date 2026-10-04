@@ -10,12 +10,14 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { openObject } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 import { PreviewCapabilities } from '#types';
@@ -62,6 +64,7 @@ export default Capability.makeModule(
       side,
       props,
       state,
+      navigate,
     }: DxAnchorActivate) => {
       const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
 
@@ -87,7 +90,21 @@ export default Capability.makeModule(
       // Tracked before the lookup, so leaving the anchor while it is in flight is an accepted close
       // that invalidates the pending result rather than a stranger's close that is dropped.
       const sequence = ++activationSequence;
-      activeTrigger = trigger;
+      // Read before the lookup: the anchor sits inside a plank the target should open beside, and may unmount meanwhile.
+      const pivotId = navigate ? Attention.getRootAttendableId(trigger) : undefined;
+      // Navigation replaces any card showing, so it must not be left open behind the opened object.
+      if (navigate && activeTrigger) {
+        activeTrigger = undefined;
+        await invokePromise(LayoutOperation.UpdatePopover, {
+          variant: 'virtual',
+          anchor: trigger,
+          kind: 'base',
+          state: false,
+        });
+      }
+      if (!navigate) {
+        activeTrigger = trigger;
+      }
       const client = capabilities.get(ClientCapabilities.Client);
       const registry = capabilities.get(Capabilities.AtomRegistry);
       // Layout is optional: in standalone harnesses (Storybook, tests) no plugin contributes
@@ -98,11 +115,21 @@ export default Capability.makeModule(
       const spaceId = layoutAtom && GraphPath.getSpaceIdFromPath(registry.get(layoutAtom).workspace);
       const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getDefaultSpace(client);
       const resolvers = capabilities.getAll(PreviewCapabilities.LinkResolver).flat();
-      const result = await EffectEx.runPromise(resolveLink(resolvers, { eid, label }, { space }));
+      const result = await EffectEx.runPromise(resolveLink(resolvers, { eid, label }, { db: space?.db }));
       // A newer activation (open or close) arrived while the lookup was in flight; bail
       // out so we don't clobber the latest state.
       if (sequence !== activationSequence) {
         return;
+      }
+
+      if (navigate) {
+        if (Obj.isObject(result?.object) && Obj.getDatabase(result.object)) {
+          const { invoke } = capabilities.get(Capabilities.OperationInvoker);
+          await EffectEx.runPromise(openObject(result.object, invoke, { pivotId }));
+          return;
+        }
+        // A target with no stored object to open (e.g. an in-memory GitHub object) still gets its preview.
+        activeTrigger = trigger;
       }
 
       if (!result) {

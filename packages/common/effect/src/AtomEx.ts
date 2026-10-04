@@ -3,8 +3,8 @@
 //
 
 import * as Duration from 'effect/Duration';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { assertArgument } from '@dxos/invariant';
 
@@ -55,7 +55,7 @@ export interface Owner {
  * Keeps `atom` mounted until `owner` is collected. Unlike `Atom.keepAlive`, it does not outlive the
  * owner. Neither the atom nor its value may reference `owner`, or the registry keeps `owner` alive.
  */
-export const makeOwned = <A extends Atom.Atom<any>>(owner: Owner, atom: A): A => {
+export const makeOwned = <A extends Atom.Atom<unknown>>(owner: Owner, atom: A): A => {
   const { registry, finalizer } = owner[OwnerId];
   finalizer.register(owner, registry.mount(atom));
   return atom;

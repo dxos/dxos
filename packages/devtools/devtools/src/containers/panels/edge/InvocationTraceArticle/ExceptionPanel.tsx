@@ -34,9 +34,7 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ objects }) => {
     return (
       <div className={mx('flex w-full items-center justify-center m-4')}>
         <Banner.Root>
-          <Banner.Content>
-            <Banner.Title>No exceptions.</Banner.Title>
-          </Banner.Content>
+          <Banner.Title>No exceptions.</Banner.Title>
         </Banner.Root>
       </div>
     );

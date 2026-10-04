@@ -4,8 +4,8 @@
 
 import React, { useRef } from 'react';
 
-import { IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Button, Empty, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { type PredicateItem } from '../types.ts';
 
@@ -28,12 +28,12 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
   const pointerSelectionRef = useRef<{ itemId: string; selected: string | undefined } | undefined>(undefined);
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text classNames='grow'>
             Predicates{predicates.length > 0 ? ` (${predicates.length})` : ''}
           </Toolbar.Text>
-          <IconButton
+          <Button
             icon='ph--x--regular'
             iconOnly
             label='Clear'
@@ -41,12 +41,16 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
             onClick={() => onSelect(undefined)}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      </Panel.Header>
+      <Panel.Body classNames='overflow-auto'>
         {predicates.length === 0 ? (
-          <Empty label='No predicates.' />
+          <Empty>No predicates.</Empty>
         ) : (
-          <Listbox.Root value={selected} onValueChange={onSelect}>
+          <Listbox.Root
+            value={selected}
+            onValueChange={onSelect}
+            items={predicates.map((item) => ({ value: item.predicate, label: item.predicate }))}
+          >
             <Listbox.Content aria-label='Predicates'>
               {predicates.map((item) => (
                 <Listbox.Item
@@ -66,15 +70,15 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
                     }
                   }}
                 >
-                  <Listbox.ItemLabel>{item.predicate}</Listbox.ItemLabel>
-                  <span className='shrink-0 text-subdued tabular-nums'>{item.count}</span>
-                  <Listbox.Indicator />
+                  <Listbox.ItemText>{item.predicate}</Listbox.ItemText>
+                  <span className='shrink-0 text-fg-subtle tabular-nums'>{item.count}</span>
+                  <Listbox.ItemIndicator />
                 </Listbox.Item>
               ))}
             </Listbox.Content>
           </Listbox.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

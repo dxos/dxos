@@ -316,6 +316,8 @@ const bundledDependencies = (dir: string): string[] =>
     return [name, ...(manifest ? Object.keys(JSON.parse(readFileSync(manifest, 'utf8')).dependencies ?? {}) : [])];
   });
 
+const DX_PLUGIN_GEN_INPUT = 'src/capabilities/index.{ts,tsx}';
+
 /**
  * Files the shared root configs reach into a workspace for by path — the vitest browser log setup
  * is loaded this way. Nothing in the owning workspace imports them.
@@ -423,6 +425,16 @@ const TESTING_ENTRY_ONLY: Record<string, string[]> = {
 
 const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/plugins/plugin-presenter': ['marked'],
+  // The app's import map is built from its direct dependencies, and plugins loaded by URL import
+  // these bare; nothing in the app imports them, but without the declaration they have no entry.
+  'packages/apps/composer-app': [
+    '@dxos/app-graph',
+    '@dxos/echo',
+    '@dxos/echo-react',
+    '@dxos/graph',
+    '@dxos/react-ui-attention',
+    '@dxos/react-ui-geo',
+  ],
   // edge-compute generates a function entrypoint containing
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
@@ -433,7 +445,11 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   // Astro's default image service is emitted into `docs/dist/.prerender/` and `import('sharp')`s
   // from there, so the package has to resolve from `docs/node_modules` — astro's own optional
   // dependency is not reachable from the emitted chunk.
-  'docs': ['sharp'],
+  'docs': [
+    'sharp',
+    // Declared so `docs:typedoc`'s `^:typedoc` builds the API reference `collect-typedoc.sh` copies.
+    '@dxos/app-framework',
+  ],
   // `@opentui/core` reaches its native library through a dynamic import interpolating
   // `process.platform`/`process.arch`, which bun folds into a constant per `--compile` target, so
   // cross-compiling the CLI resolves all five at bundle time. pnpm installs them for the host
@@ -508,6 +524,7 @@ for (const manifest of globSync(
     ...pathResolvedEntry(dir),
     ...moonReferencedEntry(dir),
     ...ROOT_REFERENCED.filter((path) => path.startsWith(`${dir}/`)).map((path) => path.slice(dir.length + 1)),
+    DX_PLUGIN_GEN_INPUT,
   ];
 
   workspaces[dir] = {

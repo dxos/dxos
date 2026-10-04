@@ -4,20 +4,21 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createLineSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 import { statusIcon, statusTextStyle } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
-/** Every status the schema offers, in the order the schema lists them. */
-export const ALL_STATUSES: readonly Task.Status[] = Task.StatusOptions.map(({ id }) => id);
+import { ALL_STATUSES } from '../../util/index.ts';
 
 export type TaskStatusFilterProps = {
   /** The statuses the list shows. Every status is the unfiltered state. */
   value: readonly Task.Status[];
   onChange: (value: readonly Task.Status[]) => void;
+  /** Whether anything narrows the list — the query too, not just the statuses this menu hides. */
+  active?: boolean;
 };
 
 /**
@@ -27,14 +28,15 @@ export type TaskStatusFilterProps = {
  * a decision a reader makes once and reads off the trigger afterwards. Multi-select, so the menu
  * stays open across several toggles — picking one value and closing is single-select behaviour.
  *
- * Separate from the query editor rather than written into its text as `status:` terms: the terms are
- * one value each, so hiding two statuses cannot be said in the query language the editor parses, and
- * a reader narrowing by text should not have their status choice rewritten under them.
+ * A view over the query rather than state of its own: the caller derives `value` from the query's
+ * `status:` terms and writes a change back into them (see `parseEnumTerms`), so the menu and the
+ * text cannot disagree about what the list is showing.
  */
-export const TaskStatusFilter = ({ value, onChange }: TaskStatusFilterProps) => {
+export const TaskStatusFilter = ({ value, onChange, active }: TaskStatusFilterProps) => {
   const { t } = useTranslation(meta.profile.key);
   const selected = useMemo(() => new Set(value), [value]);
   const filtered = selected.size < ALL_STATUSES.length;
+  const narrowed = active || filtered;
 
   // The group carries no items of its own — it is the context that makes the items checkboxes rather
   // than radios, and the menu stay open while they are toggled.
@@ -88,10 +90,12 @@ export const TaskStatusFilter = ({ value, onChange }: TaskStatusFilterProps) => 
 
   return (
     <ActionMenu deferUntilOpen group={group} actions={actions}>
-      <IconButton
-        // Filled while a status is hidden, so the trigger says the list is narrowed without the
-        // reader opening it — the rows that are missing are otherwise invisible.
-        icon={filtered ? 'ph--funnel--fill' : 'ph--funnel--regular'}
+      <Button
+        // Filled and accented while anything narrows the list, so the trigger says rows are missing
+        // without the reader opening it; the accent survives the toolbar dimming icons at rest.
+        icon={narrowed ? 'ph--funnel--fill' : 'ph--funnel--regular'}
+        iconClassNames={narrowed ? 'text-accent-text' : undefined}
+        data-filtered={narrowed ? 'true' : 'false'}
         iconOnly
         label={t('filter-status.label')}
         data-testid='tasks.filter.status'

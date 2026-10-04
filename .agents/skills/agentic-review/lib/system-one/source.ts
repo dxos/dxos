@@ -6,8 +6,12 @@
 // question chooses between, windows for files too large for one state, and export extraction.
 // The model cannot emit a line number, so a violation is located by choosing a segment.
 
-/** Longest segment offered as one location option; longer declarations are split. */
-const MAX_SEGMENT_LINES = 40;
+/**
+ * Longest segment offered as one location option; longer declarations are split. Calibrated on
+ * reviewers' own lines: 12-line segments are hit as often as 40-line ones at half the span, and a
+ * second choice inside the first loses more hits than it saves lines.
+ */
+export const MAX_SEGMENT_LINES = 12;
 
 /** Shortest segment kept on its own; shorter runs merge into the previous one. */
 const MIN_SEGMENT_LINES = 4;
@@ -42,8 +46,9 @@ type LineRange = { start: number; end: number };
  *
  * @param lines Lines of the text being located in.
  * @param firstLine Line number of `lines[0]` in the file.
+ * @param maxLines Longest segment before a declaration is split.
  */
-export const segmentLines = (lines: readonly string[], firstLine = 1): Segment[] => {
+export const segmentLines = (lines: readonly string[], firstLine = 1, maxLines = MAX_SEGMENT_LINES): Segment[] => {
   if (lines.length === 0) {
     return [];
   }
@@ -59,8 +64,8 @@ export const segmentLines = (lines: readonly string[], firstLine = 1): Segment[]
   }));
   const splitRanges: LineRange[] = initialRanges.flatMap(({ start, end }) => {
     const pieces: LineRange[] = [];
-    for (let from = start; from <= end; from += MAX_SEGMENT_LINES) {
-      pieces.push({ start: from, end: Math.min(end, from + MAX_SEGMENT_LINES - 1) });
+    for (let from = start; from <= end; from += maxLines) {
+      pieces.push({ start: from, end: Math.min(end, from + maxLines - 1) });
     }
     return pieces;
   });

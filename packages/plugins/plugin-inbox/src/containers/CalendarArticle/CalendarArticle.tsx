@@ -115,15 +115,9 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [id, invokePromise],
   );
 
-  // The same reading gesture as the mailbox and the task ledger: selecting the event is what drives
-  // `activeEvent` (which selects and scrolls the grid, below), and the detail opens in the event's
-  // own companion where there is room for one — the calendar contributes one companion per event —
-  // or as a plank at the `event` rung otherwise.
   const handleNavigate = useDetailNavigation({
     contextId: id,
     getPath: (eventId) => getFeedObjectPath(id, eventId),
-    level: 'event',
-    companion: (eventId) => eventId,
   });
 
   // The active event drives the grid's selection: set + scroll it once whenever the active event changes
@@ -203,20 +197,20 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
       <div className='grid grid-cols-1 @2xl:grid-cols-[min-content_1fr] h-full'>
         <Panel.Root classNames='hidden @2xl:block'>
           <NaturalCalendar.Root ref={calendarRef}>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <NaturalCalendar.Toolbar />
-            </Panel.Toolbar>
-            <Panel.Content asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <NaturalCalendar.Grid dates={dates} onSelect={handleDateSelect} onSelectRange={handleRangeSelect} />
-            </Panel.Content>
+            </Panel.Body>
           </NaturalCalendar.Root>
         </Panel.Root>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-          </Panel.Toolbar>
+          </Panel.Header>
 
-          <Panel.Content asChild>
+          <Panel.Body asChild>
             {events.length === 0 ? (
               <InitializeCalendar calendar={subject} />
             ) : (
@@ -229,7 +223,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
                 onAction={handleAction}
               />
             )}
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as FiberHandle from 'effect/FiberHandle';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
@@ -30,8 +30,9 @@ import { invariant } from '@dxos/invariant';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useThemeContext } from '@dxos/react-ui';
+import { useThemeMode } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Listbox } from '@dxos/react-ui-list';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import {
   createBasicExtensions,
@@ -97,7 +98,7 @@ const STORY_WORKSPACE_ID = `${GraphNode.RootId}/${DeckSchema.DEFAULT_DECK_ID}`;
  * the container because `Editor.View` renders its own div and drops unknown props.
  */
 const TestArticle = ({ title, content }: { title: string; content: string }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
@@ -138,12 +139,10 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   const handleOpen = useCallback(
     (messageId: string) => {
       setSelected(messageId);
-      // The exact shape MailboxArticle dispatches: a level-open relative to this plank as the root.
       void invokePromise(LayoutOperation.Open, {
         subject: [`${launcherId}/${messageId}`],
-        root: launcherId,
-        level: 'message',
-        disposition: 'add',
+        pivotId: launcherId,
+        disposition: 'detail',
         navigation: 'immediate',
       });
     },
@@ -151,19 +150,24 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   );
 
   return (
-    <div className='grid content-start gap-1 p-2' data-testid='story.launcher'>
-      {LAUNCHER_MESSAGES.map((message) => (
-        <button
-          key={message.id}
-          className='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
-          data-testid='story.launcher.row'
-          data-selected={selected === message.id}
-          onClick={() => handleOpen(message.id)}
-        >
-          {message.title}
-        </button>
-      ))}
-    </div>
+    <Listbox.Root
+      value={selected}
+      onValueChange={handleOpen}
+      items={LAUNCHER_MESSAGES.map((message) => ({ value: message.id, label: message.id }))}
+    >
+      <Listbox.Content aria-label='Messages' classNames='grid content-start gap-1 p-2' data-testid='story.launcher'>
+        {LAUNCHER_MESSAGES.map((message) => (
+          <Listbox.Item
+            key={message.id}
+            id={message.id}
+            classNames='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
+            data-testid='story.launcher.row'
+          >
+            {message.title}
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
   );
 };
 
@@ -339,7 +343,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                   data-testid='story.companion'
                   data-companion-to={companionTo?.title}
                 >
-                  <p className='text-sm text-description'>Story companion surface</p>
+                  <p className='text-sm text-fg-muted'>Story companion surface</p>
                   <p>
                     Companion <span className='font-mono text-xs'>{String(data.variant)}</span> of{' '}
                     <span className='font-medium'>{companionTo?.title ?? data.attendableId}</span>.
@@ -389,7 +393,6 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                     properties: { label: item.title, icon: item.icon },
                   }),
                 ),
-                // The launcher declares its chain on the node, the way the app resolves it off the type.
                 AppGraphNode.make({
                   id: LAUNCHER_ID,
                   type: 'story-launcher',
@@ -397,7 +400,6 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                   properties: {
                     label: 'Inbox',
                     icon: 'ph--tray--regular',
-                    deck: { levels: [{ key: 'list' }, { key: 'message' }] },
                   },
                 }),
               ]),

@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type CleanupFn, Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
@@ -668,10 +668,8 @@ export const waitFor = (graph: BaseGraph, id: string): Effect.Effect<Node.Node> 
  * Implementation helper for expandSync.
  * If the node does not exist yet, the expand is recorded as pending and applied when the node is added.
  *
- * Fires the `onExpand` callback to add connections to the node. That callback subscribes to the node's
- * connector atom immediately, so every matching builder extension runs before this returns — which is why
- * anything on a paint-critical path (a pointer handler, a render) should prefer {@link expand}. Their
- * output reaches the graph on the builder's next flush, not by the time this returns.
+ * Fires the `onExpand` callback to add connections to the node. The builder only marks the relation's
+ * connectors dirty; they run, and their output reaches the graph, on its next flush.
  *
  * Expanding a node that is already expanded for the same relation is a no-op.
  */

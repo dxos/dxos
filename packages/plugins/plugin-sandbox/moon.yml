@@ -4,7 +4,9 @@ tags:
   - composer-plugin
   - ts-vite-build
   - ts-test
+  - ts-test-storybook
   - pack
+  - storybook
 
 tasks:
   check-module-structure:
@@ -24,3 +26,22 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
+  # The local sandbox helper the desktop app bundles, compiled for the host platform. Not part of
+  # `build`: only composer-app's Tauri build consumes it.
+  compile-sidecar:
+    command: bun
+    args:
+      - ./scripts/build-sidecar.ts
+    deps:
+      - ^:build
+    inputs:
+      - '@group(production)'
+      - scripts/build-sidecar.ts
+      - /.prototools
+    outputs:
+      - dist/sidecar/
+    options:
+      # Compiled for the host, which moon's hash does not cover: a cached artifact could be another
+      # platform's executable. It builds in seconds, so it is simply never cached.
+      cache: false
+      timeout: 120

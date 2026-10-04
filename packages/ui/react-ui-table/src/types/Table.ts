@@ -28,6 +28,7 @@ export class Table extends Type.makeObject<Table>(DXN.make('org.dxos.type.table'
     Annotation.LabelAnnotation.set(['name']),
     ViewAnnotation.set(['view']),
     Annotation.IconAnnotation.set({ icon: 'ph--table--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

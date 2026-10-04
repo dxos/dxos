@@ -42,7 +42,7 @@ const DefaultStory = () => {
   }, []);
 
   return (
-    <Card.Root fullWidth>
+    <Card.Root>
       <Card.Header>
         <Card.Title>Citrin Cooperman Advisors LLC</Card.Title>
       </Card.Header>

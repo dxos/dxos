@@ -34,15 +34,15 @@ export const AgentRunner = Capability.lazyModule(
   () => import('./agent-runner.ts'),
 );
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph.ts'), {
   name: 'HistoryGraph',
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
@@ -64,7 +64,7 @@ export const MarkdownBinding = Capability.lazyModule(
   {
     provides: [MarkdownCapabilities.EditorBindingHook, ReviewCapabilities.HistoryProvider],
     activatesOn: MarkdownEvents.Start,
-    environments: [],
+    environments: ['browser', 'tauri'],
   },
   () => import('./markdown-binding.ts'),
 );
@@ -95,17 +95,17 @@ export const ReviewState = Capability.lazyModule(
   {
     provides: [ReviewCapabilities.ReviewRenderPolicy],
     activatesOn: ReviewEvents.Start,
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./review-state.ts'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
   activatesOn: ReviewEvents.Start,
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const TourFragment = Capability.lazyModule(
   'TourFragment',
-  { provides: [AppCapabilities.TourFragment], environments: [] },
+  { provides: [AppCapabilities.TourFragment], environments: ['browser', 'tauri'] },
   () => import('./tour-fragment.ts'),
 );
 export const Translations = AppCapability.translations([...translations, ...threadTranslations]);

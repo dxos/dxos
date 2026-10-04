@@ -8,7 +8,7 @@ import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 
 export type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space } from '@dxos/client/echo';
@@ -21,7 +21,6 @@ import { NotFound } from '../app/index.ts';
 import { Translations } from '../app/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
 import * as ContainerModel from '../types/ContainerModel.ts';
-import * as DeckSpec from './DeckSpec.ts';
 
 //
 //
@@ -164,7 +163,6 @@ export const makeObject = ({
   draggable = true,
   droppable = true,
   navigable = false,
-  deck,
   dropInto,
   canDrop: canDropOverride,
   blockInstruction,
@@ -177,13 +175,6 @@ export const makeObject = ({
   draggable?: boolean;
   droppable?: boolean;
   navigable?: boolean;
-  /**
-   * How the deck should behave when this object is its root, for types whose answer depends on the
-   * enabled plugins rather than the type alone (a collection opens its own article when one exists,
-   * else the deck seeded with its contents). Types with a fixed answer use
-   * {@link AppAnnotation.DeckAnnotation} instead.
-   */
-  deck?: DeckSpec.DeckSpec;
   /** The container an object dropped onto the row joins. */
   dropInto?: ContainerModel.Container;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
@@ -220,8 +211,6 @@ export const makeObject = ({
   })();
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(AppAnnotation.GraphPropsAnnotation.get(schema)) : undefined;
-  // The caller wins: it knows the enabled plugins, which the schema annotation cannot.
-  const deckSpec = deck ?? (schema ? Option.getOrUndefined(AppAnnotation.DeckAnnotation.get(schema)) : undefined);
 
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getListPartials(ContainerModel.collection(object), db)
@@ -257,10 +246,22 @@ export const makeObject = ({
       blockInstruction,
       canDrop,
       ...(dropInto && droppable ? getDropTargetPartials(dropInto, db) : {}),
-      [DeckSpec.DECK_SPEC_PROPERTY]: deckSpec,
       ...partials,
     },
   };
+};
+
+/** Node property naming what kind of thing a node is ("Message", "Task"), for nodes that are not ECHO objects. */
+export const TYPE_LABEL_PROPERTY = 'typeLabel';
+
+/** What kind of thing `node` is: its own {@link TYPE_LABEL_PROPERTY}, else its ECHO type's label. */
+export const getTypeLabel = (node: Pick<AppGraphNode.Node, 'data' | 'properties'>): Translations.Label | undefined => {
+  const declared: Translations.Label | undefined = node.properties[TYPE_LABEL_PROPERTY];
+  if (declared) {
+    return declared;
+  }
+  const typename = Obj.isObject(node.data) ? Obj.getTypename(node.data) : undefined;
+  return typename ? ['typename.label', { ns: typename }] : undefined;
 };
 
 //

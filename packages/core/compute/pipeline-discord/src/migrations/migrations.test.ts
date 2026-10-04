@@ -3,13 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as Migrator from 'effect/sql/Migrator';
 import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
-import { SqlMigrations } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import extractedQuestionInit from './extracted-question/0001_init.sql?raw';
 import {

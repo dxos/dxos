@@ -8,9 +8,8 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { Button, Field, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Empty, Input, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Empty } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { type TestConnectionStatus } from '#hooks';
@@ -112,147 +111,143 @@ export const ConnectionView = ({
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
-              <Form.Viewport>
-                <Form.Content>
-                  <Form.FieldSet label={title} description={source}>
-                    {!hasConnector && <p className='px-trim-md text-description'>{t('no-connector.message')}</p>}
+      <Panel.Body>
+        <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
+          <Form.Viewport scroll>
+            <Form.Content>
+              <Form.FieldSet label={title} description={source}>
+                {!hasConnector && <p className='px-trim-md text-fg-muted'>{t('no-connector.message')}</p>}
 
-                    {onRename && (
-                      <Form.Field label={t('connection-name.label')}>
-                        <Field.Input
-                          // Remounted when the stored name changes. The input is uncontrolled, so
-                          // React would otherwise keep the old text after a replicated rename
-                          // arrives — and the next blur would write that stale value back over it.
-                          key={name ?? ''}
-                          // The stored name, not `title`: an unnamed connection shows the account
-                          // or connector label there, and seeding it here would persist that
-                          // fallback the first time the field is focused and blurred.
-                          defaultValue={name ?? ''}
-                          placeholder={title || t('connection-name.placeholder')}
-                          data-testid='connection.name-input'
-                          // Committed on blur and Enter rather than per keystroke: this writes
-                          // straight to a replicated object, and the label is echoed in the
-                          // sidebar as you type. Unchanged input writes nothing, so merely
-                          // tabbing through the field cannot pin the derived label.
-                          onBlur={(event) => {
-                            const next = event.target.value.trim();
-                            if (next !== (name ?? '')) {
-                              onRename(next);
-                            }
-                          }}
-                          onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
-                        />
-                      </Form.Field>
-                    )}
-
-                    {/*
-                      One JSON block rather than a labelled row per field: none of it is editable,
-                      and a stack of read-only rows competes visually with the two rows that ARE
-                      actionable. Sits above the status so a failure reads against it.
-                    */}
-                    {details.length > 0 && (
-                      <Form.Field standalone label={t('connection-details.label')}>
-                        <JsonHighlighter
-                          data={Object.fromEntries(details.map(({ label, value }) => [label, value]))}
-                          classNames='text-xs overflow-auto'
-                          testId='connection.details'
-                        />
-                      </Form.Field>
-                    )}
-
-                    {/* Hide Sync now entirely when the connector has no `sync` op. */}
-                    {canSync && (
-                      <Form.Field standalone label={t('sync-now.label')} description={t('sync-now.description')}>
-                        <Button onClick={onSync} disabled={syncing || bindings.length === 0}>
-                          {syncing ? t('syncing.label') : t('sync-now.label')}
-                        </Button>
-                      </Form.Field>
-                    )}
-
-                    {/* Credential status is hidden for connectors that can't be tested (`unsupported`). */}
-                    {testStatus !== 'unsupported' && (
-                      <Form.Field
-                        standalone
-                        label={t('connection-status.label')}
-                        description={
-                          testStatus === 'valid'
-                            ? t('connection-valid.message')
-                            : testStatus === 'invalid'
-                              ? t('connection-invalid.message')
-                              : t('connection-checking.message')
+                {onRename && (
+                  <Form.Field label={t('connection-name.label')}>
+                    <Input
+                      // Remounted when the stored name changes. The input is uncontrolled, so
+                      // React would otherwise keep the old text after a replicated rename
+                      // arrives — and the next blur would write that stale value back over it.
+                      key={name ?? ''}
+                      // The stored name, not `title`: an unnamed connection shows the account
+                      // or connector label there, and seeding it here would persist that
+                      // fallback the first time the field is focused and blurred.
+                      defaultValue={name ?? ''}
+                      placeholder={title || t('connection-name.placeholder')}
+                      data-testid='connection.name-input'
+                      // Committed on blur and Enter rather than per keystroke: this writes
+                      // straight to a replicated object, and the label is echoed in the
+                      // sidebar as you type. Unchanged input writes nothing, so merely
+                      // tabbing through the field cannot pin the derived label.
+                      onBlur={(event) => {
+                        const next = event.target.value.trim();
+                        if (next !== (name ?? '')) {
+                          onRename(next);
                         }
-                        error={testStatus === 'invalid' && testError ? testError : undefined}
-                      >
-                        <Button onClick={onTestConnection} disabled={testing}>
-                          {testing ? t('testing-connection.label') : t('test-connection.label')}
-                        </Button>
-                      </Form.Field>
-                    )}
+                      }}
+                      onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
+                    />
+                  </Form.Field>
+                )}
 
-                    {/* Reauthenticate is available for OAuth connectors; the credential is replaced in place. */}
-                    {canReauthenticate && (
-                      <Form.Field
-                        standalone
-                        label={t('reauthenticate.label')}
-                        description={t('reauthenticate.description')}
-                      >
-                        <Button onClick={onReauthenticate} disabled={reauthenticating}>
-                          {reauthenticating ? t('reauthenticating.label') : t('reauthenticate.label')}
-                        </Button>
-                      </Form.Field>
-                    )}
+                {/*
+                  One JSON block rather than a labelled row per field: none of it is editable,
+                  and a stack of read-only rows competes visually with the two rows that ARE
+                  actionable. Sits above the status so a failure reads against it.
+                */}
+                {details.length > 0 && (
+                  <Form.Field standalone label={t('connection-details.label')}>
+                    <JsonHighlighter
+                      data={Object.fromEntries(details.map(({ label, value }) => [label, value]))}
+                      classNames='text-xs overflow-auto'
+                      testId='connection.details'
+                    />
+                  </Form.Field>
+                )}
 
-                    {/* Only show change-targets for connectors that support user-pickable targets. */}
-                    {canChangeTargets && (
-                      <Form.Field
-                        standalone
-                        label={t('change-targets.label')}
-                        description={t('change-targets.description')}
-                      >
-                        <Button onClick={onChangeTargets} disabled={!syncTargetsAvailable || loadingTargets}>
-                          {loadingTargets ? t('loading.label') : t('change-targets.label')}
-                        </Button>
-                      </Form.Field>
-                    )}
+                {/* Hide Sync now entirely when the connector has no `sync` op. */}
+                {canSync && (
+                  <Form.Field standalone label={t('sync-now.label')} description={t('sync-now.description')}>
+                    <Button onClick={onSync} disabled={syncing || bindings.length === 0}>
+                      {syncing ? t('syncing.label') : t('sync-now.label')}
+                    </Button>
+                  </Form.Field>
+                )}
 
-                    <Form.Field
-                      standalone
-                      label={t('delete-connection.label')}
-                      description={t('delete-connection.description')}
-                    >
-                      <Button variant='destructive' onClick={onDelete}>
-                        {t('delete-connection.label')}
-                      </Button>
-                    </Form.Field>
-                  </Form.FieldSet>
+                {/* Credential status is hidden for connectors that can't be tested (`unsupported`). */}
+                {testStatus !== 'unsupported' && (
+                  <Form.Field
+                    standalone
+                    label={t('connection-status.label')}
+                    description={
+                      testStatus === 'valid'
+                        ? t('connection-valid.message')
+                        : testStatus === 'invalid'
+                          ? t('connection-invalid.message')
+                          : t('connection-checking.message')
+                    }
+                    error={testStatus === 'invalid' && testError ? testError : undefined}
+                  >
+                    <Button onClick={onTestConnection} disabled={testing}>
+                      {testing ? t('testing-connection.label') : t('test-connection.label')}
+                    </Button>
+                  </Form.Field>
+                )}
 
-                  {/* Hide the sync-targets section for connectors that don't sync. */}
-                  {canSync && (
-                    <Form.FieldSet label={t('targets.label')}>
-                      {bindings.length === 0 ? (
-                        <Empty label={canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')} />
-                      ) : (
-                        bindings.map((binding) => (
-                          <BindingRow
-                            key={binding.id}
-                            binding={binding}
-                            optionsSchema={optionsSchema}
-                            onRemove={onRemoveBinding}
-                          />
-                        ))
-                      )}
-                    </Form.FieldSet>
+                {/* Reauthenticate is available for OAuth connectors; the credential is replaced in place. */}
+                {canReauthenticate && (
+                  <Form.Field
+                    standalone
+                    label={t('reauthenticate.label')}
+                    description={t('reauthenticate.description')}
+                  >
+                    <Button onClick={onReauthenticate} disabled={reauthenticating}>
+                      {reauthenticating ? t('reauthenticating.label') : t('reauthenticate.label')}
+                    </Button>
+                  </Form.Field>
+                )}
+
+                {/* Only show change-targets for connectors that support user-pickable targets. */}
+                {canChangeTargets && (
+                  <Form.Field
+                    standalone
+                    label={t('change-targets.label')}
+                    description={t('change-targets.description')}
+                  >
+                    <Button onClick={onChangeTargets} disabled={!syncTargetsAvailable || loadingTargets}>
+                      {loadingTargets ? t('loading.label') : t('change-targets.label')}
+                    </Button>
+                  </Form.Field>
+                )}
+
+                <Form.Field
+                  standalone
+                  label={t('delete-connection.label')}
+                  description={t('delete-connection.description')}
+                >
+                  <Button variant='destructive' onClick={onDelete}>
+                    {t('delete-connection.label')}
+                  </Button>
+                </Form.Field>
+              </Form.FieldSet>
+
+              {/* Hide the sync-targets section for connectors that don't sync. */}
+              {canSync && (
+                <Form.FieldSet label={t('targets.label')}>
+                  {bindings.length === 0 ? (
+                    <Empty>{canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')}</Empty>
+                  ) : (
+                    bindings.map((binding) => (
+                      <BindingRow
+                        key={binding.id}
+                        binding={binding}
+                        optionsSchema={optionsSchema}
+                        onRemove={onRemoveBinding}
+                      />
+                    ))
                   )}
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
+                </Form.FieldSet>
+              )}
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </Panel.Body>
     </Panel.Root>
   );
 };

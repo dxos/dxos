@@ -7,8 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Blob, Database, DXN, type Error, Obj, Ref, Type } from '@dxos/echo';
-import { CollectionItemAnnotation } from '@dxos/schema';
+import { Annotation, Blob, Collection, Database, DXN, type Error, Obj, Ref, Type } from '@dxos/echo';
 
 /**
  * Canonical file type. Storage is backend-agnostic — `data` references a {@link Blob.Blob} object
@@ -22,7 +21,7 @@ export class File extends Type.makeObject<File>(DXN.make('org.dxos.type.file', '
     timestamp: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'indigo' }),
-    CollectionItemAnnotation.set(true),
+    Annotation.UserType.set({ tags: [Collection.ItemTag] }),
   ),
 ) {}
 

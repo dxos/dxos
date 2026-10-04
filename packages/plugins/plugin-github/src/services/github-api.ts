@@ -7,12 +7,12 @@
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
@@ -628,6 +628,33 @@ export const approvePullRequest = (
       ),
     { event: 'APPROVE', ...(body ? { body } : {}) },
     GitHubReviewSchema,
+  );
+
+const GitHubSubmittedReviewSchema = Schema.Struct({
+  id: Schema.Number,
+  /** `APPROVED`, `CHANGES_REQUESTED`, `COMMENTED`, `DISMISSED` or `PENDING`. */
+  state: Schema.String,
+  user: Schema.NullOr(Schema.Struct({ login: Schema.String })).pipe(Schema.optional),
+  submitted_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubSubmittedReview = Schema.Schema.Type<typeof GitHubSubmittedReviewSchema>;
+
+/**
+ * GET /repos/{owner}/{repo}/pulls/{number}/reviews — every page, oldest first, since a reviewer's
+ * standing verdict is their latest review and a truncated list could miss it.
+ */
+export const fetchReviews = (
+  owner: string,
+  repo: string,
+  number: number,
+): GitHubEffect<readonly GitHubSubmittedReview[]> =>
+  githubPages(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}/reviews`,
+      ),
+    Schema.Array(GitHubSubmittedReviewSchema),
+    (page) => page,
   );
 
 /** POST /repos/{owner}/{repo}/issues/{number}/comments — a conversation comment, which a pull request shares with issues. */

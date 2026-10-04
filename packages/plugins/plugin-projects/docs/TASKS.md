@@ -1021,9 +1021,10 @@ companion).
       so editing is the same gesture wherever a task is opened and the
       description keeps its live markdown extensions. Still to grow into:
       assignee, dependencies, sub-tasks, history, delegation.
-- [x] **Row opens the detail** — `TaskSetArticle` rows invoke
-      `LayoutOperation.Select` + `LayoutOperation.Open` at `level: 'task'`;
-      meta-click opens its own plank; arrow keys read down the list through
+- [x] **Row opens the detail** — `TaskSetArticle` rows open the task as the
+      host plank's detail through `useDetailNavigation` (a companion tab under
+      a flattened deck, a reused plank otherwise); meta-click opens its own
+      plank; arrow keys read down the list through
       `useArticleKeyboardNavigation`.
 - [ ] **Retire the `TaskList.Edit` strip** — it is `createOnly` in
       `TaskSetArticle` now (the article is the editor, so a selected row no
@@ -1032,3 +1033,8 @@ companion).
       remains is removing it, which needs creation somewhere else — an inline new
       row in the list, or a toolbar action that creates the task and opens its
       plank (plugin-inbox's draft pattern).
+- [x] **`SpacePlugin` never activates under plugin-tasks' storybook** — the cause was not the
+      lazy import: plugin-space's surface module activates only on a request for one of its
+      declared `roles`, and `org.dxos.role.cardMasonry` was missing from that list, so the grid
+      appeared only where some other plugin-space role (an article) had already activated the
+      module. Fixed by declaring the role; `CardMasonry`'s `ViaSurface` story guards it.

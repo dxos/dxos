@@ -5,18 +5,19 @@
 import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Tabs, useTranslation } from '@dxos/react-ui';
+import { Empty, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
-import { Empty } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
-import { mx } from '@dxos/ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
@@ -174,17 +175,29 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
   // Table rows are editable, so opening a row is a deliberate row action rather than `onRowClick`
   // (which would fire on every cell click and fight with in-cell editing).
   const rowActions = useMemo(
-    (): TableRowAction[] => [{ id: 'open', label: ['open-object.label', { ns: meta.profile.key }] }],
-    [],
+    (): TableRowAction[] => [
+      { id: 'open', label: ['open-object.label', { ns: meta.profile.key }] },
+      ...(TypeOptions.isUserType(type)
+        ? [
+            {
+              id: 'addToCollection',
+              label: ['add-to-collection.label', { ns: osTranslations }],
+            } satisfies TableRowAction,
+          ]
+        : []),
+    ],
+    [type],
   );
 
   const handleRowAction = useCallback(
     (actionId: string, object: Obj.Unknown) => {
       if (actionId === 'open') {
         handleOpen(object);
+      } else if (actionId === 'addToCollection') {
+        void invokePromise(CollectionOperation.OpenAddToCollection, { object });
       }
     },
-    [handleOpen],
+    [handleOpen, invokePromise],
   );
 
   // One action graph for the whole toolbar: the mode-specific actions first, then the layout toggle.
@@ -266,13 +279,17 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Tabs.Root asChild value={layout} onValueChange={(value) => setLayout(value as Layout)}>
+      <Tabs.Root asChild value={layout} onValueChange={(value) => setLayout(value as Layout)} orientation='vertical'>
         <Panel.Root role={role}>
-          <Panel.Toolbar classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
-            {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
+          <Panel.Header classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
+            {layout !== 'duplicates' && (
+              <Toolbar.Root>
+                <SearchList.Input placeholder={t('search-placeholder.label')} />
+              </Toolbar.Root>
+            )}
             <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
-          </Panel.Toolbar>
-          <Panel.Content>
+          </Panel.Header>
+          <Panel.Body>
             <LayoutPanel value='masonry' empty={noResults}>
               <ObjectMasonry cacheKey={typeUri} items={tileItems} />
             </LayoutPanel>
@@ -294,10 +311,10 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
                 <ObjectMasonry cacheKey={typeUri} items={tileItems} />
               </LayoutPanel>
             )}
-          </Panel.Content>
-          <Panel.Statusbar classNames='flex items-center p-1 border-t border-subdued-separator'>
+          </Panel.Body>
+          <Panel.Footer classNames='flex items-center p-1 border-t border-separator-subtle'>
             {t('item-count.label', { count: tileItems.length })}
-          </Panel.Statusbar>
+          </Panel.Footer>
         </Panel.Root>
       </Tabs.Root>
     </SearchList.Root>
@@ -306,9 +323,9 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
 /** One layout's content, or the message standing in for it when the layout has nothing to show. */
 const LayoutPanel = ({ value, empty, children }: PropsWithChildren<{ value: Layout; empty?: string }>) => (
-  <Tabs.Panel value={value} classNames='contents'>
-    {empty ? <Empty classNames='h-full' label={empty} /> : children}
-  </Tabs.Panel>
+  <Tabs.Content value={value} classNames='contents'>
+    {empty ? <Empty classNames='h-full'>{empty}</Empty> : children}
+  </Tabs.Content>
 );
 
 TypeArticle.displayName = 'TypeArticle';
