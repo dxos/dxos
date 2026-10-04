@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import { useContext, useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-toolkit/Hooks';
+import { Obj } from '@dxos/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -50,4 +51,37 @@ export const useBreadcrumbs = (ids: string[]): Breadcrumb[] => {
   }, [graph, registry, key, t]);
 
   return crumbs;
+};
+
+/** Every ancestor path of a qualified node id, outermost first (`root/a/b/c` → `root`, `root/a`, `root/a/b`). */
+export const ancestorPaths = (id: string): string[] => {
+  const segments = id.split('/');
+  return segments.slice(0, -1).map((_, index) => segments.slice(0, index + 1).join('/'));
+};
+
+/**
+ * A node's place in the tree as breadcrumbs: its ancestors from the nearest object below the workspace (a project,
+ * a collection's item) down to its parent, so a session reads `Project > Sessions`. The root, the workspace and the
+ * navtree's section and type groups above that object are left out, since every node under them shares them.
+ */
+export const useAncestorBreadcrumbs = (id: string | undefined): Breadcrumb[] => {
+  const { graph } = Hooks.useAppGraph();
+  const registry = useContext(RegistryContext);
+  const [ids, setIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const paths = id ? ancestorPaths(id) : [];
+    const atoms = paths.map((path) => graph.node(path));
+    const update = () => {
+      const first = atoms.findIndex((atom) => Obj.isObject(Option.getOrUndefined(registry.get(atom))?.data));
+      const next = first < 0 ? [] : paths.slice(first);
+      setIds((prev) => (prev.join('\0') === next.join('\0') ? prev : next));
+    };
+
+    update();
+    const unsubscribers = atoms.map((atom) => registry.subscribe(atom, update));
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+  }, [graph, registry, id]);
+
+  return useBreadcrumbs(ids);
 };
