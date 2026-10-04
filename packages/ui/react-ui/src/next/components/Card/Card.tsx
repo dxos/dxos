@@ -289,6 +289,11 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   trailing?: ReactNode;
   /** The chosen row of a set (`aria-current`). */
   current?: boolean;
+  /**
+   * How far the row's text runs in a `grid` card: `full` across both rails (content with nothing to align beside it,
+   * such as a snippet), `end` on through the end rail when there is no trailing cell. The content track by default.
+   */
+  span?: 'full' | 'end';
 };
 
 /**
@@ -297,7 +302,7 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * it), as the current `Card.Action` row was.
  */
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
-  ({ classNames, icon, leading, trailing, current, onClick, onKeyDown, children, ...props }, forwardedRef) => (
+  ({ classNames, icon, leading, trailing, current, span, onClick, onKeyDown, children, ...props }, forwardedRef) => (
     <div
       {...props}
       {...clickableProps(onClick, onKeyDown)}
@@ -305,6 +310,7 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
       data-scope='card'
       data-part='row'
       data-trailing={trailing != null ? '' : undefined}
+      data-span={span}
       className={mx(recipes.cardRow(), onClick && recipes.cardClickable(), classNames)}
       ref={forwardedRef}
     >

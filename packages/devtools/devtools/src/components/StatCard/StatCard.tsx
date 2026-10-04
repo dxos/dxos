@@ -161,12 +161,8 @@ const StatCardRow = ({
     ));
   return (
     <Card.Row
-      classNames={[
-        classNames,
-        onClick && 'cursor-pointer hover:bg-hover-surface',
-        current && 'bg-hover-surface',
-        span && !trailing && SPAN_TRAILING,
-      ]}
+      classNames={[classNames, onClick && 'cursor-pointer hover:bg-hover-surface', current && 'bg-hover-surface']}
+      span={span && !trailing ? 'end' : undefined}
       onClick={onClick}
       current={current}
       leading={leading}
@@ -191,12 +187,6 @@ const StatCardRow = ({
     </Card.Row>
   );
 };
-
-/** Runs a row's content through the end rail when it has no trailing cell of its own. */
-const SPAN_TRAILING = '[&>[data-part=row-main]]:[grid-column:content-start/full-end]';
-
-/** Runs a row's content through both rails. */
-const SPAN_FULL = '[&>[data-part=row-main]]:[grid-column:full-start/full-end]';
 
 StatCardRow.displayName = 'StatCard.Row';
 
@@ -226,7 +216,7 @@ type StatCardContentProps = PropsWithChildren<
 
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, full, children }: StatCardContentProps) => (
-  <Card.Row leading={full ? undefined : <span />} classNames={full ? SPAN_FULL : SPAN_TRAILING}>
+  <Card.Row leading={full ? undefined : <span />} span={full ? 'full' : 'end'}>
     <Flex column grow={false} classNames={['min-w-0 text-xs', classNames]}>
       {children}
     </Flex>

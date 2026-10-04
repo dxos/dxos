@@ -201,6 +201,12 @@
     grid-column: content-start / full-end;
     grid-template-columns: minmax(0, 1fr) minmax(var(--dx-card-trailing-min), auto);
   }
+  .dx-card-row[data-span='end'] > .dx-card-row-main {
+    grid-column: content-start / full-end;
+  }
+  .dx-card-row[data-span='full'] > .dx-card-row-main {
+    grid-column: full-start / full-end;
+  }
   .dx-card-row-content {
     flex: 1;
     min-width: 0;
