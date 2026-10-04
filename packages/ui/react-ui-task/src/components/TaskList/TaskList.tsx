@@ -13,7 +13,6 @@ import {
   Grid,
   Icon,
   Tag,
-  Tooltip,
   composable,
   composableProps,
   toLocalizedString,
@@ -804,26 +803,35 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
     return null;
   }
 
-  const tag = (
+  const hue = agent ? 'purple' : 'indigo';
+
+  // Icon-only, a square button in the row's controls; its tooltip names the assignee, unless a session shows its card
+  // on hover, which already names the run and a tooltip would stack on.
+  if (iconOnly && label) {
+    return (
+      <Button
+        iconOnly
+        icon={icon}
+        hue={hue}
+        label={label}
+        showTooltip={!session}
+        data-testid='taskList.item.assignee'
+        {...(session && anchor)}
+      />
+    );
+  }
+
+  return (
     <Tag
-      hue={agent ? 'purple' : 'indigo'}
+      hue={hue}
       data-testid='taskList.item.assignee'
       // A button when there is a session to open, so the keyboard reaches it as the pointer does.
       {...(session && { ...anchor, role: 'button', tabIndex: 0 })}
       classNames={session && 'cursor-pointer'}
     >
-      {(agent || iconOnly) && <Icon icon={icon} classNames={mx('inline-block size-4', !iconOnly && 'me-1')} />}
-      {iconOnly ? <span className='sr-only'>{label}</span> : label}
+      {agent && <Icon icon={icon} classNames='inline-block size-4 me-1' />}
+      {label}
     </Tag>
-  );
-
-  // A session shows its card on hover, which already names the run; a tooltip would stack on it.
-  return iconOnly && !session && label ? (
-    <Tooltip.Trigger asChild content={label}>
-      {tag}
-    </Tooltip.Trigger>
-  ) : (
-    tag
   );
 });
 
