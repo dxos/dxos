@@ -143,10 +143,10 @@ export type TaskOrdinalProps = {
   classNames?: string;
 };
 
-/** The gutter's ordinal, tinted by outcome so a scan down the column reads as progress. */
+/** The gutter's ordinal, in the task's mnemonic hue, so the number and the mnemonic read as the same task. */
 export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => {
-  const status = task.status ?? 'todo';
-  const hue = status === 'done' ? 'green' : status === 'failed' || status === 'cancelled' ? 'rose' : 'neutral';
+  // Hashed from the mnemonic, as the mnemonic chip (and the task's Gantt lane) are.
+  const hue = getHashHue(Obj.getMnemonic(task));
   return (
     // The same square every other cell in the row occupies, so the badge centres under the pane's
     // column rather than hugging the track's start.
