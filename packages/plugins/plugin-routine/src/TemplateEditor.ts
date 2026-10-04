@@ -4,5 +4,5 @@
 
 // @import-as-namespace
 
-export { TemplateEditor as Root } from './components/TemplateEditor/index.ts';
-export type { TemplateEditorProps as RootProps } from './components/TemplateEditor/index.ts';
+export { TemplateEditor } from './components/TemplateEditor/index.ts';
+export type { TemplateEditorProps } from './components/TemplateEditor/index.ts';

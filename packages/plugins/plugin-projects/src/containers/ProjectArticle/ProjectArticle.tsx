@@ -270,13 +270,17 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 <Form.Content>
                   <Form.Fields />
 
-                  {instructions && <InstructionsEditor.Root db={db} instructions={instructions} />}
+                  {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
 
                   {/* Standing context (inputs bound into every project session) — deliberately a
                       separate labeled section from Artifacts (outputs the project owns). */}
                   {instructions && (
                     <Form.FieldSet label={t('context.label')}>
-                      <InstructionsEditor.Root db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
+                      <InstructionsEditor.InstructionsEditor
+                        db={db}
+                        instructions={instructions}
+                        fields={CONTEXT_FIELDS}
+                      />
                     </Form.FieldSet>
                   )}
 

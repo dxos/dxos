@@ -59,7 +59,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='dx-document'>
-        {instructions && <InstructionsEditor.Root db={db} instructions={instructions} />}
+        {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
       </Panel.Body>
     </Panel.Root>
   );

@@ -6,7 +6,7 @@ import React, { type ComponentType, type KeyboardEvent, type SyntheticEvent, use
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as CardMenuSlot from '@dxos/app-toolkit/CardMenuSlot';
+import * as CardSlot from '@dxos/app-toolkit/CardSlot';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
 import { Entity, Obj } from '@dxos/echo';
@@ -75,7 +75,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
           <Layout.Block rail='end'>
             {/* React portals bubble through the component tree, so the menu's clicks would reach the card. */}
             <div role='none' className='contents' onClick={stopPropagation}>
-              <CardMenuSlot.Root subject={subject} menu={menu} />
+              <CardSlot.MenuSlot subject={subject} menu={menu} />
               {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
               <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
                 <Button.Root

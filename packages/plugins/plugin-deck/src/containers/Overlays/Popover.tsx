@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as CardMenuSlot from '@dxos/app-toolkit/CardMenuSlot';
+import * as CardSlot from '@dxos/app-toolkit/CardSlot';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Attention } from '@dxos/react-ui-attention';
@@ -165,7 +165,7 @@ export const PopoverContent = () => {
             menu={
               // TODO(wittjosiah): Reconcile with Card.Menu.
               <Layout.Block rail='end'>
-                {popoverSubject !== undefined && <CardMenuSlot.Root subject={popoverSubject} menu={menu} />}
+                {popoverSubject !== undefined && <CardSlot.MenuSlot subject={popoverSubject} menu={menu} />}
                 <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
                   <Button.Root variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
                 </ActionMenu>

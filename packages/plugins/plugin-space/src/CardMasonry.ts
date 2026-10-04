@@ -4,5 +4,5 @@
 
 // @import-as-namespace
 
-export { CardMasonry as Root } from './components/CardMasonry/index.ts';
-export type { CardMasonryProps as RootProps } from './components/CardMasonry/index.ts';
+export { CardMasonry } from './components/CardMasonry/index.ts';
+export type { CardMasonryProps } from './components/CardMasonry/index.ts';
