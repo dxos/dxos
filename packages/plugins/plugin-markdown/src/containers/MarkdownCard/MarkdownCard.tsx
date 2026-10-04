@@ -69,8 +69,9 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
         </Card.Section>
       )}
       <Card.Section>
-        <Card.Row>
-          <Card.Text classNames='px-2 text-xs' variant='muted'>
+        {/* Across the rails, as the snippet is, so the count starts at the snippet's text edge rather than indented. */}
+        <Card.Row classNames='[&>[data-part=row-main]]:[grid-column:full]'>
+          <Card.Text classNames='px-2 text-xs' variant='muted' data-testid='markdown.card.words'>
             {info.words} {t('words.label', { count: info.words })}
           </Card.Text>
         </Card.Row>
