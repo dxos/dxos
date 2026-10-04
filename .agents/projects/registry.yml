@@ -14,8 +14,8 @@ projects:
     summary: 'Cross-space notifications inbox: R0 envelope tab with unread badge, R1 panel of Message tiles stored in a feed in the default space. Delivered via the EDGE per-identity inbox using a new generic signed envelope (device key + chain), contacts-only senders; a Sender capability lets other plugins and bots post by identity DID.'
     tasks: .agents/projects/plugin-messenger/TASKS.md
     design: agents/superpowers/specs/2026-10-04-plugin-messenger-design.md
-    prs: []
-    resume: 'Spec written, awaiting user review. NEXT: writing-plans, then Phase 1 (envelope + InboxService).'
+    prs: [13701]
+    resume: 'Phase 1 = draft PR #13701 (bottom of stack, must not land alone): signed envelope, message-only HaloInbox, invitations as messages, MemoryEdgeInbox testing relay. NEXT: Phase 2 (plugin-messenger + deck badge) on a child branch, then gh stack link.'
   - name: architecture-rules
     status: active
     user: dmaretskyi
