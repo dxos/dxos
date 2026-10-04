@@ -96,11 +96,11 @@ export const withClientProvider = ({
   };
 };
 
+type LocalServicesOptions = NonNullable<Parameters<TestBuilder['createLocalClientServices']>[0]>;
+
 // TODO(burdon): Implement context per client for context.
 // TODO(burdon): Callback once all invitations have completed.
 // TODO(burdon): Delay/jitter for creation of other clients.
-type LocalServicesOptions = NonNullable<Parameters<TestBuilder['createLocalClientServices']>[0]>;
-
 export type WithMultiClientProviderProps = InitializeProps &
   Omit<ClientProviderProps, 'onInitialized'> & {
     numClients?: number;
