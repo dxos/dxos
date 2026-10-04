@@ -737,7 +737,7 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
       {...(session && { ...anchor, role: 'button', tabIndex: 0 })}
       classNames={session && 'cursor-pointer'}
     >
-      {(agent || iconOnly) && <Icon icon={icon} size='xs' classNames={mx('inline-block', !iconOnly && 'me-1')} />}
+      {(agent || iconOnly) && <Icon icon={icon} classNames={mx('inline-block size-4', !iconOnly && 'me-1')} />}
       {iconOnly ? <span className='sr-only'>{label}</span> : label}
     </Tag>
   );

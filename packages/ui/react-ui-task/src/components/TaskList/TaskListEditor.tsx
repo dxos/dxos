@@ -39,9 +39,6 @@ import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
 import { TaskEstimateControl, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
 
-/** Whether a drag carries files from outside the page, rather than an element dragged within it. */
-const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');
-
 export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
   placeholder?: string;
@@ -528,5 +525,8 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     );
   },
 );
+
+/** Whether a drag carries files from outside the page, rather than an element dragged within it. */
+const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');
 
 TaskListEditor.displayName = 'TaskList.Editor';

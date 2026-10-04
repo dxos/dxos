@@ -17,6 +17,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
+import { translations as githubTranslations } from '@dxos/plugin-github/translations';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -153,7 +154,6 @@ const meta = {
   title: 'plugins/plugin-tasks/containers/TaskSetArticle',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // The plugin manager, not a bare client provider: the article invokes the task verbs through
     // `useOperationInvoker`, which throws without PluginManagerContext.
@@ -188,11 +188,13 @@ const meta = {
       ],
       setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
+    // Outermost, so the popover the layout renders outside the story still reads the story's translations.
+    withTheme(),
   ],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...translations, ...reactUiTranslations],
+    translations: [...translations, ...githubTranslations, ...reactUiTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
