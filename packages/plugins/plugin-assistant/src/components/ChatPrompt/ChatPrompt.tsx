@@ -228,7 +228,6 @@ export const ChatPrompt = ({
           </div>
 
           <ChatActions
-            classNames='col-span-2'
             attendableId={attendableId}
             customActions={customActions}
             // `active`, not `streaming`: a turn parked in a tool call streams nothing,

@@ -5,7 +5,7 @@
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren } from 'react';
 
-import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
@@ -58,10 +58,9 @@ export const ChatActions = ({
   // While a turn runs the primary control interrupts it — unless there is text waiting, in which
   // case sending it (which queues it behind the running turn) is what the reader is asking for.
   const showStop = processing && !canSend;
-  return (
-    <div className={mx('flex items-center gap-1', classNames)}>
+  const controls = (
+    <>
       {children}
-      {customActions && <ContributedActions actions={customActions} attendableId={attendableId} />}
       {debug && (
         <Button
           variant='ghost'
@@ -103,27 +102,41 @@ export const ChatActions = ({
           data-testid='assistant.send'
         />
       )}
-    </div>
+    </>
+  );
+
+  // One toolbar for the whole row, so the contributed actions and the prompt's own controls share its roving focus.
+  return customActions ? (
+    <ContributedActions actions={customActions} attendableId={attendableId} classNames={classNames}>
+      {controls}
+    </ContributedActions>
+  ) : (
+    <Toolbar.Root classNames={classNames}>{controls}</Toolbar.Root>
   );
 };
 
 /**
- * The contributed actions, rendered through the menu's own item dispatch rather than a local copy
- * of it — that is what makes a `variant: 'custom'` contribution (the mic's press-and-hold and its
- * options menu) render here exactly as it does in a document toolbar.
+ * The prompt's toolbar with the contributed actions first, rendered through the menu's own item dispatch rather than a
+ * local copy of it — that is what makes a `variant: 'custom'` contribution (the mic's press-and-hold and its options
+ * menu) render here exactly as it does in a document toolbar.
  *
- * Its own component so the hook is unconditional; the row renders it only when a caller supplies
- * actions.
+ * Its own component so the hook is unconditional; the row renders it only when a caller supplies actions.
  */
 const ContributedActions = ({
   actions,
   attendableId,
-}: {
-  actions: Atom.Atom<ActionGraphProps>;
-  attendableId?: string;
-}) => {
+  classNames,
+  children,
+}: ThemedClassName<
+  PropsWithChildren<{
+    actions: Atom.Atom<ActionGraphProps>;
+    attendableId?: string;
+  }>
+>) => {
   const menuActions = useMenuActions(actions);
-  // Plain (non-`custom`) items render `Toolbar.*` primitives, which throw without the roving-focus
-  // context `ActionToolbar` provides; `contents` keeps the items in the prompt's own row.
-  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive classNames='contents' />;
+  return (
+    <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive classNames={classNames}>
+      {children}
+    </ActionToolbar>
+  );
 };
