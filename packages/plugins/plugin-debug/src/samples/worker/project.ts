@@ -51,7 +51,6 @@ export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = Samp
       const instructions = yield* Database.add(
         Instructions.make({
           name: 'Hello Worker',
-          description: 'Bindings for a chat working this project.',
           text: INSTRUCTIONS,
           objects: [Ref.make(tasks.taskSet)],
         }),
