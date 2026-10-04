@@ -11,7 +11,7 @@
 #                  function wrapping one, plus any `provides` its options add.
 #
 # The facts are `deus:passes` argument nodes (see `design/ONTOLOGY.md`). Helpers private to this file
-# are backward rules (`<=`): EYE proves them on demand and never writes them to the derived graph.
+# are backward rules (`<=`): the engine proves them on demand and never writes them to the derived graph.
 
 @prefix deus: <https://dxos.org/vocab/deus#>.
 @prefix capx: <https://dxos.org/vocab/deus/capabilities#>.

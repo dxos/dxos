@@ -80,9 +80,10 @@ declare const display: {
 };
 
 /**
- * Design questions ("how does X wire its services?"). `subgraph` explores the index from the prompt,
- * scores every candidate file's relevance (System One when the host has a key, else a text and degree
- * baseline) and returns the scored graph — ready for `display.graph`, with the relevant nodes `kept`.
+ * Design questions ("how does X wire its services?"). `subgraph` has a small model query the index for
+ * the prompt, selects from what the queries found (tests and internals hidden unless the prompt asks,
+ * relevance by System One when the host has a key, boosted by connectivity, kept connected) and returns
+ * the scored graph — ready for `display.graph`, with the relevant nodes `kept`.
  * Takes seconds to a minute; call it once per question.
  */
 declare const design: {

@@ -19,13 +19,12 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import * as Native from '../internal/native.ts';
-import * as Quadstore from '../internal/quadstore.ts';
 import * as Store from '../Store.ts';
 
 /**
- * Names the process holding a store open. Both graph backends lock their directory for as long as
- * a writer has it open (LevelDB and RocksDB alike), so a second opener fails, and "locked" alone
- * leaves the user hunting for which `index`, `serve` or `mcp` to stop.
+ * Names the process holding a store open. RocksDB locks its directory for as long as a writer has
+ * it open, so a second opener fails, and "locked" alone leaves the user hunting for which `index`,
+ * `serve` or `mcp` to stop.
  */
 
 export type Holder = {
@@ -33,9 +32,8 @@ export type Holder = {
   readonly command: string;
 };
 
-/** The lock file of each database a store may hold; only the backend in use will exist. */
+/** The lock file of each RocksDB database a store holds. */
 export const lockFiles = (dir: string): string[] => [
-  join(dir, Quadstore.DIR, 'LOCK'),
   join(dir, Native.DIR, 'oxigraph', 'LOCK'),
   join(dir, Native.DIR, 'journal', 'LOCK'),
 ];
@@ -122,8 +120,8 @@ const describeHolder = (holder: Holder): string => {
 };
 
 /**
- * RocksDB and LevelDB both say "lock" when another process holds the directory, but the store wraps
- * that in its own "failed to open" error, so the whole cause chain is searched.
+ * RocksDB says "lock" when another process holds the directory, but the store wraps that in its own
+ * "failed to open" error, so the whole cause chain is searched.
  */
 export const isLockError = (error: unknown): boolean => {
   for (let current = error; current instanceof Error; current = current.cause) {
@@ -192,11 +190,13 @@ export const layer = (
       const deadline = (yield* Clock.currentTimeMillis) + Duration.toMillis(timeout);
       let announced = false;
       while (true) {
-        // Each attempt gets its own scope so a failed one closes whatever it opened before failing.
-        const scope = yield* Scope.make();
+        // Each attempt gets its own scope so a failed one closes whatever it opened before failing; it
+        // is tied to the layer's scope before the build starts, so an interrupted build releases the lock.
+        const scope = yield* Effect.uninterruptible(
+          Effect.tap(Scope.make(), (attempt) => Effect.addFinalizer((outer) => Scope.close(attempt, outer))),
+        );
         const result = yield* Effect.result(Layer.buildWithScope(open(), scope));
         if (Result.isSuccess(result)) {
-          yield* Effect.addFinalizer((outer) => Scope.close(scope, outer));
           return result.success;
         }
         const error = result.failure;
