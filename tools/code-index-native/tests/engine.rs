@@ -671,7 +671,7 @@ fn constructs_maintain_like_recomputation() {
         let predicate = *rng.pick(&["p", "q"]);
         let subject = node((rng.next() % 6) as usize);
         edges(
-            rng.pick(&graphs),
+            rng.pick(&graphs).as_str(),
             &[(subject, predicate, rng.pick(&objects).clone())],
         )
     };

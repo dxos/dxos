@@ -120,8 +120,8 @@ export const derivedGraphIri = (reasoner: string): NamedNode =>
 export const isDerivedGraph = (graph: string): boolean => graph.startsWith(DERIVED_GRAPH_PREFIX);
 
 /**
- * The graph a JS pass writes. Outside the derived prefix, so both backends take it as a premise of
- * every rule file (the native engine journals it like a file graph); `Reasoner.run` recomputes it
+ * The graph a JS pass writes. Outside the derived prefix, so it is a premise of every rule file
+ * (the engine journals it like a file graph); `Reasoner.run` recomputes it
  * before any rule runs, so it never outlives the file graphs it was read from.
  */
 export const PASS_GRAPH_PREFIX = `${GRAPH_BASE}pass/`;
