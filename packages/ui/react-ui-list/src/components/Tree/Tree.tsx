@@ -44,6 +44,7 @@ import {
   Block,
   DragPreview,
   Empty,
+  type Gutter,
   Icon,
   type IconHue,
   ScrollArea,
@@ -700,26 +701,28 @@ TreeLabel.displayName = 'Tree.Label';
  * Ark's `tree` element carrying Container attributes, so the ScrollArea viewport slot merges onto it and the tree
  * element itself scrolls (part-naming rules 1 and 2).
  */
-const TreeContentElement = composable<HTMLDivElement, {}>(({ children, ...props }, forwardedRef) => {
-  const { onTreeKeyDown, onTreePointerDownCapture } = useTreeContext('Tree.Content');
-  const { className, ...rest } = composableProps(props, { classNames: 'dx-container dx-tree-content' });
-  return (
-    <TreeView.Tree
-      {...rest}
-      data-scope='tree-view'
-      data-part='tree'
-      data-gutter='inset'
-      data-layout='stack'
-      data-gap='none'
-      className={className}
-      onKeyDown={onTreeKeyDown}
-      onPointerDownCapture={onTreePointerDownCapture}
-      ref={forwardedRef}
-    >
-      {children}
-    </TreeView.Tree>
-  );
-});
+const TreeContentElement = composable<HTMLDivElement, { gutter?: Gutter }>(
+  ({ children, gutter = 'inset', ...props }, forwardedRef) => {
+    const { onTreeKeyDown, onTreePointerDownCapture } = useTreeContext('Tree.Content');
+    const { className, ...rest } = composableProps(props, { classNames: 'dx-container dx-tree-content' });
+    return (
+      <TreeView.Tree
+        {...rest}
+        data-scope='tree-view'
+        data-part='tree'
+        data-gutter={gutter}
+        data-layout='stack'
+        data-gap='none'
+        className={className}
+        onKeyDown={onTreeKeyDown}
+        onPointerDownCapture={onTreePointerDownCapture}
+        ref={forwardedRef}
+      >
+        {children}
+      </TreeView.Tree>
+    );
+  },
+);
 
 type TreeContentProps = {
   /**
@@ -727,6 +730,8 @@ type TreeContentProps = {
    * `Tree.Item` renders as `Tree.ItemGroup`); other children (e.g. `Tree.Empty`) render after the rows.
    */
   children?: ReactNode | ((node: TreeNode) => ReactNode);
+  /** The rows' inline inset; `inset` by default, `none` for a tree inside a host that frames it. */
+  gutter?: Gutter;
 };
 
 const renderDefaultRow = (node: TreeNode) => <TreeItem node={node} />;
@@ -739,7 +744,7 @@ const SETTLED_ROWS = ':is([data-tree-row], [data-tree-group]):not([data-disclosu
  * nested in `BranchContent`: zag navigates the collection rather than the DOM, so the flat list serves both the whole
  * tree and a window of it, and `aria-level`/`aria-expanded` carry the hierarchy.
  */
-const TreeContent = ({ children }: TreeContentProps) => {
+const TreeContent = ({ children, gutter }: TreeContentProps) => {
   const { treeId, walk, virtual, scrollToIndexRef, focusedValue, draggable, dropAtEnd } =
     useTreeContext('Tree.Content');
   const renderRow = typeof children === 'function' ? children : renderDefaultRow;
@@ -780,7 +785,7 @@ const TreeContent = ({ children }: TreeContentProps) => {
   return (
     <ScrollArea.Root>
       <ScrollArea.Viewport asChild>
-        <TreeContentElement ref={windowing.listRef}>
+        <TreeContentElement gutter={gutter} ref={windowing.listRef}>
           {content}
           {draggable && dropAtEnd && <TreeEndDropTarget treeId={treeId} root={walk.root} />}
           {trailing}

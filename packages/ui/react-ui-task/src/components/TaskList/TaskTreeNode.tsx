@@ -19,6 +19,7 @@ import {
   resolveTaskPlacement,
 } from './hierarchy.ts';
 import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.tsx';
+import { useTaskListContext } from './TaskListContext.ts';
 import { TaskCheckbox, TaskMnemonic, TaskOrdinal, TaskStatusControl } from './TaskRowCells.tsx';
 import {
   TASK_TREE_ROOT_ID,
@@ -101,6 +102,7 @@ export const TaskTreeNode = ({
   onTaskUpdate,
   onTaskMove,
 }: TaskTreeNodeProps) => {
+  const { flush } = useTaskListContext('TaskList.TreeNode');
   const { t } = useTranslation(translationKey);
   const registry = useContext(RegistryContext);
 
@@ -343,7 +345,7 @@ export const TaskTreeNode = ({
       onDrop={handleDrop}
     >
       <Tree.Label srOnly>{t('task-list.label')}</Tree.Label>
-      <Tree.Content>{renderRow}</Tree.Content>
+      <Tree.Content gutter={flush ? 'none' : undefined}>{renderRow}</Tree.Content>
     </Tree.Root>
   );
 };
@@ -377,6 +379,7 @@ const TaskRowHeading = ({
   onTaskUpdate,
 }: TaskRowHeadingProps) => {
   const { t } = useTranslation(translationKey);
+  const { showMnemonics } = useTaskListContext('TaskList.RowHeading');
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
   // does not change, so a rename made anywhere else would leave the row showing its old title.
@@ -407,7 +410,7 @@ const TaskRowHeading = ({
       <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} />
       <div className='inline-flex min-w-0 items-center gap-2'>
         {/* The live task, not the snapshot: only the live object knows its space, which the copied URI names. */}
-        <TaskMnemonic task={task} />
+        {showMnemonics && <TaskMnemonic task={task} />}
         {/* The placeholder is drawn by CSS so the element's text stays the title itself. */}
         <span
           data-testid='taskList.item.title'

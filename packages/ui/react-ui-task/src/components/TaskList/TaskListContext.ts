@@ -38,6 +38,12 @@ export type TaskListContextValue = {
   hierarchical: boolean;
   /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
   showGutter: boolean;
+  /** Render who holds each task; off collapses the assignee track. */
+  showAssignees: boolean;
+  /** Render each task's mnemonic before its title. */
+  showMnemonics: boolean;
+  /** Rows and the edit pane run to the host's edges, with no inline inset. */
+  flush: boolean;
   /**
    * The edit pane's column template, built once from the options so the tree's rows and the pane
    * lay out on the same named tracks (`gutter`, `status`, `title`, `assignee`, `estimate`, `priority`,

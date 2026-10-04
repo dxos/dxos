@@ -30,6 +30,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
+import { type Task } from '@dxos/types';
 import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -38,7 +39,13 @@ import { translationKey } from '#translations';
 
 import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
-import { TaskEstimateControl, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
+import {
+  TaskEstimateControl,
+  TaskEstimatePicker,
+  TaskPriorityIcon,
+  TaskPriorityPicker,
+  TaskStatusControl,
+} from './TaskRowCells.tsx';
 
 export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
@@ -107,7 +114,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     const { t } = useTranslation(translationKey);
     const { className, ...rest } = composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
-    const { tasks, selected, gridTemplateColumns, showEstimates, onTaskCreate, onTaskUpdate, onTaskSelect } =
+    const { tasks, selected, gridTemplateColumns, showEstimates, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
       useTaskListContext('TaskList.Editor');
 
     const task = useMemo(
@@ -123,6 +130,9 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     // synchronously — a `setState` would still hold the previous render's text.
     const draftDescription = useRef('');
     const [draft, setDraft] = useState('');
+    // Set on the create row before the task exists, and sent with its draft.
+    const [draftPriority, setDraftPriority] = useState<Task.Priority>();
+    const [draftEstimate, setDraftEstimate] = useState<Task.Estimate>();
     // Held by the pane, not the host: there is no task to attach them to until the create lands.
     const [files, setFiles] = useState<readonly File[]>([]);
     const [dragOver, setDragOver] = useState(false);
@@ -177,6 +187,8 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           const kept = new Set(result?.rejectedFiles ?? []);
           setFiles((files) => files.filter((file) => !sent.includes(file) || kept.has(file)));
           setDraft((draft) => (draft === sentTitle ? '' : draft));
+          setDraftPriority(undefined);
+          setDraftEstimate(undefined);
           if (draftDescription.current === sentDescription) {
             draftDescription.current = '';
             setCreateEpoch((epoch) => epoch + 1);
@@ -186,7 +198,12 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         creating.current = true;
         try {
           result = onTaskCreate?.(
-            { title, ...(description.length > 0 && { description }) },
+            {
+              title,
+              ...(description.length > 0 && { description }),
+              ...(draftPriority && { priority: draftPriority }),
+              ...(draftEstimate && { estimate: draftEstimate }),
+            },
             sent.length > 0 ? sent : undefined,
           );
         } catch (error) {
@@ -200,7 +217,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           log.catch(error);
         });
       }
-    }, [draft, files, task, current, onTaskCreate, onTaskUpdate]);
+    }, [draft, draftPriority, draftEstimate, files, task, current, onTaskCreate, onTaskUpdate]);
 
     // Blur commits a rename but never a create: leaving the field is not a decision to add a task,
     // and half a title would become one — clicking the list, the thread, or anywhere else would
@@ -346,7 +363,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           // content does, rather than 2rem inside it with nothing in the gap.
           !grid && (showControls ? 'grid-cols-[2rem_1fr_min-content]' : 'grid-cols-[1fr_min-content]'),
           // The tree's rows sit inside its content's inset gutter, so the pane insets by the same gap.
-          grid && 'px-(--dx-gap-size)',
+          grid && !flush && 'px-(--dx-gap-size)',
           className,
         )}
         // On the list's own template the pane's cells name their tracks, so the icon sits under the
@@ -488,7 +505,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             the add row needs both. Editing, the fields commit themselves — and a host carrying the
             task's controls in its own toolbar (`showControls` off) has no use for a second bar of
             chrome floating over the title. */}
-        {(showControls ? current || draft.trim().length > 0 : !current && draft.trim().length > 0) && (
+        {(showControls || (!current && draft.trim().length > 0)) && (
           <Toolbar.Root
             size='sm'
             classNames={mx(
@@ -498,22 +515,45 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
               showControls ? 'col-start-[-2]' : 'col-start-2',
             )}
           >
-            {/* Only when editing an existing task: the create row has nothing to set an estimate or
-                priority on until it is saved. */}
-            {showControls && task && showEstimates && <TaskEstimateControl task={task} />}
-            {showControls && task && <TaskPriorityIcon task={task} />}
-            <SystemButton.Save
-              variant='ghost'
-              data-testid='taskList.edit.save'
-              onClick={handleSave}
-              onMouseDown={(event) => event.preventDefault()}
-            />
-            <SystemButton.Cancel
-              variant='ghost'
-              data-testid='taskList.edit.cancel'
-              onClick={handleCancel}
-              onMouseDown={(event) => event.preventDefault()}
-            />
+            {/* Editing, the task's own controls; creating, the same pickers over the draft, so a task can be
+                sized and ranked as it is added. */}
+            {showControls &&
+              showEstimates &&
+              (task && current ? (
+                <TaskEstimateControl task={task} />
+              ) : (
+                <TaskEstimatePicker
+                  estimate={draftEstimate}
+                  onChange={setDraftEstimate}
+                  testId='taskList.edit.estimate'
+                />
+              ))}
+            {showControls &&
+              (task && current ? (
+                <TaskPriorityIcon task={task} />
+              ) : (
+                <TaskPriorityPicker
+                  priority={draftPriority}
+                  onChange={setDraftPriority}
+                  testId='taskList.edit.priority'
+                />
+              ))}
+            {(current || draft.trim().length > 0) && (
+              <>
+                <SystemButton.Save
+                  variant='primary'
+                  data-testid='taskList.edit.save'
+                  onClick={handleSave}
+                  onMouseDown={(event) => event.preventDefault()}
+                />
+                <SystemButton.Cancel
+                  variant='ghost'
+                  data-testid='taskList.edit.cancel'
+                  onClick={handleCancel}
+                  onMouseDown={(event) => event.preventDefault()}
+                />
+              </>
+            )}
           </Toolbar.Root>
         )}
       </div>

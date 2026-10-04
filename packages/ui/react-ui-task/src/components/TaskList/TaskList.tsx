@@ -115,6 +115,12 @@ type TaskListRootProps = PropsWithChildren<{
   showOrdinals?: boolean;
   /** Render each task's estimate beside the priority control. Off by default. */
   showEstimates?: boolean;
+  /** Render who holds each task; off collapses the assignee track. On by default. */
+  showAssignees?: boolean;
+  /** Render each task's mnemonic before its title. On by default. */
+  showMnemonics?: boolean;
+  /** Rows and the edit pane run to the host's edges, with no inline inset (a list inside a framed host). */
+  flush?: boolean;
   /**
    * Render each task's description under its title; rows grow to fit. Off by default, so a
    * single-line list (e.g. the chat strip) keeps one row per task.
@@ -186,6 +192,9 @@ const TaskListRoot = ({
   showDescription = false,
   descriptionComponents,
   showEstimates = false,
+  showAssignees = true,
+  showMnemonics = true,
+  flush = false,
   hierarchical = false,
   collapsed,
   selected: selectedProp,
@@ -251,9 +260,10 @@ const TaskListRoot = ({
         toggle: hierarchical || !!groups,
         showGutter,
         showEstimates,
+        showAssignees,
         hasActions: !!getTaskActions,
       }),
-    [hierarchical, groups, showGutter, showEstimates, getTaskActions],
+    [hierarchical, groups, showGutter, showEstimates, showAssignees, getTaskActions],
   );
 
   return (
@@ -272,6 +282,9 @@ const TaskListRoot = ({
       showEstimates={showEstimates}
       hierarchical={hierarchical}
       showGutter={showGutter}
+      showAssignees={showAssignees}
+      showMnemonics={showMnemonics}
+      flush={flush}
       isCollapsed={isCollapsed}
       selected={selected}
       checked={checked}
@@ -342,12 +355,14 @@ const buildGridTemplate = ({
   toggle,
   showGutter,
   showEstimates,
+  showAssignees,
   hasActions,
 }: {
   /** A hierarchical list has branches to disclose; a flat one holds no square for a chevron. */
   toggle: boolean;
   showGutter: boolean;
   showEstimates: boolean;
+  showAssignees: boolean;
   hasActions: boolean;
 }): { columns: string; gridTemplateColumns: string } => {
   const candidates: (readonly [name: string | undefined, size: string] | false)[] = [
@@ -358,7 +373,8 @@ const buildGridTemplate = ({
     ['title', 'minmax(0, 1fr)'],
     // Sized by its content: a row with no pull request holds no width for one.
     ['artifacts', 'auto'],
-    ['assignee', 'var(--dx-block-size)'],
+    // Kept, at no width, when hidden: the description spans `title / assignee` and so needs the line.
+    ['assignee', showAssignees ? 'var(--dx-block-size)' : '0px'],
     showEstimates && ['estimate', 'var(--dx-block-size)'],
     ['priority', 'var(--dx-block-size)'],
     hasActions && ['actions', 'var(--dx-block-size)'],
@@ -484,7 +500,7 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 
 /** Trailing cells of a tree row, after its title, and the chips line under it. */
 const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
-  const { showEstimates } = useTaskListContext('TaskList.TreeTrailing');
+  const { showEstimates, showAssignees } = useTaskListContext('TaskList.TreeTrailing');
   const task = item.task;
   // Subscribed for the same reason as the heading: priority, estimate and assignee are property
   // edits, which do not change the task array the model is built from.
@@ -502,7 +518,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
         <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
       </div>
       <div className='grid place-items-center'>
-        {current.assignee && <TaskListAssignee assignee={current.assignee} iconOnly />}
+        {showAssignees && current.assignee && <TaskListAssignee assignee={current.assignee} iconOnly />}
       </div>
       {showEstimates && <TaskEstimateControl task={task} />}
       <TaskPriorityIcon task={task} />

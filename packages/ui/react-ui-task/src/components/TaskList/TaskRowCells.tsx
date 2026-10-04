@@ -204,39 +204,54 @@ TaskCheckbox.displayName = 'TaskList.Checkbox';
  */
 export const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
-  const estimate = task.estimate;
+  return (
+    <TaskEstimatePicker
+      estimate={task.estimate}
+      onChange={onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))}
+      testId='taskList.item.estimate'
+    />
+  );
+};
+
+export type TaskEstimatePickerProps = {
+  estimate?: Task.Estimate;
+  /** Omitted for a readonly label. */
+  onChange?: (estimate: Task.Estimate | undefined) => void;
+  testId?: string;
+};
+
+/** The estimate label and its menu over a bare value, for a row's task or a draft that has none yet. */
+export const TaskEstimatePicker = ({ estimate, onChange, testId }: TaskEstimatePickerProps) => {
   const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
-  if (!onTaskUpdate) {
+  if (!onChange) {
     return <Block classNames={estimateTextStyle(estimate)}>{label}</Block>;
   }
 
   return (
-    <>
-      <Block>
-        {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
-        <ActionMenu
-          deferUntilOpen
-          actions={() =>
-            [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
-              createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
-                label: title,
-                checked: (estimate ?? 'none') === id,
-              }),
-            )
-          }
+    <Block>
+      {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
+      <ActionMenu
+        deferUntilOpen
+        actions={() =>
+          [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
+            createMenuAction(`estimate-${id}`, () => onChange(id === 'none' ? undefined : id), {
+              label: title,
+              checked: (estimate ?? 'none') === id,
+            }),
+          )
+        }
+      >
+        <Button
+          variant='ghost'
+          data-testid={testId}
+          classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
+          onClick={(event: MouseEvent) => event.stopPropagation()}
         >
-          <Button
-            variant='ghost'
-            data-testid='taskList.item.estimate'
-            classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
-            onClick={(event: MouseEvent) => event.stopPropagation()}
-          >
-            {label}
-          </Button>
-        </ActionMenu>
-      </Block>
-    </>
+          {label}
+        </Button>
+      </ActionMenu>
+    </Block>
   );
 };
 
@@ -252,13 +267,30 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
  * discovering a hover affordance.
  */
 export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
-  const { t } = useTranslation(translationKey);
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
-  const priority = task.priority ?? undefined;
+  return (
+    <TaskPriorityPicker
+      priority={task.priority ?? undefined}
+      onChange={onTaskUpdate && ((priority) => onTaskUpdate(task, { priority: priority ?? null }))}
+      testId='taskList.item.priority'
+    />
+  );
+};
+
+export type TaskPriorityPickerProps = {
+  priority?: Task.Priority;
+  /** Omitted for a readonly glyph. */
+  onChange?: (priority: Task.Priority | undefined) => void;
+  testId?: string;
+};
+
+/** The priority glyph and its menu over a bare value, for a row's task or a draft that has none yet. */
+export const TaskPriorityPicker = ({ priority, onChange, testId }: TaskPriorityPickerProps) => {
+  const { t } = useTranslation(translationKey);
   const icon = priorityIcon(priority);
   const styles = priorityTextStyle(priority);
 
-  if (!onTaskUpdate) {
+  if (!onChange) {
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
@@ -275,7 +307,7 @@ export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
         deferUntilOpen
         actions={() =>
           [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon: optionIcon }) =>
-            createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
+            createMenuAction(`priority-${id}`, () => onChange(id === 'none' ? undefined : id), {
               label: t(`priority-${id}.label`),
               // `None` takes the row's unset glyph, so every option has an icon and the labels align.
               icon: optionIcon ?? UNSET_ICON,
@@ -290,7 +322,7 @@ export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           icon={icon}
           iconOnly
           label={t('task-priority.label')}
-          data-testid='taskList.item.priority'
+          data-testid={testId}
           iconClassNames={styles}
           onClick={(event) => event.stopPropagation()}
         />
