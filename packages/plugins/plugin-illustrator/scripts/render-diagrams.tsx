@@ -8,7 +8,7 @@
 // `--scoreboard` it prints the Tier-2 table instead (every flowchart strategy × soft metrics).
 // Passing `.mmd` paths renders just those files instead of the corpus; `--layering down` (or a comma list of
 // `down`, `up`, `free`) restricts the candidate layerings the engine chooses among.
-// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.mmd …]` (vite-node; bun cannot load elkjs).
+// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.mmd …]` (tsx from source; bun cannot load elkjs).
 //
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -56,58 +56,55 @@ const LAYERING = process.argv.includes('--layering')
   : undefined;
 
 /**
- * Routing the ~50 candidates per diagram is nearly all of the run and each is independent, so they
- * fan out over a worker per core; the engine still selects among them in generation order, so the
- * output is the same as routing them in turn.
+ * Routing the candidates is nearly all of the run and each is independent, so they fan out over a
+ * worker per core as the engine places them; it still selects among them in generation order, so
+ * the output is the same as routing them in turn.
  */
 const makeWorkerPool = (size: number) => {
-  type Batch = {
-    jobs: readonly MermaidEngine.EmitJob[];
-    results: Scene.Command[][];
-    next: number;
-    done: number;
-    resolve: (results: Scene.Command[][]) => void;
+  type Task = {
+    job: MermaidEngine.EmitJob;
+    resolve: (commands: Scene.Command[]) => void;
     reject: (error: Error) => void;
   };
-  let batch: Batch | undefined;
+  const queue: Task[] = [];
+  const running = new Map<Worker, Task>();
+  const idle: Worker[] = [];
   const dispatch = (worker: Worker) => {
-    if (batch && batch.next < batch.jobs.length) {
-      const id = batch.next++;
-      worker.postMessage({ id, job: batch.jobs[id] });
+    const task = queue.shift();
+    if (task) {
+      running.set(worker, task);
+      worker.postMessage(task.job);
+    } else {
+      idle.push(worker);
     }
   };
   const workers = Array.from({ length: size }, () => {
     const worker = new Worker(new URL('./emit-worker.ts', import.meta.url));
-    worker.on('message', ({ id, commands }: { id: number; commands: Scene.Command[] }) => {
-      if (!batch) {
-        return;
+    worker.on('message', (commands: Scene.Command[]) => {
+      running.get(worker)?.resolve(commands);
+      running.delete(worker);
+      dispatch(worker);
+    });
+    worker.on('error', (error) => {
+      const task = running.get(worker);
+      if (!task) {
+        throw error;
       }
-      batch.results[id] = commands;
-      if (++batch.done === batch.jobs.length) {
-        const { resolve, results } = batch;
-        batch = undefined;
-        resolve(results);
-      } else {
+      running.delete(worker);
+      task.reject(error);
+    });
+    idle.push(worker);
+    return worker;
+  });
+  const emitCandidate = (job: MermaidEngine.EmitJob): Promise<Scene.Command[]> =>
+    new Promise((resolve, reject) => {
+      queue.push({ job, resolve, reject });
+      const worker = idle.pop();
+      if (worker) {
         dispatch(worker);
       }
     });
-    worker.on('error', (error) => {
-      if (!batch) {
-        throw error;
-      }
-      batch.reject(error);
-      batch = undefined;
-    });
-    return worker;
-  });
-  const emitCandidates = (jobs: readonly MermaidEngine.EmitJob[]): Promise<Scene.Command[][]> =>
-    jobs.length === 0
-      ? Promise.resolve([])
-      : new Promise((resolve, reject) => {
-          batch = { jobs, results: new Array(jobs.length), next: 0, done: 0, resolve, reject };
-          workers.forEach(dispatch);
-        });
-  return { emitCandidates, close: () => Promise.all(workers.map((worker) => worker.terminate())) };
+  return { emitCandidate, close: () => Promise.all(workers.map((worker) => worker.terminate())) };
 };
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
@@ -115,12 +112,13 @@ const objectsOf = (commands: readonly Scene.Command[]) =>
 
 type Strategy = { id: string; compile: (source: string) => Promise<readonly Scene.Command[]> };
 
-const pool = makeWorkerPool(availableParallelism());
-const { emitCandidates } = pool;
+// One core stays with the main thread, which places the candidates while the workers route them.
+const pool = makeWorkerPool(Math.max(1, availableParallelism() - 1));
+const { emitCandidate } = pool;
 
 const strategies: Strategy[] = [
   { id: 'layered', compile: async (source) => Mermaid.compile(source) },
-  { id: 'elk', compile: (source) => MermaidEngine.compile(source, { emitCandidates }) },
+  { id: 'elk', compile: (source) => MermaidEngine.compile(source, { emitCandidate }) },
 ];
 
 /** Standalone SVG: the component's markup plus width/height from its viewBox and the inline styles. */
@@ -165,7 +163,7 @@ if (process.argv.includes('--scoreboard')) {
   let failed = false;
   for (const { name, source, svgPath } of sources) {
     const objects = objectsOf(
-      await MermaidEngine.compile(source, { emitCandidates, ...(LAYERING ? { layering: LAYERING } : {}) }),
+      await MermaidEngine.compile(source, { emitCandidate, ...(LAYERING ? { layering: LAYERING } : {}) }),
     );
     const report = Diagnostics.analyze(objects);
     writeFileSync(svgPath, toSvg(objects));

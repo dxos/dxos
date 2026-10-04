@@ -27,6 +27,80 @@ type Point = Scene.Point;
 const DX = [1, 0, -1, 0];
 const DY = [0, 1, 0, -1];
 
+/** Offsets past this distance turn the same way as at it, so the table clamps to it. */
+const TURN_RADIUS = 4;
+const TURN_SPAN = TURN_RADIUS * 2 + 1;
+
+/**
+ * Fewest turns from a cell heading `dir` to a target `(dx, dy)` away, entered heading `endDir` or
+ * paying the search's one-turn penalty for entering off-axis — on an empty grid, so an admissible
+ * and consistent lower bound for the search, indexed `[endDir][dir][dx][dy]`. It is exact where the
+ * old estimate ignored the arrival heading, which sent every search sweeping the cells behind its
+ * target. Computed once, by one backward search per arrival heading over the moves the search makes.
+ */
+const TURN_TABLE = (() => {
+  const table = new Uint8Array(4 * 4 * TURN_SPAN * TURN_SPAN);
+  // The board leaves room around the radius for the detours an off-axis approach takes.
+  const board = TURN_RADIUS + 4;
+  const side = board * 2 + 1;
+  const stateOf = (x: number, y: number, dir: number) => ((y + board) * side + (x + board)) * 4 + dir;
+  const turns = new Uint8Array(side * side * 4);
+  // Label-correcting relaxation: steps cost 0, 1 or 2 turns, and a state re-enters the queue
+  // whenever it improves, so the queue holds at most a few passes over a small board.
+  const queue = new Int32Array(side * side * 4 * 8);
+  for (let endDir = 0; endDir < 4; endDir++) {
+    turns.fill(255);
+    let head = 0;
+    let tail = 0;
+    // Arriving at the target ends the search whatever the heading.
+    for (let dir = 0; dir < 4; dir++) {
+      turns[stateOf(0, 0, dir)] = 0;
+      queue[tail++] = stateOf(0, 0, dir);
+    }
+    while (head < tail) {
+      const state = queue[head++ % queue.length];
+      const arrivedDir = state % 4;
+      const cell = (state - arrivedDir) / 4;
+      const x = (cell % side) - board;
+      const y = Math.floor(cell / side) - board;
+      // Every state that steps into (x, y) heading `arrivedDir`, and what that step costs.
+      const px = x - DX[arrivedDir];
+      const py = y - DY[arrivedDir];
+      if (Math.abs(px) > board || Math.abs(py) > board || (px === 0 && py === 0)) {
+        continue;
+      }
+      const arrival = x === 0 && y === 0 && arrivedDir !== endDir ? 1 : 0;
+      for (let dir = 0; dir < 4; dir++) {
+        if ((arrivedDir + 2) % 4 === dir) {
+          continue;
+        }
+        const previous = stateOf(px, py, dir);
+        const total = turns[state] + (arrivedDir === dir ? 0 : 1) + arrival;
+        if (total < turns[previous]) {
+          turns[previous] = total;
+          queue[tail++ % queue.length] = previous;
+        }
+      }
+    }
+    for (let dir = 0; dir < 4; dir++) {
+      for (let dx = -TURN_RADIUS; dx <= TURN_RADIUS; dx++) {
+        for (let dy = -TURN_RADIUS; dy <= TURN_RADIUS; dy++) {
+          const at = ((endDir * 4 + dir) * TURN_SPAN + dx + TURN_RADIUS) * TURN_SPAN + dy + TURN_RADIUS;
+          table[at] = dx === 0 && dy === 0 ? 0 : turns[stateOf(-dx, -dy, dir)];
+        }
+      }
+    }
+  }
+  return table;
+})();
+
+const clampTurnOffset = (offset: number) => Math.max(-TURN_RADIUS, Math.min(TURN_RADIUS, offset));
+
+const turnsBetween = (dx: number, dy: number, dir: number, endDir: number): number =>
+  TURN_TABLE[
+    ((endDir * 4 + dir) * TURN_SPAN + clampTurnOffset(dx) + TURN_RADIUS) * TURN_SPAN + clampTurnOffset(dy) + TURN_RADIUS
+  ];
+
 export type AvoidingRouterOptions = {
   /** Search-cell size (scene px): a fraction of the layout grid, so routes can hug node borders. */
   step: number;
@@ -167,27 +241,11 @@ export const makeAvoidingRouter = (
     return top;
   };
 
-  /**
-   * Fewest turns any path from (x, y) heading `dir` needs to reach the target: none while aligned
-   * and heading at it, two when heading away along its axis, otherwise one. Admissible, and since
-   * a turn costs as much as a thousand steps it is what makes the search converge on a diagram
-   * hundreds of cells across — distance alone leaves it exploring almost uniformly.
-   */
-  const turnsNeeded = (x: number, y: number, dir: number, target: Point): number => {
+  const estimateFrom = (x: number, y: number, dir: number, target: Point, endDir: number): number => {
     const dx = target.x - x;
     const dy = target.y - y;
-    if (dx !== 0 && dy !== 0) {
-      return 1;
-    }
-    if (dx === 0 && dy === 0) {
-      return 0;
-    }
-    const towards = dx !== 0 ? (dx > 0 ? 0 : 2) : dy > 0 ? 1 : 3;
-    return dir === towards ? 0 : (dir + 2) % 4 === towards ? 2 : 1;
+    return Math.abs(dx) + Math.abs(dy) + turnsBetween(dx, dy, dir, endDir) * TURN_COST;
   };
-
-  const estimateFrom = (x: number, y: number, dir: number, target: Point): number =>
-    Math.abs(target.x - x) + Math.abs(target.y - y) + turnsNeeded(x, y, dir, target) * TURN_COST;
 
   // Every cell in every heading, so a reachable target is never abandoned on a large diagram.
   const budget = Math.max(50_000, (bounds.x1 - bounds.x0) * (bounds.y1 - bounds.y0) * 4);
@@ -206,7 +264,12 @@ export const makeAvoidingRouter = (
   ): Found | undefined => {
     poolSize = 0;
     heapSize = 0;
-    heapPush(cellIndex(source.x, source.y) * 4 + startDir, 0, estimateFrom(source.x, source.y, startDir, target), -1);
+    heapPush(
+      cellIndex(source.x, source.y) * 4 + startDir,
+      0,
+      estimateFrom(source.x, source.y, startDir, target, endDir),
+      -1,
+    );
     generation++;
     const settledAt = (index: number) => (settledGen[index] === generation ? settledCost[index] : undefined);
     let found = -1;
@@ -259,7 +322,7 @@ export const makeAvoidingRouter = (
         if (dominated !== undefined && dominated <= cost) {
           continue;
         }
-        heapPush(cell * 4 + dir, cost, cost + estimateFrom(x, y, dir, target), current);
+        heapPush(cell * 4 + dir, cost, cost + estimateFrom(x, y, dir, target, endDir), current);
       }
     }
 

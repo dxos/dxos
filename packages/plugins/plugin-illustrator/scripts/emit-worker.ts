@@ -4,14 +4,14 @@
 
 //
 // Worker thread for `render-diagrams.tsx`: routes the layout candidates it is sent, so a diagram's
-// candidates route on every core instead of one. Runs under plain Node (type stripping), which
-// resolves `@dxos/diagram` to its built dist, as the render task's `^:build` dependency provides.
+// candidates route on every core instead of one. It inherits the parent's tsx loader and `source`
+// condition, so it runs the same `@dxos/diagram` source as the main thread.
 //
 
 import { parentPort } from 'node:worker_threads';
 
 import { MermaidEngine } from '@dxos/diagram';
 
-parentPort?.on('message', ({ id, job }: { id: number; job: MermaidEngine.EmitJob }) => {
-  parentPort?.postMessage({ id, commands: MermaidEngine.emitJob(job) });
+parentPort?.on('message', (job: MermaidEngine.EmitJob) => {
+  parentPort?.postMessage(MermaidEngine.emitJob(job));
 });
