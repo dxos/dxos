@@ -45,10 +45,10 @@ import { TaskSlashCommands } from '../../commands/index.ts';
 import { AiUsageQuotaError, type ProcessorRequestContext, getProcessorState } from '../../processor/index.ts';
 import {
   ChatStatus,
+  DEFAULT_MAX_QUEUE,
   ChatActivity as NaturalChatActivity,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
-  DEFAULT_MAX_QUEUE,
 } from '../ChatPrompt/index.ts';
 import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue/index.ts';
 import {
