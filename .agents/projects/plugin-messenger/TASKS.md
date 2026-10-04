@@ -17,14 +17,15 @@ Phase 1 alone leaves invitations unannounced. Phase 3 follows.
 
 ## Phase 1: transport + invitations as messages
 
-- [ ] `@dxos/credentials` `inbox-envelope.ts`: create/verify, device chain, id, size check + tests.
-- [ ] `InboxServiceImpl.#pull` dispatch; unknown types left pending; tests.
-- [ ] `HaloInbox.messages` / `sendMessage` in client proxy.
-- [ ] `InboxService` message-only: `send`/`Notices` replaced; legacy credential → invitation message.
-- [ ] `SpaceInvitationMessage` in app-toolkit; plugin-space sends via `sendMessage`.
-- [ ] plugin-client: `spaceInvitation` surface (Join / Open); remove inbox-monitor, tracker, filter,
+- [x] `@dxos/credentials` `inbox-envelope.ts`: create/verify, device chain, id, size check + tests.
+- [x] `InboxServiceImpl.#pull` dispatch; unknown types left pending; tests.
+- [x] `HaloInbox.messages` / `sendMessage` in client proxy.
+- [x] `InboxService` message-only: `send`/`Notices` replaced; legacy credential → invitation message.
+- [x] `SpaceInvitationMessage` (in `@dxos/types`, since client-services builds it for legacy notices; role token
+      `AppSurface.SpaceInvitation` in app-toolkit); plugin-space sends via `sendMessage`.
+- [x] plugin-client: `spaceInvitation` surface (Join / Open); remove inbox-monitor, tracker, filter,
       `SpaceInvitationsContainer`, graph node.
-- [ ] Lift `MemoryEdgeInbox` to `@dxos/client-services/testing`; inject into local services.
+- [x] Lift `MemoryEdgeInbox` to `@dxos/client-services/testing`; inject into local services.
 
 ## Phase 2: plugin-messenger
 
@@ -43,5 +44,6 @@ Phase 1 alone leaves invitations unannounced. Phase 3 follows.
 ## Follow-ups
 
 - [ ] Delete the legacy credential receive path after the TTL window.
+- [ ] Changeset for Phase 1 when the PR is opened.
 - [ ] Shared message tile for plugin-inbox + plugin-messenger.
 - [ ] Retention/pruning of the feed and `readIds`.

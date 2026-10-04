@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
 import type { MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
+import { type Actor, SpaceInvitationMessage } from '@dxos/types';
 
 import { AppCapabilities } from '../../app-framework/index.ts';
 
@@ -688,6 +689,12 @@ export type ContactPickerData = {
 
 /** Slot for choosing known contacts to admit to a space; filled by the client plugin. */
 export const ContactPicker: Role.Role<ContactPickerData> = Role.make('org.dxos.role.contactPicker');
+
+/** Data for the space-invitation slot: the invitation block's data plus who sent the message. */
+export type SpaceInvitationData = SpaceInvitationMessage.Data & { sender?: Actor.Actor };
+
+/** Slot for a space invitation carried by a message (see `SpaceInvitationMessage`); filled by the client plugin. */
+export const SpaceInvitation: Role.Role<SpaceInvitationData> = Role.make(SpaceInvitationMessage.SPACE_INVITATION_ROLE);
 
 /** Role token for the `searchInput` role (was `search-input`). */
 export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.searchInput');

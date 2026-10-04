@@ -10,7 +10,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { SpaceOperation } from '#types';
 
-import { admitContacts, sendInvitationNotices } from './admit-contacts.ts';
+import { admitContacts, sendInvitationMessages } from './admit-contacts.ts';
 import { SpaceOperationConfig } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.AddMembers> = SpaceOperation.AddMembers.pipe(
@@ -20,7 +20,18 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddMembers> = SpaceOp
       const result = yield* Effect.promise(() =>
         admitContacts(space, [...identityKeys], role, client.halo.contacts.get()),
       );
-      yield* Effect.promise(() => sendInvitationNotices(client.halo.inbox, space.key, result.admitted, role));
+      const identity = client.halo.identity.get();
+      if (identity && result.admitted.length > 0) {
+        yield* Effect.promise(() =>
+          sendInvitationMessages(client.halo.inbox, {
+            sender: { identityDid: identity.did, name: identity.profile?.displayName },
+            spaceKey: space.key,
+            spaceName: space.properties.name,
+            identityKeys: result.admitted,
+            role,
+          }),
+        );
+      }
       const { createJoinUrl } = yield* Capability.get(SpaceOperationConfig);
       // A link only helps someone who was admitted.
       return { joinUrl: result.admitted.length > 0 ? createJoinUrl(space.key) : '', ...result };
