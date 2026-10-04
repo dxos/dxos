@@ -53,26 +53,31 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** A header with a status and a menu, as the EDGE card has. */
+/** Headers with a status and a menu (as the EDGE card has), and with a figure but no control (as Performance has). */
 const MenuStory = () => (
-  <StatCard.Root>
-    <StatCard.Header
-      icon='ph--cloud--regular'
-      title='EDGE'
-      info='healthy'
-      menu={[
-        { label: 'Refresh', icon: 'ph--arrow-clockwise--regular', onClick: () => {} },
-        { label: 'Copy raw', icon: 'ph--copy--regular', onClick: () => {} },
-      ]}
-    />
-    <StatCard.Row label='Websocket' value='connected' />
-    <StatCard.Row label='RTT' value='85' unit='ms' />
-    <StatCard.Row
-      label='Cache'
-      value='12'
-      action={<Button iconOnly variant='ghost' icon='ph--trash--regular' label='Clear' />}
-    />
-  </StatCard.Root>
+  <>
+    <StatCard.Root>
+      <StatCard.Header
+        icon='ph--cloud--regular'
+        title='EDGE'
+        info='healthy'
+        menu={[
+          { label: 'Refresh', icon: 'ph--arrow-clockwise--regular', onClick: () => {} },
+          { label: 'Copy raw', icon: 'ph--copy--regular', onClick: () => {} },
+        ]}
+      />
+      <StatCard.Row label='Websocket' value='connected' />
+      <StatCard.Row label='RTT' value='85' unit='ms' />
+      <StatCard.Row
+        label='Cache'
+        value='12'
+        action={<Button iconOnly variant='ghost' icon='ph--trash--regular' label='Clear' />}
+      />
+    </StatCard.Root>
+    <StatCard.Root>
+      <StatCard.Header icon='ph--hourglass--regular' title='Performance' info='0' />
+    </StatCard.Root>
+  </>
 );
 
 /** The menu sits in the trailing rail, level with the units, and the status ends just before it. */
@@ -83,10 +88,18 @@ export const TestHeaderMenu: Story = {
     const trigger = canvas.getByRole('button', { name: 'EDGE' }).getBoundingClientRect();
     const rowAction = canvas.getByRole('button', { name: 'Clear' }).getBoundingClientRect();
     const info = canvas.getByText('healthy').getBoundingClientRect();
-    // The trigger is in the trailing rail, level with a row's action (the header's rail cell insets it by a pixel or two).
-    await expect(Math.abs(trigger.right - rowAction.right)).toBeLessThanOrEqual(2);
+    // The trigger is in the trailing rail, level with a row's action.
+    await expect(Math.abs(trigger.right - rowAction.right)).toBeLessThanOrEqual(1);
     // The status is pushed to the end of the middle column, against the rail.
     await expect(trigger.left - info.right).toBeLessThan(16);
+    // The control is centred in its rail cell.
+    const triggerElement = canvas.getByRole('button', { name: 'EDGE' });
+    const cell = triggerElement.closest<HTMLElement>('[data-rail="end"]')?.getBoundingClientRect();
+    await expect(
+      cell != null && Math.abs((cell.left + cell.right) / 2 - (trigger.left + trigger.right) / 2),
+    ).toBeLessThanOrEqual(1);
+    // A card with no control keeps its end rail, so its figure ends where the status does.
+    await expect(Math.abs(canvas.getByText('0').getBoundingClientRect().right - info.right)).toBeLessThanOrEqual(1);
 
     // The menu opens from the rail.
     await userEvent.click(canvas.getByRole('button', { name: 'EDGE' }));
