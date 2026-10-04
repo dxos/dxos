@@ -25,14 +25,14 @@ import { NotificationsPanel } from './NotificationsPanel.tsx';
 const DefaultStory = () => {
   const { spaceId } = useClientStory();
   const space = useSpace(spaceId);
-  const [notifications] = useQuery(space?.db, Filter.type(Notifications.Notifications));
-  if (!notifications) {
+  const containers = useQuery(space?.db, Filter.type(Notifications.Notifications));
+  if (containers.length === 0) {
     return <Loading />;
   }
 
   return (
     <NotificationsPanel
-      notifications={notifications}
+      containers={containers}
       renderInvitation={({ data, sender }) => (
         <Card.Text>{`${sender.name} invited you to ${data.spaceName}.`}</Card.Text>
       )}
@@ -58,7 +58,7 @@ const meta = {
         const feed = await notifications.feed.load();
         const messages = makeNotificationMessages();
         await EffectEx.runPromise(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(space.db))));
-        Notifications.markRead(notifications, [messages[2].id]);
+        Notifications.markRead([notifications], [messages[2]]);
       },
     }),
   ],

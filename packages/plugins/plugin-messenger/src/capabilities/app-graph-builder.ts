@@ -9,7 +9,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import { Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { meta } from '#meta';
@@ -17,21 +16,11 @@ import { MESSENGER_COMPANION, MessengerCapabilities, Notifications } from '#type
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const notificationsAtom = yield* MessengerCapabilities.NotificationsContainer;
+    const containersAtom = yield* MessengerCapabilities.NotificationsContainers;
 
-    // Split from the count so a read-state change does not re-run the feed query.
-    const messagesAtom = Atom.make((get) => {
-      const notifications = get(notificationsAtom);
-      const feed = notifications && get(notifications.feed.atom);
-      const db = notifications && Obj.getDatabase(notifications);
-      return feed && db ? get(db.query(Notifications.messagesQuery(feed)).atom) : undefined;
-    });
     const unreadAtom = Atom.make((get) => {
-      const notifications = get(notificationsAtom);
-      const messages = get(messagesAtom);
-      return notifications && messages
-        ? Notifications.countUnread(messages, get(Obj.atom(notifications)).readIds)
-        : undefined;
+      const containers = get(containersAtom);
+      return containers.length > 0 ? Notifications.countUnread(Notifications.deriveView(get, containers)) : undefined;
     }).pipe(Atom.keepAlive);
 
     const extensions = yield* Effect.all([

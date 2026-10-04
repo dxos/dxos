@@ -45,9 +45,20 @@ Decisions taken while building (beyond the spec):
 - `badge` lives in the deck-companion node's `properties` (next to `mount`/`joyride`), not `data`,
   which is the surface subject; rendered as a `data-badge` pseudo-element because an icon-only
   `Button` renders no children.
-- Unread count and the panel's container come from `MessengerCapabilities.NotificationsContainer`, an atom
-  the materializer module contributes once the default space is ready.
-- Concurrent first writes from two devices can create two containers; readers pick the lowest id.
+- Unread count and the panel's containers come from `MessengerCapabilities.NotificationsContainers`, an
+  atom the materializer module contributes once the default space is ready.
+- Concurrent first writes from two devices can create two containers. They converge
+  (`Notifications.converge`, run on every materializer pass and whenever the container set changes):
+  the lowest id wins; the losers' messages are moved (copied, then removed from the loser) into its
+  feed, skipping any whose envelope key it already holds, their read keys are merged, and the losers
+  are deleted. Deleted containers are still scanned, so a write from a device that had not yet seen
+  the deletion is moved too. Until then the panel, badge and envelope dedupe read every container.
+- Read state is `readKeys` (envelope id, else message id), not message ids: copies made concurrently
+  by two devices share a key, so read state needs no remapping, and merging is an append rather than an
+  array replacement (concurrent replacements lost read state under test). A second copy of one message
+  in the winning feed is dropped by the next convergence and hidden by `Notifications.view` meanwhile.
+- Links in inbox messages are encoded absolute (`Message.encodeJson`); `loadLink` opens the linked
+  space if it is inactive before loading the ref.
 - The panel's per-space filter is deferred (all / unread / invitations only).
 - `TwoUsers` composes the components and `startInboxMaterializer` per client directly (no plugin
   manager per client); Bob stores notifications in a space of his own, and the deck badge is mirrored
@@ -57,9 +68,9 @@ Decisions taken while building (beyond the spec):
 
 - [ ] Per-space filter in the panel (by the linked object's space).
 - [ ] QA demo recording of `QA-1` against the running app (autocue).
-- [ ] Verify a linked object resolves on the recipient: in `TwoUsers`, Bob's click did not show
-      "Opened “Q3 planning”" (ref decoded from JSON may be relative, or the shared space not loaded).
+- [x] Verify a linked object resolves on the recipient: refs were encoded relative (`echo:///<id>`)
+      and resolved against Bob's own space; now absolute, asserted by the `TwoUsers` play test.
 - [ ] Delete the legacy credential receive path after the TTL window.
 - [x] Changeset for Phase 1 when the PR is opened.
 - [ ] Shared message tile for plugin-inbox + plugin-messenger.
-- [ ] Retention/pruning of the feed and `readIds`.
+- [ ] Retention/pruning of the feed and `readKeys`.

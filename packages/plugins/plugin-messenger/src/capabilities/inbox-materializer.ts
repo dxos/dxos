@@ -35,9 +35,7 @@ export default Capability.makeModule(
     const spaceAtom = Atom.make<Space | undefined>(undefined).pipe(Atom.keepAlive);
     const notificationsAtom = Atom.make((get) => {
       const space = get(spaceAtom);
-      return space
-        ? Notifications.select(get(space.db.query(Filter.type(Notifications.Notifications)).atom))
-        : undefined;
+      return space ? Notifications.order(get(space.db.query(Filter.type(Notifications.Notifications)).atom)) : [];
     }).pipe(Atom.keepAlive);
 
     const announce = (message: Message.Message) =>
@@ -80,6 +78,6 @@ export default Capability.makeModule(
     });
 
     yield* Effect.addFinalizer(() => Effect.sync(materializer.stop));
-    return Capability.contribute(MessengerCapabilities.NotificationsContainer, notificationsAtom);
+    return Capability.contribute(MessengerCapabilities.NotificationsContainers, notificationsAtom);
   }),
 );

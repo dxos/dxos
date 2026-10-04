@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Database, Filter, Obj, Query } from '@dxos/echo';
-import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
+import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
@@ -49,8 +50,8 @@ const matchesFilter = (filter: NotificationFilter, message: Message.Message, rea
 export type NotificationsPanelProps = {
   role?: string;
   attendableId?: string;
-  /** The container whose feed is listed; its read state is updated in place. */
-  notifications: Notifications.Notifications;
+  /** The containers whose feeds are listed, the one to write read state to first (see `Notifications.order`). */
+  containers: readonly Notifications.Notifications[];
   renderInvitation?: InvitationRenderer;
   /** Goes to what a message links to; called after the message is marked read. */
   onOpen?: (message: Message.Message) => void;
@@ -62,25 +63,16 @@ export type NotificationsPanelProps = {
 export const NotificationsPanel = ({
   role,
   attendableId,
-  notifications,
+  containers,
   renderInvitation,
   onOpen,
 }: NotificationsPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
-  const [readIds] = useObject(notifications, 'readIds');
-  const feed = useResolveRef(notifications.feed);
-  const messages = useQuery(
-    Obj.getDatabase(notifications),
-    feed ? Notifications.messagesQuery(feed) : Query.select(Filter.nothing()),
-  );
-
-  const read = useMemo(() => new Set(readIds), [readIds]);
-  const unreadIds = useMemo(
-    () => messages.filter((message) => !read.has(message.id)).map((message) => message.id),
-    [messages, read],
-  );
+  const viewAtom = useMemo(() => Atom.make((get) => Notifications.deriveView(get, containers)), [containers]);
+  const { messages, read } = useAtomValue(viewAtom);
+  const unread = useMemo(() => messages.filter((message) => !read.has(message.id)), [messages, read]);
 
   const handleAction = useCallback<NotificationActionHandler>(
     (action) => {
@@ -91,30 +83,30 @@ export const NotificationsPanel = ({
 
       switch (action.type) {
         case 'open': {
-          Notifications.markRead(notifications, [message.id]);
+          Notifications.markRead(containers, [message]);
           onOpen?.(message);
           break;
         }
         case 'mark-read': {
-          Notifications.markRead(notifications, [message.id]);
+          Notifications.markRead(containers, [message]);
           break;
         }
         case 'mark-unread': {
-          Notifications.markUnread(notifications, message.id);
+          Notifications.markUnread(containers, [message]);
           break;
         }
         case 'delete': {
-          const db = Obj.getDatabase(notifications);
+          const db = containers[0] && Obj.getDatabase(containers[0]);
           if (db) {
             void EffectEx.runPromise(
-              Notifications.remove(notifications, [message]).pipe(Effect.provide(Database.layer(db))),
+              Notifications.remove(containers, [message]).pipe(Effect.provide(Database.layer(db))),
             ).catch((error) => log.warn('failed to delete notification', { error }));
           }
           break;
         }
       }
     },
-    [messages, notifications, onOpen],
+    [messages, containers, onOpen],
   );
 
   const menuActions = useMenuBuilder(
@@ -152,12 +144,12 @@ export const NotificationsPanel = ({
           {
             label: ['mark-all-read.label', { ns: meta.profile.key }],
             icon: 'ph--checks--regular',
-            disabled: unreadIds.length === 0,
+            disabled: unread.length === 0,
           },
-          () => Notifications.markRead(notifications, unreadIds),
+          () => Notifications.markRead(containers, unread),
         )
         .build(),
-    [filter, notifications, unreadIds],
+    [filter, containers, unread],
   );
 
   const items = useMemo(

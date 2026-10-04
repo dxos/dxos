@@ -17,7 +17,7 @@ import { MessengerCapabilities } from '#types';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  requires: [MessengerCapabilities.NotificationsContainer],
+  requires: [MessengerCapabilities.NotificationsContainers],
 });
 
 // Headless: invitations must be stored (and toasted) whether or not the panel was ever opened, so
@@ -26,7 +26,7 @@ export const InboxMaterializer = Capability.lazyModule(
   'InboxMaterializer',
   {
     requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker, ClientCapabilities.Client],
-    provides: [MessengerCapabilities.NotificationsContainer],
+    provides: [MessengerCapabilities.NotificationsContainers],
     activatesOn: ClientEvents.SpacesAvailable,
     environments: ['browser', 'tauri'],
   },

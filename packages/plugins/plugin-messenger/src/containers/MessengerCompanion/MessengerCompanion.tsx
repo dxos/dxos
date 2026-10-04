@@ -32,7 +32,7 @@ export const MessengerCompanion = () => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useCapability(ClientCapabilities.Client);
-  const notifications = useOptionalAtomCapability(MessengerCapabilities.NotificationsContainer);
+  const containers = useOptionalAtomCapability(MessengerCapabilities.NotificationsContainers);
 
   const handleOpen = useCallback(
     (message: Message.Message) => {
@@ -54,7 +54,7 @@ export const MessengerCompanion = () => {
     [client, invokePromise],
   );
 
-  if (!notifications) {
+  if (!containers || containers.length === 0) {
     return (
       <Panel.Root>
         <Panel.Body>
@@ -69,7 +69,7 @@ export const MessengerCompanion = () => {
   return (
     <NotificationsPanel
       role={AppSurface.deckCompanion(MESSENGER_COMPANION).role}
-      notifications={notifications}
+      containers={containers}
       renderInvitation={renderInvitation}
       onOpen={handleOpen}
     />

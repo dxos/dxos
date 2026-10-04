@@ -34,6 +34,7 @@ export type MaterializeResult = {
 
 /**
  * Stores each pending message from a contact in the database's notifications feed, then acks it.
+ * Containers other devices created concurrently are folded in first (see `Notifications.converge`).
  *
  * Ack comes after the write so a crash in between re-delivers rather than loses the message; the
  * envelope id recorded as a foreign key turns that re-delivery (or another device's copy) into a no-op.
@@ -44,6 +45,7 @@ export const materialize = Effect.fn('InboxMaterializer.materialize')(function* 
   contacts,
   ack,
 }: MaterializeProps) {
+  yield* Notifications.converge();
   const candidates = messages.filter(
     (message) => message.type === InboxService.INBOX_MESSAGE_TYPE && contacts.has(message.senderIdentityKey.toHex()),
   );
@@ -53,6 +55,9 @@ export const materialize = Effect.fn('InboxMaterializer.materialize')(function* 
 
   const notifications = yield* Notifications.getOrCreate;
   const feed = yield* Database.load(notifications.feed);
+  // Another device's container may arrive between converging and writing, so every feed is checked.
+  const others = (yield* Notifications.getAll).filter((container) => container.id !== notifications.id);
+  const feeds = [feed, ...(yield* Effect.forEach(others, (container) => Database.load(container.feed)))];
   const written: Message.Message[] = [];
   const acked: string[] = [];
   for (const inboxMessage of candidates) {
@@ -63,7 +68,7 @@ export const materialize = Effect.fn('InboxMaterializer.materialize')(function* 
       continue;
     }
 
-    const [existing] = yield* Feed.query(feed, Notifications.envelopeFilter(inboxMessage.id)).run;
+    const [existing] = yield* Database.query(Notifications.envelopeQuery(inboxMessage.id, feeds)).run;
     if (!existing) {
       const sender = contacts.get(inboxMessage.senderIdentityKey.toHex());
       const message = Obj.make(Message.Message, {

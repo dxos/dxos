@@ -2,21 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { MemoryEdgeInbox } from '@dxos/client-services/testing';
 import { type Space } from '@dxos/client/echo';
-import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { Button, Checkbox, Flex, Icon, Input, Panel, Select, Toolbar } from '@dxos/react-ui';
+import { Block, Button, Checkbox, Empty, Flex, Icon, Input, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization } from '@dxos/types';
@@ -35,7 +37,7 @@ const LINKED_OBJECT_NAME = 'Q3 planning';
 // Alice: picks a contact and sends a message, optionally linking an object in the shared space.
 //
 
-const AliceColumn = () => {
+const SenderColumn = () => {
   const client = useClient();
   const { spaceId } = useClientStory();
   const space = useSpace(spaceId);
@@ -83,7 +85,9 @@ const AliceColumn = () => {
     <Panel.Root data-testid='messenger.alice'>
       <Panel.Header>
         <Toolbar.Root>
-          <Icon icon='ph--user--regular' />
+          <Block>
+            <Icon icon='ph--user--regular' />
+          </Block>
           <span>Alice</span>
         </Toolbar.Root>
       </Panel.Header>
@@ -154,14 +158,9 @@ const useOwnSpace = (): Space | undefined => {
   return space;
 };
 
-const UnreadBadge = ({ notifications }: { notifications: Notifications.Notifications }) => {
-  const [readIds] = useObject(notifications, 'readIds');
-  const feed = useResolveRef(notifications.feed);
-  const messages = useQuery(
-    Obj.getDatabase(notifications),
-    feed ? Notifications.messagesQuery(feed) : Query.select(Filter.nothing()),
-  );
-  const unread = Notifications.countUnread(messages, readIds ?? []);
+const UnreadBadge = ({ containers }: { containers: readonly Notifications.Notifications[] }) => {
+  const viewAtom = useMemo(() => Atom.make((get) => Notifications.deriveView(get, containers)), [containers]);
+  const unread = Notifications.countUnread(useAtomValue(viewAtom));
   return unread > 0 ? (
     <span className='rounded-full bg-accent-bg text-accent-fg text-xs px-2' data-testid='messenger.badge'>
       {unread}
@@ -169,10 +168,10 @@ const UnreadBadge = ({ notifications }: { notifications: Notifications.Notificat
   ) : null;
 };
 
-const BobColumn = () => {
+const ReceiverColumn = () => {
   const client = useClient();
   const space = useOwnSpace();
-  const [notifications] = useQuery(space?.db, Filter.type(Notifications.Notifications));
+  const containers = useQuery(space?.db, Filter.type(Notifications.Notifications));
   const [opened, setOpened] = useState<string>();
 
   useEffect(() => {
@@ -203,19 +202,19 @@ const BobColumn = () => {
     <Panel.Root data-testid='messenger.bob'>
       <Panel.Header>
         <Toolbar.Root>
-          <Icon icon='ph--envelope--regular' />
+          <Block>
+            <Icon icon='ph--envelope--regular' />
+          </Block>
           <span>Bob</span>
-          {notifications && <UnreadBadge notifications={notifications} />}
+          {containers.length > 0 && <UnreadBadge containers={containers} />}
           {opened && <span className='text-sm text-fg-muted'>{`Opened “${opened}”`}</span>}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-        {notifications ? (
-          <NotificationsPanel notifications={notifications} onOpen={handleOpen} />
+        {containers.length > 0 ? (
+          <NotificationsPanel containers={containers} onOpen={handleOpen} />
         ) : (
-          <Flex center classNames='h-full text-fg-subtle' role='status'>
-            No notifications yet.
-          </Flex>
+          <Empty>No notifications yet.</Empty>
         )}
       </Panel.Body>
     </Panel.Root>
@@ -224,7 +223,7 @@ const BobColumn = () => {
 
 const DefaultStory = () => {
   const { index } = useClientStory();
-  return index === 0 ? <AliceColumn /> : <BobColumn />;
+  return index === 0 ? <SenderColumn /> : <ReceiverColumn />;
 };
 
 const meta = {

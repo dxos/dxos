@@ -30,7 +30,7 @@ Design: `agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`.
 type Notifications
   fields:
     feed: Ref<Feed>                       # messages, in arrival order; owned (SetParent)
-    readIds: string[]                     # ids of read messages still in the feed
+    readKeys: string[]                    # keys (envelope id, else message id) of read messages
   typename: org.dxos.type.notifications
   version: 0.1.0
   note: |
@@ -60,8 +60,10 @@ component MessengerCapabilities.Sender
 ```
 
 ```mdl
-component MessengerCapabilities.NotificationsContainer
-  desc: Atom of the default space's Notifications container, undefined until it exists.
+component MessengerCapabilities.NotificationsContainers
+  desc: |
+    Atom of the default space's Notifications containers, the one every device writes to first; empty
+    until one exists, and more than one only until the materializer converges them.
 ```
 
 ```mdl

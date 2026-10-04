@@ -6,11 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Database } from '@dxos/echo';
+import { Database, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Message } from '@dxos/types';
+
+import { Notifications } from '#types';
 
 import { type Sender, materialize } from './materialize.ts';
 
@@ -32,7 +34,7 @@ export type InboxMaterializerProps = {
 
 /**
  * Keeps the notifications feed in step with the HALO inbox: every change to the pending messages,
- * the contact book or the space list triggers a pass of {@link materialize}. Passes never overlap,
+ * the contact book, the space list or the set of notifications containers triggers a pass of {@link materialize}. Passes never overlap,
  * so one envelope is not written twice by this device.
  */
 export const startInboxMaterializer = ({
@@ -44,6 +46,8 @@ export const startInboxMaterializer = ({
   let closed = false;
   let running = false;
   let rerun = false;
+  let watchedSpace: Space | undefined;
+  let unwatchContainers = () => {};
 
   const pass = Effect.gen(function* () {
     const space = getSpace();
@@ -56,6 +60,12 @@ export const startInboxMaterializer = ({
     }
 
     onSpaceReady?.(space);
+    // A container another device created arrives by replication alone, and must be folded in then.
+    if (watchedSpace !== space) {
+      unwatchContainers();
+      watchedSpace = space;
+      unwatchContainers = space.db.query(Filter.type(Notifications.Notifications)).subscribe(schedule);
+    }
     const contacts = new Map(
       client.halo.contacts.get().flatMap((contact) => {
         const identityKey = toPublicKey(contact.identityKey);
@@ -114,6 +124,7 @@ export const startInboxMaterializer = ({
       closed = true;
       unsubscribeReloaded();
       unsubscribe();
+      unwatchContainers();
     },
   };
 };

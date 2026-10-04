@@ -26,7 +26,10 @@ export interface Sender {
 /** Sends messages to other identities' notification panels; consumed by plugins, bots and `MessengerOperation.Send`. */
 export const Sender = Capability.makeSingleton<Sender>()(`${meta.profile.key}.capability.sender`);
 
-/** The default space's notifications container, once the space is ready and the container exists. */
-export const NotificationsContainer = Capability.makeSingleton<Atom.Atom<Notifications.Notifications | undefined>>()(
-  `${meta.profile.key}.capability.notificationsContainer`,
+/**
+ * The default space's notifications containers, the one every device writes to first; more than one
+ * only until the materializer converges them, so readers union all of them.
+ */
+export const NotificationsContainers = Capability.makeSingleton<Atom.Atom<readonly Notifications.Notifications[]>>()(
+  `${meta.profile.key}.capability.notificationsContainers`,
 );

@@ -38,6 +38,41 @@ const inboxMessage = (id: string, sender: PublicKey, text = `message ${id}`): In
 const run = (db: EchoDatabase, props: MaterializeProps) =>
   EffectEx.runAndForwardErrors(materialize(props).pipe(Effect.provide(Database.layer(db))));
 
+const runEffect = <A, E>(db: EchoDatabase, effect: Effect.Effect<A, E, Database.Service>) =>
+  EffectEx.runAndForwardErrors(effect.pipe(Effect.provide(Database.layer(db))));
+
+/** What a reader sees: every container's messages, collapsed by envelope, with merged read state. */
+const visible = async (db: EchoDatabase) => {
+  const containers = Notifications.order(await db.query(Filter.type(Notifications.Notifications)).run());
+  const feeds = await Promise.all(containers.map((container) => container.feed.load()));
+  const messages = await db.query(Notifications.messagesQuery(feeds)).run();
+  const { messages: unique, read } = Notifications.view(messages, Notifications.readKeys(containers));
+  return {
+    containers: containers.length,
+    texts: unique.map((message) => Message.extractText(message)).toSorted(),
+    read: unique.flatMap((message) => (read.has(message.id) ? [Message.extractText(message)] : [])).toSorted(),
+  };
+};
+
+/** Simulates a device that materialized before it saw any other device's container. */
+const writeOwnContainer = async (db: EchoDatabase, envelopes: { id: string; text: string; read?: boolean }[]) => {
+  const notifications = db.add(Notifications.make());
+  const feed = await notifications.feed.load();
+  const messages = envelopes.map(({ id, text }) =>
+    Message.make({
+      sender: { name: 'Alice' },
+      blocks: [{ _tag: 'text', text }],
+      [Obj.Meta]: { keys: [{ source: Notifications.INBOX_KEY_SOURCE, id }] },
+    }),
+  );
+  await runEffect(db, Feed.append(feed, messages));
+  Notifications.markRead(
+    [notifications],
+    messages.filter((_, index) => envelopes[index].read),
+  );
+  await db.flush();
+};
+
 const storedMessages = async (db: EchoDatabase) => {
   const [notifications] = await db.query(Filter.type(Notifications.Notifications)).run();
   if (!notifications) {
@@ -123,5 +158,83 @@ describe('materialize', () => {
     expect(second).toEqual({ written: [], acked: ['e1', 'e2'] });
     expect(await storedMessages(db)).toHaveLength(2);
     expect(await db.query(Filter.type(Notifications.Notifications)).run()).toHaveLength(1);
+  });
+
+  test('containers two devices created concurrently converge into one, losing and repeating nothing', async ({
+    expect,
+  }) => {
+    const { db, peer, key } = await builder.createDatabase({ types: TYPES });
+    const otherDevice = await peer.openDatabase(key, undefined, { client: await peer.createClient() });
+
+    // Both devices received e1 before either saw the other's container; each read a different message.
+    await Promise.all([
+      writeOwnContainer(db, [
+        { id: 'e1', text: 'one', read: true },
+        { id: 'e2', text: 'two' },
+      ]),
+      writeOwnContainer(otherDevice, [
+        { id: 'e1', text: 'one' },
+        { id: 'e3', text: 'three', read: true },
+      ]),
+    ]);
+    await expect.poll(async () => (await visible(db)).containers).toEqual(2);
+    await expect.poll(async () => (await visible(otherDevice)).containers).toEqual(2);
+
+    // Until they converge, readers see the union, each message once.
+    expect(await visible(db)).toEqual({ containers: 2, texts: ['one', 'three', 'two'], read: ['one', 'three'] });
+
+    // Both devices converge at once; a redelivered envelope held only by the other container is not rewritten.
+    const [first] = await Promise.all([
+      run(db, {
+        messages: [inboxMessage('e3', CONTACT_KEY), inboxMessage('e4', CONTACT_KEY, 'four')],
+        contacts,
+        ack: async () => {},
+      }),
+      runEffect(otherDevice, Notifications.converge()),
+    ]);
+    expect(first.written.map((message) => Message.extractText(message))).toEqual(['four']);
+
+    const expected = { containers: 1, texts: ['four', 'one', 'three', 'two'], read: ['one', 'three'] };
+    await expect.poll(() => visible(db)).toEqual(expected);
+    await expect.poll(() => visible(otherDevice)).toEqual(expected);
+
+    // Running again on either device folds any concurrent copies away and changes nothing visible.
+    await runEffect(db, Notifications.converge());
+    await runEffect(otherDevice, Notifications.converge());
+    await expect.poll(async () => (await storedMessages(db)).length).toEqual(4);
+    await expect.poll(() => visible(otherDevice)).toEqual(expected);
+  });
+
+  test('a message written to a container after another device deleted it is still moved, once', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: TYPES });
+    await writeOwnContainer(db, [{ id: 'e1', text: 'one', read: true }]);
+    await writeOwnContainer(db, [{ id: 'e2', text: 'two', read: true }]);
+    const [, loser] = Notifications.order(await db.query(Filter.type(Notifications.Notifications)).run());
+    const loserFeed = await loser.feed.load();
+    await runEffect(db, Notifications.converge());
+    expect((await visible(db)).read).toEqual(['one', 'two']);
+
+    // Marking a moved message unread sticks, though the deleted container still records it read.
+    const containers = await db.query(Filter.type(Notifications.Notifications)).run();
+    Notifications.markUnread(containers, await storedMessages(db));
+    await runEffect(db, Notifications.converge());
+    expect((await visible(db)).read).toEqual([]);
+
+    // The device that created the loser had not yet seen the deletion.
+    const late = Message.make({
+      sender: { name: 'Alice' },
+      blocks: [{ _tag: 'text', text: 'late' }],
+      [Obj.Meta]: { keys: [{ source: Notifications.INBOX_KEY_SOURCE, id: 'e3' }] },
+    });
+    await runEffect(db, Feed.append(loserFeed, [late]));
+    await runEffect(db, Notifications.converge());
+    expect(await visible(db)).toEqual({ containers: 1, texts: ['late', 'one', 'two'], read: [] });
+
+    // Deleting a moved message does not bring it back from the deleted container.
+    const lateCopy = (await storedMessages(db)).find((message) => Message.extractText(message) === 'late');
+    expect(lateCopy).toBeDefined();
+    await runEffect(db, Notifications.remove(containers, lateCopy ? [lateCopy] : []));
+    await runEffect(db, Notifications.converge());
+    expect((await visible(db)).texts).toEqual(['one', 'two']);
   });
 });
