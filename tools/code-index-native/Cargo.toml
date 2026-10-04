@@ -36,3 +36,13 @@ harness = false
 [profile.release]
 lto = "thin"
 codegen-units = 4
+
+# `cargo test` (CI's `cargo-test`) runs the engine over real rule files; unoptimized it took 17 min
+# against 17 s optimized, which pushes CI's test shard past its 30-minute limit.
+[profile.test]
+opt-level = 3
+debug = false
+
+[profile.dev.package."*"]
+opt-level = 3
+debug = false
