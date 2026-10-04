@@ -5,8 +5,8 @@
 import React, { forwardRef, useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as NamePopover from '@dxos/app-framework/NamePopover';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as NamePopover from '@dxos/app-toolkit/NamePopover';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';

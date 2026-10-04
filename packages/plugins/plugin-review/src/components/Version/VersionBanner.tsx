@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import * as NamePopover from '@dxos/app-framework/NamePopover';
+import * as NamePopover from '@dxos/app-toolkit/NamePopover';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';

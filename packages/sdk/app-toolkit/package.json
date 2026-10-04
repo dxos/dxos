@@ -227,6 +227,16 @@
       "types": "./dist/types/src/Hooks.d.ts",
       "import": "./dist/lib/ns/Hooks.mjs"
     },
+    "./HomeSection": {
+      "source": "./src/HomeSection.ts",
+      "types": "./dist/types/src/HomeSection.d.ts",
+      "import": "./dist/lib/ns/HomeSection.mjs"
+    },
+    "./NamePopover": {
+      "source": "./src/NamePopover.ts",
+      "types": "./dist/types/src/NamePopover.d.ts",
+      "import": "./dist/lib/ns/NamePopover.mjs"
+    },
     "./NotFoundArticle": {
       "source": "./src/NotFoundArticle.ts",
       "types": "./dist/types/src/NotFoundArticle.d.ts",

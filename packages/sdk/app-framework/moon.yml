@@ -9,3 +9,52 @@ tags:
   - ts-test-storybook
   - typedoc
   - storybook
+tasks:
+  check-module-structure:
+    # Fail when any export pulls in `@dxos/react-ui`: the framework renders no UI of its own, so
+    # components built on react-ui belong in `@dxos/app-toolkit`.
+    command: >-
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
+      --export .
+      --export ./ActivationEvent
+      --export ./ActivationEvents
+      --export ./Capabilities
+      --export ./Capability
+      --export ./CapabilityManager
+      --export ./HistoryTracker
+      --export ./Plugin
+      --export ./PluginAssetCache
+      --export ./PluginManager
+      --export ./PluginManifest
+      --export ./ProcessManagerPlugin
+      --export ./Registry
+      --export ./Role
+      --export ./SharedPackages
+      --export ./UndoMapping
+      --export ./UndoRegistry
+      --export ./UrlLoader
+      --export ./config
+      --export ./vite-plugin
+      --export ./Cli
+      --export ./testing
+      --export ./testing/react
+      --export ./App
+      --export ./Hooks
+      --export ./PluginManagerProvider
+      --export ./Surface
+      --export ./Devtools
+      --export ./Translations
+      --to "@dxos/react-ui"
+      --conditions browser
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - '^@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60
