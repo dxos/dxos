@@ -118,34 +118,50 @@ export type GraphData = {
   readonly edges: readonly { from: string; to: string; kind: string }[];
 };
 
+/** Most below-threshold nodes a presentation carries; past this they only crowd the force layout. */
+export const HIDDEN_LIMIT = 100;
+
 /**
- * The scored graph as a force-view presentation: every candidate, so the below-threshold ones are a
- * click away, and every edge of a relevant kind between them plus the relays pruning added.
+ * The scored graph as a force-view presentation: every kept node, the best below-threshold ones so
+ * they are a click away, and every edge of a relevant kind between them plus the relays pruning
+ * added. A hidden node's card omits its doc and snippet, which are most of a node's weight on the wire.
  */
-export const toGraphData = (scored: Graph.Scored): GraphData & { grouping: string; scorer: string } => ({
-  grouping: scored.grouping,
-  scorer: scored.scorer,
-  nodes: scored.nodes.map((node) => ({
-    id: node.iri,
-    label: node.label,
-    ...(node.package ? { group: node.package } : {}),
-    score: Number(node.score.toFixed(3)),
-    kept: node.kept,
-    card: {
-      path: node.path,
-      kind: node.kind,
-      package: node.package,
+export const toGraphData = (scored: Graph.Scored): GraphData & { grouping: string; scorer: string } => {
+  const hidden = scored.nodes
+    .filter((node) => !node.kept)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, HIDDEN_LIMIT);
+  const shown = new Set([...scored.nodes.filter((node) => node.kept), ...hidden].map((node) => node.iri));
+  const nodes = scored.nodes.filter((node) => shown.has(node.iri));
+  return {
+    grouping: scored.grouping,
+    scorer: scored.scorer,
+    nodes: nodes.map((node) => ({
+      id: node.iri,
+      label: node.label,
+      ...(node.package ? { group: node.package } : {}),
       score: Number(node.score.toFixed(3)),
-      declarations: node.symbols.join(', '),
-      doc: node.doc,
-      snippet: node.snippet,
-      why: node.why,
-    },
-  })),
-  edges: Graph.dedupe(
-    scored.edges.filter((edge) => edge.kind === Graph.RELAY || (scored.relations[edge.kind] ?? 0) >= 0.5),
-  ).map(({ from, to, kind }) => ({ from, to, kind })),
-});
+      kept: node.kept,
+      card: {
+        path: node.path,
+        kind: node.kind,
+        package: node.package,
+        score: Number(node.score.toFixed(3)),
+        declarations: node.symbols.join(', '),
+        ...(node.kept ? { doc: node.doc, snippet: node.snippet } : {}),
+        why: node.why,
+      },
+    })),
+    edges: Graph.dedupe(
+      scored.edges.filter(
+        (edge) =>
+          shown.has(edge.from) &&
+          shown.has(edge.to) &&
+          (edge.kind === Graph.RELAY || (scored.relations[edge.kind] ?? 0) >= 0.5),
+      ),
+    ).map(({ from, to, kind }) => ({ from, to, kind })),
+  };
+};
 
 /** Explore (deterministic) and zoom with whichever decision model is in context. */
 const scoreFor = (

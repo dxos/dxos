@@ -1,5 +1,6 @@
 /*
- * Popover: a portalled panel on the popup level (`.dx-popup` supplies size, level and radius), padded by the gap.
+ * Popover: a portalled panel on the popup level (`.dx-popup` supplies size, level and radius). Unpadded: the call site
+ * decides its content's inset (Body brings its own gutter, Header its own padding).
  */
 
 @layer dx-components {
@@ -10,14 +11,13 @@
     min-width: 12rem;
     max-width: min(24rem, 100vw - 1rem);
     max-height: var(--available-height, none);
-    padding: var(--dx-gap-size);
+    padding: 0;
   }
 
-  /* Fills what Header and Footer leave; its inset gutter replaces the panel's padding, so the thumb sits in it. */
+  /* Fills what Header and Footer leave; its inset gutter is the content's inset, and the thumb sits in it. */
   .dx-popover-body {
     flex: 1 1 auto;
     min-height: 0;
-    margin-inline: calc(-1 * var(--dx-gap-size));
     /* Clipped to the panel's corners: in an unpadded panel the body's content meets the rounded border. */
     border-radius: inherit;
     overflow: hidden;
@@ -29,6 +29,7 @@
 
   /* A trailing CloseTrigger's inset cell ends at the panel's padding edge, like `Field.Header`'s trailing icon-only Button. */
   .dx-popover-header {
+    margin: var(--dx-gap-size) var(--dx-gap-size) 0;
     display: flex;
     align-items: center;
     gap: var(--dx-gap-size);

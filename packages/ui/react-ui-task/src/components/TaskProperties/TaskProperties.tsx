@@ -13,8 +13,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
-import { PERSON_ICON, shortDid } from './assignee.ts';
+import { useAssigneeDisplay } from '../../hooks/index.ts';
+import { PERSON_ICON, shortDid } from '../../util/assignee.ts';
 import {
   UNSET_ICON,
   estimateTextStyle,
@@ -22,8 +22,9 @@ import {
   priorityTextStyle,
   statusIcon,
   statusTextStyle,
-} from './status-icons.ts';
-import { useAssigneeDisplay } from './useAssigneeDisplay.ts';
+} from '../../util/status-icons.ts';
+import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
+import { TaskMnemonic } from '../TaskList/TaskRowCells.tsx';
 
 /** The glyph for an estimate, which the list renders as letters and has none of its own. */
 const ESTIMATE_ICON = 'ph--ruler--regular';
@@ -70,9 +71,22 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
     // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
     <Container asChild gutter='inherit' gap='sm' classNames={classNames} data-testid='taskList.properties'>
       <section>
-        <Typography asChild tone='subtle' classNames='text-sm'>
+        {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
+        <Typography asChild tone='subtle' classNames='dx-label py-0'>
           <h2>{t('task-properties.label')}</h2>
         </Typography>
+        {/* The task's reference first: what names it, and the button that copies it, in the glyph column. */}
+        <div
+          className={mx(TASK_GRID, 'items-center min-h-(--dx-control-sm) min-w-0')}
+          data-testid='taskList.property.reference'
+        >
+          <div className={TASK_GRID_ICON}>
+            <TaskMnemonic task={task} />
+          </div>
+          <Typography tone='muted' classNames='text-sm'>
+            {Obj.getMnemonic(task)}
+          </Typography>
+        </div>
         {createdAt !== undefined && (
           <TaskProperty
             icon='ph--calendar-plus--regular'
@@ -111,6 +125,8 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
             (() => [
               createMenuAction('assignee-none', () => onTaskUpdate(task, { assignee: null }), {
                 label: t('assignee-none.label'),
+                // The unset glyph, as the priority picker's `None` takes, so every option's label aligns.
+                icon: UNSET_ICON,
                 checked: !assignee,
               }),
               // An assignee the people list cannot show — an agent, or an actor with no contact — is
@@ -169,7 +185,8 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
               [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
                 createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
                   label: t(`priority-${id}.label`),
-                  icon,
+                  // `None` takes the unset glyph, so every option has an icon and the labels align.
+                  icon: icon ?? UNSET_ICON,
                   iconClassNames: priorityTextStyle(id),
                   checked: (priority ?? 'none') === id,
                 }),

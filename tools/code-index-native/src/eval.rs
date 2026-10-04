@@ -31,16 +31,18 @@ const FAR_SMALLER: usize = 8;
 
 thread_local! {
     /// Patterns a body builds (`("#" ?name "\\.(\\w+)$") string:concatenation ?pattern`), compiled once.
-    static PATTERNS: RefCell<FxHashMap<String, Option<Regex>>> = RefCell::default();
+    /// Shared rather than cloned: a cloned `Regex` starts with an empty match cache, and rebuilding
+    /// it cost more than the match itself.
+    static PATTERNS: RefCell<FxHashMap<String, Option<Rc<Regex>>>> = RefCell::default();
 }
 
 /// A pattern built at run time; an invalid one matches nothing.
-fn compiled(pattern: &str) -> Option<Regex> {
+fn compiled(pattern: &str) -> Option<Rc<Regex>> {
     PATTERNS.with(|patterns| {
         if let Some(regex) = patterns.borrow().get(pattern) {
             return regex.clone();
         }
-        let regex = Regex::new(pattern).ok();
+        let regex = Regex::new(pattern).ok().map(Rc::new);
         patterns
             .borrow_mut()
             .insert(pattern.to_owned(), regex.clone());
@@ -424,10 +426,14 @@ impl Solver<'_> {
                 regex,
                 negate,
             } => {
+                let built;
                 let compiled = match regex {
-                    Some(regex) => Some(regex.clone()),
-                    None => resolve(rule, dict, pattern, binding)
-                        .and_then(|id| compiled(&dict.text(id))),
+                    Some(regex) => Some(regex),
+                    None => {
+                        built = resolve(rule, dict, pattern, binding)
+                            .and_then(|id| compiled(&dict.text(id)));
+                        built.as_deref()
+                    }
                 };
                 // A pattern from the data that does not compile matches nothing, negated or not.
                 let value = resolve(rule, dict, arg, binding).map(|id| dict.text(id));
@@ -462,10 +468,14 @@ impl Solver<'_> {
                 regex,
                 out,
             } => {
+                let built;
                 let compiled = match regex {
-                    Some(regex) => Some(regex.clone()),
-                    None => resolve(rule, dict, pattern, binding)
-                        .and_then(|id| compiled(&dict.text(id))),
+                    Some(regex) => Some(regex),
+                    None => {
+                        built = resolve(rule, dict, pattern, binding)
+                            .and_then(|id| compiled(&dict.text(id)));
+                        built.as_deref()
+                    }
                 };
                 let scraped =
                     resolve(rule, dict, text, binding)

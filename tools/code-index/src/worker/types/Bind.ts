@@ -21,6 +21,8 @@ export type SymbolFacts = {
   readonly aliasOf: readonly string[];
   /** `export * as N from …` — the file a namespace symbol publishes whole. */
   readonly namespaceOf: readonly string[];
+  /** Every `deus:kind`, since a class or function merged with a `namespace` declares one IRI twice. */
+  readonly kinds?: readonly string[];
 };
 
 export type Env = {
@@ -183,6 +185,96 @@ export const binder = (env: Env) => {
   return { bind: (type: Term.Type) => bind(type), resolve: (iri: string) => resolveIri(iri, 0) };
 };
 
+/**
+ * Kinds that stand for a declaration elsewhere rather than being one. Not `namespace`: a TypeScript
+ * `namespace` is a declaration, and an `export * as N` alias is already known by its `namespaceOf`.
+ */
+const REFERENCE_KINDS: ReadonlySet<string> = new Set(['reexport']);
+
+/** Whether the facts are a declaration proper: neither an alias, a namespace barrel, nor a re-export. */
+export const isDeclaration = (facts: SymbolFacts): boolean =>
+  facts.aliasOf.length === 0 &&
+  facts.namespaceOf.length === 0 &&
+  (facts.kinds === undefined || facts.kinds.length === 0 || facts.kinds.some((kind) => !REFERENCE_KINDS.has(kind)));
+
+/**
+ * Resolves a reference IRI as an importer wrote it (`file:<barrel>#X`, `module:<specifier>#X.y`) to
+ * the declaration it denotes, with the same semantics as {@link binder}'s resolution: the longest
+ * declared prefix, then an alias, a namespace or `export *`, a local declaration shadowing a star
+ * export. A member of a declaration (`Foo.bar` on a const) resolves to the declaration.
+ */
+export const declarations = (env: Env) => {
+  // Shared by every lookup, since a pass resolves tens of thousands of names through the same barrels.
+  const memo = new Map<string, string | undefined>();
+  // Lookups in progress; meeting one again is a cycle of barrels.
+  const active = new Set<string>();
+  // Bumped whenever a walk is cut short, so a miss found under a cut is not remembered as a miss.
+  let cuts = 0;
+
+  const resolveIri = (iri: string, depth: number): string | undefined => {
+    const parts = split(iri);
+    if (!parts) {
+      return undefined;
+    }
+    if (iri.startsWith(Ontology.MODULE_BASE)) {
+      const file = env.moduleFile(parts.file);
+      return file ? resolvePath(file, parts.path, depth + 1) : undefined;
+    }
+    return resolvePath(parts.file, parts.path, depth + 1);
+  };
+
+  const resolvePath = (file: string, path: readonly string[], depth: number): string | undefined => {
+    const key = `${file}#${path.join('.')}`;
+    if (memo.has(key)) {
+      return memo.get(key);
+    }
+    if (depth > MAX_DEPTH || active.has(key)) {
+      cuts++;
+      return undefined;
+    }
+    const cutsBefore = cuts;
+    active.add(key);
+    const found = resolveUncached(file, path, depth);
+    active.delete(key);
+    if (found !== undefined || cuts === cutsBefore) {
+      memo.set(key, found);
+    }
+    return found;
+  };
+
+  const resolveUncached = (file: string, path: readonly string[], depth: number): string | undefined => {
+    for (let length = path.length; length >= 1; length--) {
+      const head = path.slice(0, length);
+      const rest = path.slice(length);
+      const iri = symbolIri(file, head);
+      const facts = env.symbol(iri);
+      if (!facts) {
+        continue;
+      }
+      if (facts.aliasOf.length > 0) {
+        const target = facts.aliasOf[0];
+        return resolveIri(rest.length > 0 ? `${target}.${rest.join('.')}` : target, depth + 1);
+      }
+      if (facts.namespaceOf.length > 0) {
+        return rest.length > 0 ? resolvePath(facts.namespaceOf[0], rest, depth + 1) : undefined;
+      }
+      return isDeclaration(facts) ? iri : undefined;
+    }
+    for (const target of env.reexports(file)) {
+      const found = resolvePath(target, path, depth + 1);
+      if (found) {
+        return found;
+      }
+    }
+    return undefined;
+  };
+
+  return {
+    /** The declaration `iri` denotes, or `undefined` when it is unknown, external or ambiguous. */
+    declarationOf: (iri: string): string | undefined => resolveIri(iri, 0),
+  };
+};
+
 /** Whether a term still names something in another file. */
 export const hasDeferred = (type: Term.Type): boolean => {
   switch (type.kind) {
@@ -205,29 +297,57 @@ export const hasDeferred = (type: Term.Type): boolean => {
   }
 };
 
+/**
+ * Module IRIs that resolve to exactly one file. A package-relative `#imports` specifier yields one
+ * global module IRI that each importing package resolves to its own file, so it names no single file.
+ */
+export const uniqueModuleFiles = (pairs: Iterable<readonly [string, string]>): Map<string, string> => {
+  const files = new Map<string, Set<string>>();
+  for (const [module, file] of pairs) {
+    const known = files.get(module);
+    if (known) {
+      known.add(file);
+    } else {
+      files.set(module, new Set([file]));
+    }
+  }
+  const unique = new Map<string, string>();
+  for (const [module, known] of files) {
+    const [only, ...others] = known;
+    if (others.length === 0) {
+      unique.set(module, only);
+    }
+  }
+  return unique;
+};
+
 /** An environment over analyzed documents — the harness's view, and the reasoner's after reading the store. */
 export const envFromDocuments = (documents: readonly Ontology.FileDocument[]): Env => {
   const symbols = new Map<string, SymbolFacts>();
-  const modules = new Map<string, string>();
+  const modules: (readonly [string, string])[] = [];
   const reexports = new Map<string, readonly string[]>();
   for (const document of documents) {
     reexports.set(document['@id'], document.reexports);
     for (const symbol of document.declares) {
+      // A declaration merge (`class X` + `namespace X`) lists one IRI twice; keep both halves.
+      const known = symbols.get(symbol['@id']);
       symbols.set(symbol['@id'], {
-        term: symbol.typeTerm === undefined ? undefined : Term.fromJson(JSON.parse(symbol.typeTerm)),
-        aliasOf: symbol.aliasOf,
-        namespaceOf: symbol.namespaceOf ?? [],
+        term: known?.term ?? (symbol.typeTerm === undefined ? undefined : Term.fromJson(JSON.parse(symbol.typeTerm))),
+        aliasOf: [...(known?.aliasOf ?? []), ...symbol.aliasOf],
+        namespaceOf: [...(known?.namespaceOf ?? []), ...(symbol.namespaceOf ?? [])],
+        kinds: [...(known?.kinds ?? []), symbol.kind],
       });
     }
     for (const node of document['@included'] ?? []) {
       if (node['@type'] === 'Module') {
-        modules.set(node['@id'], node.moduleFile);
+        modules.push([node['@id'], node.moduleFile]);
       }
     }
   }
+  const moduleFile = uniqueModuleFiles(modules);
   return {
     symbol: (iri) => symbols.get(iri),
-    moduleFile: (iri) => modules.get(iri),
+    moduleFile: (iri) => moduleFile.get(iri),
     reexports: (file) => reexports.get(file) ?? [],
   };
 };

@@ -15,6 +15,8 @@ import {
 } from 'd3-force';
 import { For, Show, createMemo, createSignal } from 'solid-js';
 
+import { Snippet } from './Snippet.tsx';
+
 /**
  * The exploration view of a `display.graph` presentation: a force layout where size and opacity
  * encode relevance, groups cluster and collapse on click, a node's card opens on click, and the
@@ -46,6 +48,16 @@ type Placed = SimulationNodeDatum & {
 
 const WIDTH = 720;
 const HEIGHT = 520;
+
+/** Group chips shown before the rest fold behind a "more" toggle; past this they swamp the panel. */
+const CHIP_LIMIT = 10;
+
+/** The share of nodes at each edge of the layout that may lie outside the framed area. */
+const OUTLIER_QUANTILE = 0.03;
+
+/** The value below which `share` of the sorted `values` lie. */
+const quantile = (values: readonly number[], share: number): number =>
+  values[Math.min(values.length - 1, Math.max(0, Math.floor(share * (values.length - 1))))] ?? 0;
 
 /** Reads what the snippet published; a malformed payload renders as an empty graph, not a crash. */
 const parse = (content: string): { nodes: InputNode[]; edges: InputEdge[] } => {
@@ -116,6 +128,7 @@ export const ForceGraph = (props: { content: string }) => {
   const [showAll, setShowAll] = createSignal(false);
   const [collapsed, setCollapsed] = createSignal<ReadonlySet<string>>(new Set());
   const [selected, setSelected] = createSignal<Placed>();
+  const [allChips, setAllChips] = createSignal(false);
 
   const hidden = () => data().nodes.filter((node) => !node.kept).length;
   const groups = createMemo(() => {
@@ -138,6 +151,9 @@ export const ForceGraph = (props: { content: string }) => {
       }
       return next;
     });
+
+  // Declared before `layout`: Solid runs a memo as soon as it is created, so a later `const` is still unbound.
+  const radius = (node: Placed) => (node.members ? 10 + Math.sqrt(node.members) * 3 : 4 + 10 * node.score);
 
   const layout = createMemo(() => {
     const visible = data().nodes.filter((node) => showAll() || node.kept);
@@ -183,8 +199,8 @@ export const ForceGraph = (props: { content: string }) => {
     const anchor = (group: string | undefined) => {
       const index = names.indexOf(group ?? '');
       const angle = (2 * Math.PI * index) / Math.max(1, names.length);
-      const radius = names.length > 1 ? Math.min(WIDTH, HEIGHT) * 0.3 : 0;
-      return { x: WIDTH / 2 + radius * Math.cos(angle), y: HEIGHT / 2 + radius * Math.sin(angle) };
+      const ring = names.length > 1 ? Math.min(WIDTH, HEIGHT) * 0.3 : 0;
+      return { x: WIDTH / 2 + ring * Math.cos(angle), y: HEIGHT / 2 + ring * Math.sin(angle) };
     };
     const list = [...nodes.values()];
     const simulation = forceSimulation<Placed>(list)
@@ -204,10 +220,21 @@ export const ForceGraph = (props: { content: string }) => {
       .force('y', forceY<Placed>((node) => anchor(node.group).y).strength(0.08))
       .stop();
     simulation.tick(300);
+    // A disconnected node the charge flung far out would otherwise set the frame and shrink every
+    // other node to a dot, so the frame comes from the bulk and the stragglers are pulled to its edge.
+    if (list.length > 0) {
+      const xs = list.map((node) => node.x ?? 0).sort((left, right) => left - right);
+      const ys = list.map((node) => node.y ?? 0).sort((left, right) => left - right);
+      const margin = 30;
+      const [left, right] = [quantile(xs, OUTLIER_QUANTILE) - margin, quantile(xs, 1 - OUTLIER_QUANTILE) + margin];
+      const [top, bottom] = [quantile(ys, OUTLIER_QUANTILE) - margin, quantile(ys, 1 - OUTLIER_QUANTILE) + margin];
+      for (const node of list) {
+        node.x = Math.min(right, Math.max(left, node.x ?? 0));
+        node.y = Math.min(bottom, Math.max(top, node.y ?? 0));
+      }
+    }
     return { nodes: list, links };
   });
-
-  const radius = (node: Placed) => (node.members ? 10 + Math.sqrt(node.members) * 3 : 4 + 10 * node.score);
 
   const bounds = createMemo(() => {
     const { nodes } = layout();
@@ -225,7 +252,7 @@ export const ForceGraph = (props: { content: string }) => {
   return (
     <div class='flex flex-col gap-2 p-2'>
       <div class='flex flex-wrap items-center gap-2 text-xs'>
-        <For each={groups()}>
+        <For each={allChips() ? groups() : groups().slice(0, CHIP_LIMIT)}>
           {([group, count]) => (
             <button
               class='border-separator rounded border px-1.5 py-0.5'
@@ -237,16 +264,21 @@ export const ForceGraph = (props: { content: string }) => {
             </button>
           )}
         </For>
+        <Show when={groups().length > CHIP_LIMIT}>
+          <button class='text-description hover:text-baseText' onClick={() => setAllChips(!allChips())}>
+            {allChips() ? 'fewer groups' : `+${groups().length - CHIP_LIMIT} groups`}
+          </button>
+        </Show>
         <Show when={hidden() > 0}>
           <button class='text-description hover:text-baseText ml-auto' onClick={() => setShowAll(!showAll())}>
             {showAll() ? 'hide low-relevance' : `show ${hidden()} low-relevance`}
           </button>
         </Show>
       </div>
-      <svg viewBox={bounds()} class='h-[28rem] w-full'>
+      <svg viewBox={bounds()} class='text-description h-[28rem] w-full'>
         <defs>
           <marker id='force-head' viewBox='0 0 10 10' refX='10' refY='5' markerWidth='6' markerHeight='6' orient='auto'>
-            <path d='M 0 0 L 10 5 L 0 10 z' class='fill-description' />
+            <path d='M 0 0 L 10 5 L 0 10 z' fill='currentColor' />
           </marker>
         </defs>
         <For each={layout().links}>
@@ -259,7 +291,7 @@ export const ForceGraph = (props: { content: string }) => {
                 y1={from.y}
                 x2={to.x}
                 y2={to.y}
-                class='stroke-description'
+                stroke='currentColor'
                 stroke-opacity={0.45}
                 stroke-dasharray={link.kind === 'relay' ? '3 3' : undefined}
                 marker-end='url(#force-head)'
@@ -281,7 +313,7 @@ export const ForceGraph = (props: { content: string }) => {
                 stroke={selected()?.id === node.id ? 'currentColor' : 'none'}
               />
               <Show when={node.score >= 0.5 || node.members}>
-                <text y={-radius(node) - 3} text-anchor='middle' class='fill-baseText text-[10px]'>
+                <text y={-radius(node) - 3} text-anchor='middle' fill='currentColor' class='text-baseText text-[10px]'>
                   {node.members ? `${node.label} ×${node.members}` : node.label}
                 </text>
               </Show>
@@ -304,7 +336,10 @@ export const ForceGraph = (props: { content: string }) => {
                 <div class='mt-1'>
                   <span class='text-description'>{key}: </span>
                   {key === 'snippet' ? (
-                    <pre class='bg-baseSurface mt-1 overflow-x-auto rounded p-1'>{String(value)}</pre>
+                    <Snippet
+                      code={String(value)}
+                      path={typeof node().card?.path === 'string' ? String(node().card?.path) : undefined}
+                    />
                   ) : (
                     <span>{String(value)}</span>
                   )}

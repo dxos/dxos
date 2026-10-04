@@ -515,7 +515,9 @@ jobs:
       - name: Set environment variables from secrets and env files
         run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
         env:
-          ENVIRONMENT: ${{ inputs.environment }}
+          # Testers sign in with production accounts, so every TestFlight build talks to production EDGE, hub and
+          # telemetry, tagged `testflight` (see env/testflight); the CrabNebula channel still follows the deploy.
+          ENVIRONMENT: testflight
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
@@ -545,6 +547,72 @@ jobs:
           IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
           NODE_ENV: production
+
+      # With API-key credentials the Tauri CLI archives unsigned and carries entitlements into the export through
+      # app_iOS.entitlements, which is empty on the runner by then, so the IPA gets only the profile's
+      # (tauri-apps/tauri#15663). Re-sign with the profile's and the committed declaration before uploading.
+      - name: Restore the app's entitlements in the IPA
+        working-directory: ./packages/apps/composer-app/src-tauri/gen/apple
+        env:
+          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/ios-resign"
+          rm -rf "$work" && mkdir -p "$work"
+          ipa="build/arm64/Composer.ipa"
+          unzip -q "$ipa" -d "$work/ipa"
+          app="$work/ipa/Payload/Composer.app"
+
+          keychain="$work/signing.keychain-db"
+          password="$(openssl rand -hex 16)"
+          searched=()
+          while IFS= read -r entry; do
+            entry="${entry//\"/}"
+            entry="${entry#"${entry%%[![:space:]]*}"}"
+            [[ -n "$entry" ]] && searched+=("$entry")
+          done < <(security list-keychains -d user)
+          trap 'security list-keychains -d user -s "${searched[@]}"; security delete-keychain "$keychain" || true' EXIT
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          echo "$IOS_CERTIFICATE" | base64 --decode > "$work/certificate.p12"
+          security import "$work/certificate.p12" -k "$keychain" -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" > /dev/null
+          # codesign only finds identities in keychains on the search list, `--keychain` notwithstanding.
+          security list-keychains -d user -s "$keychain" "${searched[@]}"
+          identity="$(security find-identity -v -p codesigning "$keychain" | awk '/Apple Distribution/ { print $2; exit }')"
+          test -n "$identity" || { echo "::error::No Apple Distribution identity in IOS_CERTIFICATE"; exit 1; }
+
+          cp ../../ios/app_iOS.entitlements "$work/declared.plist"
+
+          codesign -d --entitlements - --xml "$app" > "$work/entitlements.plist"
+          python3 - "$work/entitlements.plist" "$work/declared.plist" <<'EOF'
+          import plistlib, sys
+          with open(sys.argv[1], 'rb') as signed, open(sys.argv[2], 'rb') as declared:
+              entitlements = plistlib.load(signed)
+              entitlements.update(plistlib.load(declared))
+          with open(sys.argv[1], 'wb') as out:
+              plistlib.dump(entitlements, out)
+          EOF
+
+          codesign --force --sign "$identity" --keychain "$keychain" --generate-entitlement-der \
+            --entitlements "$work/entitlements.plist" "$app"
+          codesign --verify --strict --verbose=2 "$app"
+          codesign -d --entitlements - --xml "$app" > "$work/signed.plist"
+          plutil -p "$work/signed.plist"
+          python3 - "$work/signed.plist" "$work/declared.plist" <<'EOF'
+          import plistlib, sys
+          signed, declared = (plistlib.load(open(path, 'rb')) for path in sys.argv[1:])
+          if not declared:
+              sys.exit('::error::ios/app_iOS.entitlements declares no entitlements')
+          missing = sorted(key for key, value in declared.items() if signed.get(key) != value)
+          if missing:
+              sys.exit(f'::error::The signed app lacks declared entitlements: {missing}')
+          EOF
+
+          rm "$ipa"
+          (cd "$work/ipa" && zip -qr --symlinks "$OLDPWD/$ipa" .)
 
       - name: Upload assets to CN
         timeout-minutes: 30
