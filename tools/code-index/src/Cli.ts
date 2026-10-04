@@ -49,8 +49,11 @@ const jsonFlag = Flag.Boolean('json').pipe(Flag.withDefault(false), Flag.withDes
 const resolveRoot = (root: Option.Option<string>): Effect.Effect<string, Crawler.CrawlError> =>
   Option.match(root, { onNone: () => Crawler.gitRoot(), onSome: (value) => Effect.succeed(resolve(value)) });
 
+const storePath = (root: string, dir: Option.Option<string>): string =>
+  Option.match(dir, { onNone: () => Crawler.storeDir(root), onSome: resolve });
+
 const storeLayer = (root: string, dir: Option.Option<string>) => {
-  const path = Option.match(dir, { onNone: () => Crawler.storeDir(root), onSome: resolve });
+  const path = storePath(root, dir);
   return Lock.layer(path, () => Store.layer(path));
 };
 
@@ -395,7 +398,7 @@ const selectModel = (provider: Option.Option<string>, model: Option.Option<strin
 
 const workspaceLayer = (root: string, store: Option.Option<string>, model: Models.Selection) =>
   Workspace.layer({
-    storeDir: Option.match(store, { onNone: () => Crawler.storeDir(root), onSome: resolve }),
+    storeDir: storePath(root, store),
     model,
   });
 
@@ -461,7 +464,7 @@ const serveHandler = ({ root, store, provider, model, endpoint, port, host, noWa
       port: Option.getOrUndefined(port),
       host: Option.getOrUndefined(host),
       model: selection,
-      reasoners: noWatch ? undefined : yield* Reasoner.load(DEFAULT_RULES),
+      watch: noWatch ? undefined : { storeDir: storePath(repo, store), rules: DEFAULT_RULES },
     }).pipe(Effect.provide(workspaceLayer(repo, store, selection)));
   });
 
@@ -477,7 +480,7 @@ const mcp = Command.make('mcp', { root: rootFlag, store: storeFlag }, ({ root, s
     // Imported here: only this command needs the MCP server and its protocol schemas.
     const Server = yield* Effect.promise(() => import('./mcp/Server.ts'));
     return yield* Server.run({
-      dir: Option.match(store, { onNone: () => Crawler.storeDir(repo), onSome: resolve }),
+      dir: storePath(repo, store),
       version: VERSION,
     });
   }),
