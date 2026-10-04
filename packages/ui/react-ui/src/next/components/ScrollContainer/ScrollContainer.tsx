@@ -49,6 +49,7 @@ const ScrollContainerRoot = forwardRef<ScrollController, ScrollContainerRootProp
     const viewportRef = useRef<HTMLElement | null>(null);
     const [pinned, setPinned] = useState(pin);
     const [overflow, setOverflow] = useState(false);
+    const [overflowEnd, setOverflowEnd] = useState(false);
 
     const controller = useMemo<ScrollController>(
       () => ({
@@ -79,9 +80,11 @@ const ScrollContainerRoot = forwardRef<ScrollController, ScrollContainerRootProp
         controller={controller}
         pinned={pinned}
         overflow={overflow}
+        overflowEnd={overflowEnd}
         setViewport={setViewport}
         setPinned={setPinned}
         setOverflow={setOverflow}
+        setOverflowEnd={setOverflowEnd}
       >
         {children}
       </ScrollContainerProvider>
@@ -119,7 +122,8 @@ const ScrollContainerViewport = slottable<HTMLDivElement, ScrollContainerViewpor
   ({ children, asChild, ...props }, forwardedRef) => {
     const viewportRef = useRef<HTMLDivElement>(null);
     const ref = useComposedRefs(forwardedRef, viewportRef);
-    const { setViewport, setPinned, setOverflow } = useScrollContainerContext('ScrollContainer.Viewport');
+    const { setViewport, setPinned, setOverflow, setOverflowEnd } =
+      useScrollContainerContext('ScrollContainer.Viewport');
 
     useEffect(() => {
       const viewport = viewportRef.current;
@@ -128,13 +132,23 @@ const ScrollContainerViewport = slottable<HTMLDivElement, ScrollContainerViewpor
       }
 
       setViewport(viewport);
+      const measure = () => {
+        setOverflow(viewport.scrollTop > 0);
+        setOverflowEnd(!isBottom(viewport));
+      };
+      measure();
+
+      // Content added below changes what is hidden at the end without any scroll event.
+      const mutationObserver = new MutationObserver(measure);
+      mutationObserver.observe(viewport, { childList: true });
       return combine(
         // Only a user's wheel decides pinning: a programmatic scroll to the end must not unpin midway.
         addEventListener(viewport, 'wheel', () => setPinned(isBottom(viewport))),
-        addEventListener(viewport, 'scroll', () => setOverflow(viewport.scrollTop > 0)),
+        addEventListener(viewport, 'scroll', measure),
+        () => mutationObserver.disconnect(),
         () => setViewport(null),
       );
-    }, [setViewport, setPinned, setOverflow]);
+    }, [setViewport, setPinned, setOverflow, setOverflowEnd]);
 
     return (
       <>
@@ -185,18 +199,23 @@ const ScrollContainerPinEffect = ({ viewportRef }: { viewportRef: RefObject<HTML
 // Fade
 //
 
-type ScrollContainerFadeProps = ThemedClassName<{}>;
+type ScrollContainerFadeProps = ThemedClassName<{
+  /** The edge the gradient covers. */
+  edge?: 'top' | 'bottom';
+}>;
 
-/** A gradient from the surface over the top edge, shown once content has scrolled under it. */
-const ScrollContainerFade = ({ classNames }: ScrollContainerFadeProps) => {
-  const { overflow } = useScrollContainerContext('ScrollContainer.Fade');
+/** A gradient from the surface over an edge, shown while content is hidden past it. */
+const ScrollContainerFade = ({ classNames, edge = 'top' }: ScrollContainerFadeProps) => {
+  const { overflow, overflowEnd } = useScrollContainerContext('ScrollContainer.Fade');
+  const visible = edge === 'top' ? overflow : overflowEnd;
   return (
     <div
       aria-hidden
       data-scope='scroll-container'
       data-part='fade'
-      data-state={overflow ? 'visible' : 'hidden'}
-      className={mx(recipes.scrollContainerFade(), classNames, 'border')}
+      data-edge={edge}
+      data-state={visible ? 'visible' : 'hidden'}
+      className={mx(recipes.scrollContainerFade(), classNames)}
     />
   );
 };

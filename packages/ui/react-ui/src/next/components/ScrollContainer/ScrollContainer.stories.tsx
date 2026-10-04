@@ -9,42 +9,47 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { sizeRow } from '../../testing.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Group, ScrollContainer, type ScrollContainerRootProps, Typography } from '../index.ts';
+import { SIZE_ARG_TYPES, type SizeArgs } from '../../testing/stories.tsx';
+import { Button, Group, Panel, ScrollContainer, type ScrollContainerRootProps, Toolbar, Typography } from '../index.ts';
 
 type StoryArgs = SizeArgs & Pick<ScrollContainerRootProps, 'pin'>;
 
 const DefaultStory = ({ pin }: StoryArgs) => {
-  const [rows, setRows] = useState(() => Array.from({ length: 20 }, (_, index) => `Entry ${index + 1}`));
+  const [rows, setRows] = useState(() => Array.from({ length: 100 }, (_, index) => `Entry ${index + 1}`));
+
   return (
-    <>
-      <Group>
-        <Button label='Add entry' onClick={() => setRows((rows) => [...rows, `Entry ${rows.length + 1}`])} />
-      </Group>
+    <Panel.Root>
+      <Panel.Header asChild>
+        <Toolbar.Root>
+          <Button label='Add entry' onClick={() => setRows((rows) => [...rows, `Entry ${rows.length + 1}`])} />
+        </Toolbar.Root>
+      </Panel.Header>
       <ScrollContainer.Root pin={pin}>
-        <ScrollContainer.Content classNames='h-[12rem]' data-testid='frame'>
-          <ScrollContainer.Fade />
-          <ScrollContainer.Viewport data-testid='viewport'>
-            {rows.map((row) => (
-              <Typography key={row}>{row}</Typography>
-            ))}
-          </ScrollContainer.Viewport>
-          <ScrollContainer.Fade />
-          <ScrollContainer.ScrollDownButton />
-        </ScrollContainer.Content>
+        <Panel.Body asChild>
+          <ScrollContainer.Content data-testid='frame'>
+            <ScrollContainer.Fade />
+            <ScrollContainer.Viewport data-testid='viewport'>
+              {rows.map((row) => (
+                <Typography key={row}>{row}</Typography>
+              ))}
+            </ScrollContainer.Viewport>
+            <ScrollContainer.Fade edge='bottom' />
+            <ScrollContainer.ScrollDownButton />
+          </ScrollContainer.Content>
+        </Panel.Body>
       </ScrollContainer.Root>
-    </>
+      <Panel.Footer>{rows.length}</Panel.Footer>
+    </Panel.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-core/components/ScrollContainer',
   render: DefaultStory,
-  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  decorators: [withLayout({ layout: 'column' }), withTheme()],
   args: { size: 'md', pin: true },
   argTypes: SIZE_ARG_TYPES,
-  parameters: { layout: 'centered' },
+  parameters: { layout: 'fullscreen' },
 } satisfies Meta<StoryArgs>;
 
 export default meta;
@@ -56,9 +61,10 @@ export const Default: Story = {};
 /** A pinned container follows new rows; scrolling up unpins, showing the fade and the button that pins again. */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(sizeRow(canvasElement, 'md'));
+    const canvas = within(canvasElement);
     const viewport = canvas.getByTestId('viewport');
-    const fade = canvas.getByTestId('frame').querySelector<HTMLElement>('[data-part="fade"]');
+    const fade = canvas.getByTestId('frame').querySelector<HTMLElement>('[data-part="fade"][data-edge="top"]');
+    const fadeEnd = canvas.getByTestId('frame').querySelector<HTMLElement>('[data-part="fade"][data-edge="bottom"]');
     const button = canvas.getByTestId('frame').querySelector<HTMLElement>('.dx-scroll-container-scroll-down');
     if (!button) {
       throw new Error('missing scroll-down button');
@@ -71,10 +77,11 @@ export const Test: Story = {
     await expect(button).toHaveAttribute('data-state', 'hidden');
     await expect(button).toHaveAttribute('tabindex', '-1');
     await expect(fade).toHaveAttribute('data-state', 'visible');
+    await waitFor(() => expect(fadeEnd).toHaveAttribute('data-state', 'hidden'));
 
     // A new row is followed.
     await userEvent.click(canvas.getByRole('button', { name: 'Add entry' }));
-    await waitFor(() => expect(canvas.getByText('Entry 21')).toBeInTheDocument());
+    await waitFor(() => expect(canvas.getByText('Entry 101')).toBeInTheDocument());
     await waitFor(() => expect(atBottom()).toBe(true));
 
     // Scrolling up by wheel unpins; at the top the fade hides.
@@ -84,9 +91,10 @@ export const Test: Story = {
       viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }));
       await expect(button).toHaveAttribute('data-state', 'visible');
       await expect(fade).toHaveAttribute('data-state', 'hidden');
+      await expect(fadeEnd).toHaveAttribute('data-state', 'visible');
     });
     await userEvent.click(canvas.getByRole('button', { name: 'Add entry' }));
-    await waitFor(() => expect(canvas.getByText('Entry 22')).toBeInTheDocument());
+    await waitFor(() => expect(canvas.getByText('Entry 102')).toBeInTheDocument());
     await expect(viewport.scrollTop).toBe(0);
 
     // The button sits in the frame's end corner and pins again.
