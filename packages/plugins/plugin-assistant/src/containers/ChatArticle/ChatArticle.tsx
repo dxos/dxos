@@ -117,7 +117,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           </Panel.Header>
           <Panel.Body asChild>
             <ChatComponent.Content>
-              <div className='dx-expand relative'>
+              <Flex classNames='dx-expand relative'>
                 {/* Thread outline (Table of Contents). */}
                 {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
 
@@ -129,8 +129,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   <Grid
                     cols={['minmax(0, 1fr)', 'auto']}
                     gap='sm'
-                    grow={false}
-                    classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-2'
+                    classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-3'
                     data-testid='assistant.chat-status'
                   >
                     {/* A box of its own: the queue's root is its listbox, which takes no placement. */}
@@ -146,11 +145,11 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                     </Flex>
                   </Grid>
                 )}
-              </div>
+              </Flex>
 
               <Flex column classNames='dx-document px-2 pb-2'>
                 {mobile && (
-                  <Grid cols={2} grow={false}>
+                  <Grid cols={2}>
                     <ChatComponent.Activity />
                   </Grid>
                 )}

@@ -566,7 +566,7 @@ const TaskListItem = ({
         <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
       </Flex>
       {showAssignees && current.assignee && (
-        <Grid center grow={false} classNames={TRACK.assignee}>
+        <Grid center classNames={TRACK.assignee}>
           <TaskListAssignee assignee={current.assignee} iconOnly />
         </Grid>
       )}

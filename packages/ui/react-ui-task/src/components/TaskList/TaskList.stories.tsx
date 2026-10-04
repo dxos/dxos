@@ -674,7 +674,7 @@ const DefaultStory = ({
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
-      <Grid rows={['minmax(0, 1fr)', 'min-content']}>
+      <Grid grow rows={['minmax(0, 1fr)', 'min-content']}>
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
