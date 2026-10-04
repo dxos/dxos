@@ -20,7 +20,7 @@ export const ShortcutsList = () => {
   );
 
   return (
-    <dl className={mx('w-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 my-3 text-subdued select-none')}>
+    <dl className={mx('w-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 my-3 text-fg-subtle select-none')}>
       {bindings.map((binding) => (
         <Fragment key={binding.id}>
           <Key binding={binding.hotkey} />
@@ -38,10 +38,7 @@ export const Key = ({ binding }: { binding: string }) => {
   return (
     <kbd role='term' className='inline-flex gap-1' aria-label={binding} id={binding}>
       {keySymbols(binding).map((c, i) => (
-        <span
-          key={i}
-          className='flex w-[24px] h-[24px] justify-center items-center rounded-sm bg-input-surface text-base-fg'
-        >
+        <span key={i} className='flex size-6 justify-center items-center rounded-sm bg-input-surface text-fg'>
           {c}
         </span>
       ))}

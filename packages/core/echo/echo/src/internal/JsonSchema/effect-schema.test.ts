@@ -32,16 +32,18 @@ test('custom annotation keys are emitted when opted in', () => {
 });
 
 test('a check contributes its keywords to the node, and nests only the colliding ones', () => {
+  // `isMinLength` counts UTF-16 code units and JSON Schema counts code points, so a minimum of `n`
+  // exports as the looser `ceil(n / 2)`.
   expect(toJsonSchema(Schema.String.check(Schema.isMinLength(3)))).toEqual({
     type: 'string',
-    minLength: 3,
+    minLength: 2,
   });
 
   // `minLength` is already stated, so the second check cannot restate it in place.
   expect(toJsonSchema(Schema.String.check(Schema.isMinLength(3), Schema.isMinLength(5)))).toEqual({
     type: 'string',
-    minLength: 3,
-    allOf: [{ minLength: 5 }],
+    minLength: 2,
+    allOf: [{ minLength: 3 }],
   });
 });
 

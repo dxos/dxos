@@ -291,6 +291,35 @@ export const ToolkitFailed: Story = {
   },
 };
 
+const evalCode = (code: string) => ({ code: trim`${code}` });
+
+/** Code mode's `eval`: printed output comes back as plain text, and a throw fails the call with it. */
+export const ToolkitCodeMode: Story = {
+  args: {
+    content: toolkit([
+      call(
+        'tc-1',
+        'eval',
+        evalCode(`
+          const tasks = await query({ typename: 'com.example.type.task' });
+          print('count', tasks.length);
+          print('titles', tasks.map((task) => task.title));
+        `),
+      ),
+      result('tc-1', 'eval', 'count 2\ntitles [\n  "Write the docs",\n  "Fix the build"\n]'),
+      call(
+        'tc-2',
+        'eval',
+        evalCode(`
+          print('updating', 2, 'tasks');
+          await ops['dxn:com.example.operation.score']({ title: 42 });
+        `),
+      ),
+      failure('tc-2', 'eval', 'updating 2 tasks\nError: Expected string, actual 42\n  at ["title"]'),
+    ]),
+  },
+};
+
 /** The pre-fold shape, kept so a regression to one panel per message is visible. */
 export const ToolkitUnmerged: Story = {
   args: {

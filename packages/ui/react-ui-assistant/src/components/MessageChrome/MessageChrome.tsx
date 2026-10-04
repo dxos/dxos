@@ -2,16 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, useLayoutEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import {
-  Icon,
-  IconButton,
-  SystemIconButton,
-  type ThemedClassName,
-  createContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, Icon, SystemButton, type ThemedClassName, createContext, useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -55,11 +48,11 @@ export { MessageChromeProvider };
 const CopyButton = ({ message }: { message: Message.Message }) => {
   const { t } = useTranslation(translationKey);
   return (
-    <SystemIconButton.Clipboard
+    <SystemButton.Clipboard
       iconOnly
       label={t('copy.label')}
       variant='ghost'
-      density='sm'
+      size='sm'
       onCopy={() => Message.extractText(message)}
     />
   );
@@ -72,17 +65,27 @@ const MessageId = ({ message }: { message: Message.Message }) => {
   }
 
   return (
-    <span className='font-mono text-subdued' title={message.id}>
+    <span className='font-mono text-fg-subtle' title={message.id}>
       {message.id.slice(-8)}
     </span>
   );
 };
 
+/** How often a relative time is re-read; the coarsest label it shows changes by the minute. */
+const TIME_REFRESH_MS = 30_000;
+
 const Time = ({ message }: { message: Message.Message }) => {
   const { t } = useTranslation(translationKey);
+  // Its own clock: the toolbar is memoized, so nothing else re-renders a label that has gone stale.
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), TIME_REFRESH_MS);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <time dateTime={message.created} title={new Date(message.created).toLocaleString()}>
-      {formatTime(message.created, { justNow: t('just-now.label') })}
+      {formatTime(message.created, { now, justNow: t('just-now.label') })}
     </time>
   );
 };
@@ -97,20 +100,20 @@ export type MessageToolbarProps = ThemedClassName<{
  * disappears changes the row's height, and a pointer travelling down a scrolling list would then
  * move every row below it.
  */
-export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
+export const PromptToolbar = memo(({ classNames, message }: MessageToolbarProps) => {
   const { t } = useTranslation(translationKey);
   const { onRewind } = useMessageChromeContext('PromptToolbar');
 
   return (
-    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-description', classNames)}>
+    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
       {onRewind && (
-        <IconButton
+        <Button
           icon='ph--clock-counter-clockwise--regular'
           iconOnly
           label={t('rewind.label')}
           variant='ghost'
-          density='sm'
+          size='sm'
           data-testid='chat.rewind'
           onClick={() => onRewind(message.id)}
         />
@@ -119,14 +122,14 @@ export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
       <MessageId message={message} />
     </div>
   );
-};
+});
 
 PromptToolbar.displayName = 'PromptToolbar';
 
 /** The controls under an answer: copy, and when the answer finished. */
-export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) => {
+export const AssistantToolbar = memo(({ classNames, message }: MessageToolbarProps) => {
   return (
-    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-description', classNames)}>
+    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
       <Time message={message} />
       <MessageId message={message} />
@@ -134,7 +137,7 @@ export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) =
       <Stats message={message} classNames='ms-auto' />
     </div>
   );
-};
+});
 
 AssistantToolbar.displayName = 'AssistantToolbar';
 
@@ -187,13 +190,13 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
   return (
     <div className='pb-1 opacity-60' data-testid='chat.context'>
       <TogglePanel.Root>
-        <TogglePanel.Content classNames='border border-subdued-separator rounded-sm'>
+        <TogglePanel.Content classNames='border border-separator-subtle rounded-sm'>
           <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
-            <span className='grow text-description truncate'>{t('context.label')}</span>
-            <Icon icon='ph--brain--regular' size={4} classNames='text-description' />
+            <span className='grow text-fg-muted truncate'>{t('context.label')}</span>
+            <Icon icon='ph--brain--regular' size='md' tone='muted' />
           </TogglePanel.Header>
           <TogglePanel.Body>
-            <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-description whitespace-pre-wrap'>
+            <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-fg-muted whitespace-pre-wrap'>
               {context}
             </TogglePanel.Viewport>
           </TogglePanel.Body>
@@ -255,12 +258,12 @@ const CollapsiblePrompt = ({ message, children }: PropsWithChildren<{ message: M
       {overflows && (
         <button
           type='button'
-          className='flex items-center gap-1 pt-1 text-xs text-description hover:text-base-fg'
+          className='flex items-center gap-1 pt-1 text-xs text-fg-muted hover:text-fg'
           aria-expanded={expanded}
           data-testid='chat.prompt.toggle'
           onClick={() => setExpanded((expanded) => !expanded)}
         >
-          <Icon icon={expanded ? 'ph--caret-up--regular' : 'ph--caret-down--regular'} size={3} />
+          <Icon icon={expanded ? 'ph--caret-up--regular' : 'ph--caret-down--regular'} size='sm' />
           {expanded ? t('show-less.label') : t('show-more.label', { count: lines })}
         </button>
       )}
@@ -278,17 +281,28 @@ const promptText = (message: Message.Message): string =>
 // Chrome
 //
 
-/** Shared hover reveal: present in flow at all times, visible when the row is under the pointer. */
-const reveal = 'pt-1 opacity-0 transition-opacity';
-// A named group: the bare `group` variant matches ANY ancestor carrying `group`, and the app's
-// planks do — every toolbar lit up when the pointer was anywhere in the deck.
-const revealOnHover = 'group-hover/message:opacity-100';
+/**
+ * Shared hover reveal: present in flow at all times, visible when the row is under the pointer.
+ *
+ * A named group: the bare `group` variant matches ANY ancestor carrying `group`, and the app's
+ * planks do — every toolbar lit up when the pointer was anywhere in the deck. Streaming hides it
+ * from the row's attribute rather than the toolbar's props, so the memoized toolbars do not
+ * re-render on every row each time a turn starts or ends.
+ */
+const reveal =
+  'pt-1 opacity-0 transition-opacity group-hover/message:opacity-100 group-data-[streaming]/message:invisible';
 
-const Row = ({ children, classNames }: PropsWithChildren<{ classNames?: string }>) => (
-  <div className={mx('group/message relative py-2', classNames)} data-testid='feed.message'>
+const Row = ({ children, classNames, streaming }: PropsWithChildren<{ classNames?: string; streaming?: boolean }>) => (
+  <div
+    className={mx('group/message relative py-2', classNames)}
+    data-streaming={streaming || undefined}
+    data-testid='feed.message'
+  >
     {children}
   </div>
 );
+
+const promptReveal = mx('justify-end', reveal);
 
 /**
  * The assistant feed's per-message frame: the reader's prompts and the model's answers are framed
@@ -304,7 +318,7 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
   const prompt = isPrompt(message);
 
   return (
-    <Row classNames={mx(selected && 'bg-hover-surface')}>
+    <Row classNames={mx(selected && 'bg-hover-surface')} streaming={streaming}>
       {prompt ? (
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[70%] min-w-0'>
@@ -317,13 +331,13 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
             >
               <CollapsiblePrompt message={message}>{children}</CollapsiblePrompt>
             </div>
-            <PromptToolbar classNames={mx('justify-end', reveal, !streaming && revealOnHover)} message={message} />
+            <PromptToolbar classNames={promptReveal} message={message} />
           </div>
         </div>
       ) : (
         <div className='min-w-0'>
           {children}
-          <AssistantToolbar classNames={mx(reveal, !streaming && revealOnHover)} message={message} />
+          <AssistantToolbar classNames={reveal} message={message} />
         </div>
       )}
     </Row>

@@ -7,7 +7,7 @@ import React, { captureOwnerStack, useEffect, useState } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { safeStringify } from '@dxos/util';
 
-import { ErrorStack, parseCaptureOwnerStack } from '../components/index.ts';
+import { ErrorStack, parseCaptureOwnerStack } from '../next/components/ErrorFallback/index.ts';
 
 export type LoadingProps = { data?: any };
 
@@ -34,13 +34,13 @@ export const Loading = ({ data }: LoadingProps) => {
         )}
       >
         <h2 className='uppercase capitalize text-xs'>Loading State</h2>
-        <pre className='text-sm text-description'>{safeStringify(data, undefined, 2)}</pre>
+        <pre className='text-sm text-fg-muted'>{safeStringify(data, undefined, 2)}</pre>
 
         <h3 className='uppercase capitalize text-xs mt-2'>Owner stack</h3>
         {ownerFrames && ownerFrames.length > 0 ? (
           <ErrorStack frames={ownerFrames} />
         ) : (
-          <p className='text-xs text-subdued'>No owner stack (production build or unsupported context).</p>
+          <p className='text-xs text-fg-subtle'>No owner stack (production build or unsupported context).</p>
         )}
       </div>
     </div>

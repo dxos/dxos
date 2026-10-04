@@ -14,9 +14,9 @@ export type JsonPath = string & { __JsonPath: true };
 
 // TODO(burdon): Start with "$."?
 
-const PATH_REGEX = /^($|[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*|\[\d+\](?:\.)?)*$)/;
+const PATH_REGEX = /^($|[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*|\[\d+\](?:\.)?)*$)/u;
 
-const PROP_REGEX = /^\w+$/;
+const PROP_REGEX = /^\w+$/u;
 
 /**
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html

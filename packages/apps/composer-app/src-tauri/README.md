@@ -158,8 +158,59 @@ The build script outputs to `Externals/{arch}/${CONFIGURATION}/libapp.a` where `
 Desktop builds (`build_tauri` job) support macOS, Linux, and Windows:
 
 - Build with code signing for macOS (Apple Developer certificate)
+- Sign each channel under its own App ID when it has one (see below)
 - Generate updater artifacts via CrabNebula
 - Upload to CrabNebula Cloud for auto-updates
+
+### macOS signing per channel
+
+Native passkeys only work when the app's signed `com.apple.application-identifier` names its own bundle
+ID, and `composer.space` lists that App ID under `webcredentials` (`src/functions/_worker.ts`). Each
+non-production channel installs under a suffixed bundle ID (`org.dxos.composer.preview`), so it needs
+its own App ID and provisioning profile.
+
+Dev and preview embed their own profile (the `MACOS_PROVISION_PROFILE_DEV` and
+`MACOS_PROVISION_PROFILE_PREVIEW` secrets); any other build embeds production's
+(`MACOS_PROVISION_PROFILE`). The app is signed under whichever App ID its profile grants, so production
+and staging stay signed as production, and the app turns native passkeys off at runtime wherever that App
+ID does not name its bundle. The release fails if the signature and the profile disagree, if any channel
+other than staging is not signed for its own bundle, or if the profile does not list the certificate the
+app is signed with. The channel profiles outlive that certificate, so rotating `MACOS_CERTIFICATE` means
+regenerating them and updating their secrets.
+
+To give a channel its own identity: register an explicit App ID for its bundle ID with Associated
+Domains, create a Developer ID profile for it with the certificate CI signs with, store it base64-encoded
+as a `MACOS_PROVISION_PROFILE_<CHANNEL>` secret, select it in `deploy-tauri.yaml`, and add the App ID to
+`CHANNEL_BUNDLE_IDS` in `_worker.ts`. For staging, also drop its exemption from the release check in
+`deploy-tauri.yaml`. The AASA change only takes effect once the production web app is deployed.
+
+### iOS passkeys
+
+The iOS app creates and redeems `composer.space` passkeys through AuthenticationServices
+(`ios/PasskeyBridge.m`, `src/passkey/ios.rs`), never WebAuthn: its page origin is `tauri://localhost`.
+That needs the `webcredentials:composer.space` associated domain:
+
+- **Domain:** the `composer.space` AASA lists `9428WC5MR8.org.dxos.composer` under `webcredentials`. iOS
+  has one App ID for every channel, so there is nothing to register per channel.
+- **Profile:** the `org.dxos.composer` App ID has Associated Domains enabled, and the App Store profile in
+  `IOS_MOBILE_PROVISION` allows any domain.
+- **Declaration:** `ios/app_iOS.entitlements` declares the domain. `gen/apple/project.yml` only names the
+  file, as Tauri's template does, so `xcodegen` writes it empty; `scripts/ios-init.sh` copies the
+  declaration in after `xcodegen`, which also covers a clean `tauri ios init`.
+- **Signing:** with App Store Connect API-key credentials, the Tauri CLI exports the IPA without the app's
+  entitlements (tauri-apps/tauri#15663). The deploy workflow's "Restore the app's entitlements in the IPA"
+  step re-signs the app with the profile's entitlements plus `ios/app_iOS.entitlements`, and fails the job
+  if any declared entitlement is missing.
+
+TestFlight builds use the `testflight` environment (`.github/workflows/env/testflight`): production EDGE,
+hub and telemetry, since testers sign in with production accounts, tagged `testflight` and wearing the dev
+channel mark.
+
+To check a build, run `codesign -d --entitlements - <Composer.app>` and look for
+`com.apple.developer.associated-domains`. On a device, a missing association surfaces as
+`ASAuthorizationError` 1004 ("Unable to verify webcredentials association"), reported as a failed
+login rather than a dismissed prompt. The simulator needs enrolled Face ID (Features > Face ID) before
+it offers to save a passkey.
 
 ### Publishing
 

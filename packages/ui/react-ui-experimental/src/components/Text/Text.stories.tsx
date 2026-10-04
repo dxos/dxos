@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { motion } from 'motion/react';
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { IconButton } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 const Text = ({ children, initial = 'open' }: PropsWithChildren<{ initial?: string }>) => {
@@ -43,7 +43,7 @@ const Text = ({ children, initial = 'open' }: PropsWithChildren<{ initial?: stri
       </div>
 
       <div className='flex justify-center'>
-        <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Restart' onClick={toggle} />
+        <Button icon='ph--arrow-clockwise--regular' iconOnly label='Restart' onClick={toggle} />
       </div>
     </div>
   );

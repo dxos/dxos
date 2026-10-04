@@ -2,50 +2,47 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
+import React, { type ButtonHTMLAttributes, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-import { type ButtonProps, useElevationContext, useId, useThemeContext } from '@dxos/react-ui';
+import { Button, type ButtonVariant, useId } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-// TODO(burdon): Convert to radix primitive and move to react-ui.
-
-export interface CompoundButtonSlots {
+export type CompoundButtonSlots = {
   root: ComponentPropsWithoutRef<'button'>;
   middle: ComponentPropsWithoutRef<'div'>;
   label: ComponentPropsWithoutRef<'p'>;
   description: ComponentPropsWithoutRef<'p'>;
-}
+};
 
-export interface CompoundButtonProps extends ButtonProps {
+export type CompoundButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
+  variant?: ButtonVariant;
   children?: ReactNode;
   description?: ReactNode;
   before?: ReactNode;
   after?: ReactNode;
   slots?: Partial<CompoundButtonSlots>;
-}
+};
 
+/** A Button whose label sits over a description, between optional leading and trailing content. */
 export const CompoundButton = ({
   children,
   description,
   before,
   after,
   variant = 'default',
-  elevation: propsElevation,
   slots = {},
   ...buttonProps
-}: Omit<CompoundButtonProps, 'density'>) => {
+}: CompoundButtonProps) => {
   const labelId = useId('compoundButton-label');
   const descriptionId = useId('compoundButton-description');
-  const { tx } = useThemeContext();
-  const elevation = useElevationContext(propsElevation);
-  const styleProps = { ...buttonProps, variant, elevation, textWrap: true };
-  const buttonClassName = tx('button.root', styleProps, 'flex items-center gap-4 py-2.5', slots.root?.className);
 
   return (
-    <button
+    <Button
       {...buttonProps}
-      {...slots.root}
-      className={buttonClassName}
+      variant={variant}
+      align='start'
+      // The label and description wrap, so the button grows past one control's height.
+      classNames={mx('h-auto gap-4 py-2.5 whitespace-normal', slots.root?.className)}
       aria-labelledby={labelId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
@@ -63,7 +60,7 @@ export const CompoundButton = ({
             {...slots.description}
             className={mx(
               'text-xs mb-1 font-normal',
-              variant === 'primary' ? 'text-sm font-normal text-base-fg' : 'text-description',
+              variant === 'primary' ? 'text-sm font-normal text-fg' : 'text-fg-muted',
               slots.description?.className,
             )}
           >
@@ -72,6 +69,6 @@ export const CompoundButton = ({
         )}
       </div>
       {after && <div className='grow-0'>{after}</div>}
-    </button>
+    </Button>
   );
 };

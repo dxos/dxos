@@ -39,21 +39,20 @@ export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps)
   return (
     <div role='group' aria-label={t('suggestion-authors.label')} className='flex flex-wrap gap-1 p-2'>
       {authors.map(({ author, label, hue, hidden }) => (
-        // The tag IS the toggle: no outer button chrome, the eye renders inside the dx-tag.
-        <Tag key={author} asChild hue={hue} classNames={hidden && 'opacity-50'}>
-          <button
-            type='button'
-            aria-pressed={!hidden}
-            aria-label={t(hidden ? 'show-author-suggestions.label' : 'hide-author-suggestions.label', {
-              author: label,
-            })}
-            data-testid='suggestion-author-toggle'
-            className='inline-flex items-center gap-1 cursor-pointer'
-            onClick={() => onToggle(author)}
-          >
-            {label}
-            <Icon icon={hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'} size={3} />
-          </button>
+        // The tag is the toggle (a clickable Tag is a button), the eye inside the pill.
+        <Tag
+          key={author}
+          hue={hue}
+          classNames={['gap-1', hidden && 'opacity-50']}
+          aria-pressed={!hidden}
+          aria-label={t(hidden ? 'show-author-suggestions.label' : 'hide-author-suggestions.label', {
+            author: label,
+          })}
+          data-testid='suggestion-author-toggle'
+          onClick={() => onToggle(author)}
+        >
+          {label}
+          <Icon icon={hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'} size='xs' />
         </Tag>
       ))}
     </div>

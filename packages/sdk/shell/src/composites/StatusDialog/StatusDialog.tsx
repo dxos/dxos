@@ -14,16 +14,12 @@ export const StatusDialog = () => {
   const titleId = useId('statusDialog__title');
   return (
     <AlertDialog.Root open>
-      <AlertDialog.Portal>
-        <AlertDialog.Overlay>
-          <AlertDialog.Content aria-labelledby={titleId}>
-            <AlertDialog.Body>
-              <AlertDialog.Description srOnly>{t('resetting.message')}</AlertDialog.Description>
-              <StatusPanel titleId={titleId} />
-            </AlertDialog.Body>
-          </AlertDialog.Content>
-        </AlertDialog.Overlay>
-      </AlertDialog.Portal>
+      <AlertDialog.Content aria-labelledby={titleId}>
+        <AlertDialog.Body>
+          <AlertDialog.Description srOnly>{t('resetting.message')}</AlertDialog.Description>
+          <StatusPanel titleId={titleId} />
+        </AlertDialog.Body>
+      </AlertDialog.Content>
     </AlertDialog.Root>
   );
 };

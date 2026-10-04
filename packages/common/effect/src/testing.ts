@@ -4,9 +4,9 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Tracer from 'effect/Tracer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import type { TestContext } from 'vitest';
 
 /** Forwards to `globalThis.fetch` per call, so a stub installed mid-effect is still picked up. */

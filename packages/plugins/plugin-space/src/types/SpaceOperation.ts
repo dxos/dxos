@@ -528,6 +528,9 @@ export const AddType = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     object: Type.getSchema(Type.Type),
+    notified: Schema.optional(Schema.Boolean).annotate({
+      description: 'Whether the plugins were told the type was added (which makes a table for it).',
+    }),
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -699,6 +702,32 @@ export const GetObjects = Operation.make({
   }),
   output: Schema.Struct({
     objects: Schema.Array(Schema.Unknown),
+  }),
+}).pipe(Operation.mutation('none'));
+
+export const ResolveUrl = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.resolveUrl'),
+    name: 'Resolve URL',
+    description:
+      'Map a Composer URL (e.g. `https://composer.space/w/<spaceId>/...`) to references to the objects it ' +
+      'shows, in order. Use when the user pastes a link. A reference names its space, so read the objects ' +
+      'by passing them on without a spaceId, one space per call.',
+    icon: 'ph--link--regular',
+  },
+  input: Schema.Struct({
+    url: Schema.String.annotate({ description: 'Composer URL, deep link (`composer://...`) or bare pathname.' }),
+  }),
+  output: Schema.Struct({
+    spaceId: Schema.optional(Schema.String).annotate({
+      description: 'The space the URL opens on; a URL spanning spaces can name objects in others.',
+    }),
+    objects: Schema.Array(
+      Schema.Struct({
+        key: Schema.String.annotate({ description: 'The URL key the object appeared under (e.g. `doc`).' }),
+        object: Ref.Ref(Obj.Unknown),
+      }),
+    ),
   }),
 }).pipe(Operation.mutation('none'));
 

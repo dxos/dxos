@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type FC, useEffect, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -248,7 +248,7 @@ export const ModuleContainer = ({ layout, columns, rows, compact = false }: Modu
 
   return (
     <div
-      className={mx('dx-fill dx-fullscreen grid', !compact && 'gap-2 p-2')}
+      className={mx('dx-fill dx-cover grid', !compact && 'gap-2 p-2')}
       style={{ gridTemplateColumns: tracks(columns, resolvedLayout.length) }}
     >
       {resolvedLayout.map((column, columnIndex) => (

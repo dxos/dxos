@@ -11,8 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { useActions } from '@dxos/plugin-graph/hooks';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Flex, Panel } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Flex, Panel, composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
@@ -74,7 +73,7 @@ export const TldrawArticle = ({
 
 const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
   <Panel.Root {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardedRef}>
-    <Panel.Content>{props.children}</Panel.Content>
+    <Panel.Body>{props.children}</Panel.Body>
   </Panel.Root>
 ));
 

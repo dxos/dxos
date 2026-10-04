@@ -4,7 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { createContext } from '@dxos/react-hooks';

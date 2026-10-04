@@ -49,7 +49,9 @@ const Tile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
   return (
     <div className='relative'>
       <GalleryImage src={src} contentType={data.variant.contentType} alt={data.variant.label} />
-      {selected && <Icon icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />}
+      {selected && (
+        <Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-accent-text' />
+      )}
     </div>
   );
 };
@@ -65,7 +67,7 @@ export const VariantGallery = ({ variants, emptyMessage, selectedIds, onSelect }
 
   if (items.length === 0) {
     return (
-      <div role='status' className='flex items-center justify-center h-full text-subdued'>
+      <div role='status' className='flex items-center justify-center h-full text-fg-subtle'>
         {emptyMessage ?? t('empty.message')}
       </div>
     );
@@ -73,7 +75,7 @@ export const VariantGallery = ({ variants, emptyMessage, selectedIds, onSelect }
 
   return (
     <Masonry.Root Tile={Tile}>
-      <Masonry.Content centered>
+      <Masonry.Content>
         <Masonry.Viewport
           items={items}
           getId={(data?: TileData) => (data ? tileId(data.variant, data.index) : '')}

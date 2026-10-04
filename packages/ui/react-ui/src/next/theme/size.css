@@ -1,131 +1,191 @@
 /*
- * Size metrics: the only source of truth for sizes (decision 2); every `.nx-*` part that takes a `size` sets
+ * Size metrics: the only source of truth for sizes (decision 2); every `.dx-*` part that takes a `size` sets
  * `data-size` and inherits the rest. Controls are inset in the block (decision 12); one icon scale serves rail Blocks
- * and controls. Labels read one text step below the body (`--nx-label-font-size`).
+ * and controls. Labels read one text step below the body (`--dx-label-font-size`), and help text takes the next-smaller
+ * size's label step (`--dx-helper-font-size`; xs and sm have no smaller step, so theirs equals the label's).
+ * `--dx-half-block-size` is redeclared per size (like `--dx-control-size`) so it resolves against that size's block.
  */
 
 @layer dx-components {
   /* Defaults for parts rendered outside any sized scope (e.g. portalled popups). */
   :root {
-    --nx-block-size: 2rem;
-    --nx-line-height: var(--text-base--line-height);
-    --nx-font-size: var(--text-base);
-    --nx-label-font-size: var(--text-sm);
-    --nx-label-line-height: var(--text-sm--line-height);
-    --nx-icon-size: 1rem;
-    --nx-gap-size: 0.5rem;
-    --nx-control-inset: 2px;
-    --nx-control-icon: 1rem;
-    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --dx-block-size: 2rem;
+    --dx-line-height: var(--text-base--line-height);
+    --dx-font-size: var(--text-base);
+    --dx-label-font-size: var(--text-sm);
+    --dx-label-line-height: var(--text-sm--line-height);
+    --dx-helper-font-size: var(--text-xs);
+    --dx-helper-line-height: var(--text-xs--line-height);
+    --dx-icon-size: 1rem;
+    --dx-gap-size: 0.5rem;
+    --dx-control-inset: 2px;
+    --dx-control-icon: 1rem;
+    --dx-control-size: calc(var(--dx-block-size) - 2 * var(--dx-control-inset));
+    --dx-half-block-size: calc(var(--dx-block-size) / 2);
   }
 
   :is(
-    .nx-scope,
-    .nx-grid,
-    .nx-scroll-root,
-    .nx-toolbar,
-    .nx-popup,
-    .nx-field-header,
-    .nx-dialog,
-    .nx-fieldset-legend
+    .dx-scope,
+    .dx-panel,
+    .dx-listbox,
+    .dx-drag-preview,
+    .dx-container,
+    .dx-scroll-root,
+    .dx-toolbar,
+    .dx-popup,
+    .dx-field-header,
+    .dx-dialog,
+    .dx-dialog-footer,
+    .dx-fieldset-legend,
+    .dx-avatar,
+    .dx-button,
+    .dx-card,
+    .dx-tree
   )[data-size='xs'] {
-    --nx-block-size: 1.25rem;
-    --nx-line-height: var(--text-xs--line-height);
-    --nx-font-size: var(--text-xs);
-    --nx-label-font-size: var(--text-xs);
-    --nx-label-line-height: var(--text-xs--line-height);
-    --nx-icon-size: 0.75rem;
-    --nx-gap-size: 0.25rem;
-    --nx-control-inset: 1px;
-    --nx-control-icon: 0.75rem;
-    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --dx-block-size: 1.25rem;
+    --dx-line-height: var(--text-xs--line-height);
+    --dx-font-size: var(--text-xs);
+    --dx-label-font-size: var(--text-xs);
+    --dx-label-line-height: var(--text-xs--line-height);
+    --dx-helper-font-size: var(--text-xs);
+    --dx-helper-line-height: var(--text-xs--line-height);
+    --dx-icon-size: 0.75rem;
+    --dx-gap-size: 0.25rem;
+    --dx-control-inset: 1px;
+    --dx-control-icon: 0.75rem;
+    --dx-control-size: calc(var(--dx-block-size) - 2 * var(--dx-control-inset));
+    --dx-half-block-size: calc(var(--dx-block-size) / 2);
   }
 
   :is(
-    .nx-scope,
-    .nx-grid,
-    .nx-scroll-root,
-    .nx-toolbar,
-    .nx-popup,
-    .nx-field-header,
-    .nx-dialog,
-    .nx-fieldset-legend
+    .dx-scope,
+    .dx-panel,
+    .dx-listbox,
+    .dx-drag-preview,
+    .dx-container,
+    .dx-scroll-root,
+    .dx-toolbar,
+    .dx-popup,
+    .dx-field-header,
+    .dx-dialog,
+    .dx-dialog-footer,
+    .dx-fieldset-legend,
+    .dx-avatar,
+    .dx-button,
+    .dx-card,
+    .dx-tree
   )[data-size='sm'] {
-    --nx-block-size: 1.5rem;
-    --nx-line-height: var(--text-sm--line-height);
-    --nx-font-size: var(--text-sm);
-    --nx-label-font-size: var(--text-xs);
-    --nx-label-line-height: var(--text-xs--line-height);
-    --nx-icon-size: 0.875rem;
-    --nx-gap-size: 0.25rem;
-    --nx-control-inset: 2px;
-    --nx-control-icon: 0.875rem;
-    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --dx-block-size: 1.5rem;
+    --dx-line-height: var(--text-sm--line-height);
+    --dx-font-size: var(--text-sm);
+    --dx-label-font-size: var(--text-xs);
+    --dx-label-line-height: var(--text-xs--line-height);
+    --dx-helper-font-size: var(--text-xs);
+    --dx-helper-line-height: var(--text-xs--line-height);
+    --dx-icon-size: 0.875rem;
+    --dx-gap-size: 0.25rem;
+    --dx-control-inset: 2px;
+    --dx-control-icon: 0.875rem;
+    --dx-control-size: calc(var(--dx-block-size) - 2 * var(--dx-control-inset));
+    --dx-half-block-size: calc(var(--dx-block-size) / 2);
   }
 
   :is(
-    .nx-scope,
-    .nx-grid,
-    .nx-scroll-root,
-    .nx-toolbar,
-    .nx-popup,
-    .nx-field-header,
-    .nx-dialog,
-    .nx-fieldset-legend
+    .dx-scope,
+    .dx-panel,
+    .dx-listbox,
+    .dx-drag-preview,
+    .dx-container,
+    .dx-scroll-root,
+    .dx-toolbar,
+    .dx-popup,
+    .dx-field-header,
+    .dx-dialog,
+    .dx-dialog-footer,
+    .dx-fieldset-legend,
+    .dx-avatar,
+    .dx-button,
+    .dx-card,
+    .dx-tree
   )[data-size='md'] {
-    --nx-block-size: 2rem;
-    --nx-line-height: var(--text-base--line-height);
-    --nx-font-size: var(--text-base);
-    --nx-label-font-size: var(--text-sm);
-    --nx-label-line-height: var(--text-sm--line-height);
-    --nx-icon-size: 1rem;
-    --nx-gap-size: 0.5rem;
-    --nx-control-inset: 2px;
-    --nx-control-icon: 1rem;
-    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --dx-block-size: 2rem;
+    --dx-line-height: var(--text-base--line-height);
+    --dx-font-size: var(--text-base);
+    --dx-label-font-size: var(--text-sm);
+    --dx-label-line-height: var(--text-sm--line-height);
+    --dx-helper-font-size: var(--text-xs);
+    --dx-helper-line-height: var(--text-xs--line-height);
+    --dx-icon-size: 1rem;
+    --dx-gap-size: 0.5rem;
+    --dx-control-inset: 2px;
+    --dx-control-icon: 1rem;
+    --dx-control-size: calc(var(--dx-block-size) - 2 * var(--dx-control-inset));
+    --dx-half-block-size: calc(var(--dx-block-size) / 2);
   }
 
   :is(
-    .nx-scope,
-    .nx-grid,
-    .nx-scroll-root,
-    .nx-toolbar,
-    .nx-popup,
-    .nx-field-header,
-    .nx-dialog,
-    .nx-fieldset-legend
+    .dx-scope,
+    .dx-panel,
+    .dx-listbox,
+    .dx-drag-preview,
+    .dx-container,
+    .dx-scroll-root,
+    .dx-toolbar,
+    .dx-popup,
+    .dx-field-header,
+    .dx-dialog,
+    .dx-dialog-footer,
+    .dx-fieldset-legend,
+    .dx-avatar,
+    .dx-button,
+    .dx-card,
+    .dx-tree
   )[data-size='lg'] {
-    --nx-block-size: 2.5rem;
-    --nx-line-height: var(--text-lg--line-height);
-    --nx-font-size: var(--text-lg);
-    --nx-label-font-size: var(--text-base);
-    --nx-label-line-height: var(--text-base--line-height);
-    --nx-icon-size: 1.25rem;
-    --nx-gap-size: 0.5rem;
-    --nx-control-inset: 3px;
-    --nx-control-icon: 1.25rem;
-    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --dx-block-size: 2.5rem;
+    --dx-line-height: var(--text-lg--line-height);
+    --dx-font-size: var(--text-lg);
+    --dx-label-font-size: var(--text-base);
+    --dx-label-line-height: var(--text-base--line-height);
+    --dx-helper-font-size: var(--text-sm);
+    --dx-helper-line-height: var(--text-sm--line-height);
+    --dx-icon-size: 1.25rem;
+    --dx-gap-size: 0.5rem;
+    --dx-control-inset: 3px;
+    --dx-control-icon: 1.25rem;
+    --dx-control-size: calc(var(--dx-block-size) - 2 * var(--dx-control-inset));
+    --dx-half-block-size: calc(var(--dx-block-size) / 2);
   }
 
   :is(
-    .nx-scope,
-    .nx-grid,
-    .nx-scroll-root,
-    .nx-toolbar,
-    .nx-popup,
-    .nx-field-header,
-    .nx-dialog,
-    .nx-fieldset-legend
+    .dx-scope,
+    .dx-panel,
+    .dx-listbox,
+    .dx-drag-preview,
+    .dx-container,
+    .dx-scroll-root,
+    .dx-toolbar,
+    .dx-popup,
+    .dx-field-header,
+    .dx-dialog,
+    .dx-dialog-footer,
+    .dx-fieldset-legend,
+    .dx-avatar,
+    .dx-button,
+    .dx-card,
+    .dx-tree
   )[data-size='xl'] {
-    --nx-block-size: 3rem;
-    --nx-line-height: var(--text-xl--line-height);
-    --nx-font-size: var(--text-xl);
-    --nx-label-font-size: var(--text-lg);
-    --nx-label-line-height: var(--text-lg--line-height);
-    --nx-icon-size: 1.5rem;
-    --nx-gap-size: 0.5rem;
-    --nx-control-inset: 3px;
-    --nx-control-icon: 1.5rem;
-    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --dx-block-size: 3rem;
+    --dx-line-height: var(--text-xl--line-height);
+    --dx-font-size: var(--text-xl);
+    --dx-label-font-size: var(--text-lg);
+    --dx-label-line-height: var(--text-lg--line-height);
+    --dx-helper-font-size: var(--text-base);
+    --dx-helper-line-height: var(--text-base--line-height);
+    --dx-icon-size: 1.5rem;
+    --dx-gap-size: 0.5rem;
+    --dx-control-inset: 3px;
+    --dx-control-icon: 1.5rem;
+    --dx-control-size: calc(var(--dx-block-size) - 2 * var(--dx-control-inset));
+    --dx-half-block-size: calc(var(--dx-block-size) / 2);
   }
 }

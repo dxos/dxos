@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import type * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type Event } from '@dxos/async';
 import { Context } from '@dxos/context';

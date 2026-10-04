@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ner",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "Experimental named entity recognition via local transformers models.",
   "homepage": "https://dxos.org",

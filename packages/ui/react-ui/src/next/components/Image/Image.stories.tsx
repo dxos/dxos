@@ -8,10 +8,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Image, Typography } from '../index.ts';
 
 /** Inline SVG, so the stories never fetch from the network. */
 const LANDSCAPE = `data:image/svg+xml,${encodeURIComponent(
@@ -22,39 +22,65 @@ const LANDSCAPE = `data:image/svg+xml,${encodeURIComponent(
   </svg>`,
 )}`;
 
+/** A wide red strip with a centred blue mark, so a square `contain` frame letterboxes it in its red corners. */
+const STRIP = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='40' viewBox='0 0 160 40'>
+    <rect width='160' height='40' fill='#ff0000'/><circle cx='80' cy='20' r='12' fill='#0000ff'/>
+  </svg>`,
+)}`;
+
+/** Transparent at its edges (a cut-out), so no dominant colour is sampled. */
+const CUTOUT = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='40' viewBox='0 0 160 40'>
+    <circle cx='80' cy='20' r='12' fill='#0000ff'/>
+  </svg>`,
+)}`;
+
 /** A malformed data URI fails to decode without any network request. */
 const BROKEN = 'data:image/png;base64,AAAA';
 
-/** Cover, contain, broken and square frames, and a clickable image. */
+/** Cover, contain, broken and square frames, a clickable image, and `backdrop='dominant'` letterboxes. */
 const DefaultStory = ({ size }: SizeArgs) => {
   const [clicks, setClicks] = useState(0);
   return (
     <div className='grid grid-cols-4 gap-2'>
-      <Next.Image src={LANDSCAPE} alt={`Mountains at dusk ${size}`} data-testid={`cover-${size}`} />
-      <Next.Image
+      <Image src={LANDSCAPE} alt='Mountains at dusk' data-testid={`cover-${size}`} />
+      <Image src={LANDSCAPE} alt='Mountains, contained' aspectRatio='1' fit='contain' data-testid={`contain-${size}`} />
+      <Image src={BROKEN} alt='Missing photo' data-testid={`broken-${size}`} />
+      <Image src={LANDSCAPE} alt='Mountains, square' aspectRatio='1' data-testid={`square-${size}`} />
+      <Image
         src={LANDSCAPE}
-        alt={`Mountains, contained ${size}`}
-        aspectRatio='1'
-        fit='contain'
-        data-testid={`contain-${size}`}
-      />
-      <Next.Image src={BROKEN} alt={`Missing photo ${size}`} data-testid={`broken-${size}`} />
-      <Next.Image src={LANDSCAPE} alt={`Mountains, square ${size}`} aspectRatio='1' data-testid={`square-${size}`} />
-      <Next.Image
-        src={LANDSCAPE}
-        alt={`Open mountains ${size}`}
+        alt='Open mountains'
         onClick={() => setClicks((count) => count + 1)}
         data-testid={`clickable-${size}`}
       />
-      <Next.Typography data-testid={`clicks-${size}`}>Opened {clicks}</Next.Typography>
+      <Typography data-testid={`clicks-${size}`}>Opened {clicks}</Typography>
+      <Image
+        src={STRIP}
+        alt='Red strip'
+        aspectRatio='1'
+        fit='contain'
+        backdrop='dominant'
+        data-testid={`backdrop-${size}`}
+      />
+      <Image
+        src={CUTOUT}
+        alt='Cut-out'
+        aspectRatio='1'
+        fit='contain'
+        backdrop='dominant'
+        data-testid={`cutout-${size}`}
+      />
     </div>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/image',
+  title: 'ui/react-ui-core/components/Image',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[40rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[40rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -66,9 +92,12 @@ export const Default: Story = {};
 
 /**
  * Frames keep their ratio, loaded images fill them, and a broken source shows the fallback icon. With `onClick` the
- * frame is a button named by its `alt`, activated by click, Enter and Space, with a focus ring.
+ * frame is a button named by its `alt`, activated by click, Enter and Space, with a focus ring. `backdrop='dominant'`
+ * fills the letterbox with the image's corner colour, slightly darkened; an image transparent at its edges leaves the
+ * host surface.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const canvas = within(sizeRow(canvasElement, 'md'));
     for (const [testId, ratio] of [
@@ -84,11 +113,11 @@ export const Test: Story = {
       await expect(img.width).toBeCloseTo(box.width, 0);
       await expect(img.height).toBeCloseTo(box.height, 0);
     }
-    await expect(canvas.getByRole('img', { name: 'Mountains at dusk md' })).toHaveAttribute('loading', 'lazy');
+    await expect(canvas.getByRole('img', { name: 'Mountains at dusk' })).toHaveAttribute('loading', 'lazy');
 
     const broken = canvas.getByTestId('broken-md');
     await waitFor(() => expect(broken).toHaveAttribute('data-status', 'error'));
-    const icon = within(broken).getByRole('img', { name: 'Missing photo md' });
+    const icon = within(broken).getByRole('img', { name: 'Missing photo' });
     await expect(icon.tagName.toLowerCase()).toBe('svg');
     // The icon is centred in the frame.
     const frame = broken.getBoundingClientRect();
@@ -96,7 +125,7 @@ export const Test: Story = {
     await expect(glyph.left + glyph.width / 2).toBeCloseTo(frame.left + frame.width / 2, 0);
     await expect(glyph.top + glyph.height / 2).toBeCloseTo(frame.top + frame.height / 2, 0);
 
-    const clickable = canvas.getByRole('button', { name: 'Open mountains md' });
+    const clickable = canvas.getByRole('button', { name: 'Open mountains' });
     await expect(clickable).toBe(canvas.getByTestId('clickable-md'));
     await userEvent.click(clickable);
     await waitFor(() => expect(canvas.getByTestId('clicks-md')).toHaveTextContent('Opened 1'));
@@ -109,5 +138,13 @@ export const Test: Story = {
     await expect(clickable).toHaveFocus();
     await expect(getComputedStyle(clickable).outlineStyle).toBe('solid');
     await expect(canvas.getByTestId('cover-md')).not.toHaveAttribute('role');
+
+    const backdrop = canvas.getByTestId('backdrop-md');
+    await waitFor(() => expect(backdrop).toHaveAttribute('data-status', 'loaded'));
+    await waitFor(() => expect(getComputedStyle(backdrop).backgroundColor).toBe('rgb(242, 0, 0)'));
+    const cutout = canvas.getByTestId('cutout-md');
+    await waitFor(() => expect(cutout).toHaveAttribute('data-status', 'loaded'));
+    await expect(cutout.style.getPropertyValue('--dx-image-backdrop')).toBe('');
+    await expect(getComputedStyle(cutout).backgroundColor).toBe('rgba(0, 0, 0, 0)');
   },
 };

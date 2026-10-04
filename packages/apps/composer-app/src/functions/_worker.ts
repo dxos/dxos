@@ -144,13 +144,18 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
     return new Response('Invalid url protocol', { status: 400 });
   }
 
+  const userAgent = request.headers.get('User-Agent');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), RSS_FETCH_TIMEOUT_MS);
   try {
     // Forward the original method so HEAD probes don't download the full body upstream.
     const upstream = await fetch(parsedFeedUrl.toString(), {
       method: request.method,
-      headers: { Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' },
+      headers: {
+        Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+        // Feed hosts' WAFs reject a request with no User-Agent (The Guardian answers 406), and a Worker's fetch adds none.
+        ...(userAgent ? { 'User-Agent': userAgent } : {}),
+      },
       signal: controller.signal,
     });
 
@@ -226,6 +231,12 @@ const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.network'];
 const BUNDLE_ID = 'org.dxos.composer';
 
 /**
+ * Prerelease desktop channels signed under their own App ID (`MACOS_PROVISION_PROFILE_<CHANNEL>`). They share the
+ * released app's passkeys but not its universal links, which stay with the released app.
+ */
+const CHANNEL_BUNDLE_IDS = ['org.dxos.composer.dev', 'org.dxos.composer.preview'];
+
+/**
  * The well-known documents that verify this domain, keyed by path.
  *
  * These are Worker routes rather than static assets because both must be served as
@@ -244,9 +255,10 @@ const WELL_KNOWN_DOCUMENTS: Record<string, (env: Env) => object | undefined> = {
     }
 
     const appId = `${env.APPLE_TEAM_ID}.${BUNDLE_ID}`;
+    const channelAppIds = CHANNEL_BUNDLE_IDS.map((bundleId) => `${env.APPLE_TEAM_ID}.${bundleId}`);
     return {
       applinks: { details: [{ appIDs: [appId], components: [{ '/': '/*' }] }] },
-      webcredentials: { apps: [appId] },
+      webcredentials: { apps: [appId, ...channelAppIds] },
     };
   },
   // WebAuthn Related Origin Requests: origins permitted to assert the `composer.space` relying party.

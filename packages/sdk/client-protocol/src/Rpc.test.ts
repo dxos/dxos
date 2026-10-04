@@ -10,13 +10,13 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Queue from 'effect/Queue';
+import * as EffectRpc from 'effect/rpc/Rpc';
+import * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import * as EffectRpc from 'effect/unstable/rpc/Rpc';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';

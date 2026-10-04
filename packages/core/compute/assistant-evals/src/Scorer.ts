@@ -122,6 +122,23 @@ export const toolCalls = (options: {
     score: invocations.pipe(Effect.map(options.score)),
   });
 
+/** Whether one tool call failed: code mode's `eval` reports a failed program as a tool error too. */
+export const failedCall = (invocation: ToolInvocation): boolean => invocation.error !== undefined;
+
+/**
+ * The fraction of the session's tool calls that succeeded (see {@link failedCall}). A session that
+ * made no calls scores nothing: every task graded with this one needs at least one.
+ */
+export const toolCallSuccess = (options: { name?: string; description?: string } = {}): Scorer =>
+  toolCalls({
+    name: options.name ?? 'tool-calls-succeeded',
+    description: options.description ?? 'The fraction of tool calls that succeeded rather than failed.',
+    score: (invocations) =>
+      invocations.length === 0
+        ? 0
+        : invocations.filter((invocation) => !failedCall(invocation)).length / invocations.length,
+  });
+
 /**
  * A scorer over the session's wall clock: full marks up to `targetMinutes`, falling linearly to
  * nothing at `budgetMinutes`. `delivered` gates it, so a run that never produced the thing being

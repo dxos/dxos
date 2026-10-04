@@ -30,7 +30,7 @@ for arg in "$@"; do
 done
 
 # The dev server watches with `fs.watch` (see `.storybook/main.ts`), which costs one descriptor per
-# watched directory — ~12k on this monorepo. A server launched from a GUI shell inherits macOS's
+# transformed file outside the Vite root — ~13k on this monorepo. A server launched from a GUI shell inherits macOS's
 # 256 soft limit and exhausts it within seconds, so raise it here, before the watcher is armed, so
 # that `diagnose.sh` reports the limit the server actually runs under.
 # Descending, because the ceiling is per-machine: the hard limit is usually `unlimited` but the

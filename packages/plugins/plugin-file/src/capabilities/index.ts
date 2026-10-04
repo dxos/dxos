@@ -22,7 +22,7 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node', 'workerd'],
+  environments: ['browser', 'node', 'tauri', 'workerd'],
 });
 export const EdgeBackend = Capability.lazyModule(
   'EdgeBackend',
@@ -30,7 +30,7 @@ export const EdgeBackend = Capability.lazyModule(
     requires: [ClientCapabilities.Client],
     provides: [FileCapabilities.Backend],
     activatesOn: FileEvents.Start,
-    environments: ['node', 'workerd'],
+    environments: ['browser', 'node', 'tauri', 'workerd'],
   },
   () => import('./edge-backend.ts'),
 );
@@ -42,20 +42,28 @@ export const FileUploader = Capability.lazyModule(
     requires: [Capabilities.OperationInvoker],
     provides: [AppCapabilities.FileUploader],
     activatesOn: FileEvents.Start,
-    environments: [],
+    environments: ['browser', 'tauri'],
   },
   () => import('./file-uploader.ts'),
 );
 export const InlineBackend = Capability.lazyModule(
   'InlineBackend',
-  { provides: [FileCapabilities.Backend], activatesOn: FileEvents.Start, environments: ['node', 'workerd'] },
+  {
+    provides: [FileCapabilities.Backend],
+    activatesOn: FileEvents.Start,
+    environments: ['browser', 'node', 'tauri', 'workerd'],
+  },
   () => import('./inline-backend.ts'),
 );
 // Browser-only: the `image` editor extension mounts a React tree into the CodeMirror widget via
 // `react-dom/client`.
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
-  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start, environments: [] },
+  {
+    provides: [MarkdownCapabilities.ExtensionProvider],
+    activatesOn: MarkdownEvents.Start,
+    environments: ['browser', 'tauri'],
+  },
   () => import('./markdown-extension.ts'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
@@ -66,6 +74,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
     'org.dxos.role.article',
     'org.dxos.role.cardContent',
     'org.dxos.role.formInput',
+    'org.dxos.role.objectProperties',
     'org.dxos.role.section',
     'org.dxos.role.slide',
   ],

@@ -4,9 +4,11 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { ObjectCard } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -33,14 +35,11 @@ const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
 
   return (
     <CardContainer icon='ph--text-aa--regular'>
-      <Card.Root border={false}>
-        <Card.Header>
-          <Card.DragHandle />
-          <Card.Title>{Obj.getLabel(subject)}</Card.Title>
-          <Card.Menu />
-        </Card.Header>
+      {/* The host the app uses (a grid card with rails), so the story lays the card out as the app does. */}
+      <ObjectCard.Root border={false}>
+        <ObjectCard.Header subject={subject} />
         <MarkdownCard subject={subject} {...args} />
-      </Card.Root>
+      </ObjectCard.Root>
     </CardContainer>
   );
 };
@@ -101,4 +100,25 @@ const ComparisonStory = () => {
 
 export const Comparison: Story = {
   render: ComparisonStory,
+};
+
+/** The word count spans the card's rails as the snippet does, so both start at the same edge. */
+export const TestWordCountAligned: Story = {
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      async () => {
+        const words = canvasElement.querySelector<HTMLElement>('[data-testid="markdown.card.words"]');
+        const line = canvasElement.querySelector<HTMLElement>('.cm-line');
+        if (!words || !line) {
+          throw new Error('Card not rendered.');
+        }
+        const range = canvasElement.ownerDocument.createRange();
+        range.selectNodeContents(words);
+        const wordsLeft = range.getBoundingClientRect().left;
+        range.selectNodeContents(line);
+        await expect(Math.abs(wordsLeft - range.getBoundingClientRect().left)).toBeLessThanOrEqual(2);
+      },
+      { timeout: 10_000 },
+    );
+  },
 };

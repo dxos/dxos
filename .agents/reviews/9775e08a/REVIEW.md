@@ -12,6 +12,19 @@ reviewId: 9775e08a
 
 _2 error(s), 4 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- 9775e08a-1 - resolved - no-casts - packages/core/compute/assistant/src/session/AiContext.ts:146
+- 9775e08a-2 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/automerge-data-source.test.ts:119
+- 9775e08a-3 - resolved - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/echo-host.test.ts:53
+- 9775e08a-4 - ignored - name-for-general-behavior - packages/core/echo/echo-host/src/db-host/feed-data-source.ts:34
+- 9775e08a-5 - ignored - comment-hygiene - packages/core/echo/echo-host/src/db-host/query-invalidation.test.ts:268
+- 9775e08a-6 - ignored - declare-optional-services-with-noop-layers - packages/plugins/plugin-space/src/operations/add-type.ts:38
+
+## Issues
+
 # ERROR 9775e08a-1 no-casts `packages/core/compute/assistant/src/session/AiContext.ts:146`
 
 System One judges this a likely violation of `no-casts` (No casts to silence the type-checker), p=0.92. The likeliest place is lines 146-157 (`await this._updateBindings(this.#bindingsQuery!.results);`, location confidence 0.97). This is a single-shot classifier: confirm against the rule before acting.
@@ -35,3 +48,19 @@ System One judges this a likely violation of `comment-hygiene` (Comments state s
 # WARN 9775e08a-6 declare-optional-services-with-noop-layers `packages/plugins/plugin-space/src/operations/add-type.ts:38`
 
 System One judges this a likely violation of `declare-optional-services-with-noop-layers` (An optional service is a declared requirement plus a noop layer, never a callback), p=0.81. The likeliest place is lines 38-49 (`const pluginManager = yield* Effect.serviceOption(Plugin.Service);`, location confidence 0.99). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `39a37c1da661f101f7b00f7c4570e815bb9f641a`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 6 violations written to fragments, 356 uncertain, 322 clean, 0 unanswered
+
+```text
+requests: 452 (238 verdicts re-asked with context the model requested)
+estimated input tokens: 4148757
+billed input tokens: 4062839 (cost $0.1706)
+measured chars per token: 3.06
+```

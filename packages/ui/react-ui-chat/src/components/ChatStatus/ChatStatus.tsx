@@ -75,7 +75,7 @@ const Root = forwardRef<ChatStatusController, RootProps>(
 
     return (
       <ChatStatusProvider elapsed={elapsed} running={running}>
-        <span className={mx('inline-flex items-center gap-2 text-description font-mono tabular-nums', classNames)}>
+        <span className={mx('inline-flex items-center gap-2 text-fg-muted font-mono tabular-nums', classNames)}>
           {children}
         </span>
       </ChatStatusProvider>

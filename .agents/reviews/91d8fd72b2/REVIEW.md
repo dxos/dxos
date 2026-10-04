@@ -12,6 +12,19 @@ reviewId: 91d8fd72b2
 
 _0 error(s), 6 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- 91d8fd72b2-1 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-trace/src/components/Gantt/Gantt.tsx:307
+- 91d8fd72b2-2 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui-trace/src/components/Gantt/Gantt.tsx:351
+- 91d8fd72b2-3 - ignored - extract-non-rendering-logic-from-component - packages/ui/react-ui-trace/src/components/Gantt/Gantt.tsx:545
+- 91d8fd72b2-4 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components.tsx:51
+- 91d8fd72b2-5 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/experimental.stories.tsx:12
+- 91d8fd72b2-6 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/experimental.stories.tsx:59
+
+## Issues
+
 # WARN 91d8fd72b2-1 no-styling-wrapper-divs `packages/ui/react-ui-trace/src/components/Gantt/Gantt.tsx:307`
 
 System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`), p=0.89. The likeliest place is lines 307-330 (`return (`, location confidence 0.43). This is a single-shot classifier: confirm against the rule before acting.
@@ -35,3 +48,19 @@ System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes co
 # WARN 91d8fd72b2-6 design-tokens-not-raw-spacing-sizing `packages/ui/react-ui/src/next/experimental.stories.tsx:59`
 
 System One judges this a likely violation of `design-tokens-not-raw-spacing-sizing` (Spacing and sizing come from the design system's tokens, not raw Tailwind or arbitrary values), p=0.82. The likeliest place is lines 59-71 (`const meta = {`, location confidence 0.57). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `bbce297f257473f2bb555481624672188ec7ddef`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 6 violations written to fragments, 138 uncertain, 150 clean, 0 unanswered
+
+```text
+requests: 203 (100 verdicts re-asked with context the model requested)
+estimated input tokens: 2288010
+billed input tokens: 2245828 (cost $0.0943)
+measured chars per token: 3.06
+```

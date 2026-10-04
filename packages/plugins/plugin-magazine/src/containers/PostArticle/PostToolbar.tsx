@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import React from 'react';
 
 import { Panel } from '@dxos/react-ui';
@@ -109,9 +109,9 @@ export const PostToolbar = ({
   );
 
   return (
-    <Panel.Toolbar asChild>
+    <Panel.Header>
       <ActionToolbar {...menuActions} attendableId={attendableId} />
-    </Panel.Toolbar>
+    </Panel.Header>
   );
 };
 

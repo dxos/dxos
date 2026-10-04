@@ -6,28 +6,16 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import type * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import * as Scope from 'effect/Scope';
-import * as Semaphore from 'effect/Semaphore';
-import * as Stream from 'effect/Stream';
-import type * as Types from 'effect/Types';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Rpc from 'effect/unstable/rpc/Rpc';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import type * as Stream from 'effect/Stream';
 
-import { Annotation, type Type } from '@dxos/echo';
-import { SchemaAST } from '@dxos/effect';
-import { assertArgument } from '@dxos/invariant';
-import { DXN, type SpaceId, URI } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { Annotation } from '@dxos/echo';
+import { type SpaceId, URI } from '@dxos/keys';
 import type { SerializedError } from '@dxos/protocols';
 
-import { InvalidOperationInputError } from './errors.ts';
 import * as Operation from './Operation.ts';
-import * as OperationHandlerSet from './OperationHandlerSet.ts';
-import * as StorageService from './StorageService.ts';
 import * as Trace from './Trace.ts';
 
 //
@@ -37,113 +25,6 @@ import * as Trace from './Trace.ts';
 /** Opaque process id (arbitrary string). */
 export const ID = Schema.String.pipe(Schema.brand('ProcessId'));
 export type ID = Schema.Schema.Type<typeof ID>;
-
-/**
- * A running process callbacks.
- *
- * Process lifecycle: Initial -> Running <-> Suspended -> Terminated.
- *
- * - onSpawn -> called once when the process is spawned.
- * - onInput -> called for every input submitted to the process.
- * - onAlarm -> called for processes scheduling alarms.
- * - onChildEvent -> called when child process produces output or exits.
- */
-export interface Callbacks<_Input, _Output, _Requirements, _Rpcs extends Rpc.Any> {
-  /**
-   * Called when the process is spawned.
-   * Not called for processes that are resumed from a previously suspended state.
-   *
-   * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
-   * @throws Throwing in the handler will terminate the process with an error.
-   *
-   * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
-   */
-  onSpawn(): Effect.Effect<void, never, _Requirements | BaseServices>;
-
-  /**
-   * Called when there's input available to process.
-   *
-   * The function can be called in parallel.
-   *
-   * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
-   * @throws Throwing in the handler will terminate the process with an error.
-   *
-   * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
-   */
-  onInput(input: _Input): Effect.Effect<void, never, _Requirements | BaseServices>;
-
-  /**
-   * Called when the process's alarm is triggered.
-   *
-   * @throws Throwing in the handler will terminate the process with an error.
-   */
-  onAlarm(): Effect.Effect<void, never, _Requirements | BaseServices>;
-
-  /**
-   * Called when the process's child process produces output or exits.
-   *
-   * This allows the parent process to hibernate while a long-running child process is running.
-   */
-  onChildEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, _Requirements | BaseServices>;
-
-  /**
-   * Handlers for the RPCs provided by the process.
-   */
-  rpcHandlers: Context.Context<Rpc.ToHandler<_Rpcs>>;
-}
-
-/**
- * Services that are always available to all processes.
- * Provided unconditionally by the runtime, so handlers may use them without declaring them
- * in {@link MakeProcessOpts.services}.
- */
-export type BaseServices = Trace.TraceService | StorageService.StorageService;
-
-export type ChildEvent<T> =
-  | {
-      readonly _tag: 'output';
-      readonly pid: ID;
-      readonly data: T;
-    }
-  | {
-      readonly _tag: 'exited';
-      readonly pid: ID;
-      readonly result: Exit.Exit<void>;
-    };
-
-export interface ProcessContext<I, O> {
-  readonly id: ID;
-
-  /**
-   * Parameters assigned during process creation.
-   */
-  readonly params: Params;
-
-  /**
-   * Complete this process with sucessful result.
-   * No additional events will be pushed to the process.
-   */
-  succeed(): void;
-
-  /**
-   * Complete this process with an error.
-   * No additional events will be pushed to the process.
-   */
-  fail(error: Error): void;
-
-  /**
-   * Submit output of the process.
-   */
-  submitOutput(output: O): void;
-
-  /**
-   * Set an alarm for the process to be woken up later. `onAlarm` runs with the process's own
-   * context, not the caller's: an alarm scheduled from inside a handler does not nest under it.
-   *
-   * @param timeout - Optional timeout in milliseconds. If not provided, the process is woken up as soon as possible.
-   */
-  setAlarm(timeout?: number): Effect.Effect<void>;
-}
 
 /**
  * Generic parameters for a all processes.
@@ -199,283 +80,8 @@ export const HarnessHostAnnotation = Annotation.make({
 });
 
 /** Whether `info` is a conversation's agent process (stamped {@link HarnessHostAnnotation} at spawn). */
-export const isHarnessHost = (info: Pick<Info, 'params'>): boolean =>
+export const isHarnessHost = (info: Pick<Process, 'params'>): boolean =>
   Option.getOrElse(Annotation.getDictionary(info.params.annotations, HarnessHostAnnotation), () => false);
-
-//
-// Executable.
-//
-
-export const ProcessTypeId = '~@dxos/functions/Process' as const;
-export type ProcessTypeId = typeof ProcessTypeId;
-
-/**
- * A process (factory).
- * Can be instantiated mutlitple times to produce new runtime instance with separate state and callbacks.
- * `create` is used to instantiate a new process.
- * Can store runtime state in scope of `create` function.
- */
-export interface Process<
-  _Input,
-  _Output,
-  _Requirements = never,
-  _Rpcs extends Rpc.Any = never,
-> extends Process.Variance<_Input, _Output, _Requirements, _Rpcs> {
-  /**
-   * Unique identifier for the executable in the reverse DNS format.
-   */
-  readonly key: string;
-
-  /**
-   * Human-readable label from {@link MakeExecutableOpts.name} when provided.
-   */
-  readonly name?: string;
-
-  readonly services: readonly Context.Key<any, any>[];
-
-  /**
-   * Codecs for the process's inputs and outputs, from {@link MakeProcessOpts}. Exposed on the
-   * interface so a caller that moves a value across a boundary (a remote runtime) can encode it
-   * with the definition's own schema rather than assuming the value is already JSON.
-   */
-  readonly input: Schema.Codec<_Input, any>;
-  readonly output: Schema.Codec<_Output, any>;
-
-  /** Schemas to register with the process's database; see {@link MakeProcessOpts.types}. */
-  readonly types?: readonly Type.AnyEntity[];
-
-  // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
-  // argument (and `Callbacks.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
-  // structural fields would block `Process<…, never>` from being assignable to `Process.Any`.
-  // The precise group is carried by the covariant `Variance` phantom and recovered at `spawn`.
-  // See design spec §4.4.
-  readonly rpcs: RpcGroup.RpcGroup<any>;
-
-  /**
-   * Create a new instance of the process.
-   */
-  create(
-    ctx: ProcessContext<_Input, _Output>,
-  ): Effect.Effect<Callbacks<_Input, _Output, _Requirements, any>, never, _Requirements | BaseServices | Scope.Scope>;
-}
-
-export const isProcess = (executable: unknown): executable is Process.Any =>
-  typeof executable === 'object' && executable !== null && ProcessTypeId in executable;
-
-export namespace Process {
-  export interface Variance<_Input, _Output, _Requirements, _Rpcs> {
-    readonly [ProcessTypeId]: {
-      readonly _Input: Types.Contravariant<_Input>;
-      readonly _Output: Types.Covariant<_Output>;
-      readonly _Requirements: Types.Covariant<_Requirements>;
-
-      // Phantom-covariant: lets `never`-RPC processes stay assignable to `Process.Any` while
-      // `spawn` still recovers the precise group from this slot. See design spec §4.4.
-      readonly _Rpcs: Types.Covariant<_Rpcs>;
-    };
-  }
-
-  export type Any = Process<any, any, any, any>;
-}
-
-export interface MakeProcessOpts {
-  /**
-   * Unique identifier for the process in the reverse DNS format.
-   */
-  readonly key: string;
-
-  readonly input: Schema.Codec<any, any>;
-  readonly output: Schema.Codec<any, any>;
-  readonly services: readonly Context.Key<any, any>[];
-  readonly rpcs?: RpcGroup.RpcGroup<any>;
-
-  /**
-   * Schemas the process's own data model needs, registered with its database at spawn.
-   *
-   * Declared here beside `services` because a host cannot know them: it resolves a process by key
-   * and has no view of the types that process queries. Unregistered, a TYPED query silently matches
-   * nothing — a queue append succeeds and the read back returns empty, which reads as a lost write
-   * rather than a missing schema.
-   */
-  readonly types?: readonly Type.AnyEntity[];
-}
-
-export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts, Opts>>(
-  opts: Opts,
-  create: (
-    ctx: ProcessContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
-  ) => Effect.Effect<
-    Partial<
-      Callbacks<
-        Schema.Schema.Type<Opts['input']>,
-        Schema.Schema.Type<Opts['output']>,
-        Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
-        RpcGroup.Rpcs<Opts['rpcs']>
-      >
-    >,
-    never,
-    Context.Service.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
-  >,
-): Process<
-  Schema.Schema.Type<Opts['input']>,
-  Schema.Schema.Type<Opts['output']>,
-  Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
-  RpcGroup.Rpcs<Opts['rpcs']>
-> => {
-  assertArgument(/^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key), 'key', 'Invalid key');
-  return {
-    [ProcessTypeId]: {} as any,
-    ...opts,
-    rpcs: opts.rpcs ?? RpcGroup.make(),
-    create: (ctx) =>
-      create(ctx).pipe(
-        Effect.map((partial) => ({
-          onSpawn: () => Effect.void,
-          onInput: () => Effect.void,
-          onAlarm: () => Effect.void,
-          onChildEvent: () => Effect.void,
-          ...partial,
-          rpcHandlers: sanitizeRpcs(opts.rpcs, partial.rpcHandlers),
-        })),
-      ),
-  };
-};
-
-// Returns `Context.Context<any>`: the runtime handler bag is stored untyped because
-// `Callbacks.rpcHandlers` is contravariant in `_Rpcs` (see design spec §4.4); the precise
-// handler contract is enforced by `make`'s `create` parameter, not by this internal helper.
-const sanitizeRpcs = <Rpcs extends Rpc.Any>(
-  defined: RpcGroup.RpcGroup<Rpcs> | undefined,
-  provided: Context.Context<Rpc.ToHandler<Rpcs>> | undefined,
-): Context.Context<any> => {
-  // Handlers are required only when a non-empty RPC group is declared.
-  const needsRpcs = defined !== undefined && defined.requests.size > 0;
-  if (!needsRpcs) {
-    // `Context.empty()` is `Context<never>`; `Context`'s requirement parameter is contravariant,
-    // so the empty (no-handler) context needs widening to the untyped bag.
-    return provided ?? (Context.empty() as Context.Context<any>);
-  }
-  if (!provided) {
-    throw new TypeError('Process declared RPCs but did not provide any handlers');
-  }
-  return provided;
-};
-
-/**
- * Durable marker recording that an operation's input handler has begun executing.
- * Persisted before the handler runs so that, after an interruption (suspend/restart), a
- * re-delivered input can tell that the previous attempt was in-flight. Cleared automatically
- * when the process reaches a terminal state (the runtime clears the process's storage).
- */
-const OperationStartedCell = StorageService.cell(Schema.fromJsonString(Schema.Boolean), 'operation/started').pipe(
-  StorageService.withDefault(() => false),
-);
-
-export const fromOperation = <const Op extends Operation.Definition.Any>(
-  op: Op,
-  handler: OperationHandlerSet.OperationHandlerSet,
-): Process<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
-  make(
-    {
-      key: DXN.getName(op.meta.key),
-      input: op.input,
-      output: op.output,
-      services: op.services,
-    },
-    (ctx) =>
-      Effect.gen(function* () {
-        const semaphore = yield* Semaphore.make(1);
-        // The process runtime assumes handlers are idempotent and always re-delivers an input
-        // whose handler was interrupted. Non-idempotent operations opt out of that retry here:
-        // a re-delivery that observes the durable "started" marker fails instead of repeating
-        // side effects. Idempotent operations skip the marker and are simply re-run.
-        const idempotent = Operation.isIdempotent(op);
-
-        return {
-          onInput: (input: Operation.Definition.Input<Op>) =>
-            Effect.gen(function* () {
-              if (!idempotent) {
-                const started = yield* OperationStartedCell.get;
-                if (started) {
-                  return yield* Effect.die(
-                    new Error(`non-idempotent operation "${op.meta.key}" was interrupted; cannot retry safely`),
-                  );
-                }
-                yield* OperationStartedCell.set(true);
-              }
-
-              // Emit operation start event.
-              log('operation process invoking', { key: op.meta.key, name: op.meta.name });
-              yield* Trace.write(Trace.OperationStart, {
-                key: op.meta.key,
-                name: op.meta.name,
-                icon: op.meta.icon,
-              });
-              // Emit ephemeral operation input event for live subscribers
-              // (history tracker, devtools) without persisting raw input.
-              yield* Trace.write(Trace.OperationInput, {
-                key: op.meta.key,
-                name: op.meta.name,
-                input,
-              });
-
-              // A property the schema does not declare is a caller mistake, not a value to drop:
-              // a misspelled field left `query-objects` with no `text` and no `typename`, which
-              // its handler read as "match everything" and returned as a successful search. The
-              // edge path validates the same way in `wrapFunctionHandler`; validating here too
-              // keeps a local invocation and a remote one to one contract.
-              yield* validateOperationInput(op, input);
-
-              const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
-              const output = yield* opHandler
-                .handler(input)
-                .pipe(Effect.orDie, Effect.withSpan(op.meta.key)) as Effect.Effect<
-                Operation.Definition.Output<Op>,
-                never,
-                never
-              >;
-
-              ctx.submitOutput(output);
-              ctx.succeed();
-
-              // Emit ephemeral operation output event before the persisted
-              // end event so subscribers see output + completion together.
-              yield* Trace.write(Trace.OperationOutput, {
-                key: op.meta.key,
-                name: op.meta.name,
-                output,
-              });
-              // Emit operation end event with success after side-effects complete.
-              yield* Trace.write(Trace.OperationEnd, {
-                key: op.meta.key,
-                name: op.meta.name,
-                icon: op.meta.icon,
-                outcome: 'success',
-              });
-            }).pipe(
-              Effect.catchDefect((defect) =>
-                Effect.gen(function* () {
-                  // Emit operation end event with failure. Carry the error's stable name as `errorCode`
-                  // so consumers can match on the failure kind (e.g. a run-again yield) without parsing
-                  // the message.
-                  const errorMessage = defect instanceof Error ? defect.message : String(defect);
-                  const errorCode = defect instanceof Error ? defect.name : undefined;
-                  yield* Trace.write(Trace.OperationEnd, {
-                    key: op.meta.key,
-                    name: op.meta.name,
-                    icon: op.meta.icon,
-                    outcome: 'failure',
-                    error: errorMessage,
-                    ...(errorCode ? { errorCode } : {}),
-                  });
-                  return yield* Effect.die(defect);
-                }),
-              ),
-              semaphore.withPermits(1),
-            ),
-        };
-      }),
-  );
 
 /**
  * Runtime state of a process.
@@ -516,12 +122,12 @@ export interface Monitor {
   /**
    * Get the current state of the process tree.
    */
-  processTree: Effect.Effect<readonly Info[]>;
+  processTree: Effect.Effect<readonly Process[]>;
 
   /**
    * Atom for the process tree.
    */
-  processTreeAtom: Atom.Atom<readonly Info[]>;
+  processTreeAtom: Atom.Atom<readonly Process[]>;
 
   /**
    * The process tree narrowed by {@link MonitorFilter} — the read a caller looking for *its* process
@@ -530,7 +136,7 @@ export interface Monitor {
    * The aggregate monitor spans local and remote runtimes, so this answers "is my agent running,
    * wherever it runs" — which is what a UI renders and what a caller holding no handle can ask.
    */
-  list(filter?: MonitorFilter): Effect.Effect<readonly Info[]>;
+  list(filter?: MonitorFilter): Effect.Effect<readonly Process[]>;
 
   /**
    * Stream ephemeral trace messages matching `filter` (DX-1125), sourced from local in-process
@@ -554,7 +160,7 @@ export interface MonitorFilter {
  * Whether `info` satisfies `filter`. Exported so every {@link Monitor} filters identically rather
  * than each implementation growing its own notion of a match.
  */
-export const matchesFilter = (info: Info, filter: MonitorFilter = {}): boolean => {
+export const matchesFilter = (info: Process, filter: MonitorFilter = {}): boolean => {
   if (filter.key !== undefined && info.key !== filter.key) {
     return false;
   }
@@ -578,15 +184,18 @@ export const matchesFilter = (info: Info, filter: MonitorFilter = {}): boolean =
 
 /** {@link Monitor.list} over a tree read, so a monitor implements it by supplying only that read. */
 export const listFromTree =
-  (processTree: Effect.Effect<readonly Info[]>) =>
-  (filter?: MonitorFilter): Effect.Effect<readonly Info[]> =>
+  (processTree: Effect.Effect<readonly Process[]>) =>
+  (filter?: MonitorFilter): Effect.Effect<readonly Process[]> =>
     Effect.map(processTree, (tree) => tree.filter((info) => matchesFilter(info, filter)));
 
 export class ProcessMonitorService extends Context.Service<ProcessMonitorService, Monitor>()(
   '@dxos/functions/ProcessMonitorService',
 ) {}
 
-export interface Info {
+/**
+ * A process: one running (or finished) instance of a durable operation, wherever its runtime runs.
+ */
+export interface Process {
   readonly pid: ID;
   readonly parentPid: ID | null;
 
@@ -667,14 +276,14 @@ export const ExitedEvent = Trace.EventType('process.exited', {
 /**
  * Renders spawned processes as a forest: top-level rows use "- ", nested rows use ├── / └── / │.
  */
-export const prettyProcessTree = (tree: readonly Info[]): string => {
+export const prettyProcessTree = (tree: readonly Process[]): string => {
   if (tree.length === 0) {
     return '';
   }
 
   const pidSet = new Set(tree.map((node) => node.pid));
-  const childrenByParent = new Map<string, Info[]>();
-  const roots: Info[] = [];
+  const childrenByParent = new Map<string, Process[]>();
+  const roots: Process[] = [];
 
   for (const node of tree) {
     const parent = node.parentPid;
@@ -688,13 +297,13 @@ export const prettyProcessTree = (tree: readonly Info[]): string => {
     childrenByParent.set(key, siblings);
   }
 
-  const byPid = (a: Info, b: Info) => String(a.pid).localeCompare(String(b.pid));
+  const byPid = (a: Process, b: Process) => String(a.pid).localeCompare(String(b.pid));
   roots.sort(byPid);
   for (const siblings of childrenByParent.values()) {
     siblings.sort(byPid);
   }
 
-  const formatLabel = (node: Info): string => {
+  const formatLabel = (node: Process): string => {
     const idShort = String(node.pid).slice(0, 6);
     const parts = [idShort, node.state];
     if (node.params.name != null && node.params.name !== '') {
@@ -710,7 +319,7 @@ export const prettyProcessTree = (tree: readonly Info[]): string => {
 
   const lines: string[] = [];
 
-  const walk = (node: Info, prefix: string, isLast: boolean, isRoot: boolean): void => {
+  const walk = (node: Process, prefix: string, isLast: boolean, isRoot: boolean): void => {
     if (isRoot) {
       lines.push(`- ${formatLabel(node)}`);
     } else {
@@ -731,67 +340,3 @@ export const prettyProcessTree = (tree: readonly Info[]): string => {
 
   return lines.join('\n');
 };
-
-/**
- * Reject an operation input the operation's own schema does not admit, naming the offending value.
- *
- * The excess-property check is deliberately top-level only: a misspelled field is the mistake worth
- * catching, and an in-process caller legitimately passes a LIVE ECHO object as a property value,
- * which carries internal keys no declared schema lists. `reportInput` and `errors: 'all'` put the
- * rejected value and every bad field in the message, since a remote caller cannot see its own
- * payload in our logs.
- */
-const validateOperationInput = <const Op extends Operation.Definition.Any>(
-  op: Op,
-  input: unknown,
-): Effect.Effect<void> => {
-  // An input schema that describes no shape cannot say what an excess property would be, and a
-  // caller handing a payload to an operation declaring `Void` is the trigger dispatcher's normal
-  // contract. `Null` is in the set because a `Void` input comes back as `Null` once the operation
-  // has round-tripped through its serialized schema, which is how the dispatcher rebuilds it.
-  const typeAst = Schema.toType(op.input).ast;
-  if (CONTENTLESS_INPUT_TAGS.has(typeAst._tag)) {
-    return Effect.void;
-  }
-
-  const fail = (message: string, cause?: unknown) =>
-    new InvalidOperationInputError({
-      message: `Operation input did not match schema (${op.meta.key}): ${message}`,
-      cause,
-    });
-
-  // Invoking with no arguments is how a skill template and the trigger dispatcher call an operation
-  // whose fields are all optional, so a nullish payload is validated as the empty object it stands
-  // for rather than rejected outright; a schema that does require fields still names them.
-  const payload = input ?? (SchemaAST.isObjects(typeAst) ? {} : input);
-
-  return Effect.suspend(() => {
-    const undeclared = undeclaredTopLevelKeys(typeAst, payload);
-    if (undeclared.length > 0) {
-      return Effect.die(
-        fail(`unexpected ${undeclared.length === 1 ? 'property' : 'properties'} ${undeclared.join(', ')}`),
-      );
-    }
-
-    return Effect.try({
-      try: () => Schema.decodeUnknownSync(Schema.toType(op.input), { reportInput: true, errors: 'all' })(payload),
-      catch: (error: any) => fail(error?.message ?? String(error), error),
-    }).pipe(Effect.asVoid, Effect.orDie);
-  });
-};
-
-/** Own keys of a struct input that the schema does not declare; empty for any other input shape. */
-const undeclaredTopLevelKeys = (typeAst: SchemaAST.AST, input: unknown): string[] => {
-  if (!SchemaAST.isObjects(typeAst) || typeof input !== 'object' || input === null || Array.isArray(input)) {
-    return [];
-  }
-  // An index signature makes every key declared, so there is nothing to reject.
-  if (typeAst.indexSignatures.length > 0) {
-    return [];
-  }
-
-  const declared = new Set(SchemaAST.getPropertySignatures(typeAst).map((prop) => prop.name.toString()));
-  return Object.keys(input).filter((key) => !declared.has(key));
-};
-
-const CONTENTLESS_INPUT_TAGS: ReadonlySet<string> = new Set(['Any', 'Unknown', 'Void', 'Undefined', 'Null', 'Never']);

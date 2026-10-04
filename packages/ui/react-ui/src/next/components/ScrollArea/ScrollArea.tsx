@@ -3,23 +3,23 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
 import { type AllowedAxis } from '@dxos/ui-types';
 
-import { ScrollAreaThumbs } from '../../../components/ScrollArea/ScrollAreaThumbs.tsx';
-import { scrollbar } from '../../../components/ScrollArea/scrollbar.ts';
 import { composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
+import { ScrollAreaThumbs } from './ScrollAreaThumbs.tsx';
+import { scrollbar } from './scrollbar.ts';
 
 type ScrollAreaContextValue = {
   native: boolean;
   setViewport: (viewport: HTMLElement | null) => void;
 };
 
-const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaContextValue>('Next.ScrollArea');
+const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaContextValue>('ScrollArea');
 
 //
 // Root
@@ -35,12 +35,14 @@ export type ScrollAreaRootProps = {
   native?: boolean;
   /** Scrolling axis; `all` scrolls both (the current ScrollArea's values). */
   orientation?: AllowedAxis;
-  /** Overlay thumbs show only while the pointer is over the frame (or a thumb is dragged). */
+  /** Overlay thumbs show only while the pointer is over the frame (or a thumb is dragged); `false` keeps them visible. */
   autoHide?: boolean;
   /** Mandatory snapping on the scrolling axis; children carry their own `scroll-snap-align`. */
   snap?: boolean;
   /** `false` scrolls without any visible bar, overlay or native. */
   scrollbars?: boolean;
+  /** Pixels at the start of the horizontal bar's track left clear, so the bar spans only what scrolls past a sticky column. */
+  trackStart?: number;
 };
 
 /** Tailwind group names the overlay thumbs' `autoHide` hover rule targets (`ScrollAreaThumbs`). */
@@ -61,14 +63,24 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
       width = 'thin',
       native = false,
       orientation = 'vertical',
-      autoHide = false,
+      autoHide = true,
       snap = false,
       scrollbars = true,
+      trackStart,
       ...props
     },
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    // Which axes currently show an overlay thumb, published as `data-overflow-*` so CSS can reserve its strip.
+    const [overflow, setOverflow] = useState({ vertical: false, horizontal: false });
+    const handleOverflowChange = useCallback(
+      (next: { vertical: boolean; horizontal: boolean }) =>
+        setOverflow((current) =>
+          current.vertical === next.vertical && current.horizontal === next.horizontal ? current : next,
+        ),
+      [],
+    );
     const { className, ...rest } = composableProps(props, {
       classNames: [recipes.scrollRoot(), autoHide && AUTO_HIDE_GROUP[orientation]],
     });
@@ -85,6 +97,8 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
           data-orientation={orientation}
           data-snap={snap ? '' : undefined}
           data-scrollbars={scrollbars ? undefined : 'false'}
+          data-overflow-y={overflow.vertical ? '' : undefined}
+          data-overflow-x={overflow.horizontal ? '' : undefined}
           className={className}
           ref={forwardedRef}
         >
@@ -95,6 +109,8 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
               orientation={orientation}
               density={width === 'thin' ? scrollbar.md : scrollbar.lg}
               autoHide={autoHide}
+              trackStart={trackStart}
+              onOverflowChange={handleOverflowChange}
             />
           )}
         </ark.div>
@@ -103,7 +119,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
   },
 );
 
-ScrollAreaRoot.displayName = 'Next.ScrollArea.Root';
+ScrollAreaRoot.displayName = 'ScrollArea.Root';
 
 //
 // Viewport
@@ -114,7 +130,7 @@ export type ScrollAreaViewportProps = {};
 /** The scrolling element; under `asChild` it is the child (e.g. a Container) itself. */
 const ScrollAreaViewport = slottable<HTMLDivElement, ScrollAreaViewportProps>(
   ({ children, asChild, ...props }, forwardedRef) => {
-    const { native, setViewport } = useScrollAreaContext('Next.ScrollArea.Viewport');
+    const { native, setViewport } = useScrollAreaContext('ScrollArea.Viewport');
     const ref = useComposedRefs(forwardedRef, setViewport);
     const { className, ...rest } = composableProps(props, { classNames: recipes.scrollViewport() });
     return (
@@ -133,7 +149,7 @@ const ScrollAreaViewport = slottable<HTMLDivElement, ScrollAreaViewportProps>(
   },
 );
 
-ScrollAreaViewport.displayName = 'Next.ScrollArea.Viewport';
+ScrollAreaViewport.displayName = 'ScrollArea.Viewport';
 
 export const ScrollArea = {
   Root: ScrollAreaRoot,

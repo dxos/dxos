@@ -1,0 +1,61 @@
+/*
+ * Breadcrumb: the trail is one block-tall row that never wraps; when it overflows it scrolls sideways with no
+ * scrollbar (a crumb trail is glanced at, not scrolled through), so it can sit in a header row. Links are subdued
+ * text that takes the base colour on hover; the current page keeps the base colour; separators are faint.
+ */
+
+@layer dx-components {
+  .dx-breadcrumb {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .dx-breadcrumb-list {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    gap: calc(var(--dx-gap-size) / 2);
+    min-width: 0;
+    min-height: var(--dx-block-size);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .dx-breadcrumb-item {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  /* Link and current share the inset, so a crumb's text stays put when it becomes (or stops being) the current page. */
+  .dx-breadcrumb-link,
+  .dx-breadcrumb-current {
+    padding-inline: var(--dx-control-inset);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+    white-space: nowrap;
+  }
+
+  .dx-breadcrumb-link {
+    border-radius: var(--radius-sm, 0.25rem);
+    color: var(--color-fg-muted);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .dx-breadcrumb-link:hover {
+    color: var(--color-fg);
+  }
+
+  .dx-breadcrumb-separator {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    color: var(--color-fg-subtle);
+    opacity: 0.5;
+  }
+}

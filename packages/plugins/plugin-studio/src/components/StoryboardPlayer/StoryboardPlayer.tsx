@@ -4,7 +4,15 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { MediaPlayer, Panel, type ThemedClassName, Toolbar, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  MediaPlayer,
+  Panel,
+  type ThemedClassName,
+  Toolbar,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -41,7 +49,7 @@ export const StoryboardPlayer = ({
   onClose,
 }: StoryboardPlayerProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const toolbarRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLButtonElement>(null);
   const [index, setIndex] = useState(0);
   const clip = clips[index];
   const isVideo = clip?.contentType?.startsWith('video/') ?? false;
@@ -61,7 +69,7 @@ export const StoryboardPlayer = ({
   }, [clip, isVideo, advance, stillMs]);
 
   // Opening the player unmounts whatever control opened it, which drops focus to the body; the
-  // toolbar takes it back so the plank stays attended (attention follows focus into an attendable)
+  // toolbar's first control takes it back so the plank stays attended (attention follows focus into an attendable)
   // and the transport is a key away. The attendable attributes mark the panel as that attention's
   // surface, which is what draws the attention ring.
   const attentionAttributes = useAttentionAttributes(attendableId);
@@ -75,17 +83,18 @@ export const StoryboardPlayer = ({
 
   return (
     <Panel.Root {...composableProps({ classNames }, attentionAttributes)}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root ref={toolbarRef} tabIndex={-1} classNames='outline-none'>
+      <Panel.Header>
+        <Toolbar.Root>
           {/* Laid out by hand — nav + position, the title centred, close — as one grid child rather
               than a grid on the root: the root brackets its children with focus sentinels, which
               would take the first and last cells. */}
           <div className='grow grid grid-cols-[auto_1fr_auto] items-center gap-1'>
             <div className='flex items-center gap-1'>
-              <Toolbar.IconButton
+              <Button
                 iconOnly
                 icon='ph--caret-left--regular'
-                density='sm'
+                size='sm'
+                ref={toolbarRef}
                 label={t('previous-frame.label')}
                 disabled={index === 0}
                 onClick={() => setIndex((current) => Math.max(0, current - 1))}
@@ -93,10 +102,10 @@ export const StoryboardPlayer = ({
               <span className='tabular-nums whitespace-nowrap'>
                 {index + 1} / {clips.length}
               </span>
-              <Toolbar.IconButton
+              <Button
                 iconOnly
                 icon='ph--caret-right--regular'
-                density='sm'
+                size='sm'
                 label={t('next-frame.label')}
                 disabled={index + 1 >= clips.length}
                 onClick={advance}
@@ -104,7 +113,7 @@ export const StoryboardPlayer = ({
             </div>
             <span className='min-w-0 truncate text-center'>{clip.name}</span>
             <div className='flex justify-end'>
-              <Toolbar.IconButton
+              <Button
                 iconOnly
                 icon='ph--x--regular'
                 label={t('close.label')}
@@ -114,8 +123,8 @@ export const StoryboardPlayer = ({
             </div>
           </div>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='bg-scrim-surface'>
+      </Panel.Header>
+      <Panel.Body classNames='bg-scrim-surface'>
         {/* Keyed by clip so the element remounts and autoplays the next source. */}
         <MediaPlayer
           key={clip.id}
@@ -127,7 +136,7 @@ export const StoryboardPlayer = ({
           alt={clip.name}
           onEnded={advance}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

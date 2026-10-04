@@ -13,7 +13,7 @@ import { Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -64,43 +64,34 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
   );
 
   return (
-    <Panel.Root>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
-              <Form.Viewport>
-                <Form.Content>
-                  <Form.FieldSet label={t('connections.label')} description={t('connections.description')}>
-                    <Form.Field
-                      standalone
-                      label={t('add-connection.label')}
-                      description={t('connect-service.description')}
-                    >
-                      <Button onClick={handleAdd}>{t('connect.label')}</Button>
-                    </Form.Field>
-                  </Form.FieldSet>
+    <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.FieldSet label={t('connections.label')} description={t('connections.description')}>
+            <Form.Field standalone label={t('add-connection.label')} description={t('connect-service.description')}>
+              <Button onClick={handleAdd}>{t('connect.label')}</Button>
+            </Form.Field>
+          </Form.FieldSet>
 
-                  {connections.length > 0 && (
-                    <Form.FieldSet label={t('connections.label')}>
-                      <Listbox.Root>
-                        <Listbox.Viewport>
-                          <Listbox.Content aria-label={t('connections.label')}>
-                            {connections.map((connection) => (
-                              <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
-                            ))}
-                          </Listbox.Content>
-                        </Listbox.Viewport>
-                      </Listbox.Root>
-                    </Form.FieldSet>
-                  )}
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
-    </Panel.Root>
+          {connections.length > 0 && (
+            <Form.FieldSet label={t('connections.label')}>
+              <Listbox.Root
+                items={connections.map((connection) => ({
+                  value: connection.id,
+                  label: connection.name ?? connection.connectorId ?? connection.id,
+                }))}
+              >
+                <Listbox.Content aria-label={t('connections.label')}>
+                  {connections.map((connection) => (
+                    <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
+            </Form.FieldSet>
+          )}
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 

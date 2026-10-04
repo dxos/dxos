@@ -14,6 +14,8 @@ mod window_state;
 mod xattr_cmd;
 #[cfg(target_os = "macos")]
 mod menubar;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+mod passkey;
 #[cfg(target_os = "macos")]
 mod spotlight;
 mod web_process;
@@ -104,6 +106,11 @@ pub fn run() {
     #[cfg(all(not(debug_assertions), desktop))]
     let port_taken = !port_available(localhost_port);
 
+    #[cfg(target_os = "macos")]
+    let native_passkeys = passkey::available(&context.config().identifier);
+    #[cfg(target_os = "ios")]
+    let native_passkeys = passkey::ios::bridge::available();
+
     let builder = tauri::Builder::default()
         .manage(asset_cache::AssetCacheState::default())
         // Custom URI scheme: serves cached third-party plugin assets so plugins keep
@@ -140,9 +147,18 @@ pub fn run() {
 
     // Initialize tauri-nspanel plugin for macOS spotlight panel.
     #[cfg(target_os = "macos")]
-    let builder = builder
-        .plugin(tauri_nspanel::init())
-        .plugin(tauri_plugin_macos_passkey::init());
+    let builder = builder.plugin(tauri_nspanel::init());
+
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    let builder = builder.plugin(passkey::init(native_passkeys));
+
+    // Unregistered, a stray `invoke` fails at once instead of opening a sheet that never returns.
+    #[cfg(target_os = "macos")]
+    let builder = if native_passkeys {
+        builder.plugin(tauri_plugin_macos_passkey::init())
+    } else {
+        builder
+    };
 
     // Initialize haptics plugin for mobile platforms.
     // Initialize web-auth plugin for mobile (ASWebAuthenticationSession on iOS, Custom Tabs on Android).
@@ -231,6 +247,10 @@ pub fn run() {
         audio_input::start_microphone_bridge,
         #[cfg(target_os = "ios")]
         audio_input::stop_microphone_bridge,
+        #[cfg(target_os = "ios")]
+        passkey::ios::bridge::login_passkey,
+        #[cfg(target_os = "ios")]
+        passkey::ios::bridge::register_passkey,
         web_process::take_web_process_terminations,
     ]);
 
@@ -268,6 +288,18 @@ pub fn run() {
                     .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(3))
                     .build(),
             )?;
+
+            #[cfg(target_os = "macos")]
+            if !native_passkeys {
+                log::warn!(
+                    "native passkeys disabled: the signed application identifier does not name {}",
+                    app.config().identifier
+                );
+            }
+            #[cfg(target_os = "ios")]
+            if !native_passkeys {
+                log::warn!("native passkeys disabled: the passkey bridge is not built into this app");
+            }
 
             // Desktop: create window pointing at localhost plugin (production) or Vite dev server (dev).
             // SharedWorker requires HTTP origin, so desktop uses External URL.

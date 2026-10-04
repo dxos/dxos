@@ -27,7 +27,7 @@ export type PipelineStatusProps = {
 export const PipelineStatus = ({ phase = 'idle', stages, telemetry, summary }: PipelineStatusProps) => (
   <div className='flex flex-col gap-3 overflow-y-auto p-2 text-sm'>
     <Section title='Status'>
-      <div className='grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-description'>
+      <div className='grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-fg-muted'>
         <span>Mic</span>
         <span>{phase === 'recording' ? '● on' : '○ off'}</span>
         <span>Pipeline</span>
@@ -37,7 +37,7 @@ export const PipelineStatus = ({ phase = 'idle', stages, telemetry, summary }: P
 
     {stages && (
       <Section title='Stages'>
-        <div className='text-description'>{stages.join(' → ') || '(none)'}</div>
+        <div className='text-fg-muted'>{stages.join(' → ') || '(none)'}</div>
       </Section>
     )}
 
@@ -47,8 +47,8 @@ export const PipelineStatus = ({ phase = 'idle', stages, telemetry, summary }: P
           {telemetry.map((event, index) => (
             <Fragment key={index}>
               <span>{event.stageId}</span>
-              <span className='text-description'>{event.outcome}</span>
-              <span className='text-right tabular-nums text-description'>{event.durationMs}ms</span>
+              <span className='text-fg-muted'>{event.outcome}</span>
+              <span className='text-right tabular-nums text-fg-muted'>{event.durationMs}ms</span>
             </Fragment>
           ))}
         </div>
@@ -57,7 +57,7 @@ export const PipelineStatus = ({ phase = 'idle', stages, telemetry, summary }: P
 
     {summary && (
       <Section title='Summary'>
-        <p className='text-description'>{summary}</p>
+        <p className='text-fg-muted'>{summary}</p>
       </Section>
     )}
   </div>

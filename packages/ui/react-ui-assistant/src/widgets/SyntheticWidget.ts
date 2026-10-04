@@ -26,7 +26,7 @@ export class SyntheticWidget extends WidgetType {
 
   override toDOM() {
     return Domino.of('div')
-      .classNames('border border-subdued-separator rounded-md dx-base-surface text-sm p-1')
+      .classNames('border border-separator-subtle rounded-md dx-base-surface text-sm p-1')
       .append(
         Domino.of('div')
           .classNames('grid grid-cols-[24px_1fr] gap-x-0.5 items-start')
@@ -35,7 +35,7 @@ export class SyntheticWidget extends WidgetType {
             // many follow it, and `1lh` tracks the text's own line-height rather than restating it.
             Domino.of('div')
               .classNames('flex h-[1lh] shrink-0 items-center justify-center self-start')
-              .append(Domino.svg('ph--lightning--regular').classNames('shrink-0 size-4 text-description')),
+              .append(Domino.svg('ph--lightning--regular').classNames('shrink-0 size-4 text-fg-muted')),
             // `items-start`, not centred: past `max-h` the box scrolls, and centred overflow puts
             // the first lines above the scroll origin where they cannot be reached.
             //
@@ -44,7 +44,7 @@ export class SyntheticWidget extends WidgetType {
             Domino.of('div')
               .classNames(
                 'flex items-start max-h-[5lh] overflow-y-auto dx-scrollbar-thin',
-                'text-description whitespace-pre-wrap',
+                'text-fg-muted whitespace-pre-wrap',
               )
               .text(this.text)
               .attributes({ 'data-synthetic-text': '' }),
