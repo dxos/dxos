@@ -11,6 +11,7 @@
 import { Dialog as DialogPrimitive, useDialog } from '@ark-ui/react/dialog';
 import { ark } from '@ark-ui/react/factory';
 import { Portal } from '@ark-ui/react/portal';
+import { ariaHidden } from '@zag-js/aria-hidden';
 import { trackDismissableElement } from '@zag-js/dismissable';
 import { trapFocus } from '@zag-js/focus-trap';
 import React, {
@@ -258,10 +259,11 @@ type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPri
   };
 
 /**
- * Attaches what the machine would have — Escape and outside-interaction dismissal, the focus trap and
- * the initial focus — to content that mounted after the machine looked for it (see `settledRef`). The same zag
- * primitives the machine uses, so the content joins the shared layer stack: Escape in a nested
- * popover still closes only the popover.
+ * Attaches what the machine would have — Escape and outside-interaction dismissal, the focus trap,
+ * the initial focus, the hidden background and the title/description wiring — to content that
+ * mounted after the machine looked for it (see `settledRef`). The same zag primitives the machine
+ * uses, so the content joins the shared layer stack: Escape in a nested popover still closes only
+ * the popover.
  */
 const useLateContent = (contentRef: RefObject<HTMLDivElement | null>) => {
   const { modal, role, onOpenChange, handlersRef, settledRef } = useDialogContext(DIALOG_CONTENT_NAME);
@@ -281,9 +283,21 @@ const useLateContent = (contentRef: RefObject<HTMLDivElement | null>) => {
       getInitialFocusEl(content, prevents(handlersRef.current.onOpenAutoFocus)) ??
       content.querySelector<HTMLElement>(TABBABLE) ??
       content;
+    // The machine checks once, in its first frame, which parts rendered; a late title and description
+    // are wired here instead.
+    const label = (part: 'title' | 'description', attribute: 'aria-labelledby' | 'aria-describedby') => {
+      const id = content.querySelector(`[data-scope="dialog"][data-part="${part}"]`)?.id;
+      if (id && !content.hasAttribute(attribute) && !content.hasAttribute('aria-label')) {
+        content.setAttribute(attribute, id);
+      }
+    };
+    label('title', 'aria-labelledby');
+    label('description', 'aria-describedby');
     const untrack = trackDismissableElement(content, {
       type: 'dialog',
       pointerBlocking: modal,
+      // As the machine's own layer: a press on a trigger toggles the dialog rather than dismissing it.
+      exclude: () => Array.from(document.querySelectorAll<HTMLElement>(`[aria-controls="${CSS.escape(content.id)}"]`)),
       onEscapeKeyDown: (event) => handlersRef.current.onEscapeKeyDown?.(event),
       onPointerDownOutside: (event) => handlersRef.current.onPointerDownOutside?.(event),
       onFocusOutside: (event) => {
@@ -306,6 +320,7 @@ const useLateContent = (contentRef: RefObject<HTMLDivElement | null>) => {
       initialFocus().focus({ preventScroll: true });
       return untrack;
     }
+    const unhide = ariaHidden([content]);
     const untrap = trapFocus(content, {
       initialFocus,
       preventScroll: true,
@@ -314,6 +329,7 @@ const useLateContent = (contentRef: RefObject<HTMLDivElement | null>) => {
     });
     return () => {
       untrap();
+      unhide();
       untrack();
     };
   }, [late, modal, role, onOpenChange, contentRef, handlersRef]);

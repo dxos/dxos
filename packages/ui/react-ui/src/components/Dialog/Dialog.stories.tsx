@@ -394,6 +394,12 @@ export const TestLazyContent: StoryObj = {
     await waitFor(async () => expect(document.activeElement?.getAttribute('placeholder')).toBe('Late field'), {
       timeout: 3_000,
     });
+    // Named by its late title, and the page behind it hidden from assistive technology.
+    const dialog = dialogElement();
+    invariant(dialog);
+    const labelledBy = dialog.getAttribute('aria-labelledby');
+    await expect(labelledBy && document.getElementById(labelledBy)?.textContent).toBe('Lazy dialog');
+    await waitFor(async () => expect(document.querySelector('[data-aria-hidden]')).not.toBeNull());
     await userEvent.keyboard('{Escape}');
     await waitFor(async () => expect(dialogElement()).toBeNull());
   },

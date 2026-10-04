@@ -708,6 +708,9 @@ catalogs:
     '@xyflow/react':
       specifier: ^12.8.1
       version: 12.8.1
+    '@zag-js/aria-hidden':
+      specifier: ^1.43.3
+      version: 1.43.3
     '@zag-js/core':
       specifier: ^1.43.3
       version: 1.43.3
@@ -21066,6 +21069,9 @@ importers:
       '@internationalized/date':
         specifier: 'catalog:'
         version: 3.12.3
+      '@zag-js/aria-hidden':
+        specifier: 'catalog:'
+        version: 1.43.3
       '@zag-js/core':
         specifier: 'catalog:'
         version: 1.43.3

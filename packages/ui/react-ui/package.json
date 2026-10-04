@@ -71,6 +71,7 @@
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@internationalized/date": "catalog:",
+    "@zag-js/aria-hidden": "catalog:",
     "@zag-js/core": "catalog:",
     "@zag-js/dismissable": "catalog:",
     "@zag-js/focus-trap": "catalog:",

@@ -50,10 +50,10 @@ export const Commands = {
     throw new Error(`palette never highlighted ${testId}`);
   },
 
-  /** Resolves once the app has fetched the chunk built from `module` — the idle preload, for a dialog. */
+  /** Resolves once the app has loaded the chunk built from `module` — the idle preload, for a dialog. */
   waitForPreload: async (host: AppManager, module: 'CommandsDialogContent' | 'SearchDialog') => {
     await expect
-      .poll(() => [...host.requestedScripts()].some((pathname) => pathname.startsWith(`/assets/${module}-`)), {
+      .poll(() => [...host.loadedScripts()].some((pathname) => pathname.startsWith(`/assets/${module}-`)), {
         timeout: PRELOAD_TIMEOUT,
       })
       .toBe(true);
