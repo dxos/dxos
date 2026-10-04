@@ -24,6 +24,7 @@ import {
   statusTextStyle,
 } from '../../util/status-icons.ts';
 import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
+import { TaskMnemonic } from '../TaskList/TaskRowCells.tsx';
 
 /** The glyph for an estimate, which the list renders as letters and has none of its own. */
 const ESTIMATE_ICON = 'ph--ruler--regular';
@@ -73,6 +74,16 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
         <Typography asChild tone='subtle' classNames='text-sm'>
           <h2>{t('task-properties.label')}</h2>
         </Typography>
+        {/* The task's reference first: what names it, and the button that copies it, in the glyph column. */}
+        <div
+          className={mx(TASK_GRID, 'items-center min-h-(--dx-control-sm) min-w-0')}
+          data-testid='taskList.property.reference'
+        >
+          <div className={TASK_GRID_ICON}>
+            <TaskMnemonic task={task} />
+          </div>
+          <span className='min-w-0 pe-1.5 text-sm font-mono truncate'>{Obj.getMnemonic(task)}</span>
+        </div>
         {createdAt !== undefined && (
           <TaskProperty
             icon='ph--calendar-plus--regular'

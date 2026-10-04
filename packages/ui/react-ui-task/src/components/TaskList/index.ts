@@ -3,7 +3,6 @@
 //
 
 export * from './hierarchy.ts';
-export { TaskMnemonic } from './TaskRowCells.tsx';
 
 export * from './TaskList.tsx';
 export { type TaskSelectModifiers } from './TaskTreeNode.tsx';

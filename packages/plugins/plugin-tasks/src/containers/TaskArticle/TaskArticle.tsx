@@ -13,7 +13,7 @@ import { useMembers } from '@dxos/halo-react';
 import { Button, Container, Panel, ScrollArea, Toolbar, Typography, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import { TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
+import { TaskHistory, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -141,7 +141,6 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                   pane has the width to wrap them, and a chip that wraps is a chip the reader can
                   see without dragging the row sideways. */}
                 <div className='flex flex-wrap items-center gap-1' data-testid='tasksPlugin.tags'>
-                  <TaskMnemonic task={task} />
                   <TaskTags task={task} />
                 </div>
 
