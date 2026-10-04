@@ -16,7 +16,7 @@ import { createClientSaveTracker, getIcon, getStatus } from '#components';
 import { useEdgeStatus, useStalled } from '#hooks';
 import { meta } from '#meta';
 
-const SYNC_COLS = ['min-content', '1fr', 'min-content', 'min-content'];
+const SYNC_COLS = ['min', 'fill', 'min', 'min'] as const;
 
 export const SyncStatus = () => {
   const client = useClient();
@@ -90,16 +90,16 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
 
       {/* Connection Details */}
       {!isConnected && (
-        <Grid cols={SYNC_COLS} grow={false} gap='sm'>
+        <Grid cols={SYNC_COLS} gap='sm'>
           <Icon icon='ph--cloud-x--regular' />
           <span className='text-fg-muted'>{t('sync-no-connection.label')}</span>
         </Grid>
       )}
 
       {isConnected && (
-        <Grid cols={SYNC_COLS} grow={false} gap='sm' classNames='gap-y-1'>
+        <Grid cols={SYNC_COLS} gap='sm' classNames='gap-y-1'>
           {/* Latency */}
-          <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
+          <Grid cols='subgrid' gap='sm' align='center' classNames='text-sm'>
             <Icon icon='ph--timer--regular' />
             <span className='text-fg-muted'>{t('sync-latency.label')}</span>
             <div />
@@ -107,7 +107,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
           </Grid>
 
           {/* Upload Speed */}
-          <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
+          <Grid cols='subgrid' gap='sm' align='center' classNames='text-sm'>
             <Icon icon='ph--arrow-up--regular' classNames='text-green-500' />
             <span className='text-fg-muted'>{t('sync-upload.label')}</span>
             <UnitValue value={status.messagesSent} format={Unit.Thousand} />
@@ -115,7 +115,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
           </Grid>
 
           {/* Download Speed */}
-          <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
+          <Grid cols='subgrid' gap='sm' align='center' classNames='text-sm'>
             <Icon icon='ph--arrow-down--regular' classNames='text-orange-500' />
             <span className='text-fg-muted'>{t('sync-download.label')}</span>
             <UnitValue value={status.messagesReceived} format={Unit.Thousand} />

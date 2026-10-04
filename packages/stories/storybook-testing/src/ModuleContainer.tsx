@@ -248,7 +248,7 @@ export const ModuleContainer = ({ layout, columns, rows, compact = false }: Modu
 
   return (
     <div
-      className={mx('dx-fill dx-fullscreen grid', !compact && 'gap-2 p-2')}
+      className={mx('dx-fill dx-cover grid', !compact && 'gap-2 p-2')}
       style={{ gridTemplateColumns: tracks(columns, resolvedLayout.length) }}
     >
       {resolvedLayout.map((column, columnIndex) => (

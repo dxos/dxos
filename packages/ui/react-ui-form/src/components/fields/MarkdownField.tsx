@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
@@ -15,10 +16,22 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
+import { useFormContext } from '../../hooks/index.ts';
 import { presentationFor } from '../presentation.tsx';
 
 /** The editor's minimum height in lines, as the current field's `min-h-[6lh]`. */
 const ROWS = 6;
+
+/**
+ * Fits the editor to the field: a long unbroken token (an inline-code URL) breaks anywhere rather than widening the
+ * content, and the editor fills the frame's height, so its scroller ends at the frame's foot instead of mid-field.
+ */
+const fieldTheme = EditorView.theme({
+  '&': { minHeight: '100%' },
+  '.cm-content': { overflowWrap: 'anywhere' },
+  // Elsewhere inline code is one clipped line (fixed height, no wrapping), which in a field widens the content instead.
+  '& .cm-content .cm-code-inline': { whiteSpace: 'break-spaces', height: 'auto', overflow: 'visible' },
+});
 
 /**
  * A markdown value in a CodeMirror editor framed by a multi-line `ControlFrame`. The value is either a string
@@ -72,7 +85,10 @@ type StringMarkdownEditorProps = {
 };
 
 const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
-  const extensions = useBasicMarkdownExtensions({ placeholder, readonly });
+  const { markdownExtensions } = useFormContext('MarkdownField');
+  // Memoised: a new list each render would reconfigure the editor on every keystroke and drop its focus.
+  const fieldExtensions = useMemo(() => [fieldTheme, ...(markdownExtensions ?? [])], [markdownExtensions]);
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   return (
     <ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
@@ -102,7 +118,12 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
     () => (text ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) })] : []),
     [text, reference],
   );
-  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: dataExtensions });
+  const { markdownExtensions } = useFormContext('MarkdownField');
+  const fieldExtensions = useMemo(
+    () => [fieldTheme, ...dataExtensions, ...(markdownExtensions ?? [])],
+    [dataExtensions, markdownExtensions],
+  );
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   if (!text) {
     return null;
   }

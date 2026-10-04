@@ -22,6 +22,7 @@ import {
   type Session,
   getSession,
 } from '@dxos/compute/AgentService';
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
@@ -35,7 +36,7 @@ import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type MakeTurnProducer } from './turn-producer.ts';
 
 /** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
-type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
+type AgentRpcs = ReturnType<typeof AgentProcess> extends Operation.Durable<any, any, any, infer Rpcs> ? Rpcs : never;
 
 /**
  * Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface.
@@ -45,7 +46,7 @@ type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, an
  * the `readonly` array the process's own schema yields.
  */
 type AgentHandle =
-  ReturnType<typeof AgentProcess> extends Process.Process<infer Input, infer Output, any, infer Rpcs>
+  ReturnType<typeof AgentProcess> extends Operation.Durable<infer Input, infer Output, any, infer Rpcs>
     ? ProcessManager.Handle<Input, Output, Rpcs>
     : never;
 

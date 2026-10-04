@@ -3,7 +3,8 @@
 //
 
 import type { Quad } from '@rdfjs/types';
-import { DataFactory, Parser } from 'n3';
+import { JsonLdParser } from 'jsonld-streaming-parser';
+import { Parser } from 'n3';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,7 +13,6 @@ import { describe, expect, test } from 'vitest';
 import * as Ontology from '../Ontology.ts';
 import { analyze, createResolver } from '../worker/analyze.ts';
 import { documentTriples } from './ntriples.ts';
-import { parseJsonLd } from './quadstore.ts';
 
 const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 const PACKAGE = fileURLToPath(new URL('../../', import.meta.url));
@@ -21,6 +21,18 @@ const key = (quad: Quad): string =>
   [quad.subject, quad.predicate, quad.object]
     .map((term) => `${term.termType}:${term.value}:${'datatype' in term ? term.datatype.value : ''}`)
     .join(' ');
+
+/** An independent reading of the document: what a conforming JSON-LD parser makes of it. */
+const parseJsonLd = (document: Ontology.FileDocument): Promise<Quad[]> =>
+  new Promise((resolve, reject) => {
+    const parser = new JsonLdParser();
+    const quads: Quad[] = [];
+    parser.on('data', (quad: Quad) => quads.push(quad));
+    parser.on('error', reject);
+    parser.on('end', () => resolve(quads));
+    parser.write(JSON.stringify(document));
+    parser.end();
+  });
 
 const sorted = (quads: readonly Quad[]): string[] => [...new Set(quads.map(key))].sort();
 
@@ -33,7 +45,7 @@ describe('documentTriples', () => {
   const resolve = createResolver(ROOT);
 
   const sameAsJsonLd = async (document: Ontology.FileDocument) => {
-    const expected = sorted(await parseJsonLd(document, DataFactory.defaultGraph()));
+    const expected = sorted(await parseJsonLd(document));
     const actual = sorted(new Parser({ format: 'N-Triples' }).parse(documentTriples(document)));
     expect(actual, document.path).toEqual(expected);
   };
@@ -81,6 +93,18 @@ describe('documentTriples', () => {
           'implDependsOn': [],
           'aliasOf': [],
           'deprecated': true,
+        },
+      ],
+      '@included': [
+        {
+          '@id': Ontology.callSiteIri(Ontology.symbolIri(path, 'x').value, 'make', 0).value,
+          '@type': 'CallSite',
+          'callee': [Ontology.memberIri('lib', 'make').value],
+          'enclosedBy': Ontology.symbolIri(path, 'x').value,
+          'line': 3,
+          'argOf': Ontology.callSiteIri(Ontology.fileIri(path).value, 'outer', 0).value,
+          'argKey': 'meta.key',
+          'literal': ['0=quote " backslash \\', 'flag=true', 'n=-1'],
         },
       ],
     });

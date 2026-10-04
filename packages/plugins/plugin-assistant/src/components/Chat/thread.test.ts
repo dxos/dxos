@@ -326,6 +326,23 @@ describe('collapseToolRuns', () => {
     expect(collapsed[0].blocks).toHaveLength(2);
     expect(collapsed[2].blocks).toHaveLength(2);
   });
+
+  // The thread re-projects on every streamed block; a new object per pass re-renders every panel.
+  test('re-folding the same run returns the same message', ({ expect }) => {
+    const run = [toolCall('tc-1'), toolResult('tc-1'), toolCall('tc-2')];
+    const first = collapseToolRuns([message('prompt'), ...run]);
+    const second = collapseToolRuns([message('prompt'), ...run, message('answer', 'assistant')]);
+    expect(second[1]).toBe(first[1]);
+  });
+
+  test('a run that grows is folded afresh', ({ expect }) => {
+    const run = [toolCall('tc-1'), toolResult('tc-1')];
+    const before = collapseToolRuns(run);
+    const after = collapseToolRuns([...run, toolCall('tc-2')]);
+    expect(after[0]).not.toBe(before[0]);
+    expect(after[0].id).toBe(before[0].id);
+    expect(after[0].blocks).toHaveLength(3);
+  });
 });
 
 const toolCall = (toolCallId: string) =>

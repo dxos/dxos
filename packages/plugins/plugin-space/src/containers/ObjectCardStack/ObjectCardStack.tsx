@@ -46,34 +46,34 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
         <Panel.Header>
           <Toolbar.Root />
         </Panel.Header>
-        <Panel.Body>
-          {selectedObjects.length === 0 ? (
-            <Banner.Root>
-              <Banner.Title>{t('row-details-no-selection.label')}</Banner.Title>
-            </Banner.Root>
-          ) : (
-            <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-              <ScrollArea.Root orientation='vertical'>
-                <ScrollArea.Viewport ref={setViewport}>
+        <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
+          <Panel.Body asChild>
+            <ScrollArea.Root orientation='vertical'>
+              {/* The gutter is the viewport's own, so the banner sits where the first card would. */}
+              <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+                {selectedObjects.length === 0 ? (
+                  <Banner.Root inset={false}>
+                    <Banner.Title>{t('row-details-no-selection.label')}</Banner.Title>
+                  </Banner.Root>
+                ) : (
                   <Mosaic.Stack
-                    classNames='py-trim-md gap-trim-md'
+                    classNames='gap-2'
                     draggable={false}
                     items={selectedObjects}
                     getId={(obj) => obj.id}
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
-                        {/* A grid card, so the form's rows (which inherit their parent's tracks) take its content track. */}
-                        <Card.Root grid>
+                        <Card.Root>
                           <ObjectForm object={props.data} type={type} />
                         </Card.Root>
                       </Mosaic.Tile>
                     )}
                   />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          )}
-        </Panel.Body>
+                )}
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Body>
+        </Mosaic.Container>
       </Panel.Root>
     );
   },

@@ -17,7 +17,7 @@ import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { Match, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
@@ -274,7 +274,10 @@ export const TaskSetArticle = ({
     </TaskFilter>
   );
 
-  const content = (
+  return (
+    // One layout whether the set is its own plank or a host's section (the project's Tasks tab): the filter in the
+    // header, the list filling the body, and the editor in the footer so it stays below the list. `TaskList.Root`
+    // renders no element, so it can wrap the whole panel.
     <TaskList.Root
       tasks={tasks}
       groups={groups}
@@ -294,42 +297,29 @@ export const TaskSetArticle = ({
       onTaskMove={arranged ? undefined : handleMove}
       onTaskSelect={handleOpen}
     >
-      <TaskList.Viewport>
-        <TaskList.Content />
-      </TaskList.Viewport>
-      <TaskList.Editor
-        createOnly
-        showDescription
-        acceptFiles={!!attachFile}
-        descriptionExtensions={descriptionExtensions}
-        classNames='bg-input-surface px-2 pb-2'
-        placeholder={t('task-create.placeholder')}
-      />
+      <Panel.Root role={role}>
+        <Panel.Header>
+          <Toolbar.Root inactive={!hasAttention}>{filterRow}</Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body>
+          {/* Fills the body (no flex container, so growing alone would not bound it): rows scroll inside it. */}
+          <TaskList.Viewport classNames='dx-expand'>
+            <TaskList.Content />
+          </TaskList.Viewport>
+        </Panel.Body>
+        {/* Framed as the chat prompt is: inset from the panel's edges, in a bordered box of its own surface. */}
+        <Panel.Footer classNames='p-2 dx-grow bg-base-surface'>
+          <TaskList.Editor
+            createOnly
+            showDescription
+            acceptFiles={!!attachFile}
+            descriptionExtensions={descriptionExtensions}
+            classNames='py-2 dx-group-surface border border-separator-subtle rounded-sm'
+            placeholder={t('task-create.placeholder')}
+          />
+        </Panel.Footer>
+      </Panel.Root>
     </TaskList.Root>
-  );
-
-  return (
-    <Match.Root
-      on={role}
-      fallback={
-        <Panel.Root role={role}>
-          <Panel.Header>
-            <Toolbar.Root inactive={!hasAttention}>{filterRow}</Toolbar.Root>
-          </Panel.Header>
-          <Panel.Body>{content}</Panel.Body>
-        </Panel.Root>
-      }
-    >
-      {/* Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
-          chrome, so render the bare list under its own filter row — a nested Panel/scroll root would
-          collapse width, but the filter has to come along or the host's copy of the list has none. */}
-      <Match.Case when={AppSurface.Section.role}>
-        <div className='flex flex-col dx-grow'>
-          <Toolbar.Root>{filterRow}</Toolbar.Root>
-          {content}
-        </div>
-      </Match.Case>
-    </Match.Root>
   );
 };
 

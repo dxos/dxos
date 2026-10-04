@@ -12,6 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as RpcSerialization from 'effect/rpc/RpcSerialization';
 import * as RpcServer from 'effect/rpc/RpcServer';
 import { createServer } from 'node:http';
+import type { Socket } from 'node:net';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -87,19 +88,35 @@ export const run = ({
     const scope = yield* Effect.scope;
 
     // NDJSON rather than JSON: the `Watch` stream is chunked down one response, and a client that
-    // parses per line sees each event as it is appended instead of at the end of the turn.
-    const rpcEffect = yield* RpcServer.toHttpEffect(Protocol.Rpcs).pipe(
-      Effect.provide(Layer.mergeAll(Handlers.layer({ root, model }), RpcSerialization.layerNdjson)),
+    // parses per line sees each event as it is appended instead of at the end of the turn. Built in
+    // this scope, not by `Effect.provide` (whose scope ends once the handler exists), so forked
+    // turns last until shutdown.
+    const handlers = yield* Layer.buildWithScope(
+      Layer.mergeAll(Handlers.layer({ root, model }), RpcSerialization.layerNdjson),
+      scope,
     );
+    const rpcEffect = yield* RpcServer.toHttpEffect(Protocol.Rpcs).pipe(Effect.provideContext(handlers));
     const rpc = yield* NodeHttpServer.makeHandler(rpcEffect, { scope });
+
+    // Created before Vite so its HMR websocket rides this listener rather than a server of its own.
+    const server = createServer();
+
+    // Every socket, upgraded ones included: Bun's `closeAllConnections` skips a websocket, and
+    // `close` waits on it forever.
+    const sockets = new Set<Socket>();
+    server.on('connection', (socket) => {
+      sockets.add(socket);
+      socket.once('close', () => sockets.delete(socket));
+    });
 
     const vite = yield* Vite.middleware({
       appRoot: WEBUI_ROOT,
       repoRoot: root,
       cacheDir: join(Crawler.storeDir(root), 'vite'),
+      httpServer: server,
     });
 
-    const server = createServer((request, response) => {
+    server.on('request', (request, response) => {
       if (request.url?.startsWith(Protocol.PATH)) {
         rpc(request, response);
       } else {
@@ -115,6 +132,11 @@ export const run = ({
       () =>
         Effect.callback<void>((resume) => {
           server.close(() => resume(Effect.void));
+          // A browser tab holds the `Watch` stream and the HMR socket open indefinitely, so they are
+          // cut rather than waited for; their request fibers see the close and are interrupted.
+          for (const socket of sockets) {
+            socket.destroy();
+          }
         }),
     );
 

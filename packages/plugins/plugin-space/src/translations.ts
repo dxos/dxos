@@ -344,7 +344,7 @@ export const translations = [
         'layout-table.label': 'Table',
         'layout-duplicates.label': 'Duplicates',
         'open-object.label': 'Open object',
-        'search-placeholder.label': 'Filter...',
+        'search-placeholder.label': 'Filter objects...',
         'search-no-results.message': 'No matches.',
         'item-count.label_zero': 'No items',
         'item-count.label_one': '1 item',

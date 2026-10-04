@@ -10,6 +10,7 @@ import type * as Rpc from 'effect/rpc/Rpc';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 
 import type * as ProcessManager from '../ProcessManager.ts';
@@ -36,7 +37,7 @@ export interface Host extends RemoteProcessManager.Control {
 export interface Options {
   readonly manager: ProcessManager.Manager;
   /** Processes this host hosts, resolved by `Process.key` — a definition cannot cross the wire. */
-  readonly definitions: readonly Process.Process<any, any, any, any>[];
+  readonly definitions: readonly Operation.Durable<any, any, any, any>[];
 }
 
 /**

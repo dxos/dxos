@@ -67,6 +67,8 @@ export const NodeCard = Schema.Struct({
   why: Schema.String,
   /** Hops from the nearest seed (0 for a seed). */
   hops: Schema.Number,
+  /** The explorer's sources for this file: which queries returned it, or `bridge`. */
+  provenance: Schema.optional(Schema.Array(Schema.String)),
 });
 
 export type NodeCard = typeof NodeCard.Type;
@@ -179,6 +181,8 @@ export type PruneOptions = {
   readonly threshold: number;
   /** At most this many nodes survive, best first. */
   readonly budget: number;
+  /** The surviving set, chosen by the caller instead of by score rank (threshold and budget then unused). */
+  readonly keep?: ReadonlySet<string>;
   /** Edge kinds that may connect survivors; others are dropped (relays through them included). */
   readonly kinds?: ReadonlySet<string>;
   /** Longest chain of dropped nodes one relay edge may stand for. */
@@ -193,10 +197,10 @@ export type PruneOptions = {
 export const prune = (
   nodes: readonly { iri: string; score: number }[],
   edges: readonly Edge[],
-  { threshold, budget, kinds, maxRelay = 2 }: PruneOptions,
+  { threshold, budget, keep, kinds, maxRelay = 2 }: PruneOptions,
 ): { kept: Set<string>; edges: Edge[] } => {
   const ranked = [...nodes].filter((node) => node.score >= threshold).sort((left, right) => right.score - left.score);
-  const kept = new Set(ranked.slice(0, budget).map((node) => node.iri));
+  const kept = new Set(keep ?? ranked.slice(0, budget).map((node) => node.iri));
   // An existing relay stays usable, so a second cut (pruned set → diagram) can relay through it again.
   const usable = edges.filter((edge) => kinds === undefined || edge.kind === RELAY || kinds.has(edge.kind));
 

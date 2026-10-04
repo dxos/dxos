@@ -20,7 +20,7 @@ export type SyncCardProps = {
  * differently under the header's label and the data rows' chips and the columns would drift.
  * The chip track takes the slack; the figures are sized for `pending/total`.
  */
-const ROW_TRACKS = ['1fr', '4.5rem', '4rem'];
+const ROW_TRACKS = ['fill', '4.5rem', '4rem'] as const;
 
 const Metric = ({ pending, total }: { pending: number; total: number }) => (
   <span className={mx('font-mono tabular-nums', pending > 0 ? 'text-warning-text' : 'text-success-text')}>
@@ -47,7 +47,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
       {spaces.length === 0 && <StatCard.Row span label='No spaces.' />}
       {spaces.length > 0 && (
         <StatCard.Row>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
+          <Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>space</span>
             <span>automerge</span>
             <span>feed</span>
@@ -64,9 +64,11 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
             icon={syncing ? 'ph--arrows-down-up--regular' : 'ph--check-circle--regular'}
             iconClassNames={syncing ? 'text-warning-text' : 'text-success-text'}
           >
-            <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
+            <Grid grow cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
               <Tooltip.Trigger asChild content={row.name}>
+                {/* Labelled: presets are icon-only by default, which left the row a bare icon with no space id. */}
                 <SystemButton.Clipboard
+                  iconOnly={false}
                   size='sm'
                   variant='ghost'
                   compact

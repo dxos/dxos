@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as Ontology from '../Ontology.ts';
+import * as Cooperative from './cooperative.ts';
 import type { Binding, Graph } from './graph.ts';
 
 /**
@@ -36,27 +37,41 @@ type Outcome = {
   readonly incremental: boolean;
 };
 
-/** The addon's surface, as `src/binding.rs` declares it. */
+/**
+ * The addon's surface, as `src/binding.rs` declares it. Every call that touches the store runs on a
+ * libuv thread: on a large store one can take seconds, and `serve` answers HTTP on this thread.
+ */
 interface NativeStore {
   putDocuments(writes: { graph: string; drop: string[]; triples: string }[]): Promise<number>;
-  dropGraphs(graphs: string[]): void;
-  insertQuads(nquads: string): void;
-  removeQuads(nquads: string): void;
+  dropGraphs(graphs: string[]): Promise<void>;
+  insertQuads(nquads: string): Promise<void>;
+  removeQuads(nquads: string): Promise<void>;
   /** Six strings per quad; see `fromRows`. */
-  match(subject?: string | null, predicate?: string | null, object?: string | null, graph?: string | null): string[];
-  query(sparql: string): { kind: 'results' | 'quads'; body: string };
-  reason(graph: string, rules: string, materialize: boolean): string;
-  reasonAll(strata: { graph: string; rules: string }[]): Outcome[];
-  quadCount(): number;
-  graphLength(graph: string): number;
+  match(
+    subject?: string | null,
+    predicate?: string | null,
+    object?: string | null,
+    graph?: string | null,
+  ): Promise<string[]>;
+  /** Rejects with a `cancelled` error once `cancel` is cancelled. */
+  query(sparql: string, cancel: QueryCancel): Promise<{ kind: 'results' | 'quads'; body: string }>;
+  reason(graph: string, rules: string, materialize: boolean): Promise<string>;
+  reasonAll(strata: { graph: string; rules: string }[]): Promise<Outcome[]>;
+  quadCount(): Promise<number>;
+  graphLength(graph: string): Promise<number>;
   journalLength(): number;
-  invalidate(): void;
-  clear(): void;
+  invalidate(): Promise<void>;
+  clear(): Promise<void>;
   close(): void;
+}
+
+interface QueryCancel {
+  cancel(): void;
 }
 
 interface Addon {
   NativeStore: { open(dir: string): NativeStore };
+  QueryCancel: new () => QueryCancel;
 }
 
 export const isAvailable = (): boolean => existsSync(ADDON_PATH);
@@ -86,15 +101,17 @@ const toNTriples = (term: RDF.Term): string => {
   }
 };
 
-const toNQuads = (quads: readonly RDF.Quad[]): string =>
-  quads
-    .map(
+const toNQuads = (quads: readonly RDF.Quad[]): Effect.Effect<string> =>
+  Effect.map(
+    Cooperative.map(
+      quads,
       (quad) =>
         `${toNTriples(quad.subject)} ${toNTriples(quad.predicate)} ${toNTriples(quad.object)}${
           quad.graph.termType === 'DefaultGraph' ? '' : ` ${toNTriples(quad.graph)}`
         } .\n`,
-    )
-    .join('');
+    ),
+    (lines) => lines.join(''),
+  );
 
 const parseQuads = (text: string, format: 'N-Quads' | 'N-Triples'): RDF.Quad[] =>
   text.length === 0 ? [] : new Parser({ format }).parse(text);
@@ -107,9 +124,8 @@ const nodeOf = (value: string): RDF.NamedNode | RDF.BlankNode =>
  * `@language` or datatype, graph — as quads: building terms from strings is several times faster
  * than parsing the same quads as N-Quads, which dominated every pass that reads a graph back.
  */
-const fromRows = (rows: readonly string[]): RDF.Quad[] => {
-  const quads: RDF.Quad[] = [];
-  for (let index = 0; index + 5 < rows.length; index += 6) {
+const fromRows = (rows: readonly string[]): Effect.Effect<RDF.Quad[]> =>
+  Cooperative.map(rowStarts(rows.length), (index) => {
     const [subject, predicate, kind, value, extra, graph] = rows.slice(index, index + 6);
     const object: RDF.Quad_Object =
       kind === 'I'
@@ -117,17 +133,19 @@ const fromRows = (rows: readonly string[]): RDF.Quad[] => {
         : kind === 'B'
           ? DataFactory.blankNode(value)
           : DataFactory.literal(value, extra.startsWith('@') ? extra.slice(1) : DataFactory.namedNode(extra));
-    quads.push(
-      DataFactory.quad(
-        nodeOf(subject),
-        DataFactory.namedNode(predicate),
-        object,
-        graph.length === 0 ? DataFactory.defaultGraph() : nodeOf(graph),
-      ),
+    return DataFactory.quad(
+      nodeOf(subject),
+      DataFactory.namedNode(predicate),
+      object,
+      graph.length === 0 ? DataFactory.defaultGraph() : nodeOf(graph),
     );
+  });
+
+function* rowStarts(length: number): Generator<number> {
+  for (let index = 0; index + 5 < length; index += 6) {
+    yield index;
   }
-  return quads;
-};
+}
 
 type JsonTerm =
   | { type: 'uri'; value: string }
@@ -265,6 +283,8 @@ export const make = <E>(
   Effect.gen(function* () {
     const attempt = <A>(message: string, thunk: () => A): Effect.Effect<A, E> =>
       Effect.try({ try: thunk, catch: fail(message) });
+    const call = <A>(message: string, thunk: () => Promise<A>): Effect.Effect<A, E> =>
+      Effect.tryPromise({ try: thunk, catch: fail(message) });
 
     if (!isAvailable()) {
       return yield* Effect.fail(
@@ -273,25 +293,44 @@ export const make = <E>(
         ),
       );
     }
+    const addon = load();
     // RocksDB holds a lock on its directory, so the store is closed with the scope rather than left
     // to the garbage collector — a reopen in the same process would otherwise fail.
     const native = yield* Effect.acquireRelease(
-      attempt('Failed to open native store', () => load().NativeStore.open(join(dir, DIR))),
+      attempt('Failed to open native store', () => addon.NativeStore.open(join(dir, DIR))),
       (store) => Effect.sync(() => store.close()),
     );
 
-    const query = (sparql: string) => native.query(sparql);
-    const results = (sparql: string): JsonResults => JSON.parse(query(sparql).body);
-    const rows = (sparql: string): Row[] =>
-      (results(sparql).results?.bindings ?? []).map(
+    const toRows = (parsed: JsonResults): Row[] =>
+      (parsed.results?.bindings ?? []).map(
         (row) => new Row(new Map(Object.entries(row).map(([key, term]) => [key, fromJson(term)]))),
       );
-    const quadsOf = (sparql: string): RDF.Quad[] => parseQuads(query(sparql).body, 'N-Triples');
+
+    /**
+     * A query on a libuv thread, cancelled when the fiber is interrupted (a timeout, a closed
+     * client): oxigraph checks the token at every quad it reads, so an abandoned evaluation stops
+     * within one read instead of holding a thread until it completes.
+     */
+    const query = (message: string, sparql: string): Effect.Effect<string, E> =>
+      Effect.callback<string, E>((resume) => {
+        const cancel = new addon.QueryCancel();
+        native.query(sparql, cancel).then(
+          (result) => resume(Effect.succeed(result.body)),
+          (cause) => resume(Effect.fail(fail(message)(cause))),
+        );
+        return Effect.sync(() => cancel.cancel());
+      });
+
+    const decode = <A>(message: string, sparql: string, read: (body: string) => A): Effect.Effect<A, E> =>
+      Effect.flatMap(query(message, sparql), (body) => attempt(`${message}: unreadable result`, () => read(body)));
+
+    // LDkit's reads are not bounded by a caller, so they get a token nobody cancels.
+    const unbounded = async (sparql: string) => (await native.query(sparql, new addon.QueryCancel())).body;
 
     const engine: IQueryEngine = {
-      queryBindings: async (sparql) => new Results(rows(sparql)),
-      queryBoolean: async (sparql) => results(sparql).boolean === true,
-      queryQuads: async (sparql) => new Results(quadsOf(sparql)),
+      queryBindings: async (sparql) => new Results(toRows(JSON.parse(await unbounded(sparql)))),
+      queryBoolean: async (sparql) => JSON.parse(await unbounded(sparql)).boolean === true,
+      queryQuads: async (sparql) => new Results(parseQuads(await unbounded(sparql), 'N-Triples')),
       queryVoid: async () => {
         throw new Error('The code index is read-only through LDkit.');
       },
@@ -306,59 +345,81 @@ export const make = <E>(
           catch: fail('Failed to write documents'),
         }).pipe(Effect.asVoid),
 
-      drop: (name) => attempt('Failed to drop graph', () => native.dropGraphs([name])),
+      drop: (name) => call('Failed to drop graph', () => native.dropGraphs([name])),
 
       putQuads: (quads) =>
-        quads.length === 0 ? Effect.void : attempt('Failed to write quads', () => native.insertQuads(toNQuads(quads))),
+        quads.length === 0
+          ? Effect.void
+          : Effect.flatMap(toNQuads(quads), (nquads) =>
+              call('Failed to write quads', () => native.insertQuads(nquads)),
+            ),
 
       delQuads: (quads) =>
-        quads.length === 0 ? Effect.void : attempt('Failed to delete quads', () => native.removeQuads(toNQuads(quads))),
+        quads.length === 0
+          ? Effect.void
+          : Effect.flatMap(toNQuads(quads), (nquads) =>
+              call('Failed to delete quads', () => native.removeQuads(nquads)),
+            ),
 
       match: (subject, predicate, object, graphName) =>
-        attempt('Failed to match quads', () =>
-          fromRows(
-            native.match(
-              subject && toNTriples(subject),
-              predicate && toNTriples(predicate),
-              object && toNTriples(object),
-              graphName && toNTriples(graphName),
+        call('Failed to match quads', () =>
+          native.match(
+            subject && toNTriples(subject),
+            predicate && toNTriples(predicate),
+            object && toNTriples(object),
+            graphName && toNTriples(graphName),
+          ),
+        ).pipe(Effect.flatMap(fromRows)),
+
+      // A term's `value` is the JSON result's, so a binding needs no term built.
+      select: (sparql) =>
+        decode('Failed to run SPARQL SELECT', sparql, (body): JsonResults => JSON.parse(body)).pipe(
+          Effect.flatMap((parsed) =>
+            Cooperative.map(parsed.results?.bindings ?? [], (row): Binding =>
+              Object.fromEntries(Object.entries(row).map(([key, term]) => [key, term.value])),
             ),
           ),
         ),
 
-      select: (sparql) =>
-        attempt('Failed to run SPARQL SELECT', (): Binding[] =>
-          rows(sparql).map((row) => Object.fromEntries([...row].map(([key, term]) => [key.value, term.value]))),
-        ),
+      ask: (sparql) =>
+        decode('Failed to run SPARQL ASK', sparql, (body) => {
+          const parsed: JsonResults = JSON.parse(body);
+          return parsed.boolean === true;
+        }),
 
-      ask: (sparql) => attempt('Failed to run SPARQL ASK', () => results(sparql).boolean === true),
-
-      construct: (sparql) => attempt('Failed to run SPARQL CONSTRUCT', () => quadsOf(sparql)),
+      construct: (sparql) => decode('Failed to run SPARQL CONSTRUCT', sparql, (body) => parseQuads(body, 'N-Triples')),
 
       // LDkit insists on a source; the engine answers every query itself, so this one is a label.
       lens: (schema) => createLens(schema, { engine, sources: ['urn:code-index:native'] }),
 
       reason: (target, rules, materialize) =>
-        attempt('Reasoning failed', () => parseQuads(native.reason(target.value, rules, materialize), 'N-Quads')),
+        call('Reasoning failed', () => native.reason(target.value, rules, materialize)).pipe(
+          Effect.flatMap((nquads) => attempt('Reasoning failed', () => parseQuads(nquads, 'N-Quads'))),
+        ),
 
-      reasonAll: (reasoners) =>
-        attempt('Reasoning failed', () => {
-          const byGraph = new Map(reasoners.map((reasoner) => [derivedGraph(reasoner.name), reasoner.name]));
-          return native
-            .reasonAll(reasoners.map((reasoner) => ({ graph: derivedGraph(reasoner.name), rules: reasoner.rules })))
-            .map((outcome) => ({
+      reasonAll: (reasoners) => {
+        const byGraph = new Map(reasoners.map((reasoner) => [derivedGraph(reasoner.name), reasoner.name]));
+        return call('Reasoning failed', () =>
+          native.reasonAll(
+            reasoners.map((reasoner) => ({ graph: derivedGraph(reasoner.name), rules: reasoner.rules })),
+          ),
+        ).pipe(
+          Effect.map((outcomes) =>
+            outcomes.map((outcome) => ({
               name: byGraph.get(outcome.graph) ?? outcome.graph,
               derived: outcome.derived,
               durationMs: outcome.durationMs,
               incremental: outcome.incremental,
-            }));
-        }),
+            })),
+          ),
+        );
+      },
 
-      count: () => attempt('Failed to count quads', () => native.quadCount()),
+      count: () => call('Failed to count quads', () => native.quadCount()),
 
-      countGraph: (name) => attempt('Failed to count quads', () => native.graphLength(name)),
+      countGraph: (name) => call('Failed to count quads', () => native.graphLength(name)),
 
-      clear: () => attempt('Failed to clear graph', () => native.clear()),
+      clear: () => call('Failed to clear graph', () => native.clear()),
     };
     return graph;
   });

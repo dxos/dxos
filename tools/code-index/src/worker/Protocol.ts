@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 /**
  * The contract between the crawling main thread and the parsing workers. Workers receive a batch of
  * paths and return each file's document as N-Triples — they never touch a database, so nothing
- * contends on SQLite or LevelDB.
+ * contends on SQLite or RocksDB.
  */
 
 export const FileRef = Schema.Struct({
