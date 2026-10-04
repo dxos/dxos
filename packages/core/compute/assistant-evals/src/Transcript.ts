@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-import type * as Prompt from 'effect/unstable/ai/Prompt';
-import * as Tool from 'effect/unstable/ai/Tool';
+import type * as Prompt from 'effect/ai/Prompt';
+import * as Tool from 'effect/ai/Tool';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 

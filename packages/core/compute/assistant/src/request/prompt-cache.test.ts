@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Prompt from 'effect/unstable/ai/Prompt';
+import * as Prompt from 'effect/ai/Prompt';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
