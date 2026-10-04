@@ -65,9 +65,18 @@ export const empty: State = {
 /** A message written before turn ids existed opens a turn keyed by its own position. */
 const openedTurnId = (entry: Events.Entry, turnId: string | undefined): string => turnId ?? `seq:${entry.seq}`;
 
-/** Closes `turnId`, or — for an end event written before turn ids existed — every open turn. */
+/**
+ * Closes `turnId` and every turn opened before it: turns run one at a time per project, so an
+ * earlier turn still open by then was abandoned (a killed process writes no end event) and would
+ * otherwise read as running forever. An end event for a turn not open closes nothing, and one
+ * written before turn ids existed closes every open turn.
+ */
 const closeTurn = (state: State, turnId: string | undefined): Pick<State, 'running' | 'openTurns'> => {
-  const openTurns = turnId === undefined ? [] : state.openTurns.filter((open) => open !== turnId);
+  if (turnId === undefined) {
+    return { running: false, openTurns: [] };
+  }
+  const index = state.openTurns.indexOf(turnId);
+  const openTurns = index < 0 ? state.openTurns : state.openTurns.slice(index + 1);
   return { running: openTurns.length > 0, openTurns };
 };
 
