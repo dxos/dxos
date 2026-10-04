@@ -425,8 +425,34 @@ describe('typescript analyzer', () => {
     expect(suite.imports).toEqual(expect.arrayContaining([file('src/config.ts'), file('src/normalize.ts')]));
     // Inside a top-level call, a type annotation is still erased.
     expect(suite.importsType).toEqual([file('src/errors.ts'), file('src/input.ts')]);
-    // No declaration exists to carry an edge, so nothing is attributed to a symbol.
-    expect(suite.declares).toEqual([]);
+    // No declaration exists to carry the edges, so the file's top-level symbol does.
+    expect(suite.declares).toHaveLength(1);
+    const [topLevel] = suite.declares;
+    expect(topLevel).toMatchObject({
+      '@id': sym('src/Store.test.ts', Ontology.TOP_LEVEL),
+      'name': Ontology.TOP_LEVEL,
+      'kind': Ontology.TOP_LEVEL,
+      'exported': false,
+      'line': 7,
+    });
+    expect(topLevel.implDependsOn).toEqual(
+      expect.arrayContaining([sym('src/config.ts', 'load'), sym('src/normalize.ts', 'Normalize')]),
+    );
+    expect(topLevel.apiDependsOn).toEqual(
+      expect.arrayContaining([sym('src/errors.ts', 'StoreError'), sym('src/input.ts', 'Input')]),
+    );
+    expect(topLevel.implDependsOn).not.toContain(sym('src/errors.ts', 'StoreError'));
+    // Callback locals bind to nothing at the top level; they are not declarations gone unresolved.
+    expect(suite.unresolvedReferences).toBe(0);
+  });
+
+  test('a file whose top-level statements reference nothing has no top-level symbol', () => {
+    const plain = analyzeTypeScript({
+      ...context,
+      path: 'src/plain.ts',
+      source: ["import { load } from './config.ts';", '', 'export const value = load();', 'console.log(1);'].join('\n'),
+    });
+    expect(plain.declares.map((declared) => declared.name)).toEqual(['value']);
   });
 
   test('a local re-export keeps a value import, a type re-export does not', () => {

@@ -74,6 +74,9 @@ export const writeUsageFixture = async (root: string): Promise<void> => {
     ].join('\n'),
     'packages/app/src/use.test.ts':
       "import { legacy } from '../../lib/src/index.ts';\nexport const tested = legacy();\n",
+    // Uses it only inside a top-level call, as most test files do.
+    'packages/app/src/suite.test.ts':
+      "import { legacy } from '../../lib/src/index.ts';\ndescribe('legacy', () => legacy());\n",
     'packages/app/src/use.stories.tsx': "import { old } from '../../lib/src/index.ts';\nexport const Story = old();\n",
     // Another `legacy`, so a bare name is ambiguous.
     'packages/app/src/other.ts': 'export const legacy = 2;\n',

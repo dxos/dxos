@@ -190,7 +190,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
   kind: prop(
     'deus:Symbol',
     'xsd:string',
-    'function, class, variable, type, interface, enum, namespace, reexport (an alias symbol of export { x } from) or unknown.',
+    'function, class, variable, type, interface, enum, namespace, reexport (an alias symbol of export { x } from), top-level (the symbol carrying references from statements that declare nothing, such as describe(…)) or unknown.',
   ),
   exported: prop('deus:Symbol', 'xsd:boolean', 'Module-public: the declaration leaves its module.'),
   line: prop(

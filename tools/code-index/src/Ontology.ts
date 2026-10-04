@@ -43,7 +43,13 @@ export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}
  * dropped and rebuilt on open: the ledger keys commits by graph IRI, so mixing schemes would leave
  * graphs no row points at and rules matching only half the facts.
  */
-export const VERSION = 5;
+export const VERSION = 6;
+
+/**
+ * Name and kind of the synthetic symbol carrying a file's top-level references (`describe(…)`,
+ * `registerX()`); not an identifier, so no declaration can share its IRI.
+ */
+export const TOP_LEVEL = 'top-level';
 
 /** IRI of a file resource; stable across revisions of that file. */
 export const fileIri = (path: string): NamedNode => DataFactory.namedNode(`${FILE_BASE}${escapePath(path)}`);

@@ -229,7 +229,7 @@ A specifier is recorded in exactly one of `imports` / `importsType` / `importsMo
 | Property                 | Range                       | Meaning                                                                                                                                                                                                      |
 | ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `deus:name`              | `xsd:string`                | Declared name; `default` for an anonymous default export.                                                                                                                                                    |
-| `deus:kind`              | `xsd:string`                | `function`, `class`, `variable`, `type`, `interface`, `enum`, `namespace`, `unknown`, and `reexport` on an alias symbol (below). A static method `Class.key` is a `function`.                                |
+| `deus:kind`              | `xsd:string`                | `function`, `class`, `variable`, `type`, `interface`, `enum`, `namespace`, `unknown`, `reexport` on an alias symbol and `top-level` (both below). A static method `Class.key` is a `function`.               |
 | `deus:exported`          | `xsd:boolean`               | **Module-public**: the declaration leaves its module.                                                                                                                                                        |
 | `deus:line`              | `xsd:integer`               | 1-based line of the declaration.                                                                                                                                                                             |
 | `deus:extends`           | `deus:Symbol`/`deus:Member` | Heritage clause target. When the clause is a call (`extends Context.Service<…>()('id')`, `extends BaseError.extend(...)`), the callee.                                                                       |
@@ -538,6 +538,18 @@ SELECT DISTINCT ?user WHERE { ?user deus:implDependsOn|deus:apiDependsOn ?r . ?r
 and the MCP `usages` tool runs that query and groups the users by package and role. A user→declaration
 edge is deliberately not materialised: it would restate every dependency edge, and `resolvesTo?` answers
 the same question at query time.
+
+A statement that declares nothing — `describe(…)`, `test(…)`, `registerX()` — runs at load time, and
+most test files use what they test only there. Its references are dependencies of the file's
+**top-level symbol**: `file:…/x.test.ts#top-level`, a `deus:Symbol` the file `deus:declares` with
+`deus:name` and `deus:kind` `"top-level"`, `deus:exported false`, `deus:line` of the first such
+statement that references anything, and `deus:apiDependsOn`/`deus:implDependsOn` like any declaration's.
+The name is not an identifier, so no declaration shares the IRI. A file whose top-level statements
+reference nothing has none. It is a symbol rather than edges from the `deus:File` because every
+consumer of dependency edges — `usages`, `67-usage`, any rule joining `implDependsOn` — joins on a
+symbol the file declares, and so sees these with no change. References inside those statements to
+callback locals are not counted in `deus:unresolvedReferences`, which keeps that measure about
+declarations.
 
 ## Snippets
 
