@@ -95,7 +95,7 @@ catalog:
   '@effect/ai-anthropic': 4.0.0
   '@effect/ai-openai': 4.0.0
   '@effect/atom-react': 4.0.0
-  '@effect/language-service': ^0.87.2
+  '@effect/language-service': ^0.87.3
   '@effect/opentelemetry': 4.0.0
   '@effect/platform-browser': 4.0.0
   '@effect/platform-bun': 4.0.0

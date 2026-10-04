@@ -172,7 +172,7 @@ catalogs:
       specifier: 4.0.0
       version: 4.0.0
     '@effect/language-service':
-      specifier: ^0.87.2
+      specifier: ^0.87.3
       version: 0.87.3
     '@effect/opentelemetry':
       specifier: 4.0.0
