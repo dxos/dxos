@@ -694,7 +694,7 @@ type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' 
  * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
  */
 const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
-  const { chat, db, processor, event } = useChatContext(CHAT_PROMPT_NAME);
+  const { chat, db, processor, event, queued } = useChatContext(CHAT_PROMPT_NAME);
 
   // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
   // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
@@ -736,6 +736,7 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
         chat={chat}
         processor={processor}
         event={event}
+        queueSize={queued.length}
         tasksVisible={hasTasks ? tasksVisible : undefined}
       />
     </Collapsible.Root>
