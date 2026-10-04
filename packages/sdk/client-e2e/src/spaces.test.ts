@@ -68,13 +68,14 @@ describe('Spaces', () => {
     const openStarted = new Trigger();
     const openReleased = new Trigger();
     const open = DatabaseImpl.prototype.open;
-    const openSpy = vi
-      .spyOn(DatabaseImpl.prototype, 'open')
-      .mockImplementationOnce(async function (this: DatabaseImpl, ctx) {
-        openStarted.wake();
-        await openReleased.wait();
-        return open.call(this, ctx);
-      });
+    const openSpy = vi.spyOn(DatabaseImpl.prototype, 'open').mockImplementationOnce(async function (
+      this: DatabaseImpl,
+      ctx,
+    ) {
+      openStarted.wake();
+      await openReleased.wait();
+      return open.call(this, ctx);
+    });
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
     onTestFinished(() => {
       vi.useRealTimers();
@@ -117,14 +118,15 @@ describe('Spaces', () => {
     const error = new Error('Database open failed.');
     const open = DatabaseImpl.prototype.open;
     let failures = 0;
-    const openSpy = vi
-      .spyOn(DatabaseImpl.prototype, 'open')
-      .mockImplementation(async function (this: DatabaseImpl, ctx) {
-        if (this.spaceId === spaceId && failures++ === 0) {
-          throw error;
-        }
-        return open.call(this, ctx);
-      });
+    const openSpy = vi.spyOn(DatabaseImpl.prototype, 'open').mockImplementation(async function (
+      this: DatabaseImpl,
+      ctx,
+    ) {
+      if (this.spaceId === spaceId && failures++ === 0) {
+        throw error;
+      }
+      return open.call(this, ctx);
+    });
     onTestFinished(() => openSpy.mockRestore());
 
     const [client, server] = testBuilder.createClientServer(host);

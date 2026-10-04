@@ -472,38 +472,37 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           />
         )}
 
-        {takesFiles &&
-          files.length > 0 && (
-            // Under the description: what the task will be created with.
-            <div
-              className={mx(
-                'col-start-[title] -col-end-1 flex flex-wrap items-center gap-1 min-w-0',
-                hasDescription ? 'row-start-3' : 'row-start-2',
-              )}
-            >
-              {files.map((file, index) => (
-                <Tag
-                  key={`${file.name}-${index}`}
-                  hue='neutral'
-                  classNames='inline-flex items-center gap-1'
-                  data-testid='taskList.edit.file'
-                >
-                  <Icon icon='ph--paperclip--regular' size='xs' />
-                  <span data-testid='taskList.edit.file.name'>{file.name}</span>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    iconOnly
-                    icon='ph--x--regular'
-                    iconSize='xs'
-                    label={t('remove-file.label', { name: file.name })}
-                    classNames='p-0 min-h-0 h-auto'
-                    onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
-                  />
-                </Tag>
-              ))}
-            </div>
-          )}
+        {takesFiles && files.length > 0 && (
+          // Under the description: what the task will be created with.
+          <div
+            className={mx(
+              'col-start-[title] -col-end-1 flex flex-wrap items-center gap-1 min-w-0',
+              hasDescription ? 'row-start-3' : 'row-start-2',
+            )}
+          >
+            {files.map((file, index) => (
+              <Tag
+                key={`${file.name}-${index}`}
+                hue='neutral'
+                classNames='inline-flex items-center gap-1'
+                data-testid='taskList.edit.file'
+              >
+                <Icon icon='ph--paperclip--regular' size='xs' />
+                <span data-testid='taskList.edit.file.name'>{file.name}</span>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  iconOnly
+                  icon='ph--x--regular'
+                  iconSize='xs'
+                  label={t('remove-file.label', { name: file.name })}
+                  classNames='p-0 min-h-0 h-auto'
+                  onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
+                />
+              </Tag>
+            ))}
+          </div>
+        )}
       </div>
     );
   },
