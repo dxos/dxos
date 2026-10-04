@@ -20,6 +20,11 @@
     opacity: 0;
     transition: opacity 200ms ease-out;
   }
+  .dx-scroll-container-fade[data-edge='bottom'] {
+    top: auto;
+    bottom: 0;
+    background: linear-gradient(to top, var(--surface-bg, var(--color-base-surface)), transparent);
+  }
   .dx-scroll-container-fade[data-state='visible'] {
     opacity: 1;
   }

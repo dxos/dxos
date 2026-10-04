@@ -9,7 +9,13 @@ import type * as Project from '@dxos/compute/Project';
 import { useSessionTimeline } from '@dxos/plugin-assistant/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Empty, useTranslation } from '@dxos/react-ui';
-import { Gantt, type GanttAxis, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';
+import {
+  Gantt,
+  type GanttAxis,
+  type GanttLane,
+  type GanttLegendMode,
+  sessionTimelineToGantt,
+} from '@dxos/react-ui-trace';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -25,6 +31,10 @@ export type ProjectPipelineProps = {
   axis?: GanttAxis;
   /** Called by the chart's axis toggle; the toggle is hidden without it. */
   onAxisChange?: (axis: GanttAxis) => void;
+  /** What the chart's first column shows per lane: its title or its token and tool counts. */
+  legend?: GanttLegendMode;
+  /** Called by the chart's legend toggle. */
+  onLegendChange?: (legend: GanttLegendMode) => void;
   /** Called with the task behind a task lane the reader picks. */
   onSelectTask?: (taskId: string) => void;
   /** Called with the chat behind a session lane the reader picks, and a task lane's with no `onSelectTask`. */
@@ -42,6 +52,8 @@ export const ProjectPipeline = ({
   tasks,
   axis = 'time',
   onAxisChange,
+  legend,
+  onLegendChange,
   onSelectTask,
   onSelectChat,
 }: ProjectPipelineProps) => {
@@ -82,6 +94,8 @@ export const ProjectPipeline = ({
       range={timeline.range}
       axis={axis}
       onAxisChange={onAxisChange}
+      legend={legend}
+      onLegendChange={onLegendChange}
       now={Date.now()}
       onLaneSelect={onSelectTask || onSelectChat ? handleLaneSelect : undefined}
       classNames='p-1'
@@ -89,8 +103,8 @@ export const ProjectPipeline = ({
     >
       <Gantt.Legend>
         <Gantt.AxisToggle />
+        <Gantt.LegendToggle />
       </Gantt.Legend>
-      <Gantt.Meta />
       <Gantt.Chart />
     </Gantt.Root>
   );

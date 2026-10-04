@@ -769,7 +769,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         {overlay}
       </div>
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
-      {navigating && <div className='dx-fullscreen' data-testid='navigation-shield' />}
+      {navigating && <div className='dx-cover' data-testid='navigation-shield' />}
       <span
         ref={menuAnchorRef}
         className='absolute size-0 pointer-events-none'

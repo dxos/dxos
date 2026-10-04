@@ -15,7 +15,7 @@ export type IndexerCardProps = {
   onCopy?: () => void;
 };
 
-const ROW_TRACKS = ['1fr', 'auto'];
+const ROW_TRACKS = ['fill', 'auto'] as const;
 
 const rowIcon = (row: IndexerRow): { icon: string; className: string } => {
   if (row.error) {
@@ -54,7 +54,9 @@ export const IndexerCard = ({ spaces = [], onRefresh, onCopy }: IndexerCardProps
           <StatCard.Row key={row.spaceId} icon={icon} iconClassNames={className}>
             <Grid grow cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
               <Tooltip.Trigger asChild content={row.error ?? row.name}>
+                {/* Labelled: presets are icon-only by default, which left the row a bare icon with no space id. */}
                 <SystemButton.Clipboard
+                  iconOnly={false}
                   size='sm'
                   variant='ghost'
                   compact

@@ -1,7 +1,7 @@
 # Effect constructs. See `rules/50-example.n3` for what belongs in a rule file and what belongs in a
 # query — in short: classification and joins here, reachability in SPARQL.
 #
-# `{ … } <= { … }` rules are backward (goal-directed): EYE proves them on demand for a forward
+# `{ … } <= { … }` rules are backward (goal-directed): the engine proves them on demand for a forward
 # rule's premise and never materializes them, so the `rule:` helpers below cost no stored quads.
 
 @prefix deus: <https://dxos.org/vocab/deus#>.

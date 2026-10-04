@@ -59,6 +59,43 @@ const emit = (json: boolean, value: unknown, text: () => string): Effect.Effect<
 
 const seconds = (ms: number): string => (ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`);
 
+const PHASE_WIDTH = 10;
+
+const REASONER_WIDTH = 16;
+
+const plural = (count: number, noun: string): string => `${count} ${noun}${count === 1 ? '' : 's'}`;
+
+const phaseLine = (phase: string, detail: string): string => `${phase.padEnd(PHASE_WIDTH)}${detail}`;
+
+/** One aligned line per completed phase of an indexing pass. */
+const formatProgress = (progress: Indexer.Progress): string => {
+  switch (progress.phase) {
+    case 'scan':
+      return phaseLine(
+        'scan',
+        `${seconds(progress.ms)} (${plural(progress.scanned, 'file')}, ${progress.changed} changed)`,
+      );
+    case 'parse':
+      // Summed across concurrent batches, so on a wide pool it exceeds the wall-clock total.
+      return phaseLine(
+        'parse',
+        progress.files > 0
+          ? `${seconds(progress.ms)} (${plural(progress.files, 'file')}, all workers)`
+          : 'no changed files',
+      );
+    case 'commit':
+      return phaseLine('commit', seconds(progress.ms));
+    case 'reasoner':
+      return `  ${progress.outcome.name.padEnd(REASONER_WIDTH)} ${String(progress.outcome.derived).padStart(8)}  ${seconds(progress.outcome.durationMs)}`;
+    case 'reason':
+      return phaseLine('reason', seconds(progress.ms));
+    case 'reason-skipped':
+      return phaseLine('reason', 'skipped');
+    case 'summary':
+      return phaseLine('summary', seconds(progress.ms));
+  }
+};
+
 const index = Command.make(
   'index',
   {
@@ -86,13 +123,14 @@ const index = Command.make(
       const reasoners = noReason
         ? []
         : yield* extname(rulesPath) === '' ? Reasoner.load(rulesPath) : Reasoner.loadFile(rulesPath);
+      // Under `--json` stdout must stay one parseable document, so progress is not printed.
       const result = yield* Indexer.run({
         root: repo,
         force,
         reasoners,
         workers: Option.getOrUndefined(workers),
+        onProgress: json ? undefined : (progress) => Console.log(formatProgress(progress)),
       }).pipe(Effect.provide(storeLayer(repo, store)));
-      const { timings } = result;
       yield* emit(json, result, () =>
         [
           `${result.root}: ${result.indexed} indexed, ` +
@@ -100,17 +138,7 @@ const index = Command.make(
             `${result.unchanged} unchanged, ${result.removed} removed` +
             (result.skipped.length > 0 ? `, ${result.skipped.length} skipped` : '') +
             (noReason ? '' : `, ${result.derived} derived`),
-          // parse and commit are summed across concurrent batches, so on a wide pool they exceed total.
-          `scan ${seconds(timings.scanMs)} · parse ${seconds(timings.parseMs)} (all workers) · commit ${seconds(timings.commitMs)}` +
-            ` · reason ${result.reasoned ? seconds(timings.reasonMs) : 'skipped'} · summary ${seconds(timings.summarizeMs)}` +
-            ` · total ${seconds(timings.totalMs)}`,
-          ...(result.reasoners.length > 0
-            ? [
-                result.reasoners
-                  .map((outcome) => `${outcome.name} ${outcome.derived} (${seconds(outcome.durationMs)})`)
-                  .join(' · '),
-              ]
-            : []),
+          phaseLine('total', seconds(result.timings.totalMs)),
         ].join('\n'),
       );
     }),

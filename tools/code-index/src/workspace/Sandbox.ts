@@ -5,6 +5,7 @@
 //
 
 import * as DecisionModel from 'effect/ai/DecisionModel';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
@@ -16,8 +17,10 @@ import { homedir, tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import * as Declarations from '../Declarations.ts';
 import * as Cache from '../design/Cache.ts';
 import * as Design from '../design/Design.ts';
+import * as Server from '../mcp/Server.ts';
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
 import * as Summary from '../Summary.ts';
@@ -106,8 +109,12 @@ const make = Effect.gen(function* () {
 
   // Optional, so the chat runs with no decision model at all; `design.subgraph` then scores by baseline.
   const decisions = yield* Effect.serviceOption(DecisionModel.DecisionModel);
+  // Optional too: with a model `design.subgraph` explores by query, without one by the deterministic walk.
+  const explorer = yield* Effect.serviceOption(LanguageModel.LanguageModel);
   // Opened on first use: most sessions never ask a design question.
   const designCache = yield* Effect.cached(Cache.open(join(store.dir, 'design-cache.jsonl')));
+  // The MCP handlers, so `symbols.usages` resolves a name exactly as the `usages` tool does.
+  const mcp = yield* Effect.cached(Server.handlers(store));
 
   /** One host call. A failure here is the snippet's failure, not the run's: it sees the message. */
   const handle = (
@@ -156,10 +163,32 @@ const make = Effect.gen(function* () {
       case 'design.subgraph':
         return designCache.pipe(
           Effect.flatMap((cache) =>
-            Design.subgraph(store, cache, decisions, {
-              prompt: String(params.prompt),
-              budget: typeof params.budget === 'number' ? params.budget : undefined,
-              threshold: typeof params.threshold === 'number' ? params.threshold : undefined,
+            Design.subgraph(
+              store,
+              cache,
+              decisions,
+              {
+                prompt: String(params.prompt),
+                budget: typeof params.budget === 'number' ? params.budget : undefined,
+                threshold: typeof params.threshold === 'number' ? params.threshold : undefined,
+              },
+              explorer,
+            ),
+          ),
+          Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
+        );
+      case 'symbols.declarations':
+        return Declarations.find(store, String(params.name)).pipe(
+          Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
+        );
+      case 'symbols.usages':
+        return mcp.pipe(
+          Effect.flatMap((handlers) =>
+            handlers.usages({
+              symbol: String(params.symbol),
+              kind: params.kind === 'api' || params.kind === 'impl' || params.kind === 'all' ? params.kind : undefined,
+              includeTests: typeof params.includeTests === 'boolean' ? params.includeTests : undefined,
+              limit: typeof params.limit === 'number' ? params.limit : undefined,
             }),
           ),
           Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),

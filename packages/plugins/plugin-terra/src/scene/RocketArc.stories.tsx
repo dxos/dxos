@@ -135,7 +135,7 @@ const RocketArcScene = () => {
       <Panel.Body asChild>
         <div className='relative grow'>
           {/* `dx-fill` is load-bearing — see `ObjectGallery.stories.tsx`. */}
-          <canvas ref={canvasRef} className='dx-fill dx-fullscreen outline-none' style={{ touchAction: 'none' }} />
+          <canvas ref={canvasRef} className='dx-fill dx-cover outline-none' style={{ touchAction: 'none' }} />
         </div>
       </Panel.Body>
     </Panel.Root>

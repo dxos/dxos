@@ -18,8 +18,19 @@ describe('Docs', () => {
     expect(api).toContain('declare const rdf');
     expect(api).toContain('declare const storage');
     expect(api).toContain('declare const display');
+    expect(api).toContain('declare const symbols');
     expect(api).toContain('declare const print');
-    for (const call of ['query', 'ask', 'prefixes', 'vocabulary', 'mermaid', 'table', 'clear']) {
+    for (const call of [
+      'query',
+      'ask',
+      'prefixes',
+      'vocabulary',
+      'mermaid',
+      'table',
+      'clear',
+      'declarations',
+      'usages',
+    ]) {
       expect(api).toContain(`${call}(`);
     }
   });

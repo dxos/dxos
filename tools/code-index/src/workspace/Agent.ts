@@ -4,6 +4,7 @@
 // @import-as-namespace
 //
 
+import * as AiError from 'effect/ai/AiError';
 import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Prompt from 'effect/ai/Prompt';
 import * as Tool from 'effect/ai/Tool';
@@ -66,11 +67,58 @@ export const MAX_STEPS = 12;
  */
 export const WARN_AT_REMAINING = 3;
 
+/** How many unusable replies in a row the model gets before the turn fails. */
+export const MAX_MALFORMED = 3;
+
+/** Long enough to identify the fault; the raw arguments that follow are the model's own code. */
+const SUMMARY_LENGTH = 240;
+
+/**
+ * Describes a reply whose tool call could not be used — arguments that are not JSON, a tool that
+ * does not exist, parameters that do not fit — or returns `undefined` for any other failure. Local
+ * models produce these often enough that failing the turn on one leaves them unusable, and the
+ * model can correct the call once told what was wrong.
+ */
+export const malformedToolCall = (cause: unknown): string | undefined => {
+  if (!AiError.isAiError(cause)) {
+    return undefined;
+  }
+  const reason = cause.reason;
+  switch (reason._tag) {
+    case 'ToolNotFoundError':
+      return `The model called a tool named \`${reason.toolName}\`, which does not exist.`;
+    case 'ToolParameterValidationError':
+      return `The model's \`${reason.toolName}\` call had invalid parameters: ${summarize(reason.description)}`;
+    case 'InvalidOutputError':
+      // A response that fails to decode against the toolkit names every union member it missed,
+      // which tells the reader nothing; the one thing it can mean here is a call that is not `exec`.
+      return reason.description.startsWith('Expected {')
+        ? "The model's reply held a tool call that is not a valid `exec` call (another tool's name, or the wrong parameters)."
+        : `The model's reply could not be read: ${summarize(reason.description)}`;
+    default:
+      return undefined;
+  }
+};
+
+const summarize = (text: string): string => {
+  const line = text.split('\n')[0];
+  return line.length > SUMMARY_LENGTH ? `${line.slice(0, SUMMARY_LENGTH)}…` : line;
+};
+
+/** What the model is told after an unusable reply, so the retry is a correction and not a reroll. */
+const correction = (problem: string): string =>
+  `[Your last reply could not be used] ${problem} The only tool is \`exec\`, and its arguments must be ` +
+  'a JSON object with a single string field `code` — for example {"code": "return 1;"}. Strings in ' +
+  'JSON use double quotes with escaped newlines; a JavaScript object literal or a template string is ' +
+  'not JSON. Try again.';
+
 export type TurnOptions = {
   readonly projectId: string;
   readonly text: string;
   /** Replaces the chat system prompt, for a turn with a dedicated job (e.g. the design explorer). */
   readonly system?: string;
+  /** The id the turn's events carry; the sender passes its own so it can recognise the echo. */
+  readonly turnId?: string;
 };
 
 export interface Api {
@@ -131,21 +179,43 @@ const make = Effect.gen(function* () {
       }),
     });
 
-  const turn: Api['turn'] = ({ projectId, text, system }) =>
+  const turn: Api['turn'] = ({ projectId, text, system, turnId = Events.newTurnId() }) =>
     Effect.gen(function* () {
-      yield* log.append(projectId, new Events.UserMessage({ text })).pipe(Effect.mapError(fail('Cannot record turn')));
+      yield* log
+        .append(projectId, new Events.UserMessage({ text, turnId }))
+        .pipe(Effect.mapError(fail('Cannot record turn')));
       const entries = yield* log.read(projectId).pipe(Effect.mapError(fail('Cannot read project log')));
       const handlers = handlerLayer(projectId);
 
       let prompt = promptOf(Fold.fold(entries), system);
+      let malformed = 0;
       // The loop is explicit: `generateText` resolves the calls of one round-trip but does not go
       // back to the model with their results, and going back is what makes this agentic.
       for (let step = 0; step < MAX_STEPS; step++) {
-        const response = yield* LanguageModel.generateText({ prompt, toolkit: ExecToolkit }).pipe(
+        const attempt = yield* LanguageModel.generateText({ prompt, toolkit: ExecToolkit }).pipe(
           Effect.provide(handlers),
           Effect.provideContext(models),
-          Effect.mapError((cause) => new AgentError({ message: describe(cause), cause })),
+          Effect.map((response) => ({ response, problem: undefined })),
+          Effect.catch((cause) => {
+            const problem = malformedToolCall(cause);
+            return problem !== undefined && malformed < MAX_MALFORMED
+              ? Effect.succeed({ response: undefined, problem })
+              : Effect.fail(new AgentError({ message: problem ?? describe(cause), cause }));
+          }),
         );
+        if (attempt.response === undefined) {
+          malformed++;
+          yield* log
+            .append(projectId, new Events.StepRetried({ message: attempt.problem, turnId }))
+            .pipe(Effect.mapError(fail('Cannot record retry')));
+          prompt = Prompt.concat(
+            prompt,
+            Prompt.make([{ role: 'user', content: [{ type: 'text', text: correction(attempt.problem) }] }]),
+          );
+          continue;
+        }
+        malformed = 0;
+        const response = attempt.response;
 
         const prose = response.text.trim();
         if (prose.length > 0) {
@@ -155,7 +225,7 @@ const make = Effect.gen(function* () {
         }
         if (response.toolCalls.length === 0) {
           return yield* log
-            .append(projectId, new Events.TurnEnded({ steps: step + 1 }))
+            .append(projectId, new Events.TurnEnded({ steps: step + 1, turnId }))
             .pipe(Effect.asVoid, Effect.mapError(fail('Cannot close turn')));
         }
         // The calls and their results go back verbatim; the tool events are already in the log.
@@ -190,7 +260,14 @@ const make = Effect.gen(function* () {
       // A failed turn is a recorded fact, not a lost one: the transcript says what went wrong and
       // the next turn starts from a consistent log.
       Effect.tapError((error) =>
-        log.append(projectId, new Events.TurnFailed({ message: error.message })).pipe(Effect.ignore),
+        log.append(projectId, new Events.TurnFailed({ message: error.message, turnId })).pipe(Effect.ignore),
+      ),
+      // An interrupted turn (the server shutting down) is closed too: only a `TurnFailed` or
+      // `TurnEnded` clears `running`, so a reload would otherwise show it working forever.
+      Effect.onInterrupt(() =>
+        log
+          .append(projectId, new Events.TurnFailed({ message: 'Interrupted before the turn finished.', turnId }))
+          .pipe(Effect.ignore),
       ),
     );
 

@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 
 import { Blob, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { type HtmlSrcResolver } from '@dxos/react-ui-components';
+import { type HtmlSrcResolver } from '@dxos/react-ui-html';
 import { type Message } from '@dxos/types';
 
 /**

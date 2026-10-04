@@ -9,6 +9,7 @@ import { DataFactory } from 'n3';
 import * as Ontology from '../Ontology.ts';
 import type * as Store from '../Store.ts';
 import { uniqueModuleFiles } from '../worker/types/Bind.ts';
+import * as Cooperative from './cooperative.ts';
 
 /** The facts a cross-file pass resolves names through: aliases, namespaces, `export *` and bare specifiers. */
 export type Barrels = {
@@ -20,11 +21,12 @@ export type Barrels = {
 };
 
 /** File graphs only: neither a derived graph nor a pass's previous run is a premise. */
-const asserted = (quads: readonly Quad[]): Quad[] => quads.filter((quad) => Ontology.isFileGraph(quad.graph.value));
+const asserted = (quads: readonly Quad[]): Effect.Effect<Quad[]> =>
+  Cooperative.filter(quads, (quad) => Ontology.isFileGraph(quad.graph.value));
 
 /** Reads one predicate's asserted quads. */
 export const readAsserted = (store: Store.Api, predicate: { readonly value: string }) =>
-  Effect.map(store.match(undefined, DataFactory.namedNode(predicate.value)), asserted);
+  Effect.flatMap(store.match(undefined, DataFactory.namedNode(predicate.value)), asserted);
 
 /** Each subject's objects, in the order read. */
 const group = (quads: readonly Quad[]): Map<string, string[]> => {
