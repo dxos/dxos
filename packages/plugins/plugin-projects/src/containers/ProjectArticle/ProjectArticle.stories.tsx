@@ -148,7 +148,8 @@ const createProject = (space: Space, storyGeneration: number) => {
   const addSubtask = (parent: Task.Task, title: string, status: Task.Status) => {
     const subtask = space.db.add(Task.make({ [Obj.Parent]: parent, title, status }));
     Obj.update(parent, (parent) => {
-      parent.subtasks = [...(parent.subtasks ?? []), Ref.make(subtask)];
+      parent.subtasks ??= [];
+      parent.subtasks.push(Ref.make(subtask));
     });
     return subtask;
   };
