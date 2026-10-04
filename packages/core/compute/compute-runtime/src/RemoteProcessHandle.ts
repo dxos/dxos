@@ -17,6 +17,7 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import type { SpaceId } from '@dxos/keys';
@@ -49,7 +50,7 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
    * for handles produced by `list`, which are metadata views: their inputs, outputs and RPC surface
    * throw until the caller re-attaches with a definition.
    */
-  readonly definition?: Process.Process<_Input, _Output, any, _Rpcs>;
+  readonly definition?: Operation.Durable<_Input, _Output, any, _Rpcs>;
 
   readonly registry: Registry.AtomRegistry;
 
@@ -98,7 +99,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   _Rpcs
 > {
   readonly #control: RemoteProcessManager.Control;
-  readonly #definition: Process.Process<_Input, _Output, any, _Rpcs> | undefined;
+  readonly #definition: Operation.Durable<_Input, _Output, any, _Rpcs> | undefined;
   readonly #registry: Registry.AtomRegistry;
   readonly #pollInterval: Duration.Duration;
   readonly #remoteTrace: RemoteTraceMonitor.Monitor | undefined;
@@ -321,7 +322,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   }
 
   hydrate(
-    definition: Process.Process<_Input, _Output, any, _Rpcs>,
+    definition: Operation.Durable<_Input, _Output, any, _Rpcs>,
   ): Effect.Effect<ProcessManager.Handle<_Input, _Output, _Rpcs>> {
     // The host revives its own processes from its own storage, so there is no dormant state to
     // restore here. What a caller does need is the definition: a handle from `attach` or `list` has
@@ -333,7 +334,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     );
   }
 
-  #requireDefinition(): Process.Process<_Input, _Output, any, _Rpcs> {
+  #requireDefinition(): Operation.Durable<_Input, _Output, any, _Rpcs> {
     if (!this.#definition) {
       throw new TypeError(
         `Remote process handle for '${this.key}' has no local process definition; inputs, outputs and RPC are unavailable`,

@@ -18,7 +18,7 @@
 # A callee is named by the subpath importers write (`@dxos/compute/Operation`), by the root barrel's
 # namespace member (`@dxos/compute` → `Operation.make`), and by its declaring file — the only IRI a
 # relative import inside `@dxos/compute` itself produces. These are facts of this file, not
-# conclusions: EYE reads them as premises and derives nothing from stating them.
+# conclusions: the engine reads them as premises and derives nothing from stating them.
 
 op:make deus:computeRole "operation".
 compute:Operation.make deus:computeRole "operation".

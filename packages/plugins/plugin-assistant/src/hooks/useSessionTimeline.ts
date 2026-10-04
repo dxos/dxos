@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-trace';
 import { Task } from '@dxos/types';
 
-const atomEmpty = Atom.make(() => [] as const as readonly Process.Info[]);
+const atomEmpty = Atom.make(() => [] as const as readonly Process.Process[]);
 
 /** A chat as the timeline's session: its uri is the agent process's target, its feed the trace meta's. */
 export const sessionFromChat = (chat: Chat.Chat): Session => ({

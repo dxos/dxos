@@ -16,6 +16,7 @@ import { extname, relative, resolve } from 'node:path';
 import * as Crawler from './Crawler.ts';
 import * as DesignCli from './design/DesignCli.ts';
 import * as Indexer from './Indexer.ts';
+import * as Lock from './mcp/Lock.ts';
 import * as Ontology from './Ontology.ts';
 import * as Reasoner from './Reasoner.ts';
 import * as Store from './Store.ts';
@@ -48,8 +49,10 @@ const jsonFlag = Flag.Boolean('json').pipe(Flag.withDefault(false), Flag.withDes
 const resolveRoot = (root: Option.Option<string>): Effect.Effect<string, Crawler.CrawlError> =>
   Option.match(root, { onNone: () => Crawler.gitRoot(), onSome: (value) => Effect.succeed(resolve(value)) });
 
-const storeLayer = (root: string, dir: Option.Option<string>) =>
-  Store.layer(Option.match(dir, { onNone: () => Crawler.storeDir(root), onSome: resolve }));
+const storeLayer = (root: string, dir: Option.Option<string>) => {
+  const path = Option.match(dir, { onNone: () => Crawler.storeDir(root), onSome: resolve });
+  return Lock.layer(path, () => Store.layer(path));
+};
 
 const emit = (json: boolean, value: unknown, text: () => string): Effect.Effect<void> =>
   Console.log(json ? JSON.stringify(value, null, 2) : text());
@@ -341,6 +344,27 @@ const openProject = (requested: Option.Option<string>) =>
     return last ?? (yield* log.createProject());
   });
 
+/**
+ * Resolves the flags to a model and checks a local one is actually running, so a missing Ollama is
+ * reported (or replaced by Anthropic) at startup instead of by every turn.
+ */
+const selectModel = (provider: Option.Option<string>, model: Option.Option<string>, endpoint: Option.Option<string>) =>
+  Effect.flatMap(
+    Models.select({
+      provider: Option.getOrUndefined(provider),
+      model: Option.getOrUndefined(model),
+      endpoint: Option.getOrUndefined(endpoint),
+    }),
+    (selection) =>
+      Models.ensureAvailable(selection, {
+        chosen:
+          Option.isSome(provider) ||
+          Option.isSome(model) ||
+          Option.isSome(endpoint) ||
+          process.env.CODE_INDEX_MODEL !== undefined,
+      }),
+  );
+
 const workspaceLayer = (root: string, store: Option.Option<string>, model: Models.Selection) =>
   Workspace.layer({
     storeDir: Option.match(store, { onNone: () => Crawler.storeDir(root), onSome: resolve }),
@@ -364,11 +388,7 @@ const chat = Command.make(
   ({ root, store, project, provider, model, endpoint, prompt }) =>
     Effect.gen(function* () {
       const repo = yield* resolveRoot(root);
-      const selection = yield* Models.select({
-        provider: Option.getOrUndefined(provider),
-        model: Option.getOrUndefined(model),
-        endpoint: Option.getOrUndefined(endpoint),
-      });
+      const selection = yield* selectModel(provider, model, endpoint);
       yield* Effect.gen(function* () {
         const opened = yield* openProject(project);
         yield* Chat.run({ projectId: opened.id, prompt: Option.getOrUndefined(prompt) });
@@ -404,11 +424,7 @@ type ServeFlags = {
 const serveHandler = ({ root, store, provider, model, endpoint, port, host, noWatch }: ServeFlags) =>
   Effect.gen(function* () {
     const repo = yield* resolveRoot(root);
-    const selection = yield* Models.select({
-      provider: Option.getOrUndefined(provider),
-      model: Option.getOrUndefined(model),
-      endpoint: Option.getOrUndefined(endpoint),
-    });
+    const selection = yield* selectModel(provider, model, endpoint);
     // Imported here rather than at the top: `serve` pulls Vite and the whole dev-server
     // machinery in, and none of the other commands should pay for it.
     const Server = yield* Effect.promise(() => import('./workspace/Server.ts'));

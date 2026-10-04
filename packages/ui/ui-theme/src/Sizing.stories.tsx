@@ -235,16 +235,16 @@ export const ClippingIsSeparate = {
 };
 
 /**
- * `dx-fullscreen` pins all four edges, which already determines the box — stacking a sizing
+ * `dx-cover` pins all four edges, which already determines the box — stacking a sizing
  * utility on top of it adds nothing.
  */
 export const Fullscreen = {
   render: () => (
     <div className='p-4 flex flex-col gap-6'>
-      <p className='max-w-2xl text-sm text-fg-muted'>Use `dx-fullscreen` instead of `dx-expand`, not alongside it.</p>
-      <Frame title='dx-fullscreen' note='dx-fullscreen against a positioned ancestor'>
+      <p className='max-w-2xl text-sm text-fg-muted'>Use `dx-cover` instead of `dx-expand`, not alongside it.</p>
+      <Frame title='dx-cover' note='dx-cover against a positioned ancestor'>
         <div className='relative h-full'>
-          <Measured label='dx-fullscreen' classNames='dx-fullscreen'>
+          <Measured label='dx-cover' classNames='dx-cover'>
             <Tall />
           </Measured>
         </div>

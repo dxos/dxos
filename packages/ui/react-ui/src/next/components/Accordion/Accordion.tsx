@@ -19,16 +19,16 @@ type AccordionRootProps = ThemedClassName<
   Omit<AccordionPrimitive.RootProps, 'onValueChange' | 'multiple'> & {
     /** More than one item open at once (the default). */
     multiple?: boolean;
-    /** Called with the open items' values. */
-    onValueChange?: (value: string[]) => void;
     /** A separator frame around and between the items (the default); `false` leaves only the dividers. */
     border?: boolean;
+    /** Called with the open items' values. */
+    onValueChange?: (value: string[]) => void;
   }
 >;
 
 /** A stack of disclosure items; any number may be open unless `multiple` is false. */
 const AccordionRoot = forwardRef<HTMLDivElement, AccordionRootProps>(
-  ({ classNames, multiple = true, onValueChange, border = true, ...props }, forwardedRef) => (
+  ({ classNames, multiple = true, border = true, onValueChange, ...props }, forwardedRef) => (
     <AccordionPrimitive.Root
       {...props}
       multiple={multiple}
