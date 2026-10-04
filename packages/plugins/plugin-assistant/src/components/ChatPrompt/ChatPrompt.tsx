@@ -236,7 +236,7 @@ export const ChatPrompt = ({
                   presets={presets}
                   onPresetChange={onPresetChange}
                 />
-                <div className='flex h-6 grow min-w-0 overflow-x-auto scrollbar-none'>
+                <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
                   {processor && <ChatReferences db={db} context={processor.context} />}
                 </div>
               </>
