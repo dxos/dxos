@@ -189,7 +189,7 @@ catalog:
   '@storybook/react-vite': ^10.6.0
   '@storybook/web-components-vite': ^10.6.0
   '@svgr/cli': ^8.1.0
-  '@swc/core': 1.16.2
+  '@swc/core': 1.16.13
   '@swc/types': ^0.1.28
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
