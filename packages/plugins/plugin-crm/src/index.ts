@@ -3,5 +3,5 @@
 //
 
 export * as CrmPlugin from './CrmPlugin.ts';
-export * from '#types';
 export * from '#skills';
+export * from '#types';

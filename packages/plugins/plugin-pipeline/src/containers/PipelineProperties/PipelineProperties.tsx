@@ -8,10 +8,9 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
+import * as ToolkitQuery from '@dxos/app-toolkit/Query';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { type Mutable } from '@dxos/echo/Obj';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
@@ -54,7 +53,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
       return;
     }
 
-    const foundType = await resolveSchemaWithRegistry(db, view.query.ast);
+    const foundType = await ToolkitQuery.resolveSchemaWithRegistry(db, view.query.ast);
     if (foundType && foundType !== type) {
       setType(() => foundType);
     }
@@ -77,9 +76,9 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
       const queue = target;
       const query = queue ? Query.fromAst(newQuery).from([Scope.feed(String(queue))]) : Query.fromAst(newQuery);
       updateView((view) => {
-        view.query.ast = query.ast as Mutable<typeof query.ast>;
+        view.query.ast = query.ast as Obj.Mutable<typeof query.ast>;
       });
-      const newType = await resolveSchemaWithRegistry(db, query.ast);
+      const newType = await ToolkitQuery.resolveSchemaWithRegistry(db, query.ast);
       if (!newType) {
         return;
       }
@@ -89,7 +88,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
         jsonSchema: newType.jsonSchema,
       });
       updateView((view) => {
-        view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
+        view.projection = Obj.getSnapshot(newView).projection as Obj.Mutable<typeof view.projection>;
       });
 
       setType(() => newType);

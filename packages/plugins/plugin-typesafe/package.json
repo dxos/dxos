@@ -49,11 +49,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./TypeSafePlugin": {
-      "source": "./src/TypeSafePlugin.ts",
-      "types": "./dist/types/src/TypeSafePlugin.d.ts",
-      "import": "./dist/lib/TypeSafePlugin.mjs"
-    },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -64,15 +59,20 @@
       "types": "./dist/types/src/types/TypeSafeCapabilities.d.ts",
       "import": "./dist/lib/TypeSafeCapabilities.mjs"
     },
-    "./TypeSafeSettings": {
-      "source": "./src/types/TypeSafeSettings.ts",
-      "types": "./dist/types/src/types/TypeSafeSettings.d.ts",
-      "import": "./dist/lib/TypeSafeSettings.mjs"
-    },
     "./TypeSafeEvents": {
       "source": "./src/TypeSafeEvents.ts",
       "types": "./dist/types/src/TypeSafeEvents.d.ts",
       "import": "./dist/lib/ns/TypeSafeEvents.mjs"
+    },
+    "./TypeSafePlugin": {
+      "source": "./src/TypeSafePlugin.ts",
+      "types": "./dist/types/src/TypeSafePlugin.d.ts",
+      "import": "./dist/lib/TypeSafePlugin.mjs"
+    },
+    "./TypeSafeSettings": {
+      "source": "./src/types/TypeSafeSettings.ts",
+      "types": "./dist/types/src/types/TypeSafeSettings.d.ts",
+      "import": "./dist/lib/TypeSafeSettings.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

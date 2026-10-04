@@ -3,5 +3,5 @@
 //
 
 export * as JmapPlugin from './JmapPlugin.ts';
-export * from '#types';
 export * from '#operations';
+export * from '#types';

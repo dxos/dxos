@@ -8,6 +8,6 @@ export * as Binding from './Binding.ts';
 export * as ConnectorAuth from './ConnectorAuth.ts';
 export * as ConnectorPlugin from './ConnectorPlugin.ts';
 export * as SyncTemplate from './SyncTemplate.ts';
-export * from '#types';
 export * from '#skills';
+export * from '#types';
 export * as ConnectorError from './ConnectorError.ts';

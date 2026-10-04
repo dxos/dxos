@@ -79,12 +79,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./NavTreeCapabilities": {
       "source": "./src/types/NavTreeCapabilities.ts",
       "types": "./dist/types/src/types/NavTreeCapabilities.d.ts",
@@ -104,6 +98,12 @@
       "source": "./src/NavTreeSurface.ts",
       "types": "./dist/types/src/NavTreeSurface.d.ts",
       "import": "./dist/lib/ns/NavTreeSurface.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

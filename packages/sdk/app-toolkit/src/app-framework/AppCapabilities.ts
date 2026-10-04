@@ -10,8 +10,7 @@ import type * as Layer$ from 'effect/Layer';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema$ from 'effect/Schema';
 
-import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
-import type { OpaqueToolkit } from '@dxos/ai';
+import type { OpaqueToolkit, AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder$ from '@dxos/app-graph/AppGraphBuilder';
 import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
@@ -21,7 +20,7 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import type { Database, Obj, Type } from '@dxos/echo';
-import type * as Retention$ from '@dxos/graph/Retention';
+import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
@@ -166,7 +165,7 @@ export const AppGraphBuilder = Capability$.make<AppGraphBuilder$.BuilderExtensio
 );
 
 /** Nodes the graph must keep loaded, contributed by each plugin that knows what it is showing. */
-export type AppGraphRetention = Retention$.Retention<AppGraphNode$.RelationInput>;
+export type AppGraphRetention = Retention.Retention<AppGraphNode$.RelationInput>;
 
 /**
  * @category Capability

@@ -17,7 +17,6 @@ const DXOS_SUBPATH_PACKAGES = new Set([
   '@dxos/app-graph',
   '@dxos/app-toolkit',
   '@dxos/assistant-toolkit',
-  '@dxos/async',
   '@dxos/compute',
   '@dxos/effect',
   '@dxos/graph',

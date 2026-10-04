@@ -43,6 +43,17 @@
       "types": "./dist/types/src/Hook.d.ts",
       "import": "./dist/lib/Hook.mjs"
     },
+    "./KvsStore": {
+      "source": "./src/KvsStore.ts",
+      "types": "./dist/types/src/KvsStore.d.ts",
+      "import": "./dist/lib/ns/KvsStore.mjs"
+    },
+    "./OtelTracer": {
+      "source": "./src/OtelTracer.ts",
+      "types": "./dist/types/src/OtelTracer.d.ts",
+      "import": "./dist/lib/ns/OtelTracer.mjs"
+    },
+    "./package.json": "./package.json",
     "./Performance": {
       "source": "./src/Performance.ts",
       "types": "./dist/types/src/Performance.d.ts",
@@ -68,26 +79,15 @@
       "types": "./dist/types/src/SpanAttributes.d.ts",
       "import": "./dist/lib/SpanAttributes.mjs"
     },
-    "./Yield": {
-      "source": "./src/Yield.ts",
-      "types": "./dist/types/src/Yield.d.ts",
-      "import": "./dist/lib/Yield.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
-    "./package.json": "./package.json",
-    "./KvsStore": {
-      "source": "./src/KvsStore.ts",
-      "types": "./dist/types/src/KvsStore.d.ts",
-      "import": "./dist/lib/ns/KvsStore.mjs"
-    },
-    "./OtelTracer": {
-      "source": "./src/OtelTracer.ts",
-      "types": "./dist/types/src/OtelTracer.d.ts",
-      "import": "./dist/lib/ns/OtelTracer.mjs"
+    "./Yield": {
+      "source": "./src/Yield.ts",
+      "types": "./dist/types/src/Yield.d.ts",
+      "import": "./dist/lib/Yield.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

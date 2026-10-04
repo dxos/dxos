@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
+import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
@@ -60,12 +60,12 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <ObjectCardPrimitive.Root>
-              <ObjectCardPrimitive.Header subject={subject} icon={icon} />
+            <ToolkitObjectCard.Root>
+              <ToolkitObjectCard.Header subject={subject} icon={icon} />
               <Card.Body>
                 <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
               </Card.Body>
-            </ObjectCardPrimitive.Root>
+            </ToolkitObjectCard.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}
             {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}

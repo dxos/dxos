@@ -15,7 +15,7 @@ import React, { StrictMode, Suspense, lazy, useCallback, useEffect, useState } f
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import * as AppApp from '@dxos/app-framework/App';
+import * as App from '@dxos/app-framework/App';
 import type * as Devtools from '@dxos/app-framework/Devtools';
 import * as Hooks from '@dxos/app-framework/Hooks';
 // Next components style through `.dx-*` rules that ship separately from the theme.
@@ -143,7 +143,7 @@ declare global {
  * The CSS animation in `index.html` keeps painting on the compositor thread
  * regardless of main-thread work, so this is purely textual feedback.
  */
-const bootStatus = (text: string) => AppApp.bootLoader?.status({ humanized: text });
+const bootStatus = (text: string) => App.bootLoader?.status({ humanized: text });
 
 // Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
 // from a true page boot. Dev-only — production has no HMR and the diagnostic
@@ -622,19 +622,19 @@ const main = async () => {
         // Pass `range` so the loader updates the existing line in place
         // ("Loading plugins (3/12)") instead of appending a fresh entry per
         // tick — keeps the visible log compact.
-        AppApp.bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
+        App.bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
         // The ring spans two phases — remote-plugin preload (0 → 50%) and
         // module activation (50 → 100%, driven from `Placeholder` once
         // React mounts). Splitting the range keeps it monotonic across
         // the boundary.
-        AppApp.bootLoader?.progress((loaded / total) * 0.5);
+        App.bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
   );
 
   bootStatus('Building Composer…');
   // Park the ring at 50% — preload done, activation about to take over.
-  AppApp.bootLoader?.progress(0.5);
+  App.bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
@@ -720,7 +720,7 @@ const main = async () => {
       raiseFatalError = (error) => setFatalError(error instanceof Error ? error : new Error(String(error)));
     }, []);
 
-    const App = Hooks.useApp({
+    const AppRoot = Hooks.useApp({
       fallback: Fallback,
       // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
       // supplied via `markSvg` in vite.config.ts) is the loading UI; `App`
@@ -744,7 +744,7 @@ const main = async () => {
 
     // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a
     // throw here would escape React entirely and blank the page.
-    return fatalError ? <Fallback error={fatalError} /> : <App />;
+    return fatalError ? <Fallback error={fatalError} /> : <AppRoot />;
   };
 
   const root = document.getElementById('root');

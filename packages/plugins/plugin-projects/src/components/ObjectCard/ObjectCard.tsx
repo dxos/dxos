@@ -6,10 +6,10 @@ import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
+import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as SpaceHooks from '@dxos/plugin-space/Hooks';
+import * as Hooks from '@dxos/plugin-space/Hooks';
 import { Card, Menu, Tag, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -30,7 +30,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
   const { t } = useTranslation(meta.profile.key);
   const [object] = useObject(objectProp);
   const label = Obj.getLabel(object)?.trim() || t('object-card.untitled.label');
-  const { archived, item: archiveItem } = SpaceHooks.useArchiveMenuItem(objectProp);
+  const { archived, item: archiveItem } = Hooks.useArchiveMenuItem(objectProp);
   const menuItems = [
     ...(onDelete ? [{ label: t('object-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }] : []),
     ...(archiveItem ? [archiveItem] : []),
@@ -54,14 +54,14 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
   );
 
   return (
-    <ObjectCardPrimitive.Root
+    <ToolkitObjectCard.Root
       classNames={onClick && 'dx-hover'}
       onClick={onClick}
       onKeyDown={onClick ? handleKeyDown : undefined}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <ObjectCardPrimitive.Header
+      <ToolkitObjectCard.Header
         subject={object}
         lines={2}
         menu={
@@ -79,7 +79,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
         }
       >
         {label}
-      </ObjectCardPrimitive.Header>
+      </ToolkitObjectCard.Header>
       {archived && (
         <Card.Row>
           <Tag classNames='justify-self-start'>{t('object-card.archived.label')}</Tag>
@@ -89,6 +89,6 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
           a second body would double the card's padding. Nothing renders for a type with no registered
           card surface; the header still identifies it. */}
       <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
-    </ObjectCardPrimitive.Root>
+    </ToolkitObjectCard.Root>
   );
 };

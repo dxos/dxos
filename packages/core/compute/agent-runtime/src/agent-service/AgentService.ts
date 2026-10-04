@@ -13,15 +13,7 @@ import * as Semaphore from 'effect/Semaphore';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
-import {
-  type AgentLocation,
-  AgentService,
-  type Conversation,
-  type GetSessionOptions,
-  type Service,
-  type Session,
-  getSession,
-} from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
@@ -72,8 +64,8 @@ export interface CreateSessionOptions {
  */
 export const createSession: (
   opts?: CreateSessionOptions,
-) => Effect.Effect<Session, never, Database.Service | Registry.Service | AgentService> = Effect.fn('createSession')(
-  function* (opts) {
+) => Effect.Effect<AgentService.Session, never, Database.Service | Registry.Service | AgentService.AgentService> =
+  Effect.fn('createSession')(function* (opts) {
     // A skill already in a database is bound as-is: it is either space-authored (no registry key at
     // all) or a fork carrying the user's edits, and resolving it through the registry would substitute
     // the pristine copy for the one the caller handed us. Anything else is referenced by its registry
@@ -98,10 +90,8 @@ export const createSession: (
     const chat = yield* Database.add(
       Chat.make({ feed: Ref.make(feed), ...(opts?.model ? { session: { model: opts.model } } : {}) }),
     );
-    return yield* getSession(chat, { provider: opts?.provider });
-  },
-  Effect.scoped,
-);
+    return yield* AgentService.getSession(chat, { provider: opts?.provider });
+  }, Effect.scoped);
 
 export interface Options {
   systemPrompt?: string;
@@ -149,9 +139,9 @@ export interface Options {
  */
 export const layer = (
   opts?: Options,
-): Layer.Layer<AgentService, never, ProcessManager.Service | RemoteProcessManager.Service> =>
+): Layer.Layer<AgentService.AgentService, never, ProcessManager.Service | RemoteProcessManager.Service> =>
   Layer.effect(
-    AgentService,
+    AgentService.AgentService,
     Effect.gen(function* () {
       const processManager = yield* ProcessManager.Service;
       // Required, not read optionally: an optional read is invisible to a `LayerSpec` stack, where a
@@ -175,7 +165,7 @@ export const layer = (
        * `edge` needs the space, since one remote manager spans them, and a chat with no space cannot
        * name where its agent would run.
        */
-      const processesFor = (location: AgentLocation | undefined, spaceId: SpaceId | undefined) => {
+      const processesFor = (location: AgentService.AgentLocation | undefined, spaceId: SpaceId | undefined) => {
         if (location !== 'edge') {
           return {
             list: (options: ProcessManager.ListOptions) => processManager.list(options),
@@ -218,9 +208,9 @@ export const layer = (
           model: string | undefined;
           provider: DXN.DXN | undefined;
           instructions: string | undefined;
-          location: AgentLocation;
+          location: AgentService.AgentLocation;
           handle: AgentHandle;
-          session: Session;
+          session: AgentService.Session;
         }
       >();
 
@@ -276,8 +266,8 @@ export const layer = (
         }
       });
 
-      const service: Service = {
-        getSession: (chat: Conversation, options?: GetSessionOptions) =>
+      const service: AgentService.Service = {
+        getSession: (chat: AgentService.Conversation, options?: AgentService.GetSessionOptions) =>
           Effect.suspend(() =>
             lockFor(chat.id).withPermits(1)(
               Effect.gen(function* () {
@@ -286,7 +276,7 @@ export const layer = (
                 // model and steering are whatever the chat points at when the process is spawned.
                 const model = chat.session?.model;
                 const instructions = chat.instructions?.uri;
-                const location: AgentLocation = options?.location ?? 'local';
+                const location: AgentService.AgentLocation = options?.location ?? 'local';
                 const cached = sessionCache.get(chat.id);
                 if (cached) {
                   if (
@@ -394,12 +384,12 @@ export const layer = (
 
 const makeSession = (
   process: AgentHandle,
-  chat: Conversation,
+  chat: AgentService.Conversation,
   feed: Feed.Feed,
   releaseSession: () => void,
   isFinished: Effect.Effect<boolean>,
   resubmit: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>,
-): Session => ({
+): AgentService.Session => ({
   chat,
   feed,
   getContext: () =>

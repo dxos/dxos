@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import type * as ChatType from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
@@ -24,8 +24,8 @@ import { useChatProcessor, useChatServices, usePlatform, usePresets, useSelectio
 import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
-  Omit<AppSurface.ObjectSectionProps<ChatType.Chat>, 'subject'> & {
-    subject?: ChatType.Chat;
+  Omit<AppSurface.ObjectSectionProps<Chat.Chat>, 'subject'> & {
+    subject?: Chat.Chat;
     companionTo?: Obj.Unknown;
   },
   Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>

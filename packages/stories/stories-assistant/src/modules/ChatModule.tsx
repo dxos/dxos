@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import * as ChatSchema from '@dxos/assistant/Chat';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Filter } from '@dxos/echo';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as Chat from '@dxos/plugin-assistant/Chat';
@@ -24,7 +24,7 @@ export const ChatModule = () => {
 };
 
 const ChatModuleContainer = ({ space }: { space: Space }) => {
-  const chats = useQuery(space.db, Filter.type(ChatSchema.Chat));
+  const chats = useQuery(space.db, Filter.type(AssistantChat.Chat));
   // The newest chat until the reader picks another; a template switch drops the id and lands on the
   // new space's own chat.
   const [selected, setSelected] = useState<string>();
@@ -35,7 +35,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
 
   // Every chat in the space, not the companion chats of one object: the story is a tour of the
   // space, and its chats are the thing worth moving between.
-  const onSelect = useCallback((chat: ChatSchema.Chat) => setSelected(chat.id), []);
+  const onSelect = useCallback((chat: AssistantChat.Chat) => setSelected(chat.id), []);
   const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
 
   const registry = useRegistry();

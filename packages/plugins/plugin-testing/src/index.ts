@@ -9,6 +9,6 @@
 // — and there is no production code-splitting benefit to recover here.
 export * as StorybookPlugin from './StorybookPlugin.ts';
 export * from '#types';
-export * as Harness from './Harness.ts';
-export * as Corpus from './Corpus.ts';
 export * as CorePlugins from './CorePlugins.ts';
+export * as Corpus from './Corpus.ts';
+export * as Harness from './Harness.ts';

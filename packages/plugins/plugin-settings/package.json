@@ -63,15 +63,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./SettingsAction": {
+      "source": "./src/SettingsAction.ts",
+      "types": "./dist/types/src/SettingsAction.d.ts",
+      "import": "./dist/lib/ns/SettingsAction.mjs"
     },
     "./SettingsPath": {
       "source": "./src/types/SettingsPath.ts",
@@ -83,10 +78,15 @@
       "types": "./dist/types/src/SettingsPlugin.d.ts",
       "import": "./dist/lib/SettingsPlugin.mjs"
     },
-    "./SettingsAction": {
-      "source": "./src/SettingsAction.ts",
-      "types": "./dist/types/src/SettingsAction.d.ts",
-      "import": "./dist/lib/ns/SettingsAction.mjs"
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

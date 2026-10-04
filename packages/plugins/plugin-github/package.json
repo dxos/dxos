@@ -64,12 +64,16 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./Extensions": {
+      "source": "./src/Extensions.ts",
+      "types": "./dist/types/src/Extensions.d.ts",
+      "import": "./dist/lib/ns/Extensions.mjs"
     },
-    "./package.json": "./package.json",
+    "./GitHubCapabilities": {
+      "source": "./src/types/GitHubCapabilities.ts",
+      "types": "./dist/types/src/types/GitHubCapabilities.d.ts",
+      "import": "./dist/lib/GitHubCapabilities.mjs"
+    },
     "./GitHubEvents": {
       "source": "./src/types/GitHubEvents.ts",
       "types": "./dist/types/src/types/GitHubEvents.d.ts",
@@ -85,20 +89,16 @@
       "types": "./dist/types/src/GitHubPlugin.d.ts",
       "import": "./dist/lib/GitHubPlugin.mjs"
     },
-    "./Extensions": {
-      "source": "./src/Extensions.ts",
-      "types": "./dist/types/src/Extensions.d.ts",
-      "import": "./dist/lib/ns/Extensions.mjs"
-    },
-    "./GitHubCapabilities": {
-      "source": "./src/types/GitHubCapabilities.ts",
-      "types": "./dist/types/src/types/GitHubCapabilities.d.ts",
-      "import": "./dist/lib/GitHubCapabilities.mjs"
-    },
+    "./package.json": "./package.json",
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     },
     "./Walkthrough": {
       "source": "./src/types/Walkthrough.ts",

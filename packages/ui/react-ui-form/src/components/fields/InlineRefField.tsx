@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj, Ref, Type } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
-import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
+import * as Annotation from '@dxos/echo/Annotation';
 import { type AnyProperties } from '@dxos/echo/internal';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN, type URI } from '@dxos/keys';
@@ -45,7 +45,8 @@ export const InlineRefField = ({
   const { t } = useTranslation(translationKey);
   const reference = getValue();
   const typename = useMemo(
-    () => SchemaEx.findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename,
+    () =>
+      SchemaEx.findAnnotation<Annotation.ReferenceAnnotationValue>(type, Annotation.ReferenceAnnotationId)?.typename,
     [type],
   );
   const createType = useType(db, typename ? DXN.make(typename) : undefined);

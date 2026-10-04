@@ -8,7 +8,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CardSlot from '@dxos/app-toolkit/CardSlot';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
+import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Block, Button, Card, useTranslation } from '@dxos/react-ui';
@@ -58,7 +58,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
 
   return (
-    <ObjectCardPrimitive.Root
+    <ToolkitObjectCard.Root
       ref={cardRef}
       classNames={[classNames, handleOpen && 'dx-hover']}
       onClick={handleOpen}
@@ -66,7 +66,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
       role={handleOpen ? 'button' : undefined}
       tabIndex={handleOpen ? 0 : undefined}
     >
-      <ObjectCardPrimitive.Header
+      <ToolkitObjectCard.Header
         subject={subject}
         menu={
           <Block rail='end'>
@@ -89,7 +89,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
       <Card.Body>
         <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
       </Card.Body>
-    </ObjectCardPrimitive.Root>
+    </ToolkitObjectCard.Root>
   );
 };
 

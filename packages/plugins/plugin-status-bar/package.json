@@ -63,15 +63,15 @@
       "types": "./dist/types/src/StatusBar.d.ts",
       "import": "./dist/lib/ns/StatusBar.mjs"
     },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./StatusBarPlugin": {
       "source": "./src/StatusBarPlugin.ts",
       "types": "./dist/types/src/StatusBarPlugin.d.ts",
       "import": "./dist/lib/StatusBarPlugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

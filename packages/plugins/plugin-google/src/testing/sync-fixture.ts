@@ -12,7 +12,7 @@ import * as Credential from '@dxos/compute/Credential';
 import type * as Operation from '@dxos/compute/Operation';
 import type * as Trace from '@dxos/compute/Trace';
 import { Database, type Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
+import type * as EchoError from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
 import { Connection } from '@dxos/link';
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
@@ -30,7 +30,7 @@ export const runGoogleSync = (
   options: MailSync.RunMailSyncOptions,
 ): Effect.Effect<
   { newMessages: number },
-  MailSync.MailSyncError | EntityNotFoundError,
+  MailSync.MailSyncError | EchoError.EntityNotFoundError,
   Database.Service | Capability.Service | Operation.Service | Trace.TraceService | GoogleMailApi | Resolver
 > =>
   MailSync.runMailSync(options).pipe(
@@ -57,7 +57,7 @@ export const googleSyncLiveServices = (
   connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<
   GoogleMailApi | Database.Service | Resolver | Capability.Service | Trace.TraceService | Operation.Service,
-  EntityNotFoundError
+  EchoError.EntityNotFoundError
 > => {
   // The fixture connection carries a real token on the object, so no credential resolves through EDGE.
   const credentials = credentialsLayerFromDatabase().pipe(

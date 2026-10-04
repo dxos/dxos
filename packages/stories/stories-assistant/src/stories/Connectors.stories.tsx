@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import * as ConnectorConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
+import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as ConnectorsSkill from '@dxos/plugin-connector/ConnectorsSkill';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as CalendarSkill from '@dxos/plugin-inbox/CalendarSkill';
@@ -98,7 +98,7 @@ export const WithGmail: Story = {
           Cell.article(mailbox),
           {
             type: AppSurface.Article,
-            data: { subject: `${ConnectorConnectorPlugin.meta.profile.key}.space-settings` },
+            data: { subject: `${ConnectorPlugin.meta.profile.key}.space-settings` },
           },
         ],
         [StoryRole.Context],
@@ -180,7 +180,7 @@ export const WithCalendar: Story = {
   args: {
     layout: [
       [StoryRole.Chat],
-      [{ type: AppSurface.Article, data: { subject: `${ConnectorConnectorPlugin.meta.profile.key}.space-settings` } }],
+      [{ type: AppSurface.Article, data: { subject: `${ConnectorPlugin.meta.profile.key}.space-settings` } }],
       [StoryRole.Context],
     ],
   },

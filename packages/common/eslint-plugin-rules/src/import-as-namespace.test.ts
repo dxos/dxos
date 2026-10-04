@@ -21,7 +21,7 @@ describe('import-as-namespace', () => {
       valid: [
         { filename, code: "import * as Hooks from './Hooks.ts';" },
         { filename, code: "import * as HooksModule from './Hooks.ts';" },
-        { filename, code: "import * as AppHooks from './Hooks.ts';" },
+        { filename, code: "import * as ToolkitHooks from './Hooks.ts';" },
       ],
       invalid: [
         {

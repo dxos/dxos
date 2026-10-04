@@ -41,15 +41,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./HeyGenPlugin": {
-      "source": "./src/HeyGenPlugin.ts",
-      "types": "./dist/types/src/HeyGenPlugin.d.ts",
-      "import": "./dist/lib/HeyGenPlugin.mjs"
-    },
     "./HeyGenEvents": {
       "source": "./src/HeyGenEvents.ts",
       "types": "./dist/types/src/HeyGenEvents.d.ts",
       "import": "./dist/lib/ns/HeyGenEvents.mjs"
+    },
+    "./HeyGenPlugin": {
+      "source": "./src/HeyGenPlugin.ts",
+      "types": "./dist/types/src/HeyGenPlugin.d.ts",
+      "import": "./dist/lib/HeyGenPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

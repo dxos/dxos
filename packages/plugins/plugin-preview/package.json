@@ -53,21 +53,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./PreviewPlugin": {
-      "source": "./src/PreviewPlugin.ts",
-      "types": "./dist/types/src/PreviewPlugin.d.ts",
-      "import": "./dist/lib/PreviewPlugin.mjs"
-    },
     "./PreviewCapabilities": {
       "source": "./src/types/PreviewCapabilities.ts",
       "types": "./dist/types/src/types/PreviewCapabilities.d.ts",
@@ -77,6 +62,21 @@
       "source": "./src/PreviewEvents.ts",
       "types": "./dist/types/src/PreviewEvents.d.ts",
       "import": "./dist/lib/ns/PreviewEvents.mjs"
+    },
+    "./PreviewPlugin": {
+      "source": "./src/PreviewPlugin.ts",
+      "types": "./dist/types/src/PreviewPlugin.d.ts",
+      "import": "./dist/lib/PreviewPlugin.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

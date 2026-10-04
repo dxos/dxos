@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-// Standalone entrypoint, not a barrel namespace: this is loaded by the log-writer worker, and
-// hoisting it onto the root barrel would put it in the graph of everyone importing the package.
+// The log-writer worker imports this through its own subpath, so nothing else loads the
+// OpenTelemetry SDK.
 
 import {
   type Attributes,

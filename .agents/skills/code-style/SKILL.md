@@ -154,8 +154,11 @@ export const func: {
   (`Operation.NoHandlerError`, like `Cause.TimeoutError`). A family of errors with no owning
   namespace gets a `<Domain>Error` namespace module (`FunctionsAiError.UpstreamError`, like
   `SqlError` or `HttpClientError`). There is no catch-all `errors` export.
-- Two packages' namespaces of the same name can meet in one file by prefixing the import:
-  `import * as AppHooks from '@dxos/app-framework/Hooks'` beside `import * as Hooks from '@dxos/react-ui/Hooks'`.
+- A namespace import uses the module's name. When the file already binds that name (another
+  package's namespace, a local declaration, or a global such as `Map` or `Error`), prefix it with
+  the package's short name: `ToolkitHooks` for `@dxos/app-toolkit/Hooks`, `GraphHooks` for
+  `@dxos/plugin-graph/Hooks`, `EchoError` for `@dxos/echo/Error`. app-framework's namespace keeps
+  the bare name.
 - For a namespace file, avoid prefixing top-level types with the namespace name —
   inside `Foo.ts` prefer `Manager`, `Service`, `Options` over `FooManager`,
   `FooService`, `FooOptions` (callers see `Foo.Manager` either way).
