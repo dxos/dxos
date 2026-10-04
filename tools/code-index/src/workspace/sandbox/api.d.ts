@@ -93,6 +93,56 @@ declare const design: {
   ): Promise<GraphData & { grouping: string; scorer: string }>;
 };
 
+/** One declaration of a name, as `symbols.declarations` returns it. */
+declare type Declaration = {
+  iri: string;
+  name: string;
+  kind?: string;
+  /** Repository-relative path of the declaring file. */
+  path: string;
+  /** The declaring file's package, e.g. `@dxos/edge-client`. */
+  package?: string;
+  exported: boolean;
+  /** Reachable from the package's public entry points. */
+  packagePublic: boolean;
+  /** `test` for a *.test.* / *.spec.* file, `story` for *.stories.*. */
+  role: 'impl' | 'test' | 'story';
+};
+
+/**
+ * Symbol lookups that rank the way a person would. Use these rather than hand-written SPARQL to find
+ * where something is defined or who uses it: a bare name often has several declarations — the real
+ * one plus test doubles and story locals — and an unordered query returns whichever comes first.
+ */
+declare const symbols: {
+  /**
+   * Every declaration of `name` (a bare name, or a canonical one like `Order.natural`), best first:
+   * package-public, then exported, then impl over story over test. `[0]` is the definition.
+   */
+  declarations(name: string): Promise<Declaration[]>;
+  /**
+   * Who uses a declaration, through barrels, re-exports and namespaces, grouped by package — the MCP
+   * `usages` tool. `symbol` is a name, an IRI or `<path>#<name>`; a name with several equally good
+   * declarations returns them as `candidates` and no `declaration`.
+   */
+  usages(
+    symbol: string,
+    options?: { kind?: 'api' | 'impl' | 'all'; includeTests?: boolean; limit?: number },
+  ): Promise<{
+    declaration?: string;
+    candidates: { iri: string; types: string[]; matchedBy: string }[];
+    packages: {
+      package: string;
+      counts: { impl: number; test: number; story: number };
+      files: { path: string; role: 'impl' | 'test' | 'story'; symbols: string[]; via: 'direct' | 'barrel' }[];
+    }[];
+    reexportedBy: string[];
+    total: { symbols: number; files: number; packages: number; impl: number; test: number; story: number };
+    truncated: boolean;
+    hint?: string;
+  }>;
+};
+
 /**
  * Writes to the transcript the model reads back — the return channel for intermediate findings.
  * `console.log` is captured the same way. Neither reaches the user's screen.

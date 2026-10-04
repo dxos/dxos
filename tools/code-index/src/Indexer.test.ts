@@ -248,6 +248,30 @@ describe('Indexer', () => {
     expect(await index()).toMatchObject({ indexed: 1, touched: 0 });
   }, 60_000);
 
+  test('the reporter hears each phase in order as the pass completes it', async () => {
+    const indexReporting = async (options?: Partial<Indexer.Options>) => {
+      const heard: Indexer.Progress[] = [];
+      const result = await index({ ...options, onProgress: (progress) => Effect.sync(() => heard.push(progress)) });
+      return { result, heard, phases: heard.map((progress) => progress.phase) };
+    };
+
+    await writeFile(join(root, 'src', 'a.ts'), 'export const a = 3;\n');
+    const edited = await indexReporting();
+    expect(edited.phases).toEqual(['scan', 'parse', 'commit', 'reasoner', 'reason', 'summary']);
+    expect(edited.heard).toContainEqual({ phase: 'parse', ms: expect.any(Number), files: 1 });
+    expect(edited.heard).toContainEqual({ phase: 'reasoner', outcome: edited.result.reasoners[0] });
+
+    const idle = await indexReporting();
+    expect(idle.phases).toEqual(['scan', 'parse', 'commit', 'reason-skipped', 'summary']);
+    expect(idle.heard).toContainEqual({ phase: 'parse', ms: 0, files: 0 });
+
+    const later = new Date(Date.now() + 120_000);
+    await utimes(join(root, 'src', 'a.ts'), later, later);
+    const touched = await indexReporting({ summarize: false });
+    expect(touched.result).toMatchObject({ indexed: 0, touched: 1 });
+    expect(touched.phases).toEqual(['scan', 'parse', 'commit', 'reason-skipped']);
+  }, 60_000);
+
   test('every snippet the index holds is valid TypeScript', async () => {
     const snippets = await withStore((store) => store.match(undefined, Ontology.snippet));
     expect(snippets.length).toBeGreaterThan(0);
