@@ -223,10 +223,8 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-messenger/Messenger',
   render: DefaultStory,
+  // The client grid is innermost so the layout wraps both columns rather than each one.
   decorators: [
-    withTheme(),
-    withMosaic(),
-    withLayout({ layout: 'fullscreen' }),
     withMultiClientProvider({
       numClients: 2,
       createIdentity: true,
@@ -237,6 +235,9 @@ const meta = {
         space.db.add(Organization.make({ name: LINKED_OBJECT_NAME }));
       },
     }),
+    withMosaic(),
+    withLayout({ layout: 'fullscreen' }),
+    withTheme(),
   ],
   parameters: {
     layout: 'fullscreen',

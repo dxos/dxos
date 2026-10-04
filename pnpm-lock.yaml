@@ -13424,9 +13424,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../ui/react-ui-card
@@ -13461,6 +13458,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui

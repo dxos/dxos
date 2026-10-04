@@ -57,6 +57,8 @@ Decisions taken while building (beyond the spec):
 
 - [ ] Per-space filter in the panel (by the linked object's space).
 - [ ] QA demo recording of `QA-1` against the running app (autocue).
+- [ ] Verify a linked object resolves on the recipient: in `TwoUsers`, Bob's click did not show
+      "Opened “Q3 planning”" (ref decoded from JSON may be relative, or the shared space not loaded).
 - [ ] Delete the legacy credential receive path after the TTL window.
 - [x] Changeset for Phase 1 when the PR is opened.
 - [ ] Shared message tile for plugin-inbox + plugin-messenger.
