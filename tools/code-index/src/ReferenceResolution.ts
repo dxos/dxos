@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import { DataFactory } from 'n3';
 
 import * as Barrels from './internal/barrels.ts';
+import * as Cooperative from './internal/cooperative.ts';
 import * as Ontology from './Ontology.ts';
 import type * as Store from './Store.ts';
 import { type SymbolFacts, declarations, isDeclaration } from './worker/types/Bind.ts';
@@ -42,14 +43,14 @@ export const derive = (store: Store.Api): Effect.Effect<Quad[], Store.StoreError
     const { aliasOf, namespaceOf, reexports, moduleFile } = yield* Barrels.read(store);
     // Every kind per IRI, since a declaration merge (`class X` + `namespace X`) asserts two.
     const kindsOf = new Map<string, string[]>();
-    for (const quad of kinds) {
+    yield* Cooperative.forEach(kinds, (quad) => {
       const known = kindsOf.get(quad.subject.value);
       if (known) {
         known.push(quad.object.value);
       } else {
         kindsOf.set(quad.subject.value, [quad.object.value]);
       }
-    }
+    });
 
     const symbol = (iri: string): SymbolFacts | undefined => {
       const symbolKinds = kindsOf.get(iri);
@@ -67,16 +68,18 @@ export const derive = (store: Store.Api): Effect.Effect<Quad[], Store.StoreError
 
     // A re-export alias resolves even when nothing references it, so its origin is always known.
     const referenced = (yield* store.select(REFERENCES)).map((row) => row.target);
-    const aliases = [...kindsOf].filter(([, symbolKinds]) => symbolKinds.includes('reexport')).map(([iri]) => iri);
+    const aliases = (yield* Cooperative.filter(kindsOf, ([, symbolKinds]) => symbolKinds.includes('reexport'))).map(
+      ([iri]) => iri,
+    );
 
     const quads: Quad[] = [];
-    for (const reference of new Set([...referenced, ...aliases])) {
+    yield* Cooperative.forEach(new Set([...referenced, ...aliases]), (reference) => {
       if (reference === undefined || !isAddressable(reference)) {
-        continue;
+        return;
       }
       const facts = symbol(reference);
       if (facts && isDeclaration(facts)) {
-        continue;
+        return;
       }
       const declaration = declarationOf(reference);
       if (declaration !== undefined && declaration !== reference) {
@@ -84,6 +87,6 @@ export const derive = (store: Store.Api): Effect.Effect<Quad[], Store.StoreError
           DataFactory.quad(DataFactory.namedNode(reference), Ontology.resolvesTo, DataFactory.namedNode(declaration)),
         );
       }
-    }
+    });
     return quads;
   });

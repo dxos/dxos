@@ -225,7 +225,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
           />
         </Panel.Header>
         <Panel.Body asChild>
-          <Grid grow cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
+          <Grid grow cols={['30rem', 'fill']} classNames='divide-x divide-separator'>
             <Grid grow rows={[1, 2]} classNames='divide-y divide-separator-subtle'>
               <div role='region' aria-label={t('browse-pane.label')} className='dx-expand grid overflow-auto'>
                 <FileTree

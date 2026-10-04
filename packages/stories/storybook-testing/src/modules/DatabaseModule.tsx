@@ -25,8 +25,8 @@ import {
   composableProps,
 } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
-import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { type EditorController, QueryEditor } from '@dxos/react-ui-query';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 

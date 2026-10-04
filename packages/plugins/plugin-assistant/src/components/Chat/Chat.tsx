@@ -45,6 +45,7 @@ import { TaskSlashCommands } from '../../commands/index.ts';
 import { AiUsageQuotaError, type ProcessorRequestContext, getProcessorState } from '../../processor/index.ts';
 import {
   ChatStatus,
+  DEFAULT_MAX_QUEUE,
   ChatActivity as NaturalChatActivity,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
@@ -55,12 +56,14 @@ import {
   type ChatContextValue,
   ChatReportContextProvider,
   type ChatRequestTiming,
+  ChatThreadContextProvider,
   useChatContext,
+  useChatThreadContext,
 } from './context.ts';
 import { type ChatEvent } from './events.ts';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
-import { projectAlarms, projectThread, resolveRewind } from './thread.ts';
+import { projectAlarms, projectSelfWakes, projectThread, resolveRewind } from './thread.ts';
 
 //
 // Root
@@ -132,6 +135,7 @@ const ChatRoot = ({
     [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
   );
   const alarms = useMemo(() => projectAlarms({ feedAlarms }), [feedAlarms]);
+  const selfWakes = useMemo(() => projectSelfWakes({ feedAlarms, messages }), [feedAlarms, messages]);
 
   // Cancelling is a plain feed removal: the queue and the alarm set are projections over the feed,
   // so dropping the record is what takes the item out of them.
@@ -256,6 +260,10 @@ const ChatRoot = ({
                 });
               break;
             }
+            // The prompt's own guard does not cover submits emitted elsewhere (a checklist's execute action).
+            if (active && queued.length >= DEFAULT_MAX_QUEUE) {
+              break;
+            }
             lastPrompt.current = ev.text;
             const context = getContext?.();
             // Await persistence (transient chat) before requesting so the agent resolves the
@@ -303,7 +311,7 @@ const ChatRoot = ({
         }
       }
     });
-  }, [event, processor, streaming, active, onSubmit, getContext, invokePromise, chat, db, feed]);
+  }, [event, processor, streaming, active, queued.length, onSubmit, getContext, invokePromise, chat, db, feed]);
 
   // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
   // turn, so the agent resumes without the report reading as something the user typed.
@@ -315,19 +323,24 @@ const ChatRoot = ({
       event={event}
       db={db}
       chat={chat}
-      messages={messages}
-      queued={queued}
-      alarms={alarms}
       onCancel={handleCancel}
       processor={processor}
-      requestTiming={requestTiming}
-      controller={controller}
+      queueSize={queued.length}
       setController={setController}
-      visibleRange={visibleRange}
       setVisibleRange={setVisibleRange}
       {...props}
     >
-      <ChatReportContextProvider submit={handleReport}>{children}</ChatReportContextProvider>
+      <ChatThreadContextProvider
+        messages={messages}
+        queued={queued}
+        alarms={alarms}
+        selfWakes={selfWakes}
+        requestTiming={requestTiming}
+        controller={controller}
+        visibleRange={visibleRange}
+      >
+        <ChatReportContextProvider submit={handleReport}>{children}</ChatReportContextProvider>
+      </ChatThreadContextProvider>
     </ChatContextProvider>
   );
 };
@@ -502,7 +515,8 @@ type ChatThreadProps = ThemedClassName<{
 
 const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { db, debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { db, debug, event, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { messages } = useChatThreadContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
@@ -642,7 +656,7 @@ type ChatOutlineProps = ThemedClassName<{}>;
  * same navigation seam as the toolbar and the arrow keys.
  */
 const ChatOutline = ({ classNames }: ChatOutlineProps) => {
-  const { messages, visibleRange, controller } = useChatContext(CHAT_OUTLINE_NAME);
+  const { messages, visibleRange, controller } = useChatThreadContext(CHAT_OUTLINE_NAME);
 
   const markers = useMemo(() => buildMarkers(messages), [messages]);
   const handleSelect = useCallback(
@@ -694,7 +708,7 @@ type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' 
  * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
  */
 const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
-  const { chat, db, processor, event } = useChatContext(CHAT_PROMPT_NAME);
+  const { chat, db, processor, event, queueSize } = useChatContext(CHAT_PROMPT_NAME);
 
   // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
   // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
@@ -736,6 +750,7 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
         chat={chat}
         processor={processor}
         event={event}
+        queueSize={queueSize}
         tasksVisible={hasTasks ? tasksVisible : undefined}
       />
     </Collapsible.Root>
@@ -928,7 +943,8 @@ const QUEUE_REVEAL_DELAY = 1_000;
 type ChatQueueProps = Omit<NaturalChatQueueProps, 'messages' | 'onCancel'>;
 
 const ChatQueue = (props: ChatQueueProps) => {
-  const { queued, onCancel } = useChatContext(CHAT_QUEUE_NAME);
+  const { onCancel } = useChatContext(CHAT_QUEUE_NAME);
+  const { queued } = useChatThreadContext(CHAT_QUEUE_NAME);
   const messages = useSettled(queued, QUEUE_REVEAL_DELAY);
 
   return <NaturalChatQueue {...props} messages={messages} onCancel={onCancel} />;
@@ -948,7 +964,8 @@ const CHAT_ACTIVITY_NAME = 'Chat.Activity';
  * beside the prompt with the rest of the presentational parts and only the binding is here.
  */
 const ChatActivity = ({ classNames }: ThemedClassName) => {
-  const { processor, alarms } = useChatContext(CHAT_ACTIVITY_NAME);
+  const { processor } = useChatContext(CHAT_ACTIVITY_NAME);
+  const { alarms } = useChatThreadContext(CHAT_ACTIVITY_NAME);
   const activity = useAtomValue(getProcessorState(processor).activity);
 
   // Earliest pending alarm: the agent wakes at the first one, so a later one says nothing about the

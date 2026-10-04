@@ -589,8 +589,8 @@ diagnostics.
 A **reasoner** is a unit that reads the graph and emits quads into its own `graph:derived/<name>`.
 Two kinds, one contract:
 
-- **N3 rule files** (`rules/*.n3`) — run by EYE over the facts whose predicates the file names
-  (an unbound predicate disables the narrowing). Right for classification and joins that introduce
+- **N3 rule files** (`rules/*.n3`) — run by the native rule engine over the facts whose
+  predicates the file names (an unbound predicate reads the whole graph). Right for classification and joins that introduce
   vocabulary: small output, declarative, diffable.
 - **JS passes** (`src/Reasoner.ts`, built in rather than loaded from `rules/`) — a `{ name, derive }`
   that reads the file graphs and replaces its own `graph:pass/<name>` (`Store.writePass`). Right for

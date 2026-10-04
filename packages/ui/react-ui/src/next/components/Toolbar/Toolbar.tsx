@@ -56,13 +56,7 @@ const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
     const rootProps = api.getRootProps();
     return (
       <ToolbarContext.Provider value={api}>
-        <ScrollArea.Root
-          size={size}
-          width='thin'
-          orientation={orientation}
-          autoHide
-          classNames={recipes.toolbarScroll()}
-        >
+        <ScrollArea.Root size={size} width='thin' orientation={orientation} classNames={recipes.toolbarScroll()}>
           <ScrollArea.Viewport asChild>
             <ToolbarElement
               asChild={asChild}

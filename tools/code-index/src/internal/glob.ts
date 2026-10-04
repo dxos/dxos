@@ -3,9 +3,9 @@
 //
 
 /**
- * Compiles a path glob to an anchored regular expression in the subset both rule engines accept
- * (EYE's and Rust's `regex`): a `**` segment spans any number of directories, `*` and `?` stay
- * within one segment, and `{a,b}` is an alternative. Everything else is literal.
+ * Compiles a path glob to an anchored regular expression the rule engine's `regex` accepts: a `**`
+ * segment spans any number of directories, `*` and `?` stay within one segment, and `{a,b}` is an
+ * alternative. Everything else is literal.
  */
 export const globPattern = (glob: string): string => {
   let pattern = '';
