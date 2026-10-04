@@ -41,7 +41,9 @@ export const measure = (
     return HIDDEN;
   }
 
-  const length = Math.min(track, Math.max(MIN_THUMB, (viewportLength / scrollLength) * track));
+  // The share of the scrolling region in view: a sticky `start` column is neither, so it leaves both lengths.
+  const visible = (viewportLength - start) / (scrollLength - start);
+  const length = Math.min(track, Math.max(MIN_THUMB, visible * track));
   const offset = start + padding + (scrollOffset / overflow) * (track - length);
   return { visible: true, offset, length };
 };
