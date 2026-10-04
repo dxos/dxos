@@ -22,6 +22,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { Diagnostics, Mermaid, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
 
 import { SceneSvg } from '../src/components/SceneSvg.tsx';
+import { type Reply } from './emit-worker.ts';
 
 const DIAGRAMS = join(dirname(fileURLToPath(import.meta.url)), '../docs/diagrams');
 
@@ -80,18 +81,22 @@ const makeWorkerPool = (size: number) => {
   };
   const workers = Array.from({ length: size }, () => {
     const worker = new Worker(new URL('./emit-worker.ts', import.meta.url));
-    worker.on('message', (commands: Scene.Command[]) => {
-      running.get(worker)?.resolve(commands);
+    worker.on('message', (reply: Reply) => {
+      const task = running.get(worker);
       running.delete(worker);
+      if ('error' in reply) {
+        task?.reject(new Error(reply.error));
+      } else {
+        task?.resolve(reply.commands);
+      }
       dispatch(worker);
     });
+    // A job's own failure comes back as a reply; this is the worker itself dying, which leaves the
+    // pool unable to promise the rest, so everything outstanding fails rather than hanging.
     worker.on('error', (error) => {
-      const task = running.get(worker);
-      if (!task) {
-        throw error;
-      }
-      running.delete(worker);
-      task.reject(error);
+      const outstanding = [...running.values(), ...queue.splice(0)];
+      running.clear();
+      outstanding.forEach((task) => task.reject(error));
     });
     idle.push(worker);
     return worker;

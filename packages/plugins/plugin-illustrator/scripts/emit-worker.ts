@@ -10,8 +10,17 @@
 
 import { parentPort } from 'node:worker_threads';
 
-import { MermaidEngine } from '@dxos/diagram';
+import { MermaidEngine, type Scene } from '@dxos/diagram';
+
+/** One reply per job: its scene commands, or why routing it failed, so the worker outlives a bad job. */
+export type Reply = { commands: Scene.Command[] } | { error: string };
 
 parentPort?.on('message', (job: MermaidEngine.EmitJob) => {
-  parentPort?.postMessage(MermaidEngine.emitJob(job));
+  let reply: Reply;
+  try {
+    reply = { commands: MermaidEngine.emitJob(job) };
+  } catch (error) {
+    reply = { error: error instanceof Error ? (error.stack ?? error.message) : String(error) };
+  }
+  parentPort?.postMessage(reply);
 });
