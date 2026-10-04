@@ -419,6 +419,15 @@ describe('mcp usages', () => {
     expect(result.packages.flatMap((group) => group.files)).toEqual([]);
   });
 
+  test('a class merged with a namespace is found through a star barrel', async () => {
+    const result = await usages({ symbol: 'packages/lib/src/service.ts#Service' });
+    expect(result.packages.flatMap((group) => group.files)).toEqual([
+      { path: 'packages/app/src/service-user.ts', role: 'impl', symbols: ['usesService'], via: 'barrel' },
+      // The namespace half constructs the class half.
+      { path: 'packages/lib/src/service.ts', role: 'impl', symbols: ['Service.make'], via: 'direct' },
+    ]);
+  });
+
   test('an alias is followed to its declaration, and an ambiguous name lists candidates', async () => {
     const alias = await usages({ symbol: 'packages/lib/src/index.ts#old' });
     expect(alias.declaration).toBe(Ontology.symbolIri('packages/lib/src/impl.ts', 'legacy').value);

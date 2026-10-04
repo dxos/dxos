@@ -61,8 +61,11 @@ export const writeUsageFixture = async (root: string): Promise<void> => {
     'packages/lib/package.json': JSON.stringify({ name: '@test/lib', version: '1.0.0' }),
     'packages/lib/src/impl.ts': '/** @deprecated Use fresh. */\nexport const legacy = () => 1;\n',
     'packages/lib/src/order.ts': 'export const natural = 1;\n',
+    // A class merged with a namespace declares one symbol under two kinds.
+    'packages/lib/src/service.ts':
+      'export class Service {}\nexport namespace Service {\n  export const make = () => new Service();\n}\n',
     'packages/lib/src/index.ts':
-      "export * from './impl.ts';\nexport * as Order from './order.ts';\nexport { legacy as old } from './impl.ts';\n",
+      "export * from './impl.ts';\nexport * from './service.ts';\nexport * as Order from './order.ts';\nexport { legacy as old } from './impl.ts';\n",
     'packages/lib/src/direct.ts': "import { legacy } from './impl.ts';\nexport const local = legacy();\n",
     'packages/app/package.json': JSON.stringify({ name: '@test/app', version: '1.0.0' }),
     'packages/app/src/use.ts': [
@@ -75,6 +78,8 @@ export const writeUsageFixture = async (root: string): Promise<void> => {
     'packages/app/src/use.test.ts':
       "import { legacy } from '../../lib/src/index.ts';\nexport const tested = legacy();\n",
     'packages/app/src/use.stories.tsx': "import { old } from '../../lib/src/index.ts';\nexport const Story = old();\n",
+    'packages/app/src/service-user.ts':
+      "import { Service } from '../../lib/src/index.ts';\nexport const usesService = Service.make();\n",
     // Another `legacy`, so a bare name is ambiguous.
     'packages/app/src/other.ts': 'export const legacy = 2;\n',
   };

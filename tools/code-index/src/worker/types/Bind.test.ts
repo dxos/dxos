@@ -146,6 +146,40 @@ describe('declarations', () => {
     });
     expect(declarationOf(at('index.ts', 'Foo.bar'))).toBe(at('foo.ts', 'Foo'));
   });
+
+  test('a class merged with a namespace, and a plain namespace, resolve by barrel and by module', ({ expect }) => {
+    const { declarationOf } = resolver({
+      'index.ts': { reexports: ['service.ts', 'util.ts'], modules: { '@test/svc': 'index.ts' } },
+      'service.ts': {
+        symbols: [
+          { name: 'Service', kind: 'class' },
+          { name: 'Service', kind: 'namespace' },
+        ],
+      },
+      'util.ts': { symbols: [{ name: 'Util', kind: 'namespace' }] },
+    });
+    for (const [name, file] of [
+      ['Service', 'service.ts'],
+      ['Util', 'util.ts'],
+    ]) {
+      expect(declarationOf(at('index.ts', name))).toBe(at(file, name));
+      expect(declarationOf(Ontology.memberIri('@test/svc', name).value)).toBe(at(file, name));
+      expect(declarationOf(Ontology.memberIri('@test/svc', `${name}.layer`).value)).toBe(at(file, name));
+    }
+  });
+
+  test('a namespace merged in either order is still a declaration', ({ expect }) => {
+    const { declarationOf } = resolver({
+      'index.ts': { reexports: ['service.ts'] },
+      'service.ts': {
+        symbols: [
+          { name: 'Service', kind: 'namespace' },
+          { name: 'Service', kind: 'class' },
+        ],
+      },
+    });
+    expect(declarationOf(at('index.ts', 'Service'))).toBe(at('service.ts', 'Service'));
+  });
 });
 
 describe('envFromDocuments', () => {
