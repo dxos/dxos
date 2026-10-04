@@ -192,6 +192,13 @@ const make = Effect.gen(function* () {
       Effect.tapError((error) =>
         log.append(projectId, new Events.TurnFailed({ message: error.message })).pipe(Effect.ignore),
       ),
+      // An interrupted turn (the server shutting down) is closed too: only a `TurnFailed` or
+      // `TurnEnded` clears `running`, so a reload would otherwise show it working forever.
+      Effect.onInterrupt(() =>
+        log
+          .append(projectId, new Events.TurnFailed({ message: 'Interrupted before the turn finished.' }))
+          .pipe(Effect.ignore),
+      ),
     );
 
   return { turn } satisfies Api;
