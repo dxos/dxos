@@ -21,6 +21,7 @@ import {
   Field,
   Icon,
   Input,
+  SystemButton,
   Tag,
   Toolbar,
   composable,
@@ -501,21 +502,15 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                 priority on until it is saved. */}
             {showControls && task && showEstimates && <TaskEstimateControl task={task} />}
             {showControls && task && <TaskPriorityIcon task={task} />}
-            <Button
+            <SystemButton.Save
               variant='ghost'
-              iconOnly
-              icon='ph--check--regular'
               data-testid='taskList.edit.save'
-              label={t('save-task.label')}
               onClick={handleSave}
               onMouseDown={(event) => event.preventDefault()}
             />
-            <Button
+            <SystemButton.Cancel
               variant='ghost'
-              iconOnly
-              icon='ph--x--regular'
               data-testid='taskList.edit.cancel'
-              label={t('cancel-edit.label')}
               onClick={handleCancel}
               onMouseDown={(event) => event.preventDefault()}
             />
