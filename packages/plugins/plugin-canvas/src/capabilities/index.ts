@@ -14,7 +14,11 @@ import { CanvasCapabilities } from '#types';
 // Browser-only: the variant supplies the React article that renders a drawing.
 export const DrawingVariant = Capability.lazyModule(
   'drawing-variant',
-  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start, environments: [] },
+  {
+    provides: [IllustratorCapabilities.VariantProvider],
+    activatesOn: IllustratorEvents.Start,
+    environments: ['browser', 'tauri'],
+  },
   () => import('./drawing-variant.ts'),
 );
 export const CanvasSettings = AppCapability.settings(() => import('./settings.ts'), {

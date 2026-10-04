@@ -39,9 +39,9 @@ export const FeedToolbar = ({ attendableId, onSync }: FeedToolbarProps) => {
   );
 
   return (
-    <Panel.Toolbar asChild>
+    <Panel.Header>
       <ActionToolbar {...menuActions} attendableId={attendableId} />
-    </Panel.Toolbar>
+    </Panel.Header>
   );
 };
 

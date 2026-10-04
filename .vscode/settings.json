@@ -63,6 +63,13 @@
     "build-cache.json": "jsonc",
     "command-versions.json": "jsonc"
   },
+  // The watcher ignores .gitignore, so nested worktrees and build output flood it with change events.
+  "files.watcherExclude": {
+    "**/.claude/worktrees/**": true,
+    "**/.moon/cache/**": true,
+    "**/.store/conversations/**": true,
+    "**/dist/**": true
+  },
   "hediet.vscode-drawio.customColorSchemes": [
     [
       {
@@ -395,6 +402,10 @@
   "oxc.disableNestedConfig": true,
   "oxc.fmt.configPath": ".oxfmtrc.json",
   "rust-analyzer.linkedProjects": ["packages/apps/composer-app/src-tauri/Cargo.toml"],
+  "search.exclude": {
+    "**/.claude/worktrees": true,
+    "**/.store/conversations": true
+  },
   "search.followSymlinks": false,
   "search.useGlobalIgnoreFiles": false,
   "search.useParentIgnoreFiles": true,

@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Response from 'effect/ai/Response';
+import * as Tool from 'effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as Response from 'effect/unstable/ai/Response';
-import * as Tool from 'effect/unstable/ai/Tool';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';

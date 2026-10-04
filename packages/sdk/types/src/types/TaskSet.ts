@@ -30,7 +30,7 @@ import * as Task from './Task.ts';
 export class TaskSet extends Type.makeObject<TaskSet>(DXN.make('org.dxos.type.taskSet', '0.4.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('commerce.productName'), Schema.optional),
-    description: Schema.String.pipe(Schema.optional),
+    description: Format.Text.pipe(Schema.optional),
     image: Format.URL.pipe(Schema.annotate({ title: 'Image' }), Schema.optional),
 
     /**

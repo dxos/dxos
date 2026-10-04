@@ -39,7 +39,7 @@ const DefaultStory = () => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Button variant='primary' onClick={handleClear}>
             Clear
@@ -51,10 +51,10 @@ const DefaultStory = () => {
             Load V1 Sample
           </Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <CanvasComponent classNames='dx-attention-surface' canvas={canvas} assetsBaseUrl={null} autoCenter />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -93,9 +93,9 @@ const BuilderStory = () => {
 
   return (
     <Panel.Root>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <CanvasComponent classNames='dx-attention-surface' canvas={canvas} assetsBaseUrl={null} autoCenter />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

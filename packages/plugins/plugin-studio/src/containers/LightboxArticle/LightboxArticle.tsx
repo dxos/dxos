@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -200,10 +200,10 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
       onAdd={({ x, y }) => void handleAddArtifact({ x, y })}
     >
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Board.Container>
             <Board.Viewport>
               <Board.Backdrop />
@@ -224,7 +224,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
               </Board.Content>
             </Board.Viewport>
           </Board.Container>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Board.Root>
   );

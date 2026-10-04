@@ -41,7 +41,11 @@ export const Expose = Capability.inlineModule(
 export const Keyboard = Capability.lazyModule(
   'Keyboard',
   // Listens on `document`, which node and workerd lack.
-  { requires: [AppCapabilities.AppGraph, Capabilities.OperationInvoker], provides: [], environments: [] },
+  {
+    requires: [AppCapabilities.AppGraph, Capabilities.OperationInvoker],
+    provides: [],
+    environments: ['browser', 'tauri'],
+  },
   () => import('./keyboard.ts'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));

@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -70,12 +70,12 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} classNames='dx-document' />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <RoutineForm db={db} routine={subject} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

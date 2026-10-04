@@ -12,6 +12,26 @@ reviewId: 7e95a014fc
 
 _0 error(s), 13 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- 7e95a014fc-1 - ignored - comment-hygiene - packages/plugins/plugin-assistant/src/plugin.ts:47
+- 7e95a014fc-2 - ignored - error-messages-carry-context - packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.stories.tsx:291
+- 7e95a014fc-3 - ignored - error-messages-carry-context - packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.stories.tsx:533
+- 7e95a014fc-4 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.tsx:122
+- 7e95a014fc-5 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-routine/src/components/CreateRoutinePanel/CreateRoutinePanel.tsx:123
+- 7e95a014fc-6 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.tsx:263
+- 7e95a014fc-7 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-space/src/components/CreateObjectPanel/CreateObjectPanel.tsx:245
+- 7e95a014fc-8 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-tasks/src/containers/TaskSetArticle/TaskSetArticle.tsx:330
+- 7e95a014fc-9 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-trace/src/components/Gantt/Gantt.stories.tsx:386
+- 7e95a014fc-10 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui-trace/src/components/Gantt/Gantt.stories.tsx:841
+- 7e95a014fc-11 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-trace/src/components/Gantt/Gantt.tsx:307
+- 7e95a014fc-12 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui-trace/src/components/Gantt/Gantt.tsx:351
+- 7e95a014fc-13 - ignored - extract-non-rendering-logic-from-component - packages/ui/react-ui-trace/src/components/Gantt/Gantt.tsx:545
+
+## Issues
+
 # WARN 7e95a014fc-1 comment-hygiene `packages/plugins/plugin-assistant/src/plugin.ts:47`
 
 System One judges this a likely violation of `comment-hygiene` (Comments state settled reasoning, not noise), p=0.82. The likeliest place is lines 47-58 (`Plugin.addModule(AssistantState),`, location confidence 0.98). Judged with added `diff, pr` context after a first pass of 0.79. This is a single-shot classifier: confirm against the rule before acting.
@@ -63,3 +83,19 @@ System One judges this a likely violation of `design-tokens-not-raw-spacing-sizi
 # WARN 7e95a014fc-13 extract-non-rendering-logic-from-component `packages/ui/react-ui-trace/src/components/Gantt/Gantt.tsx:545`
 
 System One judges this a likely violation of `extract-non-rendering-logic-from-component` (Move derived-state and lifecycle logic out of the component body into a hook or function), p=0.84. The likeliest place is lines 545-568 (`for (const list of byLane.values()) {`, location confidence 0.32). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `a73270543e4d7b941962ab914a888a94754567c5`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 13 violations written to fragments, 224 uncertain, 1529 clean, 0 unanswered
+
+```text
+requests: 716 (116 verdicts re-asked with context the model requested)
+estimated input tokens: 6073891
+billed input tokens: 5709574 (cost $0.2398)
+measured chars per token: 3.19
+```

@@ -56,9 +56,9 @@ describe('Chat', () => {
         expect(Object.keys(Chat.fields).sort()).toEqual([
           'feed',
           'instructions',
-          'model',
           'name',
           'remote',
+          'session',
           'tasks',
           'viewType',
         ]);
@@ -69,28 +69,28 @@ describe('Chat', () => {
   );
 
   it.effect(
-    'model is held as a ref whose URI is the model DXN, and clears back to unset',
+    'the session config holds the model DXN, and clears back to unset',
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
-        expect(chat.model).toBeUndefined();
+        expect(chat.session?.model).toBeUndefined();
 
         const model = DXN.make('com.anthropic.model.claude-sonnet-5.default');
         Obj.update(chat, (chat) => {
-          chat.model = Ref.fromURI(model);
+          chat.session = { model };
         });
         yield* Database.flush();
-        expect(chat.model?.uri).toBe(model);
+        expect(chat.session?.model).toBe(model);
 
-        // Survives a round trip through the database: the ref carries no target, only the DXN.
+        // Survives a round trip through the database.
         const [reloaded] = yield* Database.query(Filter.type(Chat.Chat)).run;
-        expect(reloaded.model?.uri).toBe(model);
+        expect(reloaded.session?.model).toBe(model);
 
         Obj.update(chat, (chat) => {
-          chat.model = undefined;
+          chat.session = undefined;
         });
         yield* Database.flush();
-        expect(chat.model).toBeUndefined();
+        expect(chat.session?.model).toBeUndefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

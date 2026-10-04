@@ -29,16 +29,6 @@ export type MemoryInfo = {
   used: number;
 };
 
-/**
- * Represents the @info props in QueryState.
- */
-export type QueryInfo = {
-  // TODO(dmaretskyi): Remove.
-  filter: any;
-  metrics: any;
-  active: boolean;
-};
-
 export type DatabaseInfo = {
   spaces: number;
   /** Objects across every open space, from `db.stats()`. Summed: the panel reports the profile. */
@@ -59,7 +49,6 @@ export type PerformanceEntryLike = Pick<PerformanceEntry, 'entryType' | 'name' |
 export type Stats = {
   performanceEntries?: PerformanceEntryLike[];
   database?: DatabaseInfo;
-  queries?: QueryInfo[];
   memory?: MemoryInfo;
   network?: NetworkStatus;
   edge?: QueryEdgeStatusResponse;
@@ -203,16 +192,6 @@ export const useStats = (): [Stats, () => void] => {
   }
 
   return [stats, () => forceUpdate({})];
-};
-
-// TODO(burdon): Move to util.
-export const removeEmpty = (obj: any): any => {
-  const maybeTruncateKey = (str: string) => (str.length > 32 ? str.slice(0, 8) : str);
-  return Object.fromEntries(
-    Object.entries(obj)
-      .filter(([_, v]) => v !== undefined && v !== null && v !== false && !(Array.isArray(v) && v.length === 0))
-      .map(([k, v]) => [k, v === Object(v) ? removeEmpty(v) : typeof v === 'string' ? maybeTruncateKey(v) : v]),
-  );
 };
 
 const useDiagnostic = <T>(request: DiagnosticsRequest, refreshInterval: number): T | undefined => {

@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type Space } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
@@ -20,6 +22,7 @@ import { type SpaceDashboard } from '#dashboard';
 import { meta } from '#meta';
 
 import * as Settings from './Settings.ts';
+import * as SpaceEvents from './SpaceEvents.ts';
 import * as SpaceSchema from './SpaceSchema.ts';
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
@@ -105,6 +108,22 @@ export type OnTypeAdded = (params: {
   show?: boolean;
 }) => Effect.Effect<void, Error, Operation.Service>;
 export const OnTypeAdded = Capability.make<OnTypeAdded>()(`${meta.profile.key}.capability.onTypeAdded`);
+
+/**
+ * Tells the plugins a type was added (plugin-table makes a table for it). Activation first, since it is
+ * what makes a lazy module contribute its `OnTypeAdded` callback.
+ */
+export const notifyTypeAdded = Effect.fnUntraced(function* (
+  managers: { plugins: PluginManager.PluginManager; capabilities: CapabilityManager.CapabilityManager },
+  params: Parameters<OnTypeAdded>[0],
+) {
+  yield* managers.plugins.activate(SpaceEvents.TypeAdded);
+  const callbacks = managers.capabilities.getAll(OnTypeAdded);
+  yield* Effect.all(
+    callbacks.map((callback) => callback(params)),
+    { concurrency: 'unbounded' },
+  );
+});
 
 // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
 export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-toolkit",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Composer-specific capabilities, plugin helpers, and playground for building Composer plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -100,11 +100,6 @@
       "source": "./src/types/ContainerModel.ts",
       "types": "./dist/types/src/types/ContainerModel.d.ts",
       "import": "./dist/lib/types/ContainerModel.mjs"
-    },
-    "./DeckSpec": {
-      "source": "./src/app-graph/DeckSpec.ts",
-      "types": "./dist/types/src/app-graph/DeckSpec.d.ts",
-      "import": "./dist/lib/app-graph/DeckSpec.mjs"
     },
     "./DefaultParent": {
       "source": "./src/types/DefaultParent.ts",

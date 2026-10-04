@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
-import { Flex, IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -93,7 +93,7 @@ const Header = () => {
   const { t } = useTranslation(meta.profile.key);
   const { repo, pulls, unavailable } = useComponentContext();
   return (
-    <header className='flex items-center justify-between gap-1 px-4 py-3 dx-modal-surface border-b border-subdued-separator'>
+    <header className='flex items-center justify-between gap-1 px-4 py-3 dx-modal-surface border-b border-separator-subtle'>
       <a
         href={`https://github.com/${repo}`}
         target='_blank'
@@ -102,7 +102,7 @@ const Header = () => {
       >
         @{repo}
       </a>
-      <div className='text-xs text-description'>
+      <div className='text-xs text-fg-muted'>
         {unavailable
           ? t('github-unavailable.message')
           : pulls.length > 0
@@ -142,7 +142,7 @@ const PullRow = ({ pull }: { pull: GithubPullRequest }) => (
         <Flex column classNames='min-w-0 flex-1'>
           {/* `leading-6` gives the title the avatar's line box, so the two align on their own. */}
           <span className='text-sm leading-6 truncate'>{pull.title}</span>
-          <span className='text-xs text-description truncate'>
+          <span className='text-xs text-fg-muted truncate'>
             #{pull.number} · {pull.user.login} · {pull.merged_at ? formatRelative(pull.merged_at) : ''}
           </span>
         </Flex>
@@ -170,7 +170,7 @@ const StatusBar = () => {
   const { t } = useTranslation(meta.profile.key);
   const { repo } = useComponentContext();
   return (
-    <IconButton
+    <Button
       icon='ph--github-logo--regular'
       label={t('view-on-github.button')}
       variant='primary'

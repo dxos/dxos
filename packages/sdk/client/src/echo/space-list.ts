@@ -8,6 +8,8 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, PushStream, SubscriptionList, Trigger, scheduleMicroTask } from '@dxos/async';
 import {
   type ClientServicesProvider,
+  ClientTraceEvents,
+  type CreateSpaceOptions,
   type Echo,
   IMPORT_SPACE_TIMEOUT,
   type Space,
@@ -263,10 +265,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this.get();
   }
 
-  async create(
-    meta?: SpaceProperties,
-    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
-  ): Promise<Space> {
+  async create(meta?: SpaceProperties, options?: CreateSpaceOptions): Promise<Space> {
     return this._createSpaceInternal(this._ctx, meta, options);
   }
 
@@ -274,7 +273,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private async _createSpaceInternal(
     ctx: Context,
     meta?: SpaceProperties,
-    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
+    options?: CreateSpaceOptions,
   ): Promise<Space> {
     log('creating space');
     const space = await runServiceCall(
@@ -290,6 +289,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       return this.get().some(({ key }) => key.equals(requirePublicKey(space.spaceKey)));
     });
     const spaceProxy = this._findProxy(space);
+    // Reported once the service has created the space, so a failure while initializing it below still counts.
+    trace.events.emit(ClientTraceEvents.spaceCreate, { spaceId: spaceProxy.id, origin: options?.origin ?? 'unknown' });
 
     await cancelWithContext(ctx, spaceProxy._databaseInitialized.wait());
     spaceProxy.db.add(Obj.make(SpaceProperties, meta ?? {}), { placeIn: 'root-doc' });

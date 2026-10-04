@@ -3,16 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
-import { ClientService } from '@dxos/client';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
+import { ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
+import { EdgeHttpClientService } from '@dxos/edge-client';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute';
 import { bundleFunction, initializeBundler } from '@dxos/edge-compute/bundler';
+import { Identity } from '@dxos/halo';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { Deploy } from './definitions.ts';
@@ -22,7 +25,6 @@ export default Deploy.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ function: fn }) {
       const loaded = yield* Database.load(fn);
-      const client = yield* ClientService;
       if (!loaded.source) {
         return yield* Effect.fail(new FunctionError({ message: 'Function has no source script.' }));
       }
@@ -42,12 +44,12 @@ export default Deploy.pipe(
       const existingFunctionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
       const currentVersion = Obj.getMeta(loaded).version;
 
-      const identity = client.halo.identity.get();
+      const identity = Option.getOrUndefined(yield* Identity.getSnapshot);
       if (!identity) {
         return yield* Effect.fail(new FunctionError({ message: 'Identity not available.' }));
       }
 
-      const functionsService = FunctionsServiceClient.fromClient(client);
+      const functionsService = new FunctionsServiceClient(yield* EdgeHttpClientService);
       const newFunction = yield* Effect.promise(() =>
         functionsService.deploy(Context.default(), {
           ownerUri: identity.did,
@@ -66,10 +68,11 @@ export default Deploy.pipe(
       });
 
       const edgeFunctionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
+      const config = yield* ConfigService;
       return {
         function: Obj.getURI(loaded),
         functionUrl: edgeFunctionId
-          ? `${client.config.values.runtime?.services?.edge?.url ?? ''}/functions/${edgeFunctionId}`
+          ? `${config.values.runtime?.services?.edge?.url ?? ''}/functions/${edgeFunctionId}`
           : undefined,
       };
     }),

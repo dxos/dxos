@@ -47,7 +47,7 @@ export class PullRequest extends Type.makeObject<PullRequest>(DXN.make('org.dxos
     /** Login of the account that opened it. */
     author: Schema.String.pipe(Schema.annotate({ title: 'Author' }), Schema.optional),
 
-    description: Schema.String.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
+    description: Format.Text.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
 
     /** Branch the change is proposed against, e.g. `main`. */
     baseBranch: Schema.String.pipe(Schema.annotate({ title: 'Base branch' }), Schema.optional),

@@ -24,9 +24,7 @@ const DefaultStory = () => {
 
   return (
     <AlertDialog.Root open={!!recoveryCode}>
-      <AlertDialog.Overlay>
-        <RecoveryCodeDialog code={recoveryCode ?? ''} />
-      </AlertDialog.Overlay>
+      <RecoveryCodeDialog code={recoveryCode ?? ''} />
     </AlertDialog.Root>
   );
 };

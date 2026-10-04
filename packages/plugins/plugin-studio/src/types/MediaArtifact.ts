@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';

@@ -6,9 +6,10 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import type * as Stream from 'effect/Stream';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
+import type { SessionConfig } from '@dxos/ai';
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { ContentBlock } from '@dxos/types';
@@ -24,8 +25,8 @@ import { Instructions } from './types/index.ts';
 export interface Conversation extends Obj.Unknown {
   readonly feed: Ref.Ref<Feed.Feed>;
   readonly instructions?: Ref.Ref<Instructions.Instructions>;
-  /** The selected model, a ref whose URI is the model DXN; unset runs the agent's default. */
-  readonly model?: Ref.Ref<Obj.Unknown>;
+  /** How the conversation runs (its model); an unset model runs the agent's default. */
+  readonly session?: SessionConfig.SessionConfig;
 }
 
 /**
@@ -114,7 +115,7 @@ export const hydrate = (...args: Parameters<Context.Service.Shape<typeof AgentSe
   AgentService.use((service) => service.hydrate(...args));
 
 export interface GetSessionOptions {
-  // The model is read off the chat (see `Conversation.model`), but the catalog's shared model ids are
+  // The model is read off the chat (see `Conversation.session`), but the catalog's shared model ids are
   // served by several providers, so the provider must still accompany it into the agent process —
   // the id alone does not identify a resolver.
   readonly provider?: DXN.DXN;

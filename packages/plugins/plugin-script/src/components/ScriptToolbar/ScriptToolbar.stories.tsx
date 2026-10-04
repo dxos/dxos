@@ -3,8 +3,8 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useMemo } from 'react';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';

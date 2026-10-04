@@ -4,7 +4,7 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useContext, useState } from 'react';
 
 import { AiContext } from '@dxos/assistant';

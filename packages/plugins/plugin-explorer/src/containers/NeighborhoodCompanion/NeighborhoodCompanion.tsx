@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { DxAnchorActivate, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { DxAnchorActivate, Panel, ToggleGroup, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type TreeNode } from '@dxos/react-ui-graph';
 import '@dxos/react-ui-graph/styles/graph.css';
 
@@ -69,24 +69,19 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <div className='grow' />
           <Toolbar.ToggleGroup type='single' value={String(depth)} onValueChange={handleDepthChange}>
             {DEPTHS.map((value) => (
-              <Toolbar.ToggleGroupItem
-                key={value}
-                value={String(value)}
-                aria-label={t('depth.label', { count: value })}
-                title={t('depth.label', { count: value })}
-              >
-                {value}
-              </Toolbar.ToggleGroupItem>
+              <Tooltip.Trigger key={value} asChild content={t('depth.label', { count: value })}>
+                <ToggleGroup.Item value={String(value)} label={String(value)} />
+              </Tooltip.Trigger>
             ))}
           </Toolbar.ToggleGroup>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Visualization.Root
           classNames='dx-base-surface'
           model={model}
@@ -96,7 +91,7 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
         >
           <Visualization.Graph onNodeHover={handleHover} />
         </Visualization.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

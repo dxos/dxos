@@ -5,8 +5,8 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it, vi } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';

@@ -50,7 +50,7 @@ const ModulePanel = ({ connection, info }: { connection: ModuleHostConnection; i
     <div className='flex flex-col gap-2 rounded-md border border-separator p-3'>
       <div className='flex items-baseline justify-between gap-2'>
         <span className='font-medium'>{info.name ?? 'failed to load'}</span>
-        <span className='truncate font-mono text-xs text-subdued' title={info.url}>
+        <span className='truncate font-mono text-xs text-fg-subtle' title={info.url}>
           {info.url}
         </span>
       </div>
@@ -120,7 +120,7 @@ const ModuleHostStory = () => {
 
   return (
     <div className='flex max-w-2xl flex-col gap-4 p-6'>
-      <p className='text-sm text-subdued'>
+      <p className='text-sm text-fg-subtle'>
         The tab passes module URLs in the worker&apos;s init config; the worker <code>import()</code>s each one and
         routes <code>invoke</code> RPCs to its exported methods. <code>math</code>, <code>text</code> and{' '}
         <code>geometry</code> are TS modules compiled by Vite and resolved via <code>?module-url</code>;{' '}

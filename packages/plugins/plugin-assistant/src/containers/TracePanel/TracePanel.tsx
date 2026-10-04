@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -82,7 +82,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     // Only the agent process itself is renamed: its children inherit the conversation environment and
     // keep their own operation names.
     const resolveLabel = useCallback(
-      (process: Process.Info) => {
+      (process: Process.Process) => {
         if (!Process.isHarnessHost(process)) {
           return undefined;
         }

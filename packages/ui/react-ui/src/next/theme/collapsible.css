@@ -1,0 +1,93 @@
+/*
+ * Collapsible: a block-row trigger with a turning caret over a section whose height animates from Ark's `--height`.
+ */
+
+@layer dx-components {
+  .dx-collapsible:not(.dx-container) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .dx-collapsible-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--dx-gap-size);
+    width: 100%;
+    min-height: var(--dx-block-size);
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-sm, 0.25rem);
+    background: none;
+    color: var(--color-fg-muted);
+    font: inherit;
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+    text-align: start;
+    cursor: pointer;
+  }
+  /* A disclosure row is text, not a control: hover strengthens the text (same hue) rather than filling a surface. */
+  .dx-collapsible-trigger:hover {
+    color: var(--color-hover-fg);
+  }
+
+  /* Caret only: a block square, the trailing disclosure of a list row, with a control's hover fill. */
+  .dx-collapsible-trigger[data-caret-only] {
+    justify-content: center;
+    width: var(--dx-block-size);
+    height: var(--dx-block-size);
+    color: inherit;
+  }
+  .dx-collapsible-trigger[data-caret-only]:hover {
+    background: var(--color-hover-surface);
+  }
+
+  .dx-collapsible-indicator {
+    display: grid;
+    place-items: center;
+    transition: transform var(--dx-disclosure-duration) var(--dx-disclosure-ease-open);
+  }
+  .dx-collapsible-indicator[data-state='open'] {
+    transform: rotate(90deg);
+  }
+
+  .dx-collapsible-content {
+    overflow: hidden;
+  }
+  /* A grid content (`gutter='inherit'`) spaces its rows as its parent grid does, since a subgrid shares columns only. */
+  .dx-collapsible-content.dx-container {
+    row-gap: inherit;
+  }
+  .dx-collapsible-content[data-state='open'] {
+    animation: dx-collapsible-open var(--dx-disclosure-duration) var(--dx-disclosure-ease-open);
+  }
+  .dx-collapsible-content[data-state='closed'] {
+    animation: dx-collapsible-close var(--dx-disclosure-duration) var(--dx-disclosure-ease-close);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dx-collapsible-indicator {
+      transition: none;
+    }
+    .dx-collapsible-content[data-state] {
+      animation: none;
+    }
+  }
+
+  @keyframes dx-collapsible-open {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--height);
+    }
+  }
+  @keyframes dx-collapsible-close {
+    from {
+      height: var(--height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}

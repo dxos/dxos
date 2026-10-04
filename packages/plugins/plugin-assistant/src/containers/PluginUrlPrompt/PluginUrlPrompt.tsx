@@ -33,14 +33,14 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
   const manager = usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_URL_PROMPT_NAME);
   const { invokePromise } = useOperationInvoker();
-  const enabled = useAtomValue(manager.enabled);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
 
   // Read from the loader's persisted entries rather than component state, so a remounted chat does
   // not offer to load a plugin that is already in.
   const loadedId = url ? UrlLoader.getRemoteEntries().find((entry) => entry.url === url)?.id : undefined;
-  const isLoaded = loadedId !== undefined && enabled.includes(loadedId);
+  const plugins = useAtomValue(manager.plugins);
+  const isLoaded = loadedId !== undefined && plugins.some((plugin) => plugin.meta.profile.key === loadedId);
 
   const handleLoad = useCallback(async () => {
     if (!url) {
@@ -48,14 +48,15 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
     }
     setPending(true);
     setError(undefined);
-    // `invokePromise` reports a handler failure as `{ error }` rather than rejecting.
-    const { data, error } = await invokePromise(RegistryOperation.LoadPlugin, { url });
+    // Loaded but not enabled: turning it on is a second, deliberate step in Plugins, where the reader
+    // sees what the plugin is before it runs. `invokePromise` reports a failure as `{ error }`.
+    const { data, error } = await invokePromise(RegistryOperation.LoadPlugin, { url, enable: false });
     setPending(false);
     if (error || !data) {
       setError(describeLoadError(error));
     } else {
       // The agent is waiting on a click it cannot observe, so the outcome is reported as a turn.
-      submit(`Loaded the plugin \`${data.id}\` from ${url} and enabled it. Continue.`);
+      submit(`Loaded the plugin \`${data.id}\` from ${url}; I will enable it in Plugins. Continue.`);
     }
   }, [invokePromise, url, submit]);
 
@@ -70,21 +71,23 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
       role='group'
       column
       gap='sm'
-      classNames='my-2 p-3 border border-subdued-separator rounded-sm'
+      // Inline-size containment: rendered as a CodeMirror widget, whose line sizes to its widest child, the card
+      // otherwise grows to the URL's unwrapped width and pushes its Load button out of the chat.
+      classNames='my-2 p-3 border border-separator-subtle rounded-sm [contain:inline-size]'
       data-testid='assistant.pluginUrlPrompt'
     >
       <Flex gap='sm' align='center'>
-        <Icon icon='ph--cloud-arrow-down--regular' size={5} classNames='shrink-0 text-subdued' />
+        <Icon icon='ph--cloud-arrow-down--regular' size='lg' tone='subtle' />
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-url-prompt.title', { plugin: label })}</p>
-          <p className='text-sm text-subdued'>
+          <p className='text-sm text-fg-subtle'>
             {isLoaded
               ? t('plugin-url-prompt.loaded', { plugin: label })
               : t('plugin-url-prompt.description', { plugin: label })}
           </p>
         </Flex>
       </Flex>
-      <code className='text-xs text-subdued break-all'>{url}</code>
+      <code className='text-xs text-fg-subtle break-all'>{url}</code>
       {error && <p className='text-sm text-error-text'>{t('plugin-url-prompt.failed', { error })}</p>}
       {!isLoaded && (
         <Flex justify='end'>

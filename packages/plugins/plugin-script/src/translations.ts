@@ -5,11 +5,13 @@
 import * as Script from '@dxos/compute/Script';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 
 import { meta } from '#meta';
 import { Notebook } from '#types';
 
 export const translations = [
+  ...queryTranslations,
   {
     'en-US': {
       [Type.getTypename(Script.Script)]: {

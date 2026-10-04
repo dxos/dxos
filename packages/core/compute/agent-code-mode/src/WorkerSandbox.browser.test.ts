@@ -24,6 +24,10 @@ import * as WorkerSandboxBrowser from './WorkerSandboxBrowser.ts';
 const TASK_TYPENAME = 'com.example.type.task';
 const PERSON_TYPENAME = 'com.example.type.person';
 
+/** The versioned DXNs the Effect dialect resolves the types by. */
+const TASK_DXN = String(DXN.make(TASK_TYPENAME, '0.1.0'));
+const PERSON_DXN = String(DXN.make(PERSON_TYPENAME, '0.1.0'));
+
 class Person extends Type.makeObject<Person>(DXN.make(PERSON_TYPENAME, '0.1.0'))(
   Schema.Struct({ name: Schema.String }),
 ) {}
@@ -99,8 +103,8 @@ describe('worker sandbox in a Web Worker', () => {
     await db.flush();
 
     const output = await run(`
-      const tasks = yield* Database.query(Filter.type(types['${TASK_TYPENAME}'], { status: 'open' })).run;
-      const owner = yield* Database.add(Obj.make(types['${PERSON_TYPENAME}'], { name: 'Ada' }));
+      const tasks = yield* Database.query(Filter.type((yield* Database.resolve('${TASK_DXN}')), { status: 'open' })).run;
+      const owner = yield* Database.add(Obj.make((yield* Database.resolve('${PERSON_DXN}')), { name: 'Ada' }));
       for (const task of tasks) {
         Obj.update(task, (task) => { task.priority = task.title.length; task.owner = Ref.make(owner); });
       }
@@ -119,7 +123,7 @@ describe('worker sandbox in a Web Worker', () => {
     const { run } = await setup();
     scored.length = 0;
     const output = await run(
-      `yield* print('scored', yield* Operation.invoke(ops['${String(Score.meta.key)}'], { title: 'Review the PR' }));`,
+      `yield* print('scored', yield* Operation.invoke((yield* Database.resolve('${String(Score.meta.key)}')), { title: 'Review the PR' }));`,
     );
     expect(output).toEqual('scored 13');
     expect(scored).toEqual(['Review the PR']);
@@ -128,8 +132,8 @@ describe('worker sandbox in a Web Worker', () => {
   test('passes a stored object to an operation on the page as that same object', async () => {
     const { db, run } = await setup();
     const output = await run(`
-      const task = yield* Database.add(Obj.make(types['${TASK_TYPENAME}'], { title: 'Write the docs', status: 'open' }));
-      const { object } = yield* Operation.invoke(ops['${String(File.meta.key)}'], { object: task });
+      const task = yield* Database.add(Obj.make((yield* Database.resolve('${TASK_DXN}')), { title: 'Write the docs', status: 'open' }));
+      const { object } = yield* Operation.invoke((yield* Database.resolve('${String(File.meta.key)}')), { object: task });
       Obj.update(object, (task) => { task.status = 'filed'; });
       yield* Database.flush();
       yield* print(object.id === task.id, task.status);
@@ -195,9 +199,8 @@ const setup = async () => {
           input: JSON.stringify({ code }),
           providerExecuted: false,
         });
-        expect(result.error).toBeUndefined();
-        return Schema.decodeUnknownSync(Schema.Struct({ output: Schema.String }))(JSON.parse(String(result.result)))
-          .output;
+        // A failed call's text is what the model is shown in place of a result.
+        return result.error ?? Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result)));
       }),
     );
 
