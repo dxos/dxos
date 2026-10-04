@@ -11,7 +11,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Container, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic } from '@dxos/react-ui-mosaic';
@@ -184,16 +184,19 @@ export const NotificationsPanel = ({
         ) : (
           <Mosaic.Container asChild withFocus>
             <ScrollArea.Root>
-              <ScrollArea.Viewport ref={setViewport}>
-                <Mosaic.VirtualStack
-                  Tile={NotificationTile}
-                  items={items}
-                  draggable={false}
-                  getId={getItemId}
-                  getScrollElement={() => viewport}
-                  estimateSize={() => 120}
-                  gap={4}
-                />
+              {/* The viewport is the Body's first Container, so it takes the panel's gutter around the tiles. */}
+              <ScrollArea.Viewport asChild ref={setViewport}>
+                <Container padBlock>
+                  <Mosaic.VirtualStack
+                    Tile={NotificationTile}
+                    items={items}
+                    draggable={false}
+                    getId={getItemId}
+                    getScrollElement={() => viewport}
+                    estimateSize={() => 120}
+                    gap={4}
+                  />
+                </Container>
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Mosaic.Container>
