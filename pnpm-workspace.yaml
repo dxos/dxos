@@ -95,7 +95,7 @@ catalog:
   '@effect/ai-anthropic': 4.0.0
   '@effect/ai-openai': 4.0.0
   '@effect/atom-react': 4.0.0
-  '@effect/language-service': ^0.87.2
+  '@effect/language-service': ^0.87.3
   '@effect/opentelemetry': 4.0.0
   '@effect/platform-browser': 4.0.0
   '@effect/platform-bun': 4.0.0
@@ -105,7 +105,7 @@ catalog:
   '@effect/sql-sqlite-wasm': 4.0.0
   '@effect/tsgo': ^0.36.5
   '@effect/vitest': 4.0.0
-  '@effect/wa-sqlite': ^0.1.2
+  '@effect/wa-sqlite': ^0.2.1
   '@elgato/streamdeck': ^2.1.2
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
