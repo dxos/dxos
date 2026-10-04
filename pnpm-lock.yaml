@@ -24483,6 +24483,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../packages/common/node-std
+      '@dxos/plugin-illustrator':
+        specifier: workspace:*
+        version: link:../../packages/plugins/plugin-illustrator
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui
@@ -24495,6 +24498,9 @@ importers:
       '@dxos/react-ui-feed':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-feed
+      '@dxos/react-ui-markdown':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui-markdown
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../packages/common/sql-sqlite
@@ -24546,9 +24552,6 @@ importers:
       ldkit:
         specifier: 'catalog:'
         version: 2.9.0
-      mermaid:
-        specifier: '>=10.9.4'
-        version: 10.9.4
       n3:
         specifier: 'catalog:'
         version: 2.1.0
