@@ -39,9 +39,8 @@ import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
 import { TaskEstimateControl, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
 
-//
-// Create — the add row; renders nothing unless the root supplies `onTaskCreate`.
-//
+/** Whether a drag carries files from outside the page, rather than an element dragged within it. */
+const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');
 
 export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
@@ -81,9 +80,6 @@ export type TaskListEditorProps = ComposableProps<{
    */
   acceptFiles?: boolean;
 }>;
-
-/** Whether a drag carries files from outside the page, rather than an element dragged within it. */
-const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');
 
 /**
  * The detail half of the list: it edits whichever task is selected, and creates one when none is.

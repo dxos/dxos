@@ -8,7 +8,17 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Block, Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover, virtualAnchor } from '@dxos/react-ui';
+import {
+  Block,
+  Card,
+  DX_ANCHOR_ACTIVATE,
+  DxAnchorActivate,
+  Flex,
+  Grid,
+  Icon,
+  Popover,
+  virtualAnchor,
+} from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { File, PullRequest, Task, TaskSet } from '@dxos/types';
@@ -542,7 +552,6 @@ const DefaultStory = ({
   showOrdinals,
   showDescription = true,
   showEstimates,
-  framed = true,
   acceptFiles = false,
 }: {
   /**
@@ -563,9 +572,6 @@ const DefaultStory = ({
   showOrdinals?: boolean;
   showDescription?: boolean;
   showEstimates?: boolean;
-  /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
-      columns against a row's, which the inset would offset. */
-  framed?: boolean;
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
 }) => {
@@ -668,21 +674,19 @@ const DefaultStory = ({
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
-      <TaskList.Viewport>
-        <TaskList.Content />
-      </TaskList.Viewport>
-      {framed ? (
-        <div className='p-2'>
+      <Grid rows={['minmax(0, 1fr)', 'min-content']}>
+        <TaskList.Viewport>
+          <TaskList.Content />
+        </TaskList.Viewport>
+        <Flex classNames='p-3'>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
           {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
-        </div>
-      ) : (
-        <TaskList.Editor grid showDescription={showDescription} />
-      )}
+        </Flex>
+      </Grid>
     </TaskList.Root>
   );
 };
@@ -986,7 +990,6 @@ export const DropZones: Story = {
     hierarchical: true,
     draggable: true,
     showDescription: false,
-    framed: false,
   },
 };
 
@@ -1694,7 +1697,6 @@ export const TestTabIndent: Story = {
     seed: seedHierarchy,
     hierarchical: true,
     draggable: true,
-    framed: false,
   },
   play: async ({ canvasElement }) => {
     const rows = () =>
@@ -1839,7 +1841,6 @@ export const TestHierarchy: Story = {
     draggable: true,
     showOrdinals: true,
     showDescription: true,
-    framed: false,
   },
   // The tree is what the walk produces, not what the array holds; and restructuring is driven from
   // the keyboard, which is the half of the gesture set that CAN be synthesized (a native HTML5 drag
@@ -1994,55 +1995,6 @@ export const TestHierarchy: Story = {
     const textStart = (element: HTMLElement) =>
       Math.round(element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingInlineStart));
     await expect(textStart(description)).toEqual(Math.round(titleCell(described.row).getBoundingClientRect().left));
-  },
-};
-
-export const Test: Story = {
-  args: {
-    framed: false,
-  },
-  // The status toggle and the add-`+` share one row grid; assert their icon gutters actually line
-  // up, since only geometry (not the DOM) shows the misalignment.
-  play: async ({ canvasElement }) => {
-    const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
-    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
-    if (!row || !create) {
-      throw new Error('Task rows not found.');
-    }
-
-    const center = (element: Element) => {
-      const { left, width } = element.getBoundingClientRect();
-      return left + width / 2;
-    };
-
-    // `:not([data-focus-sentinel])`: a focus group inserts zero-size boundary elements as its first
-    // and last children, so the first *rendered* cell is not the first element child.
-    const firstCell = (element: HTMLElement) => element.querySelector(':scope > *:not([data-focus-sentinel])');
-    // A tree row leads with its disclosure toggle and carries the status control inside the
-    // heading, where the pane — which has no disclosure — leads with the status column itself.
-    const rowIcon = row.querySelector<HTMLElement>('[data-testid="taskList.item.status"]');
-    // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
-    // child — the same column a row's status toggle occupies.
-    const createIcon = firstCell(create);
-    // The title cell, not the title text: the mnemonic chip leads the text within the cell.
-    const rowLabel = titleCell(row);
-    // The title input itself: its field root takes no box, so a positional pick would measure nothing.
-    const createLabel = create.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]');
-    // Guarded together: indexing a NodeList yields `undefined` for a missing cell, and reading
-    // geometry off it would throw a TypeError instead of failing the alignment assertion.
-    if (!rowIcon || !createIcon || !rowLabel || !createLabel) {
-      throw new Error('Row icons or label cells not found.');
-    }
-
-    // Same icon column ⇒ same horizontal centre (sub-pixel tolerance for rounding).
-    await expect(Math.abs(center(rowIcon) - center(createIcon))).toBeLessThan(1);
-    // ...and the labels start at the same x.
-    await expect(
-      Math.abs(rowLabel.getBoundingClientRect().left - createLabel.getBoundingClientRect().left),
-    ).toBeLessThan(1);
-
-    // The row spans the full width, so trailing actions sit at the far edge.
-    await expect(row.getBoundingClientRect().width).toBeGreaterThan(create.getBoundingClientRect().width * 0.9);
   },
 };
 
