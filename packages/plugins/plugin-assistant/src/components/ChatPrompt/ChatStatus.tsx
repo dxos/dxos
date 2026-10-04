@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { ChatStatus as NaturalChatStatus, formatElapsed } from '@dxos/react-ui-chat';
-import { Matrix } from '@dxos/react-ui-components';
+import { Matrix } from '@dxos/react-ui-experimental';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
 

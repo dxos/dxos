@@ -5,10 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button, Toolbar } from '@dxos/react-ui';
+import { Button, Flex, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Spinner, type SpinnerProps } from './Spinner.tsx';
+import { PulseSpinner } from './PulseSpinner.tsx';
+import { ShapeSpinner } from './ShapeSpinner.tsx';
+import { type SpinnerProps } from './Spinner.tsx';
 
 const DefaultStory = ({ state: _state }: SpinnerProps) => {
   const [state, setState] = useState(_state);
@@ -16,27 +18,29 @@ const DefaultStory = ({ state: _state }: SpinnerProps) => {
   return (
     <div className='flex flex-col grow'>
       <Toolbar.Root>
-        <Button onClick={() => setState('pulse')}>Pulse</Button>
-        <Button onClick={() => setState('spin')}>Spin</Button>
-        <Button onClick={() => setState('flash')}>Flash</Button>
+        <Button onClick={() => setState('ready')}>Ready</Button>
+        <Button onClick={() => setState('thinking')}>Thinking</Button>
+        <Button onClick={() => setState('alert')}>Alert</Button>
         <Button onClick={() => setState('error')}>Error</Button>
       </Toolbar.Root>
-      <div className='flex grow items-center justify-center'>
-        <Spinner state={state} size={6} />
-      </div>
+      {/* Both implementations of the one interface, in the same state. */}
+      <Flex grow center gap='lg'>
+        <ShapeSpinner state={state} size={6} />
+        <PulseSpinner state={state} size={6} />
+      </Flex>
     </div>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-components/Spinner',
-  component: Spinner,
+  component: ShapeSpinner,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof Spinner>;
+} satisfies Meta<typeof ShapeSpinner>;
 
 export default meta;
 
