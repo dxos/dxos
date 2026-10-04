@@ -125,7 +125,7 @@ const MAX_UNSEEN_WRITE_WAKES = 20;
  * The process target is a queue DXN string.
  */
 export const AgentProcess = (options: AgentProcessOptions) =>
-  Process.make(
+  Operation.makeDurable(
     {
       key: AGENT_PROCESS_KEY,
       // Accepts plain text or content blocks.
