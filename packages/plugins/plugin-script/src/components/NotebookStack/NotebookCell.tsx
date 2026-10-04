@@ -137,7 +137,12 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
       return (
         <>
-          <TemplateEditor.Root id={cell.id} source={prompt.text} lineNumbers={false} classNames={editorStyles} />
+          <TemplateEditor.TemplateEditor
+            id={cell.id}
+            source={prompt.text}
+            lineNumbers={false}
+            classNames={editorStyles}
+          />
           <NotebookPromptResult cell={cell} promptResults={promptResults} />
         </>
       );

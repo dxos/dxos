@@ -217,15 +217,10 @@
       "types": "./dist/types/src/AttentionSigil.d.ts",
       "import": "./dist/lib/ns/AttentionSigil.mjs"
     },
-    "./CardIconSlot": {
-      "source": "./src/CardIconSlot.ts",
-      "types": "./dist/types/src/CardIconSlot.d.ts",
-      "import": "./dist/lib/ns/CardIconSlot.mjs"
-    },
-    "./CardMenuSlot": {
-      "source": "./src/CardMenuSlot.ts",
-      "types": "./dist/types/src/CardMenuSlot.d.ts",
-      "import": "./dist/lib/ns/CardMenuSlot.mjs"
+    "./CardSlot": {
+      "source": "./src/CardSlot.ts",
+      "types": "./dist/types/src/CardSlot.d.ts",
+      "import": "./dist/lib/ns/CardSlot.mjs"
     },
     "./Hooks": {
       "source": "./src/Hooks.ts",
@@ -251,11 +246,6 @@
       "source": "./src/SettingsScope.ts",
       "types": "./dist/types/src/SettingsScope.d.ts",
       "import": "./dist/lib/ns/SettingsScope.mjs"
-    },
-    "./UpdateRow": {
-      "source": "./src/UpdateRow.ts",
-      "types": "./dist/types/src/UpdateRow.d.ts",
-      "import": "./dist/lib/ns/UpdateRow.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

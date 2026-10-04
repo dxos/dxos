@@ -29,7 +29,7 @@ const TraceModuleContainer = ({ space, attendableId }: { space: Space; attendabl
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-        <TracePanel.Root space={space} attendableId={attendableId ?? space.id} />
+        <TracePanel.TracePanel space={space} attendableId={attendableId ?? space.id} />
       </Panel.Body>
     </Panel.Root>
   );

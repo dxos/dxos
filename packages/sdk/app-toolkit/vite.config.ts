@@ -7,14 +7,12 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'ns/AppSurface': 'src/AppSurface.ts',
-    'ns/UpdateRow': 'src/UpdateRow.ts',
     'ns/SettingsScope': 'src/SettingsScope.ts',
     'ns/PluginRegistryButton': 'src/PluginRegistryButton.ts',
     'ns/NotFoundArticle': 'src/NotFoundArticle.ts',
     'ns/ObjectCard': 'src/ObjectCard.ts',
     'ns/Hooks': 'src/Hooks.ts',
-    'ns/CardMenuSlot': 'src/CardMenuSlot.ts',
-    'ns/CardIconSlot': 'src/CardIconSlot.ts',
+    'ns/CardSlot': 'src/CardSlot.ts',
     'ns/AttentionSigil': 'src/AttentionSigil.ts',
     'AppSurface': 'src/ui/components/app-surface.ts',
     'AttentionSigil': 'src/ui/components/AttentionSigil.tsx',
@@ -24,7 +22,6 @@ export default defineConfig({
     'NotFoundArticle': 'src/ui/components/NotFoundArticle.tsx',
     'PluginRegistryButton': 'src/ui/components/PluginRegistryButton.tsx',
     'SettingsScope': 'src/ui/components/SettingsScope.tsx',
-    'UpdateRow': 'src/ui/components/UpdateRow.tsx',
     'index': 'src/index.ts',
     'account/Account': 'src/account/Account.ts',
     'app-framework/AppCapabilities': 'src/app-framework/AppCapabilities.ts',

@@ -4,5 +4,5 @@
 
 // @import-as-namespace
 
-export { InstructionsEditor as Root } from './components/InstructionsEditor/index.ts';
-export type { InstructionsEditorProps as RootProps } from './components/InstructionsEditor/index.ts';
+export { InstructionsEditor } from './components/InstructionsEditor/index.ts';
+export type { InstructionsEditorProps } from './components/InstructionsEditor/index.ts';

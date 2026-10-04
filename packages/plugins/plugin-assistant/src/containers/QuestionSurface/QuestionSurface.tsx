@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import * as CardIconSlot from '@dxos/app-toolkit/CardIconSlot';
+import * as CardSlot from '@dxos/app-toolkit/CardSlot';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -56,9 +56,9 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
     <Card.Root classNames='my-2' size='sm'>
       <Card.Header>
         <Block>
-          <CardIconSlot.Root subject={object}>
+          <CardSlot.IconSlot subject={object}>
             <Icon icon='ph--question--regular' />
-          </CardIconSlot.Root>
+          </CardSlot.IconSlot>
         </Block>
         {/* The task, not the question: a `Card.Title` truncates to one line by design, and the
             question is a sentence the reader has to read in full — so the body carries it. */}

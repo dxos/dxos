@@ -35,7 +35,7 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
         <Typography asChild tone='subtle' classNames='dx-label py-0'>
           <h2>{t('task-artifacts.label')}</h2>
         </Typography>
-        <CardMasonry.Root objects={artifacts} size='compact' inline />
+        <CardMasonry.CardMasonry objects={artifacts} size='compact' inline />
       </section>
     </Container>
   );

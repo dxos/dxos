@@ -9,8 +9,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import '@dxos/react-ui/theme.css';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
-import * as UpdateRow from '@dxos/app-toolkit/UpdateRow';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -23,7 +23,7 @@ export type PwaSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 export const PwaSettings = () => {
   const { t } = useTranslation(meta.profile.key);
   const manager = Hooks.useCapability(AppCapabilities.UpdateManager);
-  const { description, button } = UpdateRow.useUpdateRow({ manager, t });
+  const { description, button } = ToolkitHooks.useUpdateRow({ manager, t });
 
   return (
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>

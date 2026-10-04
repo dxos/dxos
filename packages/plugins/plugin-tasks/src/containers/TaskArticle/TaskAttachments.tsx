@@ -290,7 +290,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
         >
           {hasCards ? (
             <RemoveAttachmentContext.Provider value={handleRemove}>
-              <CardMasonry.Root
+              <CardMasonry.CardMasonry
                 objects={refs ?? []}
                 size='compact'
                 inline

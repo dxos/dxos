@@ -4,5 +4,5 @@
 
 // @import-as-namespace
 
-export { TracePanel as Root } from './containers/TracePanel/TracePanel.tsx';
-export type { TracePanelProps as RootProps } from './containers/TracePanel/TracePanel.tsx';
+export { TracePanel } from './containers/TracePanel/TracePanel.tsx';
+export type { TracePanelProps } from './containers/TracePanel/TracePanel.tsx';
