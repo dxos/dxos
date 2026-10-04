@@ -45,7 +45,25 @@ export type Options = {
    * opt out: each costs a scan of the whole store, which would dwarf a one-file reindex.
    */
   readonly summarize?: boolean;
+  /** Told about each phase as it completes; omitted, the pass is silent, as library callers want. */
+  readonly onProgress?: Reporter;
 };
+
+/**
+ * One completed phase, in the order a pass reaches them: `scan`, `parse`, `commit`, then a
+ * `reasoner` per pass and rule file, then `reason` (or `reason-skipped`), then `summary` unless
+ * `summarize` is off.
+ */
+export type Progress =
+  | { readonly phase: 'scan'; readonly ms: number; readonly scanned: number; readonly changed: number }
+  | { readonly phase: 'parse'; readonly ms: number; readonly files: number }
+  | { readonly phase: 'commit'; readonly ms: number }
+  | { readonly phase: 'reasoner'; readonly outcome: Reasoner.Outcome }
+  | { readonly phase: 'reason'; readonly ms: number }
+  | { readonly phase: 'reason-skipped' }
+  | { readonly phase: 'summary'; readonly ms: number };
+
+export type Reporter = (progress: Progress) => Effect.Effect<void>;
 
 /**
  * Wall-clock for the whole pass, and per-phase durations. `parse` and `commit` are summed across
@@ -140,6 +158,7 @@ export const run = (
     const batchSize = options.batchSize ?? DEFAULT_BATCH_SIZE;
     const commitSize = options.commitSize ?? DEFAULT_COMMIT_SIZE;
 
+    const report = options.onProgress ?? (() => Effect.void);
     const started = Date.now();
     const reasoners = options.reasoners ?? [];
     const [scanMs, { entries, changed, touches, removed }] = yield* millis(
@@ -175,6 +194,7 @@ export const run = (
         return { entries, changed, touches, removed: states.filter((state) => !present.has(state.path)) };
       }),
     );
+    yield* report({ phase: 'scan', ms: scanMs, scanned: entries.length, changed: changed.length });
 
     let commitMs = 0;
     const [removalMs] = yield* millis(
@@ -222,8 +242,12 @@ export const run = (
           }),
         { concurrency: poolSize, discard: true },
       );
+      yield* report({ phase: 'parse', ms: parseMs, files: changed.length });
       yield* commit();
+    } else {
+      yield* report({ phase: 'parse', ms: 0, files: 0 });
     }
+    yield* report({ phase: 'commit', ms: commitMs });
 
     yield* store.setMeta('root', root);
     yield* store.setMeta('indexedAt', new Date().toISOString());
@@ -235,12 +259,21 @@ export const run = (
     // before reasoning, reporting stale conclusions until some file changed.
     const current = reasoners.length > 0 ? yield* store.reasoned(Reasoner.signature(reasoners)) : undefined;
     const willReason = reasoners.length > 0 && current === undefined;
-    const [reasonMs, outcomes] = yield* millis(willReason ? Reasoner.run(reasoners) : Effect.succeed([]));
+    const [reasonMs, outcomes] = yield* millis(
+      willReason
+        ? Reasoner.run(reasoners, { onOutcome: (outcome) => report({ phase: 'reasoner', outcome }) })
+        : Effect.succeed([]),
+    );
+    yield* report(willReason ? { phase: 'reason', ms: reasonMs } : { phase: 'reason-skipped' });
     const derived = willReason
       ? outcomes.reduce((total, outcome) => total + outcome.derived, 0)
       : (current ?? (yield* store.derivedCount()));
 
-    const [summarizeMs] = yield* millis(options.summarize === false ? Effect.void : Summary.refresh(store));
+    const summarize = options.summarize !== false;
+    const [summarizeMs] = yield* millis(summarize ? Summary.refresh(store) : Effect.void);
+    if (summarize) {
+      yield* report({ phase: 'summary', ms: summarizeMs });
+    }
 
     return {
       root,
