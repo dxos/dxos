@@ -89,8 +89,12 @@ export const TestHeaderMenu: Story = {
     const trigger = canvas.getByRole('button', { name: 'EDGE' }).getBoundingClientRect();
     const rowAction = canvas.getByRole('button', { name: 'Clear' }).getBoundingClientRect();
     const info = canvas.getByText('healthy').getBoundingClientRect();
-    // The trigger is in the trailing rail, level with a row's action.
-    await expect(Math.abs(trigger.right - rowAction.right)).toBeLessThanOrEqual(1);
+    // The end rail centres a control (the header's menu, a row's action) and starts a unit at its leading edge.
+    const centre = (rect: DOMRect) => (rect.left + rect.right) / 2;
+    await expect(Math.abs(centre(trigger) - centre(rowAction))).toBeLessThanOrEqual(1);
+    const unitElement = canvas.getByText('ms');
+    const unitRail = unitElement.closest<HTMLElement>('[data-rail="end"]')?.getBoundingClientRect();
+    await expect(unitRail != null && unitElement.getBoundingClientRect().left - unitRail.left).toBeLessThanOrEqual(6);
     // The status is pushed to the end of the middle column, against the rail.
     await expect(trigger.left - info.right).toBeLessThan(16);
     // The header's icon sits in the start rail with the rows' icons.

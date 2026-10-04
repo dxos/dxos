@@ -292,6 +292,11 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
    * which an icon-only action fills, and a wider one extends back into the content track.
    */
   trailing?: ReactNode;
+  /**
+   * Content centred in the card's end rail (an icon-only action, a unit), mirroring `leading` in the start rail; unlike
+   * `trailing` it never extends back into the content track, so every row's end column lines up.
+   */
+  end?: ReactNode;
   /** The chosen row of a set (`aria-current`). */
   current?: boolean;
   /**
@@ -307,7 +312,10 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * it), as the current `Card.Action` row was.
  */
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
-  ({ classNames, icon, leading, trailing, current, span, onClick, onKeyDown, children, ...props }, forwardedRef) => (
+  (
+    { classNames, icon, leading, trailing, end, current, span, onClick, onKeyDown, children, ...props },
+    forwardedRef,
+  ) => (
     <div
       {...props}
       {...clickableProps(onClick, onKeyDown)}
@@ -330,6 +338,7 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
           </div>
         )}
       </div>
+      {end != null && <Block rail='end'>{end}</Block>}
     </div>
   ),
 );

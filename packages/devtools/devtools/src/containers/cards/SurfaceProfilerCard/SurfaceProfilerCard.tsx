@@ -153,7 +153,7 @@ export const SurfaceProfilerCard = ({
         <StatCard.Row unit='ms'>
           <Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>role</span>
-            <span>×</span>
+            <span>#</span>
             <span>avg</span>
             <span>max</span>
           </Grid>

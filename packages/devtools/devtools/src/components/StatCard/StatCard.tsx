@@ -55,15 +55,15 @@ type StatCardHeaderProps = {
 
 /**
  * One layout for every card: the icon in the start rail, the title and optional info as a two-column grid in the content
- * track, and the button or menu in the end rail. A row rather than a `Card.Header`, so it follows the rails at any width
- * as the rows under it do; its end cell is kept when empty, so the info ends at the same edge on every card.
+ * track, and the button or menu centred in the end rail. A row rather than a `Card.Header`, so it follows the rails at any
+ * width as the rows under it do, and the info ends at the content edge on every card.
  */
 const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
   <Card.Row
     leading={<Icon icon={icon} classNames={hue && getStyles(hue).text} />}
-    trailing={
+    end={
       action ??
-      (menu ? (
+      (menu && (
         <Card.Menu label={title}>
           {menu.map((item) => (
             <Menu.Item
@@ -73,8 +73,6 @@ const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeader
             />
           ))}
         </Card.Menu>
-      ) : (
-        <span />
       ))
     }
   >
@@ -104,13 +102,13 @@ type StatCardRowProps = PropsWithChildren<
     /** The row's text; omitted when `children` lay the content out themselves. */
     label?: ReactNode;
     value?: ReactNode;
-    /** Shown in the trailing gutter, so values end on one edge whether or not they carry a unit. */
+    /** Shown at the start of the end rail, so values end on one edge whether or not they carry a unit. */
     unit?: string;
     /** Tooltip on the label, for the full text of a truncated row or more detail. */
     tooltip?: ReactNode;
-    /** Trailing gutter control; takes the gutter over `unit`. */
+    /** End rail control; takes the rail over `unit`. */
     action?: ReactNode;
-    /** Run the content through the trailing gutter (columns 2–3); by default it stays in the content track so values line up. */
+    /** Run the content through the end rail when the row has no unit or control; by default it stays in the content track so values line up. */
     span?: boolean;
     warning?: boolean;
     /** A selectable row: clicking it reports, and `current` marks the selected one. */
@@ -121,7 +119,7 @@ type StatCardRowProps = PropsWithChildren<
 
 /**
  * A label/value row: icon, disclosure toggle or control in the leading gutter, a unit or control in
- * the trailing one. `span` runs the content through the trailing gutter — via an explicit
+ * the end rail. `span` runs the content through the end rail — via an explicit
  * `grid-column-end`, since `Card.Row` places its children by `col-start` only. `children`
  * replace the label/value pair for rows that need their own columns (a `Grid`).
  */
@@ -144,11 +142,10 @@ const StatCardRow = ({
   children,
 }: StatCardRowProps) => {
   // Units sit in a fixed-width cell (empty when there is none), so values end on one edge across rows.
-  const trailing =
-    action ??
-    (span && !unit ? undefined : (
-      <span className='inline-block w-8 ps-1 whitespace-nowrap text-xs text-fg-muted'>{unit}</span>
-    ));
+  // The end rail holds the control (centred) or the unit (from the rail's start, so it reads on from its value), and
+  // values end at the content edge on every row.
+  const end =
+    action ?? (unit ? <span className='justify-self-start ps-1 text-xs text-fg-muted'>{unit}</span> : undefined);
   // The leading rail is kept even when empty, so labels align across rows.
   const leading =
     control ??
@@ -167,11 +164,11 @@ const StatCardRow = ({
   return (
     <Card.Row
       classNames={[classNames, onClick && 'cursor-pointer hover:bg-hover-surface', current && 'bg-hover-surface']}
-      span={span && !trailing ? 'end' : undefined}
+      span={span && !end ? 'end' : undefined}
       onClick={onClick}
       current={current}
       leading={leading}
-      trailing={trailing}
+      end={end}
     >
       <Flex align='center' justify='between' gap='sm' classNames='min-w-0 text-xs'>
         {children ?? (
