@@ -33,7 +33,7 @@ const DefaultStory = ({ sample, loadRemoteImages, compare }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-components/Html/email',
+  title: 'ui/react-ui-html/Html/email',
   component: DefaultStory,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

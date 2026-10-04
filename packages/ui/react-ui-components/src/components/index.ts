@@ -3,7 +3,6 @@
 //
 
 export * from './AnimatedBorder/index.ts';
-export * from './HtmlViewer/index.ts';
 export * from './NumericTabs/index.ts';
 export * from './ProgressMeter/index.ts';
 export * from './QueryEditor/index.ts';

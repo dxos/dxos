@@ -1,8 +1,8 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-declare module '*.md?raw' {
+declare module '*.html?raw' {
   const content: string;
   export default content;
 }

@@ -25,7 +25,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
-import { Html, emailDialect } from '@dxos/react-ui-components';
+import { Html, emailDialect } from '@dxos/react-ui-html';
 import { ActionToolbar, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { TagIndex } from '@dxos/schema';

@@ -57,7 +57,6 @@
     "@dxos/ui-types": "workspace:*",
     "@lezer/common": "catalog:",
     "@lezer/highlight": "catalog:",
-    "dompurify": "catalog:",
     "effect": "catalog:",
     "json5": "catalog:",
     "motion": "catalog:"
