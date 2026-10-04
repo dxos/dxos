@@ -720,7 +720,8 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   }, [scale.width]);
 
   return (
-    <ScrollArea.Root orientation='horizontal' classNames={classNames} ref={forwardedRef}>
+    // Grows into the row the legend and meta leave: a scroll frame's own track has no minimum width, so it would collapse.
+    <ScrollArea.Root orientation='horizontal' classNames={['dx-grow', classNames]} ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef}>
         <svg
           // Pixel coordinates against the drawing's own width, with no viewBox: a viewBox would

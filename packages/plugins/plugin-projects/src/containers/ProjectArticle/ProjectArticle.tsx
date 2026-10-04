@@ -25,7 +25,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
-import { Container, Empty, Flex, Icon, Panel, Splitter, Tabs, useTranslation } from '@dxos/react-ui';
+import { Container, Empty, Flex, Icon, Panel, ScrollArea, Splitter, Tabs, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -326,17 +326,23 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               <Splitter.Panel position='end'>
                 {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
                     trace feed on every trace message, which is pure cost behind a collapsed panel. */}
-                {showPipeline && space && (
-                  <ProjectPipeline
-                    space={space}
-                    project={subject}
-                    tasks={tasks}
-                    axis={axis}
-                    onAxisChange={setAxis}
-                    onSelectTask={openTask}
-                    onSelectChat={handleSelectChat}
-                  />
-                )}
+                {showPipeline &&
+                  space && (
+                    // Lanes outgrow the panel: they scroll vertically here while the chart scrolls time horizontally.
+                    <ScrollArea.Root orientation='vertical' width='thin' classNames='dx-expand'>
+                      <ScrollArea.Viewport>
+                        <ProjectPipeline
+                          space={space}
+                          project={subject}
+                          tasks={tasks}
+                          axis={axis}
+                          onAxisChange={setAxis}
+                          onSelectTask={openTask}
+                          onSelectChat={handleSelectChat}
+                        />
+                      </ScrollArea.Viewport>
+                    </ScrollArea.Root>
+                  )}
               </Splitter.Panel>
             </Splitter.Root>
           )}
