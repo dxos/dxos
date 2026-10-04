@@ -185,6 +185,11 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
   ({ classNames, size, container, children, ...props }, forwardedRef) => {
     const select = useSelectContext();
     const popupSize = usePopupSize(size, select.open, [select.getTriggerProps().id]);
+    // With nothing to choose (a trigger still loading its options) the popup would open as an empty frame.
+    if (select.collection.items.length === 0) {
+      return null;
+    }
+
     return (
       <Portal container={container}>
         <SelectPrimitive.Positioner>
