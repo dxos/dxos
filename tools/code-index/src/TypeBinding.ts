@@ -8,6 +8,7 @@ import type { Quad } from '@rdfjs/types';
 import * as Effect from 'effect/Effect';
 import { DataFactory } from 'n3';
 
+import * as Barrels from './internal/barrels.ts';
 import * as Ontology from './Ontology.ts';
 import type * as Store from './Store.ts';
 import { type SymbolFacts, binder, hasDeferred } from './worker/types/Bind.ts';
@@ -23,30 +24,10 @@ import * as Term from './worker/types/Term.ts';
 
 export const NAME = 'bind-types';
 
-/** File graphs only: neither a derived graph nor this pass's previous run is a premise. */
-const asserted = (quads: readonly Quad[]) => quads.filter((quad) => Ontology.isFileGraph(quad.graph.value));
-
 export const derive = (store: Store.Api): Effect.Effect<Quad[], Store.StoreError> =>
   Effect.gen(function* () {
-    const read = (predicate: { value: string }) =>
-      Effect.map(store.match(undefined, DataFactory.namedNode(predicate.value)), asserted);
-    const terms = yield* read(Ontology.typeTerm);
-    const aliases = yield* read(Ontology.aliasOf);
-    const namespaces = yield* read(Ontology.namespaceOf);
-    const reexports = yield* read(Ontology.reexports);
-    const modules = yield* read(Ontology.moduleFile);
-
-    const group = (quads: readonly Quad[]) => {
-      const grouped = new Map<string, string[]>();
-      for (const quad of quads) {
-        grouped.set(quad.subject.value, [...(grouped.get(quad.subject.value) ?? []), quad.object.value]);
-      }
-      return grouped;
-    };
-    const aliasOf = group(aliases);
-    const namespaceOf = group(namespaces);
-    const reexported = group(reexports);
-    const moduleFile = new Map(modules.map((quad) => [quad.subject.value, quad.object.value]));
+    const terms = yield* Barrels.readAsserted(store, Ontology.typeTerm);
+    const { aliasOf, namespaceOf, reexports, moduleFile } = yield* Barrels.read(store);
     const termOf = new Map<string, Term.Type>();
     for (const quad of terms) {
       termOf.set(quad.subject.value, Term.fromJson(JSON.parse(quad.object.value)));
@@ -58,7 +39,7 @@ export const derive = (store: Store.Api): Effect.Effect<Quad[], Store.StoreError
           ? { term: termOf.get(iri), aliasOf: aliasOf.get(iri) ?? [], namespaceOf: namespaceOf.get(iri) ?? [] }
           : undefined,
       moduleFile: (iri) => moduleFile.get(iri),
-      reexports: (file) => reexported.get(file) ?? [],
+      reexports: (file) => reexports.get(file) ?? [],
     });
 
     const types = TypeRdf.collector();
