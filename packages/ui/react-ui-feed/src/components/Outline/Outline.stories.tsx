@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -148,16 +148,10 @@ export const Placement: Story = {
   play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;
     const ticks = canvasElement.querySelectorAll<HTMLElement>('[role="navigation"] button');
-    const settle = async () => {
-      for (let frame = 0; frame < 20; frame++) {
-        await new Promise((resolve) => requestAnimationFrame(resolve));
-      }
-    };
 
-    const placementAt = async (index: number) => {
-      const tick = ticks[index];
-      const bounds = tick.getBoundingClientRect();
-      tick.dispatchEvent(
+    const hover = (index: number) => {
+      const bounds = ticks[index].getBoundingClientRect();
+      ticks[index].dispatchEvent(
         new PointerEvent('pointerover', {
           bubbles: true,
           pointerType: 'mouse',
@@ -165,17 +159,24 @@ export const Placement: Story = {
           clientY: bounds.y + 4,
         }),
       );
-      await settle();
-      const positioner = doc.querySelector<HTMLElement>('[data-scope="popover"][data-part="positioner"]');
-      const card = positioner?.getBoundingClientRect();
+    };
+
+    // Positioning runs on animation frames after the card mounts, so poll rather than wait a fixed number of frames.
+    const placement = (index: number) => {
+      const bounds = ticks[index].getBoundingClientRect();
+      const card = doc
+        .querySelector<HTMLElement>('[data-scope="popover"][data-part="positioner"]')
+        ?.getBoundingClientRect();
       return {
         beside: card != null && card.left >= bounds.right,
         centred: card != null && Math.abs(card.top + card.height / 2 - (bounds.top + bounds.height / 2)) <= 2,
       };
     };
 
-    await expect(await placementAt(3)).toEqual({ beside: true, centred: true });
-    await expect(await placementAt(8)).toEqual({ beside: true, centred: true });
+    hover(3);
+    await waitFor(() => expect(placement(3)).toEqual({ beside: true, centred: true }), { timeout: 5_000 });
+    hover(8);
+    await waitFor(() => expect(placement(8)).toEqual({ beside: true, centred: true }), { timeout: 5_000 });
   },
 };
 

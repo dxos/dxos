@@ -30,6 +30,7 @@ const DefaultStory = ({ pin }: StoryArgs) => {
               <Typography key={row}>{row}</Typography>
             ))}
           </ScrollContainer.Viewport>
+          <ScrollContainer.Fade />
           <ScrollContainer.ScrollDownButton />
         </ScrollContainer.Content>
       </ScrollContainer.Root>

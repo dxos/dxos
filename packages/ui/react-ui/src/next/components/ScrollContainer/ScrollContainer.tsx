@@ -196,7 +196,7 @@ const ScrollContainerFade = ({ classNames }: ScrollContainerFadeProps) => {
       data-scope='scroll-container'
       data-part='fade'
       data-state={overflow ? 'visible' : 'hidden'}
-      className={mx(recipes.scrollContainerFade(), classNames)}
+      className={mx(recipes.scrollContainerFade(), classNames, 'border')}
     />
   );
 };
