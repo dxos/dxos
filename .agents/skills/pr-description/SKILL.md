@@ -24,10 +24,13 @@ UI aspect and a new dependency between macro components; it then carries all fiv
 
 ## How to pick
 
-Decide from the diff against the base, not from the commit messages or the task prompt:
+Decide from the diff against the PR's own base, not from the commit messages or the task prompt.
+That base is `origin/main` for a standalone or bottom-of-stack PR, and the parent PR's head branch
+for a stacked child, so the parent's changes do not pick templates for this PR:
 
 ```bash
-git diff --stat origin/main...HEAD
+git diff --stat origin/main...HEAD             # standalone or bottom of stack
+git diff --stat origin/<parent-branch>...HEAD  # stacked child
 ```
 
 - **Bugfix**: the branch exists because something was broken. A refactor that happens to fix a bug

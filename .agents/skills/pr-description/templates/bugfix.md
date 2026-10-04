@@ -13,9 +13,11 @@ and what the user saw: the error text, the wrong value, the hang. Quote the log 
 
 ### Reproduction
 
-<The test that reproduces it: file path and test name. State that it fails on the base branch and
-passes with the fix, and how you checked (`moon run <pkg>:test -- <file>` on both). If no automated
-test can reproduce it, say why and give the manual steps instead.>
+<The test that reproduces it: file path and test name. State that it fails without the fix and
+passes with it, and how you checked (`moon run <pkg>:test -- <file>`). A test this PR adds does not
+exist on the base, so show the failure by reverting only the fix with the test kept (for example
+`git checkout origin/main -- <fixed files>`), or by an existing test or manual steps on the base.
+If no automated test can reproduce it, say why and give the manual steps instead.>
 
 ### Root cause
 
