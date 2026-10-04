@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-messenger
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-04
+    summary: 'Cross-space notifications inbox: R0 envelope tab with unread badge, R1 panel of Message tiles stored in a feed in the default space. Delivered via the EDGE per-identity inbox using a new generic signed envelope (device key + chain), contacts-only senders; a Sender capability lets other plugins and bots post by identity DID.'
+    tasks: .agents/projects/plugin-messenger/TASKS.md
+    design: agents/superpowers/specs/2026-10-04-plugin-messenger-design.md
+    prs: []
+    resume: 'Spec written, awaiting user review. NEXT: writing-plans, then Phase 1 (envelope + InboxService).'
   - name: architecture-rules
     status: active
     user: dmaretskyi
