@@ -113,9 +113,10 @@ const Timeline = ({ title, history }: { title: string; history: boolean }) => {
     <div className='flex flex-col gap-1'>
       <h2 className='px-2 text-sm text-fg-subtle'>{title}</h2>
       <Gantt.Root {...sessionTimelineToGantt(timeline)} range={timeline.range} classNames='p-2'>
-        <Gantt.Legend />
+        <Gantt.Legend>
+          <Gantt.LegendToggle />
+        </Gantt.Legend>
         <Gantt.Chart />
-        <Gantt.Meta />
       </Gantt.Root>
     </div>
   );

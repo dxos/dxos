@@ -140,7 +140,6 @@ export const WithResearchQueue: Story = {
       const researchPrompt = space.db.add(
         Instructions.make({
           name: 'Research',
-          description: 'Research organization',
           text: 'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked research (set mockSearch to true).',
           skills: [Ref.make(WebSearchSkill.make())],
         }),
@@ -267,7 +266,6 @@ export const WithProject: Story = {
       const researchPrompt = space.db.add(
         Instructions.make({
           name: 'Research',
-          description: 'Research organization',
           text: trim`
             Research the organization provided as input.
             Absolutely, in all cases, create a research note for it at the end.

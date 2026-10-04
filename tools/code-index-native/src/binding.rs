@@ -8,7 +8,7 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
-use napi::bindgen_prelude::AsyncTask;
+use napi::bindgen_prelude::{AsyncTask, ToNapiValue, TypeName};
 use napi::{Env, Error, Result, Task};
 use napi_derive::napi;
 use oxigraph::model::{GraphName, NamedNode, NamedOrBlankNode, Quad, Term};
@@ -109,6 +109,38 @@ impl Task for Query {
     }
 }
 
+/// Any other store call on a libuv thread: on a large store each can hold the thread for seconds,
+/// which on the event loop would stall every request the process serves.
+pub struct Blocking<T> {
+    work: Option<Box<dyn FnOnce() -> Result<T> + Send>>,
+}
+
+impl<T: ToNapiValue + TypeName + Send + 'static> Task for Blocking<T> {
+    type Output = T;
+    type JsValue = T;
+
+    fn compute(&mut self) -> Result<T> {
+        let work = self
+            .work
+            .take()
+            .ok_or_else(|| Error::from_reason("the task already ran"))?;
+        work()
+    }
+
+    fn resolve(&mut self, _env: Env, output: T) -> Result<T> {
+        Ok(output)
+    }
+}
+
+fn blocking<T>(work: impl FnOnce() -> Result<T> + Send + 'static) -> AsyncTask<Blocking<T>>
+where
+    T: ToNapiValue + TypeName + Send + 'static,
+{
+    AsyncTask::new(Blocking {
+        work: Some(Box::new(work)),
+    })
+}
+
 /// Cancels the queries it was passed to; each stops at the next quad it reads.
 #[napi]
 pub struct QueryCancel {
@@ -151,7 +183,8 @@ impl NativeStore {
             .ok_or_else(|| Error::from_reason("the native store is closed"))
     }
 
-    /// Releases RocksDB's directory lock; every later call fails.
+    /// Releases RocksDB's directory lock once no call is in flight (each holds the store); every later
+    /// call fails.
     #[napi]
     pub fn close(&mut self) {
         self.store = None;
@@ -174,41 +207,45 @@ impl NativeStore {
         }))
     }
 
-    #[napi]
-    pub fn drop_graphs(&self, graphs: Vec<String>) -> Result<()> {
-        self.inner()?.drop_graphs(&graphs).map_err(error)
+    #[napi(ts_return_type = "Promise<void>")]
+    pub fn drop_graphs(&self, graphs: Vec<String>) -> Result<AsyncTask<Blocking<()>>> {
+        let store = Arc::clone(self.inner()?);
+        Ok(blocking(move || store.drop_graphs(&graphs).map_err(error)))
     }
 
-    #[napi]
-    pub fn insert_quads(&self, nquads: String) -> Result<()> {
-        self.inner()?.insert_quads(&nquads).map_err(error)
+    #[napi(ts_return_type = "Promise<void>")]
+    pub fn insert_quads(&self, nquads: String) -> Result<AsyncTask<Blocking<()>>> {
+        let store = Arc::clone(self.inner()?);
+        Ok(blocking(move || store.insert_quads(&nquads).map_err(error)))
     }
 
-    #[napi]
-    pub fn remove_quads(&self, nquads: String) -> Result<()> {
-        self.inner()?.remove_quads(&nquads).map_err(error)
+    #[napi(ts_return_type = "Promise<void>")]
+    pub fn remove_quads(&self, nquads: String) -> Result<AsyncTask<Blocking<()>>> {
+        let store = Arc::clone(self.inner()?);
+        Ok(blocking(move || store.remove_quads(&nquads).map_err(error)))
     }
 
     /// Quads matching the pattern, as `QUAD_ROW` strings each (see `rows`). A term is N-Triples
     /// syntax; `graph` may be `DEFAULT`.
-    #[napi(js_name = "match")]
+    #[napi(js_name = "match", ts_return_type = "Promise<string[]>")]
     pub fn match_quads(
         &self,
         subject: Option<String>,
         predicate: Option<String>,
         object: Option<String>,
         graph: Option<String>,
-    ) -> Result<Vec<String>> {
+    ) -> Result<AsyncTask<Blocking<Vec<String>>>> {
+        let none = || Ok(blocking(|| Ok(Vec::new())));
         let subject = match subject.as_deref().map(term).transpose()? {
             None => None,
             Some(Term::NamedNode(node)) => Some(NamedOrBlankNode::NamedNode(node)),
             Some(Term::BlankNode(node)) => Some(NamedOrBlankNode::BlankNode(node)),
-            Some(Term::Literal(_)) => return Ok(Vec::new()),
+            Some(Term::Literal(_)) => return none(),
         };
         let predicate = match predicate.as_deref().map(term).transpose()? {
             None => None,
             Some(Term::NamedNode(node)) => Some(node),
-            Some(_) => return Ok(Vec::new()),
+            Some(_) => return none(),
         };
         let object = object.as_deref().map(term).transpose()?;
         let graph = match graph.as_deref() {
@@ -217,14 +254,16 @@ impl NativeStore {
             Some(text) => match term(text)? {
                 Term::NamedNode(node) => Some(GraphName::NamedNode(node)),
                 Term::BlankNode(node) => Some(GraphName::BlankNode(node)),
-                Term::Literal(_) => return Ok(Vec::new()),
+                Term::Literal(_) => return none(),
             },
         };
-        let quads = self
-            .inner()?
-            .match_quads(subject, predicate, object, graph)
-            .map_err(error)?;
-        Ok(rows(&quads))
+        let store = Arc::clone(self.inner()?);
+        Ok(blocking(move || {
+            let quads = store
+                .match_quads(subject, predicate, object, graph)
+                .map_err(error)?;
+            Ok(rows(&quads))
+        }))
     }
 
     /// Runs off the event loop; `cancel` aborts it, after which it rejects with a `cancelled` error.
@@ -237,20 +276,25 @@ impl NativeStore {
         }))
     }
 
-    /// One rule file evaluated from nothing; returns its conclusions as N-Quads in `graph`.
-    #[napi]
-    pub fn reason(&self, graph: String, rules: String, materialize: bool) -> Result<String> {
+    /// One rule file evaluated from nothing; resolves to its conclusions as N-Quads in `graph`.
+    #[napi(ts_return_type = "Promise<string>")]
+    pub fn reason(
+        &self,
+        graph: String,
+        rules: String,
+        materialize: bool,
+    ) -> Result<AsyncTask<Blocking<String>>> {
         NamedNode::new(graph.as_str()).map_err(error)?;
-        let quads = self
-            .inner()?
-            .reason(&graph, &rules, materialize)
-            .map_err(error)?;
-        store::NativeStore::to_nquads(&quads).map_err(error)
+        let store = Arc::clone(self.inner()?);
+        Ok(blocking(move || {
+            let quads = store.reason(&graph, &rules, materialize).map_err(error)?;
+            store::NativeStore::to_nquads(&quads).map_err(error)
+        }))
     }
 
     /// Every rule file in order, maintained incrementally where the stored state allows.
-    #[napi]
-    pub fn reason_all(&self, strata: Vec<Stratum>) -> Result<Vec<Outcome>> {
+    #[napi(ts_return_type = "Promise<Outcome[]>")]
+    pub fn reason_all(&self, strata: Vec<Stratum>) -> Result<AsyncTask<Blocking<Vec<Outcome>>>> {
         let strata: Vec<store::Stratum> = strata
             .into_iter()
             .map(|stratum| store::Stratum {
@@ -258,43 +302,51 @@ impl NativeStore {
                 rules: stratum.rules,
             })
             .collect();
-        let outcomes = self.inner()?.reason_all(&strata).map_err(error)?;
-        Ok(outcomes
-            .into_iter()
-            .map(|outcome| Outcome {
-                graph: outcome.graph,
-                derived: count(outcome.derived),
-                added: count(outcome.added),
-                removed: count(outcome.removed),
-                duration_ms: outcome.duration_ms,
-                incremental: outcome.incremental,
-            })
-            .collect())
+        let store = Arc::clone(self.inner()?);
+        Ok(blocking(move || {
+            let outcomes = store.reason_all(&strata).map_err(error)?;
+            Ok(outcomes
+                .into_iter()
+                .map(|outcome| Outcome {
+                    graph: outcome.graph,
+                    derived: count(outcome.derived),
+                    added: count(outcome.added),
+                    removed: count(outcome.removed),
+                    duration_ms: outcome.duration_ms,
+                    incremental: outcome.incremental,
+                })
+                .collect())
+        }))
     }
 
-    #[napi]
-    pub fn quad_count(&self) -> Result<u32> {
-        self.inner()?.quad_count().map(count).map_err(error)
+    #[napi(ts_return_type = "Promise<number>")]
+    pub fn quad_count(&self) -> Result<AsyncTask<Blocking<u32>>> {
+        let store = Arc::clone(self.inner()?);
+        Ok(blocking(move || store.quad_count().map(count).map_err(error)))
     }
 
-    #[napi]
-    pub fn graph_length(&self, graph: String) -> Result<u32> {
-        self.inner()?.graph_len(&graph).map(count).map_err(error)
+    #[napi(ts_return_type = "Promise<number>")]
+    pub fn graph_length(&self, graph: String) -> Result<AsyncTask<Blocking<u32>>> {
+        let store = Arc::clone(self.inner()?);
+        Ok(blocking(move || store.graph_len(&graph).map(count).map_err(error)))
     }
 
+    /// A counter read, so it stays synchronous.
     #[napi]
     pub fn journal_length(&self) -> Result<u32> {
         Ok(count(self.inner()?.journal_len()))
     }
 
-    #[napi]
-    pub fn invalidate(&self) -> Result<()> {
-        self.inner()?.invalidate().map_err(error)
+    #[napi(ts_return_type = "Promise<void>")]
+    pub fn invalidate(&self) -> Result<AsyncTask<Blocking<()>>> {
+        let store = Arc::clone(self.inner()?);
+        Ok(blocking(move || store.invalidate().map_err(error)))
     }
 
-    #[napi]
-    pub fn clear(&self) -> Result<()> {
-        self.inner()?.clear().map_err(error)
+    #[napi(ts_return_type = "Promise<void>")]
+    pub fn clear(&self) -> Result<AsyncTask<Blocking<()>>> {
+        let store = Arc::clone(self.inner()?);
+        Ok(blocking(move || store.clear().map_err(error)))
     }
 }
 
