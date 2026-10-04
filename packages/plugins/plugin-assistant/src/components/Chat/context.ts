@@ -40,6 +40,8 @@ export type ChatContextValue = {
   onCancel: (item: Message.Message | Alarm.Alarm) => void;
   /** Undefined while the processor is still opening; the chat renders from the feed meanwhile. */
   processor?: AiChatProcessor;
+  /** How many prompts wait behind the running turn; a count, so it changes per enqueue rather than per block. */
+  queueSize: number;
   setController: (controller: ChatThreadController | null) => void;
   setVisibleRange: (range: MessageRange | undefined) => void;
 };
@@ -51,6 +53,8 @@ export type ChatThreadContextValue = {
   queued: Message.Message[];
   /** Alarms still waiting to fire, earliest first. */
   alarms: Alarm.Alarm[];
+  /** Alarms that have woken the agent since the last user prompt. */
+  selfWakes: number;
   requestTiming: ChatRequestTiming | null;
   /** The thread's controller, shared between `Chat.Thread` and `Chat.Outline`. */
   controller: ChatThreadController | null;

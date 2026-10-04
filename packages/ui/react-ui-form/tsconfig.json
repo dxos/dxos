@@ -57,13 +57,13 @@
       "path": "../react-ui"
     },
     {
-      "path": "../react-ui-components"
-    },
-    {
       "path": "../react-ui-editor"
     },
     {
       "path": "../react-ui-list"
+    },
+    {
+      "path": "../react-ui-query"
     },
     {
       "path": "../react-ui-syntax-highlighter"

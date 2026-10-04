@@ -11,8 +11,10 @@ import React, {
   type RefObject,
   createContext,
   forwardRef,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -118,9 +120,17 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
     const [register] = useState(
       () => (part: LabelPart, present: boolean) => setLabels((labels) => ({ ...labels, [part]: present })),
     );
+    // zag measures on opening, so a positioner that mounts later (keyed or conditional content) would stay at 0,0.
+    const repositionRef = useRef(popover.reposition);
+    repositionRef.current = popover.reposition;
+    const handlePositioner = useCallback((element: HTMLDivElement | null) => {
+      if (element) {
+        repositionRef.current();
+      }
+    }, []);
     return (
       <Portal container={container}>
-        <PopoverPrimitive.Positioner>
+        <PopoverPrimitive.Positioner ref={handlePositioner}>
           <PopoverPrimitive.Content
             {...props}
             {...(labels.title && { 'aria-labelledby': popover.getTitleProps().id })}

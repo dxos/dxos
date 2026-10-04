@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Popover, type ThemedClassName } from '@dxos/react-ui';
+import { Flex, Popover, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // Rest tick width (px) and the wave radius (in rows) over which the hover extension falls off. The
@@ -366,15 +366,16 @@ export const Outline = ({
           // pointer walked the rail, drifting further from the tick with every step. Remounting per
           // tick is what makes it re-measure.
           key={hoveredMarker.id}
+          // Wide enough for a prompt's first lines, but never past the space beside the rail.
+          classNames='w-[32rem] max-w-(--available-width)'
         >
-          <Popover.Body>
-            <div className='px-2 py-1 max-w-[24rem] w-[24rem]'>
-              <p className='truncate font-medium'>{hoveredMarker.title}</p>
-              {hoveredMarker.description && (
-                <p className='mt-1 text-sm text-fg-muted line-clamp-3'>{hoveredMarker.description}</p>
-              )}
-            </div>
-          </Popover.Body>
+          {/* A plain column rather than `Popover.Body`: a hover card neither scrolls nor needs the body's gutter grid. */}
+          <Flex column classNames='gap-1 px-2 py-1'>
+            <p className='font-medium line-clamp-2'>{hoveredMarker.title}</p>
+            {hoveredMarker.description && (
+              <p className='text-sm text-fg-muted line-clamp-4'>{hoveredMarker.description}</p>
+            )}
+          </Flex>
         </Popover.Content>
       )}
     </Popover.Root>
