@@ -179,7 +179,7 @@ export class Impl<I, O, R> implements ProcessManager.Handle<I, O, any> {
   #services: Context.Context<R | Operation.BaseServices>;
   readonly #dispatchContext: Context.Context<never>;
   #alarmSemaphore = Effect.runSync(Semaphore.make(1));
-  readonly #handler: Operation.Handler<I, O, R, any>;
+  readonly #handler: Operation.DurableHandler<I, O, R, any>;
   readonly #scope: Scope.Closeable;
   readonly #registry: Registry.AtomRegistry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
@@ -195,7 +195,7 @@ export class Impl<I, O, R> implements ProcessManager.Handle<I, O, any> {
   constructor(
     readonly pid: Process.ID,
     parentId: Process.ID | null,
-    handler: Operation.Handler<I, O, R, any>,
+    handler: Operation.DurableHandler<I, O, R, any>,
     scope: Scope.Closeable,
     services: Context.Context<R | Operation.BaseServices>,
     dispatchContext: Context.Context<never>,

@@ -135,13 +135,13 @@ export declare namespace Definition {
   export type Services<T extends Any> = T extends Variance<infer _I, infer _O, infer S> ? S : never;
 
   export type HandlerType<T extends Any> =
-    T extends Variance<infer I, infer O, infer S> ? HandlerFn<I, O, any, S> : never;
+    T extends Variance<infer I, infer O, infer S> ? Handler<I, O, any, S> : never;
 }
 
 /**
- * Runtime handler function for a (non-durable) Operation; see {@link Handler} for durable operations.
+ * Runtime handler for an Operation.
  */
-export type HandlerFn<I, O, E = Error, R = never> = (input: I) => Effect.Effect<O, E, R>;
+export type Handler<I, O, E = Error, R = never> = (input: I) => Effect.Effect<O, E, R>;
 
 export type WithHandler<T extends Definition.Any> = T & {
   handler: Definition.HandlerType<T>;
@@ -268,19 +268,19 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
  */
 export const withHandler: {
   <Def extends Definition<any, any>, E = never>(
-    handler: HandlerFn<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
+    handler: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
   ): (op: Def) => WithHandler<Def>;
   <Def extends Definition<any, any>, E = never>(
     op: Def,
-    handler: HandlerFn<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
+    handler: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
   ): WithHandler<Def>;
 } = <Def extends Definition<any, any>, E = never>(
-  opOrHandler: Def | HandlerFn<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
-  handler?: HandlerFn<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
+  opOrHandler: Def | Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
+  handler?: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
 ): WithHandler<Def> => {
   // If called with just handler (piped usage).
   if (handler === undefined) {
-    const handlerFn = opOrHandler as HandlerFn<
+    const handlerFn = opOrHandler as Handler<
       Definition.Input<Def>,
       Definition.Output<Def>,
       E,
@@ -346,7 +346,7 @@ export const opaqueHandler = <T extends Operation.Definition.Any>(
  * - onAlarm -> called for processes scheduling alarms.
  * - onChildEvent -> called when child process produces output or exits.
  */
-export interface Handler<_Input, _Output, _Requirements, _Rpcs extends Rpc.Any> {
+export interface DurableHandler<_Input, _Output, _Requirements, _Rpcs extends Rpc.Any> {
   /**
    * Called when the process is spawned.
    * Not called for processes that are resumed from a previously suspended state.
@@ -485,7 +485,7 @@ export interface Durable<
   readonly types?: readonly Type.AnyEntity[];
 
   // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
-  // argument (and `Handler.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
+  // argument (and `DurableHandler.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
   // structural fields would block `Durable<…, never>` from being assignable to `Durable.Any`.
   // The precise group is carried by the covariant `Variance` phantom and recovered at `spawn`.
   // See design spec §4.4.
@@ -496,7 +496,11 @@ export interface Durable<
    */
   create(
     ctx: DurableContext<_Input, _Output>,
-  ): Effect.Effect<Handler<_Input, _Output, _Requirements, any>, never, _Requirements | BaseServices | Scope.Scope>;
+  ): Effect.Effect<
+    DurableHandler<_Input, _Output, _Requirements, any>,
+    never,
+    _Requirements | BaseServices | Scope.Scope
+  >;
 }
 
 export const isDurable = (executable: unknown): executable is Durable.Any =>
@@ -541,7 +545,7 @@ export interface DurableProps {
 }
 
 /**
- * Creates a durable operation from its declaration and a factory for its {@link Handler}.
+ * Creates a durable operation from its declaration and a factory for its {@link DurableHandler}.
  */
 export const makeDurable = <const Opts extends Types.NoExcessProperties<DurableProps, Opts>>(
   opts: Opts,
@@ -549,7 +553,7 @@ export const makeDurable = <const Opts extends Types.NoExcessProperties<DurableP
     ctx: DurableContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
   ) => Effect.Effect<
     Partial<
-      Handler<
+      DurableHandler<
         Schema.Schema.Type<Opts['input']>,
         Schema.Schema.Type<Opts['output']>,
         Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
@@ -585,7 +589,7 @@ export const makeDurable = <const Opts extends Types.NoExcessProperties<DurableP
 };
 
 // Returns `Context.Context<any>`: the runtime handler bag is stored untyped because
-// `Handler.rpcHandlers` is contravariant in `_Rpcs` (see design spec §4.4); the precise
+// `DurableHandler.rpcHandlers` is contravariant in `_Rpcs` (see design spec §4.4); the precise
 // handler contract is enforced by `makeDurable`'s `create` parameter, not by this internal helper.
 const sanitizeRpcs = <Rpcs extends Rpc.Any>(
   defined: RpcGroup.RpcGroup<Rpcs> | undefined,
