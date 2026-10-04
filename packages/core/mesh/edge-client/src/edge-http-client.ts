@@ -5,10 +5,11 @@
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as Schema from 'effect/Schema';
 
 import { type Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
@@ -30,6 +31,11 @@ import {
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
   type GetPluginsResponseBody,
+  type InboxListResponse,
+  InboxListResponseSchema,
+  type InboxSendResponse,
+  InboxSendResponseSchema,
+  type IndexerHeadsResponse,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
@@ -67,6 +73,21 @@ export type UploadPluginBundleRequest = {
   slug: string;
   version: string;
   files: { path: string; content: string }[];
+};
+
+export type CreateApiTokenRequest = {
+  label: string;
+  /** Epoch milliseconds; the token never expires when omitted. */
+  expiresAt?: number;
+};
+
+/** A minted token: `token` is the secret, returned once; the rest is its non-secret summary. */
+export type CreateApiTokenResponse = {
+  token: string;
+  id: string;
+  prefix: string;
+  label: string;
+  expiresAt?: number | null;
 };
 
 export type TriggersDispatcherStatus = {
@@ -162,7 +183,12 @@ export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientS
  * services run at different URLs and are never both available from the same base URL.
  */
 /** Upstream service the EDGE AI proxy forwards to; selects the `/ai/generate/<service>` route. */
-export type EdgeAiService = 'anthropic' | 'deepseek' | 'typesafe';
+export type EdgeAiService =
+  | 'anthropic'
+  | 'deepseek'
+  | 'typesafe'
+  /** TypeSafe's System One wire, answered by Workers AI's `typesafe/jev` on EDGE's Cloudflare account. */
+  | 'workers-ai/typesafe';
 
 export class EdgeHttpClient extends BaseHttpClient {
   constructor(baseUrl: string, options?: EdgeHttpClientOptions) {
@@ -280,6 +306,49 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL(`/db/spaces/${spaceId}/join`, this.baseUrl), {
       ...args,
       body,
+      method: 'POST',
+      auth: true,
+    });
+  }
+
+  //
+  // Inbox (user-to-user notices)
+  //
+
+  /**
+   * Leaves a notice in another identity's inbox; the sender is the identity this client authenticates as.
+   * @param payload Opaque to EDGE; the recipient verifies it.
+   */
+  public async sendInboxMessage(
+    ctx: Context,
+    recipientDid: string,
+    payload: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<InboxSendResponse> {
+    const response = await this._call(ctx, new URL(`/inbox/${encodeURIComponent(recipientDid)}`, this.baseUrl), {
+      ...args,
+      body: { payload },
+      method: 'POST',
+      auth: true,
+    });
+    return Schema.decodeUnknownSync(InboxSendResponseSchema)(response);
+  }
+
+  /**
+   * Lists the pending notices addressed to this client's identity.
+   */
+  public async listInbox(ctx: Context, args?: EdgeHttpCallArgs): Promise<InboxListResponse> {
+    const response = await this._call(ctx, new URL('/inbox', this.baseUrl), { ...args, method: 'GET', auth: true });
+    return Schema.decodeUnknownSync(InboxListResponseSchema)(response);
+  }
+
+  /**
+   * Removes notices from this identity's inbox on every device.
+   */
+  public async ackInbox(ctx: Context, ids: readonly string[], args?: EdgeHttpCallArgs): Promise<void> {
+    await this._call(ctx, new URL('/inbox/ack', this.baseUrl), {
+      ...args,
+      body: { ids },
       method: 'POST',
       auth: true,
     });
@@ -632,6 +701,15 @@ export class EdgeHttpClient extends BaseHttpClient {
     });
   }
 
+  /** Heads of every document in the space as last indexed by EDGE. */
+  public async getIndexerHeads(ctx: Context, spaceId: SpaceId, args?: EdgeHttpCallArgs): Promise<IndexerHeadsResponse> {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/indexer-heads`, this.baseUrl), {
+      ...args,
+      method: 'GET',
+      auth: true,
+    });
+  }
+
   //
   // Registry
   //
@@ -651,6 +729,52 @@ export class EdgeHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<{ moduleUrl: string }> {
     return this._call(ctx, new URL('/registry/upload', this.baseUrl), {
+      body: request,
+      method: 'POST',
+      auth: true,
+      ...args,
+    });
+  }
+
+  /**
+   * Your private plugins: releases uploaded with {@link uploadPrivatePluginBundle}, listed only to the
+   * identity that published them. Same shape as {@link getRegistryPlugins}, so callers merge the two.
+   */
+  public async getPrivateRegistryPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetPluginsResponseBody> {
+    return this._call(ctx, new URL('/registry/private/plugins', this.baseUrl), { auth: true, ...args, method: 'GET' });
+  }
+
+  /**
+   * Uploads a private plugin release, which is hosted like a public one but written to no AT Protocol
+   * repo: the registry records it against the caller, authenticated by identity or by API key.
+   */
+  public async uploadPrivatePluginBundle(
+    ctx: Context,
+    request: UploadPluginBundleRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<{ moduleUrl: string }> {
+    return this._call(ctx, new URL('/registry/private/upload', this.baseUrl), {
+      body: request,
+      method: 'POST',
+      auth: true,
+      ...args,
+    });
+  }
+
+  //
+  // API tokens
+  //
+
+  /**
+   * Mints a personal API token bound to this client's identity, for a process that cannot sign as it
+   * (a CLI in a sandbox, a CI job). Hub accepts only a verifiable presentation here, never a token.
+   */
+  public async createApiToken(
+    ctx: Context,
+    request: CreateApiTokenRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<CreateApiTokenResponse> {
+    return this._call(ctx, new URL('/hub/api/api-tokens', this.baseUrl), {
       body: request,
       method: 'POST',
       auth: true,

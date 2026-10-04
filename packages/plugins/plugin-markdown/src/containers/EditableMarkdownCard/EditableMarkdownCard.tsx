@@ -32,7 +32,7 @@ export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => 
 
   return (
     <Card.Section classNames='overflow-hidden'>
-      <Card.Row fullWidth>
+      <Card.Row>
         <MarkdownEditorProvider id={id} object={subject} viewMode='source' identity={identity}>
           {(editorRootProps) => (
             <Editor.Root {...editorRootProps}>

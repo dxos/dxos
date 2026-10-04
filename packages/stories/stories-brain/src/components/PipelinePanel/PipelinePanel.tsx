@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { IconButton, Panel, ScrollArea, Select, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Button, Empty, Panel, ScrollArea, Select, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type StageInfo = {
@@ -57,25 +56,23 @@ export const PipelinePanel = ({
   const stages = pipeline?.stages ?? [];
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Select.Root value={selected} onValueChange={onSelect}>
-            <Select.TriggerButton placeholder='Pipeline' />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {pipelines.map((item) => (
-                    <Select.Option key={item.id} value={item.id}>
-                      {item.label}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
+          <Select.Root
+            value={[selected]}
+            onValueChange={({ value: [value] }) => onSelect(value)}
+            items={pipelines.map((item) => ({ value: item.id, label: item.label }))}
+          >
+            <Select.Trigger placeholder='Pipeline' />
+            <Select.Content>
+              {pipelines.map((item) => (
+                <Select.Item key={item.id} item={{ value: item.id, label: item.label }} />
+              ))}
+            </Select.Content>
           </Select.Root>
           <div className='grow' />
-          <span className='text-sm text-description tabular-nums'>{processed} processed</span>
-          <IconButton
+          <span className='text-sm text-fg-muted tabular-nums'>{processed} processed</span>
+          <Button
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
             iconOnly
             label={running ? 'Stop' : 'Start'}
@@ -83,26 +80,26 @@ export const PipelinePanel = ({
             onClick={() => (running ? onStop?.() : onStart?.())}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root padding>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
           <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
-            {stages.length === 0 && <Empty label='No stages.' />}
+            {stages.length === 0 && <Empty>No stages.</Empty>}
             {stages.map((stage) => (
               <div
                 key={stage.id}
                 className={mx(
-                  'flex flex-col min-w-0 dx-card-surface border border-subdued-separator rounded-sm px-3 py-2',
+                  'flex flex-col min-w-0 dx-card-surface border border-separator-subtle rounded-sm px-3 py-2',
                   !stage.enabled && 'opacity-50',
                 )}
               >
                 <span className='font-medium truncate'>{stage.id}</span>
-                {stage.description && <span className='text-sm text-description truncate'>{stage.description}</span>}
+                {stage.description && <span className='text-sm text-fg-muted truncate'>{stage.description}</span>}
               </div>
             ))}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -19,7 +19,7 @@ export class Profile extends Type.makeObject<Profile>(DXN.make('org.dxos.type.si
     agent: Ref.Ref(Agent.Agent),
     journal: Ref.Ref(Journal.Journal),
     journalEnabled: Schema.optional(Schema.Boolean),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--brain--regular', hue: 'violet' })),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--brain--regular', hue: 'violet' }), Annotation.UserType.set()),
 ) {}
 
 /** Creates a Sidekick profile with journal enabled by default. */

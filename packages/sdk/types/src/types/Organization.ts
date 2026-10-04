@@ -32,7 +32,7 @@ const OrganizationSchema = Schema.Struct({
     }),
     Schema.optional,
   ),
-  description: Schema.String.pipe(
+  description: Format.Text.pipe(
     Schema.annotate({ title: 'Description' }),
     Annotation.GeneratorAnnotation.set({
       generator: 'lorem.paragraphs',
@@ -81,7 +81,7 @@ const _OrganizationSchema = OrganizationSchema.pipe(
 );
 
 export class Organization extends Type.makeObject<Organization>(DXN.make('org.dxos.type.organization', '0.1.0'))(
-  _OrganizationSchema,
+  _OrganizationSchema.pipe(Annotation.UserType.set()),
 ) {}
 
 export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);

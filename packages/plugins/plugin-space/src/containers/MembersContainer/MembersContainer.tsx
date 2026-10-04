@@ -22,7 +22,7 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
-import { Button, Icon, QrCode, SystemIconButton, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, QrCode, SystemButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import {
   type ActionMenuItem,
@@ -173,39 +173,35 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
-            <Form.FieldSet>
-              <div role='group' className='min-w-0'>
-                <h3 className='text-lg mb-2'>{t('members.label')}</h3>
-                <SpaceMemberList spaceKey={space.key} includeSelf />
-              </div>
-              {showContactPicker && (
-                <div role='group' className='min-w-0'>
-                  <h3 className='text-lg mb-2'>{t('add-known-people.label')}</h3>
-                  <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
-                </div>
+            <Form.FieldSet label={t('members.label')}>
+              <SpaceMemberList spaceKey={space.key} includeSelf />
+            </Form.FieldSet>
+            {showContactPicker && (
+              <Form.FieldSet label={t('add-known-people.label')}>
+                <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
+              </Form.FieldSet>
+            )}
+            <Form.FieldSet
+              label={t('invitations.label')}
+              description={selectedInvitation ? undefined : t('space-invitation.description')}
+            >
+              {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
+              {!selectedInvitation && (
+                <>
+                  <InvitationList
+                    send={handleSend}
+                    invitations={visibleInvitations ?? []}
+                    onClickRemove={(invitation) => invitation.cancel()}
+                    createInvitationUrl={createInvitationUrl}
+                  />
+                  <BifurcatedAction
+                    actions={inviteActions}
+                    activeAction={activeAction}
+                    onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
+                    data-testid='membersContainer.createInvitation'
+                  />
+                </>
               )}
-              <div role='group' className='min-w-0'>
-                <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
-                {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
-                {!selectedInvitation && (
-                  <>
-                    <p className='text-description mb-2'>{t('space-invitation.description')}</p>
-                    <InvitationList
-                      className='mb-2'
-                      send={handleSend}
-                      invitations={visibleInvitations ?? []}
-                      onClickRemove={(invitation) => invitation.cancel()}
-                      createInvitationUrl={createInvitationUrl}
-                    />
-                    <BifurcatedAction
-                      actions={inviteActions}
-                      activeAction={activeAction}
-                      onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
-                      data-testid='membersContainer.createInvitation'
-                    />
-                  </>
-                )}
-              </div>
             </Form.FieldSet>
           </Form.FieldSet>
         </Form.Content>
@@ -265,9 +261,9 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
+      <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
-        <div className='w-full aspect-square relative text-description'>
+        <div className='w-full aspect-square relative text-fg-muted'>
           <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
           <Centered>
             <Emoji text={emoji} />
@@ -276,7 +272,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <span id={qrLabel} className='sr-only'>
           {t('qr.label')}
         </span>
-        <SystemIconButton.Clipboard value={url ?? 'never'} />
+        <SystemButton.Clipboard value={url ?? 'never'} />
       </div>
       <Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
@@ -291,9 +287,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
   return (
     <>
-      <p className='text-description'>{t('auth-other-device-emoji.message')}</p>
+      <p className='text-fg-muted'>{t('auth-other-device-emoji.message')}</p>
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
-      <p className='text-description'>{t('auth-code.message')}</p>
+      <p className='text-fg-muted'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
       <Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
@@ -304,9 +300,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
 const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
   return statusValue > 0 ? (
-    <Icon icon='ph--check--regular' size={6} classNames='m-trim-xs' />
+    <Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size={6} classNames='m-trim-xs' />
+    <Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
   );
 };
 

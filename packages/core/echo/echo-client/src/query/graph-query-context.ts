@@ -6,7 +6,7 @@ import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { GroupBy, QueryPlanner } from '@dxos/echo-host/query';
+import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -403,6 +403,10 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   private _isValidSourceForQuery(query: QueryAST.Query): boolean {
+    if (queryContainsChanges(query)) {
+      return false;
+    }
+
     const targetSpaces = getTargetSpacesForQuery(query);
     // Disabled by spaces filter.
     if (targetSpaces.length > 0 && !targetSpaces.includes(this.spaceId)) {

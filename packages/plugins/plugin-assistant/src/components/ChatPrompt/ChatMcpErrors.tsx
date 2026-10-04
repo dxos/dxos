@@ -6,6 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
 import { Banner, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
@@ -33,20 +34,29 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
 
   return (
     <Banner.Root valence='warning'>
-      <Banner.Content classNames={['m-1', classNames]}>
-        <Banner.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Banner.Title>
-        <Banner.Body asChild>
-          <ul className='flex flex-col gap-0.5 text-sm'>
+      <Banner.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Banner.Title>
+      <Banner.Body>
+        <Listbox.Root
+          items={errors.map((error) => ({
+            value: `${error.url}::${error.protocol}`,
+            label: `${error.url}::${error.protocol}`,
+          }))}
+        >
+          <Listbox.Content aria-label={t('mcp-server-error.label')} classNames='gap-0.5 text-sm'>
             {errors.map((error) => (
-              <li key={`${error.url}::${error.protocol}`} className='truncate'>
-                <span className='font-mono'>{error.url}</span>
-                {' — '}
-                <span>{error.message}</span>
-              </li>
+              <Listbox.Item key={`${error.url}::${error.protocol}`} id={`${error.url}::${error.protocol}`}>
+                {/* `min-w-0`: the item is a flex child, so without it `truncate` never shrinks below
+                      the content's intrinsic width. */}
+                <span className='truncate min-w-0'>
+                  <span className='font-mono'>{error.url}</span>
+                  {' — '}
+                  <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
+                </span>
+              </Listbox.Item>
             ))}
-          </ul>
-        </Banner.Body>
-      </Banner.Content>
+          </Listbox.Content>
+        </Listbox.Root>
+      </Banner.Body>
     </Banner.Root>
   );
 };

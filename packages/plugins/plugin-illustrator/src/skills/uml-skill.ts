@@ -17,6 +17,7 @@ const operations = [
   DrawingOperation.Generate,
   DrawingOperation.Draw,
   DrawingOperation.Edit,
+  DrawingOperation.Score,
 ];
 
 const make = () =>
@@ -81,6 +82,26 @@ const make = () =>
         an ECHO object reference opens when the node is activated; a URL or path is kept on the
         node for tooling. Keep to ~14 nodes and 3 groups; split a larger system into several
         drawings.
+
+        Relation kinds draw with UML markers: \`B ..|> A\` (implements, dashed hollow triangle),
+        \`A -.-> B\` (creates), \`A o--> B\` (owns or contains), \`A --{ B\` (has many) and
+        \`B --|> A\` (extends); a plain \`-->\` is a dependency or call.
+
+        ## Refining a diagram
+
+        After each ${Operation.toolName(DrawingOperation.Generate)}, call
+        ${Operation.toolName(DrawingOperation.Score)} and improve the diagram over several rounds
+        (about five, or until the overall score stops rising). Each round, say in one line what the
+        scores and diagnostics showed and what you are changing, then regenerate. Change only what is
+        true of the code:
+
+        - Label each box with a component name alone; put caveats ("no cap", limits) on edges.
+        - Keep every box at one level of abstraction: services and modules, not their fields, caches,
+          limits or data types.
+        - Remove crossings, overlapping arrows and overlapping labels: reorder declarations, move a
+          node to another group, switch TB/LR, or drop an edge that restates another.
+        - Groups should hold what depends on each other; dependencies should run one way between them.
+        - Keep the best-scoring version; if a change lowers the score, go back.
 
         ## Drawing it yourself
 

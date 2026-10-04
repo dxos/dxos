@@ -32,6 +32,7 @@ export default Capability.makeModule(
     const builder = AppGraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry, {
       anchorKey: UrlPath.WORKSPACE_KEY,
       linked: { key: UrlPath.COMPANION_KEY, relation: AppNode.companion },
+      tailSeparator: UrlPath.TAIL_SEPARATOR,
     });
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());

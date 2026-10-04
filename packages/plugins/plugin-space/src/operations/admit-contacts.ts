@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type HaloInbox } from '@dxos/client-protocol';
 import { type Space, type SpaceMember_Role } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { createBuf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact, ContactSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 
@@ -33,4 +35,30 @@ export const admitContacts = async (
     }
   }
   return result;
+};
+
+/**
+ * Tells each admitted identity it can join, so it need not be sent the link by hand.
+ * A notice is a convenience on top of the admission: a failed send is logged, never thrown.
+ */
+export const sendInvitationNotices = async (
+  inbox: Pick<HaloInbox, 'send'>,
+  spaceKey: PublicKey,
+  identityKeys: string[],
+  role: SpaceMember_Role,
+): Promise<{ sent: string[]; failed: string[] }> => {
+  const results = await Promise.allSettled(
+    identityKeys.map((key) => inbox.send({ recipientIdentityKey: PublicKey.from(key), spaceKey, role })),
+  );
+  const sent: string[] = [];
+  const failed: string[] = [];
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      sent.push(identityKeys[index]);
+    } else {
+      failed.push(identityKeys[index]);
+      log.warn('failed to send space invitation notice', { identityKey: identityKeys[index], error: result.reason });
+    }
+  });
+  return { sent, failed };
 };

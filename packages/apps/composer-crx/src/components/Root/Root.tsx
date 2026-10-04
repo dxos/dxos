@@ -6,7 +6,9 @@ import '@dxos-theme';
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { ErrorBoundary, ErrorBoundaryProps, ThemeProvider, Tooltip } from '@dxos/react-ui';
+// Next components style through `.dx-*` rules that ship separately from the theme.
+import '@dxos/react-ui/theme.css';
+import { ErrorBoundary, ErrorBoundaryProps, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 
 import { translations } from '../../translations.ts';
@@ -29,9 +31,7 @@ export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorBoundaryPro
 
   return (
     <ThemeProvider tx={defaultTx} resourceExtensions={translations} themeMode='dark'>
-      <Tooltip.Provider>
-        <ErrorBoundary name={name}>{children}</ErrorBoundary>
-      </Tooltip.Provider>
+      <ErrorBoundary name={name}>{children}</ErrorBoundary>
     </ThemeProvider>
   );
 };

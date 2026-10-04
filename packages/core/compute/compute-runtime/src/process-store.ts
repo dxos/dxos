@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Schema from 'effect/Schema';
 import * as Semaphore from 'effect/Semaphore';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
@@ -57,6 +57,8 @@ export const PersistedProcess = Schema.Struct({
     conversation: Schema.optional(Schema.String),
   }),
   parentId: Schema.NullOr(Process.ID),
+  // Who the process's writes are attributed to (`Database.Origin`); absent on records written before it existed.
+  origin: Schema.optional(Schema.Literals(['user', 'system', 'unknown'])),
   state: Schema.Enum(Process.State),
   alarmDueAt: Schema.NullOr(Schema.Number),
   events: Schema.Array(PersistedEvent),

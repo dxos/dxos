@@ -8,9 +8,8 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import * as Process from '@dxos/compute/Process';
-import { Icon, IconButton, ScrollArea, Tooltip, composable, composableProps } from '@dxos/react-ui';
-import { type ColumnRenderer, type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
-import { mx } from '@dxos/ui-theme';
+import { Button, Icon, Tooltip, composable, composableProps } from '@dxos/react-ui';
+import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
 import { Unit } from '@dxos/util';
 
 const DEFAULT_DEPTH = 1;
@@ -23,7 +22,7 @@ const NESTED_ACTIVE_STATES = new Set<Process.State>([
 
 export type ProcessTreeProps = {
   // TODO(burdon): Atom.
-  processes: readonly Process.Info[];
+  processes: readonly Process.Process[];
   /**
    * Maximum nesting depth from the root (1 = top-level processes only).
    *
@@ -36,19 +35,19 @@ export type ProcessTreeProps = {
    *
    * Must be referentially stable — `ProcessTree` is memoized on its props.
    */
-  resolveLabel?: (process: Process.Info) => string | undefined;
+  resolveLabel?: (process: Process.Process) => string | undefined;
   /** Pids drawn as selected; the tree is controlled, so a click reports through `onSelectedChange`. */
   selected?: readonly string[];
   /** The selection after a click: the clicked pid alone, or toggled among the others on a meta-click. */
   onSelectedChange?: (selected: string[]) => void;
-  onProcessTerminate?: (process: Process.Info) => void;
+  onProcessTerminate?: (process: Process.Process) => void;
 };
 
 /** Node of the pruned process forest handed to the tree model. */
 type ProcessNode = {
   id: string;
   /** Absent on the synthetic root, which anchors the top-level processes and is never rendered. */
-  process?: Process.Info;
+  process?: Process.Process;
   children: ProcessNode[];
 };
 
@@ -109,7 +108,7 @@ export const ProcessTree = React.memo(
       );
 
       const handleSelect = useCallback(
-        ({ item, current, meta }: { item: ProcessNode; current: boolean; meta: boolean }) => {
+        ({ item, current, meta }: TreeSelectEvent<ProcessNode>) => {
           if (!item.process) {
             return;
           }
@@ -121,91 +120,98 @@ export const ProcessTree = React.memo(
         [selected, onSelectedChange],
       );
 
-      const renderIcon = useMemo(() => makeIconRenderer(), []);
-      const renderColumns = useMemo(() => makeColumnRenderer(onProcessTerminate), [onProcessTerminate]);
+      const renderRow = useCallback(
+        (node: TreeNode<ProcessNode>) => <ProcessRow node={node} onProcessTerminate={onProcessTerminate} />,
+        [onProcessTerminate],
+      );
 
       return (
-        <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
-          <ScrollArea.Viewport>
-            <Tree<ProcessNode>
-              id={ROOT_ID}
-              model={model}
-              density='sm'
-              selectionMode='multiple'
-              classNames='text-sm tabular-nums font-thin'
-              gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
-              renderIcon={renderIcon}
-              renderColumns={renderColumns}
-              onOpenChange={handleOpenChange}
-              onSelect={handleSelect}
-            />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+        <div {...composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
+          <Tree.Root
+            id={ROOT_ID}
+            model={model}
+            virtual='fixed'
+            size='sm'
+            selectionMode='multiple'
+            columns={COLUMNS}
+            onOpenChange={handleOpenChange}
+            onSelect={handleSelect}
+          >
+            <Tree.Content>{renderRow}</Tree.Content>
+          </Tree.Root>
+        </div>
       );
     },
   ),
 );
 
-/** Status glyph — animated, coloured and tooltipped per state, which `TreeItemDataProps.icon` cannot express. */
-const makeIconRenderer =
-  (): IconRenderer<ProcessNode> =>
-  ({ item: { process } }) =>
-    process === undefined ? null : (
-      <Tooltip.Trigger content={process.state.toString()}>
-        <Icon
-          size={4}
-          synchronized
-          classNames={mx(
-            'shrink-0',
-            process.state === Process.State.RUNNING && 'animate-spin',
-            process.state === Process.State.FAILED && 'text-error-text',
-            process.state === Process.State.SUCCEEDED && 'text-success-text',
-          )}
-          icon={Match.value(process.state).pipe(
-            Match.when(Process.State.RUNNING, () => 'ph--spinner-gap--regular'),
-            Match.when(Process.State.SUCCEEDED, () => 'ph--check-circle--regular'),
-            Match.when(Process.State.FAILED, () => 'ph--warning--regular'),
-            Match.when(Process.State.HYBERNATING, () => 'ph--spinner--regular'),
-            Match.when(Process.State.IDLE, () => 'ph--moon-stars--regular'),
-            Match.when(Process.State.TERMINATING, () => 'ph--x-circle--regular'),
-            Match.when(Process.State.TERMINATED, () => 'ph--x-circle--regular'),
-            Match.orElse(() => 'ph--spinner-gap--regular'),
-          )}
-        />
-      </Tooltip.Trigger>
-    );
+/** Disclosure, status glyph, label, then the elapsed time and the terminate control. */
+const COLUMNS = 'var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) min-content min-content';
 
-/** Trailing columns: elapsed time for finished processes, and the terminate control. */
-const makeColumnRenderer =
-  (onProcessTerminate?: (process: Process.Info) => void): ColumnRenderer<ProcessNode> =>
-  ({ item: { process } }) =>
-    process === undefined ? null : (
-      <>
-        <div className='flex items-center justify-end ps-1 text-xs text-description tabular-nums'>
-          {[Process.State.FAILED, Process.State.SUCCEEDED].includes(process.state) && (
-            <span className='whitespace-nowrap'>{Unit.Duration(process.metrics.wallTime).toString()}</span>
-          )}
-        </div>
-        <div className='flex items-center mx-1'>
-          {onProcessTerminate && process.state !== Process.State.TERMINATED && (
-            <IconButton
-              classNames='min-h-0 p-1'
-              icon='ph--x--regular'
-              iconOnly
-              density='sm'
-              variant='ghost'
-              label='Actions'
-              onClick={(event) => {
-                event.stopPropagation();
-                onProcessTerminate(process);
-              }}
-            />
-          )}
-        </div>
-      </>
-    );
+type ProcessRowProps = {
+  node: TreeNode<ProcessNode>;
+  onProcessTerminate?: (process: Process.Process) => void;
+};
 
-const sortProcesses = (processes: readonly Process.Info[]): Process.Info[] => {
+/** One process: its status glyph (animated, coloured and tooltipped per state), elapsed time and terminate control. */
+const ProcessRow = ({ node, onProcessTerminate }: ProcessRowProps) => {
+  const process = node.item?.process;
+  return (
+    <Tree.Item node={node}>
+      <Tree.ItemIndicator />
+      <Tree.ItemIcon>{process && <StatusIcon process={process} />}</Tree.ItemIcon>
+      <Tree.ItemText />
+      <span className='text-end ps-1 text-xs text-fg-muted tabular-nums whitespace-nowrap'>
+        {process &&
+          [Process.State.FAILED, Process.State.SUCCEEDED].includes(process.state) &&
+          Unit.Duration(process.metrics.wallTime).toString()}
+      </span>
+      <span>
+        {process && onProcessTerminate && process.state !== Process.State.TERMINATED && (
+          <Button
+            icon='ph--x--regular'
+            iconOnly
+            size='sm'
+            variant='ghost'
+            label='Actions'
+            onClick={(event) => {
+              event.stopPropagation();
+              onProcessTerminate(process);
+            }}
+          />
+        )}
+      </span>
+    </Tree.Item>
+  );
+};
+
+const StatusIcon = ({ process }: { process: Process.Process }) => (
+  <Tooltip.Trigger content={process.state.toString()}>
+    <Icon
+      size='md'
+      spin={process.state === Process.State.RUNNING}
+      valence={
+        process.state === Process.State.FAILED
+          ? 'error'
+          : process.state === Process.State.SUCCEEDED
+            ? 'success'
+            : undefined
+      }
+      icon={Match.value(process.state).pipe(
+        Match.when(Process.State.RUNNING, () => 'ph--spinner-gap--regular'),
+        Match.when(Process.State.SUCCEEDED, () => 'ph--check-circle--regular'),
+        Match.when(Process.State.FAILED, () => 'ph--warning--regular'),
+        Match.when(Process.State.HYBERNATING, () => 'ph--spinner--regular'),
+        Match.when(Process.State.IDLE, () => 'ph--moon-stars--regular'),
+        Match.when(Process.State.TERMINATING, () => 'ph--x-circle--regular'),
+        Match.when(Process.State.TERMINATED, () => 'ph--x-circle--regular'),
+        Match.orElse(() => 'ph--spinner-gap--regular'),
+      )}
+    />
+  </Tooltip.Trigger>
+);
+
+const sortProcesses = (processes: readonly Process.Process[]): Process.Process[] => {
   return [
     ...processes.filter((process) => [Process.State.RUNNING, Process.State.HYBERNATING].includes(process.state)),
     ...processes.filter((process) => [Process.State.IDLE].includes(process.state)).slice(0, 3),
@@ -219,7 +225,7 @@ const sortProcesses = (processes: readonly Process.Info[]): Process.Info[] => {
   });
 };
 
-const sortNestedActive = (processes: readonly Process.Info[]): Process.Info[] =>
+const sortNestedActive = (processes: readonly Process.Process[]): Process.Process[] =>
   processes
     .filter((process) => NESTED_ACTIVE_STATES.has(process.state))
     .sort((left, right) => {
@@ -232,10 +238,10 @@ const sortNestedActive = (processes: readonly Process.Info[]): Process.Info[] =>
  * Builds the process forest, pruned to `maxDepth` from each root. Nested levels surface only still-
  * active processes, so a deep tree stays readable while completed work collapses out of view.
  */
-const buildProcessForest = (processes: readonly Process.Info[], maxDepth: number): ProcessNode => {
+const buildProcessForest = (processes: readonly Process.Process[], maxDepth: number): ProcessNode => {
   const pidSet = new Set(processes.map((process) => String(process.pid)));
-  const childrenByParent = new Map<string, Process.Info[]>();
-  const roots: Process.Info[] = [];
+  const childrenByParent = new Map<string, Process.Process[]>();
+  const roots: Process.Process[] = [];
 
   for (const process of processes) {
     const parent = process.parentPid;
@@ -249,7 +255,7 @@ const buildProcessForest = (processes: readonly Process.Info[], maxDepth: number
     childrenByParent.set(key, siblings);
   }
 
-  const visit = (process: Process.Info, level: number): ProcessNode => {
+  const visit = (process: Process.Process, level: number): ProcessNode => {
     const children = level >= maxDepth ? [] : sortNestedActive(childrenByParent.get(String(process.pid)) ?? []);
     return {
       id: String(process.pid),

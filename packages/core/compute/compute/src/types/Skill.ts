@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Annotation, Database, DXN, Filter, Obj, Ref, Registry, Type, URI } from '@dxos/echo';
+import { Annotation, Database, DXN, Filter, Format, Obj, Ref, Registry, Type, URI } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 // Text is referenced in the inferred type of Skill (via Template.Template → Ref.Ref(Text.Text));
 // the import lets TypeScript name it in the emitted .d.ts.
@@ -41,7 +41,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     /**
      * Description of the skill's purpose and functionality.
      */
-    description: Schema.optional(Schema.String).annotate({
+    description: Schema.optional(Format.Text).annotate({
       description: "Description of the skill's purpose and functionality",
     }),
 
@@ -70,7 +70,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     /**
      * Array of MCP servers that the AI assistant can use when this skill is active.
      */
-    mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
+    mcpServers: Schema.optional(Schema.Array(McpServer.Spec)),
 
     /**
      * Hooks triggered automatically at certain points in the agent's lifecycle.
@@ -78,7 +78,8 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     hooks: Schema.optional(Schema.Array(Schema.suspend(() => Hook))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'amber' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--student--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

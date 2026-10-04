@@ -73,6 +73,9 @@
       "path": "packages/sdk/client-services/tsconfig.json"
     },
     {
+      "path": "tools/code-index/tsconfig.json"
+    },
+    {
       "path": "tools/codemorph/tsconfig.json"
     },
     {
@@ -179,6 +182,9 @@
     },
     {
       "path": "packages/core/echo/echo-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-sqlite/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
@@ -799,6 +805,9 @@
       "path": "packages/ui/react-ui-grid/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-html/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-introspect/tsconfig.json"
     },
     {
@@ -821,6 +830,9 @@
     },
     {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-query/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-rdf/tsconfig.json"
@@ -992,6 +1004,9 @@
     },
     {
       "path": "tools/vite-plugin-log/tsconfig.json"
+    },
+    {
+      "path": "tools/vite-plugin-module-url/tsconfig.json"
     },
     {
       "path": "tools/vite-plugin-shutdown/tsconfig.json"

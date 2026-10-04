@@ -143,7 +143,7 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-list"
+      "path": "../../ui/react-ui-html"
     },
     {
       "path": "../../ui/react-ui-menu"
@@ -152,10 +152,10 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-search"
+      "path": "../../ui/react-ui-query"
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter"
+      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-table"
@@ -180,9 +180,6 @@
     },
     {
       "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-preview"

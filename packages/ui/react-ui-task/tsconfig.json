@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/random"
     },
     {
@@ -27,9 +30,6 @@
       "path": "../react-ui"
     },
     {
-      "path": "../react-ui-card"
-    },
-    {
       "path": "../react-ui-list"
     },
     {
@@ -37,6 +37,9 @@
     },
     {
       "path": "../react-ui-menu"
+    },
+    {
+      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"

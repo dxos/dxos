@@ -36,12 +36,12 @@ export const SceneArticle = ({ subject, attendableId, role }: SceneArticleProps)
   return (
     <SpacetimeEditor.Root scene={subject}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <SpacetimeEditor.Toolbar attendableId={attendableId} alwaysActive />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SpacetimeEditor.Canvas camera={camera} onCameraChange={setCamera} />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </SpacetimeEditor.Root>
   );

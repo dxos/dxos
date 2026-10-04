@@ -2,20 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import { extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import React, {
+  type FC,
+  type KeyboardEvent,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
-import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
-import { SystemIconButton, useTranslation } from '@dxos/react-ui';
-import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
-import { Task } from '@dxos/types';
+import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Tree, type TreeDropEvent, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list';
+import { type Task } from '@dxos/types';
 
-import { TaskQuestion } from '../TaskQuestion/TaskQuestion.tsx';
 import {
-  type TaskDropIntent,
   type TaskPlacement,
   resolveIndent,
   resolveNudge,
@@ -23,43 +26,60 @@ import {
   resolveReparent,
   resolveTaskPlacement,
 } from './hierarchy.ts';
-import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.tsx';
-import { TaskCheckbox, TaskOrdinal, TaskStatusControl } from './TaskRowCells.tsx';
+import { type TaskDescriptionProps } from './TaskDescription.tsx';
+import { useTaskListContext } from './TaskListContext.ts';
 import {
   TASK_TREE_ROOT_ID,
+  type TaskGroup,
+  type TaskGroupHeader,
   type TaskNode,
-  buildTaskForest,
   buildTaskPaths,
+  buildTaskTree,
   createTaskTreeModel,
 } from './tree-model.ts';
 
 /**
- * The hierarchical list rendered as a `Tree`, so the machine owns disclosure, roving focus and the
- * APG keymap instead of the row re-deriving `aria-level`/`posinset`/`setsize` by hand.
+ * The task list rendered as a Next `Tree`, so the machine owns disclosure, roving focus and the APG keymap. A row's
+ * cells lay out on the Root's `columns` in DOM order: the disclosure (when the list can disclose), then the gutter,
+ * status and title, then the trailing cells; the chips and the description are placed on the row's later lines.
  *
- * The row's cell order changes as a consequence: `Tree` renders `[toggle][heading][columns]`, so the
- * disclosure control leads the row where the flat list put it after the ordinal and status control.
- * Everything else keeps its column.
- *
- * `Alt+Arrow` restructuring survives untouched — zag ignores modified arrows, verified against the
- * tree's own story, so indent/outdent/nudge still reach the row handler.
+ * `Shift+Arrow` and `Tab` restructuring reach the consumer's key handler before the machine's, which ignores modified
+ * arrows anyway; a taken key keeps focus on the moved row as it remounts under its new path.
  */
+
 /**
  * How a row was activated, so a host can tell a plain click from a modified one — e.g. opening the
  * task in a plank of its own rather than reusing the one the list reads into.
  */
 export type TaskSelectModifiers = { meta?: boolean };
 
+export type TaskItemProps = {
+  node: TaskNode;
+  /** The tree's disclosure cell, when the list discloses branches. */
+  indicator?: ReactNode;
+  ordinal?: number;
+  checked: boolean;
+  translationKey: string;
+  showDescription: boolean;
+  descriptionComponents?: TaskDescriptionProps['components'];
+  onTaskCheck?: (task: Task.Task) => void;
+  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
+};
+
+/** A task's whole row, rendered into the tree's row; injected so this module need not know its cells. */
+export type TaskItemRenderer = FC<TaskItemProps>;
+
 export type TaskTreeNodeProps = {
-  /** Paint the drop bands on every row (development affordance). */
-  debug?: boolean;
   /** Render status headers with their tasks flat beneath, instead of the hierarchy. */
   groupByStatus?: readonly Task.Status[];
+  /** Host-defined groups, rendered as collapsible headers with counts (see {@link TaskGroup}). */
+  groups?: readonly TaskGroup[];
   /** Nest sub-tasks under their parent; off renders one row per task. */
   hierarchical?: boolean;
   tasks: readonly Task.Task[];
   collapsed: ReadonlySet<string>;
-  showGutter: boolean;
+  /** Whether rows lead with a disclosure cell: a flat list has no branch to disclose. */
+  toggle: boolean;
   ordinals: ReadonlyMap<string, number>;
   selected?: string;
   /** Ids of the checked rows; the gutter renders a checkbox instead of an ordinal once wired. */
@@ -69,42 +89,38 @@ export type TaskTreeNodeProps = {
   showDescription?: boolean;
   /** Renderers for the description beyond the row's own. */
   descriptionComponents?: TaskDescriptionProps['components'];
-  /** Render the questions in each task's history under its title. */
-  showQuestions?: boolean;
   onCollapseToggle: (id: string) => void;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
-  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
-  /** The list's column template — the tree's rows and the edit pane lay out on the same tracks. */
-  gridTemplateColumns: string;
-  renderTrailing?: ColumnRenderer<TaskNode>;
+  /** The rows' column template (see `buildGridTemplate`); the edit pane lays out on the same tracks. */
+  columns: string;
+  renderItem: TaskItemRenderer;
 };
 
 export const TaskTreeNode = ({
-  debug,
   groupByStatus,
+  groups,
   hierarchical,
   tasks,
   collapsed,
-  showGutter,
+  toggle,
   ordinals,
   selected,
   checked,
-  gridTemplateColumns,
-  renderTrailing,
+  columns,
+  renderItem: Item,
   translationKey,
   showDescription = false,
   descriptionComponents,
-  showQuestions = false,
   onCollapseToggle,
   onTaskCheck,
   onTaskSelect,
   onTaskUpdate,
   onTaskMove,
-  onQuestionAnswer,
 }: TaskTreeNodeProps) => {
+  const { flush } = useTaskListContext('TaskList.TreeNode');
   const { t } = useTranslation(translationKey);
   const registry = useContext(RegistryContext);
 
@@ -114,10 +130,21 @@ export const TaskTreeNode = ({
   const collapsedRef = useRef(collapsed);
   collapsedRef.current = collapsed;
   const model = useMemo(
-    () => createTaskTreeModel(tasks, { collapsed: collapsedRef.current, groupByStatus, translationKey, hierarchical }),
-    [tasks, groupByStatus, translationKey, hierarchical],
+    () =>
+      createTaskTreeModel(tasks, {
+        collapsed: collapsedRef.current,
+        groups,
+        groupByStatus,
+        translationKey,
+        hierarchical,
+      }),
+    [tasks, groups, groupByStatus, translationKey, hierarchical],
   );
-  const paths = useMemo(() => buildTaskPaths(buildTaskForest(tasks)), [tasks]);
+  // From the forest the model renders, so a grouped task's path runs through its group's header.
+  const paths = useMemo(
+    () => buildTaskPaths(buildTaskTree(tasks, { groups, groupByStatus, hierarchical })),
+    [tasks, groups, groupByStatus, hierarchical],
+  );
 
   // Selection is owned by `TaskList.Root`, so it is driven into the model rather than held there —
   // otherwise selecting a task elsewhere (or clearing it from the edit pane) leaves the tree's own
@@ -155,51 +182,23 @@ export const TaskTreeNode = ({
     [model, registry, onCollapseToggle],
   );
 
+  // A list without a selection handler highlights nothing, and a group header is never selected —
+  // activating one discloses it instead.
+  const canSelect = useCallback(({ item }: { item: TaskNode }) => !!onTaskSelect && !!item.task, [onTaskSelect]);
+
   // `meta` rides along so a host can distinguish a plain activation (read into the pane the list
   // reads into) from a modified one (open in its own plank), the way the nav tree does.
   const handleSelect = useCallback(
-    ({ item, meta }: { item: TaskNode; meta?: boolean }) => item.task && onTaskSelect?.(item.task, { meta }),
+    ({ item, meta }: TreeSelectEvent<TaskNode>) => item.task && onTaskSelect?.(item.task, { meta }),
     [onTaskSelect],
   );
 
-  const renderHeading: HeadingRenderer<TaskNode> = useCallback(
-    ({ item }) => (
-      <TaskTreeHeading
-        node={item}
-        {...{
-          showGutter,
-          ordinals,
-          checked,
-          translationKey,
-          showDescription,
-          descriptionComponents,
-          showQuestions,
-          onTaskCheck,
-          onTaskUpdate,
-          onQuestionAnswer,
-        }}
-      />
-    ),
-    [
-      showGutter,
-      ordinals,
-      checked,
-      translationKey,
-      showDescription,
-      descriptionComponents,
-      showQuestions,
-      onTaskCheck,
-      onTaskUpdate,
-      onQuestionAnswer,
-    ],
-  );
-
-  // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
-  // handled here rather than per row. `Shift` moves the row where an unmodified arrow navigates:
-  // up/down reorder among siblings, left/right change depth. The focused row names its task through
-  // `data-object-id`, which is what lets one container-level handler serve every depth.
+  // Restructuring is keyboard-driven: `Shift` moves the row where an unmodified arrow navigates —
+  // up/down reorder among siblings, left/right change depth — and `Tab`/`Shift+Tab` change depth
+  // too, as in an outliner. The focused row names its task through `data-object-id`, which is what
+  // lets one tree-level handler serve every depth.
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLDivElement>) => {
+    (event: KeyboardEvent<HTMLDivElement>) => {
       // A reader needs a way back out of a selection, and `Escape` is where they look for it.
       if (event.key === 'Escape' && selected) {
         event.preventDefault();
@@ -207,18 +206,26 @@ export const TaskTreeNode = ({
         return;
       }
 
-      if (!onTaskMove || !event.shiftKey) {
+      const tab = event.key === 'Tab';
+      if (!onTaskMove || !(event.shiftKey || tab)) {
         return;
       }
-      const id = (event.target as HTMLElement | null)
-        ?.closest<HTMLElement>('[data-object-id]')
-        ?.getAttribute('data-object-id');
+      const target = event.target instanceof HTMLElement ? event.target : undefined;
+      const row = target?.closest<HTMLElement>('[data-object-id]');
+      // `Tab` only from the row itself: from a control inside it, `Tab` is how focus reaches the
+      // next control, and taking it there would strand the reader in the row.
+      if (!row || (tab && row !== target)) {
+        return;
+      }
+      const id = row.getAttribute('data-object-id');
       const task = id ? tasks.find((task) => task.id === id) : undefined;
       if (!task) {
         return;
       }
       const placement = (() => {
         switch (event.key) {
+          case 'Tab':
+            return event.shiftKey ? resolveOutdent(tasks, task) : resolveIndent(tasks, task);
           case 'ArrowRight':
             return resolveIndent(tasks, task);
           case 'ArrowLeft':
@@ -231,206 +238,147 @@ export const TaskTreeNode = ({
             return undefined;
         }
       })();
+      // A key that moves nothing is left alone — for `Tab`, so focus can still leave the list
+      // rather than being trapped on a row that cannot indent.
       if (placement) {
         event.preventDefault();
         event.stopPropagation();
         onTaskMove(task, placement);
       }
     },
-    [onTaskMove, tasks, selected, onTaskSelect],
+    [tasks, selected, onTaskMove, onTaskSelect],
   );
 
-  // The drop half of the gesture. `Tree` publishes each row as a pragmatic-dnd draggable carrying
-  // `TreeData`; the placement is resolved here because only the list knows the task set the move is
-  // relative to. Same shape as the navtree's monitor, which is the established consumer of this
-  // contract.
-  useEffect(() => {
-    if (!onTaskMove) {
-      return;
-    }
+  // The drop half of the gesture; the placement is resolved here because only the list knows the
+  // task set the move is relative to. The source is looked up by id, since the drag payload's item
+  // is untyped.
+  const handleDrop = useCallback(
+    ({ instruction, source, item, atEnd }: TreeDropEvent<TaskNode>) => {
+      const sourceTask = tasks.find((task) => task.id === source.id);
+      if (!onTaskMove || !sourceTask) {
+        return;
+      }
 
-    return monitorForElements({
-      // Scoped to this tree: monitors are global, so the navtree's drags reach here too.
-      canMonitor: ({ source }) => isTreeDataFor(source.data, TASK_TREE_ROOT_ID),
-      onDrop: ({ location, source }) => {
-        const target = location.current.dropTargets[0];
-        if (!target) {
-          return;
-        }
+      // The end strip means one thing, which is "last among the roots".
+      if (atEnd) {
+        onTaskMove(sourceTask, { parentTask: null, before: undefined });
+        return;
+      }
 
-        // The end strip has no hitbox: it means one thing, which is "last among the roots".
-        if ((target.data as { atEnd?: boolean }).atEnd) {
-          const dragged = (source.data.item as TaskNode | undefined)?.task;
-          if (dragged) {
-            onTaskMove(dragged, { parentTask: null, before: undefined });
-          }
-          return;
-        }
+      // The synthetic root and the group headers have no task, so a drop onto one is not a move.
+      const targetTask = item.task;
+      if (!targetTask || instruction.type === 'instruction-blocked') {
+        return;
+      }
 
-        const instruction = extractInstruction(target.data);
-        if (!instruction || instruction.type === 'instruction-blocked') {
-          return;
-        }
+      // The hitbox's instruction is taken as given: dropping onto a row makes the task its child,
+      // and the reorder zones at the row's edges are what place it before or after instead.
+      // `reparent` is the shallow band under a last child, and is the only way out of a subtree
+      // for a drop past its final row — without it the task can only ever join that subtree.
+      const placement =
+        instruction.type === 'reparent'
+          ? // `desiredLevel` is absolute, so the number of ancestors to climb is the drop in depth.
+            resolveReparent(tasks, sourceTask, targetTask, instruction.currentLevel - instruction.desiredLevel)
+          : resolveTaskPlacement({ tasks, source: sourceTask, target: targetTask, intent: instruction.type });
+      if (placement) {
+        onTaskMove(sourceTask, placement);
+      }
+    },
+    [tasks, onTaskMove],
+  );
 
-        // The synthetic root has no task, so a drop onto it (or from it) is not a move.
-        const sourceTask = (source.data.item as TaskNode | undefined)?.task;
-        const targetTask = (target.data.item as TaskNode | undefined)?.task;
-        if (!sourceTask || !targetTask) {
-          return;
-        }
+  const renderRow = useCallback(
+    (node: TreeNode<TaskNode>) => {
+      const header = node.item?.group;
+      if (node.group || !node.item) {
+        return <Tree.Item node={node} />;
+      }
+      if (header) {
+        return (
+          <Tree.Item node={node}>
+            <Tree.ItemIndicator />
+            <TaskGroupHeading group={header} translationKey={translationKey} />
+          </Tree.Item>
+        );
+      }
 
-        // The hitbox's instruction is taken as given: dropping onto a row makes the task its child,
-        // and the reorder zones at the row's edges are what place it before or after instead.
-        // `reparent` is the shallow band under a last child, and is the only way out of a subtree
-        // for a drop past its final row — without it the task can only ever join that subtree.
-        const placement =
-          instruction.type === 'reparent'
-            ? // `desiredLevel` is absolute, so the number of ancestors to climb is the drop in depth.
-              resolveReparent(tasks, sourceTask, targetTask, instruction.currentLevel - instruction.desiredLevel)
-            : resolveTaskPlacement({
-                tasks,
-                source: sourceTask,
-                target: targetTask,
-                intent: instruction.type as TaskDropIntent,
-              });
-        if (placement) {
-          onTaskMove(sourceTask, placement);
-        }
-      },
-    });
-  }, [tasks, onTaskMove]);
+      const task = node.item.task;
+      return (
+        <Tree.Item node={node}>
+          <Item
+            node={node.item}
+            indicator={toggle ? <Tree.ItemIndicator /> : undefined}
+            ordinal={task && ordinals.get(task.id)}
+            checked={!!task && !!checked?.has(task.id)}
+            translationKey={translationKey}
+            showDescription={showDescription}
+            descriptionComponents={descriptionComponents}
+            onTaskCheck={onTaskCheck}
+            onTaskUpdate={onTaskUpdate}
+          />
+        </Tree.Item>
+      );
+    },
+    [
+      toggle,
+      ordinals,
+      checked,
+      translationKey,
+      showDescription,
+      descriptionComponents,
+      onTaskCheck,
+      onTaskUpdate,
+      Item,
+    ],
+  );
 
   return (
-    <Tree<TaskNode>
+    <Tree.Root<TaskNode>
       id={TASK_TREE_ROOT_ID}
-      ariaLabel={t('task-list.label')}
       model={model}
-      gridTemplateColumns={gridTemplateColumns}
-      classNames='w-full min-w-0'
+      columns={columns}
+      // Chips and the description sit on the row's later lines, so a row grows to fit them and the
+      // rows are not windowed at a fixed pitch.
+      multiline
+      virtual='variable'
       draggable={!!onTaskMove}
-      // A flat list is a tree of depth one: no branch will ever need disclosing, so the template
-      // carries no toggle track and the first cell is the gutter or the status control.
-      toggle={!!hierarchical}
       // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
       // hitbox offers no make-child zone on one, and so no drop indicator either.
       leavesAcceptChildren
-      // The highlight is what tells the reader where they are; a tree that only highlights (rather
-      // than navigating on select) wants it to travel with the arrows.
-      selectionFollowsFocus
       // Dragging past the last row is the obvious way to say "put it last"; without a target there
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd
-      // A task list is the long list in this app — a project's backlog runs to hundreds of rows,
-      // each carrying a title, a description, four controls and a subscription, and a reader sees
-      // twenty of them. Applies to the flat list; a hierarchical one has branches to disclose and
-      // renders whole.
-      virtualize
-      debug={debug}
-      renderHeading={renderHeading}
-      renderColumns={renderTrailing}
+      indentGuides
+      // Deliberately NOT `selectionFollowsFocus`: selecting a task opens its detail (a companion, or
+      // a plank), so arrows that selected as they travelled would open every row the reader passes
+      // on the way to the one they want. The arrows move focus and `Enter` commits it.
+      canSelect={canSelect}
       onOpenChange={handleOpenChange}
       onSelect={handleSelect}
       onKeyDown={handleKeyDown}
-    />
+      onDrop={handleDrop}
+    >
+      <Tree.Label srOnly>{t('task-list.label')}</Tree.Label>
+      {/* Rows pad their ends as any tree's do, so the highlight runs edge to edge; a flush list's host frames it. */}
+      <Tree.Content rowInset={!flush}>{renderRow}</Tree.Content>
+    </Tree.Root>
   );
 };
 
 /**
- * The gutter cell, status control and title — the row's leading content, beside the tree's own
- * toggle. The gutter holds either the checkbox or the ordinal, never both: they occupy one cell, and
- * a number beside a box reads as two ways to act on the row.
+ * A group's header: its icon, label and how many tasks it holds, spanning the row from after the
+ * disclosure up to the trailing controls. The count is of the group's tasks, sub-tasks included, so
+ * it matches what expanding shows.
  */
-const TaskTreeHeading = ({
-  node,
-  showGutter,
-  ordinals,
-  checked,
-  translationKey,
-  showDescription,
-  descriptionComponents,
-  showQuestions,
-  onTaskCheck,
-  onTaskUpdate,
-  onQuestionAnswer,
-}: {
-  node: TaskNode;
-  showGutter: boolean;
-  ordinals: ReadonlyMap<string, number>;
-  checked?: ReadonlySet<string>;
-  translationKey: string;
-  showDescription: boolean;
-  descriptionComponents?: TaskDescriptionProps['components'];
-  showQuestions: boolean;
-  onTaskCheck?: (task: Task.Task) => void;
-  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
-  onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
-}) => {
-  const task = node.task;
-  // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
-  // does not change, so a rename made anywhere else would leave the row showing its old title.
-  // Read through the snapshot; the controls still take the live object, which is what they write to.
-  const [snapshot] = useObject(task);
-  const current = snapshot ?? task;
-  const ordinal = task && ordinals.get(task.id);
-
-  if (!task || !current) {
-    return null;
-  }
-
-  const description = showDescription ? current.description?.trim() || undefined : undefined;
-  // Read off the snapshot, so an answer given anywhere else lands in the row as it is written.
-  const questions = showQuestions ? Task.getQuestions(current.history) : [];
-
+const TaskGroupHeading = ({ group, translationKey }: { group: TaskGroupHeader; translationKey: string }) => {
+  const { t } = useTranslation(translationKey);
   return (
-    // Cells, not a container: they are direct children of the tree row's subgrid and take the
-    // tracks the list's template names, so the row is one grid and the pane lays out on the same
-    // tracks by name rather than by re-declaring their widths.
-    <>
-      {showGutter &&
-        (onTaskCheck ? (
-          <TaskCheckbox
-            task={task}
-            checked={!!checked?.has(task.id)}
-            classNames='col-[gutter]'
-            onCheckedChange={onTaskCheck}
-          />
-        ) : ordinal !== undefined ? (
-          <TaskOrdinal task={task} ordinal={ordinal} classNames='col-[gutter]' />
-        ) : (
-          // Holds the gutter track so a numberless row's title still lines up with its neighbours.
-          <span className='col-[gutter]' />
-        ))}
-      <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
-      <div className='inline-flex min-w-0 items-center gap-2 col-[title] self-center'>
-        <SystemIconButton.Clipboard
-          classNames='font-mono'
-          density='sm'
-          variant='tag'
-          hue='emerald'
-          label={Obj.getMnemonic(current)}
-          iconEnd
-          onCopy={() => '@' + Obj.getMnemonic(current)}
-          data-testid='taskList.item.mnemonic'
-        />
-        <span data-testid='taskList.item.title' className='truncate'>
-          {current.title}
-        </span>
-      </div>
-      {/* The row's second line, running under the title and its chips only: it has to clear the
-          ordinal and the status control, or it reads as belonging to the row above, and it must stop
-          short of the trailing controls so it does not run beneath the estimate, priority and menu. */}
-      {(description || questions.length > 0) && (
-        <div className='col-[title/chips-end] row-start-2 flex min-w-0 flex-col gap-2 pb-1'>
-          {description && <TaskDescription content={description} components={descriptionComponents} />}
-          {questions.map((thread) => (
-            <TaskQuestion
-              key={thread.question.id}
-              thread={thread}
-              onAnswer={onQuestionAnswer && ((answer) => onQuestionAnswer(task, thread.question.id, answer))}
-            />
-          ))}
-        </div>
-      )}
-    </>
+    <div className='col-[2/assignee] flex min-w-0 items-center gap-2' data-testid='taskList.group.header'>
+      {group.icon && <Icon icon={group.icon} size='md' classNames={group.iconClassNames} />}
+      <span className='truncate font-medium'>{toLocalizedString(group.label, t)}</span>
+      <span className='text-sm text-fg-muted' data-testid='taskList.group.count'>
+        {group.count}
+      </span>
+    </div>
   );
 };

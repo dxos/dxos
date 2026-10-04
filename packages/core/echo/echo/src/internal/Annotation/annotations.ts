@@ -80,7 +80,7 @@ export const getSchemaURI = (schema: Schema.Top): URI.URI | undefined => {
 export const TypenameSchema = Schema.String.pipe(
   Schema.check(
     Schema.isPattern(
-      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/u,
     ),
   ),
 ).annotate({
@@ -92,7 +92,7 @@ export const TypenameSchema = Schema.String.pipe(
  * Semantic version format: `major.minor.patch`
  * Example: `1.0.0`
  */
-export const VersionSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+.\d+.\d+$/))).annotate({
+export const VersionSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+.\d+.\d+$/u))).annotate({
   description: 'Semantic version format: `major.minor.patch`',
   example: '1.0.0',
 });
@@ -286,14 +286,6 @@ export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 export type SchemaMeta = TypeMeta & { id: string };
 
 /**
- * Identifies a schema as hidden from user-facing surfaces (like dotfiles — visible only via an advanced setting).
- */
-// TODO(wittjosiah): Invert the default? Hide every type unless it opts in, so a new type is
-//   invisible until someone marks it as user-facing rather than visible until someone hides it.
-export const HiddenAnnotationId = '@dxos/schema/annotation/Hidden';
-export const HiddenAnnotation = createAnnotationHelper<boolean>(HiddenAnnotationId);
-
-/**
  * Identifies label property or JSON path expression.
  * Either a string or an array of strings representing field accessors each matched in priority order.
  */
@@ -434,6 +426,27 @@ export const FormOrderedAnnotationId = '@dxos/schema/annotation/FormOrdered';
 export const FormOrderedAnnotation = createAnnotationHelper<boolean>(FormOrderedAnnotationId);
 
 /**
+ * How a form presents an array of references; the two options are independent.
+ */
+export type ArrayPresentation = {
+  /** Rows (or chips) reorder by drag and keyboard, and the order is persisted; `false` by default. */
+  ordered?: boolean;
+  /**
+   * `tag`: removable chips in the targets' hues (the default for arrays of `Tag` refs). `title`: a row per target with
+   * its type's icon, its label and an optional description (the default otherwise).
+   */
+  display?: 'tag' | 'title';
+  /** A property of the target whose value is the `title` row's description line. */
+  description?: string;
+};
+
+/**
+ * When set on an array-of-`Ref` property, sets how the form presents it ({@link ArrayPresentation}).
+ */
+export const ArrayPresentationAnnotationId = '@dxos/schema/annotation/ArrayPresentation';
+export const ArrayPresentationAnnotation = createAnnotationHelper<ArrayPresentation>(ArrayPresentationAnnotationId);
+
+/**
  * Annotation carrying one or more named layout DSL templates that control how a
  * form arranges a schema's fields (consumed by `@dxos/react-ui-form`'s
  * `Form.Layout` / `Form.FieldSet`). Callers select a variant by name; the
@@ -528,7 +541,7 @@ const IconAnnotationSchema = Schema.Struct({
    * weight variants. All three are admitted because a type whose subject IS a brand — an Anthropic
    * session, a GitHub repo — has no honest Phosphor equivalent.
    */
-  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/))),
+  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/u))),
 
   /**
    * Color name.
@@ -634,6 +647,35 @@ export const SetParentAnnotation: Omit<Annotation.Annotation<SetParentAnnotation
 } = {
   ...setParentAnnotation,
   set: ({ override = true }: SetParentAnnotationOptions = {}) => setParentAnnotation.set({ value: true, override }),
+};
+
+/** Value of {@link UserTypeAnnotation}. */
+export type UserTypeAnnotationValue = {
+  /** Keys a surface filters on (e.g. which types a collection's create dialog offers); opaque to ECHO. */
+  readonly tags?: readonly string[];
+};
+
+const userTypeAnnotation = makeUserAnnotation<UserTypeAnnotationValue>({
+  id: 'org.dxos.annotation.userType',
+  schema: Schema.Struct({ tags: Schema.optional(Schema.Array(Schema.String)) }),
+});
+
+/**
+ * Marks a static type as user-facing, so it shows in pickers, the nav tree, and collections. Absent, the
+ * type is internal (like a dotfile, visible only via an advanced setting); a new type stays out of sight
+ * until someone opts it in. Stored as property meta, so it survives persisting the schema.
+ *
+ * @example
+ * ```ts
+ * Schema.Struct({ ... }).pipe(Annotation.UserType.set());
+ * Schema.Struct({ ... }).pipe(Annotation.UserType.set({ tags: [Collection.ItemTag] }));
+ * ```
+ */
+export const UserTypeAnnotation: Omit<Annotation.Annotation<UserTypeAnnotationValue>, 'set'> & {
+  set: (value?: UserTypeAnnotationValue) => <S extends Schema.Top>(schema: S) => S;
+} = {
+  ...userTypeAnnotation,
+  set: (value: UserTypeAnnotationValue = {}) => userTypeAnnotation.set(value),
 };
 
 /**

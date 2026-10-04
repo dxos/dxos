@@ -10,11 +10,10 @@ tasks:
     deps:
       - ~:#prebuild
   prebuild-lezer:
-    command: pnpm exec lezer-generator --typeScript ./src/dsl/diagram.grammar -o ./src/dsl/gen/diagram.ts
+    command: pnpm exec lezer-generator --typeScript --noTerms ./src/dsl/diagram.grammar -o ./src/dsl/gen/diagram.ts
     inputs:
       - src/dsl/diagram.grammar
     outputs:
-      - src/dsl/gen/diagram.terms.ts
       - src/dsl/gen/diagram.ts
     tags:
       - prebuild

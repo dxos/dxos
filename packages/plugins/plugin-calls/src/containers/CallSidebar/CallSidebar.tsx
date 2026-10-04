@@ -30,12 +30,12 @@ export const CallSidebar = () => {
   return (
     <Call.Root>
       <Panel.Root>
-        <Panel.Content asChild>
+        <Panel.Body asChild>
           <Call.Viewport>
             <Call.Grid />
             <Call.Toolbar onLeave={handleLeave} />
           </Call.Viewport>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Call.Root>
   );

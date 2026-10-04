@@ -5,6 +5,7 @@
 export * from './builder.ts';
 export * from './camera.ts';
 export * from './clipboard.ts';
+export * from './diagram.ts';
 export * from './dnd.ts';
 export * from './hit.ts';
 export * from './layout.ts';

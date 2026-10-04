@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 
 import {
@@ -31,7 +31,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
+import { Deferred, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -294,15 +294,9 @@ export const MailboxArticle = ({
 
   const handleClear = useCallback(() => applyFilterText(filterProp ?? ''), [filterProp, applyFilterText]);
 
-  // The reading gesture the task ledger and the calendar share: the row becomes the list's selection
-  // and its detail opens beside it — the `message` companion where the viewport has room for one,
-  // the `message` rung of the mailbox's chain otherwise. `MessageArticle` renders the whole thread
-  // either way; the conversation node lives under this mailbox view.
   const openDetail = useDetailNavigation({
     contextId: id,
     getPath: (messageId) => getFeedObjectPath(id, messageId),
-    level: 'message',
-    companion: 'message',
   });
   const handleNavigate = useCallback(
     (messageId: string, newPlank = false) => {
@@ -320,9 +314,6 @@ export const MailboxArticle = ({
   const handleAction = useCallback<InboxStackActionHandler>(
     (action) => {
       switch (action.type) {
-        // A message click ('current') and a conversation click ('current-conversation') both open the
-        // one unified conversation (thread) view — a single message is just a one-message conversation —
-        // as a standalone plank beside the mailbox.
         case 'current':
         case 'current-conversation': {
           const message = messages.find((message) => message.id === action.messageId);
@@ -448,12 +439,10 @@ export const MailboxArticle = ({
 
   return (
     <Panel.Root data-testid='inbox.mailbox'>
-      <ElevationProvider elevation='positioned'>
-        <Panel.Toolbar asChild>
-          <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-        </Panel.Toolbar>
-      </ElevationProvider>
-      <Panel.Content>
+      <Panel.Header>
+        <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+      </Panel.Header>
+      <Panel.Body>
         <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
@@ -471,14 +460,14 @@ export const MailboxArticle = ({
             onAction={handleAction}
           />
         </Deferred>
-      </Panel.Content>
-      <Panel.Statusbar asChild>
+      </Panel.Body>
+      <Panel.Footer>
         <ProgressMeter
-          classNames='border-t border-subdued-separator'
+          classNames='border-t border-separator-subtle'
           state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
           onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
         />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

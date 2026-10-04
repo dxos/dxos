@@ -33,6 +33,11 @@ export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
 
 export const KeyValueProps = Schema.Record(Schema.String, Schema.Any);
 
+/**
+ * Creates a new random field id.
+ *
+ * @performance O(1); generates a random key.
+ */
 export const createFieldId = () => PublicKey.random().truncate();
 
 export const Projection = Schema.Struct({
@@ -75,12 +80,14 @@ export class View extends Type.makeObject<View>(DXN.make('org.dxos.type.view', '
      * Projection of the data returned from the query.
      */
     projection: Projection,
-  }).pipe(
-    internal.HiddenAnnotation.set(true),
-    Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' }),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' })),
 ) {}
 
+/**
+ * Creates a new view object.
+ *
+ * @performance O(n) in projection fields; allocates an in-memory view object.
+ */
 export const make = (props: Partial<Obj.MakeProps<typeof View>>): Type.InstanceType<typeof View> => {
   return Obj.make(View, {
     query: { ast: Query.select(Filter.nothing()).ast },

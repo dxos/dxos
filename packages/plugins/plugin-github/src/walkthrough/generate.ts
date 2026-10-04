@@ -12,6 +12,7 @@ import { Walkthrough } from '#types';
 
 import { fillWalkthrough } from './fill.ts';
 import { isGeneratedFile } from './generated.ts';
+import { spaceHeadings } from './headings.ts';
 import { parsePatch } from './patch.ts';
 import {
   CHAPTER_SYSTEM_PROMPT,
@@ -121,7 +122,7 @@ export const generateWalkthrough = <R = never>({
     const walkthrough = yield* upsert(existing, {
       pullRequest: Ref.make(pullRequest),
       title: Walkthrough.makeTitle(pullRequest, remote.title ?? pullRequest.title),
-      body: filled.body,
+      body: spaceHeadings(filled.body),
       commit: remote.commit ?? '',
       generatedAt: new Date().toISOString(),
       model,

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Model, Provider } from '@dxos/ai';
 import { DXN } from '@dxos/keys';
 
-import { providerForModel } from './presets.ts';
+import { DEFAULT_MODEL, pickPreset, presetsForProvider, providerForModel } from './presets.ts';
 
 describe('providerForModel', () => {
   test('keeps the active provider when it serves the model', ({ expect }) => {
@@ -32,5 +32,22 @@ describe('providerForModel', () => {
     const unknown = DXN.make('com.example.model.mystery.default');
     expect(providerForModel(unknown, Provider.edge.id)).toBe(Provider.edge.id);
     expect(providerForModel(unknown, undefined)).toBeUndefined();
+  });
+});
+
+describe('pickPreset', () => {
+  test('defaults edge chats to Sonnet when settings name no model', ({ expect }) => {
+    expect(DEFAULT_MODEL).toBe(Model.claudeSonnet5.id);
+    expect(pickPreset(presetsForProvider(Provider.edge.id))?.model).toBe(Model.claudeSonnet5.id);
+  });
+
+  test('prefers the configured default over the built-in one', ({ expect }) => {
+    const presets = presetsForProvider(Provider.edge.id);
+    expect(pickPreset(presets, Model.claudeOpus5.id)?.model).toBe(Model.claudeOpus5.id);
+  });
+
+  test('falls back to the first preset for a provider that does not serve the default', ({ expect }) => {
+    const presets = presetsForProvider(Provider.ollama.id);
+    expect(pickPreset(presets)?.model).toBe(presets[0]?.model);
   });
 });

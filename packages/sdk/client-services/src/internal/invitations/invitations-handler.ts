@@ -9,7 +9,12 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos/async';
-import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
+import {
+  ClientTraceEvents,
+  INVITATION_TIMEOUT,
+  getExpirationTime,
+  invitationEventAttributes,
+} from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
@@ -48,7 +53,7 @@ import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts'
 import { type EdgeInvitationConfig, EdgeInvitationHandler } from './edge-invitation-handler.ts';
 import { InvitationGuestExtension } from './invitation-guest-extenstion.ts';
 import { InvitationHostExtension, MAX_OTP_ATTEMPTS, isAuthenticationRequired } from './invitation-host-extension.ts';
-import { createGuardedInvitationState } from './invitation-state.ts';
+import { createGuardedInvitationState, getInvitationOutcome } from './invitation-state.ts';
 import { InvitationTopology } from './invitation-topology.ts';
 
 const metrics = _trace.metrics;
@@ -198,6 +203,7 @@ export class InvitationsHandler {
               log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               guardedState.set(extension, Invitation_State.SUCCESS);
               metrics.increment('dxos.invitation.success', 1, { tags: { role: 'host', method: 'swarm' } });
+              _trace.events.emit(ClientTraceEvents.invitationAdmit, invitationEventAttributes(guardedState.current));
               log('host invitation handler opened');
               admitted = true;
               topology.retire(remotePeerId);
@@ -291,6 +297,8 @@ export class InvitationsHandler {
     });
     const { timeout = INVITATION_TIMEOUT } = invitation;
 
+    // The PostHog dashboard "EDGE replication latency" (https://eu.posthog.com/project/126171/dashboard/973334)
+    // queries this span's name and attributes: update it when changing them.
     const guestSpanId = `invitation-guest-${invitation.invitationId}`;
     // Reassign ctx to the child context returned by spanStart so downstream calls
     // (`edgeInvitationHandler.handle`, `_joinSwarm`, etc.) inherit this span as their
@@ -310,6 +318,8 @@ export class InvitationsHandler {
         attributes: {
           'ctx.dxos.invitation.id': invitation.invitationId,
           'ctx.dxos.invitation.kind': Invitation_Kind[invitation.kind],
+          'ctx.dxos.invitation.type': Invitation_Type[invitation.type],
+          ...(invitation.spaceId ? { 'ctx.spaceId': invitation.spaceId } : {}),
         },
       }) ?? ctx;
     if (ctx !== invitationCtx) {
@@ -317,7 +327,6 @@ export class InvitationsHandler {
         void invitationCtx.dispose();
       });
     }
-    ctx.onDispose(() => _trace.spanEnd(guestSpanId));
 
     if (deviceProfile) {
       invariant(invitation.kind === Invitation_Kind.DEVICE, 'deviceProfile provided for non-device invitation');
@@ -325,6 +334,16 @@ export class InvitationsHandler {
 
     const triedPeersIds = new ComplexSet(PublicKey.hash);
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
+    // A delegated invitation races EDGE against member devices, so its type cannot say which one admitted the guest.
+    let admittedBy: 'edge' | 'peer' | undefined;
+    ctx.onDispose(() =>
+      _trace.spanEnd(guestSpanId, {
+        attributes: {
+          outcome: getInvitationOutcome(guardedState.current.state),
+          ...(admittedBy ? { 'dxos.invitation.admittedBy': admittedBy } : {}),
+        },
+      }),
+    );
 
     const shouldCancelInvitationFlow = (extension: InvitationGuestExtension) => {
       const isLockedByAnotherConnection = guardedState.mutex.isLocked() && !extension.hasFlowLock();
@@ -439,11 +458,16 @@ export class InvitationsHandler {
                 ...protocol.toJSON(),
               });
               metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'swarm' } });
+              const firstAdmission = admittedBy === undefined;
+              admittedBy = 'peer';
               guardedState.complete({
                 ...guardedState.current,
                 ...result,
                 state: Invitation_State.SUCCESS,
               });
+              if (firstAdmission) {
+                _trace.events.emit(ClientTraceEvents.invitationAccept, invitationEventAttributes(guardedState.current));
+              }
               log('guest invitation handler opened');
             } catch (err: any) {
               if (err instanceof TimeoutError) {
@@ -479,7 +503,13 @@ export class InvitationsHandler {
         const result = await protocol.accept(edgeCtx, admissionResponse, admissionRequest);
         log.info('admitted by edge', { ...protocol.toJSON() });
         metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'edge' } });
+        // A delegated invitation can also be admitted by a peer in the same run; report the join once.
+        const firstAdmission = admittedBy === undefined;
+        admittedBy = 'edge';
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation_State.SUCCESS });
+        if (firstAdmission) {
+          _trace.events.emit(ClientTraceEvents.invitationAccept, invitationEventAttributes(guardedState.current));
+        }
       },
     });
     edgeInvitationHandler.handle(ctx, guardedState, protocol, deviceProfile);

@@ -3,7 +3,7 @@
 //
 
 import { type EditorState, type Extension } from '@codemirror/state';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, {
   type PropsWithChildren,
   Suspense,
@@ -256,7 +256,7 @@ const EditorDiagnostics = ({ classNames }: EditorDiagnosticsProps) => {
   const extensionCount = countExtensions(extensions);
   const item = (label: string, value: string | number) => (
     <span>
-      <span className='text-subdued'>{label} </span>
+      <span className='text-fg-subtle'>{label} </span>
       {value}
     </span>
   );
@@ -264,7 +264,7 @@ const EditorDiagnostics = ({ classNames }: EditorDiagnosticsProps) => {
   return (
     <div
       className={mx(
-        'flex flex-wrap gap-x-4 gap-y-0.5 border-bs border-separator px-2 py-1 text-xs font-mono text-description',
+        'flex flex-wrap gap-x-4 gap-y-0.5 border-bs border-separator px-2 py-1 text-xs font-mono text-fg-muted',
         classNames,
       )}
       data-testid='editor.diagnostics'

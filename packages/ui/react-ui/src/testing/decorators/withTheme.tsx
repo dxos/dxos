@@ -8,7 +8,6 @@ import { I18nProvider } from 'react-aria-components';
 
 import { type ThemeMode } from '@dxos/ui-types';
 
-import { Tooltip } from '../../components/index.ts';
 import { type ThemeContextValue, ThemeProvider } from '../../providers/index.ts';
 import { defaultTx } from '../../theme/index.ts';
 
@@ -35,9 +34,7 @@ export const withTheme =
           resourceExtensions={translations}
           platform={platform}
         >
-          <Tooltip.Provider>
-            <Story />
-          </Tooltip.Provider>
+          <Story />
         </ThemeProvider>
       </I18nProvider>
     );

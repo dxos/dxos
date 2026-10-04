@@ -2,23 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AiError from 'effect/ai/AiError';
+import * as Decision from 'effect/ai/Decision';
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as Decision from 'effect/unstable/ai/Decision';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
 import * as AiModelResolver from '../../AiModelResolver.ts';
 import * as AiService from '../../AiService.ts';
+import * as Model from '../../Model.ts';
+import * as Provider from '../../Provider.ts';
 import * as TypeSafeResolver from './TypeSafeResolver.ts';
 
 const OUTAGE = 'Our production database is down and customers cannot check out. We need help NOW.';
@@ -26,7 +28,7 @@ const PRICING = 'Hi, whenever you have a moment — could you send me a quote fo
 
 const serviceLayer = (apiKey: string) =>
   AiModelResolver.buildAiService.pipe(
-    Layer.provide(TypeSafeResolver.make({ apiKey: Effect.succeed(Redacted.make(apiKey)) })),
+    Layer.provide(TypeSafeResolver.make({ typesafe: { apiKey: Effect.succeed(Redacted.make(apiKey)) } })),
     Layer.provide(FetchHttpClient.layer),
   );
 
@@ -40,7 +42,7 @@ const decide = <
   apiKey = process.env.TYPESAFE_API_KEY ?? '',
 ) =>
   DecisionModel.decide(definition, { input }).pipe(
-    Effect.provide(AiService.decisionModel('ai.typesafe.model.jev.latest').pipe(Layer.provide(serviceLayer(apiKey)))),
+    Effect.provide(AiService.decisionModel(Model.typesafeJev.id).pipe(Layer.provide(serviceLayer(apiKey)))),
   );
 
 const Urgency = Decision.make({
@@ -130,6 +132,95 @@ describe('TypeSafe resolver', () => {
         Effect.provide(
           AiService.decisionModel('com.anthropic.model.claude-sonnet-5.default').pipe(Layer.provide(serviceLayer(''))),
         ),
+      ),
+    );
+
+    expect(exit._tag).toBe('Failure');
+  });
+
+  test("each jev model goes to its own provider's endpoint", async ({ expect }) => {
+    const urls: string[] = [];
+    const recording = Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make((request) =>
+        Effect.sync(() => {
+          urls.push(request.url);
+          return HttpClientResponse.fromWeb(
+            request,
+            Response.json({ model: 'jev-1.13.0', answers: { urgent: { type: 'noul', noul: 0.9 } } }),
+          );
+        }),
+      ),
+    );
+    const routed = AiModelResolver.buildAiService.pipe(
+      Layer.provide(
+        TypeSafeResolver.make({
+          typesafe: { apiKey: Effect.succeed(undefined), endpoint: () => 'http://typesafe.test/v1/systemone' },
+          workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => 'http://workers-ai.test/v1/systemone' },
+        }),
+      ),
+      Layer.provide(recording),
+    );
+    const ask = (model: Model.Model, options?: AiService.ResolveOptions) =>
+      DecisionModel.decide(Urgency, { input: OUTAGE }).pipe(
+        Effect.provide(AiService.decisionModel(model.id, options).pipe(Layer.provide(routed))),
+      );
+
+    await EffectEx.runPromise(Effect.all([ask(Model.typesafeJev), ask(Model.cloudflareJev)]));
+    expect(urls).toEqual(['http://typesafe.test/v1/systemone', 'http://workers-ai.test/v1/systemone']);
+
+    // A provider that does not serve the model does not resolve it.
+    const exit = await Effect.runPromiseExit(ask(Model.cloudflareJev, { provider: Provider.typesafe.id }));
+    expect(exit._tag).toBe('Failure');
+  });
+
+  test('clef and the default alias go to Workers AI with their own back-end name', async ({ expect }) => {
+    const sent: { url: string; model: unknown }[] = [];
+    const recording = Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make((request) =>
+        Effect.sync(() => {
+          const body =
+            request.body._tag === 'Uint8Array' ? JSON.parse(new TextDecoder().decode(request.body.body)) : {};
+          sent.push({ url: request.url, model: body.model });
+          return HttpClientResponse.fromWeb(
+            request,
+            Response.json({ model: body.model, answers: { urgent: { type: 'noul', noul: 0.9 } } }),
+          );
+        }),
+      ),
+    );
+    let configured = Model.cloudflareClefFlash.id;
+    const routed = AiModelResolver.buildAiService.pipe(
+      Layer.provide(
+        TypeSafeResolver.make({
+          workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => 'http://workers-ai.test/v1/systemone' },
+          defaultModel: () => configured,
+        }),
+      ),
+      Layer.provide(recording),
+    );
+    const ask = (id: Model.Model['id']) =>
+      DecisionModel.decide(Urgency, { input: OUTAGE }).pipe(
+        Effect.provide(AiService.decisionModel(id).pipe(Layer.provide(routed))),
+      );
+
+    await EffectEx.runPromise(ask(Model.cloudflareClef.id));
+    await EffectEx.runPromise(ask(Model.defaultDecisionModel));
+    configured = Model.cloudflareJev.id;
+    await EffectEx.runPromise(ask(Model.defaultDecisionModel));
+
+    expect(sent).toEqual([
+      { url: 'http://workers-ai.test/v1/systemone', model: 'clef' },
+      { url: 'http://workers-ai.test/v1/systemone', model: 'clef-flash' },
+      { url: 'http://workers-ai.test/v1/systemone', model: 'jev-latest' },
+    ]);
+  });
+
+  test('a model whose provider has no route does not resolve', async ({ expect }) => {
+    const exit = await Effect.runPromiseExit(
+      Effect.void.pipe(
+        Effect.provide(AiService.decisionModel(Model.cloudflareJev.id).pipe(Layer.provide(serviceLayer('')))),
       ),
     );
 

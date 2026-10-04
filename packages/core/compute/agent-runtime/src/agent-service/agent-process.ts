@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
 import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
@@ -12,10 +14,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import { AiService, OpaqueToolkit } from '@dxos/ai';
+import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import {
   AiContext,
   Alarm,
@@ -38,11 +38,13 @@ import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
+import { loadSpaceMcpServers } from './mcp-servers.ts';
 import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 
 export interface AgentProcessOptions {
@@ -80,11 +82,6 @@ export interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
-
-  /**
-   * Provider for space-level MCP server configs, called on each turn.
-   */
-  getMcpServers?: () => McpServer.McpServer[];
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -96,6 +93,31 @@ export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
  * from waking the agent forever.
  */
 const UNSEEN_WRITE_RETRY_MS = 250;
+
+/** How much of a sub-agent's result the trace keeps: enough to read, never the whole payload. */
+const RESULT_PREVIEW_LENGTH = 200;
+
+/**
+ * A short, safe rendering of a sub-agent's result for the trace.
+ *
+ * Guarded because this sits between removing the child from `delegations` and running the strategy's
+ * `onComplete`: a `BigInt` or a cycle would throw here, become a defect, and take the whole return
+ * path with it — the work item would never be updated and work waiting on it never reconciled.
+ * Losing the preview is survivable; losing the return is not.
+ */
+const resultPreview = (value: unknown): string | undefined => {
+  let text: string | undefined;
+  try {
+    text = typeof value === 'string' ? value : JSON.stringify(value);
+  } catch {
+    return undefined;
+  }
+  if (text === undefined) {
+    return undefined;
+  }
+  return text.length > RESULT_PREVIEW_LENGTH ? `${text.slice(0, RESULT_PREVIEW_LENGTH)}…` : text;
+};
+
 const MAX_UNSEEN_WRITE_WAKES = 20;
 
 /**
@@ -103,7 +125,7 @@ const MAX_UNSEEN_WRITE_WAKES = 20;
  * The process target is a queue DXN string.
  */
 export const AgentProcess = (options: AgentProcessOptions) =>
-  Process.make(
+  Operation.makeDurable(
     {
       key: AGENT_PROCESS_KEY,
       // Accepts plain text or content blocks.
@@ -117,7 +139,17 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       // registers exactly these with the process's database, and a typed query for a type it does
       // not know matches nothing. Without them a hosted agent reads its own skill bindings back
       // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
-      types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AiContext.Binding, Skill.Skill],
+      // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
+      types: [
+        Chat.Chat,
+        Feed.Feed,
+        Message.Message,
+        Alarm.Alarm,
+        AiContext.Binding,
+        Skill.Skill,
+        McpServer.McpServer,
+        AccessToken.AccessToken,
+      ],
       services: [
         Database.Service,
         OpaqueToolkit.OpaqueToolkitProvider,
@@ -157,6 +189,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // `sessionStore`.
         let toolResults: ToolResultEvent[] = [...(yield* ToolResultsCell.get)];
         let ackedEntries: string[] = [...(yield* AckedEntriesCell.get)];
+        let selfWakes = yield* SelfWakesCell.get;
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
@@ -214,13 +247,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // The chat's own selection wins: the process is bound to the chat, so the model it runs on is
         // recovered from the chat on rehydration like the instructions are.
-        const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? options.defaultModel;
-        const requestModelLayer = AiService.languageModel(
-          model ? DXN.getName(model) : 'com.anthropic.model.claude-opus-5.default',
-          {
-            provider: options.provider,
-          },
-        );
+        const model = chat.session?.model ?? options.defaultModel;
+        const requestModelLayer = AiService.languageModel(DXN.getName(model ?? Model.claudeSonnet5.id), {
+          provider: options.provider,
+        });
 
         const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
 
@@ -421,15 +451,35 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   log('agent onAlarm handling', { tag: 'message', id: message.id });
                   unseenWriteIds.delete(message.id);
                   unseenWriteWakes = 0;
+                  if (isUserPrompt(message) && selfWakes > 0) {
+                    selfWakes = 0;
+                    yield* SelfWakesCell.set(selfWakes);
+                  }
                   dequeued = message;
                   prompt = [...message.blocks];
                 } else if (dueAlarm !== undefined) {
-                  log('agent onAlarm self-wake', { firedAt: dueAlarm.wakeAt });
                   unseenAlarms.delete(dueAlarm.id);
+                  if (selfWakes >= Alarm.MAX_SELF_WAKES) {
+                    // Spent: acked without a turn, so the loop ends here until the user prompts again.
+                    log.warn('agent self-wake budget spent, dropping alarm', { wakes: selfWakes });
+                    yield* sessionStore.ack(feed, dueAlarm);
+                    ackedEntries = [...ackedEntries, dueAlarm.id];
+                    yield* AckedEntriesCell.set(ackedEntries);
+                    const after = yield* sessionStore.loadPending(feed);
+                    yield* reconcileAlarmWith(after);
+                    yield* maybeCompleteWith(after);
+                    return;
+                  }
+                  selfWakes++;
+                  yield* SelfWakesCell.set(selfWakes);
+                  log('agent onAlarm self-wake', { firedAt: dueAlarm.wakeAt, wakes: selfWakes });
                   dequeued = dueAlarm;
                   prompt = [
                     ContentBlock.Text.make({
-                      text: wakeUpPrompt(dueAlarm.wakeAt, dueAlarm.message ?? null),
+                      text: wakeUpPrompt(dueAlarm.wakeAt, dueAlarm.message ?? null, {
+                        wake: selfWakes,
+                        max: Alarm.MAX_SELF_WAKES,
+                      }),
                       disposition: 'synthetic',
                     }),
                   ];
@@ -480,13 +530,21 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
-                  mcpServers: options.getMcpServers?.(),
+                  mcpServers: yield* loadSpaceMcpServers(),
                 })
                 .pipe(
                   Effect.onExit((exit) =>
-                    Trace.write(Trace.AgentRequestEnd, {
-                      status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
-                      error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+                    Effect.gen(function* () {
+                      yield* Trace.write(Trace.AgentRequestEnd, {
+                        status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
+                        error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+                      });
+                      // The failure ends the process below, skipping the reconcile, so the strategy
+                      // hears of it here or not at all. A stop the reader asked for is not a failure.
+                      const onTurnFailed = Option.isSome(strategy) ? strategy.value.onTurnFailed : undefined;
+                      if (onTurnFailed && Exit.isFailure(exit) && !Cause.hasInterrupts(exit.cause)) {
+                        yield* onTurnFailed(chat, exit.cause);
+                      }
                     }),
                   ),
                 );
@@ -550,6 +608,16 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
                 const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
                 const exit = yield* fiber.await;
+                // Written beside `DelegationSpawned`, and for the same reason: the return is only
+                // observable here. The child's own trace ends with its operation and says nothing
+                // about reporting back, so this is what pairs an exit with the task it answers.
+                const result = Exit.isSuccess(exit) ? resultPreview(exit.value) : undefined;
+                yield* Trace.write(Trace.DelegationCompleted, {
+                  taskId: delegation.id,
+                  pid: String(event.pid),
+                  status: Exit.isSuccess(exit) ? 'success' : 'failure',
+                  ...(result === undefined ? {} : { result }),
+                });
                 if (Option.isSome(strategy)) {
                   yield* strategy.value.onComplete(chat, delegation.id, exit);
                   // Re-reconcile: work that was waiting on this delegation (e.g. a dependent task)
@@ -680,6 +748,16 @@ const AckedEntriesCell = StorageService.cell(
   Schema.fromJsonString(Schema.Array(Schema.String).pipe(Schema.mutable)),
   'ackedEntries',
 ).pipe(StorageService.withDefault(() => []));
+
+/** Alarms that have woken the agent since the last user prompt; bounded by {@link Alarm.MAX_SELF_WAKES}. */
+const SelfWakesCell = StorageService.cell(Schema.fromJsonString(Schema.Number), 'selfWakes').pipe(
+  StorageService.withDefault(() => 0),
+);
+
+/** A prompt someone typed, as opposed to one the system wrote (a report, a tool result). */
+const isUserPrompt = (message: Message.Message): boolean =>
+  message.sender.role === 'user' &&
+  message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic');
 
 const ToolCallState = Schema.Struct({
   activeCalls: Schema.Array(
@@ -860,16 +938,21 @@ export const computeAlarmDelay = ({
  * reminder message it is surfaced verbatim, otherwise a generic continuation prompt is used.
  * Exported so the prompt shape stays pinned by tests without spawning an agent.
  */
-export const wakeUpPrompt = (firedAt: number, message: string | null): string =>
-  message != null
-    ? trim`
-      Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
-      ${message}
-    `
-    : trim`
-      Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
-      Continue with whatever you intended to do when you scheduled this wake-up.
-    `;
+export const wakeUpPrompt = (
+  firedAt: number,
+  message: string | null,
+  budget?: { wake: number; max: number },
+): string => {
+  const fired = `Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).`;
+  const body = message ?? 'Continue with whatever you intended to do when you scheduled this wake-up.';
+  const limit =
+    budget == null
+      ? undefined
+      : budget.wake >= budget.max
+        ? `This is self-wake ${budget.wake} of ${budget.max}: further alarms will not wake you until the user writes again, so finish or report where you are now.`
+        : `This is self-wake ${budget.wake} of ${budget.max} before the user must write again.`;
+  return [fired, body, limit].filter((line) => line != null).join('\n');
+};
 
 const ToolExecutionService = ({
   enableBackgrounding,

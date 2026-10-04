@@ -151,7 +151,7 @@ export const formattingStyles = EditorView.theme({
     textDecoration: 'none !important',
     fontSize: 'small',
     textTransform: 'uppercase',
-    color: 'var(--color-description)',
+    color: 'var(--color-fg-muted)',
     backgroundColor: 'var(--color-group-alt-surface)',
   },
   '.cm-table-cell': {

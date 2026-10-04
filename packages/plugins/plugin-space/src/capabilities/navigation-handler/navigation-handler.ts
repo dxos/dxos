@@ -3,14 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
@@ -22,8 +21,8 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
-import { JoinByKeyError } from '../../errors.ts';
-import { JOIN_BY_KEY_TIMEOUT, readJoinSpaceKey } from './join-space-key.ts';
+import { JoinByKeyError, NoIdentityError } from '../../errors.ts';
+import { readJoinSpaceKey } from './join-space-key.ts';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;
@@ -49,8 +48,8 @@ export default Capability.makeModule(
     // `getSnapshot` reports `none` both for "no identity" and for "client not initialized", and
     // navigation handlers now dispatch before `client.initialize()` resolves — so the snapshot must
     // not be read until initialization lands or every deep-linked URL reads as a definite "no
-    // identity". Shared by both branches below, each of which ignores its URL param rather than
-    // forcing identity creation here and bypassing the normal onboarding flow.
+    // identity". Without one the invitation param is ignored rather than forcing identity creation
+    // here and bypassing the normal onboarding flow.
     const hasLocalIdentity = Effect.gen(function* () {
       yield* Effect.promise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
       return Option.isSome(yield* Identity.getSnapshot.pipe(Effect.provide(HaloServicesLayer)));
@@ -59,43 +58,24 @@ export default Capability.makeModule(
     const reportFailure = (error: unknown) =>
       Effect.gen(function* () {
         log.warn('navigation handler failed', { error });
-        const toastKeyPrefix = JoinByKeyError.is(error) ? 'join-by-key-failed-toast' : 'navigation-failed-toast';
         yield* Operation.invoke(LayoutOperation.AddToast, {
           id: `${meta.profile.key}/navigation-failed`,
-          title: [`${toastKeyPrefix}.title`, { ns: meta.profile.key }],
-          description: [`${toastKeyPrefix}.description`, { ns: meta.profile.key }],
+          title: ['navigation-failed-toast.title', { ns: meta.profile.key }],
+          description: ['navigation-failed-toast.description', { ns: meta.profile.key }],
           icon: 'ph--warning--regular',
         }).pipe(Effect.catch((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))));
       });
 
+    // The operation reports its own join failures; a missing identity leaves the param for onboarding.
     const joinByKey = (spaceKey: PublicKey) =>
-      Effect.gen(function* () {
-        if (!(yield* hasLocalIdentity)) {
-          return;
-        }
-
-        log('space join-by-key received via navigation');
-        const existing = client.spaces.get().find((space) => space.key.equals(spaceKey));
-        // Its own fiber so a join that lands after the timeout still opens the space; the param stays
-        // until then so a reload can retry.
-        const join = yield* Effect.forkDetach(
-          (existing ? Effect.succeed(existing) : Effect.tryPromise(() => client.spaces.joinBySpaceKey(spaceKey))).pipe(
-            Effect.tap(() => Effect.sync(() => removeQueryParam(joinSpaceKeyProp))),
-            Effect.tap((space) => Operation.invoke(SpaceOperation.Open, { space })),
-            // `Open` only readies the space's database; switching the workspace is what takes the user there.
-            Effect.flatMap((space) =>
-              Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) }),
-            ),
-          ),
-        );
-        const joined = yield* Fiber.join(join).pipe(
-          Effect.timeoutOption(JOIN_BY_KEY_TIMEOUT),
-          Effect.catch((cause) => Effect.fail(new JoinByKeyError({ cause }))),
-        );
-        if (Option.isNone(joined)) {
-          return yield* Effect.fail(new JoinByKeyError({ context: { timeout: JOIN_BY_KEY_TIMEOUT } }));
-        }
-      }).pipe(Effect.catch(reportFailure));
+      Operation.invoke(SpaceInvitationOperation.JoinBySpaceKey, { spaceKey: spaceKey.toHex() }).pipe(
+        Effect.tap(() => Effect.sync(() => removeQueryParam(joinSpaceKeyProp))),
+        Effect.catch((error) =>
+          NoIdentityError.is(error) || JoinByKeyError.is(error)
+            ? Effect.sync(() => log('join by space key not completed', { error }))
+            : reportFailure(error),
+        ),
+      );
 
     const handler: AppCapabilities.NavigationHandler = (url: URL) =>
       Effect.gen(function* () {

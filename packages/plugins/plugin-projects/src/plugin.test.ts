@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Project from '@dxos/compute/Project';
@@ -16,6 +18,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from '#meta';
 import { ProjectsPlugin } from '#plugin';
+import { ProjectCapabilities } from '#types';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
@@ -65,5 +68,20 @@ describe('ProjectsPlugin', () => {
     await client.waitUntilInitialized();
     await harness.waitForCapability(ClientCapabilities.SchemaRegistered);
     expect(client.graph.registry.getByURI(String(Type.getURI(Project.Project)))).toBeDefined();
+  });
+
+  test('the settings default to showing task descriptions', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
+      // without them.
+      plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
+    });
+
+    // Idle-gated; the harness awaits Startup only.
+    await harness.fire(ActivationEvents.Idle);
+    expect(harness.manager.getActive()).toContain(moduleId('Settings'));
+    const registry = harness.get(Capabilities.AtomRegistry);
+    expect(registry.get(harness.get(ProjectCapabilities.Settings)).showTaskDescriptions).toBe(true);
+    expect(harness.getAll(AppCapabilities.Settings).some((entry) => entry.prefix === meta.profile.key)).toBe(true);
   });
 });

@@ -4,6 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { Outline, RemoteSession } from '@dxos/types';
 
@@ -12,6 +13,7 @@ import { Journal } from '#types';
 
 export const translations = [
   ...taskTranslations,
+  ...queryTranslations,
   {
     'en-US': {
       [Type.getTypename(Journal.Journal)]: {
@@ -48,15 +50,46 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Tasks',
+        'task-artifacts.label': 'Artifacts',
+        'task-questions.label': 'Questions',
+        'task-attachments.label': 'Attachments',
+        'task-attachment.remove.label': 'Remove attachment',
+        'task-attachments.drop-area.label': 'Drop or paste files to attach',
+        'task-attachment.uploading.label': 'Uploading {{name}}…',
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
+        'move-task-error.title': 'Could not move task',
+        'close.label': 'Close',
         'filter.label': 'Filter tasks',
         'filter.placeholder': 'Filter',
         'filter-clear.label': 'Clear filter',
+        'filter-status.label': 'Filter by status',
+        'filter-status-all.label': 'Show all statuses',
+        'filter-status-none.label': 'Hide all statuses',
+        'sort.label': 'Order by',
+        'sort-manual.label': 'Manual',
+        'sort-status.label': 'Status',
+        'sort-priority.label': 'Priority',
+        'sort-estimate.label': 'Estimate',
+        'sort-created.label': 'Created',
+        'sort-updated.label': 'Updated',
+        'sort-title.label': 'Title',
+        'sort-asc.label': 'Ascending',
+        'sort-desc.label': 'Descending',
+        'group.label': 'Group by',
+        'group-none.label': 'No grouping',
+        'group-status.label': 'Status',
+        'group-priority.label': 'Priority',
+        'group-assignee.label': 'Assignee',
+        'group-milestone.label': 'Milestone',
+        'group-no-priority.label': 'No priority',
+        'group-unassigned.label': 'Unassigned',
+        'group-no-milestone.label': 'No milestone',
         'backlog.label': 'Backlog',
         'milestone-progress.label': '{{done}}/{{total}}',
         'delete-object.label': 'Delete object',
         'delete-task.label': 'Delete task',
+        'add-sub-task.label': 'Add sub-task',
         'task-deleted.label': 'Task deleted',
         'tasks-deleted.label': 'Tasks deleted',
         'create-outline.label': 'Create outline',

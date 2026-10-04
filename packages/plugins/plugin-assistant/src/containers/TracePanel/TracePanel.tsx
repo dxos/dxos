@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -82,7 +82,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     // Only the agent process itself is renamed: its children inherit the conversation environment and
     // keep their own operation names.
     const resolveLabel = useCallback(
-      (process: Process.Info) => {
+      (process: Process.Process) => {
         if (!Process.isHarnessHost(process)) {
           return undefined;
         }
@@ -111,35 +111,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       [invokePromise],
     );
 
-    // Debug hatch (dev builds only): expose the raw trace messages (the exact `buildExecutionGraph`
-    // input) so a real trace can be captured as a test fixture. While the TracePanel is mounted, run
-    // `dxosDumpTrace()` in the console — it copies the serialized `Trace.Message[]` to the clipboard
-    // (and logs it). Gated on `import.meta.env.DEV` so it's stripped from production builds.
-    const traceMessages = useTraceMessages(space);
-    useEffect(() => {
-      if (!import.meta.env.DEV) {
-        return;
-      }
-
-      // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
-      const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
-      debugGlobal.dxosDumpTrace = () => {
-        const data = traceMessages.map((message) => ({
-          meta: message.meta,
-          isEphemeral: message.isEphemeral,
-          events: message.events,
-        }));
-        const json = JSON.stringify(data, null, 2);
-        // eslint-disable-next-line no-console
-        console.log(json);
-        void navigator.clipboard?.writeText(json);
-        return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
-      };
-
-      return () => {
-        delete debugGlobal.dxosDumpTrace;
-      };
-    }, [traceMessages]);
+    useTraceDumpHatch(space);
 
     return (
       <NaturalTracePanel
@@ -170,3 +142,28 @@ const feedKey = (uri: string): string => {
   const eid = EID.tryParse(uri);
   return (eid && EID.getEntityId(eid)) ?? uri;
 };
+
+const useTraceDumpHatch: (space: TracePanelProps['space']) => void = import.meta.env.DEV
+  ? (space) => {
+      const traceMessages = useTraceMessages(space);
+      useEffect(() => {
+        const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
+        debugGlobal.dxosDumpTrace = () => {
+          const data = traceMessages.map((message) => ({
+            meta: message.meta,
+            isEphemeral: message.isEphemeral,
+            events: message.events,
+          }));
+          const json = JSON.stringify(data, null, 2);
+          // eslint-disable-next-line no-console
+          console.log(json);
+          void navigator.clipboard?.writeText(json);
+          return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
+        };
+
+        return () => {
+          delete debugGlobal.dxosDumpTrace;
+        };
+      }, [traceMessages]);
+    }
+  : () => {};

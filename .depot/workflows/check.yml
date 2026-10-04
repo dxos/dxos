@@ -450,6 +450,13 @@ jobs:
           - name: Clean stale test results
             run: rm -rf test-results
 
+          # plugin-sandbox's local-backend tests skip without these. A no-op once the image built
+          # from `.github/Dockerfile` carries them; that image only rebuilds after the Dockerfile lands.
+          - name: Install sandbox tools
+            run: >-
+              command -v bwrap >/dev/null ||
+              (sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat ripgrep)
+
       - name: Test
         if: ${{ env.TRUNK_TOKEN != '' }}
         uses: trunk-io/analytics-uploader@v1

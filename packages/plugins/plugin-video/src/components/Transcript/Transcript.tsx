@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { composable, composableProps, composeRefs, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps, composeRefs, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
 import {
@@ -42,7 +42,7 @@ export type TranscriptProps = {
  */
 export const Transcript = composable<HTMLDivElement, TranscriptProps>(
   ({ classNames, id, source, onSeek, currentSeconds, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = useThemeMode();
     // Subscribe to the ref's target so the editor (re-)initializes once it resolves; a `Ref`'s
     // `.target` loads asynchronously and isn't reactive on its own, so without this the editor
     // mounts empty (e.g. the Summary tab is blank until toggled away and back).

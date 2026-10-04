@@ -108,6 +108,13 @@ export type CompileOptions = {
   maxWidth?: number;
   /** Connector router (default: obstacle-avoiding A* with the Z-router as fallback). */
   route?: Router;
+  /**
+   * Routes one candidate, nearly all of the layout's time (default: on this thread); a caller with
+   * worker threads can run {@link emitJob} there. Each candidate is handed over as soon as it is
+   * placed, so placing the rest overlaps the routing; the candidates are still collected in
+   * generation order. Not used with a custom `route`, which cannot leave the thread.
+   */
+  emitCandidate?: (job: EmitJob) => Promise<Scene.Command[]>;
 };
 
 /** One generated layout with the objective's verdict on it. */
@@ -129,7 +136,7 @@ export type Result = {
   ranked: readonly Objective.Ranked<Candidate>[];
 };
 
-type Cell = { w: number; h: number };
+export type Cell = { w: number; h: number };
 type Pitch = { x: number; y: number };
 
 /** One cell size for every node, sized to the longest label wrapped at `maxWidth`. */
@@ -155,7 +162,7 @@ const pitchFor = (graph: MermaidGraph, cell: Cell, lattice: number): Pitch => {
   };
 };
 
-type Placement = {
+export type Placement = {
   nodes: Map<string, Rect>;
   frames: Map<string, Rect>;
 };
@@ -257,7 +264,7 @@ const compactGroups = (
 type ElkEdge = { id: string; sources: string[]; targets: string[] };
 
 /**
- * Edges for ELK's layering. Inheritance points at the abstraction, which ranks ABOVE its
+ * Edges for ELK's layering. Inheritance and implementation point at the abstraction, which ranks ABOVE its
  * subtypes — so those edges are reversed, as `relationRanks` does for class diagrams; has-many
  * and containment already flow owner-above-owned. In `columns`, the root lays out groups without
  * seeing inside them (`SEPARATE_CHILDREN`), so every edge is lifted to its endpoints' root-level
@@ -270,7 +277,7 @@ const layeringEdges = (graph: MermaidGraph, arrangement: Arrangement, layering: 
   const betweenGroups = (edge: MermaidEdge) =>
     groupOf.has(edge.from) && groupOf.has(edge.to) && groupOf.get(edge.from) !== groupOf.get(edge.to);
   const oriented = graph.edges.flatMap((edge) => {
-    if (edge.kind === 'inheritance') {
+    if (edge.kind === 'inheritance' || edge.kind === 'implements') {
       return [{ from: edge.to, to: edge.from }];
     }
     if (edge.kind !== 'reference' || layering === 'down' || betweenGroups(edge)) {
@@ -603,6 +610,79 @@ type EmitOptions = {
   route?: Router;
 };
 
+/** One candidate's routing, as structured-cloneable data so it can cross to a worker thread. */
+export type EmitJob = Omit<EmitOptions, 'route'> & {
+  source: string;
+  cell: Cell;
+  placement: Placement;
+};
+
+const rectsOverlap = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+/** Whether an axis-aligned (or short diagonal) segment passes through a rect, by its bounding box. */
+const segmentHits = ([a, b]: [Scene.Point, Scene.Point], rect: Rect) =>
+  rectsOverlap(
+    { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(b.x - a.x) || 1, h: Math.abs(b.y - a.y) || 1 },
+    rect,
+  );
+
+/**
+ * Edge labels, each at the first spot along its own path that is clear of every node, every label
+ * already placed and every other edge's line: beside a vertical run or above/below a horizontal one,
+ * trying the middle segment first and working outward. Falls back to the middle when nothing is clear.
+ */
+const placeLabels = (
+  labelled: readonly { id: string; text: string; points: Scene.Point[] }[],
+  paths: readonly Scene.Point[][],
+  nodes: readonly Rect[],
+): Scene.Text[] => {
+  const segments = paths.map((points) =>
+    points.slice(0, -1).map((point, index): [Scene.Point, Scene.Point] => [point, points[index + 1]]),
+  );
+  const placed: Rect[] = [];
+  return labelled.map(({ id, text, points }) => {
+    const size = { w: text.length * LABEL_FONT.charW, h: LABEL_FONT.lineH };
+    const own = points.slice(0, -1).map((point, index): [Scene.Point, Scene.Point] => [point, points[index + 1]]);
+    const middle = Math.floor((own.length - 1) / 2);
+    const order = own.map((_, index) => index).sort((a, b) => Math.abs(a - middle) - Math.abs(b - middle));
+    const candidates = order.flatMap((index) => {
+      const [a, b] = own[index];
+      const vertical = Math.abs(a.x - b.x) < Math.abs(a.y - b.y);
+      return [0.5, 0.3, 0.7].flatMap((t) => {
+        const at = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+        return vertical
+          ? [
+              { x: at.x + GRID / 4, y: at.y - size.h / 2 },
+              { x: at.x - GRID / 4 - size.w, y: at.y - size.h / 2 },
+            ]
+          : [
+              { x: at.x - size.w / 2, y: at.y - size.h - GRID / 8 },
+              { x: at.x - size.w / 2, y: at.y + GRID / 8 },
+            ];
+      });
+    });
+    const clear = (rect: Rect) =>
+      !nodes.some((node) => rectsOverlap(rect, node)) &&
+      !placed.some((other) => rectsOverlap(rect, other)) &&
+      !segments.some((path) => path.some((segment) => segmentHits(segment, rect)));
+    const [head, tail] = own[middle] ?? [points[0], points[points.length - 1]];
+    const fallback = { x: (head.x + tail.x) / 2 + GRID / 4, y: (head.y + tail.y) / 2 - LABEL_FONT.lineH };
+    const origin = candidates.find((candidate) => clear({ ...candidate, ...size })) ?? fallback;
+    placed.push({ ...origin, ...size });
+    return { kind: 'text', id: `${id}-label`, x: origin.x, y: origin.y, text, weight: 's' };
+  });
+};
+
+/** Group tints in declaration order; a renderer fills a frame with a light wash of its color. */
+const GROUP_COLORS: readonly Scene.Color[] = [
+  'light-blue',
+  'light-green',
+  'yellow',
+  'light-violet',
+  'orange',
+  'light-red',
+];
+
 /**
  * Scene commands for a placement: one world object per subgraph frame (painted first) and per
  * node, plus an `edges` object of connectors.
@@ -617,7 +697,7 @@ const emit = (
   const at = (rect: Rect): Scene.Point => ({ x: origin.x + rect.x * scale, y: origin.y + rect.y * scale });
   const commands: Scene.Command[] = [];
 
-  for (const group of graph.groups) {
+  for (const [index, group] of graph.groups.entries()) {
     const frame = frames.get(group.id);
     if (!frame) {
       continue;
@@ -629,7 +709,17 @@ const emit = (
         origin: at(frame),
         scale,
         elements: [
-          { kind: 'rect', id: 'frame', x: 0, y: 0, w: frame.w, h: frame.h, stroke: 'dashed', color: 'grey' },
+          {
+            kind: 'rect',
+            id: 'frame',
+            x: 0,
+            y: 0,
+            w: frame.w,
+            h: frame.h,
+            stroke: 'dashed',
+            fill: 'tint',
+            color: GROUP_COLORS[index % GROUP_COLORS.length],
+          },
           // The label sits in the frame's top band rather than centered, where members would cover it.
           ...(group.label.trim()
             ? [
@@ -744,6 +834,8 @@ const emit = (
       }
       return best ?? direct;
     };
+    const labelled: { id: string; text: string; points: Scene.Point[] }[] = [];
+    const paths: Scene.Point[][] = [];
     routed.forEach((edge, index) => {
       const from = nodes.get(edge.from);
       const to = nodes.get(edge.to);
@@ -754,34 +846,37 @@ const emit = (
       terminals.set(edge.from, [...(terminals.get(edge.from) ?? []), { point: points[0], role: 'exit' }]);
       terminals.set(edge.to, [...(terminals.get(edge.to) ?? []), { point: points[points.length - 1], role: 'entry' }]);
       const id = `${edge.from}-${edge.to}-${index}`;
+      const style = markers(edge.kind);
       if (points.length > 2) {
-        elements.push({ kind: 'line', id: `${id}-path`, points: points.slice(0, -1) });
+        elements.push({
+          kind: 'line',
+          id: `${id}-path`,
+          points: points.slice(0, -1),
+          ...(style.stroke ? { stroke: style.stroke } : {}),
+        });
       }
       elements.push({
         kind: 'arrow',
         id,
         start: points[points.length - 2],
         end: points[points.length - 1],
-        ...markers(edge.kind),
+        ...style,
       });
       if (edge.label) {
-        const head = points[Math.floor(points.length / 2) - 1];
-        const tail = points[Math.floor(points.length / 2)];
-        elements.push({
-          kind: 'text',
-          id: `${id}-label`,
-          x: (head.x + tail.x) / 2 + GRID / 4,
-          y: (head.y + tail.y) / 2 - LABEL_FONT.lineH,
-          text: edge.label,
-          weight: 's',
-        });
+        labelled.push({ id, text: edge.label, points });
       }
+      paths.push(points);
     });
+    elements.push(...placeLabels(labelled, paths, [...nodes.values()]));
     commands.push({ op: 'upsert-object', object: { id: 'edges', origin, scale, elements } });
   }
 
   return commands;
 };
+
+/** Routes one candidate with the default router; what a worker runs for `CompileOptions.emitCandidate`. */
+export const emitJob = ({ source, cell, placement, ...options }: EmitJob): Scene.Command[] =>
+  emit(parse(source), cell, placement, options);
 
 const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
@@ -795,6 +890,7 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
   const graph = parse(source);
   const { origin = { x: 0, y: 0 }, scale = 1, maxWidth = MAX_W, objective = Objective.DEFAULT, route } = options;
   const cell = measureCell(graph, maxWidth);
+  const horizontal = graph.direction === 'LR' || graph.direction === 'RL';
   const lattices = typeof options.lattice === 'number' ? [options.lattice] : (options.lattice ?? LATTICES);
   const orders = options.order ?? ORDERS;
   const buses = options.bus ?? [true, false];
@@ -813,7 +909,16 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
     'every candidate axis needs a value',
   );
 
-  const candidates: Candidate[] = [];
+  const emitCandidate = route ? undefined : options.emitCandidate;
+  // A candidate can fail while later ones are still being placed, before `Promise.all` below
+  // observes it; marking it handled here keeps that from crashing the process as an unhandled
+  // rejection, and `Promise.all` still rethrows the failure.
+  const settleLater = (commands: Promise<Scene.Command[]>) => {
+    commands.catch(() => {});
+    return commands;
+  };
+
+  const pending: { candidate: Omit<Candidate, 'commands' | 'layout'>; commands: Promise<Scene.Command[]> }[] = [];
   // Knobs often reach the same placement (a graph with no in-package references layers the same
   // either way; equal-height packages align the same every way); each is routed and graded once.
   const seen = new Set<string>();
@@ -830,22 +935,22 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
               .map(([id, rect]) => `${id}:${rect.x}:${rect.y}`)
               .sort()
               .join(' ');
+            // Without a row of subtypes to gather, the bus draws exactly what its absence does; the
+            // `false` twin is routed anyway, so routing both would be the same work twice.
+            const formsBus = !horizontal && inheritanceBuses(graph.edges, placement.nodes).consumed.size > 0;
             for (const bus of buses) {
-              if (seen.has(`${arrangement}|${bus}|${key}`)) {
+              if (seen.has(`${arrangement}|${bus}|${key}`) || (bus && !formsBus && buses.includes(false))) {
                 continue;
               }
               seen.add(`${arrangement}|${bus}|${key}`);
-              const commands = emit(graph, cell, placement, { origin, scale, bus, arrangement, route });
-              const objects = objectsOf(commands);
-              candidates.push({
-                lattice,
-                order,
-                arrangement,
-                layering,
-                alignment,
-                bus,
-                commands,
-                layout: { objects, report: Diagnostics.analyze(objects) },
+              const job: EmitJob = { source, cell, placement, origin, scale, bus, arrangement };
+              pending.push({
+                candidate: { lattice, order, arrangement, layering, alignment, bus },
+                commands: settleLater(
+                  emitCandidate
+                    ? emitCandidate(job)
+                    : Promise.resolve(emit(graph, cell, placement, { origin, scale, bus, arrangement, route })),
+                ),
               });
             }
           }
@@ -853,6 +958,13 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
       }
     }
   }
+
+  const emitted = await Promise.all(pending.map(({ commands }) => commands));
+  const candidates = pending.map(({ candidate }, index): Candidate => {
+    const commands = emitted[index];
+    const objects = objectsOf(commands);
+    return { ...candidate, commands, layout: { objects, report: Diagnostics.analyze(objects) } };
+  });
 
   const { chosen, ranked } = Objective.select(objective, candidates);
   return { commands: chosen.candidate.commands, chosen, ranked };

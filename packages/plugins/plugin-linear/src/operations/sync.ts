@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
@@ -126,7 +126,9 @@ const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): str
  * sync runs repeatedly and must never append a second ref for a task already in the set.
  */
 const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
-  if (container.tasks.some(Ref.hasEntityId(task.id))) {
+  const listed = container.tasks.some(Ref.hasEntityId(task.id));
+  // A stale entry for a task now parented elsewhere is not membership; it still needs re-rooting.
+  if (listed && Obj.getParent(task)?.id === container.id) {
     return;
   }
   // The reverse-ref index, not `Obj.getParent`: the array states membership, the parent edge does not.
@@ -138,12 +140,21 @@ const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Tas
       continue;
     }
     Obj.update(set, (set) => {
-      set.tasks = set.tasks.filter((ref) => !Ref.hasEntityId(task.id)(ref));
+      TaskSet.removeRefsInPlace(set.tasks, new Set([task.id]));
     });
   }
-  Obj.update(container, (container) => {
-    container.tasks.push(Ref.make(task));
-  });
+  // A task filed as a sub-task is listed by its parent rather than a set; it leaves that list too.
+  const parent = Task.getParentTask(task);
+  if (parent) {
+    Obj.update(parent, (parent) => {
+      TaskSet.removeRefsInPlace(parent.subtasks ?? [], new Set([task.id]));
+    });
+  }
+  if (!listed) {
+    Obj.update(container, (container) => {
+      container.tasks.push(Ref.make(task));
+    });
+  }
   Obj.setParent(task, container);
 });
 

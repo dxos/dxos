@@ -3,13 +3,13 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
-import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
-import { Form, ObjectForm, omitId } from '@dxos/react-ui-form';
+import { Button, Flex, Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
+import { Form, ObjectForm, omitId, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
@@ -59,6 +59,8 @@ export type CreateObjectPanelProps = {
   onTargetChange?: (target: Database.Database) => void;
   onTypenameChange?: (typename: string) => void;
   onCreateObject?: (params: { metadata: Metadata; data?: Record<string, any> }) => MaybePromise<void>;
+  /** Abandons the create; the draft form offers a Cancel button only when this is supplied. */
+  onCancel?: () => void;
 };
 
 export const CreateObjectPanel = ({
@@ -75,6 +77,7 @@ export const CreateObjectPanel = ({
   onTargetChange,
   onTypenameChange,
   onCreateObject,
+  onCancel,
 }: CreateObjectPanelProps) => {
   const initialFormValues = useDefaultValue(initialFormValuesProp, () => ({}));
   const metadata = typename && resolve?.(typename);
@@ -97,12 +100,13 @@ export const CreateObjectPanel = ({
       // A live create always has a form to show — the object's own — so only a draft can skip
       // straight to creating from an entry that declares no inputs.
       if (mode !== 'live' && metadata && !metadata.inputSchema && !metadata.customPanel && !schema) {
-        await onCreateObject?.({ metadata });
+        // No form to show, so the caller's defaults (a name typed into a link, say) are the data.
+        await onCreateObject?.({ metadata, data: initialFormValues });
       } else {
         onTypenameChange?.(id);
       }
     },
-    [mode, schema, resolve, onCreateObject, onTypenameChange],
+    [mode, schema, resolve, initialFormValues, onCreateObject, onTypenameChange],
   );
 
   const inputSchema = useMemo(() => {
@@ -148,6 +152,7 @@ export const CreateObjectPanel = ({
         target={target}
         initialFormValues={initialFormValues}
         onCreateObject={(data) => handleCreateObject(data)}
+        onCancel={onCancel}
       />
     );
   }
@@ -164,10 +169,7 @@ export const CreateObjectPanel = ({
         testId='create-object-form'
       >
         <Form.Viewport>
-          <Form.Content>
-            <Form.Fields />
-            <Form.Submit />
-          </Form.Content>
+          <CreateObjectFormContent onCancel={onCancel} />
         </Form.Viewport>
       </Form.Root>
     );
@@ -177,6 +179,41 @@ export const CreateObjectPanel = ({
 };
 
 CreateObjectPanel.displayName = 'CreateObjectPanel';
+
+type CreateObjectFormContentProps = Pick<CreateObjectPanelProps, 'onCancel'>;
+
+/** The draft form's body: its fields, then Cancel and Create; Enter in a single-line field creates. */
+const CreateObjectFormContent = ({ onCancel }: CreateObjectFormContentProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  const {
+    form: { canSave, onSave },
+  } = useFormContext(CreateObjectFormContent.displayName);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const handleSubmit = useCallback(() => {
+    if (canSave) {
+      void onSave();
+    }
+  }, [canSave, onSave]);
+  useSubmitOnEnter(contentRef, handleSubmit);
+
+  return (
+    <Form.Content ref={contentRef}>
+      <Form.Fields />
+      <Flex gap='sm' justify='end' classNames='pt-form-padding'>
+        {onCancel && (
+          <Button onClick={onCancel} data-testid='cancel-button'>
+            {t('object-form-cancel.label')}
+          </Button>
+        )}
+        <Button variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
+          {t('object-form-confirm.label')}
+        </Button>
+      </Flex>
+    </Form.Content>
+  );
+};
+
+CreateObjectFormContent.displayName = 'CreateObjectPanel.FormContent';
 
 type SelectTypeProps = Pick<CreateObjectPanelProps, 'options'> & {
   onChange: (id: string) => void;
@@ -193,7 +230,8 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
@@ -212,13 +250,13 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
           >
             <Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}
-              size={8}
+              size='xl'
               classNames={getIconHueStyles(option.iconHue)}
             />
             <div className='flex flex-col min-w-0 grow gap-0.5'>
               <span className='truncate'>{option.label}</span>
               {(option.plugin || option.description) && (
-                <span className='truncate text-description text-xs'>
+                <span className='truncate text-fg-muted text-xs'>
                   {option.plugin ? t('plugin-subtitle.label', { plugin: option.plugin }) : option.description}
                 </span>
               )}
@@ -254,7 +292,8 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
 
   // TODO(burdon): Change to Masonry.
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus

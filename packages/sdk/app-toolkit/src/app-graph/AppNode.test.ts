@@ -2,14 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Atom from 'effect/reactivity/Atom';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Annotation, Collection, type Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { CollectionItemAnnotation } from '@dxos/schema';
 
 import * as ContainerModel from '../types/ContainerModel.ts';
 import * as AppNode from './AppNode.ts';
@@ -19,7 +18,7 @@ const TYPENAME = 'com.example.type.doc';
 const Doc = Type.makeObject(DXN.make(TYPENAME, '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
-    CollectionItemAnnotation.set(true),
+    Annotation.UserType.set(),
   ),
 );
 

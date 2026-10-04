@@ -4,23 +4,24 @@
 
 // @import-as-namespace
 
+import * as AiError from 'effect/ai/AiError';
+import type * as Decision from 'effect/ai/Decision';
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import type * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import type * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
-import * as AiError from 'effect/unstable/ai/AiError';
-import type * as Decision from 'effect/unstable/ai/Decision';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
-import { DXN } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
 
 import * as AiModelResolver from '../../AiModelResolver.ts';
 import { AiModelNotAvailableError } from '../../errors.ts';
+import * as Model from '../../Model.ts';
 import * as Provider from '../../Provider.ts';
 
 /**
@@ -29,19 +30,8 @@ import * as Provider from '../../Provider.ts';
  */
 export const DEFAULT_ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 
-/** TypeSafe as a provider; not in `Provider.all`, which lists language-model providers for pickers. */
-export const provider = Provider.make('ai.typesafe.provider.systemOne', {
-  label: 'TypeSafe',
-  endpoint: DEFAULT_ENDPOINT,
-});
-
-/** System One's current release. */
-export const jevLatest = DXN.make('ai.typesafe.model.jev.latest');
-
-/** Back-end model name per model id. */
-const BACKENDS: Partial<Record<DXN.DXN, string>> = {
-  [jevLatest]: 'jev-latest',
-};
+/** The decision models this resolver serves: every model that speaks the System One wire. */
+export const models: readonly Model.Model[] = Model.decisionModels;
 
 //
 // Wire protocol: one POST carries the state and a map of named questions, answered independently.
@@ -243,25 +233,51 @@ export const makeDecisionModel = <R = never>(
     });
   });
 
+/** How to reach each provider; a model whose provider has no route does not resolve. */
+export type Routes<R = never> = {
+  /** TypeSafe's own System One API ({@link Model.typesafeJev}). */
+  readonly typesafe?: Options<R>;
+  /**
+   * Cloudflare Workers AI behind a System One endpoint: {@link Model.cloudflareJev},
+   * {@link Model.cloudflareClef} and {@link Model.cloudflareClefFlash}, told apart by back-end name.
+   */
+  readonly workersAi?: Options<R>;
+  /**
+   * The model {@link Model.defaultDecisionModel} stands for, read per resolution so a changed setting
+   * applies to the next decision. Defaults to {@link Model.typesafeJev}.
+   */
+  readonly defaultModel?: () => DXN.DXN;
+};
+
 /**
- * Resolves TypeSafe's decision models, when the request names no provider or names TypeSafe;
- * language models go upstream.
+ * Resolves each decision model per provider, when the request names no provider or names the model's
+ * own; language models go upstream.
  */
 export const make = <R = never>(
-  options: Options<R>,
+  routes: Routes<R>,
 ): Layer.Layer<AiModelResolver.AiModelResolver, never, HttpClient.HttpClient | R> =>
   AiModelResolver.decisionResolver(
     { name: 'TypeSafe' },
     Effect.gen(function* () {
       const context = yield* Effect.context<HttpClient.HttpClient | R>();
-      return (model, resolveOptions) => {
-        const backend =
-          resolveOptions?.provider === undefined || resolveOptions.provider === provider.id
-            ? BACKENDS[model]
-            : undefined;
-        return backend
-          ? Layer.effect(DecisionModel.DecisionModel, makeDecisionModel(backend, options).pipe(Effect.provide(context)))
-          : Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
+      const byProvider = new Map([
+        [Provider.typesafe.id, routes.typesafe],
+        [Provider.workersAi.id, routes.workersAi],
+      ]);
+      const defaultModel = routes.defaultModel ?? (() => Model.typesafeJev.id);
+      return (requested, resolveOptions) => {
+        const id = requested === Model.defaultDecisionModel ? defaultModel() : requested;
+        const model = models.find(
+          (model) =>
+            model.id === id && (resolveOptions?.provider === undefined || resolveOptions.provider === model.provider),
+        );
+        const options = model && byProvider.get(model.provider);
+        return model && options
+          ? Layer.effect(
+              DecisionModel.DecisionModel,
+              makeDecisionModel(model.backend, options).pipe(Effect.provide(context)),
+            )
+          : Layer.unwrap(Effect.fail(new AiModelNotAvailableError(id)));
       };
     }),
   );

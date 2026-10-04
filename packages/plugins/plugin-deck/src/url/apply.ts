@@ -18,10 +18,10 @@ import { CompanionViewState, DeckSchema } from '#types';
 import {
   closeCompanionPlank,
   openCompanionPlank,
+  prunePlankNames,
   resolveCompanionAnchor,
   resolveCompanionPlank,
   updateActiveDeck,
-  updatePlankNames,
   withViewTransition,
 } from '../util/index.ts';
 import * as Navigation from './navigation.ts';
@@ -68,8 +68,7 @@ export const applyActive = Effect.fnUntraced(function* (
     flatten,
     segments: { previous: open?.segments, next: segments },
   });
-  const activeSegments = deckUpdates.active.map((id) => Navigation.segmentOf(segments, id));
-  const plankNames = updatePlankNames(deck.plankNames, activeSegments);
+  const plankNames = prunePlankNames(deck.plankNames, deckUpdates.active);
   const { active, inactive, companionPlanks } = deckUpdates;
   // A caller with no intent at all (a close, a set) has no opinion, so the write falls back to the plank
   // attention is displaced onto, which has to be one that is open. A caller that passed an intent has
@@ -99,7 +98,7 @@ export const applyActive = Effect.fnUntraced(function* (
 
   // Only a write that changes what is open is worth animating, since rendering is frozen for the whole
   // update step.
-  yield* intent?.transition && changed ? withViewTransition(write) : write;
+  yield* intent?.transition && changed ? withViewTransition(write, ['dx-plank']) : write;
 
   return toAttend;
 });

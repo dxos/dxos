@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type ComponentProps,
   type ComponentType,
   type CSSProperties,
   type JSX,
@@ -18,14 +19,15 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
-import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { composable, composableProps, useMergeRefs } from '@dxos/react-ui';
+import { ScrollArea, ThemedClassName, composable, composableProps, useMergeRefs, usePx } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 import { prefersReducedMotion, useFlip } from './useFlip.ts';
 import { useMasonryLayout } from './useMasonryLayout.ts';
 
 /** Reveal the grid once the layout has been stable for this long (the initial reflow has settled). */
+type ScrollAreaRootProps = ComponentProps<typeof ScrollArea.Root>;
+
 const REVEAL_SETTLE_MS = 80;
 
 /** Reveal the grid no later than this after mount, so churning content never hides it indefinitely. */
@@ -56,8 +58,7 @@ type MasonryContextValue = {
   /**
    * Centre the columns when `maxColumnWidth` caps them narrower than the container. Off aligns them
    * to the start instead, which reads better when the grid sits in a form or list flow whose other
-   * rows are start-aligned. Distinct from `Masonry.Content`'s `centered`, which is ScrollArea's
-   * scrollbar-padding balance and says nothing about column alignment.
+   * rows are start-aligned.
    */
   centered: boolean;
 };
@@ -102,31 +103,29 @@ MasonryRoot.displayName = 'Masonry.Root';
 //
 // Content
 //
-// The outer wrapper: renders the ScrollArea.Root. Style this layer
-// (centered/thin/padding) to control the scroll container; the Viewport measures
-// its own content box, so scrollbar width and padding are accounted for whatever
-// density is configured here.
+// The outer wrapper: renders the ScrollArea.Root. `padding` sets the inline gutter the
+// Viewport pads its content with (`--gutter`, the grid gap); the Viewport measures its own
+// content box, so the gutter and the thumb are accounted for whatever is configured here.
 //
 
 type MasonryContentProps = ThemedClassName<
-  PropsWithChildren<Pick<ScrollAreaRootProps, 'scrollbars' | 'centered' | 'thin' | 'padding'>>
+  PropsWithChildren<
+    Pick<ScrollAreaRootProps, 'scrollbars'> & {
+      /** Inline gutter equal to the grid gap, so the perimeter matches the inter-column gap. */
+      padding?: boolean;
+    }
+  >
 >;
 
 const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
-  ({ children, scrollbars, centered = true, thin = true, padding = true, ...props }, forwardedRef) => {
+  ({ children, scrollbars, padding = true, ...props }, forwardedRef) => {
     const { gap } = useMasonryContext('Masonry.Content');
+    const style: CSSProperties & Record<'--gutter', string> = { '--gutter': padding ? `${gap}rem` : '0px' };
     return (
       <ScrollArea.Root
-        // Drive the ScrollArea gutter to the grid gap so the left/right perimeter
-        // matches the inter-column gap: the centered+padding theme resolves this to
-        // pl = gap and pr = gap - scrollbar, keeping both sides symmetric with the
-        // scrollbar accounted for at any density. Cast: CSSProperties has no index
-        // signature for CSS custom properties, so `--gutter` cannot be typed directly.
-        {...composableProps(props, { style: { '--gutter': `${gap}rem` } as CSSProperties })}
+        // `size-full`: the grid is a pane of its own and fills its host, as a Panel does, whatever the host's display.
+        {...composableProps(props, { classNames: 'size-full', style })}
         scrollbars={scrollbars}
-        centered={centered}
-        thin={thin}
-        padding={padding}
         ref={forwardedRef}
       >
         {children}
@@ -263,9 +262,8 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     });
     const gridRef = useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef]);
 
-    // The viewport is the full-width scroll container; its centered+padded theme
-    // (with `--gutter` set to the gap) balances the scrollbar into symmetric inline
-    // gutters. The grid fills the content box and the layout centres capped columns,
+    // The viewport is the full-width scroll container, padded inline by `--gutter`
+    // (the gap, set by Masonry.Content). The grid fills the content box and the layout centres capped columns,
     // so nothing overflows and left/right spacing matches the gap. The viewport always
     // renders so it can be measured; tiles render once a width is known.
     const grid = (
@@ -306,7 +304,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
                   // the column, or a narrow (single-column, mobile) container overflows
                   // and shows a horizontal scrollbar.
                   className={[
-                    '[&>*]:min-w-0!',
+                    '*:min-w-0!',
                     selectable && 'cursor-pointer',
                     selected && 'rounded-md ring-2 ring-inset ring-primary-500',
                   ]
@@ -338,7 +336,9 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // (`w-full min-w-0`) without claiming the block axis, which would fight the surrounding flow —
     // the grid's height comes from the computed layout.
     return scroll ? (
-      <ScrollArea.Viewport ref={viewportRef}>{grid}</ScrollArea.Viewport>
+      <ScrollArea.Viewport classNames='px-(--gutter)' ref={viewportRef}>
+        {grid}
+      </ScrollArea.Viewport>
     ) : (
       <div className='flex-1 w-full min-w-0' ref={viewportRef}>
         {grid}

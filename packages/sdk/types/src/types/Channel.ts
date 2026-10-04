@@ -28,7 +28,7 @@ export class Channel extends Type.makeObject<Channel>(DXN.make('org.dxos.type.ch
       /** Provider-owned config object (a `Feed` for the default backend), owned by the channel. */
       config: Ref.Ref(Obj.Unknown).pipe(Annotation.SetParent.set()),
     }).pipe(Annotation.FormInputAnnotation.set(false)),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--hash--regular', hue: 'rose' })),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--hash--regular', hue: 'rose' }), Annotation.UserType.set()),
 ) {}
 
 export const instanceOf = (value: unknown): value is Channel => Obj.instanceOf(Channel, value);

@@ -9,12 +9,12 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import { Button, Field, Select, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Container, Field, Flex, Input, Select, SystemButton, useTranslation } from '@dxos/react-ui';
 import { ContactPicker } from '@dxos/shell/react';
 
 import { meta } from '#meta';
 
-const ROLES = [SpaceMember_Role.EDITOR, SpaceMember_Role.READER, SpaceMember_Role.ADMIN] as const;
+const ROLES = [SpaceMember_Role.READER, SpaceMember_Role.EDITOR, SpaceMember_Role.ADMIN] as const;
 
 type AdmitRole = (typeof ROLES)[number];
 
@@ -31,7 +31,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   const contacts = useContacts();
   const members = useMembers(space.key);
   const identity = useIdentity();
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string>();
   const [role, setRole] = useState<AdmitRole>(SpaceMember_Role.EDITOR);
   const [joinUrl, setJoinUrl] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -50,11 +50,15 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   const canAdmit = selfRole === SpaceMember_Role.OWNER || selfRole === SpaceMember_Role.ADMIN;
 
   const handleAdd = async () => {
+    if (!selected) {
+      return;
+    }
+
     setPending(true);
     try {
-      const result = await onAdd(selected, role);
+      const result = await onAdd([selected], role);
       setJoinUrl(result.joinUrl);
-      setSelected(result.failed.map((failure) => failure.key));
+      setSelected(result.failed[0]?.key);
     } catch (err) {
       // Selection is kept so the user can retry.
       log.catch(err);
@@ -64,58 +68,53 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   };
 
   if (contacts.length === 0) {
-    return <p className='text-description'>{t('contact-picker-empty.message')}</p>;
+    return <p className='text-fg-muted'>{t('contact-picker-empty.message')}</p>;
   }
 
   return (
-    <div role='group' className='flex flex-col gap-2'>
-      <ContactPicker
-        contacts={contacts}
-        excludeKeys={memberKeys}
-        value={selected}
-        onChange={(keys) => {
-          setSelected(keys);
-          setJoinUrl(undefined);
-        }}
-        disabled={!canAdmit}
-      />
-      <div className='flex gap-2'>
+    <Container gap='md' role='group' gutter='none'>
+      <Flex align='center' gap='sm'>
+        <ContactPicker
+          contacts={contacts}
+          excludeKeys={memberKeys}
+          value={selected}
+          onChange={(key) => {
+            setSelected(key);
+            setJoinUrl(undefined);
+          }}
+          disabled={!canAdmit}
+        />
         <Select.Root
-          value={String(role)}
-          onValueChange={(value) =>
+          value={[String(role)]}
+          onValueChange={({ value: [value] }) =>
             setRole(ROLES.find((candidate) => String(candidate) === value) ?? SpaceMember_Role.EDITOR)
           }
+          items={ROLES.map((value) => ({ value: String(value), label: t(roleLabel[value]) }))}
         >
-          <Select.TriggerButton disabled={!canAdmit} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {ROLES.map((value) => (
-                  <Select.Option key={value} value={String(value)}>
-                    {t(roleLabel[value])}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
+          <Select.Trigger classNames='min-w-[6rem]' disabled={!canAdmit} />
+          <Select.Content>
+            {ROLES.map((value) => (
+              <Select.Item key={value} item={{ value: String(value), label: t(roleLabel[value]) }} />
+            ))}
+          </Select.Content>
         </Select.Root>
-        <Button
-          disabled={!canAdmit || pending || selected.length === 0}
+        <SystemButton.Add
+          iconOnly
+          label={t('contact-picker-add.label')}
+          disabled={!canAdmit || pending || !selected}
           onClick={handleAdd}
           data-testid='contactPicker.add'
-        >
-          {t('contact-picker-add.label')}
-        </Button>
-      </div>
+        />
+      </Flex>
       {joinUrl && (
-        <div className='flex gap-2'>
+        <Flex gap='sm'>
           <Field.Root readOnly>
-            <Field.Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
+            <Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
           </Field.Root>
-          <SystemIconButton.Clipboard value={joinUrl} />
-        </div>
+          <SystemButton.Clipboard value={joinUrl} />
+        </Flex>
       )}
-    </div>
+    </Container>
   );
 };
 

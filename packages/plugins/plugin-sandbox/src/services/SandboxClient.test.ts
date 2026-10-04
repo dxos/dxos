@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -80,3 +80,42 @@ const stub = (body: unknown) => {
   );
   return { requests, layer, client: new SandboxClient('http://localhost:8792', async () => undefined) };
 };
+
+describe('SandboxClient.setRepositories', () => {
+  test('replaces the attachments with one PUT and reads the record out of the envelope', async ({ expect }) => {
+    const bodies: unknown[] = [];
+    const urls: URL[] = [];
+    const record = {
+      id: 'box',
+      spaceId: 'space',
+      baseImage: 'img',
+      createdAt: 'now',
+      expiresAt: 'later',
+      repositories: [{ id: 'repo', name: 'site' }],
+    };
+    const layer = Layer.succeed(HttpClient.HttpClient)(
+      HttpClient.make((request, url) => {
+        urls.push(url);
+        if (request.body._tag === 'Uint8Array') {
+          bodies.push(JSON.parse(new TextDecoder().decode(request.body.body)));
+        }
+        return Effect.succeed(
+          HttpClientResponse.fromWeb(
+            request,
+            new Response(JSON.stringify({ success: true, data: record }), {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            }),
+          ),
+        );
+      }),
+    );
+    const client = new SandboxClient('http://localhost:8792', async () => undefined);
+    const result = await EffectEx.runPromise(
+      client.setRepositories('space', 'box', [{ id: 'repo', name: 'site' }]).pipe(Effect.provide(layer)),
+    );
+    expect(result.repositories).toEqual([{ id: 'repo', name: 'site' }]);
+    expect(urls[0].pathname).toBe('/spaces/space/sandboxes/box/repositories');
+    expect(bodies[0]).toEqual({ repositories: [{ id: 'repo', name: 'site' }] });
+  });
+});

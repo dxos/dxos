@@ -386,7 +386,7 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
 
   // Label.
   if (options.labels && !options.onNodePointerEnter) {
-    const g = group.append('g').classed('dx-label', true);
+    const g = group.append('g').classed('dx-graph-label', true);
     g.append('line');
     g.append('rect');
     g.append('text').style('dominant-baseline', 'middle');

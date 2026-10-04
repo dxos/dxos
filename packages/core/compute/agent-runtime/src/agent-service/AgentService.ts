@@ -7,8 +7,8 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Semaphore from 'effect/Semaphore';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
@@ -22,7 +22,7 @@ import {
   type Session,
   getSession,
 } from '@dxos/compute/AgentService';
-import * as McpServer from '@dxos/compute/McpServer';
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
@@ -36,7 +36,7 @@ import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type MakeTurnProducer } from './turn-producer.ts';
 
 /** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
-type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
+type AgentRpcs = ReturnType<typeof AgentProcess> extends Operation.Durable<any, any, any, infer Rpcs> ? Rpcs : never;
 
 /**
  * Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface.
@@ -46,7 +46,7 @@ type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, an
  * the `readonly` array the process's own schema yields.
  */
 type AgentHandle =
-  ReturnType<typeof AgentProcess> extends Process.Process<infer Input, infer Output, any, infer Rpcs>
+  ReturnType<typeof AgentProcess> extends Operation.Durable<infer Input, infer Output, any, infer Rpcs>
     ? ProcessManager.Handle<Input, Output, Rpcs>
     : never;
 
@@ -96,7 +96,7 @@ export const createSession: (
     // The agent process runs on a chat, so the conversation gets one even when the caller only
     // wanted a bare session; the model is the chat's own, which is where the process reads it from.
     const chat = yield* Database.add(
-      Chat.make({ feed: Ref.make(feed), ...(opts?.model ? { model: Ref.fromURI(opts.model) } : {}) }),
+      Chat.make({ feed: Ref.make(feed), ...(opts?.model ? { session: { model: opts.model } } : {}) }),
     );
     return yield* getSession(chat, { provider: opts?.provider });
   },
@@ -113,7 +113,7 @@ export interface Options {
   makeTurnProducer?: MakeTurnProducer;
 
   /**
-   * Model for a chat that has not selected one (`Chat.model` unset).
+   * Model for a chat that has not selected one (`Chat.session.model` unset).
    */
   defaultModel?: DXN.DXN;
 
@@ -135,11 +135,6 @@ export interface Options {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
-
-  /**
-   * Provider for space-level MCP server configs.
-   */
-  getMcpServers?: () => McpServer.McpServer[];
 }
 
 /**
@@ -250,7 +245,6 @@ export const layer = (
           makeTurnProducer: opts?.makeTurnProducer,
           defaultModel: opts?.defaultModel,
           provider: provider ?? opts?.provider,
-          getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
         });
@@ -290,7 +284,7 @@ export const layer = (
                 const provider = options?.provider ?? opts?.provider;
                 // Read off the chat rather than passed in: the process is bound to the chat, so its
                 // model and steering are whatever the chat points at when the process is spawned.
-                const model = chat.model?.uri;
+                const model = chat.session?.model;
                 const instructions = chat.instructions?.uri;
                 const location: AgentLocation = options?.location ?? 'local';
                 const cached = sessionCache.get(chat.id);

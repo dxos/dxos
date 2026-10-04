@@ -5,10 +5,35 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Ref } from '@dxos/echo';
+import { type Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import type { SandboxField } from './Dialect.ts';
+import type { SandboxField, SandboxType } from './Dialect.ts';
+
+/**
+ * Every object and relation type the database's registry holds, with its fields: what the model is
+ * told it may resolve. Read from the registry the code will run against, so a sandbox that could not
+ * rebuild a type does not list it.
+ */
+export const describeTypes = (db: Database.Database): SandboxType[] =>
+  db.registry
+    .list()
+    .filter((entity) => Type.isType(entity) && (Type.isObject(entity) || Type.isRelation(entity)))
+    .flatMap((type) => {
+      const typename = Type.getTypename(type) ?? '';
+      return typename.length > 0
+        ? [
+            {
+              typename,
+              dxn: String(DXN.make(typename, Type.getVersion(type))),
+              kind: Type.isRelation(type) ? ('relation' as const) : ('object' as const),
+              // The same `fields` record the bound type carries, which is what the model would
+              // otherwise go looking for.
+              fields: describeFields(('fields' in type && type.fields) || {}),
+            },
+          ]
+        : [];
+    });
 
 /** How deep a label follows arrays and recursive schemas before settling for `object`. */
 const MAX_DEPTH = 3;
@@ -23,6 +48,25 @@ export const describeFields = (fields: Schema.Struct.Fields): SandboxField[] =>
     type: labelOf(field.ast, 0),
     optional: SchemaAST.isOptional(field.ast),
   }));
+
+/**
+ * An operation's input as the model is told about it, in the same labels as the types section, e.g.
+ * `{ project: Ref<org.dxos.type.project> }`.
+ *
+ * Derived from the operation's own schema rather than the tool-calling projection, because that
+ * projection rewrites refs to URI strings — a shape `Operation.invoke` rejects.
+ */
+export const describeInput = (schema: Schema.Top): string => {
+  const ast = schema.ast;
+  // The three spellings of "takes no input", as `createStructFieldsFromSchema` reads them.
+  if (ast._tag === 'Void' || ast._tag === 'Null' || ast._tag === 'Unknown') {
+    return 'none';
+  }
+  if (SchemaAST.isObjects(ast) && ast.propertySignatures.length === 0 && ast.indexSignatures.length === 0) {
+    return '{}';
+  }
+  return labelOf(ast, 0);
+};
 
 /**
  * A short, TypeScript-like label for a schema node.
@@ -68,7 +112,15 @@ export const labelOf = (ast: SchemaAST.AST, depth: number): string => {
     return label.includes(' | ') ? `(${label})[]` : `${label}[]`;
   }
   if (SchemaAST.isObjects(ast)) {
-    return 'object';
+    // A record or open struct (`Obj.Unknown`) has no closed field list to state.
+    if (ast.propertySignatures.length === 0 || ast.indexSignatures.length > 0) {
+      return 'object';
+    }
+    const fields = ast.propertySignatures.map(
+      (property) =>
+        `${String(property.name)}${SchemaAST.isOptional(property.type) ? '?' : ''}: ${labelOf(property.type, depth + 1)}`,
+    );
+    return `{ ${fields.join(', ')} }`;
   }
   if (SchemaAST.isSuspend(ast)) {
     return labelOf(ast.thunk(), depth + 1);

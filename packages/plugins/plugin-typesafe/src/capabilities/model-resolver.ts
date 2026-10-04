@@ -2,18 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AiError from 'effect/ai/AiError';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Redacted from 'effect/Redacted';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
 
+import { Model } from '@dxos/ai';
 import { TypeSafeResolver } from '@dxos/ai/resolvers';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Credential from '@dxos/compute/Credential';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -22,7 +23,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { TypeSafeCapabilities, TypeSafeSettings } from '#types';
 
 import { TYPESAFE_SOURCE } from '../constants.ts';
-import { EDGE_ENDPOINT, isEdgeRequest, makeEdgeHttpClient } from './edge-http-client.ts';
+import { EDGE_ENDPOINT, WORKERS_AI_ENDPOINT, isEdgeRequest, makeEdgeHttpClient } from './edge-http-client.ts';
 
 const aiError = (reason: AiError.AiErrorReason): AiError.AiError =>
   AiError.make({ module: 'TypeSafe', method: 'decide', reason });
@@ -72,10 +73,10 @@ export const requiredApiKey = (endpoint: string) =>
       );
 
 /**
- * Where a call goes. Unset routes through EDGE; so does the vendor URL, the previous default and still
- * in persisted settings, since a browser can never call it (no CORS).
+ * Where a TypeSafe call goes. Unset routes through EDGE; so does the vendor URL, the previous default
+ * and still in persisted settings, since a browser can never call it (no CORS).
  */
-const resolveEndpoint = (configured: string | undefined): string => {
+export const resolveEndpoint = (configured: string | undefined): string => {
   const endpoint = configured?.trim();
   return endpoint && endpoint !== TypeSafeResolver.DEFAULT_ENDPOINT ? endpoint : EDGE_ENDPOINT;
 };
@@ -87,22 +88,27 @@ export default Capability.makeModule(
 
     // Settings are read per call rather than required: this module activates at Startup, before
     // settings modules are guaranteed to have been contributed.
-    const endpoint = () => {
+    const settings = (): TypeSafeSettings.Settings | undefined => {
       const [settingsAtom] = manager.getAll(TypeSafeCapabilities.Settings);
-      return resolveEndpoint(settingsAtom && registry.get(settingsAtom).endpoint);
+      return settingsAtom && registry.get(settingsAtom);
     };
+    const endpoint = () => resolveEndpoint(settings()?.endpoint);
 
     // Resolved on the first EDGE call rather than here, since the Client capability does not exist
     // yet at Startup.
     let edgeClient: EdgeHttpClient | undefined;
     const getEdgeClient = (): EdgeHttpClient => {
-      const [client] = manager.getAll(ClientCapabilities.Client);
-      invariant(client, 'Client capability is required for TypeSafe requests.');
-      const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+      const [config] = manager.getAll(ClientCapabilities.Config);
+      invariant(config, 'Client config is required for TypeSafe requests.');
+      const [haloIdentity] = manager.getAll(ClientCapabilities.IdentityService);
+      invariant(haloIdentity, 'HALO identity capability is required for TypeSafe requests.');
+      const edgeUrl = config.values.runtime?.services?.edge?.url;
       invariant(edgeUrl, 'EDGE services are not configured.');
+      const edgeIdentity = haloIdentity.getEdgeIdentity();
+      invariant(Option.isSome(edgeIdentity), 'Identity not available.');
       edgeClient ??= new EdgeHttpClient(edgeUrl);
       // A no-op unless the identity changed, so the cached EDGE credential survives between calls.
-      edgeClient.setIdentity(createEdgeIdentity(client));
+      edgeClient.setIdentity(edgeIdentity.value);
       return edgeClient;
     };
 
@@ -122,7 +128,12 @@ export default Capability.makeModule(
 
     return Capability.contribute(
       AppCapabilities.AiModelResolver,
-      TypeSafeResolver.make({ apiKey, endpoint }).pipe(Layer.provide(httpClient)),
+      TypeSafeResolver.make({
+        typesafe: { apiKey, endpoint },
+        // Workers AI bills the platform Cloudflare account, so there is no vendor key to send.
+        workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => WORKERS_AI_ENDPOINT },
+        defaultModel: () => settings()?.decisionModel ?? Model.typesafeJev.id,
+      }).pipe(Layer.provide(httpClient)),
     );
   }),
 );

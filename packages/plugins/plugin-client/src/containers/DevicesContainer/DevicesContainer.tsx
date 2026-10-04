@@ -11,7 +11,7 @@ import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Flex, Icon, IconButton, QrCode, SystemIconButton, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Icon, QrCode, SystemButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
@@ -52,24 +52,20 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
             label={t('devices-verbose.label', { ns: meta.profile.key })}
             description={t('devices.description', { ns: meta.profile.key })}
           >
-            <Form.FieldSet>
-              <div role='group' className='min-w-0'>
-                <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.profile.key })}</h3>
-                <Listbox.Root>
-                  <Listbox.Content aria-label={t('devices.label', { ns: meta.profile.key })}>
-                    {devices.map((device: Identity.DeviceInfo) => (
-                      <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Root>
-              </div>
-              {createInvitationUrl && (
-                <div role='group' className='min-w-0'>
-                  <h3 className='text-lg mb-2'>{t('add-device.label')}</h3>
-                  <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-                </div>
-              )}
+            <Form.FieldSet label={t('devices.label', { ns: meta.profile.key })}>
+              <Listbox.Root items={devices.map((device) => ({ value: device.key, label: device.label ?? device.key }))}>
+                <Listbox.Content aria-label={t('devices.label', { ns: meta.profile.key })}>
+                  {devices.map((device: Identity.DeviceInfo) => (
+                    <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
             </Form.FieldSet>
+            {createInvitationUrl && (
+              <Form.FieldSet label={t('add-device.label')}>
+                <DeviceInvitation createInvitationUrl={createInvitationUrl} />
+              </Form.FieldSet>
+            )}
           </Form.FieldSet>
           <Form.FieldSet label={t('logout-section.title')} description={t('logout-section.description')}>
             <Form.Field standalone label={t('logout.label')} description={t('logout.description')}>
@@ -222,8 +218,8 @@ const InvitationSection = ({
 
   return activeView === 'init' ? (
     <>
-      <p className='text-description mb-2'>{t('add-device.description')}</p>
-      <IconButton
+      <p className='text-fg-muted mb-2'>{t('add-device.description')}</p>
+      <Button
         icon='ph--plus--regular'
         label={t('create-device-invitation.label')}
         disabled={!!event}
@@ -258,10 +254,10 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
+      <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
         <Flex justify='center' classNames='py-4'>
-          <div className='w-full md:max-w-80 aspect-square relative text-description'>
+          <div className='w-full md:max-w-80 aspect-square relative text-fg-muted'>
             <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
             <Centered>
               <Emoji text={emoji} />
@@ -275,7 +271,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       {/* TODO(burdon): Factor out button bar */}
       <Flex justify='center'>
         <Flex gap='sm'>
-          <SystemIconButton.Clipboard value={url ?? 'never'} />
+          <SystemButton.Clipboard value={url ?? 'never'} />
           <Button variant='ghost' onClick={onCancel}>
             {t('cancel.label')}
           </Button>
@@ -291,9 +287,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
   return (
     <>
-      <p className='text-description'>{t('auth-other-device-emoji.message')}</p>
+      <p className='text-fg-muted'>{t('auth-other-device-emoji.message')}</p>
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
-      <p className='text-description'>{t('auth-code.message')}</p>
+      <p className='text-fg-muted'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
       <Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
@@ -304,9 +300,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
 const InvitationComplete = ({ succeeded }: { succeeded: boolean }) => {
   return succeeded ? (
-    <Icon icon='ph--check--regular' size={6} classNames='m-trim-xs' />
+    <Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size={6} classNames='m-trim-xs' />
+    <Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
   );
 };
 

@@ -69,6 +69,7 @@ export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.me
   }).pipe(
     Annotation.LabelAnnotation.set(['properties.subject']),
     Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

@@ -38,6 +38,7 @@ export class Ticket extends Type.makeObject<Ticket>(DXN.make('org.dxos.type.supp
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--lifebuoy--regular', hue: 'rose' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
+    Annotation.UserType.set(),
   ),
 ) {}
 

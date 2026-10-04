@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { RegisterService } from '@dxos/client-protocol';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -48,6 +48,7 @@ import {
   EdgeAgentService,
   FeedService,
   IdentityService,
+  InboxService,
   InvitationsService,
   LoggingService,
   NetworkService,
@@ -75,6 +76,7 @@ import {
   IdentityLifecycleLayer,
   IdentityManagerLayer,
   IdentityServiceLayer,
+  InboxServiceLayer,
 } from '../identity/index.ts';
 import {
   InvitationFactoriesLayer,
@@ -383,9 +385,15 @@ export const SigningContextProviderSpec = LayerSpec.make(
   () => SigningContextProviderLayer,
 );
 
+// The edge client is required only when configured, so the handler is built after it rather than
+// finding it absent; without it, edge-assisted admission is simply unavailable.
 export const InvitationsHandlerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
-    { affinity: 'application', requires: [SwarmNetworkManagerService], provides: [InvitationsHandlerService] },
+    {
+      affinity: 'application',
+      requires: [SwarmNetworkManagerService, ...(options.edgeAvailable ? [EdgeHttpClientService] : [])],
+      provides: [InvitationsHandlerService],
+    },
     () => InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps }),
   );
 
@@ -451,11 +459,18 @@ export const InvitationFactoriesSpec = LayerSpec.make(
   () => InvitationFactoriesLayer,
 );
 
+// The edge client is required only when configured, so the manager is built after it rather than
+// finding it absent; without it, it stays dormant (see `EdgeAgentManager._open`).
 export const EdgeAgentManagerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
       affinity: 'application',
-      requires: [Hook.Controller, SpacesContract.ManagerService, IdentityContract.ProviderService],
+      requires: [
+        Hook.Controller,
+        SpacesContract.ManagerService,
+        IdentityContract.ProviderService,
+        ...(options.edgeAvailable ? [EdgeHttpClientService] : []),
+      ],
       provides: [EdgeAgentManagerService],
     },
     () => EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures }),
@@ -596,6 +611,26 @@ export const ContactsServiceSpec = LayerSpec.make(
 export const ContactsServiceRegistrationSpec = LayerSpec.make(
   { affinity: 'application', requires: [ContactsService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(ContactsService.Rpcs, ContactsService.Tag),
+);
+
+// The edge tags are required only when configured, so the service is built after them rather than
+// finding them absent; without them it still serves an empty inbox.
+export const InboxServiceSpec = (options: ServiceStackServices) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [
+        IdentityContract.ManagerService,
+        ...(options.edgeAvailable ? [EdgeHttpClientService, EdgeConnectionService] : []),
+      ],
+      provides: [InboxService.Tag],
+    },
+    () => InboxServiceLayer,
+  );
+
+export const InboxServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [InboxService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(InboxService.Rpcs, InboxService.Tag),
 );
 
 export const InvitationsServiceSpec = LayerSpec.make(
@@ -794,6 +829,8 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   IdentityServiceRegistrationSpec,
   ContactsServiceSpec,
   ContactsServiceRegistrationSpec,
+  InboxServiceSpec(options),
+  InboxServiceRegistrationSpec,
   InvitationsServiceSpec,
   InvitationsServiceRegistrationSpec,
   DevicesServiceSpec,

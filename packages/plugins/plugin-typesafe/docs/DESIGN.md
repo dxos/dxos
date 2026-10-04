@@ -35,6 +35,25 @@ connects TypeSafe mid-session keeps getting failures until something restarts th
 who disconnects keeps succeeding against a captured key. Per call is one query against an in-memory
 credential set, which is not worth optimising away for either of those bugs.
 
+**Workers AI is a second model id, not a setting.** Cloudflare serves the same model as `typesafe/jev`,
+so `@dxos/ai` catalogs jev once per provider: `Model.typesafeJev` (TypeSafe) and `Model.cloudflareJev`
+(Workers AI). A consumer picks one with `AiService.decisionModel(id)`, which keeps the choice in the
+code that asks the question rather than in a space-wide setting. `TypeSafeResolver` routes by the
+model's provider, and this plugin gives each provider its EDGE route
+(`/ai/generate/typesafe`, `/ai/generate/workers-ai/typesafe`). Both speak the System One wire. Workers
+AI has no vendor key, so none is sent: a connected TypeSafe key would otherwise go to a route that
+never uses it.
+
+**Clef is another Workers AI model on the same wire.** Cloudflare's Clef and Clef Flash answer the
+System One request shape, so they are catalog entries (`Model.cloudflareClef`,
+`Model.cloudflareClefFlash`) on the Workers AI route, told apart on EDGE by the back-end name in the
+body (`clef`, `clef-flash`, `jev-*`). No new route, transport or setting per model.
+
+**The default is a setting; pinning stays in code.** `Model.defaultDecisionModel` is an alias, not a
+model: the resolver swaps it for the model the plugin settings select, read per resolution so a change
+applies to the next decision. A consumer that needs a specific model still names it; one that just
+needs "a decision model" (plugin-labeler) asks for the alias and follows the user's choice.
+
 **A direct endpoint needs a key, over HTTPS.** The `endpoint` setting bypasses EDGE, so there is no
 platform key behind it; a space with none connected fails with an `AuthenticationError`
 (`MissingKey`) the caller can turn into "connect TypeSafe". The key goes out as a bearer token, so the

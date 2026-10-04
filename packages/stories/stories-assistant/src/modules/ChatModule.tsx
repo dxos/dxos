@@ -12,7 +12,7 @@ import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
-import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, Popover, Toolbar } from '@dxos/react-ui';
 import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
 
 export const ChatModule = () => {
@@ -54,23 +54,20 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
   return (
     <Chat.Root chat={chat} processor={processor}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher}>
-            <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
+            <Toolbar.Text classNames='text-fg-subtle'>{chat?.name}</Toolbar.Text>
             <Popover.Root>
               <Popover.Trigger asChild>
-                <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+                <Button icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
               </Popover.Trigger>
-              <Popover.Portal>
-                <Popover.Content>
-                  <ExecutionGraphModule />
-                  <Popover.Arrow />
-                </Popover.Content>
-              </Popover.Portal>
+              <Popover.Content>
+                <ExecutionGraphModule />
+              </Popover.Content>
             </Popover.Root>
           </Chat.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
             <div className='flex flex-col gap-1 p-1'>
@@ -79,7 +76,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
               <Chat.Prompt {...chatProps} outline preset={preset?.id} />
             </div>
           </Chat.Content>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Chat.Root>
   );

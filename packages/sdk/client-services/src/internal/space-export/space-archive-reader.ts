@@ -4,7 +4,7 @@
 
 import type { DocumentId } from '@automerge/automerge-repo';
 
-import { assertArgument, failedInvariant, invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
   type FeedArchiveBlock,
@@ -40,7 +40,12 @@ export const extractSpaceArchive = async (archive: SpacesService.SpaceArchive): 
       .replace(`${SpaceArchiveFileStructure.documents}/`, '')
       .replace(/\.bin$/, '') as DocumentId;
     invariant(!documentId.includes('/'));
-    documents[documentId] = entry.content ?? failedInvariant();
+    // The reader leaves `content` null for a zero-byte entry, which an export writes for a document with no local chunks.
+    if (!entry.content || entry.content.byteLength === 0) {
+      log.warn('skipping empty document in space archive', { documentId });
+      continue;
+    }
+    documents[documentId] = entry.content;
   }
 
   const feeds: Record<string, ExtractedFeed> = {};

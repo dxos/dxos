@@ -3,10 +3,10 @@
 //
 
 import * as Context from 'effect/Context';
+import * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
-import * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { serviceError } from './service-rpc.ts';
 import { mutableArray } from './service-schemas.ts';
@@ -96,6 +96,11 @@ export const QueryResult = Schema.Struct({
    * serialized group key.
    */
   aggregates: Schema.optional(Schema.String),
+  /**
+   * JSON-encoded plain record for a result that is not an entity (an Automerge change selected by
+   * `Filter.changes`); no object fields are sent, and `id` is the record's own identity.
+   */
+  recordJson: Schema.optional(Schema.String),
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 
