@@ -340,7 +340,7 @@ export const ToolkitOperations: Story = {
 };
 
 /** A code-mode `eval` call: named after the operation its code invokes, not after the `eval` tool. */
-export const ToolkitCodeMode: Story = {
+export const ToolkitCodeModeNamed: Story = {
   args: {
     content: toolkit([
       {
@@ -354,7 +354,7 @@ export const ToolkitCodeMode: Story = {
 };
 
 /** A code-mode `eval` call spanning several operations: listed by name, in the order the code calls them. */
-export const ToolkitCodeModeMultiple: Story = {
+export const ToolkitCodeModeNamedMultiple: Story = {
   args: {
     content: toolkit([
       {
