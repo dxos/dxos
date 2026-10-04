@@ -99,11 +99,13 @@ export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps
         <CardTile.Header
           menu={!!menuItems}
           menuItems={menuItems}
+          leading={
+            !read && (
+              <Icon icon='ph--circle--fill' size='xs' classNames='text-accent-text' aria-label={t('unread.label')} />
+            )
+          }
           title={
             <>
-              {!read && (
-                <Icon icon='ph--circle--fill' size='xs' classNames='text-accent-text' aria-label={t('unread.label')} />
-              )}
               <span className={read ? 'grow truncate' : 'grow truncate font-medium'}>{title}</span>
               <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>{time}</span>
             </>

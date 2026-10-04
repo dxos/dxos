@@ -9,7 +9,7 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 import { type Database, Filter } from '@dxos/echo';
 import { type PaginationResult, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { Block, Card, Focus, Icon, ScrollArea, composable, composableProps } from '@dxos/react-ui';
+import { Card, Focus, Icon, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { CardTile, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
@@ -626,10 +626,10 @@ const ConversationMessageRow = ({
   );
 
   return (
-    <Card.Row classNames='items-start'>
-      <Block classNames='h-8 items-center'>
-        <ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />
-      </Block>
+    <Card.Row
+      classNames='items-start'
+      leading={<ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />}
+    >
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
         <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
           <span className='truncate'>{from}</span>

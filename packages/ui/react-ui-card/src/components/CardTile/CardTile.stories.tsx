@@ -12,10 +12,10 @@ import { translations } from '#translations';
 
 import { CardTile } from './CardTile.tsx';
 
-// CardTile.Header standalone inside Card chrome; CardTile.Root's mosaic shell is exercised by the
+// CardTile.Header standalone inside the grid Card chrome CardTile.Root renders; CardTile.Root's mosaic shell is exercised by the
 // EventStack / InboxStack stories (it requires a Mosaic.Container ancestor).
 const DefaultStory = ({ menu, starred }: { menu?: boolean; starred?: boolean }) => (
-  <Card.Root border={false} classNames='p-1'>
+  <Card.Root grid border={false} classNames='p-1'>
     <CardTile.Header
       menu={menu}
       starred={starred}

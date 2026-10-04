@@ -82,7 +82,7 @@ const SenderColumn = () => {
   }, [sender, recipientDid, text, withLink, linked]);
 
   return (
-    <Panel.Root data-testid='messenger.alice'>
+    <Panel.Root data-testid='messenger.sender'>
       <Panel.Header>
         <Toolbar.Root>
           <Block>
@@ -92,7 +92,7 @@ const SenderColumn = () => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-        <Flex column gap='md' classNames='p-4'>
+        <Flex column gap='md' classNames='p-3'>
           <Select.Root
             items={options}
             value={recipientDid ? [recipientDid] : []}
@@ -199,7 +199,7 @@ const ReceiverColumn = () => {
   );
 
   return (
-    <Panel.Root data-testid='messenger.bob'>
+    <Panel.Root data-testid='messenger.receiver'>
       <Panel.Header>
         <Toolbar.Root>
           <Block>
@@ -262,22 +262,22 @@ type Story = StoryObj<typeof meta>;
 export const TwoUsers: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const alice = within(await canvas.findByTestId('messenger.alice', {}, { timeout: 20_000 }));
-    const bob = within(await canvas.findByTestId('messenger.bob', {}, { timeout: 20_000 }));
+    const sender = within(await canvas.findByTestId('messenger.sender', {}, { timeout: 20_000 }));
+    const receiver = within(await canvas.findByTestId('messenger.receiver', {}, { timeout: 20_000 }));
 
     // 1. Bob becomes Alice's contact once the shared-space invitation completes.
-    const send = await alice.findByTestId('messenger.send');
-    await userEvent.type(await alice.findByTestId('messenger.text'), 'Please review');
+    const send = await sender.findByTestId('messenger.send');
+    await userEvent.type(await sender.findByTestId('messenger.text'), 'Please review');
     await waitFor(() => expect(send).toBeEnabled(), { timeout: 20_000 });
 
     // 2. Alice sends; the tile and the badge appear on Bob's side.
     await userEvent.click(send);
-    const tile = await bob.findByText('Please review', {}, { timeout: 20_000 });
-    await waitFor(() => expect(bob.getByTestId('messenger.badge')).toHaveTextContent('1'), { timeout: 10_000 });
+    const tile = await receiver.findByText('Please review', {}, { timeout: 20_000 });
+    await waitFor(() => expect(receiver.getByTestId('messenger.badge')).toHaveTextContent('1'), { timeout: 10_000 });
 
     // 3. Opening the tile marks it read, which clears the badge, and resolves the link in the shared space.
     await userEvent.click(tile);
-    await waitFor(() => expect(bob.queryByTestId('messenger.badge')).toBeNull(), { timeout: 10_000 });
-    await bob.findByText(`Opened “${LINKED_OBJECT_NAME}”`, {}, { timeout: 10_000 });
+    await waitFor(() => expect(receiver.queryByTestId('messenger.badge')).toBeNull(), { timeout: 10_000 });
+    await receiver.findByText(`Opened “${LINKED_OBJECT_NAME}”`, {}, { timeout: 10_000 });
   },
 };
