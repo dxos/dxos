@@ -8,7 +8,6 @@ import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, use
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
 import {
-  Block,
   Button,
   type ButtonProps,
   Card,
@@ -185,10 +184,7 @@ const RowDate = ({ start, end }: RowDateProps) => {
   const duration = [hours > 0 && `${hours}h`, minutes > 0 && `${minutes}m`].filter(Boolean).join(' ');
 
   return (
-    <Card.Row>
-      <Block>
-        <Icon icon='ph--calendar--regular' />
-      </Block>
+    <Card.Row icon='ph--calendar--regular'>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
         <div className='truncate text-fg-muted'>{format(start, 'PPp')}</div>
         {duration.length > 0 && <div className='text-fg-muted text-xs'>({duration})</div>}
@@ -215,10 +211,7 @@ const RowRef = ({ object }: RowRefProps) => {
 
   // TODO(burdon): Nav?
   return (
-    <Card.Row>
-      <Block>
-        <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
-      </Block>
+    <Card.Row leading={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}>
       <div className='flex items-center'>
         <span className='truncate text-primary-text'>{label}</span>
       </div>
@@ -264,10 +257,7 @@ type RowPersonProps = {
  * Static avatar variant — no contact resolution. Suitable for virtualized list tiles.
  */
 const PersonAvatarRow = ({ actor, size, onClick }: Pick<RowPersonProps, 'actor' | 'size' | 'onClick'>) => (
-  <Card.Row>
-    <Block>
-      <Avatar actor={actor} size={size} onClick={onClick} />
-    </Block>
+  <Card.Row leading={<Avatar actor={actor} size={size} onClick={onClick} />}>
     <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
   </Card.Row>
 );
@@ -379,8 +369,8 @@ const PersonContactRow = ({
   const { t } = useTranslation(translationKey);
 
   return (
-    <Card.Row>
-      <Block>
+    <Card.Row
+      leading={
         <ContactAvatar
           actor={actor}
           role={role}
@@ -390,10 +380,9 @@ const PersonContactRow = ({
           onContactCreate={onContactCreate}
           onClick={onClick}
         />
-      </Block>
-      <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
-      {onRemove && (
-        <Block rail='end'>
+      }
+      trailing={
+        onRemove && (
           <Button
             variant='ghost'
             iconOnly
@@ -401,8 +390,10 @@ const PersonContactRow = ({
             label={t('remove-attendee.label')}
             onClick={onRemove}
           />
-        </Block>
-      )}
+        )
+      }
+    >
+      <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
     </Card.Row>
   );
 };
@@ -437,10 +428,7 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
   }
 
   return (
-    <Card.Row>
-      <Block>
-        <Icon icon='ph--tag--regular' />
-      </Block>
+    <Card.Row icon='ph--tag--regular'>
       <div className='flex flex-wrap gap-1 py-1' data-testid='extracted-tags'>
         {tags.map((tag) => (
           <Tag
@@ -519,10 +507,7 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
   }
 
   return (
-    <Card.Row>
-      <Block>
-        <Icon icon='ph--paperclip--regular' />
-      </Block>
+    <Card.Row icon='ph--paperclip--regular'>
       <div className='flex flex-wrap gap-1 py-1' data-testid='message-attachments'>
         {attachments.map((attachment, index) => (
           <Tag
