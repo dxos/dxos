@@ -875,6 +875,26 @@ export const TestOpensAtNewest: Story = {
   },
 };
 
+/** Beside the legend and meta columns the chart takes the remaining width, rather than collapsing to nothing. */
+export const TestChartFillsRow: Story = {
+  args: { ...ManyLanes.args, inspect: false },
+  decorators: [(Story) => <div className='w-[800px]'>{Story()}</div>],
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      () => {
+        const chart = canvasElement
+          .querySelector<HTMLElement>('svg')
+          ?.closest<HTMLElement>('[data-scope="scroll-area"]');
+        if (!chart) {
+          throw new Error('No chart.');
+        }
+        expect(chart.getBoundingClientRect().width).toBeGreaterThan(200);
+      },
+      { timeout: 10_000 },
+    );
+  },
+};
+
 /** One band whose lanes branch off one another: `parentId` indents, `openedFrom` and `closedInto` connect. */
 export const Branching: Story = {
   args: {
