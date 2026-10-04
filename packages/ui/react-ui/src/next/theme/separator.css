@@ -4,20 +4,20 @@
  */
 
 @layer dx-components {
-  .nx-separator {
+  .dx-separator {
     flex-shrink: 0;
     border: none;
     background: var(--color-separator);
   }
-  .nx-separator[data-orientation='horizontal'] {
+  .dx-separator[data-orientation='horizontal'] {
     align-self: stretch;
     height: 1px;
-    margin-block: var(--nx-control-inset);
+    margin-block: var(--dx-control-inset);
   }
-  .nx-separator[data-orientation='vertical'] {
+  .dx-separator[data-orientation='vertical'] {
     align-self: center;
     width: 1px;
-    height: var(--nx-control-size);
-    margin-inline: var(--nx-control-inset);
+    height: var(--dx-control-size);
+    margin-inline: var(--dx-control-inset);
   }
 }

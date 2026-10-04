@@ -14,6 +14,7 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -87,6 +88,52 @@ describe('BindChatContext', () => {
       TestHelpers.provideTestContext,
     ),
   );
+});
+
+describe('BindChatContext over a stable subject', () => {
+  beforeEach(() => {
+    const atomRegistry = AtomRegistry.make();
+    manager = CapabilityManager.make({ registry: atomRegistry });
+    manager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, implementation: atomRegistry });
+    // A registry skill bound by URI: its target does not resolve here, as in a space without the registry.
+    const skill: Ref.Ref<Skill.Skill> = Ref.fromURI(Skill.registryURI('org.dxos.skill.unresolved'));
+    manager.contribute({
+      module: 'test',
+      interface: AssistantCapabilities.SubjectContext,
+      implementation: {
+        getBindings: ({ subject }) =>
+          Effect.succeed({
+            skills: [skill],
+            objects: [Ref.make(subject)],
+          }),
+      },
+    });
+  });
+
+  // Every companion open re-runs this; a subject that has not changed must not grow the feed.
+  it.effect(
+    'binds nothing new when re-run over an unchanged subject',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat();
+        const subject = yield* makeText('subject');
+
+        yield* Operation.invoke(AssistantOperation.BindChatContext, { chat, subject });
+        const first = yield* bindingCount(chat);
+        yield* Operation.invoke(AssistantOperation.BindChatContext, { chat, subject });
+        yield* Operation.invoke(AssistantOperation.BindChatContext, { chat, subject });
+
+        expect(yield* bindingCount(chat)).toBe(first);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+const bindingCount = Effect.fnUntraced(function* (chat: Chat.Chat) {
+  const feed = yield* Database.load(chat.feed);
+  return (yield* Feed.query(feed, Query.type(AiContext.Binding)).run).length;
 });
 
 /** A provider that binds a marker of its own making, so a test can name it by content. */

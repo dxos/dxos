@@ -36,7 +36,7 @@ const reference = [
  */
 const Row = ({ symbol }: { symbol: string }) => (
   <div className='flex items-center gap-4'>
-    <div className='w-56 shrink-0 font-mono text-xs text-subdued'>{symbol}</div>
+    <div className='w-56 shrink-0 font-mono text-xs text-fg-subtle'>{symbol}</div>
     {sizes.map((size) => (
       // The slot keeps columns aligned across rows; the inner box takes its size from the icon.
       <div key={size} className='grid w-20 place-items-center'>
@@ -50,7 +50,7 @@ const Row = ({ symbol }: { symbol: string }) => (
 
 const Group = ({ symbols, title }: { symbols: string[]; title: string }) => (
   <div className='flex flex-col gap-2'>
-    <h2 className='text-sm uppercase tracking-wide text-subdued'>{title}</h2>
+    <h2 className='text-sm uppercase tracking-wide text-fg-subtle'>{title}</h2>
     {symbols.map((symbol) => (
       <Row key={symbol} symbol={symbol} />
     ))}

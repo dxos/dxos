@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Column, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
@@ -87,14 +87,10 @@ export const CreateGamePanel = ({ target, onCreateObject, onCancel, variants: va
       onCancel={handleBack}
       testId='create-game-form'
     >
-      {/* Rendered inside the create dialog's Dialog.Body (which owns the gutter Column); use
-          Column.Center to align with the dialog title rather than nesting another Column.Root. */}
-      <Column.Center>
-        <Form.Content>
-          <Form.Fields />
-          <Form.Actions />
-        </Form.Content>
-      </Column.Center>
+      <Form.Content>
+        <Form.Fields />
+        <Form.Actions />
+      </Form.Content>
     </Form.Root>
   );
 };
@@ -121,34 +117,32 @@ const VariantPicker = ({ variants, onSave, onCancel }: VariantPickerProps) => {
 
   return (
     <Form.Root schema={VariantSelection} values={values} onSave={onSave} onCancel={onCancel}>
-      <Column.Center>
-        <Form.Content>
-          <SearchList.Root onSearch={handleSearch}>
-            <SearchList.Input
-              classNames='mb-form-gap'
-              autoFocus
-              data-testid='create-game-panel.variant-input'
-              placeholder={t('create-panel.variant.placeholder')}
-            />
-            <SearchList.Viewport>
-              {results.map((variant) => (
-                <SearchList.Item
-                  key={variant.id}
-                  value={variant.id}
-                  label={variant.label}
-                  icon={variant.icon ?? 'ph--sword--regular'}
-                  checked={variant.id === variantId}
-                  onSelect={() => setSelectedId(variant.id)}
-                />
-              ))}
-            </SearchList.Viewport>
-          </SearchList.Root>
-          <Form.Actions
-            submitLabel={hasInputs ? t('create-panel.continue.label') : undefined}
-            submitIcon={hasInputs ? 'ph--arrow-right--regular' : undefined}
+      <Form.Content>
+        <SearchList.Root onSearch={handleSearch}>
+          <SearchList.Input
+            classNames='mb-form-gap'
+            autoFocus
+            data-testid='create-game-panel.variant-input'
+            placeholder={t('create-panel.variant.placeholder')}
           />
-        </Form.Content>
-      </Column.Center>
+          <SearchList.Viewport>
+            {results.map((variant) => (
+              <SearchList.Item
+                key={variant.id}
+                value={variant.id}
+                label={variant.label}
+                icon={variant.icon ?? 'ph--sword--regular'}
+                checked={variant.id === variantId}
+                onSelect={() => setSelectedId(variant.id)}
+              />
+            ))}
+          </SearchList.Viewport>
+        </SearchList.Root>
+        <Form.Actions
+          submitLabel={hasInputs ? t('create-panel.continue.label') : undefined}
+          submitIcon={hasInputs ? 'ph--arrow-right--regular' : undefined}
+        />
+      </Form.Content>
     </Form.Root>
   );
 };

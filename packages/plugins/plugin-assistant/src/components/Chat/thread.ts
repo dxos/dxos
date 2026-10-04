@@ -88,6 +88,26 @@ export const projectThread = ({
 };
 
 /**
+ * Alarms that have woken the agent since the last prompt the user typed: the count the runtime caps at
+ * `Alarm.MAX_SELF_WAKES`, read from the feed so the status can show it.
+ */
+export const projectSelfWakes = ({
+  feedAlarms,
+  messages,
+}: {
+  feedAlarms: readonly Alarm.Alarm[];
+  messages: readonly Message.Message[];
+}): number => {
+  const lastPrompt = messages.findLast(
+    (message) =>
+      message.sender.role === 'user' &&
+      message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic'),
+  );
+  const since = lastPrompt?.created ?? '';
+  return feedAlarms.filter((alarm) => isConsumed(alarm) && alarm.created >= since).length;
+};
+
+/**
  * The alarms still waiting to fire, earliest first: those the agent has not consumed and (for a
  * cancelled one) not removed from the feed.
  */
@@ -115,6 +135,26 @@ const isMachinery = (block: Message.Message['blocks'][number]): boolean =>
 const isToolOnly = (message: Message.Message): boolean =>
   message.blocks.length > 0 && message.blocks.every(isMachinery);
 
+/** A folded run and the messages it was folded from, keyed by the run's first message. */
+const foldedRuns = new WeakMap<Message.Message, { run: readonly Message.Message[]; folded: Message.Message }>();
+
+/**
+ * The run folded into one message, reusing the previous fold while the run holds the same messages:
+ * the thread re-projects on every streamed block, and a fresh object per pass made every tool panel
+ * in the thread look changed, re-rendering all of them for each block of the current turn.
+ */
+const foldRun = (run: readonly Message.Message[]): Message.Message => {
+  const [first] = run;
+  const cached = foldedRuns.get(first);
+  if (cached && cached.run.length === run.length && cached.run.every((message, index) => message === run[index])) {
+    return cached.folded;
+  }
+
+  const folded = { ...first, blocks: run.flatMap((entry) => entry.blocks) } as Message.Message;
+  foldedRuns.set(first, { run, folded });
+  return folded;
+};
+
 /**
  * Folds each run of tool-only messages into one, so a multi-step turn renders as a single panel.
  *
@@ -139,8 +179,7 @@ export const collapseToolRuns = (messages: readonly Message.Message[]): Message.
     if (end === index) {
       collapsed.push(message);
     } else {
-      const run = messages.slice(index, end + 1);
-      collapsed.push({ ...message, blocks: run.flatMap((entry) => entry.blocks) } as Message.Message);
+      collapsed.push(foldRun(messages.slice(index, end + 1)));
     }
 
     index = end;

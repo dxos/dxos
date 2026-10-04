@@ -33,12 +33,12 @@ const DefaultStory = () => {
   return (
     <SpacetimeEditor.Root ref={controller} scene={scene}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <SpacetimeEditor.Toolbar alwaysActive />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SpacetimeEditor.Canvas />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </SpacetimeEditor.Root>
   );

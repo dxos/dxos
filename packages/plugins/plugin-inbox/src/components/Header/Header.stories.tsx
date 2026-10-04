@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card } from '@dxos/react-ui';
+import { Block, Card } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -56,9 +56,9 @@ const DefaultStory = ({ actors = [KNOWN_SENDER] }: StoryArgs) => {
     <ContactPreview db={space?.db}>
       <Header.Root>
         <Card.Row>
-          <Card.Block>
+          <Block>
             <Row.Star starred={starred} onToggle={() => setStarred((value) => !value)} />
-          </Card.Block>
+          </Block>
           <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
         </Card.Row>
         {actors.map((actor, index) => (
@@ -140,7 +140,7 @@ export const Spec: Story = {
     const avatarFor = (name: string) => {
       const avatar = canvas
         .getByText(name)
-        .closest('.dx-card__row')
+        .closest('[data-scope="card"][data-part="row"]')
         ?.querySelector('[data-testid="row.contact-avatar"]');
       if (!avatar) {
         throw new Error(`Contact avatar not found for ${name}.`);

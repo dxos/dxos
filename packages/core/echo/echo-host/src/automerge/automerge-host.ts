@@ -42,7 +42,7 @@ import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, bufferToArray, defaultMap } from '@dxos/util';
+import { ComplexSet, bufferToArray, countWork, defaultMap } from '@dxos/util';
 
 import {
   type CollectionState,
@@ -347,6 +347,7 @@ export class AutomergeHost extends Resource {
     super();
     this._leases = new DocumentLeaseRegistry({
       open: (documentId) => {
+        countWork('automerge.docLoads');
         const query = this._repo.findWithProgress(documentId);
         const handle = this._repo.getHandle(documentId);
         invariant(handle, 'Document query has no attached handle.');
@@ -804,6 +805,7 @@ export class AutomergeHost extends Resource {
     }
     if (this._repo.handles[documentId]) {
       await this._repo.removeFromCache(documentId);
+      countWork('automerge.evictions');
     }
     log('evicted document', { documentId });
     return true;
@@ -943,9 +945,12 @@ export class AutomergeHost extends Resource {
   async removeDocument(id: AnyDocumentId): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
-    // Evicted first, draining its pending save, so the handle cannot re-persist what is deleted
-    // below — collection loads the document to check ownership, so one is usually live here.
+    // Flushed, then evicted, so the handle cannot re-persist what is deleted below — collection loads
+    // the document to check ownership, so one is usually live here. Eviction only detaches the save
+    // listener; a throttled save already scheduled still runs, and the flush is what makes it a
+    // no-op, since its heads then match the last save.
     if (this._repo.handles[documentId]) {
+      await this._repo.flush([documentId]);
       await this._repo.removeFromCache(documentId);
     }
     // Dropped from the registry too: the document is about to stop existing, so a later eviction of
@@ -953,21 +958,16 @@ export class AutomergeHost extends Resource {
     this._leases.forget(documentId);
     this._confirmedChanges.delete(documentId);
 
-    // One transaction: the orphan scan enumerates the heads table, so chunks outliving their heads
-    // row could never be found again.
+    // One write: the orphan scan enumerates the heads table, so chunks outliving their heads row could
+    // never be found again. Through the chunk write queue, so a save queued before it cannot land after.
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
-    await RuntimeProvider.runPromise(this._runtime)(
+    await this._storage.enqueue(
       Effect.gen({ self: this }, function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql.withTransaction(
-          Effect.gen({ self: this }, function* () {
-            yield* this._headsStore.remove(documentId);
-            yield* this._storage.removeRangeEffect([documentId]);
-            for (const family of SUBDUCTION_KEY_FAMILIES) {
-              yield* this._storage.removeRangeEffect([SUBDUCTION_PREFIX, family, sedimentreeId]);
-            }
-          }),
-        );
+        yield* this._headsStore.remove(documentId);
+        yield* this._storage.removeRangeEffect([documentId]);
+        for (const family of SUBDUCTION_KEY_FAMILIES) {
+          yield* this._storage.removeRangeEffect([SUBDUCTION_PREFIX, family, sedimentreeId]);
+        }
       }),
     );
 

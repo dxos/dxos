@@ -13,7 +13,7 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { Menu, type ThemedClassName } from '@dxos/react-ui';
+import { Menu, type ThemedClassName, virtualAnchor } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
@@ -769,59 +769,58 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         {overlay}
       </div>
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
-      {navigating && <div className='dx-fullscreen' data-testid='navigation-shield' />}
+      {navigating && <div className='dx-cover' data-testid='navigation-shield' />}
       <span
         ref={menuAnchorRef}
         className='absolute size-0 pointer-events-none'
         style={{ left: menu?.at.x ?? 0, top: menu?.at.y ?? 0 }}
       />
-      <Menu.Root modal={false} open={menu !== undefined} onOpenChange={(open) => !open && closeMenu()}>
-        <Menu.VirtualTrigger virtualRef={menuAnchorRef} />
-        <Menu.Content side='right' sideOffset={4} collisionPadding={8}>
-          <Menu.Viewport>
-            {menu?.kind === 'point' && (
+      <Menu.Root
+        open={menu !== undefined}
+        onOpenChange={({ open }) => !open && closeMenu()}
+        positioning={{ ...virtualAnchor(menuAnchorRef), placement: 'right', gutter: 4, overflowPadding: 8 }}
+      >
+        <Menu.Content>
+          {menu?.kind === 'point' && (
+            <Menu.Item
+              data-testid='remove-point'
+              onSelect={() => {
+                const point = registry.get(atoms.point);
+                if (point) {
+                  removePoint(point);
+                }
+              }}
+              item={{ value: 'Remove control point', label: 'Remove control point' }}
+            />
+          )}
+          {menu?.kind === 'element' && (
+            <>
               <Menu.Item
-                data-testid='remove-point'
+                data-testid='menu-cut'
+                disabled={!capabilities.delete}
+                onSelect={cut}
+                item={{ value: 'Cut', label: 'Cut' }}
+              />
+              <Menu.Item data-testid='menu-copy' onSelect={copy} item={{ value: 'Copy', label: 'Copy' }} />
+              <Menu.Item
+                data-testid='menu-delete'
+                disabled={!capabilities.delete}
                 onSelect={() => {
-                  const point = registry.get(atoms.point);
-                  if (point) {
-                    removePoint(point);
-                  }
+                  projection.apply({ kind: 'delete', ids: [...registry.get(atoms.selection)] });
+                  select([]);
                 }}
-              >
-                Remove control point
-              </Menu.Item>
-            )}
-            {menu?.kind === 'element' && (
-              <>
-                <Menu.Item data-testid='menu-cut' disabled={!capabilities.delete} onSelect={cut}>
-                  Cut
-                </Menu.Item>
-                <Menu.Item data-testid='menu-copy' onSelect={copy}>
-                  Copy
-                </Menu.Item>
-                <Menu.Item
-                  data-testid='menu-delete'
-                  disabled={!capabilities.delete}
-                  onSelect={() => {
-                    projection.apply({ kind: 'delete', ids: [...registry.get(atoms.selection)] });
-                    select([]);
-                  }}
-                >
-                  Delete
-                </Menu.Item>
-              </>
-            )}
-            {menu?.kind === 'canvas' && (
-              <Menu.Item
-                data-testid='menu-paste'
-                disabled={!clipboard || !capabilities.create}
-                onSelect={() => paste(menu.scene)}
-              >
-                Paste
-              </Menu.Item>
-            )}
-          </Menu.Viewport>
+                item={{ value: 'Delete', label: 'Delete' }}
+              />
+            </>
+          )}
+          {menu?.kind === 'canvas' && (
+            <Menu.Item
+              data-testid='menu-paste'
+              disabled={!clipboard || !capabilities.create}
+              onSelect={() => paste(menu.scene)}
+              item={{ value: 'Paste', label: 'Paste' }}
+            />
+          )}
         </Menu.Content>
       </Menu.Root>
     </>

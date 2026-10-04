@@ -11,6 +11,11 @@ export const translations = [
     'en-US': {
       [translationKey]: {
         'empty.label': 'No items',
+        'error-fallback.title.label': 'Runtime Error',
+        'error-fallback.stack.label': 'Stack',
+        'error-fallback.data.label': 'Data',
+        'steps.step.label': 'Step {{index}}',
+        'remove.label': 'Delete',
 
         'toolbar-menu.label': 'Action menu',
         'toolbar-drag-handle.label': 'Drag to rearrange',
@@ -32,7 +37,7 @@ export const translations = [
         'system-button.ai.label': 'Run AI',
         'system-button.add.label': 'Add',
         'system-button.delete.label': 'Delete',
-        'system-button.remove.label': 'Remove',
+        'system-button.remove.label': 'Delete',
         'system-button.edit.label': 'Edit',
         'system-button.close.label': 'Close',
         'system-button.open.label': 'Open',
@@ -70,6 +75,12 @@ export const translations = [
         'password-input.hide.label': 'Hide password',
         'tag.delete.label': 'Remove {{label}}',
 
+        'combobox.search.label': 'Search',
+        'combobox.empty.label': 'No results',
+        'combobox.loading.label': 'Loading…',
+        'combobox.create.label': 'Create “{{query}}”',
+
+        'drag-handle.label': 'Drag to rearrange',
         'drag-handle.role.label': 'drag handle',
         'drag-handle.grabbed.message': 'Grabbed. Press the arrow keys to move, Space to drop.',
         'drag-handle.moved-up.message': 'Moved up.',

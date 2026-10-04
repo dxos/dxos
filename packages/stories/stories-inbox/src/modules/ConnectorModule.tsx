@@ -42,7 +42,7 @@ const ConnectorModuleContainer = ({ space, attendableId }: { space: Space; atten
     // Report which half of the lookup failed rather than a bare "not connected": a cursor whose
     // `spec.target` doesn't match this mailbox (a second, materialized Mailbox is the usual cause)
     // looks identical to having no cursor at all.
-    <div className='h-full grid place-items-center p-2 text-sm text-description'>
+    <div className='h-full grid place-items-center p-2 text-sm text-fg-muted'>
       <JsonHighlighter
         data={{
           connected: false,

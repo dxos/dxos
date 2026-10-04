@@ -151,9 +151,9 @@ export const SwarmArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         <DynamicTable properties={properties} rows={rows} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

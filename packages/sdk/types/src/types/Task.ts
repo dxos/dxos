@@ -76,7 +76,7 @@ export type Status = Schema.Schema.Type<typeof Status>;
  * painted in.
  */
 export const StatusOptions: Option<Status>[] = [
-  { id: 'todo', title: 'Todo', color: 'neutral', icon: 'ph--square--regular' },
+  { id: 'todo', title: 'Todo', color: 'neutral', icon: 'ph--check-square-offset--regular' },
   { id: 'backlog', title: 'Backlog', color: 'neutral', icon: 'ph--tray--regular' },
   { id: 'started', title: 'Started', color: 'sky', icon: 'ph--hourglass--regular' },
   { id: 'review', title: 'In Review', color: 'cyan', icon: 'ph--user-sound--regular' },
@@ -200,6 +200,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 
     description: Schema.optional(
       Schema.String.pipe(
+        Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
         Schema.annotate({ title: 'Description' }),
         Annotation.GeneratorAnnotation.set({
           generator: 'lorem.paragraphs',
@@ -1083,9 +1084,9 @@ const loadOrUndefined = <T extends Obj.Unknown>(ref: Ref.Ref<T>): Effect.Effect<
 };
 
 /**
- * The top of `task`'s tree, walking parent edges up — the unit of work every task in the tree lands
- * with. Synchronous with no load to time out: a parent edge is a strong dependency, materialized
- * before its child is, so an unresolved hop means no parent task. A parent that is not a task (the
+ * The top of `task`'s tree, walking parent edges up — the unit of work a claim covers. Synchronous
+ * with no load to time out: a parent edge is a strong dependency, materialized before its child is,
+ * so an unresolved hop means no parent task. A parent that is not a task (the
  * set, or nothing) ends the walk. Cycle-safe.
  */
 export const collectRoot = (task: Task): Effect.Effect<Task> =>
@@ -1103,42 +1104,34 @@ export const collectRoot = (task: Task): Effect.Effect<Task> =>
 export const collectTree = (task: Task): Effect.Effect<Task[], never, Database.Service> =>
   Effect.flatMap(collectRoot(task), collectSubtree);
 
-/** A task tree already has a different open PR: every sub-task of a task lands in one PR. */
+/** A task already holds a different open PR: one task lands in one PR. */
 export class PullRequestConflictError extends BaseError.extend(
   'PullRequestConflictError',
-  'Task tree already has an open pull request.',
+  'Task already has an open pull request.',
 ) {}
 
 /**
- * The task an artifact produced for `task` is recorded on. A pull request goes to the ROOT of the
- * tree, since a task with sub-tasks is one unit of work that lands in one PR; anything else stays on
- * `task`. Fails when any task in the tree already holds a DIFFERENT pull request that is still open
- * — the root normally, but a sub-task may carry one recorded before PRs were routed to the root.
+ * Checks that `artifact` may be recorded on `task` itself. A pull request is refused when `task`
+ * already holds a DIFFERENT pull request that is still open; a parent's or sibling's PR is no
+ * conflict, since a sub-task that was fixed on its own carries the PR that fixed it, while a
+ * parent's PR still reads as covering every sub-task that has none of its own.
  */
-export const artifactTarget = (
-  task: Task,
-  artifact: Obj.Unknown,
-): Effect.Effect<Task, PullRequestConflictError, Database.Service> =>
-  Effect.gen(function* () {
-    if (!PullRequest.instanceOf(artifact)) {
-      return task;
+export const checkArtifact = Effect.fnUntraced(function* (task: Task, artifact: Obj.Unknown) {
+  if (!PullRequest.instanceOf(artifact)) {
+    return;
+  }
+  for (const ref of task.artifacts ?? []) {
+    if (refEntityId(ref) === artifact.id) {
+      continue;
     }
-    const [root, ...descendants] = yield* collectTree(task);
-    for (const member of [root, ...descendants]) {
-      for (const ref of member.artifacts ?? []) {
-        if (refEntityId(ref) === artifact.id) {
-          continue;
-        }
-        const existing = yield* loadOrUndefined(ref);
-        if (PullRequest.instanceOf(existing) && existing.state === 'open') {
-          const url = existing.url ?? PullRequest.reference(existing);
-          return yield* Effect.fail(
-            new PullRequestConflictError({
-              message: `Task tree "${root.title}" already has PR ${url}; all subtasks land in one PR.`,
-            }),
-          );
-        }
-      }
+    const existing = yield* loadOrUndefined(ref);
+    if (PullRequest.instanceOf(existing) && existing.state === 'open') {
+      const url = existing.url ?? PullRequest.reference(existing);
+      return yield* Effect.fail(
+        new PullRequestConflictError({
+          message: `Task "${task.title}" already has open PR ${url}; attach another PR to the sub-task it fixes.`,
+        }),
+      );
     }
-    return root;
-  });
+  }
+});

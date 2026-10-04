@@ -120,6 +120,12 @@ export default Capability.makeModule(
       pending.add(companionUri);
       void operationInvoker
         .invokePromise(AssistantOperation.EnsureCompanionChat, { companionTo: object }, { spaceId: db.spaceId })
+        // A failed operation resolves with `error` rather than rejecting, and is retried on the next trigger.
+        .then(({ error }) => {
+          if (error) {
+            log.warn('Failed to provision companion chat', { plankId, error });
+          }
+        })
         .catch((error) => log.warn('Failed to provision companion chat', { plankId, error }))
         .finally(() => pending.delete(companionUri));
 

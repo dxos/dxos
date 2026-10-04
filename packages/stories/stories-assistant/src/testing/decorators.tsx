@@ -102,6 +102,29 @@ export const config = {
       services: SERVICES_CONFIG.LOCAL,
     },
   }),
+  /**
+   * Persistent OPFS storage with no EDGE: the client gates every EDGE layer on an edge URL, so
+   * leaving it out keeps replication, signaling and agents off and a perf run measures only the
+   * local stack. Only for scripted stories, since the AI service it names is never reached.
+   */
+  offlinePersistent: new Config({
+    runtime: {
+      client: {
+        storage: {
+          persistent: true,
+        },
+        edgeFeatures: {
+          feedReplicator: false,
+          subductionReplicator: false,
+          signaling: false,
+          agents: false,
+        },
+      },
+      services: {
+        ai: SERVICES_CONFIG.REMOTE.ai,
+      },
+    },
+  }),
 };
 
 type DecoratorsProps = Merge<
