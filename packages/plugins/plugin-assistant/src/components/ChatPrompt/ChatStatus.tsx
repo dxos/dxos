@@ -154,7 +154,7 @@ export const ChatStatusView = ({
                   <Icon icon='ph--alarm--regular' size='md' />
                   {formatWakeAt(alarm.wakeAt)}
                   {selfWakes > 0 && (
-                    <span data-testid='assistant.chat-status.self-wakes' className='text-description'>
+                    <span data-testid='assistant.chat-status.self-wakes' className='text-fg-muted'>
                       {selfWakes}/{Alarm.MAX_SELF_WAKES}
                     </span>
                   )}
