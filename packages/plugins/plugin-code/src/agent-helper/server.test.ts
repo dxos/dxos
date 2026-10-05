@@ -18,7 +18,7 @@ import type * as AgentSpec from './AgentSpec.ts';
 import { type AgentServer, serve } from './server.ts';
 
 const TOKEN = 'a'.repeat(48);
-const FAKE_AGENT = fileURLToPath(new URL('../agents/testing/fake-agent-stdio.ts', import.meta.url));
+const FAKE_AGENT = fileURLToPath(new URL('../agents/testing/fake-agent-subprocess.ts', import.meta.url));
 
 const agents: AgentSpec.AgentSpec[] = [
   { id: 'fake', entry: FAKE_AGENT, executable: { name: 'node', versionArgs: ['--version'] } },
