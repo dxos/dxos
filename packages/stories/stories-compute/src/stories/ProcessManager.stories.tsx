@@ -41,7 +41,6 @@ const meta: Meta<typeof ModuleContainer> = {
   args: {
     layout: [[StoryRole.Command, StoryRole.Logging], [StoryRole.Processes]],
     columns: '28rem_1fr',
-    rows: ['3fr_2fr'],
   },
 };
 
