@@ -177,9 +177,8 @@ export class EdgeSeededSpace implements TestPlan<EdgeSeededSpaceSpec, EdgeSeeded
         spaceId = (await seeder.brain.importSpace({ archivePath: spec.archivePath })).spaceId;
       } else {
         spaceId = (await seeder.brain.createSpace({ label: 'seeded-space' })).spaceId;
-        await seeder.brain.createDocuments({
+        await seeder.brain.createSeedDocuments({
           spaceId,
-          prefix: 'seed-',
           count: spec.syntheticDocuments,
           contentBytes: spec.syntheticContentBytes,
         });

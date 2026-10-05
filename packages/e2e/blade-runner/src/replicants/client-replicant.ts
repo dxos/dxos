@@ -54,6 +54,18 @@ export class EdgeStressDocument extends Type.makeObject<EdgeStressDocument>(
   }),
 ) {}
 
+/**
+ * Bulk filler for a seeded space: a type of its own, so queries over {@link EdgeStressDocument} — the
+ * probes a plan polls — never load the thousands of seed documents beside them.
+ */
+export class EdgeSeedDocument extends Type.makeObject<EdgeSeedDocument>(
+  DXN.make('org.dxos.type.bladeRunner.edgeSeedDocument', '0.1.0'),
+)(
+  Schema.Struct({
+    content: Schema.String,
+  }),
+) {}
+
 export type SyncSummary = {
   connected: boolean;
   missingOnLocal: number;
@@ -170,7 +182,7 @@ export class ClientReplicant {
 
     const client = new Client({ config: fullConfig, services });
     await client.initialize();
-    await client.addTypes([EdgeStressDocument]);
+    await client.addTypes([EdgeStressDocument, EdgeSeedDocument]);
 
     this.#services = services;
     this.#client = client;
@@ -439,23 +451,21 @@ export class ClientReplicant {
   // Documents.
   //
 
-  /** Bulk variant of {@link createDocument}: one flush for the whole batch, so a seed of thousands stays quick. */
+  /** Fill a space with {@link EdgeSeedDocument}s, one flush for the whole batch so a seed of thousands stays quick. */
   @trace.span()
-  async createDocuments({
+  async createSeedDocuments({
     spaceId,
-    prefix,
     count,
     contentBytes,
   }: {
     spaceId: string;
-    prefix: string;
     count: number;
     contentBytes: number;
   }): Promise<void> {
     const db = (await this.#getSpace(spaceId)).db;
     const content = 'x'.repeat(contentBytes);
     for (let index = 0; index < count; index++) {
-      db.add(Obj.make(EdgeStressDocument, { docId: `${prefix}${index}`, content, counters: [] }));
+      db.add(Obj.make(EdgeSeedDocument, { content }));
     }
     await db.flush();
   }
