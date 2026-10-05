@@ -5,8 +5,9 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { RegistryOperation } from '@dxos/plugin-registry/operations';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Operations from '@dxos/plugin-registry/Operations';
 import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -27,9 +28,9 @@ export type PluginPromptProps = {
  */
 export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_PROMPT_NAME);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const enabled = useAtomValue(manager.enabled);
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -49,7 +50,7 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
       // `invokePromise` turns a handler failure into `{ error }` rather than rejecting, and the
       // operation itself reports a plugin it could not enable in `rejected` — neither reaches a
       // `catch`, so both are read here.
-      const { data, error } = await invokePromise(RegistryOperation.EnablePlugins, { ids: [pluginId] });
+      const { data, error } = await invokePromise(Operations.RegistryOperation.EnablePlugins, { ids: [pluginId] });
       if (error || data?.rejected.some(({ id }) => id === pluginId)) {
         setFailed(true);
       } else {

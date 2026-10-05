@@ -4,10 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/hooks';
-import { useNode } from '@dxos/plugin-graph/hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as DeckHooks from '@dxos/plugin-deck/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Empty, ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 
@@ -22,18 +23,18 @@ const DRAWER_NAME = 'MobileDeckLayout.Drawer';
  */
 export const MobileDrawer = () => {
   const { t } = useTranslation(meta.profile.key);
-  const { graph } = useAppGraph();
-  const { state } = useDeckState();
+  const { graph } = Hooks.useAppGraph();
+  const { state } = DeckHooks.useDeckState();
   const { topId } = useMobileStack();
 
   const placeholder = useMemo(() => <Loading />, []);
 
   // Companions of the visible panel; the drawer shows the one the complementary sidebar selects.
-  const companions = useCompanions(topId) ?? [];
-  const { companionId, variant } = useSelectedCompanion(companions, state.complementarySidebarPanel);
+  const companions = DeckHooks.useCompanions(topId) ?? [];
+  const { companionId, variant } = DeckHooks.useSelectedCompanion(companions, state.complementarySidebarPanel);
 
-  const node = useNode(graph, companionId);
-  const parentNode = useNode(graph, topId);
+  const node = GraphHooks.useNode(graph, companionId);
+  const parentNode = GraphHooks.useNode(graph, topId);
 
   const data = useMemo<AppSurface.ArticleData | undefined>(() => {
     if (!node || !companionId) {

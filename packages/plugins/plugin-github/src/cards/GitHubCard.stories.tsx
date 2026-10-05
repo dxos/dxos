@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ObjectCard } from '@dxos/app-toolkit/ui';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Obj } from '@dxos/echo';
 import { Block, Button } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

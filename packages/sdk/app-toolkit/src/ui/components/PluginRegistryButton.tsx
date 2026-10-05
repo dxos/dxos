@@ -4,7 +4,7 @@
 
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -26,7 +26,7 @@ export type PluginRegistryButtonProps = Pick<
 export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistryButtonProps>(
   ({ onClick, ...props }, forwardedRef) => {
     const { t } = useTranslation(osTranslations);
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = Hooks.useOperationInvoker();
     const available = usePluginRegistryAvailable();
     if (!available) {
       return null;

@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Option from 'effect/Option';
 import { useContext, useEffect, useState } from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 
@@ -20,7 +20,7 @@ export type Breadcrumb = { id: string; label: string };
  * matching {@link useCompanions}.
  */
 export const useBreadcrumbs = (ids: string[]): Breadcrumb[] => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const registry = useContext(RegistryContext);
   const { t } = useTranslation(meta.profile.key);
   const [crumbs, setCrumbs] = useState<Breadcrumb[]>([]);
@@ -65,7 +65,7 @@ export const ancestorPaths = (id: string): string[] => {
  * navtree's section and type groups above that object are left out, since every node under them shares them.
  */
 export const useAncestorBreadcrumbs = (id: string | undefined): Breadcrumb[] => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const registry = useContext(RegistryContext);
   const [ids, setIds] = useState<string[]>([]);
 

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Dialog } from '@dxos/react-ui';
 
 import { translations } from '#translations';
@@ -26,7 +26,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withPluginManager({
-      plugins: [...corePlugins(), ClientPlugin.make({})],
+      plugins: [...CorePlugins.make(), ClientPlugin.make({})],
     }),
   ],
   parameters: {

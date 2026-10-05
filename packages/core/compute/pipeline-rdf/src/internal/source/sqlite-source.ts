@@ -9,7 +9,7 @@ import type * as SqlError from 'effect/sql/SqlError';
 import type * as Statement from 'effect/sql/Statement';
 import { DataFactory, type Quad, type Term as RdfTerm } from 'n3';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 const { namedNode, literal, quad, defaultGraph } = DataFactory;
 

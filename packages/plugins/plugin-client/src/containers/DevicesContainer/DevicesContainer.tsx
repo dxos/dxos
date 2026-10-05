@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Identity, type Invitation } from '@dxos/halo';
 import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
@@ -28,7 +28,7 @@ export type DevicesContainerProps = Pick<ClientOptions.ClientPluginOptions, 'ide
 
 export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: DevicesContainerProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();
 
@@ -120,7 +120,7 @@ const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUr
   // `client.config` only — the network status above keeps this container on the client regardless
   // (Missing API 9). The gate matters: an invitation code in a production console is a live secret.
   const client = useClient();
-  const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
+  const [identityService] = Hooks.useCapabilities(ClientCapabilities.IdentityService);
   const [flow, setFlow] = useState<Invitation.Flow>();
   // Latched before the share resolves, so a second click cannot open a second live invitation.
   const [pending, setPending] = useState(false);

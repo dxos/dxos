@@ -4,8 +4,8 @@
 
 import React, { useLayoutEffect, useState } from 'react';
 
-import { useDeckState } from '@dxos/plugin-deck/hooks';
-import { Dialog, PopoverContent, PopoverRoot, Toaster, type ToasterProps } from '@dxos/plugin-deck/overlays';
+import * as Hooks from '@dxos/plugin-deck/Hooks';
+import * as Overlays from '@dxos/plugin-deck/Overlays';
 import { Splitter, type SplitterMode } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 
@@ -16,13 +16,13 @@ import { MobileMain } from './MobileMain.tsx';
 
 const MOBILE_DECK_LAYOUT_NAME = 'MobileDeckLayout';
 
-export type MobileDeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
+export type MobileDeckLayoutProps = Pick<Overlays.ToasterProps, 'onDismissToast'>;
 
 /**
  * Mobile root layout: a navigation stack of the deck's active panels over a companion drawer.
  */
 export const MobileDeckLayout = ({ onDismissToast }: MobileDeckLayoutProps) => {
-  const { state } = useDeckState();
+  const { state } = Hooks.useDeckState();
   const { toasts } = state;
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [splitterMode, setSplitterMode] = useState<SplitterMode>('start');
@@ -38,7 +38,7 @@ export const MobileDeckLayout = ({ onDismissToast }: MobileDeckLayoutProps) => {
 
   return (
     <DebugOverlay.Root enabled={false}>
-      <PopoverRoot>
+      <Overlays.PopoverRoot>
         <Dnd.Root>
           <MobileLayout.Root
             classNames='dx-expand overflow-hidden grid relative dx-toolbar-surface'
@@ -53,13 +53,13 @@ export const MobileDeckLayout = ({ onDismissToast }: MobileDeckLayoutProps) => {
                   <MobileDrawer />
                 </Splitter.Panel>
               </Splitter.Root>
-              <Dialog />
-              <PopoverContent />
-              <Toaster toasts={toasts} onDismissToast={onDismissToast} />
+              <Overlays.Dialog />
+              <Overlays.PopoverContent />
+              <Overlays.Toaster toasts={toasts} onDismissToast={onDismissToast} />
             </MobileLayout.Panel>
           </MobileLayout.Root>
         </Dnd.Root>
-      </PopoverRoot>
+      </Overlays.PopoverRoot>
     </DebugOverlay.Root>
   );
 };

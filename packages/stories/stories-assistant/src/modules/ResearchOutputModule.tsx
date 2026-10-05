@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
@@ -13,7 +14,7 @@ import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { ResearchInputQueue } from '../testing/schema.ts';
 
 export const ResearchOutputModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }

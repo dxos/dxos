@@ -5,7 +5,7 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import { Config } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
 import { DXOS_VERSION } from '../../version.ts';

@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 import React, { useEffect, useRef, useState } from 'react';
 
 import * as Process from '@dxos/compute/Process';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { Block, Card, Icon } from '@dxos/react-ui';
 

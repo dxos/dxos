@@ -3,5 +3,4 @@
 //
 
 export * as SpotlightPlugin from './SpotlightPlugin.ts';
-export * from '#meta';
 export * from '#types';

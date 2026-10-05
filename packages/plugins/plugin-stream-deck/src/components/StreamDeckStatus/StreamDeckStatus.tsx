@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

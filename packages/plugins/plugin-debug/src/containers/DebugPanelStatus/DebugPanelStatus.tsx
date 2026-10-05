@@ -4,9 +4,9 @@
 
 import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
 import { Button, FloatingPanel, type FloatingPanelPoint, type FloatingPanelSize, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
@@ -45,7 +45,7 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const { position, size = DEFAULT_SIZE, mode = 'docked' } = useViewState(debugPanelAspect, DEBUG_PANEL_CONTEXT);
   const { update } = useViewStateActions(debugPanelAspect, DEBUG_PANEL_CONTEXT);

@@ -5,9 +5,9 @@
 import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
-import { useAtomCapabilityState, useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type AiContext } from '@dxos/assistant';
-import type * as ChatModule from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
 import * as McpServer from '@dxos/compute/McpServer';
 import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -53,7 +53,7 @@ const styles = {
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
   db: Database.Database;
-  chat?: ChatModule.Chat;
+  chat?: Chat.Chat;
   context?: AiContext.Binder;
   registry?: Registry.Registry;
 };
@@ -211,7 +211,7 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
 const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   const { t } = useTranslation(meta.profile.key);
   const [remote, setRemote] = useObject(chat, 'remote');
-  const client = useOptionalCapability(ClientCapabilities.Client);
+  const client = Hooks.useOptionalCapability(ClientCapabilities.Client);
   // Offered only where an edge service is configured, which is the same condition that decides
   // whether `RemoteProcessManager` is the real manager or `layerNoop`: against the noop a spawn has
   // no `list` or `spawn`, so choosing `remote` would persist a flag the next prompt cannot honour.
@@ -289,8 +289,8 @@ const ModelsPanel = ({
  */
 const OnlineSwitch = () => {
   const { t } = useTranslation(meta.profile.key);
-  const [settings, setSettings] = useAtomCapabilityState(AssistantCapabilities.Settings);
-  const hasBuiltIn = useOptionalCapability(AssistantCapabilities.OllamaManager) !== undefined;
+  const [settings, setSettings] = Hooks.useAtomCapabilityState(AssistantCapabilities.Settings);
+  const hasBuiltIn = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager) !== undefined;
   const online = resolveProvider(settings.modelProvider, hasBuiltIn) === Provider.edge.id;
 
   const handleChange = useCallback(

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 

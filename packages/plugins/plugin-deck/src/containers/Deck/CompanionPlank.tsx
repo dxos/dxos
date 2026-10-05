@@ -4,10 +4,10 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { useNode } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 
@@ -35,12 +35,12 @@ export type CompanionPlankProps = ThemedClassName<{
  * the tab strip is empty and {@link Companion} says so rather than the pane collapsing.
  */
 export const CompanionPlank = ({ id, fullscreen, classNames }: CompanionPlankProps) => {
-  const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const companion = Attention.isLinkedSegment(id);
   const contextId = (companion ? Attention.getParentId(id) : undefined) ?? id;
-  const contextNode = useNode(graph, contextId);
+  const contextNode = GraphHooks.useNode(graph, contextId);
   const companions = useCompanions(contextId);
 
   const onValueChange = useCallback(

@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
 

@@ -11,7 +11,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Blob, Database, Filter, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
 import { Progress, ThemeProvider, defaultTx } from '@dxos/react-ui';
 import { File } from '@dxos/types';

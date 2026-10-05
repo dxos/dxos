@@ -11,9 +11,10 @@ import React, {
   useMemo,
 } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import { useComposedRefs } from '@dxos/react-hooks';
 import {
   Breadcrumb,
@@ -54,8 +55,8 @@ export type PlankProps = ThemedClassName<{
   /** Attendable id; defaults to the node id. */
   attendableId?: string;
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
-  actions?: AttentionSigilAction[][];
-  onAction?: (action: AttentionSigilAction) => void;
+  actions?: AttentionSigil.Action[][];
+  onAction?: (action: AttentionSigil.Action) => void;
   /** Navigation-history trail rendered before the title (flat mode); clicking one goes back to it. */
   breadcrumbs?: { id: string; label: string }[];
   onSelectBreadcrumb?: (id: string) => void;
@@ -142,7 +143,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
           <Pane.Toolbar>
             <ActionRoot>
               {actions && actions.length > 0 ? (
-                <AttentionSigil
+                <AttentionSigil.Root
                   icon={icon}
                   related={related}
                   attendableId={attendableId}
@@ -151,7 +152,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                   triggerLabel={label}
                 >
                   {sigilFooter}
-                </AttentionSigil>
+                </AttentionSigil.Root>
               ) : (
                 <Pane.Sigil
                   attendableId={attendableId}

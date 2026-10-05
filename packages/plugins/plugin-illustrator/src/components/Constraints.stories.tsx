@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Appeal, Diagnostics, Dsl, type Scene, type Semantic, SemanticEngine, UmlGrid } from '@dxos/diagram';
 import { diagram as diagramLanguage } from '@dxos/diagram/extension';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Grid, ScrollArea, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

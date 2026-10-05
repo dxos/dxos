@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { IndexKind_Kind } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -55,7 +55,7 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
   withLayout({ layout: 'column' }),
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       StorybookPlugin.make({}),
       ClientPlugin.make({
         types: [TestItem, Person.Person, Organization.Organization],

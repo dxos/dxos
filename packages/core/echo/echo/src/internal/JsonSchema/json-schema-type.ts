@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 import { type Mutable } from '../common/proxy/index.ts';
 import { EntityKindSchema } from '../common/types/index.ts';

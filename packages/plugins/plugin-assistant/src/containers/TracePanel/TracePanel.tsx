@@ -9,10 +9,10 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapabilityState, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import { Annotation, Filter } from '@dxos/echo';
@@ -40,8 +40,8 @@ export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<NaturalTracePane
 export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
   ({ space, attendableId, onProcessTerminate, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes(attendableId);
-    const { invokePromise } = useOperationInvoker();
-    const [settings, updateSettings] = useAtomCapabilityState(AssistantCapabilities.Settings);
+    const { invokePromise } = Hooks.useOperationInvoker();
+    const [settings, updateSettings] = Hooks.useAtomCapabilityState(AssistantCapabilities.Settings);
     const environments = useMemo(
       () => parseProcessEnvironments(settings.traceProcessEnvironments),
       [settings.traceProcessEnvironments],
@@ -57,7 +57,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const selectedPids = useSelection(attendableId, 'multi');
     const { multi: setSelected } = useSelectionActions(attendableId);
 
-    const monitor = useCapability(Capabilities.ProcessManager);
+    const monitor = Hooks.useCapability(Capabilities.ProcessManager);
     const processesAtom = useMemo(
       () => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty,
       [monitor],

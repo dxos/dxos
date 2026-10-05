@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React, { type RefObject, forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Flex, Icon, Link, useTranslation } from '@dxos/react-ui';
 

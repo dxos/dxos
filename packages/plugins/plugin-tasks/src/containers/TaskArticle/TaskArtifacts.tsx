@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { CardMasonry } from '@dxos/plugin-space/components';
+import * as CardMasonry from '@dxos/plugin-space/CardMasonry';
 import { Container, Typography, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 
@@ -35,7 +35,7 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
         <Typography asChild tone='subtle' classNames='dx-label py-0'>
           <h2>{t('task-artifacts.label')}</h2>
         </Typography>
-        <CardMasonry objects={artifacts} size='compact' inline />
+        <CardMasonry.CardMasonry objects={artifacts} size='compact' inline />
       </section>
     </Container>
   );

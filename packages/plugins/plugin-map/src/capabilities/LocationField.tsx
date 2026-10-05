@@ -4,8 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { type Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as Surface from '@dxos/app-framework/Surface';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Database, JsonSchema, Obj, URI } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';

@@ -21,19 +21,19 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import { PromptError } from '../errors.ts';
+import * as AgentOperation from '../types/AgentOperation.ts';
 import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool.ts';
-import { RunInstructions } from './definitions.ts';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
 
-export default RunInstructions.pipe(
+export default AgentOperation.RunInstructions.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* (data) {

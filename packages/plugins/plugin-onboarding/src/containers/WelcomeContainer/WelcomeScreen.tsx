@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Account from '@dxos/app-toolkit/Account';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { createDidFromIdentityKey } from '@dxos/credentials';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client';
+import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { useClient } from '@dxos/react-client';
@@ -50,7 +50,7 @@ const emailLoginEnabled = !passkeyOnly && (!isTauri() || NATIVE_EMAIL_LOGIN_ENAB
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
   const identity = useIdentity();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
   const [error, setError] = useState<WelcomeError | null>(null);
   const pendingRef = useRef(false);

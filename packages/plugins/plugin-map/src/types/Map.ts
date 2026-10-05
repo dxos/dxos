@@ -9,20 +9,19 @@ import * as Schema from 'effect/Schema';
 // namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Annotation, DXN, Format, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { ViewAnnotation } from '@dxos/schema';
 
 export class Map extends Type.makeObject<Map>(DXN.make('org.dxos.type.map', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
-    center: Format.GeoPoint.pipe(FormInputAnnotation.set(false), Schema.optional),
-    zoom: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
+    view: Ref.Ref(View.View).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    center: Format.GeoPoint.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    zoom: Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     // TODO(wittjosiah): Use GeoJSON format for rendering arbitrary data on the map.
     //   e.g., points, lines, polygons, etc.
-    coordinates: Schema.Array(Format.GeoPoint).pipe(FormInputAnnotation.set(false), Schema.optional),
+    coordinates: Schema.Array(Format.GeoPoint).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     ViewAnnotation.set(['view']),
     Annotation.IconAnnotation.set({ icon: 'ph--compass--regular', hue: 'green' }),
     Annotation.UserType.set(),

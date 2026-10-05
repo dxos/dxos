@@ -9,12 +9,12 @@ import { expect, within } from 'storybook/test';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -75,7 +75,7 @@ const DefaultStory = () => {
 const meta: Meta = {
   title: 'plugins/plugin-deck/components/Plank',
   decorators: [
-    withPluginManager({ plugins: [...corePlugins(), TestPlugin()], capabilities: [TestExtension] }),
+    withPluginManager({ plugins: [...CorePlugins.make(), TestPlugin()], capabilities: [TestExtension] }),
     withAttention(),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),

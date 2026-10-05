@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Project from '@dxos/compute/Project';
 import { log } from '@dxos/log';
 import { Button, Flex, useTranslation } from '@dxos/react-ui';
@@ -23,9 +23,9 @@ export type ProjectFolderProps = { project: Project.Project };
  */
 export const ProjectFolder = ({ project }: ProjectFolderProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const registry = useCapability(Capabilities.AtomRegistry);
-  const stateAtom = useCapability(CodeCapabilities.State);
-  const folder = useAtomCapability(CodeCapabilities.State).repositories?.[project.id];
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const stateAtom = Hooks.useCapability(CodeCapabilities.State);
+  const folder = Hooks.useAtomCapability(CodeCapabilities.State).repositories?.[project.id];
 
   const setFolder = useCallback(
     (folder: string | undefined) =>

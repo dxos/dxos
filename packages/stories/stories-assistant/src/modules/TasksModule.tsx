@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -20,7 +20,7 @@ import {
 } from '@dxos/ui-editor';
 
 export const TasksModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }

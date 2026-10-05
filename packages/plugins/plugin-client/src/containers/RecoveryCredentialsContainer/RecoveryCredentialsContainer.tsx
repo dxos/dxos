@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
@@ -33,7 +33,7 @@ const KIND_ICONS: Record<Identity.RecoveryKind, string> = {
 
 export const RecoveryCredentialsContainer = () => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const credentials = useCredentials();
   const recoveryCredentials = credentials.filter(
     (credential) => credential.type === 'dxos.halo.credentials.IdentityRecovery',

@@ -4,8 +4,9 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
@@ -26,7 +27,7 @@ export type CodeSettingsProps = AppSurface.SettingsData;
  */
 export const CodeSettings = ({ subject }: CodeSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const spaces = useSpaces();
   const space = spaces[0];
   const tokens = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: SERVICE }));
@@ -69,7 +70,7 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
         <Form.Content>
           <Form.FieldSet
             label={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={meta.profile.key} />}
+            actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Field label={t('api-key.label')}>
               <PasswordInput

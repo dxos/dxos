@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Card, Flex, Tag, type TagHue, useTranslation } from '@dxos/react-ui';
 import { type Issue, type PullRequest, type Repo } from '@dxos/types';
 

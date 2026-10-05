@@ -5,7 +5,7 @@
 import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { useCallback, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Context } from '@dxos/context';
 import { Button, Flex, Icon, SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -18,7 +18,7 @@ import { useHubHttpClient } from '../../hooks/index.ts';
 
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.profile.key);
-  const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);
+  const accountCacheAtom = Hooks.useCapability(ClientCapabilities.AccountCache);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
   const [pending, setPending] = useState(false);

@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -73,9 +73,9 @@ const importFailureKey = (error: unknown): string => {
  */
 export const ImportPullRequestDialog = () => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const openObject = useOpenObject();
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
 
   const handleCancel = useCallback(async () => {
     await invokePromise(LayoutOperation.UpdateDialog, { state: false });

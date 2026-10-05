@@ -26,7 +26,7 @@ import React, {
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import * as Hooks from '@dxos/plugin-graph/Hooks';
 import {
   Button,
   DropIndicator,
@@ -89,7 +89,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
   const { onSelect, onTabChange } = useNavTreeContext();
   const { getItem } = useNavTreeState();
   const [isLg] = useMediaQuery('lg');
-  const runAction = useActionRunner();
+  const runAction = Hooks.useActionRunner();
 
   return useCallback(
     (event: MouseEvent) => {
@@ -306,7 +306,7 @@ export const L0Menu = ({
   onItemHover,
 }: L0MenuProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const runAction = useActionRunner();
+  const runAction = Hooks.useActionRunner();
   const handleAction = useCallback(
     (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps) => {
       void runAction(action, params);

@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Block, Card, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
@@ -21,7 +21,7 @@ export type InstrumentArticleProps = AppSurface.ObjectArticleProps<Ibkr.Instrume
 /** Article surface for an Instrument: static header, TradingView chart, SEC EDGAR fundamentals via op. */
 export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [instrument] = useObject(subject);
   const tradingViewSymbol = useMemo(() => resolveTradingViewSymbol(instrument), [instrument]);
   const [fundamentals, setFundamentals] = useState<Ibkr.FundamentalsSnapshot>();

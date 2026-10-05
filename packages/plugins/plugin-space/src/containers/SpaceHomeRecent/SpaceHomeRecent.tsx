@@ -4,9 +4,10 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { HomeSection, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as HomeSection from '@dxos/app-toolkit/HomeSection';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
@@ -35,7 +36,7 @@ type SpaceScopedProps = {
 export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   const { t } = useTranslation(meta.profile.key);
 
-  const schemas = useCapabilities(AppCapabilities.Schema);
+  const schemas = Hooks.useCapabilities(AppCapabilities.Schema);
   const filter = useMemo(() => {
     const collectionTypename = Type.getTypename(Collection.Collection);
     const types = schemas
@@ -72,7 +73,7 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
 };
 
 const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
   const label = toLocalizedString(

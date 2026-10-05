@@ -9,7 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore } from '@dxos/feed';
 import { type DataSourceCursor } from '@dxos/index-core';
 import { EntityId, SpaceId } from '@dxos/keys';

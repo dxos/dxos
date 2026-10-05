@@ -5,7 +5,7 @@
 import { Octokit } from '@octokit/core';
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj } from '@dxos/echo';
@@ -23,7 +23,7 @@ export type FunctionPublishingProps = { object: Script.Script };
 // TODO(burdon): Move to separate tab?
 export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(object);
 
   const [githubToken] = useQuery(db, Filter.type(AccessToken.AccessToken, { source: 'github.com' }));

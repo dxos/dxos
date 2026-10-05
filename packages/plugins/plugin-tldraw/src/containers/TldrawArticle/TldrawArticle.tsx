@@ -4,11 +4,12 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { useActions } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { Flex, Panel, composable, composableProps } from '@dxos/react-ui';
@@ -31,7 +32,7 @@ export const TldrawArticle = ({
   onActivate,
 }: TldrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
-  const [settings, updateSettings] = useAtomCapabilityState(TldrawCapabilities.Settings);
+  const [settings, updateSettings] = Hooks.useAtomCapabilityState(TldrawCapabilities.Settings);
   const id = Obj.getURI(drawing as Obj.Any);
   const { hasAttention } = useAttention(attendableId);
   const section = role === AppSurface.Section.role;
@@ -42,8 +43,8 @@ export const TldrawArticle = ({
   };
 
   // TODO(wittjosiah): Genericize tldraw toolbar actions w/ graph.
-  const { graph } = useAppGraph();
-  const actions = useActions(graph, id);
+  const { graph } = ToolkitHooks.useAppGraph();
+  const actions = GraphHooks.useActions(graph, id);
   const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
   const content = (

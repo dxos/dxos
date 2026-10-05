@@ -4,8 +4,11 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardMenuSlot, ObjectCard, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as CardSlot from '@dxos/app-toolkit/CardSlot';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import {
   Block,
   Button,
@@ -114,7 +117,7 @@ export const PopoverContent = () => {
   // The popover is portaled; resolve the origin plank from the anchor element it was opened from.
   const pivotId =
     state.popoverAnchor instanceof Element ? Attention.getRootAttendableId(state.popoverAnchor) : undefined;
-  const objectMenuItems = useObjectMenuItems(popoverSubject, pivotId);
+  const objectMenuItems = Hooks.useObjectMenuItems(popoverSubject, pivotId);
   const menu = useMenuActions();
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
@@ -165,7 +168,7 @@ export const PopoverContent = () => {
             menu={
               // TODO(wittjosiah): Reconcile with Card.Menu.
               <Block rail='end'>
-                {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
+                {popoverSubject !== undefined && <CardSlot.MenuSlot subject={popoverSubject} menu={menu} />}
                 <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
                   <Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
                 </ActionMenu>

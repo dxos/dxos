@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { useLayout } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import {
   Button,
   Carousel,
@@ -140,7 +140,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   ) => {
     const { t } = useTranslation(meta.profile.key);
     const themeMode = useThemeMode();
-    const layout = useLayout();
+    const layout = Hooks.useLayout();
     // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
     // 4rem floor on both left it with less width for the center content than the gutters themselves.
     const isMobile = layout.mode === 'mobile';

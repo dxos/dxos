@@ -37,7 +37,7 @@ import {
   Score,
   View,
 } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
 import { IMAGE_NOTE, type Judge, decisionModel, isJudge, seesImages } from './judges.ts';

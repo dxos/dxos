@@ -4,8 +4,9 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -28,7 +29,7 @@ export type CrxSettingsProps = AppSurface.SettingsData<{ readonly?: boolean }>;
  */
 export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const [test, setTest] = useState<TestState>({ kind: 'idle' });
 
   // Round-trip a ping to the extension and report its identity (or why it failed).
@@ -58,7 +59,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
           <Form.FieldSet
             label={meta.profile.name ?? meta.profile.key}
             description={t('settings.description')}
-            actions={readonly ? undefined : <SettingsScope prefix={subject.prefix} />}
+            actions={readonly ? undefined : <SettingsScope.Root prefix={subject.prefix} />}
           >
             <Form.Fields />
           </Form.FieldSet>

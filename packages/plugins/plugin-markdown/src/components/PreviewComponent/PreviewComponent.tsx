@@ -5,10 +5,11 @@
 import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { Surface, useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
@@ -94,7 +95,7 @@ export const PreviewComponent = ({
   // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
   // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
   // first document render. The invoker is only the open-click fallback; absence is tolerable.
-  const invoker = useOptionalCapability(Capabilities.OperationInvoker);
+  const invoker = Hooks.useOptionalCapability(Capabilities.OperationInvoker);
   const invokePromise = invoker?.invokePromise;
 
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).

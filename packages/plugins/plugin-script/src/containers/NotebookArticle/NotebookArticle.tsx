@@ -9,9 +9,9 @@ import * as Exit from 'effect/Exit';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -90,7 +90,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
   }, [db, notebook, graph]);
 
   const [promptResults, setPromptResults] = useState<Record<string, string>>({});
-  const handleExecPrompts = useSpaceCallback(
+  const handleExecPrompts = Hooks.useSpaceCallback(
     db?.spaceId,
     [] as const,
     Effect.fnUntraced(function* () {
@@ -217,9 +217,9 @@ const runPrompt = Effect.fn(function* ({
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: Operation.Definition.Input<typeof RunInstructions> = { instructions, input };
+  const inputData: Operation.Definition.Input<typeof AgentOperation.RunInstructions> = { instructions, input };
   // Invoke the function.
-  const result = yield* Operation.invoke(RunInstructions, inputData).pipe(Effect.orDie, Effect.exit);
+  const result = yield* Operation.invoke(AgentOperation.RunInstructions, inputData).pipe(Effect.orDie, Effect.exit);
 
   Exit.match(result, {
     onFailure: (cause) => {

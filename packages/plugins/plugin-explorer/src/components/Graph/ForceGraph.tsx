@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { SelectionModel } from '@dxos/graph';
+import * as SelectionModel from '@dxos/graph/SelectionModel';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
   type GraphController,
@@ -26,7 +26,7 @@ const EMPTY_ATOM = Atom.make<{ nodes: SpaceGraphNode[]; edges: SpaceGraphEdge[] 
 export type ForceGraphProps = {
   model?: SpaceGraphModel;
   grid?: boolean;
-  selection?: SelectionModel;
+  selection?: SelectionModel.SelectionModel;
   onInspect?: GraphProps<SpaceGraphNode, SpaceGraphEdge>['onInspect'];
 } & Pick<GraphProps, 'drag'>;
 
@@ -36,7 +36,7 @@ export const ForceGraph = composable<HTMLDivElement, ForceGraphProps>(
     useAtomValue(model?.graphAtom ?? EMPTY_ATOM);
 
     const graph = useRef<GraphController>(null);
-    const selection = useMemo(() => selectionProp ?? new SelectionModel(), [selectionProp]);
+    const selection = useMemo(() => selectionProp ?? new SelectionModel.SelectionModel(), [selectionProp]);
     useEffect(() => {
       const unsubscribe = selection.subscribe(() => graph.current?.repaint());
       return unsubscribe;

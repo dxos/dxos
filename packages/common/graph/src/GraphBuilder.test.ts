@@ -9,7 +9,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as fc from 'fast-check';
 import { describe, expect, test, vi } from 'vitest';
 
-import { AtomEx } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { LogLevel, type LogProcessor, log } from '@dxos/log';
 
 import * as GraphBuilder from './GraphBuilder.ts';

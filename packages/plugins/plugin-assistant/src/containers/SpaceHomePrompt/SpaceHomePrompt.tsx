@@ -5,9 +5,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import type * as ChatType from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -32,16 +32,16 @@ type SpaceScopedProps = {
  */
 export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const registry = useRegistry();
-  const atomRegistry = useCapability(Capabilities.AtomRegistry);
-  const stateAtom = useCapability(AssistantCapabilities.State);
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
   const runtime = useChatServices({ id: space?.id });
-  const settings = useAtomCapability(AssistantCapabilities.Settings);
+  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
 
   // In-memory backing chat (not yet added to the space). `nonce` forces a fresh chat after submit.
-  const [chat, setChat] = useState<ChatType.Chat>();
+  const [chat, setChat] = useState<Chat.Chat>();
   const [nonce, setNonce] = useState(0);
   const { preset, ...presetProps } = usePresets(settings, chat);
   useEffect(() => {

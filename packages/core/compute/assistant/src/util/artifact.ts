@@ -8,7 +8,7 @@ import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { Database, type Error as EchoError, Obj, Ref, type Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 

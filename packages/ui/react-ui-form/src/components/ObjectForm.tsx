@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { type Database, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import { composable } from '@dxos/react-ui';
 import { FactoryAnnotation } from '@dxos/schema';

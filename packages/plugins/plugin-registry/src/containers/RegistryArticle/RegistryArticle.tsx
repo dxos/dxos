@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { usePluginManager } from '@dxos/app-framework/ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { composable } from '@dxos/react-ui';
 
 import { BaseRegistryArticle } from '../BaseRegistryArticle/index.ts';
@@ -26,7 +26,7 @@ export type RegistryArticleProps = {
 
 export const RegistryArticle = composable<HTMLDivElement, RegistryArticleProps>(
   ({ id, plugins: pluginsProp, extraTagsById, ...props }, forwardedRef) => {
-    const manager = usePluginManager();
+    const manager = PluginManagerProvider.usePluginManager();
     const failed = useAtomValue(manager.failed);
     const plugins = useMemo(() => [...pluginsProp].sort(sortByPluginMeta), [pluginsProp]);
     const failuresById = useMemo(

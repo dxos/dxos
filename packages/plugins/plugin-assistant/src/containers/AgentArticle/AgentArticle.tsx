@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Agent from '@dxos/assistant/Agent';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { InstructionsEditor } from '@dxos/plugin-routine/components';
+import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
 import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -30,7 +30,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
 
   const spaceId = db?.spaceId;
-  const resetHistory = useSpaceCallback(
+  const resetHistory = Hooks.useSpaceCallback(
     spaceId,
     [Database.Service],
     Effect.fnUntraced(function* () {
@@ -56,7 +56,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='dx-document'>
-        {instructions && <InstructionsEditor db={db} instructions={instructions} />}
+        {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
       </Panel.Body>
     </Panel.Root>
   );

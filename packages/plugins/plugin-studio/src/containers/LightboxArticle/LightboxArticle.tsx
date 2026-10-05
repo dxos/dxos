@@ -6,8 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -66,7 +67,7 @@ export type LightboxArticleProps = AppSurface.ObjectArticleProps<Lightbox.Lightb
  */
 export const LightboxArticle = ({ role, subject: lightbox, attendableId }: LightboxArticleProps) => {
   const { hasAttention } = useAttention(attendableId);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const [items] = useObject(lightbox, 'items');
   const itemsAtom = useMemo(

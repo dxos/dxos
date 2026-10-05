@@ -9,7 +9,8 @@ import React, { type ReactNode, useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';

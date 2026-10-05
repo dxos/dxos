@@ -7,15 +7,15 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, screen, waitFor, within } from 'storybook/test';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { SchemaEx } from '@dxos/effect';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { Dialog } from '@dxos/react-ui';
@@ -90,7 +90,7 @@ const meta = {
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [ProcessManagerPlugin(), ClientPlugin.make({}), TemplatesPlugin()],
+      plugins: [ProcessManagerPlugin.make(), ClientPlugin.make({}), TemplatesPlugin()],
     }),
   ],
   tags: ['test'],

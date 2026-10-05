@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
@@ -16,7 +16,7 @@ import { SpaceOperation } from '#types';
 
 export const ImportSpaceDialog = () => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const [importing, setImporting] = useState<string>();
 

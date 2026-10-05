@@ -6,8 +6,8 @@ import { type Observer } from '@babylonjs/core/Misc/observable';
 import { type Scene } from '@babylonjs/core/scene';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Panel, Select, Tabs, useTranslation } from '@dxos/react-ui';
@@ -106,7 +106,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   // The plugin owns the cache so it survives this article's remounts (resize, companion, navigation);
   // rendered without a plugin manager (stories, tests) the mount owns a private one instead.
   const fallbackCache = useMemo(() => new PlanetCache(), []);
-  const planetCache = useOptionalCapability(TerraCapabilities.PlanetCache) ?? fallbackCache;
+  const planetCache = Hooks.useOptionalCapability(TerraCapabilities.PlanetCache) ?? fallbackCache;
   const [isPlaying, setIsPlaying] = useState(true);
   const [gizmosVisible, setGizmosVisible] = useState(false);
   const [view, setView] = useState<ViewMode>('scene');

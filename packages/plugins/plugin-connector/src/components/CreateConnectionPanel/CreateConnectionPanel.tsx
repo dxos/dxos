@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { useTranslation } from '@dxos/react-ui';
@@ -44,7 +44,7 @@ export const CreateConnectionPanel = ({
   connectors: connectorsProp,
 }: CreateConnectionPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const capabilityConnectors = useCapabilities(Connector).flat();
+  const capabilityConnectors = Hooks.useCapabilities(Connector).flat();
   const connectors = connectorsProp ?? capabilityConnectors;
   const [connectorId, setConnectorId] = useState<string>();
   const [error, setError] = useState<string>();

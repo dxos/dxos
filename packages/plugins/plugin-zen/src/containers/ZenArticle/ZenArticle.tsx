@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Flex, Panel } from '@dxos/react-ui';
 import { Oscilloscope } from '@dxos/react-ui-audio';
 

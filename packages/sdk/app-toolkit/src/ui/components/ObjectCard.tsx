@@ -19,7 +19,7 @@ const DEFAULT_ICON = 'ph--circle-dashed--regular';
 type ObjectCardRootProps = Omit<CardRootProps, 'classNames' | 'grid'>;
 
 /** A grid `Card.Root`, so an object card's header and rows share the card's rails. */
-const ObjectCardRoot = composable<HTMLDivElement, ObjectCardRootProps>((props, forwardedRef) => (
+export const ObjectCardRoot = composable<HTMLDivElement, ObjectCardRootProps>((props, forwardedRef) => (
   <Card.Root {...props} grid ref={forwardedRef} />
 ));
 
@@ -43,7 +43,7 @@ type ObjectCardHeaderProps = {
 };
 
 /** The object's icon (overridable by a `CardIcon` contribution), its title, and an optional menu. */
-const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps>(
+export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps>(
   ({ subject, icon: iconProp, children, lines, menu }, forwardedRef) => {
     const entity = Entity.isEntity(subject) ? subject : undefined;
     const iconAnnotation = entity && Entity.getIcon(entity);

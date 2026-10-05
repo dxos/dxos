@@ -12,7 +12,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';

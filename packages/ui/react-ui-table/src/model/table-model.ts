@@ -8,7 +8,7 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import * as JsonSchema from '@dxos/echo/JsonSchema';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { type Label } from '@dxos/react-ui';

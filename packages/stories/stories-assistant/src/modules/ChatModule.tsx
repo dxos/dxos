@@ -4,19 +4,19 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import * as ChatSchema from '@dxos/assistant/Chat';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Filter } from '@dxos/echo';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
-import { Chat } from '@dxos/plugin-assistant/components';
-import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
+import * as Chat from '@dxos/plugin-assistant/Chat';
+import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { Button, Panel, Popover, Toolbar } from '@dxos/react-ui';
 import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
 
 export const ChatModule = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -24,23 +24,23 @@ export const ChatModule = () => {
 };
 
 const ChatModuleContainer = ({ space }: { space: Space }) => {
-  const chats = useQuery(space.db, Filter.type(ChatSchema.Chat));
+  const chats = useQuery(space.db, Filter.type(AssistantChat.Chat));
   // The newest chat until the reader picks another; a template switch drops the id and lands on the
   // new space's own chat.
   const [selected, setSelected] = useState<string>();
   const chat = chats.find(({ id }) => id === selected) ?? chats.at(-1);
 
   // The picker edits the chat's own model, so the hook needs the chat it is rendered for.
-  const { preset, ...chatProps } = usePresets({}, chat);
+  const { preset, ...chatProps } = AssistantHooks.usePresets({}, chat);
 
   // Every chat in the space, not the companion chats of one object: the story is a tour of the
   // space, and its chats are the thing worth moving between.
-  const onSelect = useCallback((chat: ChatSchema.Chat) => setSelected(chat.id), []);
+  const onSelect = useCallback((chat: AssistantChat.Chat) => setSelected(chat.id), []);
   const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
 
   const registry = useRegistry();
-  const runtime = useProcessManagerRuntime();
-  const processor = useChatProcessor({ runtime, db: space.db, chat, preset, registry });
+  const runtime = Hooks.useProcessManagerRuntime();
+  const processor = AssistantHooks.useChatProcessor({ runtime, db: space.db, chat, preset, registry });
 
   // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.

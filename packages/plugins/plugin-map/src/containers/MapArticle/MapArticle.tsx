@@ -4,7 +4,7 @@
 
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { Flex, type FlexProps, Panel, useControlledState } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';

@@ -5,10 +5,11 @@
 import * as Option from 'effect/Option';
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -60,7 +61,7 @@ export type MembersContainerProps = AppSurface.SpaceArticleProps<{
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
   const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
   const visibleInvitations = invitations?.filter(
     (invitation) => ![Invitation_State.CANCELLED].includes(invitation.get().state),

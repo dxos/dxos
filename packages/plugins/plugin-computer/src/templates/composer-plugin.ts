@@ -2,17 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { PLUGIN_DEV_SERVER_PORT } from '@dxos/app-framework';
+import * as PluginManifest from '@dxos/app-framework/PluginManifest';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import {
-  GUIDE,
-  IDS,
-  PARENT_INSTRUCTIONS,
-  type Variant,
-  makeComposerPlugin,
-  readGuide,
-  writePlugin,
-} from '@dxos/plugin-projects/templates';
+import * as Templates from '@dxos/plugin-projects/Templates';
 import { isTauri } from '@dxos/util';
 
 import { SKILL_KEY } from '../skills/computer-skill.ts';
@@ -21,18 +13,18 @@ import { SKILL_KEY } from '../skills/computer-skill.ts';
 export const FOLDER = 'world-clock';
 
 /** The dev manifest `composerPlugin` serves, and the URL Plugins → Dev Server loads by default. */
-export const MANIFEST_URL = `http://localhost:${PLUGIN_DEV_SERVER_PORT}/manifest.json`;
+export const MANIFEST_URL = `http://localhost:${PluginManifest.DEV_SERVER_PORT}/manifest.json`;
 
 /** The plugin's entry as the dev server compiles it on request. */
-const ENTRY_URL = `http://localhost:${PLUGIN_DEV_SERVER_PORT}/src/plugin.tsx`;
+const ENTRY_URL = `http://localhost:${PluginManifest.DEV_SERVER_PORT}/src/plugin.tsx`;
 
 /** Run by the reader from the Composer app directory: the Computer shell kills scripts that outlive its timeout. */
 const DEV_SERVER_COMMAND = `node_modules/.bin/vite temp/plugins/${FOLDER}`;
 
 // Loading the plugin is the reader's click, not a task, so a chat can run the plan end to end on its own.
-const COMPUTER: Variant = {
+const COMPUTER: Templates.Variant = {
   skill: SKILL_KEY,
-  instructions: `${PARENT_INSTRUCTIONS}
+  instructions: `${Templates.PARENT_INSTRUCTIONS}
 
 Use the Computer skill's shell. It runs on the machine serving this app, and every command starts \
 in the Composer app directory, so run the commands in the tasks exactly as written, without \`cd\`. \
@@ -42,10 +34,10 @@ The plugin's own Vite dev server serves \`temp/plugins/${FOLDER}\` at ${MANIFEST
 Never start it or build the plugin yourself, and never \`pnpm exec\`: \`vite build\` and \`pnpm exec\` rebuild \
 Composer itself, and the app you are running in goes blank.
 
-${IDS}`,
+${Templates.IDS}`,
   steps: [
-    readGuide(`It is \`../../../${GUIDE}\`.`),
-    writePlugin(
+    Templates.readGuide(`It is \`../../../${Templates.GUIDE}\`.`),
+    Templates.writePlugin(
       `temp/plugins/${FOLDER}`,
       "Leave `composerPlugin`'s dev port at its default, and set no build `outDir`: the dev server serves the source.",
     ),
@@ -69,4 +61,4 @@ ${IDS}`,
  */
 export const composerPlugin: ProjectCapabilities.Template | undefined = isTauri()
   ? undefined
-  : makeComposerPlugin(COMPUTER);
+  : Templates.makeComposerPlugin(COMPUTER);

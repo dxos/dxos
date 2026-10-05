@@ -4,7 +4,7 @@
 
 import { type FocusEvent } from 'react';
 
-import { type SchemaAST } from '@dxos/effect';
+import type * as SchemaAST from '@dxos/effect/SchemaAST';
 import { createContext } from '@dxos/react-hooks';
 
 import { type FormFieldStatus, type FormPresentation } from '#types';

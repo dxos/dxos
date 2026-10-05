@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card, type ImageProps, useTranslation } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Card, ImageProps, useTranslation } from '@dxos/react-ui';
 import { type File } from '@dxos/types';
 
 import { meta } from '#meta';
