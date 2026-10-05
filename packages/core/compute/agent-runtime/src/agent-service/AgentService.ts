@@ -309,12 +309,14 @@ export const layer = (opts?: Options): Layer.Layer<AgentService, never, Process.
                 // spawns a fresh process for the same feed (history is replayed from it), which is
                 // the path an app already takes when it re-reads the session per prompt.
                 const databaseContext = yield* Effect.context<Database.Service>();
-                // The handle's own status is a snapshot the client polls, so a REMOTE process that
-                // finished moments ago still reads as running here — and the host then drops the
-                // prompt. What the host actually knows is the manager's `list`.
+                // A REMOTE handle's status is a snapshot the client polls, so a process that finished
+                // moments ago still reads as running here — and the host then drops the prompt. What
+                // the host actually knows is the manager's `list`. A local handle is the live process
+                // itself, so its status is authoritative, and the local `list` reads every persisted
+                // process record — a storage round trip per record before every prompt.
                 const isFinished: Effect.Effect<boolean> = Effect.suspend(() =>
-                  Process.isTerminal(handle.status.state)
-                    ? Effect.succeed(true)
+                  Process.isTerminal(handle.status.state) || location !== 'edge'
+                    ? Effect.succeed(Process.isTerminal(handle.status.state))
                     : processManager.handles({ target, key: executable.key, location: processLocation }).pipe(
                         Effect.map((live) => {
                           const current = live.find((process) => process.pid === handle.pid);

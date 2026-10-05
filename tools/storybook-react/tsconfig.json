@@ -24,6 +24,9 @@
       "path": "../../packages/core/compute/agent-claude"
     },
     {
+      "path": "../../packages/sdk/client"
+    },
+    {
       "path": "../../packages/ui/react-ui"
     },
     {

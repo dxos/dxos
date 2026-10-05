@@ -29,12 +29,13 @@ import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { FeedProtocol } from '@dxos/protocols';
 import { type ContentBlock, Message } from '@dxos/types';
+import { markWork } from '@dxos/util';
 
 import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request/index.ts';
 import { ToolExecutionServices } from '../tool-runtime/index.ts';
 import * as AiContext from './AiContext.ts';
 import * as Harness from './Harness.ts';
-import { SessionStore } from './SessionStore.ts';
+import { SessionStore, isQueued } from './SessionStore.ts';
 import * as SkillHooks from './SkillHooks.ts';
 import { createToolkit } from './toolkit.ts';
 
@@ -176,21 +177,27 @@ export class Session extends Resource {
     const rewindFrom = this._feed.rewindFrom;
     const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
 
-    return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Effect.gen({ self: this }, function* () {
-        yield* Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined);
-        if (rewindFrom !== undefined) {
-          Obj.update(this._feed, (feed) => {
-            feed.rewindFrom = undefined;
-          });
-        }
-      }),
+    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+      Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined),
     );
+    if (rewindFrom !== undefined) {
+      // Cleared only once feed queries see the continuation: the thread truncates on the pointer, and
+      // clearing it before the index has the continuation shows the abandoned turn again until it does.
+      await this.#messagesInAppendOrder();
+      Obj.update(this._feed, (feed) => {
+        feed.rewindFrom = undefined;
+      });
+    }
   }
 
-  /** The message preceding `rewindFrom` in append order, which the continuation parents to. */
+  /**
+   * The message preceding `rewindFrom` in append order, which the continuation parents to.
+   *
+   * Queue entries are skipped: a turn's own user message is appended right after the entry it was
+   * taken from, and an entry never joins the thread, so parenting to one cuts the lineage off.
+   */
   async #parentForRewind(rewindFrom: string): Promise<string | undefined> {
-    const messages = await this.#messagesInAppendOrder();
+    const messages = (await this.#messagesInAppendOrder()).filter((message) => !isQueued(message));
     const index = messages.findIndex((message) => message.id === rewindFrom);
     return index > 0 ? messages[index - 1].id : undefined;
   }
@@ -209,6 +216,7 @@ export class Session extends Resource {
 
       yield* Trace.emitRequestPhase('loading-history');
       const history = yield* Effect.promise(() => this.getHistory());
+      markWork('session.history-loaded');
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
 
@@ -217,6 +225,38 @@ export class Session extends Resource {
         skills: skills.length,
         objects: objects.length,
       });
+
+      // Formatted once per binding set and source text rather than per model call: formatting loads
+      // every skill's template, each a wait behind the page's other work, and an unchanged prompt is
+      // also what lets the provider's prompt cache hit across turns. The atoms keep their arrays'
+      // identity until a binding changes them; a source not loaded here cannot be compared, so it
+      // formats again.
+      const sources = (currentSkills: Skill.Skill[]): (string | undefined)[] => [
+        ...this.#instructions.map((instructions) => instructions.text.target?.content),
+        ...currentSkills.map((skill) => skill.instructions.source.target?.content),
+      ];
+      let formatted:
+        | { skills: Skill.Skill[]; objects: Obj.Unknown[]; sources: (string | undefined)[]; text: string }
+        | undefined;
+      const formatSystem = (currentSkills: Skill.Skill[], currentObjects: Obj.Unknown[]) =>
+        Effect.gen({ self: this }, function* () {
+          const currentSources = sources(currentSkills);
+          if (
+            formatted?.skills === currentSkills &&
+            formatted.objects === currentObjects &&
+            currentSources.every((source, index) => source !== undefined && source === formatted?.sources[index])
+          ) {
+            return formatted.text;
+          }
+          const text = yield* formatSystemPrompt({
+            system: params.system,
+            skills: currentSkills,
+            objects: currentObjects,
+            instructions: this.#instructions,
+          }).pipe(Effect.orDie);
+          formatted = { skills: currentSkills, objects: currentObjects, sources: currentSources, text };
+          return text;
+        });
 
       const request = new AiRequest.Request({
         summarizationThreshold: SUMMARY_THRESHOLD,
@@ -233,7 +273,10 @@ export class Session extends Resource {
         prompt: params.prompt,
         sender: params.sender,
         system: params.system,
+        systemPrompt: yield* formatSystem(skills, objects),
       });
+
+      markWork('session.request-begun');
 
       // Fire begin-request hooks declared by the bound skills. These run in the agent's turn
       // fiber (Tier A only), so they cannot reach the live host (Tier B) — that is the end hook's job.
@@ -246,7 +289,9 @@ export class Session extends Resource {
       // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
       // Each iteration is scoped so the MCP connections it opens are closed before the next opens its own.
       const runIteration = Effect.gen({ self: this }, function* () {
+        markWork('session.iteration');
         yield* Effect.promise(() => this.context.sync());
+        markWork('session.context-synced');
         const currentSkills = this.context.getSkills();
         const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
         yield* Trace.emitRequestPhase('building-toolkit');
@@ -256,13 +301,10 @@ export class Session extends Resource {
           opaqueToolkits: mcps,
         });
 
+        markWork('session.toolkit-built');
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
-        const system = yield* formatSystemPrompt({
-          system: params.system,
-          skills: currentSkills,
-          objects: this.context.getObjects(),
-          instructions: this.#instructions,
-        }).pipe(Effect.orDie);
+        const system = yield* formatSystem(currentSkills, this.context.getObjects());
+        markWork('session.system-prompt-built');
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
         if (done) {
@@ -275,6 +317,7 @@ export class Session extends Resource {
         }
 
         yield* request.runTools({ toolkit });
+        markWork('session.tools-done');
         return 'continue' as const;
       }).pipe(Effect.scoped);
 
