@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { analyze, errors } from './diagnostics.ts';
 import { compile, parse, read, toScene } from './dsl/index.ts';

@@ -4,7 +4,7 @@
 
 import * as Predicate from 'effect/Predicate';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import { BaseError } from '@dxos/errors';
 
 const SLACK_API_ERROR_MESSAGE = 'Slack API returned an error.' as const;
@@ -27,7 +27,7 @@ export const formatSlackSyncFailure = (error: unknown): string => {
     const code = (error.context as { code?: unknown }).code;
     return typeof code === 'string' ? `Slack API error: ${code}` : SLACK_API_ERROR_MESSAGE;
   }
-  if (SyncDatabaseMissingError.is(error)) {
+  if (ConnectorSync.DatabaseMissingError.is(error)) {
     return error.message;
   }
   if (error instanceof BaseError) {

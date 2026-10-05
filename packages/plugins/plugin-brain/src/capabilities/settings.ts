@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
 import { BrainCapabilities, BrainSettings } from '#types';
@@ -16,7 +16,7 @@ import { BrainCapabilities, BrainSettings } from '#types';
  * scope so the analyze processor (`./mailbox-processor`) can read it live via the atom registry
  * without a cross-capability lookup or activation ordering.
  */
-export const settingsAtom = createKvsStore({
+export const settingsAtom = KvsStore.make({
   key: meta.profile.key,
   schema: BrainSettings.Settings,
   defaultValue: (): BrainSettings.Settings => ({}),

@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Banner, composable } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Util from '@dxos/react-ui/Util';
 
 import { InitializeEmpty } from './InitializeEmpty.tsx';
 import { useTargetConnection } from './useTargetConnection.ts';
@@ -27,7 +28,7 @@ export type InitializeProps<T extends Obj.Any> = {
  *
  * Used by `InitializeMailbox` and `InitializeCalendar`.
  */
-export const Initialize = composable<HTMLDivElement, InitializeProps<any>>(
+export const Initialize = Util.composable<HTMLDivElement, InitializeProps<any>>(
   ({ target, noConnectionsMessage, emptyMessage, ...props }, forwardedRef) => {
     const { connection } = useTargetConnection(target);
     const message = connection ? emptyMessage : noConnectionsMessage;

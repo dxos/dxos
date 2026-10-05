@@ -5,10 +5,10 @@
 
 import React, { useEffect, useReducer, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export type FPSProps = ThemedClassName<{
+export type FPSProps = Util.ThemedClassName<{
   width?: number;
   height?: number;
   bar?: string;

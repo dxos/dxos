@@ -4,10 +4,11 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { useNode } from '@dxos/plugin-graph/hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 
 import { useNodeActionExpander } from '#hooks';
 
@@ -34,9 +35,9 @@ export const DetailCompanion = ({ role, attendableId, detail }: DetailCompanionP
 DetailCompanion.displayName = 'DetailCompanion';
 
 const useRestoredNode = (path: string) => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   useEffect(() => {
     AppGraph.expandPath(graph, path);
   }, [graph, path]);
-  return useNode(graph, path);
+  return GraphHooks.useNode(graph, path);
 };

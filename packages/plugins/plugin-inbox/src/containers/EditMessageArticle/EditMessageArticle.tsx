@@ -4,12 +4,12 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { type Message } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
@@ -27,17 +27,17 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   const spaceId = db?.spaceId;
   // Resolve the runtime here (container) and pass it into the composer hooks — the hooks live under
   // `components`/`hooks` and must not call capability hooks themselves.
-  const runtime = useProcessManagerRuntime();
+  const runtime = Hooks.useProcessManagerRuntime();
   const extensions = useEmailComposerExtensions(runtime, subject);
-  const sendOperations = useCapabilities(InboxCapabilities.MailSendOperation);
+  const sendOperations = Hooks.useCapabilities(InboxCapabilities.MailSendOperation);
   // No contributed generator means nothing to invoke, so the affordance is omitted rather than shown
   // and failing — the same reason the send action is gated on a provider.
-  const replyGenerator = useCapabilities(InboxCapabilities.ReplyGenerator)[0];
+  const replyGenerator = Hooks.useCapabilities(InboxCapabilities.ReplyGenerator)[0];
   const onSend = useSendEmail(runtime, subject, sendOperations);
 
   // Generate: fill the reply draft's body from the message it replies to (thread + facts grounded).
   // Only offered for reply drafts scoped to a resolvable mailbox.
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const mailbox = mailboxes.find((candidate) => Obj.getURI(candidate) === subject.properties?.mailbox);
   const canGenerate = mailbox !== undefined && !!subject.properties?.inReplyTo && replyGenerator !== undefined;

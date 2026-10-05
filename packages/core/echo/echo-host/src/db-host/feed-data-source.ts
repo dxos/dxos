@@ -8,7 +8,7 @@ import type * as SqlClient from 'effect/sql/SqlClient';
 import { type Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { type ObjectJSON } from '@dxos/echo/internal';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { type FeedStore } from '@dxos/feed';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { failedInvariant } from '@dxos/invariant';

@@ -5,13 +5,15 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, type Dispatch, type SetStateAction, useCallback, useMemo, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { Flex, Input, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -43,12 +45,12 @@ const usePendingGatedState = <T,>(value: T, pending: boolean): [T, Dispatch<SetS
   if (!pending) {
     lastRef.current = value;
   }
-  return useControlledState(lastRef.current);
+  return UiHooks.useControlledState(lastRef.current);
 };
 
 export const ProfileContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
   const pendingRef = useRef(false);
   // Bumped on every edit, so a write's completion can tell whether a newer edit has queued behind
@@ -132,7 +134,7 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Input
+            <Input.Root
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
@@ -169,16 +171,16 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field standalone label={label} description={t('hue.description')}>
-            <Flex classNames='justify-self-end'>
+            <Layout.Flex classNames='justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
-            </Flex>
+            </Layout.Flex>
           </Form.Field>
         );
       },
       did: ({ label, getValue }) => {
         return (
           <Form.Field label={label} description={t('did.description')}>
-            <Input variant='mono' value={getValue() ?? ''} readOnly copyable />
+            <Input.Root variant='mono' value={getValue() ?? ''} readOnly copyable />
           </Form.Field>
         );
       },

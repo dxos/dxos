@@ -4,16 +4,22 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useOperation } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { generateName } from '@dxos/display-name';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { Button, Container, Panel, ScrollArea, Toolbar, Typography, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskHistory, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -41,11 +47,11 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * a plugin that can store files is present.
  */
 export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attendableId }: TaskArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
-  const handleUpdate = useOperation(
+  const handleUpdate = Hooks.useOperation(
     TaskOperation.UpdateTask,
     (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
@@ -73,7 +79,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
   );
 
   // Record-only: an agent that asked over the MCP reads the answer back off the task.
-  const handleQuestionAnswer = useOperation(
+  const handleQuestionAnswer = Hooks.useOperation(
     TaskOperation.AnswerQuestion,
     (task: Task.Task, question: string, answer: string) => ({ task: Ref.make(task), question, answer }),
     { spaceId },
@@ -120,7 +126,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the
                 section headings and the cards all start at the content track, and only a glyph
                 hangs outside it. */}
-              <Container gutter='md' gap='lg' classNames='py-2'>
+              <Layout.Container gutter='md' gap='lg' classNames='py-2'>
                 {/* The task's own fields, not the list's strip: the pane has a subject, so it
                   needs neither the create case nor the selection the strip reads. */}
                 {/* Keyed by task, so a new subject replaces the text held rather than carrying the previous one's across. */}
@@ -153,12 +159,12 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                   standing "Questions" label over nothing says the pane expects them, when what a
                   task with none has is nothing to answer. */}
                 {openQuestions.length > 0 && (
-                  <Container asChild gutter='inherit' gap='md'>
+                  <Layout.Container asChild gutter='inherit' gap='md'>
                     <section data-testid='tasksPlugin.questions'>
                       {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
-                      <Typography asChild tone='subtle' classNames='dx-label py-0'>
+                      <Typography.Text asChild tone='subtle' classNames='dx-label py-0'>
                         <h2>{t('task-questions.label')}</h2>
-                      </Typography>
+                      </Typography.Text>
                       {openQuestions.map((thread) => (
                         <TaskQuestion
                           key={thread.question.id}
@@ -167,7 +173,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                         />
                       ))}
                     </section>
-                  </Container>
+                  </Layout.Container>
                 )}
 
                 <TaskAttachments
@@ -178,7 +184,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 />
                 {history && history.length > 0 && <TaskHistory entries={history} />}
                 <TaskArtifacts task={task} />
-              </Container>
+              </Layout.Container>
             </TaskAttachmentDropZone>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
@@ -194,7 +200,7 @@ TaskArticle.displayName = 'TaskArticle';
  * row's trailing gutter, where the pane's whole subject is the task and they are its actions.
  */
 const TaskActions = ({ task }: { task: Task.Task }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const contributed = useTaskActions();
   const actions = useMemo(() => contributed(task), [contributed, task]);
 
@@ -204,7 +210,7 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
 
   return (
     <ActionMenu deferUntilOpen actions={actions}>
-      <Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--dots-three-vertical--regular'

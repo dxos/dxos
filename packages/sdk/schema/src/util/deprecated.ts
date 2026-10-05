@@ -6,7 +6,8 @@ import type * as Schema from 'effect/Schema';
 
 import { QueryAST } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { type URI } from '@dxos/keys';
 
 /**

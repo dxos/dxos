@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { toSvgFile } from './SceneSvgFile.tsx';
 

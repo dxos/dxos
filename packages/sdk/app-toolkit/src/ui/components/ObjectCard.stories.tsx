@@ -8,7 +8,8 @@ import { expect, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
-import { Card, Menu } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Menu from '@dxos/react-ui/Menu';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 

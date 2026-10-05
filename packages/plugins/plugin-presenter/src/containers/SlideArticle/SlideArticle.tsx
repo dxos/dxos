@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 

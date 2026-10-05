@@ -7,7 +7,10 @@ import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 're
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { ScrollArea, SystemButton, composable, composableProps, useThemeMode } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis } from '@dxos/ui-types';
 
@@ -59,7 +62,7 @@ export type SyntaxHighlighterProps = Pick<
  * https://github.com/react-syntax-highlighter/react-syntax-highlighter
  * https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/prism.html
  */
-export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterProps>(
+export const SyntaxHighlighter = Util.composable<HTMLDivElement, SyntaxHighlighterProps>(
   ({ scroll = 'all', copyButton, classNames, className, role, style, ...props }, forwardedRef) => {
     if (scroll === false) {
       return (
@@ -109,7 +112,7 @@ const CopyOverlay = ({ source }: { source: string }) => (
 );
 
 /** The non-scrolling leaf: all scrolling is deferred to an enclosing viewport. */
-const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterProps, 'scroll'>>(
+const SyntaxHighlighterLeaf = Util.composable<HTMLDivElement, Omit<SyntaxHighlighterProps, 'scroll'>>(
   (
     {
       classNames,
@@ -125,7 +128,7 @@ const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterP
     },
     forwardedRef,
   ) => {
-    const themeMode = useThemeMode();
+    const themeMode = Hooks.useThemeMode();
     const source = sourceOf(children, fallback);
     const language = source.length > MAX_HIGHLIGHTED_LENGTH ? 'text' : languageProp;
 
@@ -134,7 +137,7 @@ const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterP
 
     return (
       <div
-        {...composableProps(
+        {...Util.composableProps(
           { classNames, className, role, style },
           {
             role: 'none',

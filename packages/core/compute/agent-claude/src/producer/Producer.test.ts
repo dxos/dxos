@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Feed } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Producer from './Producer.ts';
 

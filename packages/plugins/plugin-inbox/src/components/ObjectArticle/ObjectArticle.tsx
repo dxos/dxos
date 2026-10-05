@@ -4,7 +4,7 @@
 
 import React, { type ComponentProps, type ReactNode } from 'react';
 
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 export type ObjectArticleProps = {
   role?: ComponentProps<typeof Panel.Root>['role'];

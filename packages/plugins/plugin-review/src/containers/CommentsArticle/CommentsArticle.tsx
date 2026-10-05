@@ -6,11 +6,12 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
@@ -19,9 +20,17 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Banner, Card, Icon, Panel, ScrollArea, Tabs, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
 import { hexToHue } from '@dxos/util';
@@ -97,9 +106,9 @@ const threadComponents = { Object: ObjectTile };
 export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
 
 export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const identity = useIdentity();
   const subjectId = Obj.getURI(subject);
 
@@ -146,7 +155,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [members],
   );
 
-  const stateAtom = useCapability(CommentCapabilities.State);
+  const stateAtom = Hooks.useCapability(CommentCapabilities.State);
   const state = useAtomValue(stateAtom);
   const drafts = state.drafts[subjectId];
 
@@ -154,8 +163,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { showResolvedThreads } = useViewState(commentsViewAspect, subjectId);
   const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
-  const commentConfigs = useCapabilities(AppCapabilities.CommentConfig);
-  const anchorSorts = useCapabilities(AppCapabilities.AnchorSort);
+  const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
+  const anchorSorts = Hooks.useCapabilities(AppCapabilities.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
     [anchorSorts, subject],
@@ -494,16 +503,16 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       <Banner.Root>
         <Banner.Body>
           <span>
-            <Trans
+            <Theme.Trans
               {...{
                 t,
                 i18nKey: 'no-comments.message',
                 components: {
                   commentIcon: (
-                    <Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                    <Icon.Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
                   ),
                   versionsIcon: (
-                    <Icon icon='ph--git-branch--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                    <Icon.Icon icon='ph--git-branch--regular' size='md' classNames='inline-block align-[-0.125em]' />
                   ),
                 },
               }}

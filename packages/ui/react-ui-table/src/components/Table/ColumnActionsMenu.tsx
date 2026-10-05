@@ -5,7 +5,9 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { Menu, useTranslation, virtualAnchor } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import { translationKey } from '#translations';
 
@@ -17,7 +19,7 @@ export type ColumnActionsMenuProps = {
 };
 
 export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const state = useAtomValue(modals.state);
   if (state?.type !== 'column') {
     return null;
@@ -30,7 +32,7 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
     <Menu.Root
       open={true}
       onOpenChange={({ open }) => !open && modals.close()}
-      positioning={virtualAnchor(modals.trigger)}
+      positioning={VirtualAnchor.virtualAnchor(modals.trigger)}
     >
       <Menu.Content>
         {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (

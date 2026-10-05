@@ -180,10 +180,13 @@ const foldRun = (run: readonly Message.Message[]): Message.Message => {
  */
 export const collapseToolRuns = (messages: readonly Message.Message[]): Message.Message[] => {
   const collapsed: Message.Message[] = [];
+  // The messages each entry was folded from, so a later result can join the fold that holds its call.
+  const sources: (readonly Message.Message[])[] = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
     if (!isToolOnly(message)) {
       collapsed.push(message);
+      sources.push([message]);
       continue;
     }
 
@@ -191,14 +194,25 @@ export const collapseToolRuns = (messages: readonly Message.Message[]): Message.
     while (end + 1 < messages.length && isToolOnly(messages[end + 1])) {
       end++;
     }
-
-    if (end === index) {
-      collapsed.push(message);
-    } else {
-      collapsed.push(foldRun(messages.slice(index, end + 1)));
-    }
-
+    const run = messages.slice(index, end + 1);
     index = end;
+
+    // A result held apart from its call by the request card that asked about it joins the call's panel; on its
+    // own it renders as an empty row.
+    const results = run.flatMap((entry) => entry.blocks);
+    const callIds = new Set(results.map((block) => (block._tag === 'toolResult' ? block.toolCallId : undefined)));
+    const caller = results.every((block) => block._tag === 'toolResult')
+      ? collapsed.findLastIndex((earlier) =>
+          earlier.blocks.some((block) => block._tag === 'toolCall' && callIds.has(block.toolCallId)),
+        )
+      : -1;
+    if (caller >= 0) {
+      sources[caller] = [...sources[caller], ...run];
+      collapsed[caller] = foldRun(sources[caller]);
+    } else {
+      collapsed.push(run.length === 1 ? message : foldRun(run));
+      sources.push(run);
+    }
   }
 
   return collapsed;

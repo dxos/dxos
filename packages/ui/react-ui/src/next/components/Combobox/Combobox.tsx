@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { createListCollection } from '@ark-ui/react/collection';
 import { Combobox as ComboboxPrimitive, useComboboxContext } from '@ark-ui/react/combobox';
 import { Portal } from '@ark-ui/react/portal';
@@ -28,12 +30,12 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Icon, type IconProps } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
-import { type SelectOption } from '../Select/index.ts';
+import type * as Select from '../Select/Select.tsx';
 
 /** Gap between control and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
@@ -41,12 +43,12 @@ const POPUP_GUTTER = 2;
 /** The value of the create row's option, which the Root appends to the collection and never selects. */
 const CREATE_VALUE = '\u0000nx-combobox-create';
 
-export type ComboboxOption = SelectOption & {
+type ComboboxOption = Select.Option & {
   /** A second line under the label, in the description tone. */
   description?: string;
 };
 
-export type ComboboxFilter = (option: ComboboxOption, query: string) => boolean;
+type ComboboxFilter = (option: ComboboxOption, query: string) => boolean;
 
 /** Case-insensitive substring match on the label. */
 const containsFilter: ComboboxFilter = (option, query) => option.label.toLowerCase().includes(query.toLowerCase());
@@ -338,7 +340,7 @@ ComboboxTrigger.displayName = 'Combobox.Trigger';
 const ComboboxCaretTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
   ({ classNames, children, placeholder: _placeholder, ...props }, forwardedRef) => (
     <ComboboxPrimitive.Trigger {...props} className={mx(recipes.comboboxTrigger(), classNames)} ref={forwardedRef}>
-      {children ?? <Icon icon='ph--caret-up-down--regular' />}
+      {children ?? <Icon.Icon icon='ph--caret-up-down--regular' />}
     </ComboboxPrimitive.Trigger>
   ),
 );
@@ -377,11 +379,15 @@ const ComboboxButtonTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps
       >
         {children ?? (
           <>
-            {single?.icon && <Icon icon={single.icon} hue={single.iconHue} />}
+            {single?.icon && <Icon.Icon icon={single.icon} hue={single.iconHue} />}
             <span id={valueId} data-scope='combobox' data-part='value-text'>
               {text || placeholder}
             </span>
-            {loading ? <Icon icon='ph--spinner-gap--regular' spin /> : <Icon icon='ph--caret-up-down--regular' />}
+            {loading ? (
+              <Icon.Icon icon='ph--spinner-gap--regular' spin />
+            ) : (
+              <Icon.Icon icon='ph--caret-up-down--regular' />
+            )}
           </>
         )}
       </ComboboxPrimitive.Trigger>
@@ -399,7 +405,7 @@ type ComboboxClearTriggerProps = ThemedClassName<ComboboxPrimitive.ClearTriggerP
 const ComboboxClearTrigger = forwardRef<HTMLButtonElement, ComboboxClearTriggerProps>(
   ({ classNames, children, ...props }, forwardedRef) => (
     <ComboboxPrimitive.ClearTrigger {...props} className={mx(recipes.comboboxTrigger(), classNames)} ref={forwardedRef}>
-      {children ?? <Icon icon='ph--x--regular' />}
+      {children ?? <Icon.Icon icon='ph--x--regular' />}
     </ComboboxPrimitive.ClearTrigger>
   ),
 );
@@ -511,7 +517,7 @@ const ComboboxLoading = () => {
   const { t } = useTranslation(translationKey);
   return loading ? (
     <div role='presentation' data-scope='combobox' data-part='loading' className={recipes.comboboxEmpty()}>
-      <Icon icon='ph--spinner-gap--regular' spin />
+      <Icon.Icon icon='ph--spinner-gap--regular' spin />
       {t('combobox.loading.label')}
     </div>
   ) : null;
@@ -650,7 +656,7 @@ ComboboxCreateItem.displayName = 'Combobox.CreateItem';
 // ItemIcon
 //
 
-type ComboboxItemIconProps = Omit<IconProps, 'icon'> & {
+type ComboboxItemIconProps = Omit<Icon.IconProps, 'icon'> & {
   /** Defaults to the option's `icon`. */
   icon?: string;
 };
@@ -659,7 +665,7 @@ type ComboboxItemIconProps = Omit<IconProps, 'icon'> & {
 const ComboboxItemIcon = forwardRef<SVGSVGElement, ComboboxItemIconProps>(({ icon, hue, ...props }, forwardedRef) => {
   const item = useItem('ItemIcon');
   const glyph = icon ?? item.icon;
-  return glyph ? <Icon {...props} icon={glyph} hue={hue ?? item.iconHue} ref={forwardedRef} /> : null;
+  return glyph ? <Icon.Icon {...props} icon={glyph} hue={hue ?? item.iconHue} ref={forwardedRef} /> : null;
 });
 
 ComboboxItemIcon.displayName = 'Combobox.ItemIcon';
@@ -720,7 +726,7 @@ type ComboboxItemIndicatorProps = ThemedClassName<ComboboxPrimitive.ItemIndicato
 const ComboboxItemIndicator = forwardRef<HTMLDivElement, ComboboxItemIndicatorProps>(
   ({ classNames, children, ...props }, forwardedRef) => (
     <ComboboxPrimitive.ItemIndicator {...props} className={mx(classNames)} ref={forwardedRef}>
-      {children ?? <Icon icon='ph--check--regular' />}
+      {children ?? <Icon.Icon icon='ph--check--regular' />}
     </ComboboxPrimitive.ItemIndicator>
   ),
 );
@@ -763,43 +769,43 @@ const ComboboxItemGroupLabel = forwardRef<HTMLDivElement, ComboboxItemGroupLabel
 );
 
 ComboboxItemGroupLabel.displayName = 'Combobox.ItemGroupLabel';
-
-export const Combobox = {
-  Root: ComboboxRoot,
-  Label: ComboboxLabel,
-  Control: ComboboxControl,
-  Input: ComboboxInput,
-  Trigger: ComboboxTrigger,
-  ClearTrigger: ComboboxClearTrigger,
-  Content: ComboboxContent,
-  List: ComboboxList,
-  Empty: ComboboxEmpty,
-  Item: ComboboxItem,
-  CreateItem: ComboboxCreateItem,
-  ItemIcon: ComboboxItemIcon,
-  ItemText: ComboboxItemText,
-  ItemDescription: ComboboxItemDescription,
-  ItemIndicator: ComboboxItemIndicator,
-  ItemGroup: ComboboxItemGroup,
-  ItemGroupLabel: ComboboxItemGroupLabel,
-};
-
 export type {
-  ComboboxClearTriggerProps,
-  ComboboxContentProps,
-  ComboboxControlProps,
-  ComboboxCreateItemProps,
-  ComboboxEmptyProps,
-  ComboboxInputProps,
-  ComboboxItemDescriptionProps,
-  ComboboxItemGroupLabelProps,
-  ComboboxItemGroupProps,
-  ComboboxItemIconProps,
-  ComboboxItemIndicatorProps,
-  ComboboxItemProps,
-  ComboboxItemTextProps,
-  ComboboxLabelProps,
-  ComboboxListProps,
-  ComboboxRootProps,
-  ComboboxTriggerProps,
+  ComboboxClearTriggerProps as ClearTriggerProps,
+  ComboboxContentProps as ContentProps,
+  ComboboxControlProps as ControlProps,
+  ComboboxCreateItemProps as CreateItemProps,
+  ComboboxEmptyProps as EmptyProps,
+  ComboboxInputProps as InputProps,
+  ComboboxItemDescriptionProps as ItemDescriptionProps,
+  ComboboxItemGroupLabelProps as ItemGroupLabelProps,
+  ComboboxItemGroupProps as ItemGroupProps,
+  ComboboxItemIconProps as ItemIconProps,
+  ComboboxItemIndicatorProps as ItemIndicatorProps,
+  ComboboxItemProps as ItemProps,
+  ComboboxItemTextProps as ItemTextProps,
+  ComboboxLabelProps as LabelProps,
+  ComboboxListProps as ListProps,
+  ComboboxRootProps as RootProps,
+  ComboboxTriggerProps as TriggerProps,
 };
+
+export {
+  ComboboxClearTrigger as ClearTrigger,
+  ComboboxContent as Content,
+  ComboboxControl as Control,
+  ComboboxCreateItem as CreateItem,
+  ComboboxEmpty as Empty,
+  ComboboxInput as Input,
+  ComboboxItem as Item,
+  ComboboxItemDescription as ItemDescription,
+  ComboboxItemGroup as ItemGroup,
+  ComboboxItemGroupLabel as ItemGroupLabel,
+  ComboboxItemIcon as ItemIcon,
+  ComboboxItemIndicator as ItemIndicator,
+  ComboboxItemText as ItemText,
+  ComboboxLabel as Label,
+  ComboboxList as List,
+  ComboboxRoot as Root,
+  ComboboxTrigger as Trigger,
+};
+export type { ComboboxFilter as Filter, ComboboxOption as Option };

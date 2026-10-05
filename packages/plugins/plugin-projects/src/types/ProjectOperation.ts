@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Chat from '@dxos/assistant/Chat';
-import { AgentService } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
@@ -54,11 +54,17 @@ export const DelegateTaskToChat = Operation.make({
   },
   // `AgentService` because the operation runs the chat's first turn: a message written to the
   // feed is a message nobody read.
-  services: [Capability.Service, Database.Service, AgentService],
+  services: [Capability.Service, Database.Service, AgentService.AgentService],
   input: Schema.Struct({
     // A plain array rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` — a
     // keyword the persisted-operation JSON schema does not carry. The handler rejects an empty list.
     tasks: Schema.Array(Ref.Ref(Task.Task)),
+    harness: Schema.optional(
+      Schema.String.annotate({
+        description:
+          "Id of the agent that works the tasks, e.g. composer or claude-code. Defaults to the reader's default agent.",
+      }),
+    ),
   }),
   output: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),

@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
@@ -543,7 +542,7 @@ export const pushTeamUpdates: <E, R>(
 const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
   const db = Obj.getDatabase(binding);
   if (!db) {
-    return yield* Effect.fail(new SyncDatabaseMissingError());
+    return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
   }
 
   const outcome = yield* Effect.result(

@@ -15,7 +15,7 @@ import { Event, Trigger, waitForCondition } from '@dxos/async';
 import { Database, Entity, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, PublicKey } from '@dxos/keys';
 import { FeedProtocol, RpcClosedError, makeInProcessClient } from '@dxos/protocols';

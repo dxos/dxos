@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, type Entity, Key, Obj, type Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { deepMapValues, trim } from '@dxos/util';
 
 export type SearchOptions<T extends Type.AnyEntity> = {

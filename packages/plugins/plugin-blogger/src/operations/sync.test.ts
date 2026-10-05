@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
 

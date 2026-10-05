@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DragMoveDirection, type ListboxOption, createContext } from '@dxos/react-ui';
+import type * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Listbox from '@dxos/react-ui/Listbox';
 
 import { type ReorderListController } from '../../hooks/index.ts';
 
@@ -11,13 +13,13 @@ import { type ReorderListController } from '../../hooks/index.ts';
 export type OrderedListContextValue = {
   reorder: ReorderListController<unknown>;
   /** The listbox option of each row, by id. */
-  options: ReadonlyMap<string, ListboxOption>;
+  options: ReadonlyMap<string, Listbox.Option>;
   readonly?: boolean;
   /** Keyboard move from the row's DragHandle, resolved against the current order. */
-  move: (id: string, direction: DragMoveDirection) => void;
+  move: (id: string, direction: DragHandle.DragMoveDirection) => void;
 };
 
-export const [OrderedListProvider, useOrderedListContext] = createContext<OrderedListContextValue>('OrderedList');
+export const [OrderedListProvider, useOrderedListContext] = Hooks.createContext<OrderedListContextValue>('OrderedList');
 
 export type OrderedListItemContextValue = {
   id: string;
@@ -26,4 +28,4 @@ export type OrderedListItemContextValue = {
 };
 
 export const [OrderedListItemProvider, useOrderedListItemContext] =
-  createContext<OrderedListItemContextValue>('OrderedList.Item');
+  Hooks.createContext<OrderedListItemContextValue>('OrderedList.Item');

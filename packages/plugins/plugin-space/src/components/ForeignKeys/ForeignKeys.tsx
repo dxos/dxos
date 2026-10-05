@@ -5,8 +5,9 @@
 import React, { useCallback } from 'react';
 
 import { type Key } from '@dxos/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -34,7 +35,7 @@ type KeyItemProps = {
 };
 
 const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const handleDelete = useCallback(() => {
     onDelete?.(forignKey);
@@ -44,7 +45,13 @@ const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
     <Listbox.Item id={forignKey.id}>
       <Listbox.ItemText />
       <Listbox.ItemDescription />
-      <Button iconOnly icon='ph--x--regular' variant='ghost' label={t('delete-key.button')} onClick={handleDelete} />
+      <Button.Root
+        iconOnly
+        icon='ph--x--regular'
+        variant='ghost'
+        label={t('delete-key.button')}
+        onClick={handleDelete}
+      />
     </Listbox.Item>
   );
 };

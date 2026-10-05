@@ -5,18 +5,18 @@
 import * as Effect from 'effect/Effect';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as HubAccount from '@dxos/app-toolkit/Account';
+import * as ToolkitAccount from '@dxos/app-toolkit/Account';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Credential, DeviceType, type Identity } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Account from '@dxos/plugin-client/Account';
-import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
+import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { osTranslations } from '@dxos/ui-theme';
@@ -306,14 +306,19 @@ export class OnboardingManager {
     // typed errors are not matchable from a catch block. The catch-all matters: `initialize()` is a
     // fire-and-forget background side-effect, so a rejection here would vanish unhandled.
     const outcome = await EffectEx.runPromise(
-      HubAccount.signUpWithEmail({ hub: HubAccount.createHubClient(this._hubUrl), email, code, ensureIdentity }).pipe(
+      ToolkitAccount.signUpWithEmail({
+        hub: ToolkitAccount.createHubClient(this._hubUrl),
+        email,
+        code,
+        ensureIdentity,
+      }).pipe(
         Effect.map(() => 'redeemed' as const),
         Effect.catchTag('EmailProbeUnavailableError', () => Effect.succeed('probe-unavailable' as const)),
         Effect.catchTag('EmailAlreadyRegisteredError', () => Effect.succeed('email-registered' as const)),
         Effect.catch((error) =>
           Effect.sync(() => {
             log.warn('signup failed; leaving signup params for retry', {
-              error: HubAccount.accountErrorType(error) ?? String(error),
+              error: ToolkitAccount.accountErrorType(error) ?? String(error),
             });
             return 'failed' as const;
           }),
@@ -347,8 +352,8 @@ export class OnboardingManager {
     invariant(this._hubUrl);
 
     await EffectEx.runPromise(
-      HubAccount.redeemAccessCode({
-        hub: HubAccount.createHubClient(this._hubUrl),
+      ToolkitAccount.redeemAccessCode({
+        hub: ToolkitAccount.createHubClient(this._hubUrl),
         identity: this._identity,
         email: this._email,
         code: this._accountInvitationCode,
@@ -356,7 +361,7 @@ export class OnboardingManager {
         Effect.catch((err) =>
           Effect.sync(() => {
             log.info('skipped binding existing identity', {
-              error: HubAccount.accountErrorType(err) ?? err.message,
+              error: ToolkitAccount.accountErrorType(err) ?? err.message,
             });
           }),
         ),

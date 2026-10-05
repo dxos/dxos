@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type HTMLAttributes, type KeyboardEvent, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,9 +13,9 @@ import { type ChromaticPalette, type MessageValence, type NeutralPalette } from 
 
 import { translationKey } from '#translations';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 
 export type TagHue = NeutralPalette | ChromaticPalette | MessageValence;
 
@@ -119,7 +121,7 @@ export const Tag = composable<HTMLElement, TagProps>(
           data-part='delete-trigger'
           className={recipes.tagDeleteTrigger()}
         >
-          <Icon icon='ph--x--regular' />
+          <Icon.Icon icon='ph--x--regular' />
         </button>
       </span>
     );

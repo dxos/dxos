@@ -4,8 +4,8 @@
 
 import React, { type ComponentProps, useCallback, useMemo } from 'react';
 
-import { Select } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import * as Select from '@dxos/react-ui/Select';
 
 import type { FeedbackPluginOption } from './types.ts';
 

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 export type PresentationShellProps = PropsWithChildren<{
@@ -23,7 +23,7 @@ export type PresentationShellProps = PropsWithChildren<{
  * that exits in a single keypress (intercepting before the deck's handler) plus a transient [ESC]
  * caption shown on enter.
  */
-export const PresentationShell = composable<HTMLDivElement, PresentationShellProps>(
+export const PresentationShell = Util.composable<HTMLDivElement, PresentationShellProps>(
   ({ children, fadeDuration = 300, hintDuration = 3000, fullscreen = true, onExit, ...props }, forwardedRef) => {
     const [visible, setVisible] = useState(false);
     const [exiting, setExiting] = useState(false);
@@ -78,7 +78,7 @@ export const PresentationShell = composable<HTMLDivElement, PresentationShellPro
 
     return (
       <div
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           classNames: [
             'relative grow overflow-hidden bg-black transition-opacity',
             visible && !exiting ? 'opacity-100' : 'opacity-0',

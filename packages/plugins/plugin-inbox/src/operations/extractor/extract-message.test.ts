@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Database, Filter, Obj, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ExtractError, type ExtractResult, type ObjectExtractor } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 

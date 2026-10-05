@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { AlertDialog } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { Action } from '../Panel/index.ts';

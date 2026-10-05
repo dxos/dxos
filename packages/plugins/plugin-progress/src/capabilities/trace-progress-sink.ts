@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { type CancelTarget, createProgressTraceSink, resolveTriggerId } from '@dxos/app-toolkit';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -68,12 +68,12 @@ export default Capability.makeModule(
 
     return [
       Capability.contribute(Capabilities.TraceSink, ({ resolver }) =>
-        createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
-          cancelProcess: (target: CancelTarget) => {
+        Progress.makeTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
+          cancelProcess: (target: Progress.CancelTarget) => {
             // An edge target never falls through to local terminate: its pid names a process on the
             // edge runtime, so terminating that id here could only hit an unrelated local process.
             if (target.runtimeName && Trace.isEdgeRuntime(target.runtimeName)) {
-              const triggerId = resolveTriggerId(target);
+              const triggerId = Progress.resolveTriggerId(target);
               if (target.space && triggerId) {
                 cancelRemote(resolver, target.space, triggerId, target.pid);
               } else {

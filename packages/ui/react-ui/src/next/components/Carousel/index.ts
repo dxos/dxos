@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Carousel.tsx';
+export * as Carousel from './Carousel.tsx';

@@ -5,14 +5,16 @@
 import React, { type ComponentPropsWithoutRef } from 'react';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Button, Popover, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
 
 import { meta } from '#meta';
 
 export type PluginFailureBadgeProps = {
   failure: PluginManager.PluginFailure;
   /** Size of the warning icon. */
-  size?: ComponentPropsWithoutRef<typeof Button>['iconSize'];
+  size?: ComponentPropsWithoutRef<typeof Button.Root>['iconSize'];
 };
 
 /**
@@ -23,12 +25,12 @@ export type PluginFailureBadgeProps = {
  * from "the plugin crashed".
  */
 export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <Button
+        <Button.Root
           variant='destructive'
           icon='ph--warning--bold'
           iconOnly

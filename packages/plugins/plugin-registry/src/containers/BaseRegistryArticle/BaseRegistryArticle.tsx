@@ -6,25 +6,23 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 // Loaded only through the lazy registry containers, so Next's CSS stays out of the boot graph.
 import '@dxos/react-ui/theme.css';
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import {
-  Container,
-  Input,
-  Panel,
-  ScrollArea,
-  Toolbar,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
@@ -62,7 +60,7 @@ export type BaseRegistryArticleProps = {
   | 'onUpdate'
 >;
 
-export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticleProps>(
+export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryArticleProps>(
   (
     {
       id,
@@ -82,12 +80,12 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.profile.key);
-    const manager = usePluginManager();
-    const { invoke, invokePromise } = useOperationInvoker();
-    const allSettings = useCapabilities(AppCapabilities.Settings);
+    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const manager = PluginManagerProvider.usePluginManager();
+    const { invoke, invokePromise } = Hooks.useOperationInvoker();
+    const allSettings = Hooks.useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
-    const settingsSync = useOptionalCapability(AppCapabilities.SettingsSync);
+    const settingsSync = Hooks.useOptionalCapability(AppCapabilities.SettingsSync);
     const [filter, setFilter] = useState('');
 
     const filtered = useMemo(() => {
@@ -147,10 +145,10 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     );
 
     return (
-      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+      <Panel.Root {...Util.composableProps(props)} ref={forwardedRef}>
         <Panel.Header>
           <Toolbar.Root>
-            <Input
+            <Input.Root
               aria-label={t('filter.label')}
               placeholder={t('filter.placeholder')}
               value={filter}
@@ -161,7 +159,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
         <Panel.Body asChild>
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
-              <Container gutter='md' padBlock>
+              <Layout.Container gutter='md' padBlock>
                 {filtered.length > 0 ? (
                   <PluginList
                     plugins={filtered}
@@ -184,7 +182,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
                 ) : (
                   empty
                 )}
-              </Container>
+              </Layout.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>

@@ -3,6 +3,5 @@
 //
 
 export * as SettingsPlugin from './SettingsPlugin.ts';
-export * from './actions.ts';
-export * from '#meta';
 export * from '#types';
+export * as SettingsAction from './SettingsAction.ts';

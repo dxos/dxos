@@ -7,19 +7,16 @@ import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, use
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import {
-  Block,
-  Button,
-  type ButtonProps,
-  Card,
-  DxAnchorActivate,
-  Icon,
-  SystemButton,
-  Tag,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tag from '@dxos/react-ui/Tag';
 import { type Actor, type Message } from '@dxos/types';
 import { mx, toHue } from '@dxos/ui-theme';
+import { DxAnchorActivate } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -150,7 +147,7 @@ const AnchorIconButton = ({
   }, [value, openCard, onClick]);
 
   return (
-    <Button
+    <Button.Root
       onPointerEnter={startHover}
       onPointerLeave={cancelHover}
       classNames={compact ? 'min-h-0' : 'aspect-square'}
@@ -186,9 +183,9 @@ const RowDate = ({ start, end }: RowDateProps) => {
 
   return (
     <Card.Row>
-      <Block>
-        <Icon icon='ph--calendar--regular' />
-      </Block>
+      <Layout.Block>
+        <Icon.Icon icon='ph--calendar--regular' />
+      </Layout.Block>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
         <div className='truncate text-fg-muted'>{format(start, 'PPp')}</div>
         {duration.length > 0 && <div className='text-fg-muted text-xs'>({duration})</div>}
@@ -216,9 +213,9 @@ const RowRef = ({ object }: RowRefProps) => {
   // TODO(burdon): Nav?
   return (
     <Card.Row>
-      <Block>
+      <Layout.Block>
         <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
-      </Block>
+      </Layout.Block>
       <div className='flex items-center'>
         <span className='truncate text-primary-text'>{label}</span>
       </div>
@@ -265,9 +262,9 @@ type RowPersonProps = {
  */
 const PersonAvatarRow = ({ actor, size, onClick }: Pick<RowPersonProps, 'actor' | 'size' | 'onClick'>) => (
   <Card.Row>
-    <Block>
+    <Layout.Block>
       <Avatar actor={actor} size={size} onClick={onClick} />
-    </Block>
+    </Layout.Block>
     <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
   </Card.Row>
 );
@@ -305,7 +302,7 @@ export const ContactAvatar = ({
   onContactCreate,
   onClick,
 }: ContactAvatarProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   // Unconditional hook, but a `getContact` caller passes no `db`, so it runs no query.
   const resolved = useActorContact(getContact ? undefined : db, actor);
   const contactDXN = getContact ? getContact(actor) : resolved;
@@ -348,7 +345,7 @@ export const ContactAvatar = ({
         <Avatar actor={actor} size={size} onClick={onClick} />
       </div>
       {canCreate && (
-        <Button
+        <Button.Root
           variant='ghost'
           iconOnly
           icon='ph--user-circle-plus--regular'
@@ -376,11 +373,11 @@ const PersonContactRow = ({
   onRemove,
   onClick,
 }: RowPersonProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   return (
     <Card.Row>
-      <Block>
+      <Layout.Block>
         <ContactAvatar
           actor={actor}
           role={role}
@@ -390,18 +387,18 @@ const PersonContactRow = ({
           onContactCreate={onContactCreate}
           onClick={onClick}
         />
-      </Block>
+      </Layout.Block>
       <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
       {onRemove && (
-        <Block rail='end'>
-          <Button
+        <Layout.Block rail='end'>
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--x--regular'
             label={t('remove-attendee.label')}
             onClick={onRemove}
           />
-        </Block>
+        </Layout.Block>
       )}
     </Card.Row>
   );
@@ -438,12 +435,12 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
 
   return (
     <Card.Row>
-      <Block>
-        <Icon icon='ph--tag--regular' />
-      </Block>
+      <Layout.Block>
+        <Icon.Icon icon='ph--tag--regular' />
+      </Layout.Block>
       <div className='flex flex-wrap gap-1 py-1' data-testid='extracted-tags'>
         {tags.map((tag) => (
-          <Tag
+          <Tag.Tag
             key={tag.id}
             hue={toHue(tag.hue)}
             data-testid={`message-tag-${tag.id}`}
@@ -457,7 +454,7 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
             }
           >
             {tag.label ?? tag.id}
-          </Tag>
+          </Tag.Tag>
         ))}
       </div>
     </Card.Row>
@@ -481,7 +478,7 @@ type RowStarProps = {
  * the click from bubbling so starring doesn't also select/activate the surrounding tile or card.
  */
 const RowStar = ({ starred, onToggle }: RowStarProps) => {
-  const handleClick = useCallback<NonNullable<ButtonProps['onClick']>>(
+  const handleClick = useCallback<NonNullable<Button.RootProps['onClick']>>(
     (event) => {
       event.stopPropagation();
       onToggle?.();
@@ -520,12 +517,12 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
 
   return (
     <Card.Row>
-      <Block>
-        <Icon icon='ph--paperclip--regular' />
-      </Block>
+      <Layout.Block>
+        <Icon.Icon icon='ph--paperclip--regular' />
+      </Layout.Block>
       <div className='flex flex-wrap gap-1 py-1' data-testid='message-attachments'>
         {attachments.map((attachment, index) => (
-          <Tag
+          <Tag.Tag
             key={attachment.ref.uri}
             hue='neutral'
             classNames={mx('inline-flex items-center gap-1', onAttachmentClick && 'cursor-pointer')}
@@ -549,9 +546,9 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
               },
             })}
           >
-            <Icon icon='ph--file--regular' size='xs' />
+            <Icon.Icon icon='ph--file--regular' size='xs' />
             {attachment.name ?? attachment.ref.uri}
-          </Tag>
+          </Tag.Tag>
         ))}
       </div>
     </Card.Row>

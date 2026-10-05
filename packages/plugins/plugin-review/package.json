@@ -78,18 +78,12 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./AgentIdentity": {
       "source": "./src/types/AgentIdentity.ts",
       "types": "./dist/types/src/types/AgentIdentity.d.ts",
       "import": "./dist/lib/AgentIdentity.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./CommentCapabilities": {
       "source": "./src/types/CommentCapabilities.ts",
       "types": "./dist/types/src/types/CommentCapabilities.d.ts",
@@ -100,6 +94,22 @@
       "types": "./dist/types/src/types/CommentOperation.d.ts",
       "import": "./dist/lib/CommentOperation.mjs"
     },
+    "./CommentOperationHandlerSet": {
+      "source": "./src/operations/CommentOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/CommentOperationHandlerSet.d.ts",
+      "import": "./dist/lib/CommentOperationHandlerSet.mjs"
+    },
+    "./CommentSkill": {
+      "source": "./src/skills/CommentSkill.ts",
+      "types": "./dist/types/src/skills/CommentSkill.d.ts",
+      "import": "./dist/lib/CommentSkill.mjs"
+    },
+    "./Containers": {
+      "source": "./src/Containers.ts",
+      "types": "./dist/types/src/Containers.d.ts",
+      "import": "./dist/lib/ns/Containers.mjs"
+    },
+    "./package.json": "./package.json",
     "./ReviewCapabilities": {
       "source": "./src/types/ReviewCapabilities.ts",
       "types": "./dist/types/src/types/ReviewCapabilities.d.ts",
@@ -120,15 +130,10 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./CommentOperationHandlerSet": {
-      "source": "./src/operations/CommentOperationHandlerSet.ts",
-      "types": "./dist/types/src/operations/CommentOperationHandlerSet.d.ts",
-      "import": "./dist/lib/CommentOperationHandlerSet.mjs"
-    },
-    "./CommentSkill": {
-      "source": "./src/skills/CommentSkill.ts",
-      "types": "./dist/types/src/skills/CommentSkill.d.ts",
-      "import": "./dist/lib/CommentSkill.mjs"
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -13,7 +13,7 @@ import * as Stream from 'effect/Stream';
 import { createServer } from 'node:http';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as McpToolkit from './McpToolkit.ts';
 

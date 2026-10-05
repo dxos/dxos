@@ -13,8 +13,8 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Focus } from '@dxos/react-ui';
 import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
+import * as Focus from '@dxos/react-ui/Focus';
 import { Loading, withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 

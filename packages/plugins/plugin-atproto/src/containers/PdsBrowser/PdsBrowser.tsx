@@ -5,29 +5,28 @@
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { AppSurface, ObjectCard } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken, Connection } from '@dxos/link';
 import { useQuery } from '@dxos/react-client/echo';
-import {
-  Button,
-  Container,
-  Empty,
-  Field,
-  Flex,
-  Icon,
-  Input,
-  Panel,
-  ScrollArea,
-  Toolbar,
-  Tooltip,
-  useTranslation,
-} from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { meta } from '#meta';
 import { AtprotoCapabilities } from '#types';
@@ -66,11 +65,11 @@ type PaneListProps = {
  */
 const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListProps) => (
   // `overflow-hidden` lets the panes shrink below their content so their own scroll areas engage.
-  <Flex gap='sm' classNames='dx-grow overflow-hidden'>
+  <Layout.Flex gap='sm' classNames='dx-grow overflow-hidden'>
     <Panel.Root classNames='shrink-0 w-max max-w-xs'>
       <Panel.Body>
         {rows.length === 0 ? (
-          <Empty>{emptyLabel}</Empty>
+          <Status.Empty>{emptyLabel}</Status.Empty>
         ) : (
           <OrderedList.Root<PaneRow>
             items={rows}
@@ -90,12 +89,12 @@ const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListPr
                     onClick={() => row.id === selectedId && onSelect(undefined)}
                   >
                     <OrderedList.ItemIcon>
-                      <Icon icon={row.icon} />
+                      <Icon.Icon icon={row.icon} />
                     </OrderedList.ItemIcon>
                     <OrderedList.ItemText>{row.label}</OrderedList.ItemText>
                     {row.adornment && (
                       <Tooltip.Trigger asChild side='bottom' content={row.adornment.label}>
-                        <Icon icon={row.adornment.icon} />
+                        <Icon.Icon icon={row.adornment.icon} />
                       </Tooltip.Trigger>
                     )}
                   </OrderedList.Item>
@@ -109,7 +108,7 @@ const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListPr
     <Panel.Root classNames='flex-1 min-w-0'>
       <Panel.Body classNames='flex flex-col dx-grow'>{detail}</Panel.Body>
     </Panel.Root>
-  </Flex>
+  </Layout.Flex>
 );
 
 /**
@@ -118,8 +117,8 @@ const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListPr
  * for are marked; their records preview as ECHO objects (readonly card surface) and can be imported.
  */
 export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const readRepoLayer = useCapability(AtprotoCapabilities.ReadRepoLayer);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const readRepoLayer = Hooks.useCapability(AtprotoCapabilities.ReadRepoLayer);
 
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
@@ -267,10 +266,10 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
   const recordDetail = record ? (
     <ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
-        <Container gap='md' gutter='none'>
+        <Layout.Container gap='md' gutter='none'>
           <span className='font-mono text-xs text-fg-muted truncate'>{record.uri}</span>
           {mappedForCollection ? (
-            <Flex column gap='sm'>
+            <Layout.Flex column gap='sm'>
               {preview && (
                 <ObjectCard.Root>
                   <ObjectCard.Header subject={preview} />
@@ -280,15 +279,15 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
               {alreadyImported ? (
                 <span className='text-sm text-success-text'>{t('imported.label')}</span>
               ) : (
-                <Button variant='primary' classNames='self-start' onClick={handleImport}>
+                <Button.Root variant='primary' classNames='self-start' onClick={handleImport}>
                   {t('import.label')}
-                </Button>
+                </Button.Root>
               )}
-            </Flex>
+            </Layout.Flex>
           ) : (
             <JsonHighlighter data={record.value} />
           )}
-        </Container>
+        </Layout.Container>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   ) : null;
@@ -297,9 +296,9 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root classNames='px-2'>
-          <Icon icon='ph--at--regular' size='md' tone='muted' />
+          <Icon.Icon icon='ph--at--regular' size='md' tone='muted' />
           <Field.Root>
-            <Input
+            <Input.Root
               classNames='grow'
               placeholder={t('handle.placeholder')}
               value={handleInput}
@@ -311,7 +310,9 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
               }}
             />
           </Field.Root>
-          <Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>{t('browse.label')}</Button>
+          <Button.Root onClick={() => setActiveHandle(handleInput.trim() || undefined)}>
+            {t('browse.label')}
+          </Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='flex flex-col dx-grow py-2'>

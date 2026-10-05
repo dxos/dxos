@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -46,7 +46,7 @@ const meta = {
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({
-      plugins: [ProcessManagerPlugin()],
+      plugins: [ProcessManagerPlugin.make()],
     }),
   ],
   parameters: {

@@ -6,13 +6,13 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Routine from '@dxos/compute/Routine';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { RoutineForm } from '#components';
 import { meta } from '#meta';
@@ -29,7 +29,7 @@ export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>
  * achieve it — reintroduce a run-state-based lock instead.
  */
 export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const registry = useContext(RegistryContext);
   // Subscribe so the run affordance tracks the routine's action (`spec`).
   const [routine] = useObject(subject);
