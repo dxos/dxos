@@ -13,6 +13,7 @@ This directory holds what a run needs besides the spec:
 | Path                  | What                                                                         |
 | --------------------- | ---------------------------------------------------------------------------- |
 | `bin/qa-browser.mjs`  | Keeps a headless Chromium page on the QA server so the app boots unwatched   |
+| `bin/two-user-invite.mjs` | Two identities in separate profiles: Bob invites Alice; reports inbox delivery and EDGE `/inbox` statuses |
 | `reports/TEMPLATE.md` | The per-run report; `reports/` is gitignored, a Routine commits on `qa`      |
 
 ## Anatomy of a test
@@ -97,3 +98,17 @@ are gitignored so a local run leaves no diff; a Routine commits its report on th
 4. Run it once through `/dxos:qa run` and fix the test where the app contradicted it before
    committing, then set its `status:` with the date. The spec is the artifact; the run is how it
    earns its accuracy.
+
+## Two identities
+
+Each `qa-browser.mjs` process is its own Chromium profile, so its own identity. `--session <uuid>`
+re-keys that page's debug port, since the server bakes one session into every page it serves:
+
+```bash
+node packages/apps/composer-app/testing/bin/qa-browser.mjs http://127.0.0.1:5182/ --session <uuid> &
+```
+
+`bin/two-user-invite.mjs [url]` drives a full contact-book invitation between two fresh identities
+(admit before contact, join, admit as contact) and prints Alice's inbox, contacts and envelope badge
+at each step plus every EDGE `/inbox` call. Point it at a deployed origin to check that EDGE accepts
+its identities: a fresh identity there gets `403 identity_not_associated_with_account`.
