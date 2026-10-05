@@ -16,22 +16,22 @@ _4 error(s), 12 warning(s)._
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 1016bdb6-1 - unresolved - no-env-vars-in-low-level-modules - packages/e2e/perf-harness/src/report.ts:555
-- 1016bdb6-2 - unresolved - extract-non-rendering-logic-from-component - packages/plugins/plugin-assistant/src/components/Chat/Chat.tsx:122
-- 1016bdb6-3 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-assistant/src/components/Chat/Chat.tsx:397
-- 1016bdb6-4 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatPrompt.stories.tsx:74
-- 1016bdb6-5 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatPrompt.tsx:211
-- 1016bdb6-6 - unresolved - no-casts - packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.stories.tsx:252
-- 1016bdb6-7 - unresolved - extract-non-rendering-logic-from-component - packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.tsx:82
-- 1016bdb6-8 - unresolved - no-sleep-in-test - packages/plugins/plugin-assistant/src/processor/outbox.test.ts:13
-- 1016bdb6-9 - unresolved - errors-extend-base-error - packages/plugins/plugin-assistant/src/processor/outbox.ts:36
-- 1016bdb6-10 - unresolved - errors-extend-base-error - packages/plugins/plugin-assistant/src/processor/processor.ts:114
-- 1016bdb6-11 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui-assistant/src/components/ChatThread/ChatThread.stories.tsx:152
-- 1016bdb6-12 - unresolved - no-casts - packages/ui/react-ui-assistant/src/components/ChatThread/ChatThread.stories.tsx:330
-- 1016bdb6-13 - unresolved - reactive-state-via-atom-bridge - packages/ui/react-ui-assistant/src/components/ChatThread/ChatThread.tsx:122
-- 1016bdb6-14 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui-assistant/src/components/MessageChrome/MessageChrome.tsx:104
-- 1016bdb6-15 - unresolved - namespace-export-with-internal-hiding - packages/ui/react-ui-assistant/src/index.ts:1
-- 1016bdb6-16 - unresolved - extract-non-rendering-logic-from-component - packages/ui/react-ui-feed/src/components/Block/MarkdownBlock.tsx:204
+- 1016bdb6-1 - ignored - no-env-vars-in-low-level-modules - packages/e2e/perf-harness/src/report.ts:555
+- 1016bdb6-2 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-assistant/src/components/Chat/Chat.tsx:122
+- 1016bdb6-3 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-assistant/src/components/Chat/Chat.tsx:397
+- 1016bdb6-4 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatPrompt.stories.tsx:74
+- 1016bdb6-5 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatPrompt.tsx:211
+- 1016bdb6-6 - ignored - no-casts - packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.stories.tsx:252
+- 1016bdb6-7 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.tsx:82
+- 1016bdb6-8 - resolved - no-sleep-in-test - packages/plugins/plugin-assistant/src/processor/outbox.test.ts:13
+- 1016bdb6-9 - resolved - errors-extend-base-error - packages/plugins/plugin-assistant/src/processor/outbox.ts:36
+- 1016bdb6-10 - ignored - errors-extend-base-error - packages/plugins/plugin-assistant/src/processor/processor.ts:114
+- 1016bdb6-11 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-assistant/src/components/ChatThread/ChatThread.stories.tsx:152
+- 1016bdb6-12 - ignored - no-casts - packages/ui/react-ui-assistant/src/components/ChatThread/ChatThread.stories.tsx:330
+- 1016bdb6-13 - ignored - reactive-state-via-atom-bridge - packages/ui/react-ui-assistant/src/components/ChatThread/ChatThread.tsx:122
+- 1016bdb6-14 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-assistant/src/components/MessageChrome/MessageChrome.tsx:104
+- 1016bdb6-15 - ignored - namespace-export-with-internal-hiding - packages/ui/react-ui-assistant/src/index.ts:1
+- 1016bdb6-16 - ignored - extract-non-rendering-logic-from-component - packages/ui/react-ui-feed/src/components/Block/MarkdownBlock.tsx:204
 
 ## Issues
 
@@ -100,6 +100,11 @@ System One judges this a likely violation of `namespace-export-with-internal-hid
 System One judges this a likely violation of `extract-non-rendering-logic-from-component` (Move derived-state and lifecycle logic out of the component body into a hook or function), p=0.84. The likeliest place is lines 204-215 (`if (!view || (!hits?.length && !highlighted.current)) {`, location confidence 0.19). This is a single-shot classifier: confirm against the rule before acting.
 
 ## Appendix
+
+1016bdb6-8 resolved: the outbox tests wait on the dispatch being reached and on `Outbox.idle`, no timer.
+1016bdb6-9 resolved: `PromptCancelledError` is `BaseError.extend`.
+1016bdb6-1, -2, -3, -4, -5, -6, -7, -10, -11, -12, -13, -14, -16 ignored: the flagged lines predate this PR (it touches other lines of those files).
+1016bdb6-15 ignored: the barrel already exports by wildcard; this PR adds one line in its existing style.
 
 ### System One pass
 
