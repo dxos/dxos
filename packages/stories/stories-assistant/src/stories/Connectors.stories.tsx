@@ -79,10 +79,7 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
-        import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-connector/ConnectorPlugin'),
-      ]);
+      const [InboxPlugin] = await Promise.all([import('@dxos/plugin-inbox/InboxPlugin')]);
       return {
         plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
@@ -124,10 +121,7 @@ export const WithGmail: Story = {
 export const WithConnectorPrompt: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
-        import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-connector/ConnectorPlugin'),
-      ]);
+      const [InboxPlugin] = await Promise.all([import('@dxos/plugin-inbox/InboxPlugin')]);
       return {
         plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
@@ -156,10 +150,7 @@ export const WithConnectorPrompt: Story = {
 export const WithCalendar: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
-        import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-connector/ConnectorPlugin'),
-      ]);
+      const [InboxPlugin] = await Promise.all([import('@dxos/plugin-inbox/InboxPlugin')]);
       return {
         plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };

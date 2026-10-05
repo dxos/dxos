@@ -174,7 +174,7 @@ export const inverseRelation = (relation: Node.RelationInput): Node.Relation => 
 };
 
 /** Node payload; `data` is undefined for a placeholder the graph has not been given yet. */
-type GraphNode = { id: string; data?: Node.Node };
+type ModelNode = { id: string; data?: Node.Node };
 
 /** Relation lives in `type`; `order` carries the caller's sort position. */
 type GraphEdge = { id: string; type: string; source: string; target: string };
@@ -251,7 +251,7 @@ export class GraphImpl implements WritableGraph {
    * Canonical store. Nodes an edge references before they are contributed sit in it as
    * placeholders, and a removed node leaves one behind, so arrival order is free.
    */
-  readonly _model: GraphModel.GraphModel<GraphNode, GraphEdge>;
+  readonly _model: GraphModel.GraphModel<ModelNode, GraphEdge>;
 
   /** @internal */
   readonly _node = Atom.family<string, Atom.Atom<Option.Option<Node.Node>>>((id) => {
@@ -367,7 +367,7 @@ export class GraphImpl implements WritableGraph {
     this._registry = registry ?? AtomEx.makeRegistry();
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
-    this._model = new GraphModel.GraphModel<GraphNode, GraphEdge>({ registry: this._registry });
+    this._model = new GraphModel.GraphModel<ModelNode, GraphEdge>({ registry: this._registry });
 
     this._model.batch(() => {
       this._setNode(GraphNode.RootId, this._constructNode({ id: GraphNode.RootId, type: Node.RootType, data: null }));

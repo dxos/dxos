@@ -158,7 +158,7 @@ export const func: {
   package's namespace, a local declaration, or a global such as `Map` or `Error`), prefix it with
   the package's short name: `ToolkitHooks` for `@dxos/app-toolkit/Hooks`, `GraphHooks` for
   `@dxos/plugin-graph/Hooks`, `EchoError` for `@dxos/echo/Error`. app-framework's namespace keeps
-  the bare name.
+  the bare name. `import-as-namespace` enforces this for package subpaths.
 - For a namespace file, avoid prefixing top-level types with the namespace name —
   inside `Foo.ts` prefer `Manager`, `Service`, `Options` over `FooManager`,
   `FooService`, `FooOptions` (callers see `Foo.Manager` either way).
