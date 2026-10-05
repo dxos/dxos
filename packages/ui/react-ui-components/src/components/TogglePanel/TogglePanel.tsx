@@ -35,19 +35,32 @@ type RootProps = ThemedClassName<
       open?: boolean;
       defaultOpen?: boolean;
       onChangeOpen?: (open: boolean) => void;
+      /**
+       * Mount the body on first open, and keep it mounted after. For a panel rendered many times over
+       * whose body is costly to build — a list of them pays for every body the reader never opens.
+       */
+      lazyMount?: boolean;
     } & Partial<ContextValue>
   >
 >;
 
-const Root = ({ children, classNames, open, defaultOpen = false, duration = 250, onChangeOpen }: RootProps) => (
+const Root = ({
+  children,
+  classNames,
+  open,
+  defaultOpen = false,
+  duration = 250,
+  lazyMount = false,
+  onChangeOpen,
+}: RootProps) => (
   <TogglePanelContext duration={duration}>
     <Collapsible.Root
       open={open}
       defaultOpen={defaultOpen}
       onOpenChange={onChangeOpen && ((details) => onChangeOpen(details.open))}
-      // The body is clipped rather than unmounted, matching what callers relied on before: several
-      // gate their own content on `open` and would double-unmount otherwise.
-      lazyMount={false}
+      // The body is clipped rather than unmounted by default, matching what callers relied on before:
+      // several gate their own content on `open` and would double-unmount otherwise.
+      lazyMount={lazyMount}
       className={mx(classNames)}
     >
       {children}
