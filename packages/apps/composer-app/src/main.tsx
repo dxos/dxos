@@ -75,7 +75,6 @@ import {
   translations,
 } from './util/index.ts';
 import clientWorkerPluginUrl from './workers/client-plugin.ts?module-url';
-import dedicatedWorkerUrl from './workers/dedicated-worker.ts?module-url';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
@@ -532,8 +531,7 @@ const main = async () => {
   );
   const services = await createClientServices(config, {
     createDedicatedWorker: () =>
-      // A module URL, not `new URL(...)`: the worker entry shares one build with the plugins it loads.
-      new Worker(dedicatedWorkerUrl, {
+      new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),

@@ -56,21 +56,21 @@ same unit of contribution a tab uses.
   identity data provider is added in `onStart` (after every `StackReady` subscriber, so the stack is
   open). A plugin would add a failure mode, and the log sink must predate plugin loading anyway.
   (Supersedes decision 4b's observability plugin, per review.)
-- **D6 — the worker is one build environment.** Composer's `ModuleUrlPlugin` lists the worker
-  entry and its plugins (`dedicated-worker.ts`, `client-plugin.ts`) as
-  entries of a `worker` build environment, built before the client with its exports kept. They share
-  chunks, so the worker holds one instance of `effect`, `@dxos/rpc` and every other module they have
-  in common; the environment's files are emitted into the client's output, and the tab starts the
-  worker from its module URL. Rejected on the way:
+- **D6 — worker plugins are entries of the worker's own build.** Composer's `ModuleUrlPlugin` is told
+  `workers: { 'src/workers/dedicated-worker.ts': ['src/workers/client-plugin.ts'] }`: in the dedicated
+  worker's build (the one Vite runs for its `new Worker(new URL(...))`), the plugin emits each listed module
+  as an extra entry chunk with its exports kept. They share chunks with the worker entry, so the worker
+  holds one instance of `effect`, `@dxos/rpc` and every other module they have in common. Vite copies the
+  worker build's files into the tab's; the tab's `?module-url` import resolves to a placeholder that the
+  plugin rewrites to the chunk's path as the importing chunk renders. Rejected on the way:
   - chunks emitted into the tab's build broke Composer's cycle-safe boot partition (a
     `boot-8 → chunk → boot-9` cycle left `trace` undefined) and could carry DOM code into the worker;
   - self-contained bundles per URL duplicated module-level state, and the first RPC reply failed with
     `DataCloneError: Symbol() could not be cloned`;
-  - extra entries injected into Vite's own nested worker build: smaller, but it leans on unofficial
-    worker-bundler behaviour.
-    Top-level plugins apply to every environment, so Composer marks its client plugins `clientOnly`;
-    the worker environment builds with `sharedPlugins`, as the nested worker build did. A plugin
-    built elsewhere still bundles its own copies: sharing with it needs a shared-module registry.
+  - a separate Vite build environment for the worker and its plugins: it took over worker bundling,
+    needed every client plugin marked out of it, and once `ClientPlugin` joined it needed
+    `strictExecutionOrder` and no per-chunk CSS, and still failed to start in production.
+    A plugin built elsewhere still bundles its own copies: sharing with it needs a shared-module registry.
 
 ## Risks
 
@@ -78,5 +78,5 @@ same unit of contribution a tab uses.
   SDKs into the worker graph (the old `worker-runtime.ts` did the same). A `LayerStack` subpath
   export would cut it; tracked in TASKS.
 
-- `ModuleUrlPlugin`'s environment turns Composer's build into Vite's app builder (`builder: {}`), and
-  a plugin that builds its own environment must now leave the client's to it.
+- D6 relies on Vite treating a worker build's first output chunk as the worker entry and copying every
+  other output file into the tab's build; `vite-plugin-module-url`'s test covers both.

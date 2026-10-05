@@ -2,30 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { basename, extname, posix, resolve } from 'node:path';
-import { type Plugin, type Rolldown } from 'vite';
+import { basename, dirname, extname, posix, relative, resolve } from 'node:path';
+import { RolldownMagicString } from 'rolldown';
+import { type Plugin } from 'vite';
 
 const QUERY = '?module-url';
 
-/** Modules built together in a build environment of their own. */
-export type ModuleUrlEnvironment = {
-  /**
-   * Environment name.
-   * @default 'moduleUrl'
-   */
-  name?: string;
-  /** Module paths, relative to the project root; each becomes an entry named after its file. */
-  entries: readonly string[];
-};
-
 export type ModuleUrlPluginOptions = {
   /**
-   * Builds these modules as one graph, in an environment built before the client, so a realm that
-   * loads several of them (a worker entry and the plugins it `import()`s) shares one instance of
-   * every module they have in common. A `?module-url` import of any other file stays a
-   * self-contained bundle.
+   * Modules built as extra entries of a worker's own build, keyed by that worker's entry (paths relative
+   * to the project root). The worker then loads one instance of every module they share with it, where a
+   * self-contained bundle would carry copies of its own. Pass the same options to the instance in
+   * `worker.plugins`, which is the one that sees the worker's build.
    */
-  environment?: ModuleUrlEnvironment;
+  workers?: Readonly<Record<string, readonly string[]>>;
 };
 
 /**
@@ -33,6 +23,22 @@ export type ModuleUrlPluginOptions = {
  * build and the worker bundles it spawns each run their own instance of the plugin.
  */
 const targets = new Set<string>();
+
+/** Output file of each module built into a host worker's build, recorded by that build for the tab's. */
+const hostedFiles = new Map<string, string>();
+
+/** Hosted modules in placeholder order; a placeholder names its module by index. */
+const placeholderModules: string[] = [];
+
+const PLACEHOLDER_RE = /__DX_MODULE_URL_(\d+)__/g;
+
+const placeholderFor = (file: string): string => {
+  let index = placeholderModules.indexOf(file);
+  if (index === -1) {
+    index = placeholderModules.push(file) - 1;
+  }
+  return `__DX_MODULE_URL_${index}__`;
+};
 
 /**
  * Path prefix the dev server mounts `/@fs/` under. The dev server ignores an absolute-URL base's origin,
@@ -45,8 +51,6 @@ const devBasePath = (base: string): string => {
   return base.startsWith('/') ? base : '/';
 };
 
-const entryName = (file: string): string => basename(file, extname(file));
-
 /**
  * Resolves `import url from './module.ts?module-url'` to the URL of that module compiled as an
  * ES module whose exports are preserved, so another realm (e.g. a worker) can `import()` it.
@@ -54,126 +58,60 @@ const entryName = (file: string): string => basename(file, extname(file));
  * Vite's built-ins cannot do this: `new URL('./x.ts', import.meta.url)` and `?url` copy the raw
  * source as an asset, and `?worker&url` bundles a worker entry with its exports tree-shaken away.
  *
- * Dev serves the source module through `/@fs/`, as a module worker entry. In a build, a module listed in `environment.entries`
- * is an entry of that environment's build, whose output files are emitted into the client's. Any
- * other module goes through Vite's worker bundler (`?worker&url`) with its exports kept: a
- * self-contained bundle, never a chunk of the importing build, whose shared chunks could carry DOM
- * code into a worker or break a chunking scheme that assumes it sees the whole graph. That path needs
- * the plugin in `worker.plugins` too, and `worker.format: 'es'`.
+ * Dev serves the source module through `/@fs/`. In a build, a module listed under a worker in `workers`
+ * is an extra entry chunk of that worker's build, so it shares the worker's chunks; Vite copies that
+ * build's files into the importing build, and the URL is resolved once both exist. Any other module
+ * goes through Vite's worker bundler (`?worker&url`) with its exports kept: a self-contained bundle,
+ * never a chunk of the importing build, whose shared chunks could carry DOM code into a worker or break
+ * a chunking scheme that assumes it sees the whole graph. Either way the plugin must be in
+ * `worker.plugins` too, and `worker.format` must be `'es'`.
  */
-export const ModuleUrlPlugin = ({ environment }: ModuleUrlPluginOptions = {}): Plugin => {
-  const environmentName = environment?.name ?? 'moduleUrl';
+export const ModuleUrlPlugin = ({ workers = {} }: ModuleUrlPluginOptions = {}): Plugin => {
   let command: 'serve' | 'build' = 'serve';
   let base = '/';
-  let root = process.cwd();
-  let entries: string[] = [];
-  /** The environment's output, emitted into the client build. */
-  let output: (Rolldown.OutputChunk | Rolldown.OutputAsset)[] = [];
-  /** Asset reference of each entry's output file, per client build. */
-  const references = new Map<string, string>();
+  /** Each hosted module, by its host worker's entry. */
+  let hosts = new Map<string, string[]>();
+  /** The host each hosted module is built into. */
+  let hostOf = new Map<string, string>();
+  /** This build's single input, when it is a worker bundle. */
+  let workerInput: string | undefined;
 
   return {
     name: 'dxos:module-url',
-    // One instance across environments: the client build reads what the environment's build produced.
-    sharedDuringBuild: true,
-    config: (config, { command }) => {
-      if (!environment || command !== 'build') {
-        return;
-      }
-
-      root = resolve(config.root ?? process.cwd());
-      entries = environment.entries.map((entry) => resolve(root, entry));
-      const names = entries.map(entryName);
-      const duplicate = names.find((name, index) => names.indexOf(name) !== index);
-      if (duplicate) {
-        throw new Error(`ModuleUrlPlugin: two entries are named "${duplicate}".`);
-      }
-
-      return { builder: {}, environments: { [environmentName]: { consumer: 'client' } } };
-    },
-    // After the environment has inherited the top-level build options: replace, not merge, the ones
-    // that describe the client's own output (its HTML inputs, its chunking, its manifest).
-    configEnvironment: (name, config) => {
-      if (!environment || name !== environmentName) {
-        return;
-      }
-
-      const assetsDir = config.build?.assetsDir ?? 'assets';
-      const fileNames = posix.join(assetsDir, '[name]-[hash].js');
-      config.build = {
-        ...config.build,
-        write: false,
-        emptyOutDir: false,
-        copyPublicDir: false,
-        manifest: false,
-        ssrManifest: false,
-        // Vite's preload helper touches `document`, which a worker does not have: no preloads, and no
-        // per-chunk CSS, which a dynamic import would preload even then.
-        modulePreload: false,
-        cssCodeSplit: false,
-        rolldownOptions: {
-          external: config.build?.rolldownOptions?.external,
-          input: Object.fromEntries(entries.map((entry) => [entryName(entry), entry])),
-          preserveEntrySignatures: 'strict',
-          output: {
-            format: 'es',
-            entryFileNames: fileNames,
-            chunkFileNames: fileNames,
-            assetFileNames: posix.join(assetsDir, '[name]-[hash][extname]'),
-            // Default splitting over several entries can put the two sides of a module cycle in chunks
-            // that import each other, and a class then extends a binding its chunk has not evaluated.
-            strictExecutionOrder: true,
-          },
-        },
-      };
-    },
     configResolved: (config) => {
       command = config.command;
       base = config.base;
+      hosts = new Map(
+        Object.entries(workers).map(([host, modules]) => [
+          resolve(config.root, host),
+          modules.map((hosted) => resolve(config.root, hosted)),
+        ]),
+      );
+      hostOf = new Map([...hosts].flatMap(([host, modules]) => modules.map((hosted) => [hosted, host] as const)));
       if (command === 'build' && config.worker.format !== 'es') {
         throw new Error('ModuleUrlPlugin needs `worker.format: "es"`: a module URL is imported, not run as a script.');
       }
     },
-    buildApp: {
-      order: 'pre',
-      handler: async (builder) => {
-        const target = environment && builder.environments[environmentName];
-        if (!target || target.isBuilt) {
-          return;
-        }
-
-        const result = await builder.build(target);
-        // A watcher (`build.watch`) has no output to hand over.
-        output = (Array.isArray(result) ? result : [result]).flatMap((entry) =>
-          'output' in entry ? entry.output : [],
-        );
-        // Building one environment turns off Vite's fallback of building them all.
-        const client = builder.environments.client;
-        if (client && !client.isBuilt) {
-          await builder.build(client);
-        }
-      },
-    },
     // Runs in each worker bundle's own build (see `worker.plugins`): Vite drops a worker entry's
     // exports, which are the point of a module URL.
-    options: (options) =>
-      typeof options.input === 'string' && targets.has(options.input)
-        ? { ...options, preserveEntrySignatures: 'strict' }
-        : undefined,
+    options: (options) => {
+      workerInput = typeof options.input === 'string' ? options.input : undefined;
+      return workerInput && targets.has(workerInput) ? { ...options, preserveEntrySignatures: 'strict' } : undefined;
+    },
     buildStart() {
-      references.clear();
-      if (this.environment.name !== 'client') {
-        return;
-      }
-
-      for (const file of output) {
-        const reference = this.emitFile({
-          type: 'asset',
-          fileName: file.fileName,
-          source: file.type === 'chunk' ? file.code : file.source,
+      for (const hosted of (workerInput && hosts.get(workerInput)) ?? []) {
+        this.emitFile({
+          type: 'chunk',
+          id: hosted,
+          name: basename(hosted, extname(hosted)),
+          preserveSignature: 'strict',
         });
-        if (file.type === 'chunk' && file.isEntry && file.facadeModuleId) {
-          references.set(file.facadeModuleId, reference);
+      }
+    },
+    generateBundle(_, bundle) {
+      for (const file of Object.values(bundle)) {
+        if (file.type === 'chunk' && file.isEntry && file.facadeModuleId && hostOf.has(file.facadeModuleId)) {
+          hostedFiles.set(file.facadeModuleId, file.fileName);
         }
       }
     },
@@ -192,18 +130,17 @@ export const ModuleUrlPlugin = ({ environment }: ModuleUrlPluginOptions = {}): P
 
       const file = id.slice(0, -QUERY.length);
       if (command === 'serve') {
-        // Served as a module worker's entry, which Vite prefixes with the `define` globals: the URL
-        // may start a worker, and in one that was already started the prefix is a no-op.
-        const path = JSON.stringify(`${posix.join(devBasePath(base), '@fs', file)}?worker_file&type=module`);
+        const path = JSON.stringify(posix.join(devBasePath(base), '@fs', file));
         return `export default new URL(${path}, location.href).href;`;
       }
 
-      const reference = references.get(file);
-      if (reference) {
-        return `export default import.meta.ROLLUP_FILE_URL_${reference};`;
-      }
-      if (entries.includes(file) && this.environment.name === 'client') {
-        this.error(`ModuleUrlPlugin: "${file}" is an entry of "${environmentName}", which was not built first.`);
+      // The host worker's build may not have run yet, so its file name is filled in when the chunk renders.
+      // Through a binding: a literal `new URL('...', import.meta.url)` would be taken for an asset reference.
+      if (hostOf.has(file)) {
+        return [
+          `const path = ${JSON.stringify(placeholderFor(file))};`,
+          'export default new URL(path, import.meta.url).href;',
+        ].join('\n');
       }
 
       targets.add(file);
@@ -211,6 +148,23 @@ export const ModuleUrlPlugin = ({ environment }: ModuleUrlPluginOptions = {}): P
         `import url from ${JSON.stringify(`${file}?worker&url`)};`,
         'export default new URL(url, globalThis.location?.href ?? import.meta.url).href;',
       ].join('\n');
+    },
+    renderChunk(code, chunk) {
+      if (!code.includes('__DX_MODULE_URL_')) {
+        return;
+      }
+
+      const output = new RolldownMagicString(code);
+      for (const match of code.matchAll(PLACEHOLDER_RE)) {
+        const hosted = placeholderModules[Number(match[1])];
+        const fileName = hosted && hostedFiles.get(hosted);
+        if (!fileName) {
+          return this.error(`ModuleUrlPlugin: "${hosted}" was not built; is its host worker started from this build?`);
+        }
+        const path = relative(dirname(chunk.fileName), fileName).split('\\').join('/');
+        output.overwrite(match.index, match.index + match[0].length, path.startsWith('.') ? path : `./${path}`);
+      }
+      return output;
     },
   };
 };

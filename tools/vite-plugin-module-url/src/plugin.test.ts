@@ -6,7 +6,7 @@ import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { build, createBuilder, createServer } from 'vite';
+import { build, createServer } from 'vite';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { ModuleUrlPlugin } from './index.ts';
@@ -67,16 +67,17 @@ describe('ModuleUrlPlugin', () => {
     expect(length).toEqual({ value: 5, unit: 'px' });
   });
 
-  test('an environment builds its entries as one graph, so they share module instances', async () => {
+  test('a module hosted by a worker is an entry of the worker build, sharing its chunks', async () => {
     const outDir = await mkdtemp(join(tmpdir(), 'module-url-'));
     onTestFinished(() => rm(outDir, { recursive: true, force: true }));
 
-    const builder = await createBuilder({
+    const options = { workers: { 'host.ts': ['plugin.ts'] } };
+    await build({
       root: sharedDir,
       configFile: false,
       logLevel: 'silent',
-      plugins: [ModuleUrlPlugin({ environment: { entries: ['host.ts', 'plugin.ts'] } })],
-      worker: { format: 'es' },
+      plugins: [ModuleUrlPlugin(options)],
+      worker: { format: 'es', plugins: () => [ModuleUrlPlugin(options)] },
       build: {
         outDir,
         minify: false,
@@ -87,7 +88,6 @@ describe('ModuleUrlPlugin', () => {
         },
       },
     });
-    await builder.buildApp();
 
     const assets = await readdir(join(outDir, 'assets'));
     const host = assets.find((name) => /^host-.*\.js$/.test(name));
@@ -96,15 +96,19 @@ describe('ModuleUrlPlugin', () => {
     expect(plugin).toBeDefined();
     const main = await readFile(join(outDir, 'main.js'), 'utf8');
     expect(main).toContain(`assets/${host}`);
-    expect(main).toContain(`assets/${plugin}`);
-    // `state.ts` is split into a chunk both entries import, not inlined into each.
-    expect(await readFile(join(outDir, 'assets', `${plugin}`), 'utf8')).toMatch(/from\s*["']\.\//);
+    expect(main).toContain(`./assets/${plugin}`);
 
-    // One realm importing both by URL sees one instance of the module they share.
-    const { hostToken } = await import(pathToFileURL(join(outDir, 'assets', `${host}`)).href);
+    // `state.ts` is one chunk the worker entry and the hosted module both import, not a copy in each.
+    const imports = (code: string) => [...code.matchAll(/from\s*["']\.\/([^"']+)["']/g)].map(([, name]) => name);
+    const hostImports = imports(await readFile(join(outDir, 'assets', `${host}`), 'utf8'));
+    const pluginImports = imports(await readFile(join(outDir, 'assets', `${plugin}`), 'utf8'));
+    expect(pluginImports.filter((name) => hostImports.includes(name))).toHaveLength(1);
+
+    // One realm loading the worker entry and the module sees one instance of what they share.
+    await import(pathToFileURL(join(outDir, 'assets', `${host}`)).href);
     const { pluginToken } = await import(pathToFileURL(join(outDir, 'assets', `${plugin}`)).href);
-    expect(typeof hostToken).toBe('symbol');
-    expect(pluginToken).toBe(hostToken);
+    expect(typeof pluginToken).toBe('symbol');
+    expect(pluginToken).toBe((globalThis as { hostToken?: symbol }).hostToken);
   });
 
   test('serve resolves to the /@fs/ URL, which the dev server compiles from TS', async () => {
@@ -123,8 +127,7 @@ describe('ModuleUrlPlugin', () => {
     const urlModule = await server.transformRequest(`${join(fixtureDir, 'geometry.ts')}?module-url`);
     expect(urlModule?.code).toContain(`/@fs${join(fixtureDir, 'geometry.ts')}`);
 
-    const compiled = await server.transformRequest(`/@fs${join(fixtureDir, 'geometry.ts')}?worker_file&type=module`);
-    expect(compiled?.code).toMatch(/vite\/dist\/client\/env\.mjs/);
+    const compiled = await server.transformRequest(`/@fs${join(fixtureDir, 'geometry.ts')}`);
     expect(compiled?.code).toContain('class Path');
     expect(compiled?.code).not.toMatch(/interface Measured|satisfies/);
   });
@@ -135,6 +138,6 @@ describe('ModuleUrlPlugin', () => {
     ['./', '/@fs'],
   ])('serve maps base %s to a %s path', async (base, prefix) => {
     const file = join(fixtureDir, 'geometry.ts');
-    expect(await loadDevUrlModule(base, file)).toContain(`"${prefix}${file}?worker_file&type=module"`);
+    expect(await loadDevUrlModule(base, file)).toContain(`"${prefix}${file}"`);
   });
 });

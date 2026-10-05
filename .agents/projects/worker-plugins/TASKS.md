@@ -19,7 +19,7 @@ Design: [`./DESIGN.md`](./DESIGN.md). Branch `dm/zen-hawking-92843m`.
 - [x] Observability back in the worker entry (`onBeforeStart`/`onStart`), per review.
 - [x] Worker entry → `PluginWorker.run`; tab config lists plugin URLs (`?module-url`).
 - [x] Dev boot verified with Playwright: identity created, survives reload, second tab boots.
-- [x] `worker` build environment (`ModuleUrlPlugin({ environment })`): the worker and its plugins share one graph.
+- [x] Worker plugins built as extra entries of the dedicated worker's build (`ModuleUrlPlugin({ workers })`).
 - [ ] Production boot verified locally; CI production build + Composer e2e green.
 
 ## Follow-ups
