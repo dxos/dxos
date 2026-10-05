@@ -181,7 +181,7 @@ export interface Manager {
   readonly processTreeAtom: Atom.Writable<readonly Process.Process[]>;
 
   /**
-   * Cancels the current run of a remote (edge) trigger — its in-flight execution and `runAgain`
+   * Cancels the current run of a remote (EDGE) trigger — its in-flight execution and `runAgain`
    * continuation chain; the trigger itself stays enabled so its schedule keeps firing. Optional:
    * absent in {@link layerNoop} (local-only deployments have no remote runtime to cancel on).
    */

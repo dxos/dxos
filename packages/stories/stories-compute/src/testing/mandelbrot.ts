@@ -56,18 +56,25 @@ export const STARTING_POINTS: readonly StartingPoint[] = [
 export const randomStartingPoint = (): StartingPoint =>
   STARTING_POINTS[Math.floor(Math.random() * STARTING_POINTS.length)];
 
-/** Form params seeded from a random {@link STARTING_POINTS} entry. */
-export const randomParams = (): MandelbrotParams => {
-  const { real, imaginary, viewWidth } = randomStartingPoint();
-  return { size: DEFAULT_SIZE, interval: DEFAULT_INTERVAL, center: { x: real, y: imaginary }, width: viewWidth };
+/** The params a {@link StartingPoint} sets: its center and view width. */
+export const startingPointParams = ({ real, imaginary, viewWidth }: StartingPoint): MandelbrotParams => ({
+  center: { x: real, y: imaginary },
+  width: viewWidth,
+});
+
+/** Form values seeded from a random {@link STARTING_POINTS} entry. */
+export const randomFormValues = (): MandelbrotFormValues => {
+  const start = randomStartingPoint();
+  return { preset: start.name, size: DEFAULT_SIZE, interval: DEFAULT_INTERVAL, ...startingPointParams(start) };
 };
 
 /** Square resolution in pixels. */
 export const Size = Schema.Literals(SIZES);
 
-/** Resolution beside the interval, the view width, and the start point's coordinates side by side. */
+/** Preset, then resolution beside the interval, the view width, and the start point's coordinates side by side. */
 const PARAMS_LAYOUT = trim`
   <grid cols="2">
+    <field name="preset" span="2"/>
     <field name="size"/>
     <field name="interval"/>
     <field name="width" span="2"/>
@@ -91,9 +98,20 @@ export const MandelbrotParams = Schema.Struct({
     Schema.annotate({ title: 'Interval (ms)', description: 'Delay between frames.' }),
     Schema.optional,
   ),
-}).pipe(Annotation.FormLayoutAnnotation.set({ default: PARAMS_LAYOUT }));
+});
 
 export type MandelbrotParams = Schema.Schema.Type<typeof MandelbrotParams>;
+
+/**
+ * The command panel's form: {@link MandelbrotParams} plus the {@link STARTING_POINTS} preset whose
+ * center and view width it fills in. The preset never reaches the process.
+ */
+export const MandelbrotFormValues = Schema.Struct({
+  preset: Schema.String.pipe(Schema.annotate({ title: 'Preset' }), Schema.optional),
+  ...MandelbrotParams.fields,
+}).pipe(Annotation.FormLayoutAnnotation.set({ default: PARAMS_LAYOUT }));
+
+export type MandelbrotFormValues = Schema.Schema.Type<typeof MandelbrotFormValues>;
 
 /**
  * Grants the process `frames` more frames to push, optionally with new {@link MandelbrotParams}; a

@@ -6,14 +6,24 @@ import React, { useState } from 'react';
 
 import type * as Process from '@dxos/compute/Process';
 import { Button, Panel, Select, Toolbar } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form, createSelectField } from '@dxos/react-ui-form';
 
-import { MandelbrotParams, randomParams } from '../testing/index.ts';
+import {
+  MandelbrotFormValues,
+  type MandelbrotParams,
+  STARTING_POINTS,
+  randomFormValues,
+  startingPointParams,
+} from '../testing/index.ts';
 
 const LOCATIONS: { value: Process.Location; label: string }[] = [
   { value: 'local', label: 'Local' },
   { value: 'edge', label: 'Remote (EDGE)' },
 ];
+
+const fieldMap = {
+  preset: createSelectField({ options: STARTING_POINTS.map(({ name }) => name), defaultLabel: null }),
+};
 
 export type CommandPanelProps = {
   /** Offer EDGE as a location; otherwise every process spawns locally. */
@@ -26,7 +36,22 @@ export type CommandPanelProps = {
 
 export const CommandPanel = ({ edge = false, ready = true, error, onCreate }: CommandPanelProps) => {
   const [location, setLocation] = useState<Process.Location>('local');
-  const [params, setParams] = useState<MandelbrotParams>(randomParams);
+  const [values, setValues] = useState<MandelbrotFormValues>(randomFormValues);
+
+  // Picking a preset moves the start to it; editing the start by hand keeps the last preset's name.
+  const handleValuesChanged = (next: Partial<MandelbrotFormValues>) =>
+    setValues((previous) => {
+      const start =
+        next.preset !== undefined && next.preset !== previous.preset
+          ? STARTING_POINTS.find(({ name }) => name === next.preset)
+          : undefined;
+      return { ...previous, ...next, ...(start ? startingPointParams(start) : {}) };
+    });
+
+  const handleCreate = () => {
+    const { preset: _preset, ...params } = values;
+    onCreate(edge ? location : 'local', params);
+  };
 
   return (
     <Panel.Root>
@@ -36,7 +61,7 @@ export const CommandPanel = ({ edge = false, ready = true, error, onCreate }: Co
             icon='ph--plus--regular'
             label='Create'
             disabled={!ready}
-            onClick={() => onCreate(edge ? location : 'local', params)}
+            onClick={handleCreate}
             data-testid='process-create'
           />
           {edge && (
@@ -62,10 +87,11 @@ export const CommandPanel = ({ edge = false, ready = true, error, onCreate }: Co
       </Panel.Header>
       <Panel.Body>
         <Form.Root
-          schema={MandelbrotParams}
-          values={params}
+          schema={MandelbrotFormValues}
+          values={values}
+          fieldMap={fieldMap}
           testId='mandelbrot-params'
-          onValuesChanged={(next) => setParams((previous) => ({ ...previous, ...next }))}
+          onValuesChanged={handleValuesChanged}
         >
           <Form.Viewport scroll>
             <Form.Content>

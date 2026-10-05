@@ -53,20 +53,20 @@ export const Default: Story = {
   decorators: createStoryDecorators({ plugins: [surfacesPlugin()], Wrapper: LocalProvider }),
 };
 
-/** Dev EDGE; it must host the Mandelbrot process key for remote spawns to succeed. */
-export const EdgeRemote: Story = {
-  decorators: createStoryDecorators({
-    plugins: [surfacesPlugin()],
-    Wrapper: EdgeProvider,
-    config: makeEdgeConfig('https://dev.dxos.network'),
-  }),
-};
-
 /** A local EDGE stack (`pnpm stack:start` in the edge repo), whose edge worker listens on :8787. */
 export const EdgeLocal: Story = {
   decorators: createStoryDecorators({
     plugins: [surfacesPlugin()],
     Wrapper: EdgeProvider,
     config: makeEdgeConfig('http://localhost:8787'),
+  }),
+};
+
+/** Dev EDGE; it must host the Mandelbrot process key for remote spawns to succeed. */
+export const EdgeRemote: Story = {
+  decorators: createStoryDecorators({
+    plugins: [surfacesPlugin()],
+    Wrapper: EdgeProvider,
+    config: makeEdgeConfig('https://dev.dxos.network'),
   }),
 };
