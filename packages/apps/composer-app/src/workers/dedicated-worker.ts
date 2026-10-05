@@ -43,31 +43,29 @@ let observability: ReturnType<typeof initializeObservability> | undefined;
 // (see main.tsx); observability stays here, set up before any plugin loads.
 PluginWorker.run({
   storageLockKey: STORAGE_LOCK_KEY,
-  onBeforeStart: (config) =>
-    Effect.gen(function* () {
-      const logFilter = config.get('runtime.client.log.filter');
-      if (logFilter) {
-        logProcessor.setFilter(logFilter);
-      }
-      observability = initializeObservability(config, isTauri(), logStore, undefined, {
-        post: (message) => observabilityWorker.postMessage(message),
-      });
-      observability.catch((err) => log.catch(err));
-      // The stack this worker builds hosts echo; automerge is slim-resolved and must be
-      // initialized before it runs (see util/automerge-wasm.ts).
-      yield* Effect.promise(() => initEchoHostWasm());
-    }),
-  onStart: (stack) =>
-    Effect.gen(function* () {
-      const pending = observability;
-      const instance = pending && (yield* Effect.promise(() => pending));
-      if (!instance) {
-        return;
-      }
-      const identityManager = yield* stack
-        .getServiceResolver()
-        .resolve(IdentityContract.ManagerService, {})
-        .pipe(Effect.orDie, Effect.scoped);
-      yield* instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager));
-    }),
+  onBeforeStart: Effect.fnUntraced(function* (config) {
+    const logFilter = config.get('runtime.client.log.filter');
+    if (logFilter) {
+      logProcessor.setFilter(logFilter);
+    }
+    observability = initializeObservability(config, isTauri(), logStore, undefined, {
+      post: (message) => observabilityWorker.postMessage(message),
+    });
+    observability.catch((err) => log.catch(err));
+    // The stack this worker builds hosts echo; automerge is slim-resolved and must be
+    // initialized before it runs (see util/automerge-wasm.ts).
+    yield* Effect.promise(() => initEchoHostWasm());
+  }),
+  onStart: Effect.fnUntraced(function* (stack) {
+    const pending = observability;
+    const instance = pending && (yield* Effect.promise(() => pending));
+    if (!instance) {
+      return;
+    }
+    const identityManager = yield* stack
+      .getServiceResolver()
+      .resolve(IdentityContract.ManagerService, {})
+      .pipe(Effect.orDie, Effect.scoped);
+    yield* instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager));
+  }),
 });

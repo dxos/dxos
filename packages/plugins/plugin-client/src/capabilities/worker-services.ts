@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import type * as RpcClient from 'effect/rpc/RpcClient';
 import * as Scope from 'effect/Scope';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -36,18 +37,17 @@ export default Capability.makeModule(
     const sqlite = WorkerRuntime.layerSqlite(persistent ? undefined : layerMemory);
     const transportFactory = new RtcTransportProxyFactory();
     const tags = WorkerRuntime.signalMetadataTags(config);
+    const routeRtcThroughTab = Effect.fnUntraced(function* (systemProtocol: RpcClient.Protocol['Service']) {
+      log('client services: routing webrtc through the owning tab');
+      transportFactory.setRtcService(yield* makeRtcServiceClientOverProtocol(systemProtocol));
+      yield* Effect.addFinalizer(() => Effect.sync(() => transportFactory.setRtcService(undefined)));
+    });
 
     yield* Effect.all([
       Hook.on(WorkerEvents.StackReady, ({ stack }) => WorkerRuntime.openStack(stack, tags).pipe(Scope.provide(scope))),
       // The owning tab carries the worker's WebRTC: only a browser tab can hold peer connections.
       Hook.on(WorkerEvents.SessionOpened, ({ isOwner, systemProtocol, scope: sessionScope }) =>
-        isOwner
-          ? Effect.gen(function* () {
-              log('client services: routing webrtc through the owning tab');
-              transportFactory.setRtcService(yield* makeRtcServiceClientOverProtocol(systemProtocol));
-              yield* Effect.addFinalizer(() => Effect.sync(() => transportFactory.setRtcService(undefined)));
-            }).pipe(Scope.provide(sessionScope))
-          : Effect.void,
+        isOwner ? routeRtcThroughTab(systemProtocol).pipe(Scope.provide(sessionScope)) : Effect.void,
       ),
       Hook.on(Events.Closing, () => host.closeStack),
       // Over a SQLite layer of its own, since the stack's is gone by the time a reset gets here.
