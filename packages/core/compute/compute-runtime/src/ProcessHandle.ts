@@ -852,13 +852,11 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
     if (state !== this.#currentStatus.state) {
       log('lifecycle: state', { state, previous: this.#currentStatus.state });
     }
-    const isTerminal =
-      state === Process.State.SUCCEEDED || state === Process.State.TERMINATED || state === Process.State.FAILED;
     this.#currentStatus = {
       state,
       exit: exit ? Option.some(exit) : Option.none(),
       startedAt: this.#currentStatus.startedAt,
-      completedAt: isTerminal ? Option.some(new Date()) : Option.none(),
+      completedAt: Process.isExited(state) ? Option.some(new Date()) : Option.none(),
     };
     log('state updated', { pid: this.pid, state });
     this.#registry.refresh(this.statusAtom);

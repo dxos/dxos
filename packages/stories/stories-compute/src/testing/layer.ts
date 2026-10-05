@@ -7,7 +7,7 @@ import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
-import { LocatedProcessManager, ProcessManager, RemoteProcessManager, RemoteTraceMonitor } from '@dxos/compute-runtime';
+import { ProcessManager, RemoteProcessManager, RemoteTraceMonitor, UnifiedProcessManager } from '@dxos/compute-runtime';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -30,13 +30,10 @@ export const makeComputeLayer = ({
   edge = false,
   client,
 }: ComputeLayerOptions): Layer.Layer<Process.ManagerService> =>
-  LocatedProcessManager.layer.pipe(
+  UnifiedProcessManager.layer.pipe(
     Layer.provide(ProcessManager.layer()),
-    Layer.provide(
-      edge
-        ? EdgeProcessManager.fromClient(client).pipe(Layer.provide(RemoteTraceMonitor.layerNoop))
-        : RemoteProcessManager.layerNoop,
-    ),
+    Layer.provide(edge ? EdgeProcessManager.fromClient(client) : RemoteProcessManager.layerNoop),
+    Layer.provide(RemoteTraceMonitor.layerNoop),
     Layer.provide(ServiceResolver.layerRequirements()),
     Layer.provide(OperationHandlerSet.provide(OperationHandlerSet.empty)),
     Layer.provide(KeyValueStore.layerMemory),

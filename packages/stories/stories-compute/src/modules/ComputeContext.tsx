@@ -22,7 +22,7 @@ import { raise } from '@dxos/debug';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 
-import { type ProcessItem } from '../components/index.ts';
+import { type LocationKind, type ProcessItem } from '../components/index.ts';
 import { type MandelbrotParams, MandelbrotProcess, makeComputeLayer } from '../testing/index.ts';
 
 export type ComputeContextValue = {
@@ -32,7 +32,7 @@ export type ComputeContextValue = {
   ready: boolean;
   items: ProcessItem[];
   error?: string;
-  create: (location: Process.Location, params: MandelbrotParams) => void;
+  create: (location: LocationKind, params: MandelbrotParams) => void;
   /** Drops an ended process's card; the manager itself prunes finished processes. */
   remove: (item: ProcessItem) => void;
 };
@@ -67,10 +67,11 @@ export const ComputeProvider = ({ edge = false, children }: ComputeProviderProps
   }, [registry, edge, client]);
 
   const create = useCallback(
-    (location: Process.Location, params: MandelbrotParams) => {
+    (kind: LocationKind, params: MandelbrotParams) => {
       if (!runtime || !space) {
         return;
       }
+      const location: Process.Location = kind === 'edge' ? { kind, space: space.id } : { kind };
       setError(undefined);
       void runtime
         .runPromiseExit(

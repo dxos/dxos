@@ -14,7 +14,6 @@ import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { ContentBlock } from '@dxos/types';
 
-import type * as Process from './Process.ts';
 import type * as Trace from './Trace.ts';
 import { Instructions } from './types/index.ts';
 
@@ -129,5 +128,7 @@ export interface GetSessionOptions {
    *
    * @default 'local'
    */
-  readonly location?: Process.Location;
+  readonly location?: AgentLocation;
 }
+
+export type AgentLocation = 'local' | 'edge';

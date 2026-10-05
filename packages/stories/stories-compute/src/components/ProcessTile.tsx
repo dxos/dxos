@@ -167,10 +167,10 @@ export const ProcessTile = ({ data: item, onRemove }: ProcessTileProps) => {
         )}
       </Card.Header>
       <Card.Row
-        icon={location === 'edge' ? 'ph--cloud--regular' : 'ph--laptop--regular'}
+        icon={location.kind === 'edge' ? 'ph--cloud--regular' : 'ph--laptop--regular'}
         data-testid='process-location'
       >
-        <Card.Text>{location}</Card.Text>
+        <Card.Text>{location.kind}</Card.Text>
       </Card.Row>
       <Card.Row icon='ph--pulse--regular' data-testid='process-state'>
         <Card.Text>{status.state}</Card.Text>
