@@ -330,13 +330,17 @@ impl NativeStore {
     #[napi(ts_return_type = "Promise<number>")]
     pub fn quad_count(&self) -> Result<AsyncTask<Blocking<u32>>> {
         let store = Arc::clone(self.inner()?);
-        Ok(blocking(move || store.quad_count().map(count).map_err(error)))
+        Ok(blocking(move || {
+            store.quad_count().map(count).map_err(error)
+        }))
     }
 
     #[napi(ts_return_type = "Promise<number>")]
     pub fn graph_length(&self, graph: String) -> Result<AsyncTask<Blocking<u32>>> {
         let store = Arc::clone(self.inner()?);
-        Ok(blocking(move || store.graph_len(&graph).map(count).map_err(error)))
+        Ok(blocking(move || {
+            store.graph_len(&graph).map(count).map_err(error)
+        }))
     }
 
     /// A counter read, so it stays synchronous.

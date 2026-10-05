@@ -17,10 +17,13 @@ fn rust_files(dir: &Path, found: &mut Vec<PathBuf>) {
 }
 
 /// FNV-1a 64 over each input's crate-relative path and contents, in path order. The CLI hashes the
-/// sources on disk the same way (`staleSource` in `tools/code-index/src/internal/native.ts`), so an
+/// sources on disk the same way (`sourcesHash` in `tools/code-index/src/internal/native.ts`), so an
 /// addon left behind by a pull that changed the crate is caught by name instead of by its symptoms.
 fn sources_hash() -> String {
-    let mut files: Vec<PathBuf> = ["Cargo.toml", "Cargo.lock", "build.rs"].iter().map(PathBuf::from).collect();
+    let mut files: Vec<PathBuf> = ["Cargo.toml", "Cargo.lock", "build.rs"]
+        .iter()
+        .map(PathBuf::from)
+        .collect();
     rust_files(Path::new("src"), &mut files);
     let mut entries: Vec<(String, Vec<u8>)> = files
         .iter()
@@ -32,7 +35,13 @@ fn sources_hash() -> String {
     entries.sort_by(|left, right| left.0.as_bytes().cmp(right.0.as_bytes()));
     let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
     for (path, contents) in &entries {
-        for byte in path.as_bytes().iter().chain([0u8].iter()).chain(contents.iter()).chain([0u8].iter()) {
+        for byte in path
+            .as_bytes()
+            .iter()
+            .chain([0u8].iter())
+            .chain(contents.iter())
+            .chain([0u8].iter())
+        {
             hash ^= u64::from(*byte);
             hash = hash.wrapping_mul(0x0100_0000_01b3);
         }
