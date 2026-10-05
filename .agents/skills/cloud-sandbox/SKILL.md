@@ -58,7 +58,7 @@ No `SessionStart` hook emits a `SESSION CONTEXT` block: run
 
 ## Tooling not on PATH
 
-`pnpm` and `node` are present (`/opt/node22/bin`); `gh` is not. `proto`, `moon`, and
+`pnpm` and `node` are present (`/opt/node22/bin`), and so is `gh`. `proto`, `moon`, and
 `node_modules` exist only where the environment's setup command ran
 `.config/claude-code-setup.sh`; without it `pnpm exec moon` fails too. Establish which case you
 are in before concluding a command is broken:
@@ -71,10 +71,11 @@ command -v proto moon; ls node_modules | wc -l   # 0 => setup never ran
 | -------------------- | ------------------------------ | --------------------------------------------- |
 | `moon run <pkg>:<t>` | `pnpm exec moon run <pkg>:<t>` | `bash .config/claude-code-setup.sh` (10+ min) |
 | `pnpm format`        | works                          | `pnpm dlx oxfmt@0.63` — matches the root pin  |
-| `gh run list …`      | `mcp__github__*` tools only    | same — there is no `gh` either way            |
+| `gh pr … --attach`   | works — setup installs gh 2.99 | the image's `gh` predates `--attach`; R2      |
 
-GitHub's REST API is **also unreachable from the shell**: `curl https://api.github.com/…` returns
-`GitHub access is not enabled for this session`, with or without a token. Never build a poll loop or
+GitHub's REST API from the shell reaches **only the repositories attached to the session**: `gh api
+repos/dxos/dxos/…` works, while any other repo answers `GitHub access to this repository is not
+enabled for this session`, with or without a token. Never build a poll loop or
 `Monitor` around it — it fails identically whether CI is red, green, or still running, so silence
 means nothing. Read run status through the `mcp__github__*` tools, which go through the server side.
 

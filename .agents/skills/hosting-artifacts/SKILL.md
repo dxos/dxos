@@ -185,9 +185,12 @@ gh pr create --title "plugin-foo: fix toolbar" --body-file /tmp/body.md \
   gh uses the file name. Videos take no alt text.
 - **Requirements:** write access to the repo, and a token from `gh auth login` or a classic PAT. Not
   supported on GitHub Enterprise Server.
-- **Check before relying on it:** `gh --version` (≥ 2.99.0) and `gh auth status`. The cloud sandbox may
-  ship an older `gh` or no working token, and the `mcp__github__*` PR tools have no attach parameter —
-  in either case fall back to R2 below rather than upgrading or authenticating mid-task.
+- **Check before relying on it:** `gh --version` must be ≥ 2.99.0. In the cloud sandbox
+  `.config/claude-code-setup.sh` installs it; the container image alone ships an older one. There,
+  `gh auth status` calls the token invalid while API calls and uploads still succeed through the
+  proxy, so judge by a real call, not by that. The `mcp__github__*` PR tools have no attach
+  parameter. Without a usable `gh`, fall back to R2 below rather than upgrading or authenticating
+  mid-task.
 
 Read the body back after the push to confirm the references were rewritten (`gh pr view <n> --json body
 -q .body | grep user-attachments`). A surviving `./out/…` path means the attach did not happen.
