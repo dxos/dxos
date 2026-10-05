@@ -110,7 +110,9 @@ export const run = ({
       scope,
     );
     const rpcEffect = yield* RpcServer.toHttpEffect(Protocol.Rpcs).pipe(Effect.provideContext(handlers));
-    const rpc = yield* NodeHttpServer.makeHandler(rpcEffect, { scope });
+    // Effect runs each request uninterruptibly, and the RPC protocol waits there for a stream's first
+    // response: a `Watch` on a quiet project never sends one, so shutdown would wait on it forever.
+    const rpc = yield* NodeHttpServer.makeHandler(Effect.interruptible(rpcEffect), { scope });
 
     // Created before Vite so its HMR websocket rides this listener rather than a server of its own.
     const server = createServer();
