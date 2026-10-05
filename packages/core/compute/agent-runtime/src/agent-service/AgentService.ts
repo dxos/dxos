@@ -300,6 +300,18 @@ export const layer = (
                   }
 
                   if (!isTerminalProcess(cached.handle.status.state)) {
+                    // Info-level: terminating a live process drops the turn it is running, which is
+                    // otherwise silent.
+                    log.info('reconfiguring agent session', {
+                      chat: chat.id,
+                      from: {
+                        model: cached.model,
+                        provider: cached.provider?.toString(),
+                        instructions: cached.instructions,
+                        location: cached.location,
+                      },
+                      to: { model, provider: provider?.toString(), instructions, location },
+                    });
                     // Model, provider, steering instructions or location changed (e.g. the user
                     // toggled online/offline, or moved the chat to the cloud): terminate the
                     // existing process so the conversation continues on a fresh process bound to the new
