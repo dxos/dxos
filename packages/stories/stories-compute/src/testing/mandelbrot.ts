@@ -21,14 +21,28 @@ const MAX_CREDITS = 10;
 /** A process that receives no request for this long exits, so an abandoned one stops costing anything. */
 const IDLE_TIMEOUT = 30_000;
 
-/** Seahorse valley: detail persists at every zoom depth. */
-const CENTER = { x: -0.743643887037151, y: 0.13182590420533 };
 const ZOOM = 0.7;
 
-/** Grants the process `frames` more frames to push, optionally at a new square resolution. */
+export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
+export type Point = Schema.Schema.Type<typeof Point>;
+
+/** Boundary points whose detail persists at every zoom depth; a process without a start picks one at random. */
+export const POINTS: readonly { name: string; point: Point }[] = [
+  { name: 'Seahorse valley', point: { x: -0.743643887037151, y: 0.13182590420533 } },
+  { name: 'Elephant valley', point: { x: 0.2850000000000001, y: 0.0100000000000001 } },
+  { name: 'Triple spiral', point: { x: -0.088, y: 0.654 } },
+  { name: 'Mini Mandelbrot', point: { x: -1.7686, y: 0.0017 } },
+  { name: 'Dendrite', point: { x: -0.1011, y: 0.9563 } },
+];
+
+/**
+ * Grants the process `frames` more frames to push, optionally at a new square resolution. A `center`
+ * restarts the zoom at frame 0 on that point.
+ */
 export const MandelbrotInput = Schema.Struct({
   frames: Schema.Number,
   size: Schema.optional(Schema.Number),
+  center: Schema.optional(Point),
 });
 
 export type MandelbrotInput = Schema.Schema.Type<typeof MandelbrotInput>;
@@ -71,7 +85,7 @@ const toBase64 = (bytes: Uint8Array): string => {
 /** Decodes {@link MandelbrotOutput.data} to one intensity byte per pixel. */
 export const decodeFrame = (data: string): Uint8Array => Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
 
-const computeFrame = (frame: number, size: number): MandelbrotOutput => {
+const computeFrame = (frame: number, size: number, center: Point): MandelbrotOutput => {
   const scale = (3 / size) * Math.pow(ZOOM, frame);
   // Deeper frames need more iterations to resolve the boundary.
   const maxIterations = Math.round(64 + frame * 24);
@@ -79,8 +93,8 @@ const computeFrame = (frame: number, size: number): MandelbrotOutput => {
   for (let row = 0; row < size; row++) {
     for (let column = 0; column < size; column++) {
       const iterations = escapeIterations(
-        CENTER.x + (column - size / 2) * scale,
-        CENTER.y + (row - size / 2) * scale,
+        center.x + (column - size / 2) * scale,
+        center.y + (row - size / 2) * scale,
         maxIterations,
       );
       bytes[row * size + column] =
@@ -104,6 +118,7 @@ export const MandelbrotProcess = Operation.makeDurable(
       let frame = 0;
       let credits = 0;
       let size = DEFAULT_SIZE;
+      let center = POINTS[Math.floor(Math.random() * POINTS.length)].point;
       let lastRequest = Date.now();
       let rendering = false;
 
@@ -122,6 +137,10 @@ export const MandelbrotProcess = Operation.makeDurable(
             if (input.size !== undefined) {
               size = clampSize(input.size);
             }
+            if (input.center !== undefined) {
+              center = input.center;
+              frame = 0;
+            }
             if (!rendering && credits > 0) {
               rendering = true;
               yield* ctx.setAlarm(0);
@@ -131,7 +150,7 @@ export const MandelbrotProcess = Operation.makeDurable(
           Effect.gen(function* () {
             if (credits > 0) {
               credits--;
-              ctx.submitOutput(computeFrame(frame++, size));
+              ctx.submitOutput(computeFrame(frame++, size, center));
               yield* schedule();
               return;
             }

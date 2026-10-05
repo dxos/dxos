@@ -7,11 +7,17 @@ import React, { useState } from 'react';
 import type * as Process from '@dxos/compute/Process';
 import { Button, Panel, Select, Toolbar } from '@dxos/react-ui';
 
-import { DEFAULT_SIZE, SIZES } from '../testing/index.ts';
+import { DEFAULT_SIZE, type Point, POINTS, SIZES } from '../testing/index.ts';
 
 const LOCATIONS: { value: Process.Location; label: string }[] = [
   { value: 'local', label: 'Local' },
   { value: 'edge', label: 'Remote (EDGE)' },
+];
+
+const RANDOM = 'random';
+const STARTS: { value: string; label: string; point?: Point }[] = [
+  { value: RANDOM, label: 'Random' },
+  ...POINTS.map(({ name, point }) => ({ value: name, label: name, point })),
 ];
 
 const RESOLUTIONS = SIZES.map((size) => ({ value: String(size), label: `${size}×${size}`, size }));
@@ -22,12 +28,14 @@ export type CommandPanelProps = {
   /** False until the runtime and space exist. */
   ready?: boolean;
   error?: string;
-  onCreate: (location: Process.Location, size: number) => void;
+  /** `center` is absent for a random start. */
+  onCreate: (location: Process.Location, size: number, center?: Point) => void;
 };
 
 export const CommandPanel = ({ remote, ready = true, error, onCreate }: CommandPanelProps) => {
   const [location, setLocation] = useState<Process.Location>('local');
   const [size, setSize] = useState<number>(DEFAULT_SIZE);
+  const [start, setStart] = useState(RANDOM);
 
   return (
     <Panel.Root>
@@ -67,11 +75,19 @@ export const CommandPanel = ({ remote, ready = true, error, onCreate }: CommandP
               ))}
             </Select.Content>
           </Select.Root>
+          <Select.Root items={STARTS} value={[start]} onValueChange={({ value: [value] }) => value && setStart(value)}>
+            <Select.Trigger data-testid='process-start-select' />
+            <Select.Content>
+              {STARTS.map((item) => (
+                <Select.Item key={item.value} item={item} />
+              ))}
+            </Select.Content>
+          </Select.Root>
           <Button
             icon='ph--plus--regular'
             label='Create'
             disabled={!ready}
-            onClick={() => onCreate(location, size)}
+            onClick={() => onCreate(location, size, STARTS.find((item) => item.value === start)?.point)}
             data-testid='process-create'
           />
         </Toolbar.Root>

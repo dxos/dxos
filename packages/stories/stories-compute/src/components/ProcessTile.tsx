@@ -13,13 +13,15 @@ import * as Process from '@dxos/compute/Process';
 import { EffectEx } from '@dxos/effect';
 import { Block, Card, Icon } from '@dxos/react-ui';
 
-import { type MandelbrotInput, type MandelbrotOutput, decodeFrame } from '../testing/index.ts';
+import { type MandelbrotInput, type MandelbrotOutput, type Point, decodeFrame } from '../testing/index.ts';
 
 export type ProcessItem = {
   id: string;
   location: Process.Location;
   /** Square resolution requested from the process. */
   size: number;
+  /** Zoom target requested from the process; absent lets it pick one at random. */
+  center?: Point;
   handle: Process.Handle<MandelbrotInput, MandelbrotOutput, never>;
 };
 
@@ -75,7 +77,7 @@ const paintFrame = (context: CanvasRenderingContext2D, output: MandelbrotOutput)
  * handle's status polling.
  */
 const useMandelbrot = (item: ProcessItem, canvas: HTMLCanvasElement | null): number | undefined => {
-  const { handle, size } = item;
+  const { handle, size, center } = item;
   const [frame, setFrame] = useState<number>();
   // Survives a StrictMode remount, so credit is granted once however often the effect re-runs.
   const granted = useRef(0);
@@ -105,12 +107,12 @@ const useMandelbrot = (item: ProcessItem, canvas: HTMLCanvasElement | null): num
       ),
     );
     if (granted.current === 0) {
-      grant({ frames: BATCH, size });
+      grant({ frames: BATCH, size, ...(center ? { center } : {}) });
     }
     return () => {
       Effect.runFork(Fiber.interrupt(fiber));
     };
-  }, [handle, size, canvas]);
+  }, [handle, size, center, canvas]);
   return frame;
 };
 

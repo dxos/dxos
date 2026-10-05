@@ -36,7 +36,7 @@ const meta: Meta<typeof ModuleContainer> = {
   parameters: { layout: 'fullscreen', controls: { disable: true }, translations: [...debugTranslations] },
   args: {
     layout: [[StoryRole.Command, StoryRole.Logging], [StoryRole.Processes]],
-    columns: '1fr_2fr',
+    columns: '28rem_1fr',
     rows: ['1fr_2fr'],
   },
 };
