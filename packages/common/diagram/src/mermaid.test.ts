@@ -67,8 +67,8 @@ describe('mermaid', () => {
       'inheritance',
       'reference',
     ]);
-    expect(markers('implements')).toEqual({ head: 'triangle', stroke: 'dashed' });
-    expect(markers('creates')).toEqual({ stroke: 'dashed' });
+    expect(markers('implements')).toEqual({ relation: 'implementation', stroke: 'dashed' });
+    expect(markers('creates')).toEqual({ relation: 'dependency', stroke: 'dashed' });
   });
 
   test('compiles to one object per node plus a frame and an edge object', ({ expect }) => {

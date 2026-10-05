@@ -636,7 +636,7 @@ const inheritanceBuses = (
       id: `${baseId}-inherit`,
       start: { x: trunkX, y: busY },
       end: { x: trunkX, y: base.y + base.h },
-      head: 'triangle',
+      relation: 'inheritance',
     });
   }
   return { elements, consumed };
