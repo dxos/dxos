@@ -184,6 +184,10 @@
     grid-row: 1;
     grid-column: content;
   }
+  /* A row of wrapped text tops its icon against the first line; text pads its first line into a block, as a rail does. */
+  .dx-card-row:has(.dx-typography[data-lines]) {
+    align-items: start;
+  }
   .dx-card-row > [data-rail='start'] {
     grid-column: full-start / content-start;
   }

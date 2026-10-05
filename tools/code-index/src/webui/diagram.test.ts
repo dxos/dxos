@@ -2,47 +2,52 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Result from 'effect/Result';
 import { describe, test } from 'vitest';
 
-import { layout, prepare } from './diagram.ts';
+import * as Diagram from '../workspace/Diagram.ts';
+import { layout } from './diagram.ts';
 
 describe('diagram', () => {
-  test('keeps a flowchart statement per line', ({ expect }) => {
-    expect(prepare('graph LR\n  echo["@dxos/echo"]\n\n  echo --> keys["@dxos/keys"]')).toEqual({
-      kind: 'flowchart',
-      source: 'graph LR\necho["@dxos/echo"]\necho --> keys["@dxos/keys"]',
-    });
-  });
-
-  test('splits semicolon statements and chained edges into one edge per line', ({ expect }) => {
-    expect(prepare('graph TD; A["x; y"] --> B -->|uses| C;\n%% ref A src/a.ts')).toEqual({
-      kind: 'flowchart',
-      source: ['graph TD', 'A["x; y"] --> B', 'B -->|uses| C', '%% ref A src/a.ts'].join('\n'),
-    });
-  });
-
-  test('reports the kinds the illustrator cannot lay out', ({ expect }) => {
-    expect(prepare('%% a comment\nsequenceDiagram\n  A->>B: hi')).toEqual({
-      kind: 'unsupported',
-      type: 'sequenceDiagram',
-    });
-    expect(prepare('  ')).toEqual({ kind: 'unsupported', type: 'empty' });
-  });
-
-  test('lays a flowchart out as one object per node plus the connectors', async ({ expect }) => {
-    const prepared = prepare('graph LR; A[Alpha] --> B[Beta] --> C[Gamma]');
-    if (prepared.kind !== 'flowchart') {
-      throw new Error('expected a flowchart');
-    }
-    const objects = await layout(prepared.source);
+  test('lays a graph out as one object per node, a frame per group, plus the connectors', async ({ expect }) => {
+    const graph = Result.getOrThrow(
+      Diagram.fromValue({
+        direction: 'LR',
+        groups: [{ id: 'core', label: 'Core' }],
+        nodes: [
+          { id: '@dxos/alpha', label: 'Alpha', group: 'core' },
+          { id: '@dxos/beta', label: 'Beta', group: 'core' },
+        ],
+        edges: [
+          { from: '@dxos/alpha', to: '@dxos/beta', label: 'uses' },
+          { from: '@dxos/beta', to: 'gamma' },
+        ],
+      }),
+    );
+    const objects = await layout(Diagram.toSource(graph));
     const labels = objects.flatMap((object) =>
       object.elements.flatMap((element) => ('text' in element ? [element.text] : [])),
     );
-    expect(labels).toEqual(expect.arrayContaining(['Alpha', 'Beta', 'Gamma']));
-    expect(objects.find((object) => object.id === 'edges')?.elements).toHaveLength(2);
+    expect(labels).toEqual(expect.arrayContaining(['Alpha', 'Beta', 'gamma', 'Core', 'uses']));
+    const arrows = objects
+      .find((object) => object.id === 'edges')
+      ?.elements.filter((element) => element.kind === 'arrow');
+    expect(arrows).toHaveLength(2);
+    const ids = Diagram.objectIds(graph);
+    expect(objects.map((object) => object.id)).toEqual(expect.arrayContaining([...ids.values(), 'group_core']));
   });
 
-  test('rejects a flowchart with no nodes rather than drawing an empty panel', async ({ expect }) => {
-    await expect(layout('graph TD\n  ???')).rejects.toThrow('no nodes');
+  test('routes candidates through `emitCandidate` when one is given', async ({ expect }) => {
+    const graph = Result.getOrThrow(Diagram.fromMermaid('graph TD; A --> B --> C'));
+    let routed = 0;
+    const { MermaidEngine } = await import('@dxos/diagram');
+    const objects = await layout(Diagram.toSource(graph), {
+      emitCandidate: async (job) => {
+        routed++;
+        return MermaidEngine.emitJob(job);
+      },
+    });
+    expect(routed).toBeGreaterThan(0);
+    expect(objects.find((object) => object.id === 'edges')?.elements).toHaveLength(2);
   });
 });

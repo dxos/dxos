@@ -23,7 +23,6 @@ import * as Trace from '@dxos/compute/Trace';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import type * as ProcessManager from './ProcessManager.ts';
 import { toError, toStatus } from './remote-process-info.ts';
 import type * as RemoteProcessManager from './RemoteProcessManager.ts';
 import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
@@ -68,22 +67,14 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
 
   /**
    * Ran after a lifecycle change this handle causes, so the manager's process tree — which the
-   * aggregate `Process.Monitor` reads rather than recomputes — does not keep reporting a process
+   * aggregate `Process.Manager` reads rather than recomputes — does not keep reporting a process
    * this handle has terminated.
    */
   readonly onLifecycleChange?: Effect.Effect<void>;
 }
 
-const TERMINAL_STATES: readonly Process.State[] = [
-  Process.State.SUCCEEDED,
-  Process.State.FAILED,
-  Process.State.TERMINATED,
-];
-
-const isTerminal = (state: Process.State): boolean => TERMINAL_STATES.includes(state);
-
 /**
- * {@link ProcessManager.Handle} for a process hosted by a remote runtime.
+ * {@link Process.Handle} for a process hosted by a remote runtime.
  *
  * The remote host owns the process; this is a view plus the control verbs. Outputs and ephemeral
  * trace are read by cursor (see `RemoteProcessManager.Control.readEvents`), so every subscription
@@ -93,7 +84,7 @@ const isTerminal = (state: Process.State): boolean => TERMINAL_STATES.includes(s
  * `runToCompletion` / `runUntilSettled` are derived here from polled state rather than served by the
  * host, so the settle predicates cannot drift from `ProcessHandle`'s definitions.
  */
-export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> implements ProcessManager.Handle<
+export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> implements Process.Handle<
   _Input,
   _Output,
   _Rpcs
@@ -104,7 +95,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   readonly #pollInterval: Duration.Duration;
   readonly #remoteTrace: RemoteTraceMonitor.Monitor | undefined;
   readonly #onLifecycleChange: Effect.Effect<void>;
-  readonly #statusAtom: Atom.Writable<ProcessManager.Status>;
+  readonly #statusAtom: Atom.Writable<Process.Status>;
   #info: RemoteProcessManager.Snapshot;
   #rpc: RpcClient.RpcClient<_Rpcs> | undefined;
 
@@ -165,11 +156,11 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     return this.#info.alarmDueAt;
   }
 
-  get status(): ProcessManager.Status {
+  get status(): Process.Status {
     return this.#registry.get(this.#statusAtom);
   }
 
-  get statusAtom(): Atom.Atom<ProcessManager.Status> {
+  get statusAtom(): Atom.Atom<Process.Status> {
     return this.#statusAtom;
   }
 
@@ -287,7 +278,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   runToCompletion(): Effect.Effect<void> {
     // Mirrors `ProcessHandle.runToCompletion`: settles on IDLE or a terminal state, and keeps waiting
     // through HYBERNATING (an alarm or a live child is still outstanding).
-    return this.#awaitState((state) => state === Process.State.IDLE || isTerminal(state));
+    return this.#awaitState((state) => state === Process.State.IDLE || Process.isExited(state));
   }
 
   runUntilSettled(): Effect.Effect<void> {
@@ -298,7 +289,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     return this.#awaitState(
       (state, info) =>
         state === Process.State.IDLE ||
-        isTerminal(state) ||
+        Process.isExited(state) ||
         (state === Process.State.HYBERNATING && info.alarmDueAt === null),
     );
   }
@@ -313,7 +304,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
         yield* Effect.forEach(options.inputs, (input) => this.submitInput(input), { discard: true });
         // Ends on IDLE or SUCCEEDED as the local `runAndExit` does — a remote process that goes idle
         // has finished this call's work, and waiting for a terminal state would never return.
-        return this.#readEvents(start, (state) => state === Process.State.IDLE || isTerminal(state), true).pipe(
+        return this.#readEvents(start, (state) => state === Process.State.IDLE || Process.isExited(state), true).pipe(
           Stream.filter((event) => event._tag === 'output'),
           Stream.map((event) => decode(event.data)),
         );
@@ -323,7 +314,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
 
   hydrate(
     definition: Operation.Durable<_Input, _Output, any, _Rpcs>,
-  ): Effect.Effect<ProcessManager.Handle<_Input, _Output, _Rpcs>> {
+  ): Effect.Effect<Process.Handle<_Input, _Output, _Rpcs>> {
     // The host revives its own processes from its own storage, so there is no dormant state to
     // restore here. What a caller does need is the definition: a handle from `attach` or `list` has
     // no codecs, and this is the only place it can acquire them.
@@ -362,7 +353,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
    */
   #readEvents(
     start: number,
-    isDone: (state: Process.State) => boolean = isTerminal,
+    isDone: (state: Process.State) => boolean = Process.isExited,
     /** Fails the stream on FAILED or TERMINATED, which `runAndExit`'s contract requires. */
     failOnAbnormalExit = false,
   ): Stream.Stream<RemoteProcessManager.Event> {
