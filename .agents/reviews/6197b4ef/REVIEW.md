@@ -1,13 +1,13 @@
 ---
 branch: dm/kind-ptolemy-az5exn
-commit: 215f77ff7d4d584c7ceaeba4cde35543c9eccc71
+commit: 6197b4efc7e3f756324082aded5142fd69b26230
 base: c1e218fa653a18f7180e4db94196e2129396eeff
 mode: fast
-createdAt: 2026-10-05T12:40:38.315Z
+createdAt: 2026-10-05T12:59:36.369Z
 isFinalized: true
 groups: 1
 rules: [harness-script-hygiene]
-reviewId: 215f77ff
+reviewId: 6197b4ef
 ---
 
 _Clean: no issues._
@@ -30,7 +30,7 @@ _Clean: no issues._
 
 ```text
 requests: 6 (2 verdicts re-asked with context the model requested)
-estimated input tokens: 13620
-billed input tokens: 14735 (cost $0.0006)
-measured chars per token: 2.77
+estimated input tokens: 14138
+billed input tokens: 15259 (cost $0.0006)
+measured chars per token: 2.78
 ```
