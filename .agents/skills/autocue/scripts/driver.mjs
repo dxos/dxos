@@ -879,12 +879,17 @@ const handlers = {
     }
     const timelineFile = path.join(options.out, 'timeline.json');
     writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
-    const recorded = await recorder?.stop();
-    // Before the session closes: the polled tap drains once more and stops its timer.
-    await logTap?.close();
-    await context?.close();
-    await browser?.close();
-    await native?.close();
+    let recorded;
+    try {
+      recorded = await recorder?.stop();
+    } finally {
+      // Also when the encode fails: the app, browser and log tap must not outlive the session.
+      // Before the session closes: the polled tap drains once more and stops its timer.
+      await logTap?.close();
+      await context?.close();
+      await browser?.close();
+      await native?.close();
+    }
     // `recorded.file` already carries the output directory; only the fallback's bare name needs it.
     const fallback = recorded ? undefined : readdirSync(options.out).find((entry) => entry.endsWith('.webm'));
     const video = recorded ? path.resolve(recorded.file) : fallback && path.resolve(options.out, fallback);
