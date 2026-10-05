@@ -119,37 +119,21 @@ export enum State {
 }
 
 /**
- * Read-only view of a process tree
+ * Whether a process in `state` has exited: SUCCEEDED, FAILED or TERMINATED. A runtime never moves a
+ * process out of these states, which is what makes them final for a host.
  */
-export interface Monitor {
-  /**
-   * Get the current state of the process tree.
-   */
-  processTree: Effect.Effect<readonly Process[]>;
+export const isExited = (state: State): boolean =>
+  state === State.SUCCEEDED || state === State.FAILED || state === State.TERMINATED;
 
-  /**
-   * Atom for the process tree.
-   */
-  processTreeAtom: Atom.Atom<readonly Process[]>;
+/**
+ * Whether a process in `state` will never run another turn: {@link isExited}, or TERMINATING.
+ * TERMINATING counts because the handle is already finished, so a caller adopting it would submit
+ * input that is dropped and wait on a process that will never run again.
+ */
+export const isTerminal = (state: State): boolean => isExited(state) || state === State.TERMINATING;
 
-  /**
-   * The process tree narrowed by {@link MonitorFilter} — the read a caller looking for *its* process
-   * wants, without reaching past this read-only surface into a manager.
-   *
-   * The aggregate monitor spans local and remote runtimes, so this answers "is my agent running,
-   * wherever it runs" — which is what a UI renders and what a caller holding no handle can ask.
-   */
-  list(filter?: MonitorFilter): Effect.Effect<readonly Process[]>;
-
-  /**
-   * Stream ephemeral trace messages matching `filter` (DX-1125), sourced from local in-process
-   * runtimes and remote runtimes broadcasting over the space swarm. Used to drive live progress UI.
-   */
-  subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message>;
-}
-
-/** Filters for {@link Monitor.list}; an absent field matches everything. */
-export interface MonitorFilter {
+/** Filters for {@link Manager.list}; an absent field matches everything. */
+export interface Filter {
   readonly key?: string;
   /** Target object the process was spawned against ({@link TargetAnnotation}). */
   readonly target?: URI.URI;
@@ -160,10 +144,10 @@ export interface MonitorFilter {
 }
 
 /**
- * Whether `info` satisfies `filter`. Exported so every {@link Monitor} filters identically rather
+ * Whether `info` satisfies `filter`. Exported so every {@link Manager} filters identically rather
  * than each implementation growing its own notion of a match.
  */
-export const matchesFilter = (info: Process, filter: MonitorFilter = {}): boolean => {
+export const matchesFilter = (info: Process, filter: Filter = {}): boolean => {
   if (filter.key !== undefined && info.key !== filter.key) {
     return false;
   }
@@ -185,15 +169,11 @@ export const matchesFilter = (info: Process, filter: MonitorFilter = {}): boolea
   return true;
 };
 
-/** {@link Monitor.list} over a tree read, so a monitor implements it by supplying only that read. */
+/** {@link Manager.list} over a tree read, so a manager implements it by supplying only that read. */
 export const listFromTree =
   (processTree: Effect.Effect<readonly Process[]>) =>
-  (filter?: MonitorFilter): Effect.Effect<readonly Process[]> =>
+  (filter?: Filter): Effect.Effect<readonly Process[]> =>
     Effect.map(processTree, (tree) => tree.filter((info) => matchesFilter(info, filter)));
-
-export class ProcessMonitorService extends Context.Service<ProcessMonitorService, Monitor>()(
-  '@dxos/functions/ProcessMonitorService',
-) {}
 
 /**
  * A process: one running (or finished) instance of a durable operation, wherever its runtime runs.
@@ -259,7 +239,7 @@ export interface Process {
 }
 
 //
-// Handle.
+// Handles.
 //
 
 export interface Status {
@@ -302,7 +282,7 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
    * the collector with {@link Effect.forkDetach}, not {@link Effect.forkChild} — the
    * parent scope closes as soon as `forEach` finishes and interrupts scoped forks
    * before live `pushEphemeral` events arrive. Interrupt the daemon fiber explicitly
-   * on dispose (see `ProcessOperationInvoker.fiberFromProcess` in `@dxos/compute-runtime`).
+   * on dispose (see {@link ProcessOperationInvoker.fiberFromProcess}).
    */
   subscribeEphemeral(): Stream.Stream<Trace.Message>;
 
@@ -434,52 +414,64 @@ export interface ListOptions {
 // Manager.
 //
 
-/**
- * Where a process runs: in this runtime, or on EDGE.
- */
-export type Location = 'local' | 'edge';
+/** Where a process runs: this runtime, or the remote (EDGE) runtime hosting `space`. */
+export type Location = { readonly kind: 'local' } | { readonly kind: 'edge'; readonly space: SpaceId };
 
-export interface ManagerSpawnOptions extends SpawnOptions {
-  /** Defaults to `local`; `edge` requires `environment.space`, since EDGE hosts processes per space. */
+export interface LocationOptions {
+  /** Defaults to local. */
   readonly location?: Location;
-}
-
-export interface ManagerListOptions extends ListOptions {
-  /** Defaults to `local`. */
-  readonly location?: Location;
-
-  /** Space to list on EDGE; required when `location` is `edge`. */
-  readonly space?: SpaceId;
-}
-
-export interface ManagerAttachOptions {
-  /** Defaults to `local`. */
-  readonly location?: Location;
-
-  /** Space hosting the process on EDGE; required when `location` is `edge`. */
-  readonly space?: SpaceId;
 }
 
 /**
- * Process control over every runtime a caller can address, chosen per call by {@link Location}.
+ * Every process this client can see or run, local and remote, behind one surface.
  *
- * A caller that only knows where it wants a process to run uses this rather than picking between the
- * local and remote managers itself. Only the definition's key reaches EDGE, so an `edge` spawn
- * succeeds only for a key EDGE hosts; the definition still supplies the handle's codecs and RPC group.
- * Every verb dies when the requested location cannot be served (e.g. `edge` without EDGE process control).
+ * The reads span both runtimes, so they answer "is my process running, wherever it runs" — which is
+ * what a UI renders and what a caller holding no handle can ask. The control verbs take a
+ * {@link Location}: a remote process is not a local one, so the caller still names where it runs,
+ * but no longer has to hold both managers to do so.
  */
 export interface Manager {
+  /** Current state of the process tree. */
+  readonly processTree: Effect.Effect<readonly Process[]>;
+
+  /** Atom for the process tree. */
+  readonly processTreeAtom: Atom.Atom<readonly Process[]>;
+
+  /**
+   * The process tree narrowed by {@link Filter}. A filter naming a space re-reads that space from
+   * the remote runtime first, so it is the authoritative read where the atom is the cheap one.
+   */
+  list(filter?: Filter): Effect.Effect<readonly Process[]>;
+
+  /**
+   * Stream ephemeral trace messages matching `filter` (DX-1125), sourced from local in-process
+   * runtimes and remote runtimes broadcasting over the space swarm. Used to drive live progress UI.
+   */
+  subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message>;
+
+  /**
+   * Spawn a process at `options.location`. A remote host is sent only the definition's key; the
+   * definition stays local, supplying the codecs and RPC group the handle is typed by.
+   *
+   * Dies when the location is a remote runtime that offers no process control.
+   */
   spawn<I, O, Rpcs extends Rpc.Any = never>(
     definition: Operation.Durable<I, O, any, Rpcs>,
-    options?: ManagerSpawnOptions,
+    options?: SpawnOptions & LocationOptions,
   ): Effect.Effect<Handle<I, O, Rpcs>>;
 
-  list(options?: ManagerListOptions): Effect.Effect<readonly Handle.Any[]>;
-
-  attach(pid: ID, options?: ManagerAttachOptions): Effect.Effect<Handle.Any>;
+  /**
+   * Handles on the processes at `options.location` matching `options`. Dormant entries require
+   * {@link Handle.hydrate} before inputs can be submitted.
+   *
+   * Dies when the location is a remote runtime that offers no process control.
+   */
+  handles(options?: ListOptions & LocationOptions): Effect.Effect<readonly Handle.Any[]>;
 }
 
-export class ManagerService extends Context.Service<ManagerService, Manager>()('@dxos/compute/Process.Manager') {}
+export class ManagerService extends Context.Service<ManagerService, Manager>()(
+  '@dxos/compute/Process.ManagerService',
+) {}
 
 /**
  * New process is spawned.

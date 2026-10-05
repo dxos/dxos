@@ -4,7 +4,6 @@
 
 import React, { useState } from 'react';
 
-import type * as Process from '@dxos/compute/Process';
 import { Button, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { Form, createSelectField } from '@dxos/react-ui-form';
 
@@ -15,8 +14,9 @@ import {
   randomFormValues,
   startingPointParams,
 } from '../testing/index.ts';
+import { type ProcessLocation } from './ProcessTile.tsx';
 
-const LOCATIONS: { value: Process.Location; label: string }[] = [
+const LOCATIONS: { value: ProcessLocation; label: string }[] = [
   { value: 'local', label: 'Local' },
   { value: 'edge', label: 'EDGE' },
 ];
@@ -31,11 +31,11 @@ export type CommandPanelProps = {
   /** False until the runtime and space exist. */
   ready?: boolean;
   error?: string;
-  onCreate: (location: Process.Location, params: MandelbrotParams) => void;
+  onCreate: (location: ProcessLocation, params: MandelbrotParams) => void;
 };
 
 export const CommandPanel = ({ edge = false, ready = true, error, onCreate }: CommandPanelProps) => {
-  const [location, setLocation] = useState<Process.Location>('local');
+  const [location, setLocation] = useState<ProcessLocation>('local');
   const [values, setValues] = useState<MandelbrotFormValues>(randomFormValues);
 
   // Picking a preset moves the start to it; editing the start by hand keeps the last preset's name.

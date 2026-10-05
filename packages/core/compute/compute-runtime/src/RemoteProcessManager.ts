@@ -175,13 +175,13 @@ export interface Control {
 export interface Manager {
   readonly processTree: Effect.Effect<readonly Process.Process[]>;
   /**
-   * Writable so {@link Manager.spawn} publishes into the same atom the aggregate `ProcessMonitor`
+   * Writable so {@link Manager.spawn} publishes into the same atom the aggregate `Process.Manager`
    * reads — otherwise a remote spawn is invisible in the process tree.
    */
   readonly processTreeAtom: Atom.Writable<readonly Process.Process[]>;
 
   /**
-   * Cancels the current run of a remote (EDGE) trigger — its in-flight execution and `runAgain`
+   * Cancels the current run of a remote (edge) trigger — its in-flight execution and `runAgain`
    * continuation chain; the trigger itself stays enabled so its schedule keeps firing. Optional:
    * absent in {@link layerNoop} (local-only deployments have no remote runtime to cancel on).
    */
@@ -197,8 +197,9 @@ export interface Manager {
    * Spawn one of the host's processes and return a handle on it. Present exactly when
    * {@link control} is: a monitor-only manager can read and cancel but not spawn.
    *
-   * Deliberately NOT a `ProcessManager.Manager`: a remote process is not a local one. A caller that
-   * wants one surface over both uses `Process.Manager` (`LocatedProcessManager`), which picks per call.
+   * Deliberately NOT a `ProcessManager.Manager`: a remote process is not a local one and consuming
+   * code picks between the two itself (unifying them, where a caller wants that, belongs a layer
+   * above — `AgentService` does it per session).
    */
   readonly spawn?: <_Input, _Output, _Rpcs extends Rpc.Any = never>(
     options: SpawnOptions<_Input, _Output, _Rpcs>,
@@ -328,7 +329,7 @@ export const makeControlVerbs = (
         const handle = yield* makeHandle<_Input, _Output, _Rpcs>(spaceId, info, definition).pipe(
           Effect.onError(() => control.terminate({ spaceId, pid: info.pid }).pipe(Effect.ignore)),
         );
-        // The aggregate `Process.Monitor` reads the tree atom rather than calling this manager, so
+        // The aggregate `Process.Manager` reads the tree atom rather than calling this manager, so
         // the atom has to be current by the time spawn returns. Failing to read it back does not
         // invalidate the spawn.
         yield* refreshProcessTree(spaceId).pipe(Effect.ignore);

@@ -88,7 +88,7 @@ const FINISHED_PROCESS_RETENTION = 200;
  */
 const EMPTY_RPC_CLIENT: RpcClient.RpcClient<any> = Effect.runSync(
   // `RpcGroup`/`RpcClient` are invariant in their group; the empty group is widened to the untyped
-  // `any` surface so the resulting client matches `Handle.rpc` (see design spec §4.4).
+  // `any` surface so the resulting client matches `Process.Handle.rpc` (see design spec §4.4).
   makeLoopbackRpcClient(
     RpcGroup.make() as unknown as RpcGroup.RpcGroup<any>,
     Context.empty() as Context.Context<any>,
@@ -168,11 +168,13 @@ export interface Manager {
   readonly operationHandlerSet: OperationHandlerSet.OperationHandlerSet;
 
   /**
-   * Local (this-runtime) process-tree view. The aggregate
-   * {@link Process.ProcessMonitorService} is assembled from this plus the
-   * remote view by {@link ProcessMonitor.layer}.
+   * Local (this-runtime) process tree. The aggregate {@link Process.ManagerService} is assembled from
+   * this plus the remote tree by {@link UnifiedProcessManager.layer}.
    */
-  readonly monitor: Process.Monitor;
+  readonly processTreeAtom: Atom.Atom<readonly Process.Process[]>;
+
+  /** Ephemeral trace messages from this runtime's processes matching `filter` (DX-1125). */
+  subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message>;
 }
 
 export { ProcessManagerService };
@@ -189,7 +191,7 @@ export interface ImplOpts {
   /**
    * Runtime name to stamp on trace messages emitted by processes spawned by this manager.
    * Identifies which runtime (local app, edge intrinsic, edge worker, ...) executed the code.
-   * Per-spawn `SpawnOptions.traceMeta.runtimeName` takes precedence over this default.
+   * Per-spawn `Process.SpawnOptions.traceMeta.runtimeName` takes precedence over this default.
    */
   runtimeName?: Trace.RuntimeName;
 }
@@ -207,10 +209,9 @@ export class Impl implements Manager {
 
   readonly #finished: Process.Process[] = [];
   readonly #processTreeAtom: Atom.Writable<readonly Process.Process[]>;
-  readonly #monitor: Process.Monitor;
   /**
    * Manager-level ephemeral trace hub (DX-1125). Every process's ephemeral messages are fanned out
-   * here so {@link Process.Monitor.subscribeToTraceMessages} can stream them (filtered) without
+   * here so {@link subscribeToTraceMessages} can stream them (filtered) without
    * attaching to individual handles.
    */
   readonly #traceSubscribers: Queue.Queue<Trace.Message>[] = [];
@@ -228,29 +229,29 @@ export class Impl implements Manager {
     this.#store = new ProcessStore(opts.kvStore);
     this.#processTreeAtom = Atom.make<readonly Process.Process[]>([]);
     this.#registry.mount(this.#processTreeAtom);
-    const processTree = Effect.sync(() => this.#registry.get(this.#processTreeAtom));
-    this.#monitor = {
-      processTree,
-      processTreeAtom: this.#processTreeAtom,
-      list: Process.listFromTree(processTree),
-      subscribeToTraceMessages: (filter: Trace.Filter): Stream.Stream<Trace.Message> =>
-        Stream.unwrap(
-          Effect.gen({ self: this }, function* () {
-            const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message>(), (queue) =>
-              Effect.sync(() => {
-                const index = this.#traceSubscribers.indexOf(queue);
-                if (index !== -1) {
-                  this.#traceSubscribers.splice(index, 1);
-                }
-              }).pipe(Effect.andThen(Queue.shutdown(queue))),
-            );
-            this.#traceSubscribers.push(queue);
-            return Stream.fromQueue(queue).pipe(
-              Stream.filter((message) => message.isEphemeral && Trace.matchesFilter(message, filter)),
-            );
-          }),
-        ),
-    };
+  }
+
+  get processTreeAtom(): Atom.Atom<readonly Process.Process[]> {
+    return this.#processTreeAtom;
+  }
+
+  subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message> {
+    return Stream.unwrap(
+      Effect.gen({ self: this }, function* () {
+        const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message>(), (queue) =>
+          Effect.sync(() => {
+            const index = this.#traceSubscribers.indexOf(queue);
+            if (index !== -1) {
+              this.#traceSubscribers.splice(index, 1);
+            }
+          }).pipe(Effect.andThen(Queue.shutdown(queue))),
+        );
+        this.#traceSubscribers.push(queue);
+        return Stream.fromQueue(queue).pipe(
+          Stream.filter((message) => message.isEphemeral && Trace.matchesFilter(message, filter)),
+        );
+      }),
+    );
   }
 
   /**
@@ -260,10 +261,6 @@ export class Impl implements Manager {
     for (const queue of this.#traceSubscribers) {
       Queue.offerUnsafe(queue, message);
     }
-  }
-
-  get monitor(): Process.Monitor {
-    return this.#monitor;
   }
 
   get operationHandlerSet(): OperationHandlerSet.OperationHandlerSet {
@@ -293,7 +290,7 @@ export class Impl implements Manager {
 
   static #isNonTerminal(handle: ProcessHandle.Impl<any, any, any>): boolean {
     const { state } = handle.snapshotStatus();
-    return state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
+    return !Process.isExited(state);
   }
 
   #buildProcessTreeSnapshot(): readonly Process.Process[] {
@@ -586,7 +583,7 @@ export class Impl implements Manager {
       log('lifecycle: started', { pid: id, key: definition.key });
 
       // Runtime→public boundary: the live handle stores its RPC client untyped (`RpcClient<any>`),
-      // while the public surface is the precise `Handle<I, O, _Rpcs>`. `RpcClient` is invariant, so
+      // while the public surface is the precise `Process.Handle<I, O, _Rpcs>`. `RpcClient` is invariant, so
       // bridging the two requires a cast here (see design spec §4.4).
       return handle as unknown as Process.Handle<I, O, _Rpcs>;
     }).pipe(Effect.withSpan('ProcessManager.spawn', { attributes: { [SpanAttributes.PROCESS.key]: definition.key } }));
@@ -804,11 +801,7 @@ export class Impl implements Manager {
         );
       }
 
-      if (
-        record.state === Process.State.SUCCEEDED ||
-        record.state === Process.State.FAILED ||
-        record.state === Process.State.TERMINATED
-      ) {
+      if (Process.isExited(record.state)) {
         yield* this.#store.deleteProcess(id);
         return yield* Effect.die(new Error(`Cannot hydrate terminal process: ${id}`));
       }
@@ -897,11 +890,7 @@ export class Impl implements Manager {
         if (seenIds.has(record.id)) {
           continue;
         }
-        if (
-          record.state === Process.State.SUCCEEDED ||
-          record.state === Process.State.FAILED ||
-          record.state === Process.State.TERMINATED
-        ) {
+        if (Process.isExited(record.state)) {
           continue;
         }
         if (
@@ -957,7 +946,7 @@ class DormantHandle<I, O> implements Process.Handle<I, O, any> {
   /** Carried on the persisted record, so a dormant handle still reports a pending alarm. */
   readonly alarmDueAt: number | null;
   // Dormant handles expose no live RPC surface; the empty client serves no requests. Stored untyped
-  // (`RpcClient<any>`) so the dormant handle is assignable to `Handle.Any` (see design spec §4.4).
+  // (`RpcClient<any>`) so the dormant handle is assignable to `Process.Handle.Any` (see design spec §4.4).
   readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
   readonly #rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Handle<I, O, any>>;
   readonly #discard: () => Effect.Effect<void>;
@@ -1015,9 +1004,9 @@ class DormantHandle<I, O> implements Process.Handle<I, O, any> {
  * On scope close, the manager's `shutdown()` runs (layer finalizer), suspending
  * process state so it can be hydrated on the next boot.
  *
- * The {@link Process.ProcessMonitorService} is provided separately by the
- * aggregate {@link ProcessMonitor.layer}, which merges this local manager's
- * `monitor` with the remote ({@link RemoteProcessManager.Service}) one.
+ * The {@link Process.ManagerService} is provided separately by the aggregate
+ * {@link UnifiedProcessManager.layer}, which dispatches across this local manager and the remote
+ * ({@link RemoteProcessManager.Service}) one.
  *
  * Requires KeyValueStore, ServiceResolver, OperationHandlerSet.OperationHandlerProvider,
  * and Registry.AtomRegistry from the environment.

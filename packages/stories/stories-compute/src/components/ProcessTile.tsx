@@ -23,9 +23,12 @@ import {
   decodeFrame,
 } from '../testing/index.ts';
 
+/** Where the story runs a process; mapped to a {@link Process.Location} when it is spawned. */
+export type ProcessLocation = 'local' | 'edge';
+
 export type ProcessItem = {
   id: string;
-  location: Process.Location;
+  location: ProcessLocation;
   /** Sent with the first request; an absent `center` lets the process pick one at random. */
   params: MandelbrotParams;
   handle: Process.Handle<MandelbrotInput, MandelbrotOutput, never>;

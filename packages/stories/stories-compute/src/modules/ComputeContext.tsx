@@ -19,10 +19,11 @@ import React, {
 
 import * as Process from '@dxos/compute/Process';
 import { raise } from '@dxos/debug';
+import { type SpaceId } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 
-import { type ProcessItem } from '../components/index.ts';
+import { type ProcessItem, type ProcessLocation } from '../components/index.ts';
 import { type MandelbrotParams, MandelbrotProcess, makeComputeLayer } from '../testing/index.ts';
 
 export type ComputeContextValue = {
@@ -32,10 +33,14 @@ export type ComputeContextValue = {
   ready: boolean;
   items: ProcessItem[];
   error?: string;
-  create: (location: Process.Location, params: MandelbrotParams) => void;
+  create: (location: ProcessLocation, params: MandelbrotParams) => void;
   /** Drops an ended process's card; the manager itself prunes finished processes. */
   remove: (item: ProcessItem) => void;
 };
+
+/** EDGE hosts processes per space, so an `edge` process is addressed by the space it runs in. */
+const toLocation = (location: ProcessLocation, space: SpaceId): Process.Location =>
+  location === 'edge' ? { kind: 'edge', space } : { kind: 'local' };
 
 const ComputeContext = createContext<ComputeContextValue | undefined>(undefined);
 
@@ -67,7 +72,7 @@ export const ComputeProvider = ({ edge = false, children }: ComputeProviderProps
   }, [registry, edge, client]);
 
   const create = useCallback(
-    (location: Process.Location, params: MandelbrotParams) => {
+    (location: ProcessLocation, params: MandelbrotParams) => {
       if (!runtime || !space) {
         return;
       }
@@ -78,7 +83,7 @@ export const ComputeProvider = ({ edge = false, children }: ComputeProviderProps
             const manager = yield* Process.ManagerService;
             return yield* manager.spawn(MandelbrotProcess, {
               name: 'Mandelbrot',
-              location,
+              location: toLocation(location, space.id),
               environment: { space: space.id },
             });
           }),

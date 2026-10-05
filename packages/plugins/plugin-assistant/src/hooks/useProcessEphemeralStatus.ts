@@ -87,7 +87,7 @@ export const useProcessEphemeralStatus = (
   // Optional capabilities: the live status is a progressive enhancement, so the component still
   // renders (e.g. in standalone stories) when there is no plugin manager / process runtime.
   const runtime = useOptionalCapability(Capabilities.ProcessManagerRuntime);
-  const monitor = useOptionalCapability(Capabilities.ProcessMonitor);
+  const monitor = useOptionalCapability(Capabilities.ProcessManager);
   const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
   const [status, setStatus] = useState<string | undefined>();
   const fibersRef = useRef<Fiber.Fiber<void, unknown>[]>([]);
