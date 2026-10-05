@@ -121,7 +121,10 @@ const DiagramPanel = (props: { content: string }) => {
       fallback={
         <div class='p-2'>
           <p class='text-errorText text-sm'>{failure()}</p>
-          <pre class='mt-2 overflow-x-auto text-xs'>{props.content}</pre>
+          <details class='mt-2'>
+            <summary class='text-description cursor-pointer text-xs'>Source</summary>
+            <pre class='max-h-96 overflow-auto text-xs'>{props.content}</pre>
+          </details>
         </div>
       }
     >

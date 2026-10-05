@@ -42,6 +42,25 @@ export const DiagramIsland = ({ objects, refining, describe }: DiagramIslandProp
   const [selection, setSelection] = useState<readonly string[]>([]);
   // A large diagram is legible only at its natural size, which the split pane rarely has room for.
   const [expanded, setExpanded] = useState(false);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const toggled = useRef(false);
+
+  // The toggle is a new element on each side of the portal, so focus follows it in and back out.
+  useEffect(() => {
+    if (toggled.current) {
+      toggle.current?.focus();
+    }
+    if (!expanded) {
+      return;
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setExpanded(false);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [expanded]);
   const refs = useMemo(
     () => Object.fromEntries(objects.flatMap((object) => (object.ref ? [[object.id, object.ref]] : []))),
     [objects],
@@ -80,10 +99,23 @@ export const DiagramIsland = ({ objects, refining, describe }: DiagramIslandProp
 
   const selectedRef = selection.length === 1 ? refs[selection[0]] : undefined;
   const body = (
-    <div className={expanded ? 'bg-baseSurface fixed inset-0 z-50 flex flex-col gap-2 p-4' : ''}>
+    <div
+      className={expanded ? 'fixed inset-0 z-50 flex flex-col gap-2 p-4' : ''}
+      // The theme's surface classes resolve inside the canvas but not on a node portalled to the
+      // body, so the overlay takes the page's own computed background to stay opaque.
+      style={expanded ? { backgroundColor: getComputedStyle(document.body).backgroundColor } : undefined}
+      {...(expanded ? { 'role': 'dialog', 'aria-modal': true, 'aria-label': 'Diagram' } : {})}
+    >
       <div className='text-description flex justify-end gap-3 text-xs'>
         {refining && <span>Refining layout…</span>}
-        <button className='hover:text-baseText' onClick={() => setExpanded((value) => !value)}>
+        <button
+          ref={toggle}
+          className='hover:text-baseText'
+          onClick={() => {
+            toggled.current = true;
+            setExpanded((value) => !value);
+          }}
+        >
           {expanded ? 'close' : 'expand'}
         </button>
       </div>
