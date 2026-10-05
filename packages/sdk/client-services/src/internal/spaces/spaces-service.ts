@@ -19,7 +19,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { type EchoHost, EchoHostService } from '@dxos/echo-host';
+import { type EchoHost, EchoHostService, createLocalSpace } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
@@ -86,6 +86,10 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
   ) {}
 
   ['SpacesService.createSpace'](request: SpacesService.CreateSpaceRequest): Effect.Effect<Space, BaseError> {
+    // A local space belongs to the device, not the identity, so it needs neither.
+    if (request.localName !== undefined) {
+      return createLocalSpace(this._echoHost, request.localName);
+    }
     return Effect.tryPromise({
       try: async () => {
         this._requireIdentity();

@@ -96,3 +96,16 @@ export class GetReactiveError extends BaseError.extend(
     super({ context: { reason: options.reason, snapshotId: options.snapshotId }, ...options });
   }
 }
+
+/**
+ * Thrown when replicated data would reference an entity in a local space: the target never leaves this
+ * device, so every other peer would hold a reference that cannot resolve.
+ */
+export class LocalReferenceError extends BaseError.extend(
+  'LocalReferenceError',
+  'A replicated object cannot reference an object in a local database.',
+) {
+  constructor(uri: URI.URI, options?: BaseErrorOptions) {
+    super({ context: { uri }, ...options });
+  }
+}

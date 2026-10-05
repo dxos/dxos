@@ -211,8 +211,8 @@ export type EchoDatabaseProps = {
    */
   preloadSchemaOnOpen?: boolean;
 
-  /** @deprecated Use spaceId */
-  spaceKey: PublicKey;
+  /** @deprecated Use spaceId. Absent for a local space, which has no key. */
+  spaceKey?: PublicKey;
 };
 
 /**
@@ -363,7 +363,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.spaceId;
   }
 
-  /** @deprecated Use spaceId. */
+  /**
+   * @deprecated Use spaceId.
+   * @throws When the space is local, since it has no key.
+   */
   get spaceKey(): PublicKey {
     return this._entityManager.spaceKey;
   }

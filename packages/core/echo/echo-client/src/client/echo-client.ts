@@ -6,11 +6,13 @@ import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
-import type { Entity } from '@dxos/echo';
+import { type Entity, Hypergraph } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
+import { runServiceCall } from '@dxos/protocols';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DataService, type FeedService, type QueryService, type SpacesService } from '@dxos/protocols/rpc';
 
 import { type BranchStore } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
@@ -27,6 +29,9 @@ export type ConnectToServiceProps = {
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
 
+  /** Opens local spaces for {@link Hypergraph.Hypergraph.localDatabase}; without it the graph has none. */
+  spacesService?: Pick<SpacesService.Client, 'SpacesService.createSpace'>;
+
   /** Runtime used to run effect-rpc service calls at Promise/callback boundaries. */
   runtime?: EffectContext.Context<never>;
 };
@@ -34,8 +39,8 @@ export type ConnectToServiceProps = {
 export type ConstructDatabaseProps = {
   spaceId: SpaceId;
 
-  /** @deprecated Use spaceId */
-  spaceKey: PublicKey;
+  /** @deprecated Use spaceId. Absent for a local space, which has no key. */
+  spaceKey?: PublicKey;
 
   /**
    * Run a reactive query for a set of dynamic schema.
@@ -73,6 +78,7 @@ export class EchoClient extends Resource {
   private _dataService: DataService.Client | undefined = undefined;
   private _queryService: QueryService.Client | undefined = undefined;
   private _feedService: FeedService.Client | undefined = undefined;
+  private _spacesService: ConnectToServiceProps['spacesService'] = undefined;
   private _runtime: EffectContext.Context<never> = EffectContext.empty();
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
@@ -81,8 +87,15 @@ export class EchoClient extends Resource {
   private readonly _objectsUpdated = new Event<ObjectUpdate>();
   private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
 
+  /** Local databases by name, opening or open; concurrent first uses share one open. */
+  readonly #localDatabases = new Map<string, Promise<DatabaseImpl>>();
+
+  /** The name each open local database was opened by, so removing it lets the name open again. */
+  readonly #localNames = new Map<SpaceId, string>();
+
   constructor(_: EchoClientProps = {}) {
     super();
+    this._graph._setLocalDatabaseOpener((name) => this.#openLocalDatabase(name));
   }
 
   get graph(): HypergraphImpl {
@@ -97,11 +110,12 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, feedService, runtime }: ConnectToServiceProps): this {
+  connectToService({ dataService, queryService, feedService, spacesService, runtime }: ConnectToServiceProps): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
     this._feedService = feedService;
+    this._spacesService = spacesService;
     this._runtime = runtime ?? EffectContext.empty();
     return this;
   }
@@ -111,6 +125,7 @@ export class EchoClient extends Resource {
     this._dataService = undefined;
     this._queryService = undefined;
     this._feedService = undefined;
+    this._spacesService = undefined;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
@@ -141,6 +156,52 @@ export class EchoClient extends Resource {
       await db.close();
     }
     this._databases.clear();
+    this.#localDatabases.clear();
+    this.#localNames.clear();
+  }
+
+  /**
+   * Opens a local space through the host, as an ordinary database of this client. Forgotten on failure,
+   * so a later call retries rather than replaying the error.
+   */
+  #openLocalDatabase(name: string): Promise<DatabaseImpl> {
+    let open = this.#localDatabases.get(name);
+    if (!open) {
+      open = this.#createLocalDatabase(name);
+      this.#localDatabases.set(name, open);
+      open.catch(() => {
+        if (this.#localDatabases.get(name) === open) {
+          this.#localDatabases.delete(name);
+        }
+      });
+    }
+    return open;
+  }
+
+  async #createLocalDatabase(name: string): Promise<DatabaseImpl> {
+    invariant(this._lifecycleState === LifecycleState.OPEN, 'ECHO client is not open.');
+    if (!this._spacesService) {
+      throw new Hypergraph.LocalDatabaseNotAvailableError({ context: { name } });
+    }
+    const space = await runServiceCall(
+      this._runtime,
+      this._spacesService['SpacesService.createSpace']({
+        localName: name,
+        membershipPolicy: MembershipPolicy.LOCKED,
+      }),
+    );
+    const directoryUrl = space.pipeline?.directoryUrl;
+    invariant(SpaceId.isValid(space.id) && SpaceId.isLocal(space.id), 'Host returned a non-local space id.');
+    invariant(directoryUrl, 'Host returned a local space without a directory.');
+    if (this._lifecycleState !== LifecycleState.OPEN) {
+      throw new ContextDisposedError();
+    }
+
+    const db = this._databases.get(space.id) ?? this.constructDatabase({ spaceId: space.id });
+    this.#localNames.set(db.spaceId, name);
+    await db.setSpaceRoot(directoryUrl);
+    await db.open();
+    return db;
   }
 
   // TODO(dmaretskyi): Make async?
@@ -196,6 +257,11 @@ export class EchoClient extends Resource {
       return Promise.resolve();
     }
     this._databases.delete(db.spaceId);
+    const localName = this.#localNames.get(db.spaceId);
+    if (localName !== undefined) {
+      this.#localNames.delete(db.spaceId);
+      this.#localDatabases.delete(localName);
+    }
     this._dbUpdateSubscriptions.get(db.spaceId)?.();
     this._dbUpdateSubscriptions.delete(db.spaceId);
     this._graph._unregisterDatabase(db.spaceId);

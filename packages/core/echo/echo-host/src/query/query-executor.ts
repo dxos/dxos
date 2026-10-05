@@ -1970,10 +1970,27 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly EntityMeta[]> {
-    return this._queryIncomingReferencesByTarget(
-      workingSet.map((item) => QueryExecutor._anchorTargetDxn(item)),
-      property,
-    );
+    // The reverse index keys targets without their space, so a local anchor's referrers are narrowed
+    // here to those its references may come from.
+    const localAnchors = workingSet.filter((item) => SpaceId.isLocal(item.spaceId));
+    const sharedAnchors = workingSet.filter((item) => !SpaceId.isLocal(item.spaceId));
+    const [shared, local] = await Promise.all([
+      this._queryIncomingReferencesByTarget(
+        sharedAnchors.map((item) => QueryExecutor._anchorTargetDxn(item)),
+        property,
+      ),
+      this._queryIncomingReferencesByTarget(
+        localAnchors.map((item) => QueryExecutor._anchorTargetDxn(item)),
+        property,
+      ),
+    ]);
+    const metas = new Map(shared.map((meta) => [meta.recordId, meta]));
+    for (const meta of local) {
+      if (SpaceId.isLocal(meta.spaceId)) {
+        metas.set(meta.recordId, meta);
+      }
+    }
+    return [...metas.values()];
   }
 
   /**
@@ -2171,7 +2188,7 @@ export class QueryExecutor extends Resource {
     const parsedEchoUri = EID.tryParse(dxn);
     const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
     const spaceId = (parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined) ?? sourceSpaceId;
-    if (!objectId || !spaceId) {
+    if (!objectId || !spaceId || !isReachable(sourceSpaceId, spaceId)) {
       return null;
     }
 
@@ -2200,6 +2217,9 @@ export class QueryExecutor extends Resource {
     }
 
     const spaceId = EID.getSpaceId(echoUri) ?? sourceSpaceId;
+    if (!isReachable(sourceSpaceId, spaceId)) {
+      return null;
+    }
 
     const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
     if (!spaceRoot) {
@@ -2616,3 +2636,9 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
     _serializeCollapsed(a) === _serializeCollapsed(b)
   );
 };
+
+/**
+ * Whether a reference held in space `from` may reach space `to`: anything may, except replicated data
+ * reaching a local space, which must behave as if the reference were not there.
+ */
+const isReachable = (from: SpaceId, to: SpaceId): boolean => SpaceId.isLocal(from) || !SpaceId.isLocal(to);

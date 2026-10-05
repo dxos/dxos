@@ -9,7 +9,7 @@ import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import { Entity, Obj, Type } from '@dxos/echo';
+import { Error as EchoError, Entity, Obj, Type } from '@dxos/echo';
 import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
@@ -45,7 +45,7 @@ import {
   setProxyHandler,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, EntityId, type URI } from '@dxos/keys';
+import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -500,11 +500,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         throw new Error('Object references must be wrapped with `Ref.make`');
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
-        if (savedTarget) {
-          return EncodedReference.fromURI(this.createRef(target, savedTarget));
-        } else {
-          return EncodedReference.fromURI(value.uri);
-        }
+        return EncodedReference.fromURI(
+          assertReplicable(target, savedTarget ? this.createRef(target, savedTarget) : value.uri),
+        );
       } else if (value instanceof Uint8Array) {
         return value;
       } else {
@@ -716,26 +714,52 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     // Note: If the object is in a different database, return a reference to a foreign database.
     if (foreignDatabase !== database) {
-      return EID.make({ spaceId: foreignDatabase.spaceId, entityId: otherObjId });
+      // Checked here too because `saveRefs` binds a cached link through this path and discards the result.
+      return assertReplicable(target, EID.make({ spaceId: foreignDatabase.spaceId, entityId: otherObjId }));
     }
 
     return EID.make({ entityId: otherObjId });
   }
 
   /**
-   *
+   * Binds the links an object cached before it had a database: unpersisted targets join this database,
+   * and the relative refs written for targets that live in another database are made absolute, since
+   * relative refs resolve in this one.
    */
   saveRefs(target: ProxyTarget): void {
-    if (!target[symbolInternals].linkCache) {
+    const linkCache = target[symbolInternals].linkCache;
+    if (!linkCache) {
       return;
     }
 
-    if (target[symbolInternals].linkCache) {
-      for (const obj of target[symbolInternals].linkCache.values()) {
-        this.createRef(target, obj);
+    const foreign = new Map<string, URI.URI>();
+    for (const [objectId, obj] of linkCache) {
+      const uri = this.createRef(target, obj);
+      const eid = EID.tryParse(uri);
+      if (eid && EID.getSpaceId(eid) !== undefined) {
+        foreign.set(objectId, uri);
       }
+    }
+    target[symbolInternals].linkCache = undefined;
 
-      target[symbolInternals].linkCache = undefined;
+    if (foreign.size > 0) {
+      // Each ref is replaced in place: rewriting the whole tree would re-insert objects the document already holds.
+      const core = target[symbolInternals];
+      const visit = (value: DecodedAutomergePrimaryValue, path: Doc.KeyPath): void => {
+        if (isEncodedReference(value)) {
+          const eid = EID.tryParse(EncodedReference.toURI(value));
+          const entityId = eid && EID.getSpaceId(eid) === undefined ? EID.getEntityId(eid) : undefined;
+          const qualified = entityId ? foreign.get(entityId) : undefined;
+          if (qualified) {
+            core.setDecoded(path, EncodedReference.fromURI(qualified));
+          }
+        } else if (Array.isArray(value)) {
+          value.forEach((entry, index) => visit(entry, [...path, index]));
+        } else if (value !== null && typeof value === 'object' && !(value instanceof Uint8Array)) {
+          Object.entries(value).forEach(([key, entry]) => visit(entry, [...path, key]));
+        }
+      };
+      visit(core.getDecoded([DATA_NAMESPACE]), [DATA_NAMESPACE]);
     }
   }
 
@@ -755,10 +779,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const sourceRef = Reflect.get(target, RelationSourceId);
     const targetRef = Reflect.get(target, RelationTargetId);
     if (isProxy(sourceRef)) {
-      core.setSource(EncodedReference.fromURI(this.createRef(target, sourceRef)));
+      core.setSource(EncodedReference.fromURI(assertReplicable(target, this.createRef(target, sourceRef))));
     }
     if (isProxy(targetRef)) {
-      core.setTarget(EncodedReference.fromURI(this.createRef(target, targetRef)));
+      core.setTarget(EncodedReference.fromURI(assertReplicable(target, this.createRef(target, targetRef))));
     }
   }
 
@@ -1118,8 +1142,12 @@ const setRelationSourceAndTarget = (target: ProxyTarget, core: ObjectCore, schem
       throw new TypeError('target must be an ECHO object');
     }
 
-    core.setSource(EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, sourceRef)));
-    core.setTarget(EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, targetRef)));
+    core.setSource(
+      EncodedReference.fromURI(assertReplicable(target, EchoReactiveHandler.instance.createRef(target, sourceRef))),
+    );
+    core.setTarget(
+      EncodedReference.fromURI(assertReplicable(target, EchoReactiveHandler.instance.createRef(target, targetRef))),
+    );
   }
 };
 
@@ -1181,9 +1209,25 @@ const linkMetaRefs = (target: ProxyTarget, meta: EntityMeta): EntityMeta =>
 
 const refToEncodedReference = (target: ProxyTarget, ref: Ref<any>): EncodedReference => {
   const savedTarget = getRefSavedTarget(ref);
-  if (savedTarget) {
-    return EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, savedTarget));
-  } else {
-    return EncodedReference.fromURI(ref.uri);
+  return EncodedReference.fromURI(
+    assertReplicable(target, savedTarget ? EchoReactiveHandler.instance.createRef(target, savedTarget) : ref.uri),
+  );
+};
+
+/**
+ * A reference written into an object of a replicated space must not name a local space: other peers could
+ * never resolve it, and the local entity's id would leak off the device. Objects of a local space, and
+ * objects not yet in any database, may reference anything.
+ */
+const assertReplicable = (target: ProxyTarget, uri: URI.URI): URI.URI => {
+  const database = getEchoDatabase(target[symbolInternals]);
+  if (database === undefined || SpaceId.isLocal(database.spaceId)) {
+    return uri;
   }
+  const eid = EID.tryParse(uri);
+  const spaceId = eid ? EID.getSpaceId(eid) : undefined;
+  if (spaceId !== undefined && SpaceId.isLocal(spaceId)) {
+    throw new EchoError.LocalReferenceError(uri);
+  }
+  return uri;
 };

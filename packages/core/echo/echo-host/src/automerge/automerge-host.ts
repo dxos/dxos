@@ -26,6 +26,7 @@ import {
   type SubductionPolicy,
   initSubduction,
   interpretAsDocumentId,
+  isValidDocumentId,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId, type Subduction } from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
@@ -38,7 +39,7 @@ import { Context, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
@@ -55,7 +56,7 @@ import { type EchoDataMonitor } from './echo-data-monitor.ts';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
 import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } from './handle-state.ts';
-import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
+import { isLocalCollectionId, tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
 import { runMigrations } from './subduction-migrations/index.ts';
@@ -1091,9 +1092,10 @@ export class AutomergeHost extends Resource {
    * {@link AutomergeReplicator}s via {@link EchoNetworkAdapter}.
    */
   private readonly _shareConfig = {
-    access: async (_peerId: PeerId, _documentId?: DocumentId): Promise<boolean> => {
-      // Access-on-request is always allowed; per-doc authorization happens in the replicator.
-      return true;
+    access: async (_peerId: PeerId, documentId?: DocumentId): Promise<boolean> => {
+      // Access-on-request is otherwise allowed, with per-doc authorization in the replicator; a local
+      // space's documents are refused here so no replicator's policy can serve them.
+      return !documentId || !(await this.#isLocalDocument(documentId));
     },
 
     // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
@@ -1196,6 +1198,10 @@ export class AutomergeHost extends Resource {
     const subductionPeerIdHex = subductionPeerId.toString();
     const repoPeerId = this._subductionPeerIdHexToRepoPeerId.get(subductionPeerIdHex);
     const documentId = sedimentreeIdToDocumentId(sedimentreeId);
+    if (await this.#isLocalDocument(documentId)) {
+      log.verbose('subduction share probe: local space document', { documentId, subductionPeerIdHex });
+      return false;
+    }
     if (!repoPeerId) {
       // Default-allow on the unbound-peer race; logged because it bypasses the share policy.
       log.verbose('subduction share probe: peer not bound, allowing', { documentId, subductionPeerIdHex });
@@ -1339,8 +1345,23 @@ export class AutomergeHost extends Resource {
       }
     }
 
+    // A local space's documents carry no space key, so their owner is read from `access.spaceId`.
+    const handle = isValidDocumentId(documentId) ? this._repo.getHandle(documentId) : undefined;
+    if (handle && getHandleState(this._repo, handle.documentId) === 'ready') {
+      const spaceId = handle.doc()?.access?.spaceId;
+      if (SpaceId.isValid(spaceId) && SpaceId.isLocal(spaceId)) {
+        return spaceId;
+      }
+    }
+
     const spaceKey = await this._getContainingSpaceForDocument(documentId);
     return spaceKey ? createIdFromSpaceKey(spaceKey) : null;
+  }
+
+  /** Whether a document belongs to a local space, which nothing may announce, serve or sync. */
+  async #isLocalDocument(documentId: string): Promise<boolean> {
+    const spaceId = await this.getContainingSpaceIdForDocument(documentId);
+    return spaceId !== null && SpaceId.isLocal(spaceId);
   }
 
   /**
@@ -1536,6 +1557,10 @@ export class AutomergeHost extends Resource {
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
+    // The reply lists the collection's document ids and heads, which a local space keeps to itself.
+    if (isLocalCollectionId(collectionId)) {
+      return;
+    }
     this._collectionSynchronizer.onCollectionStateQueried(collectionId, peerId);
   }
 

@@ -34,6 +34,12 @@ export type MembershipPolicy = Schema.Schema.Type<typeof MembershipPolicy>;
 export const CreateSpaceRequest = Schema.Struct({
   tags: Schema.optional(mutableArray(Schema.String)),
   membershipPolicy: MembershipPolicy,
+  /**
+   * Opens this device's local space of that name instead, creating it on first use: a space with a local
+   * id (`SpaceId.isLocal`), no key, credentials or members, that never replicates. `tags` and
+   * `membershipPolicy` do not apply to it.
+   */
+  localName: Schema.optional(Schema.String),
 });
 export interface CreateSpaceRequest extends Schema.Schema.Type<typeof CreateSpaceRequest> {}
 

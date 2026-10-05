@@ -18,6 +18,12 @@ const MULTIBASE_PREFIX = 'B';
 
 const ENCODED_LENGTH = 33;
 
+/**
+ * Every local (device-only, never replicated) space id starts with this. 35 fixed bits, so a random or
+ * key-derived replicated id carries it with probability 2^-35; {@link SpaceId.random} never does.
+ */
+const LOCAL_PREFIX = `${MULTIBASE_PREFIX}LOCALDB`;
+
 const isValid = (value: unknown): value is SpaceId => {
   return typeof value === 'string' && value.startsWith(MULTIBASE_PREFIX) && value.length === ENCODED_LENGTH;
 };
@@ -39,6 +45,9 @@ export const SpaceId: Schema.Codec<SpaceId, string> & {
   encode: (value: Uint8Array) => SpaceId;
   decode: (value: SpaceId) => Uint8Array;
   isValid: (value: unknown) => value is SpaceId;
+  isLocal: (value: SpaceId) => boolean;
+  localPrefix: string;
+  local: (seed: Uint8Array) => SpaceId;
   make: (value: string) => SpaceId;
   random: () => SpaceId;
 } = withStatics(SpaceIdSchema, {
@@ -57,10 +66,34 @@ export const SpaceId: Schema.Codec<SpaceId, string> & {
 
   isValid,
 
+  /**
+   * Whether the id names a local space: one whose data stays on this device and must never be referenced
+   * from replicated data.
+   */
+  isLocal: (value: SpaceId): boolean => value.startsWith(LOCAL_PREFIX),
+
+  /** What every local space id starts with, for matching them where {@link SpaceId.isLocal} cannot run (SQL). */
+  localPrefix: LOCAL_PREFIX,
+
+  /**
+   * A local space id derived from 20 bytes of `seed`: the encoding with its leading characters replaced by
+   * the local marker, which keeps it a valid base-32 id.
+   */
+  local: (seed: Uint8Array): SpaceId => {
+    const encoded = SpaceId.encode(seed);
+    return SpaceId.make(LOCAL_PREFIX + encoded.slice(LOCAL_PREFIX.length));
+  },
+
   make: (value: string): SpaceId => {
     invariant(isValid(value), 'Invalid SpaceId');
     return value;
   },
 
-  random: (): SpaceId => SpaceId.encode(randomBytes(SpaceId.byteLength)),
+  random: (): SpaceId => {
+    let id: SpaceId;
+    do {
+      id = SpaceId.encode(randomBytes(SpaceId.byteLength));
+    } while (SpaceId.isLocal(id));
+    return id;
+  },
 });
