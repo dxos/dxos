@@ -4,14 +4,14 @@
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { forceParsing, syntaxTree } from '@codemirror/language';
-import { EditorState } from '@codemirror/state';
+import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
 import { focus } from '../../state/focus.ts';
 import { image } from './image.ts';
 
-const createView = (doc: string, extensions: any[]) => {
+const createView = (doc: string, extensions: Extension[]) => {
   const parent = document.createElement('div');
   return new EditorView({
     state: EditorState.create({
