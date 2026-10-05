@@ -228,7 +228,6 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
       };
     });
 
-    // TODO(burdon): Trap cursor keys (otherwise the enclosing focus group grabs focus.)
     return (
       <div
         {...composableProps(props, {
