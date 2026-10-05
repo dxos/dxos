@@ -18,7 +18,7 @@ import {
   makeClientServicesRpcFromRouter,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { ServiceStack } from '@dxos/client-services';
+import { type IdentityManager, ServiceStack } from '@dxos/client-services';
 import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -85,6 +85,8 @@ export type LocalClientServicesParams = {
    * If not provided, falls back to in-memory SQLite (indexes lost on restart).
    */
   sqlitePath?: string;
+  /** Replaces the EDGE inbox; tests share one relay (e.g. `MemoryEdgeInbox`) between clients. */
+  inboxRelay?: IdentityManager.InboxRelay;
 };
 
 /**
@@ -285,6 +287,7 @@ export class LocalClientServices implements ClientServicesProvider {
             runtimeProps: this._params.runtimeProps,
             signalManager: this._params.signalManager,
             transportFactory: this._params.transportFactory,
+            inboxRelay: this._params.inboxRelay,
             connectionLog: this._params.connectionLog,
             autoConnect: this._params.autoConnect,
           }).pipe(

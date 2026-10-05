@@ -19,6 +19,7 @@ export const TextField = ({
   placeholder,
   presentation,
   autoFocus,
+  jsonPath,
   getValue,
   onBlur,
   onValueChange,
@@ -39,6 +40,7 @@ export const TextField = ({
       value={value}
       onBlur={onBlur}
       onChange={(event) => onValueChange(type, event.target.value)}
+      data-testid={jsonPath}
       {...(key && { variant: 'mono', spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
     />
   );

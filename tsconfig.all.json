@@ -535,6 +535,9 @@
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-messenger/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-mobile/tsconfig.json"
     },
     {
