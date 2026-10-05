@@ -10,6 +10,7 @@ import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, Message } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
+import { getDelivery, isUnread } from '../../delivery.ts';
 import { translationKey } from '../../translations.ts';
 import { formatTime } from './format-time.ts';
 
@@ -107,7 +108,8 @@ export const PromptToolbar = memo(({ classNames, message }: MessageToolbarProps)
   return (
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
-      {onRewind && (
+      {/* Nothing to rewind to until the agent has taken the prompt up: it is not in the history yet. */}
+      {onRewind && !isUnread(getDelivery(message)) && (
         <Button
           icon='ph--clock-counter-clockwise--regular'
           iconOnly

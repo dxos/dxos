@@ -32,4 +32,8 @@ export type ChatThreadEvent =
   /** A suggestion or select option was chosen — the text is ready to submit. */
   | { type: 'submit'; text: string }
   /** Soft-fork the thread from the given message (the prompt toolbar's rewind). */
-  | { type: 'rewind'; id: string };
+  | { type: 'rewind'; id: string }
+  /** Send again a prompt that never reached the agent (its delivery row's retry). */
+  | { type: 'retry-prompt'; id: string }
+  /** Withdraw a prompt the agent has not taken up (its delivery row's remove). */
+  | { type: 'remove-prompt'; id: string };

@@ -84,6 +84,8 @@ const RUN_METRICS: ReadonlyArray<{ id: string; keys: string[]; reduce: 'max' | '
   },
   { id: 'run > peak app footprint', keys: ['appFootprintBytes'], reduce: 'max', when: 'footprintProcesses' },
   { id: 'run > total blocking time', keys: ['tbtMs'], reduce: 'sum' },
+  // A level: only the stage that submitted a prompt carries the column.
+  { id: 'run > submit to queued visible', keys: ['submitToQueuedVisibleMs'], reduce: 'max' },
 ];
 
 /**

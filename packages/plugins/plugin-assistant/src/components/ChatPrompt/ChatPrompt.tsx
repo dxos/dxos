@@ -164,7 +164,8 @@ export const ChatPrompt = ({
   );
 
   // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
-  // queued behind the running turn rather than dropped (`Chat.Root` routes it to `enqueue`).
+  // queued behind the running turn rather than dropped (`Chat.Root` sends it through the processor's
+  // outbox, which queues it while the agent is busy).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
       if (!processor || queueFull) {

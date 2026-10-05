@@ -3,6 +3,7 @@
 //
 
 export * from './components/index.ts';
+export * from './delivery.ts';
 export * from './registry.tsx';
 export * from './renderer.ts';
 export * from './translations.ts';

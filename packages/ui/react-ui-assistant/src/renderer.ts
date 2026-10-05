@@ -6,6 +6,7 @@ import { type URI } from '@dxos/keys';
 import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
 
+import { getDelivery } from './delivery.ts';
 import { type ChatView } from './types.ts';
 
 export type CreateRendererOptions = {
@@ -105,6 +106,16 @@ export const createRenderer = (
         return parts;
       }, [])
       .join('\n\n');
+
+    // Last, on a line of its own: the ticks sit under the prompt, and a status change then differs
+    // from the previous document only inside the tag, which is all the item reconciles.
+    const delivery = getDelivery(message);
+    if (delivery) {
+      return {
+        kind: 'markdown',
+        text: `${text}\n\n<delivery status="${delivery}" id="${escapeAttribute(message.id)}" />`,
+      };
+    }
 
     return { kind: 'markdown', text };
   };
@@ -234,13 +245,15 @@ const LINE_HEIGHT = 24;
 const LINE_CHARS = 90;
 /** A collapsed panel: reasoning, a tool run, a summary. */
 const PANEL_HEIGHT = 50;
+/** The delivery ticks' line under a prompt still on its way to the agent. */
+const DELIVERY_HEIGHT = 20;
 
 /**
  * What a row will measure, from the message alone. Rough on purpose — its only job is to be close
  * enough that measuring the row does not move the rows below it.
  */
 export const estimateRow = (message: Message.Message): number => {
-  let height = ROW_CHROME;
+  let height = getDelivery(message) ? ROW_CHROME + DELIVERY_HEIGHT : ROW_CHROME;
   for (const block of message.blocks) {
     switch (block._tag) {
       case 'text': {

@@ -255,6 +255,9 @@ const counterColumns = (row: StageRow): Record<string, number | boolean> => {
       reactRenderers: row.react.renderers,
     });
   }
+  if (row.submitToQueuedVisibleMs !== undefined) {
+    columns.submitToQueuedVisibleMs = row.submitToQueuedVisibleMs;
+  }
   if (row.data) {
     const counters = row.data.counters;
     Object.assign(

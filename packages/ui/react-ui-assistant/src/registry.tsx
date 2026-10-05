@@ -2,9 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type XmlWidgetRegistry, getXmlInnerText, getXmlTextChild } from '@dxos/ui-editor';
+import * as Schema from 'effect/Schema';
 
+import { type XmlWidgetDef, type XmlWidgetRegistry, getXmlInnerText, getXmlTextChild } from '@dxos/ui-editor';
+
+import { DeliveryStatus } from './delivery.ts';
 import {
+  type DeliveryLabels,
+  DeliveryWidget,
   FallbackWidget,
   ReasoningWidget,
   ReferenceWidget,
@@ -148,3 +153,15 @@ export const assistantRegistry: XmlWidgetRegistry = {
     Component: FallbackWidget,
   },
 } as const;
+
+const isDeliveryStatus = Schema.is(DeliveryStatus);
+
+/**
+ * The delivery ticks under a prompt still on its way to the agent. Not in {@link assistantRegistry}
+ * because its labels are the reader's language, which only a rendered thread has.
+ */
+export const createDeliveryWidget = (labels: DeliveryLabels): XmlWidgetDef => ({
+  block: true,
+  factory: ({ status, id }) =>
+    isDeliveryStatus(status) && typeof id === 'string' ? new DeliveryWidget(status, id, labels) : null,
+});

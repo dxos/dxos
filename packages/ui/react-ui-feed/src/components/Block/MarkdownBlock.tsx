@@ -11,6 +11,7 @@ import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { type ObjectLinkProps, type WidgetDef, type WidgetState, type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
+import { diffRange } from './diff-range.ts';
 import { createBlockExtensions } from './extensions.ts';
 import { type HighlightRange, setHighlights } from './highlight.ts';
 import { useSelectionGroup } from './selection-group.ts';
@@ -126,13 +127,14 @@ export const MarkdownBlock = memo(
         return;
       }
 
-      // A non-append (a rewrite, a view-type switch, a rewind) lands atomically — dripping a
-      // replacement would show the reader a half-rewritten document.
+      // A non-append (a rewrite, a view-type switch, a status tag changing) lands atomically —
+      // dripping a replacement would show the reader a half-rewritten document — and replaces only
+      // the span that differs, so the decorations and widgets either side of it survive.
       if (!text.startsWith(dispatchedRef.current)) {
         cancelAnimationFrame(dripRaf.current);
         dripRaf.current = 0;
         dispatchedRef.current = text;
-        view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+        view.dispatch({ changes: diffRange(view.state.doc.toString(), text) });
         return;
       }
 
