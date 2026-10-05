@@ -29,6 +29,10 @@ import { type MaybeProvider, getProviderValue, isTruthy } from '@dxos/util';
 
 let instanceCount = 0;
 
+/** By node type, since `instanceof` fails for a node from another window. */
+const isDocumentOrShadowRoot = (node: Node): node is Document | ShadowRoot =>
+  node.nodeType === Node.DOCUMENT_NODE || (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE && 'host' in node);
+
 export type CursorInfo = {
   from: number;
   to: number;
@@ -106,13 +110,21 @@ export const useTextEditor = (
       });
 
       // https://codemirror.net/docs/ref/#view.EditorViewConfig
+      // Built detached and attached after: the constructor sets the editor's classes and attributes,
+      // and each set on a connected element invalidates style against every rule in the page.
       view = new EditorView({
-        parent: parentRef.current,
         state,
         // `scrollTo` is the position recorded at the top of the viewport, so restore it there.
         scrollTo: scrollTo != null ? EditorView.scrollIntoView(scrollTo, { y: 'start', yMargin: 0 }) : undefined,
         dispatchTransactions: debug ? debugDispatcher : undefined,
       });
+      parentRef.current.appendChild(view.dom);
+      // A view built without a parent assumes the main document; a shadow root or another window's
+      // document needs its styles and window listeners moved there.
+      const root = parentRef.current.getRootNode();
+      if (isDocumentOrShadowRoot(root)) {
+        view.setRoot(root);
+      }
 
       // Move to end of line after document loaded (unless selection is specified).
       if (selectionEnd && !initialSelection) {
