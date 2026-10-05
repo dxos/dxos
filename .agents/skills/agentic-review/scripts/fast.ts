@@ -61,6 +61,15 @@ const run = (name: string, args: string[]): void => {
 const mainBase = values.base ? null : mainMergeBase(values.main ? [values.main, 'origin/main', 'main'] : undefined);
 // Only a review of the whole PR can stand in for the stores before it.
 const priors = mainBase ? findPrReviews(mainBase, root).filter((review) => review.slug !== slug) : [];
+// Deleting a store whose index did not parse would drop its dismissals unseen.
+const unreadable = priors.filter((review) => review.error);
+if (unreadable.length > 0) {
+  for (const review of unreadable) {
+    console.error(`fast: review \`${review.slug}\` has an unreadable index: ${review.error}`);
+  }
+  console.error('fast: fix those index lines first, so their statuses carry into the new review.');
+  process.exit(1);
+}
 
 run('prepare.ts', [
   '--fast',

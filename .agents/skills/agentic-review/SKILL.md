@@ -246,7 +246,9 @@ review runs the subagent workflow above. Then fix or dismiss each issue, set its
   rule and file, when that pair is unique) match a row of the new index carries its status over
   — a `resolved` finding raised again is a regression, so it stays `unresolved` — and the old
   store directory is deleted. Commit that deletion with the new
-  store. `--base=<ref>` reviews less than the whole PR, so it keeps the earlier stores.
+  store. An earlier store whose index does not parse stops the run before it reviews anything,
+  so its dismissals are never dropped unseen. `--base=<ref>` reviews less than the whole PR, so it
+  keeps the earlier stores.
 - **Changed files ignore merges.** `--pr-only` / `--fast` review only files a non-merge commit
   on HEAD's first-parent line touched and that still differ from the base, so a merge from
   main — and the conflict resolution inside it — brings nothing into the review. `--pr-only`
