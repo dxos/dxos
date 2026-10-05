@@ -78,3 +78,9 @@ Decisions taken while building (beyond the spec):
 - [x] Changeset for Phase 1 when the PR is opened.
 - [ ] Shared message tile for plugin-inbox + plugin-messenger.
 - [ ] Retention/pruning of the feed and `readKeys`.
+- [x] Surface inbox failures for identities without an account (EDGE 403
+      `identity_not_associated_with_account`): `InboxAccountRequiredError` from `sendMessage`,
+      `HaloInbox.status` (published on the transition only), `AddMembers.notNotified` + "Added, but not
+      notified" toast with Copy link, messenger panel empty state explains it.
+- [ ] Show the account-required notice in the panel even when older notifications are listed (today it
+      replaces the empty state only).
