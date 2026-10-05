@@ -98,11 +98,11 @@ run that wrote no rows scores that group at the floor:
 node scripts/score-perf.ts score [--dir test-results/perf] [--publish]
 ```
 
-Each target is the median of the first CI run on the perf-nightly runner (10 iterations, Storybook
-in dev mode) and each limit is 1.5× it. One run is a thin sample: recalibrate from the nightly's own
-`ci.perf-stage` rows once a few nights have run, and never raise a target: where the CI median was
-worse than the earlier target (`peak app footprint`), the earlier target stands. The `busy > ` targets
-came the same way from the first CI run that included the busy space (10 iterations); busy's peak
-app footprint shares the blank target, since the busy data barely moves it. `seed`, `wall > idle` (a scripted
-wait), `edge traffic` (EDGE is off) and `app code transferred` (an unbundled dev server) are left
-unbudgeted on purpose.
+Each target is the median of the first perf-nightly CI run against the built Storybook (5
+iterations, blank and busy), rounded up to two significant figures, and each limit is 1.5× it.
+Dev-server rows (`DX_PERF_SERVER=dev`) never feed these budgets. One run is a thin sample:
+recalibrate from the nightly's own `ci.perf-stage` rows once a few nights have run, and never raise a
+target. Where the CI median was worse than the earlier dev-server target, the earlier target stands:
+the worst tab lag p95 (blank and busy) and busy's worst worker lag p95, which the build's single
+chunk pushes up while it parses. `seed`, `wall > idle` (a scripted wait), `edge traffic` (EDGE is off)
+and `app code transferred` are left unbudgeted on purpose.
