@@ -20,7 +20,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { CommandModule, type ProcessItem, ProcessTile } from '../components/index.ts';
-import { type RemoteMode, TickerProcess, makeComputeLayer } from '../testing/index.ts';
+import { MandelbrotProcess, type RemoteMode, makeComputeLayer } from '../testing/index.ts';
 
 type StoryProps = {
   remote: RemoteMode;
@@ -56,7 +56,11 @@ const DefaultStory = ({ remote }: StoryProps) => {
         .runPromiseExit(
           Effect.gen(function* () {
             const manager = yield* Process.ManagerService;
-            return yield* manager.spawn(TickerProcess, { name: 'Ticker', location, environment: { space: space.id } });
+            return yield* manager.spawn(MandelbrotProcess, {
+              name: 'Mandelbrot',
+              location,
+              environment: { space: space.id },
+            });
           }),
         )
         .then((exit) =>
@@ -128,7 +132,7 @@ export const Default: Story = {
   decorators: [withClientProvider({ createIdentity: true, createSpace: true })],
 };
 
-/** Remote processes run on the dev EDGE service, which must host the ticker's process key. */
+/** Remote processes run on the dev EDGE service, which must host the Mandelbrot process key. */
 export const Edge: Story = {
   args: { remote: 'edge' },
   decorators: [withClientProvider({ createIdentity: true, createSpace: true, config: edgeConfig })],

@@ -3,4 +3,4 @@
 //
 
 export * from './layer.ts';
-export * from './ticker.ts';
+export * from './mandelbrot.ts';

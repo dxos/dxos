@@ -14,12 +14,12 @@ import { EffectEx } from '@dxos/effect';
 import { Block, Button, Card, Focus } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 
-import { type TickerOutput } from '../testing/index.ts';
+import { HEIGHT, type MandelbrotOutput, WIDTH } from '../testing/index.ts';
 
 export type ProcessItem = {
   id: string;
   location: Process.Location;
-  handle: Process.Handle<void, TickerOutput, never>;
+  handle: Process.Handle<void, MandelbrotOutput, never>;
 };
 
 const TERMINAL_STATES: readonly Process.State[] = [
@@ -46,24 +46,56 @@ const useNow = (active: boolean): number => {
   return now;
 };
 
-/** Latest output of the process; the subscription also drives a remote handle's status polling. */
-const useLatestOutput = (handle: ProcessItem['handle']): TickerOutput | undefined => {
-  const [output, setOutput] = useState<TickerOutput>();
+/** Maps an escape count to RGB; points that never escape are black. */
+const colorFor = (iterations: number, maxIterations: number): [number, number, number] => {
+  if (iterations >= maxIterations) {
+    return [0, 0, 0];
+  }
+  const t = Math.sqrt(iterations / maxIterations);
+  return [Math.round(255 * Math.min(1, 3 * t)), Math.round(255 * t * t), Math.round(255 * (1 - t) * 0.8 + 50 * t)];
+};
+
+const paintBand = (context: CanvasRenderingContext2D, band: MandelbrotOutput) => {
+  const rows = band.data.length / WIDTH;
+  const image = context.createImageData(WIDTH, rows);
+  band.data.forEach((iterations, index) => {
+    const [red, green, blue] = colorFor(iterations, band.maxIterations);
+    image.data.set([red, green, blue, 255], index * 4);
+  });
+  context.putImageData(image, 0, band.y);
+};
+
+/**
+ * Paints each output band onto the canvas and returns the frame being rendered; the subscription
+ * also drives a remote handle's status polling.
+ */
+const useMandelbrot = (handle: ProcessItem['handle'], canvas: HTMLCanvasElement | null): number | undefined => {
+  const [frame, setFrame] = useState<number>();
   useEffect(() => {
+    const context = canvas?.getContext('2d');
+    if (!context) {
+      return;
+    }
     const fiber = Effect.runFork(
-      Stream.runForEach(handle.subscribeOutputs(), (next) => Effect.sync(() => setOutput(next))),
+      Stream.runForEach(handle.subscribeOutputs(), (band) =>
+        Effect.sync(() => {
+          paintBand(context, band);
+          setFrame(band.frame);
+        }),
+      ),
     );
     return () => {
       Effect.runFork(Fiber.interrupt(fiber));
     };
-  }, [handle]);
-  return output;
+  }, [handle, canvas]);
+  return frame;
 };
 
 export const ProcessTile: MosaicStackTileComponent<ProcessItem> = (props) => {
   const { handle, location } = props.data;
   const status = useAtomValue(handle.statusAtom);
-  const output = useLatestOutput(handle);
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const frame = useMandelbrot(handle, canvas);
   const terminal = TERMINAL_STATES.includes(status.state);
   const now = useNow(!terminal);
   const end = Option.match(status.completedAt, { onNone: () => now, onSome: (date) => date.getTime() });
@@ -98,11 +130,19 @@ export const ProcessTile: MosaicStackTileComponent<ProcessItem> = (props) => {
               <span data-testid='process-state'>{status.state}</span>
               <span className='text-fg-muted'>Elapsed</span>
               <span className='font-mono'>{formatElapsed(end - status.startedAt.getTime())}</span>
-              <span className='text-fg-muted'>Output</span>
+              <span className='text-fg-muted'>Frame</span>
               <span className='font-mono' data-testid='process-output'>
-                {output ? `#${output.tick} prime=${output.prime}` : '—'}
+                {frame ?? '—'}
               </span>
             </div>
+          </Card.Row>
+          <Card.Row>
+            <canvas
+              ref={setCanvas}
+              width={WIDTH}
+              height={HEIGHT}
+              className='w-full aspect-[4/3] rounded-sm bg-black [image-rendering:pixelated]'
+            />
           </Card.Row>
         </Card.Root>
       </Focus.Item>

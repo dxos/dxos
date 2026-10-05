@@ -17,7 +17,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { EdgeProcessManager } from '@dxos/edge-compute';
 
-import { TickerProcess } from './ticker.ts';
+import { MandelbrotProcess } from './mandelbrot.ts';
 
 /**
  * What stands in for EDGE: a second in-memory runtime behind the remote control surface, or the real
@@ -41,7 +41,7 @@ const simulatedRemoteLayer = Layer.effect(
       handlerSet: yield* OperationHandlerSet.OperationHandlerProvider,
       idGenerator: ProcessManager.UUIDProcessIdGenerator,
     });
-    const control = yield* LocalRemoteHost.makeHost({ manager: host, definitions: [TickerProcess] });
+    const control = yield* LocalRemoteHost.makeHost({ manager: host, definitions: [MandelbrotProcess] });
     const processTreeAtom = Atom.make<readonly Process.Process[]>([]);
     registry.mount(processTreeAtom);
     return {
