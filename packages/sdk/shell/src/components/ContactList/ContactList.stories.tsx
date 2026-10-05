@@ -61,7 +61,9 @@ export const TestLayout: Story = {
       const tags = textBox(item.querySelector<HTMLElement>('[data-part="item-description"]'));
       const copy = item.querySelector<HTMLElement>('button[aria-label]:not([data-testid])')?.getBoundingClientRect();
       // The avatar starts the row and the name follows it a gap apart, rather than either floating mid-row.
-      await expect((avatar?.left ?? Number.NaN) - row.left).toBeLessThan(24);
+      const avatarInset = (avatar?.left ?? Number.NaN) - row.left;
+      await expect(avatarInset).toBeGreaterThanOrEqual(0);
+      await expect(avatarInset).toBeLessThan(24);
       const gap = (name?.left ?? Number.NaN) - (avatar?.right ?? 0);
       await expect(gap).toBeGreaterThanOrEqual(4);
       await expect(gap).toBeLessThan(24);
@@ -78,7 +80,9 @@ export const TestLayout: Story = {
         await expect((tagTop ?? Number.NaN) - range.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(6);
       }
       // The copy button ends the row.
-      await expect(row.right - (copy?.right ?? Number.NaN)).toBeLessThan(24);
+      const copyInset = row.right - (copy?.right ?? Number.NaN);
+      await expect(copyInset).toBeGreaterThanOrEqual(0);
+      await expect(copyInset).toBeLessThan(24);
     }
   },
 };
