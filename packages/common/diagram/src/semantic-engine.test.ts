@@ -11,6 +11,7 @@ import { compile, parse, toScene } from './dsl/index.ts';
 import * as MermaidEngine from './mermaid-engine.ts';
 import type * as Scene from './scene.ts';
 import { measureBox, pitchFor } from './semantic-engine.ts';
+import * as Semantic from './semantic.ts';
 
 type Rect = { x: number; y: number; w: number; h: number };
 
@@ -270,6 +271,66 @@ describe('semantic engine', { timeout: 120_000 }, () => {
       const route = pathOf(objects, 'Cat-Animal-1');
       expect(route[0].x).toBe(cat.x);
       expect(route[route.length - 1].x).toBe(animal.x + animal.w);
+    });
+  });
+
+  describe('port significance', () => {
+    const FACE = 'node Hub @cell(1,0)\nnode Left @cell(0,1)\nnode Right @cell(2,1)\n';
+
+    test('relations rank from inheritance down to dependency', ({ expect }) => {
+      const ranked = [
+        Semantic.significance('inheritance'),
+        Semantic.significance('composition'),
+        Semantic.significance('aggregation'),
+        Semantic.significance(undefined),
+        Semantic.significance('dependency'),
+      ];
+      expect(ranked).toEqual([...ranked].sort((left, right) => right - left));
+      expect(new Set(ranked).size).toBe(ranked.length);
+      expect(Semantic.significance('implementation')).toBe(Semantic.significance('inheritance'));
+      expect(Semantic.significance(undefined, 'dashed')).toBe(Semantic.significance('dependency'));
+    });
+
+    test('the more significant of two edges on one face enters at its centre', ({ expect }) => {
+      for (const [statements, central, aside] of [
+        ['edge Left:top depends-on Hub:bottom\nedge Right:top composes Hub:bottom', 'Right-Hub-1', 'Left-Hub-0'],
+        ['edge Left:top composes Hub:bottom\nedge Right:top depends-on Hub:bottom', 'Left-Hub-0', 'Right-Hub-1'],
+      ] as const) {
+        const { objects } = sceneOf(`${FACE}${statements}`);
+        const hub = rectOf(objects, 'Hub');
+        const [centralEnd, asideEnd] = [central, aside].map((id) => pathOf(objects, id).at(-1));
+        expect(centralEnd).toEqual({ x: hub.x + hub.w / 2, y: hub.y + hub.h });
+        expect(asideEnd?.y).toBe(hub.y + hub.h);
+        expect(asideEnd?.x).not.toBe(hub.x + hub.w / 2);
+        expect(analyze(objects).metrics.crossings).toBe(0);
+      }
+    });
+
+    test('edges of equal significance keep their order, centred on the face', ({ expect }) => {
+      const { objects } = sceneOf(`${FACE}edge Left:top -> Hub:bottom\nedge Right:top -> Hub:bottom`);
+      const hub = rectOf(objects, 'Hub');
+      const [left, right] = ['Left-Hub-0', 'Right-Hub-1'].map((id) => pathOf(objects, id).at(-1)?.x ?? NaN);
+      expect(left).toBeLessThan(right);
+      expect(left + right).toBe(2 * (hub.x + hub.w / 2));
+    });
+
+    test('an inheritance trunk leaves the subtype from its centre beside a dependency', ({ expect }) => {
+      const { objects } = sceneOf(`
+        diagram flow=down
+        node Animal
+        node Dog below Animal
+        node Cat right-of Dog
+        node Logger above Cat
+        edge Dog extends Animal
+        edge Cat extends Animal
+        edge Cat depends-on Logger
+      `);
+      const cat = rectOf(objects, 'Cat');
+      const centre = { x: cat.x + cat.w / 2, y: cat.y };
+      expect(pathOf(objects, 'Cat-Animal-1')[0]).toEqual(centre);
+      const logger = pathOf(objects, 'Cat-Logger-2')[0];
+      expect(logger.y).toBe(cat.y);
+      expect(logger.x).not.toBe(centre.x);
     });
   });
 
