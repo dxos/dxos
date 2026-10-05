@@ -30,7 +30,7 @@ import type * as Credential from '@dxos/compute/Credential';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -43,6 +43,7 @@ import { findInCause } from '../util/error-cause.ts';
 import { Outbox, type OutboxEntry, PromptCancelledError } from './outbox.ts';
 import { providerForModel } from './presets.ts';
 import { type ProcessorRequestContext, createPromptContent } from './prompt.ts';
+import { EMPTY_THREAD, type ThreadProjection, projectThread } from './thread.ts';
 
 /**
  * Space-scoped services materialised by the layer passed into
@@ -98,8 +99,6 @@ export type ProcessorSendOptions = {
    * prompt. Lets a transient chat persist and flush its conversation feed so the agent can resolve it.
    */
   prepare?: () => Promise<void> | void;
-  /** Ids of the feed messages the thread holds at submit (see {@link OutboxEntry.known}). */
-  known?: Iterable<string>;
 };
 
 /** Settles the dispatch of one prompt: resolved once the agent holds it, rejected if it never will. */
@@ -251,6 +250,15 @@ export class AiChatProcessor {
   /** Prompts sent from this chat, from submit onwards, in submit order (see {@link send}). */
   public readonly outbox: Atom.Atom<readonly OutboxEntry[]>;
 
+  /** The feed's messages, live: what the outbox and the streamed turn are reconciled against. */
+  readonly #feedMessages: Atom.Atom<readonly Message.Message[]>;
+
+  /**
+   * What the chat renders: the feed's turns, the turn streaming now, and the prompts on their way to
+   * the agent, reconciled into one list (see `projectThread`). The UI reads this and nothing else.
+   */
+  public readonly thread: Atom.Atom<ThreadProjection>;
+
   /**
    * MCP server connection errors observed during the most recent request.
    * Misconfigured/unreachable servers are dropped from the toolkit so the chat
@@ -285,6 +293,19 @@ export class AiChatProcessor {
     this.#registry = this._options.observableRegistry ?? AtomRegistry.make();
     this.#outbox = new Outbox(this.#registry, (payload) => this.#dispatch(payload));
     this.outbox = this.#outbox.entries;
+    // Held for the processor's life: a query's atom is memoized per result, so the query must be too.
+    const db = Obj.getDatabase(this._feed);
+    this.#feedMessages = db
+      ? db.query(Query.select(Filter.type(Message.Message)).from(this._feed)).atom
+      : Atom.make<readonly Message.Message[]>([]);
+    this.thread = Atom.make((get) =>
+      projectThread({
+        feedMessages: get(this.#feedMessages),
+        pendingMessages: get(this.messages),
+        rewindFrom: get(Obj.atom(this._feed)).rewindFrom,
+        outbox: get(this.outbox),
+      }),
+    );
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
@@ -355,10 +376,12 @@ export class AiChatProcessor {
    *
    * Returns the outbox id, which is the prompt's thread row for its whole life.
    */
-  send(request: ProcessorRequest, { prepare, known = [] }: ProcessorSendOptions = {}): string {
+  send(request: ProcessorRequest, { prepare }: ProcessorSendOptions = {}): string {
     const content = createPromptContent(request);
     const blocks = typeof content === 'string' ? [ContentBlock.Text.make({ text: content })] : content;
-    return this.#outbox.add({ request, prepare }, { blocks, known: new Set(known) }).id;
+    // What the feed holds now cannot be this prompt's echo, however alike it reads.
+    const known = new Set(this.#registry.get(this.#feedMessages).map(({ id }) => id));
+    return this.#outbox.add({ request, prepare }, { blocks, known }).id;
   }
 
   /** Forgets a prompt this client sent; withdrawing one the agent's queue holds is the feed's business. */
@@ -786,14 +809,13 @@ export class AiChatProcessor {
 
 export type AiChatProcessorState = Pick<
   AiChatProcessor,
-  'streaming' | 'active' | 'messages' | 'outbox' | 'error' | 'mcpErrors' | 'activity'
+  'streaming' | 'active' | 'thread' | 'error' | 'mcpErrors' | 'activity'
 >;
 
 const idleProcessorState: AiChatProcessorState = {
   streaming: Atom.make(false),
   active: Atom.make(false),
-  messages: Atom.make<Message.Message[]>([]),
-  outbox: Atom.make<readonly OutboxEntry[]>([]),
+  thread: Atom.make<ThreadProjection>(EMPTY_THREAD),
   error: Atom.make<Option.Option<Error>>(Option.none()),
   mcpErrors: Atom.make<readonly Trace.PayloadType<typeof Trace.McpServerError>[]>([]),
   activity: Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined),

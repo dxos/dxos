@@ -10,7 +10,7 @@ import { Annotation, Feed, Obj } from '@dxos/echo';
 import { DeliveryAnnotation, type DeliveryStatus } from '@dxos/react-ui-assistant';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { type OutboxEntry } from '../../processor/index.ts';
+import { type OutboxEntry } from './outbox.ts';
 
 /**
  * Append order for {@link Feed.history}, which walks lineage positionally rather than by time.
@@ -54,6 +54,9 @@ export type ThreadProjection = {
   /** How many rows at the end of {@link messages} are prompts not yet in the history. */
   tail: number;
 };
+
+/** A chat with nothing in it yet. */
+export const EMPTY_THREAD: ThreadProjection = { messages: [], delivery: new Map(), queued: 0, tail: 0 };
 
 /**
  * The turns a thread should render: those reachable from the feed's head, so a rewind's abandoned turns

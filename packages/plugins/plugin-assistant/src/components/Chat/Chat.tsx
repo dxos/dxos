@@ -42,7 +42,14 @@ import { meta } from '#meta';
 import { AssistantOperation } from '#types';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
-import { AiUsageQuotaError, type ProcessorRequestContext, getProcessorState } from '../../processor/index.ts';
+import {
+  AiUsageQuotaError,
+  type ProcessorRequestContext,
+  getProcessorState,
+  projectAlarms,
+  projectSelfWakes,
+  resolveRewind,
+} from '../../processor/index.ts';
 import {
   ChatStatus,
   DEFAULT_MAX_QUEUE,
@@ -62,7 +69,6 @@ import {
 import { type ChatEvent } from './events.ts';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
-import { projectAlarms, projectSelfWakes, projectThread, resolveRewind } from './thread.ts';
 
 //
 // Root
@@ -120,20 +126,12 @@ const ChatRoot = ({
   const [controller, setController] = useState<ChatThreadController | null>(null);
   const [visibleRange, setVisibleRange] = useState<MessageRange | undefined>(undefined);
 
-  const feedMessages = useQuery(
-    db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-  );
   const feedAlarms = useQuery(
     db,
     feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
   );
-  const pendingMessages = useAtomValue(processorState.messages);
-  const outbox = useAtomValue(processorState.outbox);
-  const { messages, delivery, queued, tail } = useMemo(
-    () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom, outbox }),
-    [feedMessages, pendingMessages, feedSnapshot?.rewindFrom, outbox],
-  );
+  // The processor queries the feed and reconciles it with the streamed turn and the outbox.
+  const { messages, delivery, queued, tail } = useAtomValue(processorState.thread);
   const alarms = useMemo(() => projectAlarms({ feedAlarms }), [feedAlarms]);
   const selfWakes = useMemo(() => projectSelfWakes({ feedAlarms, messages }), [feedAlarms, messages]);
 
@@ -273,10 +271,7 @@ const ChatRoot = ({
             // Optimistic: the prompt is in the thread from this call on, before `onSubmit` persists a
             // transient chat and before the agent acknowledges it. The processor requests it when the
             // agent is idle and queues it behind a running turn otherwise.
-            processor.send(
-              { message: text, context: getContext?.() },
-              { prepare: () => onSubmit?.(text), known: feedMessages.map(({ id }) => id) },
-            );
+            processor.send({ message: text, context: getContext?.() }, { prepare: () => onSubmit?.(text) });
           }
           break;
         }
@@ -313,7 +308,7 @@ const ChatRoot = ({
         }
       }
     });
-  }, [event, processor, streaming, active, queued, onSubmit, getContext, invokePromise, chat, db, feed, feedMessages]);
+  }, [event, processor, streaming, active, queued, onSubmit, getContext, invokePromise, chat, db, feed]);
 
   // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
   // turn, so the agent resumes without the report reading as something the user typed.

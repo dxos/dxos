@@ -10,7 +10,7 @@ import { Annotation, Feed, Obj } from '@dxos/echo';
 import { getDelivery } from '@dxos/react-ui-assistant';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { type OutboxEntry } from '../../processor/index.ts';
+import { type OutboxEntry } from './outbox.ts';
 import { byAppendOrder, collapseToolRuns, projectAlarms, projectThread, resolveRewind } from './thread.ts';
 
 describe('byAppendOrder', () => {
