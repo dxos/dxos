@@ -9,7 +9,6 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { mx } from '@dxos/ui-theme';
 
@@ -157,7 +156,7 @@ export const SurfaceProfilerCard = ({
         <StatCard.Row unit='ms'>
           <Layout.Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>role</span>
-            <span>×</span>
+            <span>#</span>
             <span>avg</span>
             <span>max</span>
           </Layout.Grid>
@@ -191,18 +190,16 @@ export const SurfaceProfilerCard = ({
         <>
           {/* One block per surface: the stringifier folds repeated references into back-references,
               and sibling surfaces routinely share their `data`. */}
+          {/* A content block, not a label row: a row's content is one truncated line, which clips the JSON to nothing. */}
           {detail.map((surface, index) => (
-            <StatCard.Row
-              key={surface.id ?? index}
-              label={selectedGroup.role}
-              control={<SystemButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
-            >
+            <StatCard.Content key={surface.id ?? index}>
               <JsonHighlighter
-                classNames='text-sm'
+                classNames='text-xs'
                 data={surface}
                 replacer={{ maxDepth: 5, maxArrayLen: 10, maxStringLen: 120 }}
+                copyButton
               />
-            </StatCard.Row>
+            </StatCard.Content>
           ))}
         </>
       )}

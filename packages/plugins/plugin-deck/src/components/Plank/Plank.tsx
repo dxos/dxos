@@ -168,7 +168,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               // attention-aware Pane.Title, sized to its content so it keeps a stable width.
               // `ps-1`, matching `Pane.Title`'s own `px-1`: the two branches below render at the same
               // origin, so the leading label must not shift as a trail appears or disappears.
-              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1'>
+              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1 grow'>
                 <Breadcrumb.List classNames='gap-1'>
                   {breadcrumbs.map((crumb) => (
                     <Fragment key={crumb.id}>

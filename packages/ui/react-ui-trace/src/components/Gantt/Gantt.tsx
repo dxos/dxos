@@ -258,6 +258,8 @@ type GanttContextValue = {
   setLegend: (legend: GanttLegendMode) => void;
   /** The one scrolling element: lanes scroll vertically under the axis, the drawing horizontally beside the legend. */
   viewport: HTMLDivElement | null;
+  /** Reports the sticky legend's width, which the horizontal bar keeps clear of since the legend does not scroll. */
+  setLegendWidth: (width: number) => void;
 } & Pick<
   GanttData,
   'onLaneSelect' | 'onMarkerSelect' | 'onAxisChange' | 'now' | 'showNow' | 'axis' | 'unitStep' | 'animate'
@@ -312,6 +314,7 @@ const GanttRoot = Util.composable<HTMLDivElement, GanttRootProps>(
       [onLegendChange],
     );
     const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+    const [legendWidth, setLegendWidth] = useState(0);
     const { rows, bands } = useMemo(() => orderRows(groups, lanes), [groups, lanes]);
     const rowById = useMemo(() => new Map(rows.map((row) => [row.lane.id, row])), [rows]);
     const markerById = useMemo(() => new Map(markers.map((marker) => [marker.id, marker])), [markers]);
@@ -348,10 +351,12 @@ const GanttRoot = Util.composable<HTMLDivElement, GanttRootProps>(
         legend={legend}
         setLegend={setLegend}
         viewport={viewport}
+        setLegendWidth={setLegendWidth}
       >
         <ScrollArea.Root
           {...Util.composableProps(props, { classNames: 'dx-expand text-xs font-mono' })}
           orientation='all'
+          trackStart={legendWidth}
           ref={forwardedRef}
         >
           {/* `items-start`: the parts are drawn in pixel rows, so a stretching host must not spread them. */}
@@ -380,7 +385,22 @@ type GanttLegendProps = Util.ThemedClassName<PropsWithChildren>;
  * showing is in a hover card over the row, so neither costs a column of its own.
  */
 const GanttLegend = Util.composable<HTMLDivElement, GanttLegendProps>(({ children, ...props }, forwardedRef) => {
-  const { rows, legend, onLaneSelect } = useGanttContext('Gantt.Legend');
+  const { rows, legend, onLaneSelect, setLegendWidth } = useGanttContext('Gantt.Legend');
+  const legendRef = useRef<HTMLDivElement>(null);
+  const ref = useComposedRefs(forwardedRef, legendRef);
+  useEffect(() => {
+    const element = legendRef.current;
+    if (!element) {
+      return;
+    }
+    const observer = new ResizeObserver(() => setLegendWidth(element.offsetWidth));
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      setLegendWidth(0);
+    };
+  }, [setLegendWidth]);
+
   return (
     <div
       {...Util.composableProps(props, {
@@ -389,7 +409,7 @@ const GanttLegend = Util.composable<HTMLDivElement, GanttLegendProps>(({ childre
         classNames:
           'sticky left-0 z-[1] shrink-0 w-[min(15rem,20cqw)] min-w-40 flex flex-col font-sans bg-(--surface-bg)',
       })}
-      ref={forwardedRef}
+      ref={ref}
     >
       <div className='flex items-center' style={{ height: HEADER_HEIGHT }}>
         {children}

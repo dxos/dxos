@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
@@ -23,6 +24,17 @@ import { presentationFor } from '../presentation.tsx';
 
 /** The editor's minimum height in lines, as the current field's `min-h-[6lh]`. */
 const ROWS = 6;
+
+/**
+ * Fits the editor to the field: a long unbroken token (an inline-code URL) breaks anywhere rather than widening the
+ * content, and the editor fills the frame's height, so its scroller ends at the frame's foot instead of mid-field.
+ */
+const fieldTheme = EditorView.theme({
+  '&': { minHeight: '100%' },
+  '.cm-content': { overflowWrap: 'anywhere' },
+  // Elsewhere inline code is one clipped line (fixed height, no wrapping), which in a field widens the content instead.
+  '& .cm-content .cm-code-inline': { whiteSpace: 'break-spaces', height: 'auto', overflow: 'visible' },
+});
 
 /**
  * A markdown value in a CodeMirror editor framed by a multi-line `ControlFrame`. The value is either a string
@@ -77,7 +89,9 @@ type StringMarkdownEditorProps = {
 
 const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
   const { markdownExtensions } = useFormContext('MarkdownField');
-  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: markdownExtensions });
+  // Memoised: a new list each render would reconfigure the editor on every keystroke and drop its focus.
+  const fieldExtensions = useMemo(() => [fieldTheme, ...(markdownExtensions ?? [])], [markdownExtensions]);
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   return (
     <Input.Frame rows={ROWS} disabled={readonly}>
       <Editor.Root>
@@ -108,11 +122,11 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
     [text, reference],
   );
   const { markdownExtensions } = useFormContext('MarkdownField');
-  const extensions = useBasicMarkdownExtensions({
-    placeholder,
-    readonly,
-    extensions: [...dataExtensions, ...(markdownExtensions ?? [])],
-  });
+  const fieldExtensions = useMemo(
+    () => [fieldTheme, ...dataExtensions, ...(markdownExtensions ?? [])],
+    [dataExtensions, markdownExtensions],
+  );
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   if (!text) {
     return null;
   }

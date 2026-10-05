@@ -12,7 +12,6 @@ import {
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
-import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { Unit } from '../util.tsx';
@@ -119,25 +118,17 @@ const SpaceDetail = ({ row }: { row: SpaceRow }) => (
 const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
   <>
     {rows.map((row) => (
+      // A label row like the others: the button's `label` is only its accessible name, so on its own the row showed a bare icon.
       <StatCard.Row
         key={row.spaceId}
         icon={row.ok ? undefined : 'ph--warning--regular'}
         iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
-      >
-        <Tooltip.Trigger asChild content={<SpaceDetail row={row} />}>
-          <SystemButton.Clipboard
-            size='sm'
-            variant='ghost'
-            compact
-            classNames='font-mono'
-            label={row.spaceId.slice(0, 8)}
-            onCopy={() => row.spaceId}
-          />
-        </Tooltip.Trigger>
-        {row.flags.length > 0 && (
-          <span className='shrink-0 font-mono tabular-nums text-error-text'>{row.flags.length}</span>
-        )}
-      </StatCard.Row>
+        label={<span className='font-mono'>{row.name ?? row.spaceId.slice(0, 8)}</span>}
+        tooltip={<SpaceDetail row={row} />}
+        value={row.flags.length > 0 ? row.flags.length : undefined}
+        warning={row.flags.length > 0}
+        action={<SystemButton.Clipboard iconOnly label={row.spaceId} onCopy={() => row.spaceId} />}
+      />
     ))}
   </>
 );

@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -51,3 +52,70 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** Headers with a status and a menu (as the EDGE card has), and with a figure but no control (as Performance has). */
+const MenuStory = () => (
+  <>
+    <StatCard.Root>
+      <StatCard.Header
+        icon='ph--cloud--regular'
+        title='EDGE'
+        info='healthy'
+        menu={[
+          { label: 'Refresh', icon: 'ph--arrow-clockwise--regular', onClick: () => {} },
+          { label: 'Copy raw', icon: 'ph--copy--regular', onClick: () => {} },
+        ]}
+      />
+      <StatCard.Row label='Websocket' value='connected' />
+      <StatCard.Row label='RTT' value='85' unit='ms' />
+      <StatCard.Row icon='ph--warning--regular' label='Warn' value='1' />
+      <StatCard.Row
+        label='Cache'
+        value='12'
+        action={<Button.Root iconOnly variant='ghost' icon='ph--trash--regular' label='Clear' />}
+      />
+    </StatCard.Root>
+    <StatCard.Root>
+      <StatCard.Header icon='ph--hourglass--regular' title='Performance' info='0' />
+    </StatCard.Root>
+  </>
+);
+
+/** The menu sits in the trailing rail, level with the units, and the status ends just before it. */
+export const TestHeaderMenu: Story = {
+  render: () => <MenuStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', { name: 'EDGE' }).getBoundingClientRect();
+    const rowAction = canvas.getByRole('button', { name: 'Clear' }).getBoundingClientRect();
+    const info = canvas.getByText('healthy').getBoundingClientRect();
+    // The end rail centres a control (the header's menu, a row's action) and starts a unit at its leading edge.
+    const centre = (rect: DOMRect) => (rect.left + rect.right) / 2;
+    await expect(Math.abs(centre(trigger) - centre(rowAction))).toBeLessThanOrEqual(1);
+    const unitElement = canvas.getByText('ms');
+    const unitRail = unitElement.closest<HTMLElement>('[data-rail="end"]')?.getBoundingClientRect();
+    await expect(unitRail != null && unitElement.getBoundingClientRect().left - unitRail.left).toBeLessThanOrEqual(6);
+    // The status is pushed to the end of the middle column, against the rail.
+    await expect(trigger.left - info.right).toBeLessThan(16);
+    // The header's icon sits in the start rail with the rows' icons.
+    const headerIcon = canvasElement.querySelector<HTMLElement>('[data-part="row"] svg')?.getBoundingClientRect();
+    const rowIcon = canvas
+      .getByText('Warn')
+      .closest<HTMLElement>('[data-part="row"]')
+      ?.querySelector('svg')
+      ?.getBoundingClientRect();
+    await expect(
+      headerIcon != null &&
+        rowIcon != null &&
+        Math.abs((headerIcon.left + headerIcon.right) / 2 - (rowIcon.left + rowIcon.right) / 2),
+    ).toBeLessThanOrEqual(1);
+    // A card with no control keeps its end rail, so its figure ends where the status does.
+    await expect(Math.abs(canvas.getByText('0').getBoundingClientRect().right - info.right)).toBeLessThanOrEqual(1);
+
+    // The menu opens from the rail.
+    await userEvent.click(canvas.getByRole('button', { name: 'EDGE' }));
+    await expect(
+      await within(canvasElement.ownerDocument.body).findByRole('menuitem', { name: 'Refresh' }),
+    ).toBeVisible();
+  },
+};

@@ -69,7 +69,9 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
           >
             <Layout.Grid grow cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
               <Tooltip.Trigger asChild content={row.name}>
+                {/* Labelled: presets are icon-only by default, which left the row a bare icon with no space id. */}
                 <SystemButton.Clipboard
+                  iconOnly={false}
                   size='sm'
                   variant='ghost'
                   compact

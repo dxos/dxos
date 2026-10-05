@@ -11,7 +11,6 @@ import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 
@@ -80,14 +79,13 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
             label={t('settings.debug-port.session.label')}
             description={t('settings.debug-port.session.description')}
           >
-            <Layout.Flex gap='sm' align='center'>
-              <span className='grow truncate font-mono text-sm'>{status.session}</span>
-              <SystemButton.Clipboard
-                iconOnly
-                label={t('settings.debug-port.copy-session.label')}
-                value={status.session ?? ''}
-              />
-            </Layout.Flex>
+            <Input.Root
+              value={status.session ?? ''}
+              disabled
+              variant='mono'
+              copyable
+              aria-label={t('settings.debug-port.session.label')}
+            />
           </Form.Field>
 
           <Form.Field standalone label={t('settings.debug-port.log.label')}>

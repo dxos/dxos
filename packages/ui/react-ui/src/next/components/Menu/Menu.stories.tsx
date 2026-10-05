@@ -430,6 +430,19 @@ export const Test: Story = {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
 
+    // Opened from the keyboard, the ring is visible: the arrow rises over it, clipped to its outer half and the ring's
+    // band, so the ring opens under the arrow's base rather than closing it off.
+    byTestId(canvasElement, 'trigger-md').focus();
+    await userEvent.keyboard('{Enter}');
+    const ringed = await within(canvasElement.ownerDocument.body).findByRole('menu');
+    await waitFor(() => expect(ringed).toHaveFocus());
+    await expect(ringed.matches(':focus-visible')).toBe(true);
+    const ringedArrow = popupFrame(ringed).querySelector<HTMLElement>('[data-part="arrow"]');
+    await expect(ringedArrow && getComputedStyle(ringedArrow).zIndex).toBe('1');
+    await expect(ringedArrow && getComputedStyle(ringedArrow).clipPath).toMatch(/^inset\(0px 0px calc\(50% - /);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
+
     // Reopen so the story rests on the menu.
     menu = await open(canvasElement);
     await expect(menu).toBeVisible();

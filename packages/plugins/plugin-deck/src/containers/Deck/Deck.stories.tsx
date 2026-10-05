@@ -889,3 +889,58 @@ export const OpenAttendsTheNewPlank: Story = {
     await expect(plankTitle(canvasElement, ATTENDED_PLANK_ID)).toHaveAttribute('data-attention', 'false');
   },
 };
+
+const companionClose = (canvasElement: HTMLElement) =>
+  within(canvasElement).queryByRole('button', { name: 'close-companion.label' });
+
+/**
+ * A lone plank's companion fits the deck it is given, so its close control is never under the end sidebar; once the
+ * deck is too narrow for a plank and a companion side by side the companion is not shown, and it returns when the deck
+ * widens again.
+ *
+ * Test:
+ * 1. Narrow the deck (by widening the navigation sidebar) to less than the plank and the companion's stored widths;
+ *    the companion's close control stays inside the deck.
+ * 2. Narrow it below a plank and a companion at their minimums; the companion is not shown.
+ * 3. Restore the sidebar; the companion is shown again.
+ */
+export const TestCompanionFitsTheDeck: Story = {
+  tags: ['test'],
+  args: { count: 1, companionPlanks: [1], sidebarState: 'expanded' },
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+    const root = canvasElement.ownerDocument.documentElement;
+    const viewport = await within(canvasElement).findByTestId('deck.viewport', {}, { timeout: 30_000 });
+    await waitFor(() => expect(companionClose(canvasElement)).not.toBeNull(), { timeout: 10_000 });
+    // Re-applied until it holds, since the end sidebar may still be settling into its rail when the story starts.
+    const narrowTo = (px: number) =>
+      waitFor(() => {
+        const sidebar = within(canvasElement).getByTestId('deck.sidebar');
+        const delta = viewport.getBoundingClientRect().width - px;
+        if (Math.abs(delta) > 1) {
+          root.style.setProperty('--dx-nav-sidebar-size', `${sidebar.getBoundingClientRect().width + delta}px`);
+        }
+        return expect(Math.abs(delta)).toBeLessThanOrEqual(1);
+      });
+
+    try {
+      // 1. Wide enough for both at their minimums (35rem), narrower than the stored pair (20rem + 30rem).
+      await narrowTo(640);
+      await waitFor(() => {
+        const close = companionClose(canvasElement);
+        return expect(close?.getBoundingClientRect().right ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(
+          viewport.getBoundingClientRect().right + 1,
+        );
+      });
+
+      // 2. Too narrow for the pair.
+      await narrowTo(480);
+      await waitFor(() => expect(companionClose(canvasElement)).toBeNull());
+    } finally {
+      root.style.removeProperty('--dx-nav-sidebar-size');
+    }
+
+    // 3. Wide again.
+    await waitFor(() => expect(companionClose(canvasElement)).not.toBeNull());
+  },
+};

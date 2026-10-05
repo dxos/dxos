@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     'ns/IllustratorOperationHandlerSet': 'src/IllustratorOperationHandlerSet.ts',
     'ns/IllustratorModel': 'src/IllustratorModel.ts',
+    'ns/SceneSvg': 'src/SceneSvg.ts',
     'index': 'src/index.ts',
     'IllustratorPlugin': 'src/IllustratorPlugin.ts',
     'plugin': 'src/plugin.tsx',
@@ -24,6 +25,7 @@ export default defineConfig({
     'util': 'src/util/index.ts',
     'Drawing': 'src/types/Drawing.ts',
     'LegacySketch': 'src/types/LegacySketch.ts',
+    'SceneSvg': 'src/components/SceneSvg.tsx',
     'DrawingOperation': 'src/types/DrawingOperation.ts',
     'IllustratorCapabilities': 'src/types/IllustratorCapabilities.ts',
     'IllustratorError': 'src/types/IllustratorError.ts',

@@ -123,7 +123,7 @@ export const CreateSpaceDialog = () => {
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
               <Form.Content>
-                <Form.Fields />
+                <Form.Fields layoutName={SpaceSchema.SPACE_FORM_CREATE_LAYOUT} />
                 <Form.ErrorText>{error}</Form.ErrorText>
                 {templates.length > 0 && (
                   <Form.FieldSet
@@ -153,7 +153,9 @@ export const CreateSpaceDialog = () => {
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Dialog.Body>
-        <Form.Actions submitLabel={t('create-space-dialog.create.label')} />
+        <Dialog.Footer>
+          <Form.Actions submitLabel={t('create-space-dialog.create.label')} />
+        </Dialog.Footer>
       </Form.Root>
     </Dialog.Content>
   );

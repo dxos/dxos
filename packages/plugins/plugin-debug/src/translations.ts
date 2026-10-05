@@ -84,7 +84,6 @@ export const translations = [
         'settings.debug-port.session.label': 'Session id',
         'settings.debug-port.session.description':
           'Pass to composer-recovery.js --session. A new id is issued on every restart.',
-        'settings.debug-port.copy-session.label': 'Copy session id.',
         'settings.debug-port.log.label': 'Debug port log',
       },
     },

@@ -172,7 +172,12 @@ const fromJson = (term: JsonTerm): RDF.Term => {
 class Row implements RDF.Bindings {
   readonly type = 'bindings';
 
-  constructor(private readonly entries: ReadonlyMap<string, RDF.Term>) {}
+  // A declared field rather than a parameter property: the indexer worker loads this file under Node's type stripping.
+  private readonly entries: ReadonlyMap<string, RDF.Term>;
+
+  constructor(entries: ReadonlyMap<string, RDF.Term>) {
+    this.entries = entries;
+  }
 
   get size() {
     return this.entries.size;
@@ -255,9 +260,11 @@ class Row implements RDF.Bindings {
 /** A finished result set as the RDF/JS `ResultStream` LDkit consumes (events plus `toArray`). */
 class Results<T> extends EventEmitter implements RDF.ResultStream<T> {
   #index = 0;
+  readonly #items: readonly T[];
 
-  constructor(private readonly items: readonly T[]) {
+  constructor(items: readonly T[]) {
     super();
+    this.#items = items;
     // Emitted on the next turn, after the consumer has attached its listeners.
     setImmediate(() => {
       for (const item of items) {
@@ -268,11 +275,11 @@ class Results<T> extends EventEmitter implements RDF.ResultStream<T> {
   }
 
   read(): T | null {
-    return this.#index < this.items.length ? this.items[this.#index++] : null;
+    return this.#index < this.#items.length ? this.#items[this.#index++] : null;
   }
 
   toArray(): Promise<T[]> {
-    return Promise.resolve([...this.items]);
+    return Promise.resolve([...this.#items]);
   }
 }
 
