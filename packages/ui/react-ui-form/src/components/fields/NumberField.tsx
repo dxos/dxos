@@ -2,15 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { useEffect, useState } from 'react';
 
 import { NumberInput } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
+import { StepAnnotation } from '../../annotations.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
 import { getNumericConstraints } from './numeric-constraints.ts';
+
+/** A fractional field without a declared step moves by 0.01 below magnitude 1, else by 0.1. */
+const defaultStep = (value: number | undefined, integer: boolean): number =>
+  integer ? 1 : value !== undefined && Math.abs(value) < 1 ? 0.01 : 0.1;
 
 /** Ark's number input parses, steps and clamps on blur; the field commits every value that parses. */
 export const NumberField = ({
@@ -42,7 +48,7 @@ export const NumberField = ({
       placeholder={placeholder}
       min={min}
       max={max}
-      step={integer ? 1 : undefined}
+      step={Option.getOrElse(StepAnnotation.getFromAst(type), () => defaultStep(committed, integer))}
       formatOptions={integer ? { maximumFractionDigits: 0 } : { useGrouping: false }}
       value={text}
       onValueChange={(next, valueAsNumber) => {

@@ -337,10 +337,11 @@ export const TaskTreeNode = ({
       id={TASK_TREE_ROOT_ID}
       model={model}
       columns={columns}
-      // Chips and the description sit on the row's later lines, so a row grows to fit them and the
-      // rows are not windowed at a fixed pitch.
+      // Chips and the description sit on the row's later lines, so a row grows to fit them; the window
+      // measures each row rather than assuming one pitch, and mounts only those in view, since every
+      // row carries several menus and tooltips and a project's list runs to hundreds of tasks.
       multiline
-      virtual='variable'
+      virtual='measured'
       draggable={!!onTaskMove}
       // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
       // hitbox offers no make-child zone on one, and so no drop indicator either.

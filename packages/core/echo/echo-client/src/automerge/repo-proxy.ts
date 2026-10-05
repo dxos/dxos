@@ -133,6 +133,12 @@ export class RepoProxy extends Resource {
   /** Delay of the pending resubscribe, so {@link flush} waits out the actual backoff step. */
   private _resubscribeDelay = 0;
 
+  /** Consecutive failed update batches, backing off the retry so a host that stays down is not hammered. */
+  private _sendRetryAttempts = 0;
+
+  /** Set while a retry is pending, so a burst of failed passes schedules one retry rather than many. */
+  private _sendRetryScheduled = false;
+
   #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
   #inboxHead = 0;
   #draining = false;
@@ -303,8 +309,10 @@ export class RepoProxy extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    // A close during the resubscribe delay cancels the task that clears this flag.
+    // A close during the resubscribe or retry delay cancels the task that clears these flags.
     this._isReconnecting = false;
+    this._sendRetryScheduled = false;
+    this._sendRetryAttempts = 0;
     this._sendUpdatesJob = this._createSendUpdatesJob();
     // TODO(dmaretskyi): Set proper space id.
     this._subscribe();
@@ -804,6 +812,7 @@ export class RepoProxy extends Resource {
         }
       }
 
+      this._sendRetryAttempts = 0;
       this._releaseDeferred();
       this._emitSaveStateEvent();
     } catch (err) {
@@ -819,17 +828,42 @@ export class RepoProxy extends Resource {
       removeIds.forEach((id) => this._pendingRemoveIds.add(id));
       updateIds.forEach((id) => this._pendingUpdateIds.add(id));
 
-      // Don't raise errors if we're closing, reconnecting, abandoned, or if the RPC connection was closed.
-      // RpcClosedError and timeouts can happen during reconnection or shutdown before _close() is called.
+      // Closing, reconnecting, an abandoned pass and a closed RPC connection each have their own path
+      // that re-sends the batch; RpcClosedError and timeouts can happen before _close() is called.
       if (
         this._lifecycleState !== LifecycleState.CLOSED &&
         !this._isReconnecting &&
         !isAbandoned &&
         !(err instanceof RpcClosedError)
       ) {
-        this._ctx.raise(err as Error);
+        // Raised into the context instead, the failure would leave the proxy in its ERROR state, where
+        // every later create and find is refused as closed until the page reloads.
+        log.warn('failed to send document updates, retrying', {
+          spaceId: this._spaceId,
+          documents: updateIds.length,
+          attempt: this._sendRetryAttempts + 1,
+          error: err,
+        });
+        this._scheduleSendRetry();
       }
     }
+  }
+
+  /** Re-runs the re-queued batch after a backoff, since nothing else triggers it if no further write comes. */
+  private _scheduleSendRetry(): void {
+    if (this._sendRetryScheduled) {
+      return;
+    }
+    this._sendRetryScheduled = true;
+    const delay = Math.min(RESUBSCRIBE_DELAY_MS * 2 ** this._sendRetryAttempts++, RESUBSCRIBE_MAX_DELAY_MS);
+    scheduleTask(
+      this._ctx,
+      () => {
+        this._sendRetryScheduled = false;
+        this._sendUpdatesJob?.trigger();
+      },
+      delay,
+    );
   }
 
   private _emitSaveStateEvent(): void {

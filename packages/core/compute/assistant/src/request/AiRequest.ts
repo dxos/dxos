@@ -35,6 +35,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
+import { markWork } from '@dxos/util';
 
 import { getOperationFromTool } from '../tool-runtime/services.ts';
 import { type AiAssistantError } from '../util/index.ts';
@@ -129,6 +130,8 @@ export type RunProps<R = never> = {
 export type BeginProps = {
   prompt: string | ContentBlock.Any[];
   system?: string;
+  /** The system prompt already formatted from `system` and the bindings, so it is not formatted twice. */
+  systemPrompt?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];
   skills?: readonly Skill.Skill[];
@@ -180,6 +183,9 @@ export class Request {
   private _toolCalls = 0;
   /** Turns of this request spent reporting a tool call the toolkit could not resolve. */
   #unresolvedTools = 0;
+
+  /** The turn's prompt, sent on the ephemeral channel once the next model call is under way. */
+  #announcement: Message.Message | undefined;
 
   constructor(private readonly _options: Options = {}) {
     this._observer = _options.observer ?? GenerationObserver.noop();
@@ -252,6 +258,7 @@ export class Request {
   begin = ({
     prompt,
     system,
+    systemPrompt: formatted,
     history = [],
     skills = [],
     objects = [],
@@ -264,7 +271,8 @@ export class Request {
       // Per-run allowance: a reused Request must not inherit a spent budget from the previous run.
       this.#unresolvedTools = 0;
 
-      const systemPrompt = yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie);
+      const systemPrompt =
+        formatted ?? (yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie));
 
       if (this._options.summarizationThreshold !== undefined) {
         const tokenCount = yield* AiPreprocessor.estimateTokens(
@@ -281,7 +289,11 @@ export class Request {
         }
       }
 
-      yield* this._submitMessage(yield* formatUserPrompt({ prompt, history }));
+      const userMessage = yield* formatUserPrompt({ prompt, history });
+      // Also sent on the ephemeral channel, as the reply's blocks are: the feed shows the prompt only
+      // once its index catches up, which can be after the reply has started streaming in.
+      this.#announcement = userMessage;
+      yield* this._submitMessage(userMessage);
     }).pipe(Effect.withSpan('AiRequest.begin'));
 
   /**
@@ -335,6 +347,7 @@ export class Request {
       });
 
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
+      markWork('request.prompt-encoded');
 
       const observer = this._observer;
       let currentMessageId: Obj.ID | null = null;
@@ -350,10 +363,26 @@ export class Request {
       // Counts attempts at the provider rather than turns: the retry below re-runs the whole
       // collect, so `Stream.unwrap` re-evaluates this on each attempt and the reader sees the
       // request being re-issued instead of an unexplained stall.
+      // Forked to run once the call has gone out rather than written before it: rendering the prompt
+      // is the reader's page work, so it runs while the provider answers instead of delaying the request.
+      // Detached, since the effect that opens the stream returns at once and would take a child with it.
+      const announce = Effect.suspend(() => {
+        const announcement = this.#announcement;
+        this.#announcement = undefined;
+        return announcement === undefined
+          ? Effect.void
+          : Effect.forEach(
+              announcement.blocks,
+              (block) => Trace.write(Trace.PartialBlock, { messageId: announcement.id, role: 'user', block }),
+              { discard: true },
+            );
+      });
+
       let attempt = 0;
       const stream = Stream.unwrap(
         Effect.gen(function* () {
           yield* Trace.emitRequestPhase('contacting-provider', { attempt: ++attempt });
+          yield* Effect.yieldNow.pipe(Effect.andThen(announce), Effect.forkDetach);
           return openStream();
         }),
       );
@@ -378,6 +407,9 @@ export class Request {
         Stream.mapEffect(
           (block) =>
             Effect.gen({ self: this }, function* () {
+              // A model that answers before the forked announcement runs must not show its reply
+              // ahead of the prompt; a no-op once the prompt has gone out.
+              yield* announce;
               if (block._tag === 'stats' && block.finishReason !== undefined) {
                 finishReason = block.finishReason;
               }
@@ -454,6 +486,7 @@ export class Request {
   }): Effect.Effect<void, RunError, RunRequirements | R> =>
     Effect.gen({ self: this }, function* () {
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
+      markWork('request.tools-begin');
       const toolCalls = this.getToolCalls();
       // A turn can end with no calls to run — a turn recovered from an unresolvable tool call leaves
       // none. Submitting anyway would append a tool message with no blocks, which the provider
@@ -472,6 +505,7 @@ export class Request {
           return yield* callTool(toolkit, block);
         }),
       );
+      markWork('request.tools-called');
 
       yield* this._submitMessage(
         Obj.make(Message.Message, {
@@ -497,11 +531,18 @@ export class Request {
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
     Effect.gen({ self: this }, function* () {
-      yield* this.begin({ prompt, system: systemTemplate, history, objects, skills, instructions });
-
       const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects, instructions }).pipe(
         Effect.orDie,
       );
+      yield* this.begin({
+        prompt,
+        system: systemTemplate,
+        systemPrompt: system,
+        history,
+        objects,
+        skills,
+        instructions,
+      });
 
       do {
         const { done, finishReason } = yield* this.runAgentTurn({ system, toolkit });

@@ -294,7 +294,8 @@ catalog:
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
   '@valtown/codemirror-ts': ^2.3.1
-  '@vitejs/plugin-react': ^6.1.1
+  # Exact: each minor pins its own `oxc-transform-react` range, and the React Compiler output was verified on this pair.
+  '@vitejs/plugin-react': 6.1.1
   '@vitejs/plugin-react-swc': ^4.3.3
   '@vitest/browser': 4.1.10
   '@vitest/browser-playwright': ^4.1.10
@@ -613,7 +614,7 @@ catalog:
   storybook: ^10.6.0
   storybook-solidjs-vite: ^10.7.1
   streamx: ^2.12.5
-  style-mod: ^4.1.0
+  style-mod: ^4.1.4
   tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
   tailwind-variants: ^3.2.2
@@ -763,6 +764,7 @@ overrides:
   qs: '>=6.14.1'
   react: 'catalog:'
   react-dom: 'catalog:'
+  style-mod: 'catalog:'
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
   undici: '>=7.18.2'
@@ -777,6 +779,7 @@ patchedDependencies:
   '@vitest/browser@4.1.10': patches/@vitest__browser@4.1.10.patch
   '@zag-js/presence@1.43.3': patches/@zag-js__presence@1.43.3.patch
   dfx@1.0.15: patches/dfx@1.0.15.patch
+  effect@4.0.0: patches/effect@4.0.0.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch

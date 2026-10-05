@@ -20,8 +20,11 @@ import { ActivationEvents, Capabilities } from '../../common/index.ts';
 import { PluginManagerContext } from '../../context.ts';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core/index.ts';
 import { setupDevtools } from '../../devtools.ts';
+import { App } from '../components/App/App.tsx';
 import { bootLoader } from '../components/App/loader.ts';
-import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components/index.ts';
+import { PluginManagerProvider } from '../components/PluginManager/PluginManagerProvider.ts';
+import { SurfaceManager } from '../components/Surface/SurfaceManager.ts';
+import { SurfaceManagerProvider } from '../components/Surface/SurfaceManagerContext.ts';
 import { createStartupWatchdog } from './startup-watchdog.ts';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';

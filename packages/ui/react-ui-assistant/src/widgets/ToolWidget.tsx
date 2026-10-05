@@ -82,10 +82,12 @@ const REASONING_ICON = 'ph--brain--regular';
 const PANEL_FRAME = 'border border-separator rounded-md min-w-0';
 
 /**
- * The operation's human-readable name where the call is an operation invocation; the raw tool name
- * is the fallback for inline toolkit and MCP tools, which have no operation behind them.
+ * The call's display label where its producer supplied one (a code-mode `eval`), else the operation's
+ * human-readable name; the raw tool name is the fallback for inline toolkit and MCP tools, which have
+ * no operation behind them.
  */
-const callTitle = (block: ContentBlock.ToolCall): string => block.operationName ?? block.name ?? 'Tool';
+const callTitle = (block: ContentBlock.ToolCall): string =>
+  block.displayName ?? block.operationName ?? block.name ?? 'Tool';
 
 /**
  * Groups a run's blocks by row.
@@ -115,7 +117,7 @@ const toEntries = (blocks: ContentBlock.Any[]): ToolEntry[] => {
           kind: 'call',
           active: true,
           title: callTitle(block),
-          icon: block.operationIcon ?? TOOL_ICON,
+          icon: block.displayIcon ?? block.operationIcon ?? TOOL_ICON,
           input: safeParseJson(block.input) ?? (block.input || undefined),
         };
         if (existing !== undefined) {
@@ -249,11 +251,14 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
     // the list it opens onto, so a collapsed run reads as one line of prose in the feed.
     //
     // The body animates: the Collapsible measures its own `--height`, so the reveal ramps instead
-    // of the content appearing and vanishing in one frame. Content stays mounted and the machine
-    // hides it, which is what lets the ramp have a height to animate to.
+    // of the content appearing and vanishing in one frame. Content mounts on first open and then
+    // stays mounted while the machine hides it, which is what lets the ramp have a height to animate to.
     <TogglePanel.Root
       open={open}
       onChangeOpen={setOpen}
+      // A thread is a column of these, nearly all left closed; building each payload at mount was
+      // most of the cost of scrolling one into view.
+      lazyMount
       // `w-0 min-w-full`: the editor sizes its content line to its widest child, so a wide payload
       // would stretch the whole line — carrying the summary row out of view and scrolling the
       // editor instead of the payload. Zero width removes this widget from that calculation, and
