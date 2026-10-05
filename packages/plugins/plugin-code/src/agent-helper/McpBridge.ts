@@ -106,14 +106,22 @@ export class Bridge {
         } else {
           log.warn('mcp host registered a server with a malformed token');
         }
+        this.#ack(frame.value.server);
         return;
       case 'unregister':
         this.#servers.delete(frame.value.server);
+        this.#ack(frame.value.server);
         return;
       case 'response':
         this.#answer(frame.value.id, frame.value.status, frame.value.headers, frame.value.body);
         return;
     }
+  }
+
+  /** Tells the page a registration change took effect, so it can hand out the server only once it is reachable. */
+  #ack(server: string): void {
+    const frame: Protocol.McpAckFrame = { _tag: 'ack', server, registered: this.#servers.has(server) };
+    this.#host?.send(JSON.stringify(frame));
   }
 
   #answer(id: string, status: number, headers: readonly (readonly [string, string])[], body: string): void {

@@ -32,15 +32,23 @@ describe('McpBridge', () => {
       ws.once('open', () => resolve());
       ws.once('error', reject);
     });
-    ws.on('message', (data) => {
-      const frame = JSON.parse(data.toString());
-      ws.send(JSON.stringify(answer(frame)));
+    const registered = new Promise<void>((resolve) => {
+      let pending = servers.length;
+      ws.on('message', (data) => {
+        const frame: Protocol.McpHelperFrame = JSON.parse(data.toString());
+        if (frame._tag === 'ack') {
+          if (--pending === 0) {
+            resolve();
+          }
+          return;
+        }
+        ws.send(JSON.stringify(answer(frame)));
+      });
     });
     for (const id of servers) {
       ws.send(JSON.stringify({ _tag: 'register', server: id, token: MCP_TOKEN } satisfies Protocol.McpHostFrame));
     }
-    // Registration is a frame like any other; give it a turn to land.
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await registered;
     return ws;
   };
 
