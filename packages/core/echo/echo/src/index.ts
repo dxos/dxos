@@ -22,6 +22,7 @@ export * as Key from './Key.ts';
 export * as Migration from './Migration.ts';
 export * as Obj from './Obj.ts';
 export * as Order from './Order.ts';
+export * as Property from './Property.ts';
 export * as Query from './Query.ts';
 export * as QueryResult from './QueryResult.ts';
 export * as Ref from './Ref.ts';

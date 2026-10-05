@@ -15,6 +15,7 @@ import { type Primitive } from '@dxos/util';
 import type * as Annotation from '../../Annotation.ts';
 import { type Mutable } from '../common/proxy/index.ts';
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types/index.ts';
+import { getLabelPropertyWithSchema, getLabelWithSchema, setLabelWithSchema } from '../Property/title.ts';
 import { createAnnotationHelper } from './util.ts';
 
 const ANNOTATION_TYPE_ID: Annotation.TypeId = '~@dxos/echo/Annotation' as const;
@@ -284,68 +285,6 @@ export const ReferenceAnnotation = createAnnotationHelper<ReferenceAnnotationVal
  */
 export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 export type SchemaMeta = TypeMeta & { id: string };
-
-/**
- * Identifies label property or JSON path expression.
- * Either a string or an array of strings representing field accessors each matched in priority order.
- */
-export const LabelAnnotationId = '@dxos/schema/annotation/Label';
-export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationId);
-
-/**
- * Returns the label for a given object based on {@link LabelAnnotationId}.
- * Lower-level version that requires explicit schema parameter.
- * Skips empty strings and whitespace-only strings, continuing to the next field.
- */
-// TODO(burdon): Convert to SchemaEx.JsonPath?
-export const getLabelWithSchema = <S extends Schema.Top>(
-  schema: S,
-  object: Schema.Schema.Type<S>,
-): string | undefined => {
-  const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
-  for (const accessor of annotation) {
-    assertArgument(
-      typeof accessor === 'string',
-      'accessor',
-      'Label annotation must be a string or an array of strings',
-    );
-    const value = SchemaEx.getField(object, accessor as SchemaEx.JsonPath);
-    switch (typeof value) {
-      case 'string': {
-        const trimmed = value.trim();
-        if (trimmed.length > 0) {
-          return value;
-        }
-        continue;
-      }
-      case 'number':
-      case 'boolean':
-      case 'bigint':
-      case 'symbol':
-        return value.toString();
-      case 'undefined':
-      case 'object':
-      case 'function':
-        continue;
-    }
-  }
-
-  return undefined;
-};
-
-/**
- * Sets the label for a given object based on {@link LabelAnnotationId}.
- * Lower-level version that requires explicit schema parameter.
- */
-// `object` is not typed by the schema: the annotation names the property at runtime, and TypeScript
-// cannot index-write a generic type parameter.
-export const setLabelWithSchema = (schema: Schema.Top, object: AnyProperties, label: string) => {
-  const annotation = LabelAnnotation.get(schema).pipe(
-    Option.map((field) => field[0]),
-    Option.getOrElse(() => 'name'),
-  );
-  object[annotation] = label;
-};
 
 /**
  * Identifies description property or JSON path expression.
@@ -683,7 +622,7 @@ export const UserTypeAnnotation: Omit<Annotation.Annotation<UserTypeAnnotationVa
  */
 export type GetLabelOptions = {
   /**
-   * Strategy for deriving a label when the entity has no `LabelAnnotation` value.
+   * Strategy for deriving a label when the entity has no `Title` value.
    * - `'typename'`: use the entity's typename (e.g. `org.dxos.type.table`).
    *   Useful for Card.Title chrome that must always display something, even
    *   for unlabeled objects.
@@ -723,17 +662,11 @@ export const setLabel = (entity: Mutable<AnyProperties>, label: string) => {
 
 /**
  * Returns the primary label property key for an entity.
- * Reads the first accessor from {@link LabelAnnotation}, defaulting to 'name'.
+ * Reads the first field backing the type's `Title` property, defaulting to 'name'.
  */
 export const getLabelProperty = (entity: AnyProperties): string => {
   const schema = getSchema(entity);
-  if (schema == null) {
-    return 'name';
-  }
-  return LabelAnnotation.get(schema).pipe(
-    Option.flatMap((fields) => Option.fromNullishOr(fields[0])),
-    Option.getOrElse(() => 'name'),
-  );
+  return (schema != null ? getLabelPropertyWithSchema(schema) : undefined) ?? 'name';
 };
 
 /**

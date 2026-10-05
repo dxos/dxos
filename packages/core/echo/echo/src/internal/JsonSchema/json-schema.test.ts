@@ -15,7 +15,6 @@ import * as Type from '../../Type.ts';
 import {
   FieldLookupAnnotationId,
   GeneratorAnnotation,
-  LabelAnnotation,
   PropertyMeta,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
@@ -29,6 +28,7 @@ import {
   getSchemaProperty,
   setSchemaProperty,
 } from '../JsonSchema/index.ts';
+import { LabelAnnotation } from '../Property/index.ts';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref/index.ts';
 import { TypeSchema } from '../Type/index.ts';
 import { foldRestSignatures, toEffectSchema, toJsonSchema } from './json-schema.ts';

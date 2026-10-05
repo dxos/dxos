@@ -56,6 +56,7 @@ export * from './sliding-window-summary.ts';
 export * from './sort.ts';
 export * from './string.ts';
 export * from './sum.ts';
+export * from './template.ts';
 export * from './throw-unhandled-error.ts';
 export * from './to-fallback.ts';
 export * from './tracer.ts';

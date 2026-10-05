@@ -23,7 +23,6 @@ export {
   type GeneratorAnnotationValue,
   IconAnnotation,
   IconFromRefAnnotation,
-  LabelAnnotation,
   ReferenceAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -33,12 +32,11 @@ export {
   UserTypeAnnotation as UserType,
   type UserTypeAnnotationValue as UserTypeValue,
   getDescriptionWithSchema,
-  getLabelWithSchema,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   setDescriptionWithSchema,
-  setLabelWithSchema,
 } from './internal/Annotation/index.ts';
+export { LabelAnnotation, getLabelWithSchema, setLabelWithSchema } from './internal/Property/index.ts';
 
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
