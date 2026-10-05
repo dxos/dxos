@@ -8,4 +8,3 @@ export * from '#skills';
 export * from '#types';
 export * as Containers from './Containers.ts';
 export * as MailSync from './MailSync.ts';
-export * as SystemTags from './SystemTags.ts';

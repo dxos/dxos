@@ -19,9 +19,9 @@
       "import": "./dist/lib/index.mjs"
     },
     "./AgentOperation": {
-      "source": "./src/AgentOperation.ts",
-      "types": "./dist/types/src/AgentOperation.d.ts",
-      "import": "./dist/lib/ns/AgentOperation.mjs"
+      "source": "./src/types/AgentOperation.ts",
+      "types": "./dist/types/src/types/AgentOperation.d.ts",
+      "import": "./dist/lib/AgentOperation.mjs"
     },
     "./AgentOperationHandlerSet": {
       "source": "./src/AgentOperationHandlerSet.ts",

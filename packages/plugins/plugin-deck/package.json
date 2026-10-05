@@ -97,9 +97,9 @@
       "import": "./dist/lib/DeckPlugin.mjs"
     },
     "./DeckRole": {
-      "source": "./src/DeckRole.ts",
-      "types": "./dist/types/src/DeckRole.d.ts",
-      "import": "./dist/lib/ns/DeckRole.mjs"
+      "source": "./src/types/DeckRole.ts",
+      "types": "./dist/types/src/types/DeckRole.d.ts",
+      "import": "./dist/lib/DeckRole.mjs"
     },
     "./DeckSchema": {
       "source": "./src/types/DeckSchema.ts",

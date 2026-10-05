@@ -20,8 +20,8 @@ import { Message, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { ToolkitError } from '../errors.ts';
-import { RunInstructions } from '../operations/index.ts';
 import * as DelegationSkill from '../skills/delegation/DelegationSkill.ts';
+import * as AgentOperation from '../types/AgentOperation.ts';
 
 /**
  * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
@@ -205,7 +205,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
             // The task ↔ process mapping lives runtime-side (the supervisor's activeIds keyed by
             // task id) — nothing is stamped on the durable task.
-            const fiber = yield* invoker.invokeFiber(RunInstructions, {
+            const fiber = yield* invoker.invokeFiber(AgentOperation.RunInstructions, {
               instructions: Ref.make(instructions),
               input: {},
             });

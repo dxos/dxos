@@ -108,14 +108,14 @@
       "import": "./dist/lib/ClientEvents.mjs"
     },
     "./ClientOperation": {
-      "source": "./src/ClientOperation.ts",
-      "types": "./dist/types/src/ClientOperation.d.ts",
-      "import": "./dist/lib/ns/ClientOperation.mjs"
+      "source": "./src/types/ClientOperation.ts",
+      "types": "./dist/types/src/types/ClientOperation.d.ts",
+      "import": "./dist/lib/ClientOperation.mjs"
     },
     "./ClientOptions": {
-      "source": "./src/ClientOptions.ts",
-      "types": "./dist/types/src/ClientOptions.d.ts",
-      "import": "./dist/lib/ns/ClientOptions.mjs"
+      "source": "./src/types/ClientOptions.ts",
+      "types": "./dist/types/src/types/ClientOptions.d.ts",
+      "import": "./dist/lib/ClientOptions.mjs"
     },
     "./ClientPlugin": {
       "source": "./src/ClientPlugin.ts",

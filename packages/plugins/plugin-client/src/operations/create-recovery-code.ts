@@ -9,20 +9,21 @@ import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 
 import { RECOVERY_CODE_DIALOG } from '../constants.ts';
-import { CreateRecoveryCode } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
-const handler: Operation.WithHandler<typeof CreateRecoveryCode> = CreateRecoveryCode.pipe(
-  Operation.withHandler(
-    Effect.fnUntraced(function* () {
-      const { recoveryCode } = yield* Identity.createRecoveryCredential();
-      yield* Operation.invoke(LayoutOperation.UpdateDialog, {
-        subject: RECOVERY_CODE_DIALOG,
-        blockAlign: 'start',
-        type: 'alert',
-        props: { code: recoveryCode },
-      });
-    }),
-  ),
-);
+const handler: Operation.WithHandler<typeof ClientOperation.CreateRecoveryCode> =
+  ClientOperation.CreateRecoveryCode.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* () {
+        const { recoveryCode } = yield* Identity.createRecoveryCredential();
+        yield* Operation.invoke(LayoutOperation.UpdateDialog, {
+          subject: RECOVERY_CODE_DIALOG,
+          blockAlign: 'start',
+          type: 'alert',
+          props: { code: recoveryCode },
+        });
+      }),
+    ),
+  );
 
 export default handler;

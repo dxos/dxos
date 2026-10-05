@@ -4,6 +4,4 @@
 
 export * as ClientPlugin from './ClientPlugin.ts';
 export * from '#types';
-export * as ClientOperation from './ClientOperation.ts';
-export * as ClientOptions from './ClientOptions.ts';
 export * as HaloServices from './HaloServices.ts';

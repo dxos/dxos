@@ -195,9 +195,9 @@
       "import": "./dist/lib/SyncStreamConfig.mjs"
     },
     "./SystemTags": {
-      "source": "./src/SystemTags.ts",
-      "types": "./dist/types/src/SystemTags.d.ts",
-      "import": "./dist/lib/ns/SystemTags.mjs"
+      "source": "./src/types/SystemTags.ts",
+      "types": "./dist/types/src/types/SystemTags.d.ts",
+      "import": "./dist/lib/SystemTags.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",

@@ -35,12 +35,6 @@ export const isSubpathPackage = (packageName) =>
   DXOS_SUBPATH_PACKAGES.has(packageName) || packageName.startsWith('@dxos/plugin-');
 
 /**
- * Packages with no root import at all: their root re-exports every subpath, React components
- * included, so any root import pulls React into CLI, edge and worker code.
- */
-const NO_ROOT_IMPORT_PACKAGES = new Set(['@dxos/app-framework', '@dxos/app-toolkit']);
-
-/**
  * The legacy aggregate entrypoint. It re-exports exactly the namespaces that now have their own
  * subpath entries, so one import of it statically drags every sibling namespace of the plugin —
  * these are Effect/ECHO schemas, runtime values rather than erased types, so the barrel problem
@@ -127,42 +121,12 @@ export default {
     const resolveExportToSegment = (pkgName, exportName) =>
       isNamespaceSegment(exportName) && loadExportsForPackage(pkgName).has(exportName) ? exportName : null;
 
-    // Reports a root import of a `NO_ROOT_IMPORT_PACKAGES` member that the fixer cannot rewrite.
-    const reportRootImport = (node, source) => {
-      if (!NO_ROOT_IMPORT_PACKAGES.has(source)) {
-        return;
-      }
-      context.report({
-        node,
-        message: `${source} has no root import; import the subpath that holds each name.`,
-      });
-    };
-    const reportRootSource = (node) => {
-      if (node.source && node.source.type === 'Literal' && typeof node.source.value === 'string') {
-        reportRootImport(node, node.source.value);
-      }
-    };
-
     return {
-      ExportAllDeclaration: reportRootSource,
-      ExportNamedDeclaration: reportRootSource,
-      ImportExpression: reportRootSource,
       ImportDeclaration: (node) => {
         const source = String(node.source.value);
         const { packageName, subpath } = parseSource(source);
         if (!isSubpathPackage(packageName)) {
           return;
-        }
-        if (subpath === undefined) {
-          const named = node.specifiers?.filter((spec) => spec.type === 'ImportSpecifier') ?? [];
-          const fixable =
-            named.length > 0 &&
-            named.length === node.specifiers.length &&
-            named.some((spec) => resolveExportToSegment(packageName, spec.imported.name));
-          if (!fixable) {
-            reportRootImport(node, source);
-            return;
-          }
         }
         // The barrel and the aggregate `/types` entry both need rewriting; a per-namespace
         // subpath is already correct. Names that resolve to neither stay on the original source,
