@@ -9,7 +9,11 @@ import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Contact } from '@dxos/react-client/halo';
-import { Avatar, Button, Icon, type ThemedClassName, toAvatarHue, useId, useTranslation } from '@dxos/react-ui';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
@@ -17,7 +21,7 @@ import { translationKey } from '../../translations.ts';
 import { profileString } from '../../util/index.ts';
 import { contactDisplayName } from '../ContactList/index.ts';
 
-export type SpaceInvitationCardProps = ThemedClassName<{
+export type SpaceInvitationCardProps = Util.ThemedClassName<{
   /** The inviter, when they are in the contact book. */
   sender?: Pick<Contact, 'identityKey' | 'profile'>;
   /** Shown when the inviter is not a known contact. */
@@ -64,8 +68,8 @@ export const SpaceInvitationCard = ({
   onJoin,
   onOpen,
 }: SpaceInvitationCardProps) => {
-  const { t } = useTranslation(translationKey);
-  const labelId = useId('spaceInvitationCard__label');
+  const { t } = Hooks.useTranslation(translationKey);
+  const labelId = Hooks.useId('spaceInvitationCard__label');
   const fallback = sender ? keyToFallback(requirePublicKey(sender.identityKey)) : undefined;
   const space = spaceName ?? spaceKey.truncate();
   const description = t('space-invitation.description', { space, role: t(roleLabelKey(role)) });
@@ -81,11 +85,11 @@ export const SpaceInvitationCard = ({
         <Avatar.Root
           aria-labelledby={labelId}
           size='md'
-          hue={toAvatarHue(profileString(sender, 'hue') ?? fallback.hue)}
+          hue={Avatar.toAvatarHue(profileString(sender, 'hue') ?? fallback.hue)}
           fallback={profileString(sender, 'emoji') ?? fallback.emoji}
         />
       ) : (
-        <Icon icon='ph--envelope-simple--regular' size='lg' tone='muted' />
+        <Icon.Icon icon='ph--envelope-simple--regular' size='lg' tone='muted' />
       )}
       {/* The sender over the space and role; its minimum width is where the button wraps under it in a narrow host. */}
       <div className='flex flex-col gap-1 min-w-24 basis-0 grow'>
@@ -97,7 +101,7 @@ export const SpaceInvitationCard = ({
         </span>
       </div>
       {joined ? (
-        <Button
+        <Button.Root
           size='sm'
           classNames='ms-auto'
           disabled={pending}
@@ -105,9 +109,9 @@ export const SpaceInvitationCard = ({
           data-testid='space-invitation-card.open'
         >
           {t('open-space-invitation.label')}
-        </Button>
+        </Button.Root>
       ) : (
-        <Button
+        <Button.Root
           size='sm'
           variant='primary'
           classNames='ms-auto'
@@ -116,7 +120,7 @@ export const SpaceInvitationCard = ({
           data-testid='space-invitation-card.join'
         >
           {t('join-space-invitation.label')}
-        </Button>
+        </Button.Root>
       )}
     </div>
   );

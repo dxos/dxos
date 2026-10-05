@@ -10,7 +10,7 @@ import { MemoryEdgeInbox } from '@dxos/client-services/testing';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Database, Feed, Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { Message } from '@dxos/types';
 

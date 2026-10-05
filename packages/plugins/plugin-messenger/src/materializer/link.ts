@@ -9,7 +9,7 @@ import { SpaceState } from '@dxos/client/echo';
 import { type Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { LinkUnavailableError } from '#types';
+import { MessengerError } from '#types';
 
 /**
  * Loads the object a notification links to. The link names the sender's space, which may be closed
@@ -22,7 +22,7 @@ export const loadLink = Effect.fn('Messenger.loadLink')(function* (client: Clien
     if (space.state.get() === SpaceState.SPACE_INACTIVE) {
       yield* Effect.tryPromise({
         try: () => space.open(),
-        catch: (error) => new LinkUnavailableError({ cause: error, context: { uri: ref.uri } }),
+        catch: (error) => new MessengerError.LinkUnavailableError({ cause: error, context: { uri: ref.uri } }),
       });
     }
     yield* Effect.promise(() => space.waitUntilReady());
@@ -30,6 +30,6 @@ export const loadLink = Effect.fn('Messenger.loadLink')(function* (client: Clien
 
   return yield* Effect.tryPromise({
     try: () => ref.load(),
-    catch: (error) => new LinkUnavailableError({ cause: error, context: { uri: ref.uri } }),
+    catch: (error) => new MessengerError.LinkUnavailableError({ cause: error, context: { uri: ref.uri } }),
   });
 });

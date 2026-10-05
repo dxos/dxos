@@ -9,37 +9,46 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Surface, useOperationInvoker, useOptionalAtomCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Client } from '@dxos/client';
 import { MemoryEdgeInbox } from '@dxos/client-services/testing';
 import { type Space, SpaceMember_Role } from '@dxos/client/echo';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { ClientPluginManager } from '@dxos/plugin-client/testing';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { useClient } from '@dxos/react-client';
 import { useSpace, useSpaces } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
 import { type WithMultiClientProviderProps, useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { Block, Button, Checkbox, Empty, Flex, Icon, Input, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import * as Status from '@dxos/react-ui/Status';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message, Organization } from '@dxos/types';
 
 import { NotificationsPanel } from '#components';
 import { loadLink, makeSender, startInboxMaterializer } from '#materializer';
+import { MESSENGER_COMPANION } from '#meta';
 import { MessengerPlugin } from '#plugin';
 import { translations } from '#translations';
-import { MESSENGER_COMPANION, MessengerCapabilities, Notifications } from '#types';
+import { MessengerCapabilities, Notifications } from '#types';
 
 /** Stands in for EDGE: both clients' inboxes are routed through it. */
 const inboxRelay = new MemoryEdgeInbox();
@@ -114,14 +123,14 @@ const SenderColumn = () => {
     <Panel.Root data-testid='messenger.sender'>
       <Panel.Header>
         <Toolbar.Root>
-          <Block>
-            <Icon icon='ph--user--regular' />
-          </Block>
+          <Layout.Block>
+            <Icon.Icon icon='ph--user--regular' />
+          </Layout.Block>
           <span>Alice</span>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-        <Flex column gap='md' classNames='p-3'>
+        <Layout.Flex column gap='md' classNames='p-3'>
           <Select.Root
             items={options}
             value={recipientDid ? [recipientDid] : []}
@@ -134,18 +143,18 @@ const SenderColumn = () => {
               ))}
             </Select.Content>
           </Select.Root>
-          <Input
+          <Input.Root
             placeholder='Message'
             value={text}
             onChange={(event) => setText(event.target.value)}
             data-testid='messenger.text'
           />
-          <Checkbox
+          <Input.Checkbox
             label={`Link “${LINKED_OBJECT_NAME}”`}
             checked={withLink}
             onCheckedChange={({ checked }) => setWithLink(checked === true)}
           />
-          <Button
+          <Button.Root
             variant='primary'
             icon='ph--paper-plane-tilt--regular'
             label='Send'
@@ -154,7 +163,7 @@ const SenderColumn = () => {
             data-testid='messenger.send'
           />
           {status && <span className='text-sm text-fg-muted'>{status}</span>}
-        </Flex>
+        </Layout.Flex>
       </Panel.Body>
     </Panel.Root>
   );
@@ -235,9 +244,9 @@ const ReceiverColumn = () => {
     <Panel.Root data-testid='messenger.receiver'>
       <Panel.Header>
         <Toolbar.Root>
-          <Block>
-            <Icon icon='ph--envelope--regular' />
-          </Block>
+          <Layout.Block>
+            <Icon.Icon icon='ph--envelope--regular' />
+          </Layout.Block>
           <span>Bob</span>
           <Toolbar.Separator variant='gap' />
           {containers.length > 0 && <UnreadBadge containers={containers} />}
@@ -248,7 +257,7 @@ const ReceiverColumn = () => {
         {containers.length > 0 ? (
           <NotificationsPanel attendableId='notifications-panel' containers={containers} onOpen={handleOpen} />
         ) : (
-          <Empty>No notifications yet.</Empty>
+          <Status.Empty>No notifications yet.</Status.Empty>
         )}
       </Panel.Body>
     </Panel.Root>
@@ -267,7 +276,7 @@ const ClientPlugins = ({ index, children }: PropsWithChildren<{ index: number }>
   <ClientPluginManager
     id={`messenger-client-${index}`}
     clientOptions={{ onClientInitialized: setupProfile }}
-    plugins={() => [...corePlugins(), SpacePlugin({}), StorybookPlugin.make({}), MessengerPlugin()]}
+    plugins={() => [...CorePlugins.make(), SpacePlugin({}), StorybookPlugin.make({}), MessengerPlugin()]}
   >
     {children}
   </ClientPluginManager>
@@ -277,7 +286,7 @@ const ClientPlugins = ({ index, children }: PropsWithChildren<{ index: number }>
 const InviterColumn = () => {
   const client = useClient();
   const contacts = useContacts();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [space, setSpace] = useState<Space>();
   const [status, setStatus] = useState<string>();
   const inviteeKey = useMemo(() => toPublicKey(contacts[0]?.identityKey)?.toHex(), [contacts]);
@@ -314,15 +323,15 @@ const InviterColumn = () => {
     <Panel.Root data-testid='messenger.inviter'>
       <Panel.Header>
         <Toolbar.Root>
-          <Block>
-            <Icon icon='ph--user--regular' />
-          </Block>
+          <Layout.Block>
+            <Icon.Icon icon='ph--user--regular' />
+          </Layout.Block>
           <span>Alice</span>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-        <Flex column gap='md' classNames='p-3'>
-          <Button
+        <Layout.Flex column gap='md' classNames='p-3'>
+          <Button.Root
             variant='primary'
             icon='ph--user-plus--regular'
             label={`Add Bob to “${INVITED_SPACE_NAME}”`}
@@ -331,7 +340,7 @@ const InviterColumn = () => {
             data-testid='messenger.invite'
           />
           {status && <span className='text-sm text-fg-muted'>{status}</span>}
-        </Flex>
+        </Layout.Flex>
       </Panel.Body>
     </Panel.Root>
   );
@@ -339,7 +348,7 @@ const InviterColumn = () => {
 
 /** Bob: the messenger's own deck companion surface, over the containers its materializer keeps. */
 const InviteeColumn = () => {
-  const containers = useOptionalAtomCapability(MessengerCapabilities.NotificationsContainers);
+  const containers = Hooks.useOptionalAtomCapability(MessengerCapabilities.NotificationsContainers);
   const spaces = useSpaces();
   const joined = spaces.some((space) => space.properties.name === INVITED_SPACE_NAME);
   const companionData = useMemo(() => ({ id: 'notifications-panel', subject: MESSENGER_COMPANION }), []);
@@ -348,9 +357,9 @@ const InviteeColumn = () => {
     <Panel.Root data-testid='messenger.invitee'>
       <Panel.Header>
         <Toolbar.Root>
-          <Block>
-            <Icon icon='ph--envelope--regular' />
-          </Block>
+          <Layout.Block>
+            <Icon.Icon icon='ph--envelope--regular' />
+          </Layout.Block>
           <span>Bob</span>
           <Toolbar.Separator variant='gap' />
           {containers && containers.length > 0 && <UnreadBadge containers={containers} />}

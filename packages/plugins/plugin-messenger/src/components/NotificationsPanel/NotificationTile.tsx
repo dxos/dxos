@@ -5,9 +5,11 @@
 import * as Option from 'effect/Option';
 import React, { type ReactNode, forwardRef, useCallback, useMemo } from 'react';
 
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
 import { CardTile, type CardTileMenuItem, Row } from '@dxos/react-ui-card';
 import { type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import { type Actor, Message, SpaceInvitationMessage } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -44,7 +46,7 @@ export type NotificationTileProps = Pick<MosaicTileProps<NotificationTileData>, 
 export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps>(
   ({ data, location, current }, forwardedRef) => {
     const { message, read, now, renderInvitation, onAction } = data;
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const { setCurrentId } = useMosaicContainer('NotificationTile');
     const invitation = useMemo(() => Option.getOrUndefined(SpaceInvitationMessage.match(message)), [message]);
     const { title, body } = useMemo(() => {
@@ -102,7 +104,12 @@ export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps
           menuItems={menuItems}
           leading={
             !read && (
-              <Icon icon='ph--circle--fill' size='xs' classNames='text-accent-text' aria-label={t('unread.label')} />
+              <Icon.Icon
+                icon='ph--circle--fill'
+                size='xs'
+                classNames='text-accent-text'
+                aria-label={t('unread.label')}
+              />
             )
           }
           title={

@@ -4,9 +4,9 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -26,7 +26,7 @@ export const SpaceInvitationContainer = ({
   spaceName,
   sender,
 }: SpaceInvitationContainerProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const spaces = useSpaces({ all: true });
   const contacts = useContacts();
   const [pending, setPending] = useState(false);

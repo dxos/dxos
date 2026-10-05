@@ -10,7 +10,7 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { InboxService } from '@dxos/protocols/rpc';
 import { Message } from '@dxos/types';
 
-import { MessageSendError, type MessengerCapabilities, UnknownRecipientError } from '#types';
+import { type MessengerCapabilities, MessengerError } from '#types';
 
 /** Resolved per call, since `client.halo` is replaced when the services reconnect. */
 export type SenderHalo = () => Pick<Halo, 'contacts' | 'inbox'>;
@@ -26,7 +26,7 @@ export const makeSender = (halo: SenderHalo): MessengerCapabilities.Sender => ({
       const contact = contacts.get().find((contact) => contact.did === recipientDid);
       const recipientIdentityKey = toPublicKey(contact?.identityKey);
       if (!recipientIdentityKey) {
-        return yield* Effect.fail(new UnknownRecipientError({ context: { recipientDid } }));
+        return yield* Effect.fail(new MessengerError.UnknownRecipientError({ context: { recipientDid } }));
       }
 
       const payload = Message.encodeJson(message);
@@ -37,7 +37,7 @@ export const makeSender = (halo: SenderHalo): MessengerCapabilities.Sender => ({
             ? new InboxPayloadTooLargeError({ cause: error })
             : InboxAccountRequiredError.is(error)
               ? new InboxAccountRequiredError({ cause: error })
-              : new MessageSendError({ cause: error, context: { recipientDid } }),
+              : new MessengerError.MessageSendError({ cause: error, context: { recipientDid } }),
       });
     }).pipe(Effect.withSpan('MessengerCapabilities.Sender.send')),
 });

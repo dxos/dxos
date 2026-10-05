@@ -9,13 +9,16 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { type InboxService } from '@dxos/protocols/rpc';
-import { Container, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic } from '@dxos/react-ui-mosaic';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { type Message, SpaceInvitationMessage } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -85,7 +88,7 @@ export const NotificationsPanel = ({
   onOpen,
   inboxStatus = 'available',
 }: NotificationsPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const now = useNow(MINUTE_MS);
@@ -196,7 +199,7 @@ export const NotificationsPanel = ({
       </Panel.Header>
       <Panel.Body asChild>
         {items.length === 0 ? (
-          <Flex center classNames='h-full text-fg-subtle' role='status'>
+          <Layout.Flex center classNames='h-full text-fg-subtle' role='status'>
             {t(
               inboxStatus === 'account-required'
                 ? 'account-required.message'
@@ -204,13 +207,13 @@ export const NotificationsPanel = ({
                   ? 'empty.message'
                   : 'empty-filtered.message',
             )}
-          </Flex>
+          </Layout.Flex>
         ) : (
           <Mosaic.Container asChild withFocus>
             <ScrollArea.Root>
-              {/* The viewport is the Body's first Container, so it takes the panel's gutter around the tiles. */}
+              {/* The viewport is the Body's first Layout.Container, so it takes the panel's gutter around the tiles. */}
               <ScrollArea.Viewport asChild ref={setViewport}>
-                <Container padBlock>
+                <Layout.Container padBlock>
                   <Mosaic.VirtualStack
                     Tile={NotificationTile}
                     items={items}
@@ -220,7 +223,7 @@ export const NotificationsPanel = ({
                     estimateSize={() => 120}
                     gap={4}
                   />
-                </Container>
+                </Layout.Container>
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Mosaic.Container>

@@ -3,8 +3,8 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as cardTranslations } from '@dxos/react-ui-card/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Notifications } from '#types';
@@ -43,4 +43,4 @@ export const translations = [
     },
   },
   ...cardTranslations,
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

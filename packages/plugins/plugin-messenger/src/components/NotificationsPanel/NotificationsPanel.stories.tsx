@@ -9,12 +9,12 @@ import { fn } from 'storybook/test';
 
 import { Database, Feed, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useSpace } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import * as Card from '@dxos/react-ui/Card';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization } from '@dxos/types';
 

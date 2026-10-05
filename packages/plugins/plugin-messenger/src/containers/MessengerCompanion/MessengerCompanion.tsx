@@ -5,20 +5,23 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Surface, useCapability, useOperationInvoker, useOptionalAtomCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Flex, Panel, useMulticastObservable, useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 import { type Message } from '@dxos/types';
 
 import { type InvitationRenderer, NotificationsPanel } from '#components';
 import { loadLink } from '#materializer';
-import { meta } from '#meta';
-import { MESSENGER_COMPANION, MessengerCapabilities } from '#types';
+import { MESSENGER_COMPANION, meta } from '#meta';
+import { MessengerCapabilities } from '#types';
 
 const renderInvitation: InvitationRenderer = ({ data, sender }) => (
   <Surface.Surface type={AppSurface.SpaceInvitation} data={{ ...data, sender }} limit={1} />
@@ -34,11 +37,11 @@ export type MessengerCompanionProps = {
 };
 
 export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  const client = useCapability(ClientCapabilities.Client);
-  const containers = useOptionalAtomCapability(MessengerCapabilities.NotificationsContainers);
-  const inboxStatus = useMulticastObservable(client.halo.inbox.status);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const client = Hooks.useCapability(ClientCapabilities.Client);
+  const containers = Hooks.useOptionalAtomCapability(MessengerCapabilities.NotificationsContainers);
+  const inboxStatus = UiHooks.useMulticastObservable(client.halo.inbox.status);
 
   const handleOpen = useCallback(
     (message: Message.Message) => {
@@ -64,9 +67,9 @@ export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) =>
     return (
       <Panel.Root>
         <Panel.Body>
-          <Flex center classNames='h-full text-fg-subtle' role='status'>
+          <Layout.Flex center classNames='h-full text-fg-subtle' role='status'>
             {t(inboxStatus === 'account-required' ? 'account-required.message' : 'empty.message')}
-          </Flex>
+          </Layout.Flex>
         </Panel.Body>
       </Panel.Root>
     );

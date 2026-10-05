@@ -6,12 +6,12 @@ import { describe, test } from 'vitest';
 
 import { SpaceMember_Role } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { InboxAccountRequiredError } from '@dxos/protocols';
 
 import { SpacePlugin } from '#plugin';
@@ -19,7 +19,7 @@ import { SpaceOperation } from '#types';
 
 describe('SpaceOperation.AddMembers', () => {
   test('admits a member it could not notify and reports why', async ({ expect }) => {
-    const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
+    const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
     await using _harness = harness;
 
     const client = harness.get(ClientCapabilities.Client);

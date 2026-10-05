@@ -9,6 +9,7 @@ export default defineConfig({
     index: 'src/index.ts',
     MessengerPlugin: 'src/MessengerPlugin.ts',
     MessengerCapabilities: 'src/types/MessengerCapabilities.ts',
+    MessengerError: 'src/types/MessengerError.ts',
     MessengerOperation: 'src/types/MessengerOperation.ts',
     Notifications: 'src/types/Notifications.ts',
     capabilities: 'src/capabilities/index.ts',
