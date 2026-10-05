@@ -74,7 +74,7 @@ export const SpaceInvitationCard = ({
     <div
       role='group'
       aria-labelledby={labelId}
-      className={mx('flex items-center gap-2 p-2', classNames)}
+      className={mx('flex flex-wrap items-center gap-2 p-2 min-w-0', classNames)}
       data-testid='space-invitation-card'
     >
       {sender && fallback ? (
@@ -87,23 +87,30 @@ export const SpaceInvitationCard = ({
       ) : (
         <Icon icon='ph--envelope-simple--regular' size='lg' tone='muted' />
       )}
-      {/* The sender over the space and role. */}
-      <div className='flex flex-col gap-1 min-w-0 grow'>
+      {/* The sender over the space and role; its minimum width is where the button wraps under it in a narrow host. */}
+      <div className='flex flex-col gap-1 min-w-24 basis-0 grow'>
         <span id={labelId} className='truncate'>
           {sender ? contactDisplayName(sender) : (senderName ?? t('unknown-sender.label'))}
         </span>
-        <span className='text-sm text-fg-muted'>
+        <span className='text-sm text-fg-muted break-words'>
           {sentAt ? `${description} · ${formatDistanceToNow(sentAt, { addSuffix: true })}` : description}
         </span>
       </div>
       {joined ? (
-        <Button size='sm' disabled={pending} onClick={() => onOpen?.()} data-testid='space-invitation-card.open'>
+        <Button
+          size='sm'
+          classNames='ms-auto'
+          disabled={pending}
+          onClick={() => onOpen?.()}
+          data-testid='space-invitation-card.open'
+        >
           {t('open-space-invitation.label')}
         </Button>
       ) : (
         <Button
           size='sm'
           variant='primary'
+          classNames='ms-auto'
           disabled={pending}
           onClick={() => onJoin?.()}
           data-testid='space-invitation-card.join'

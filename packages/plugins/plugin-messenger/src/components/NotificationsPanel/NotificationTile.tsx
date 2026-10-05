@@ -114,7 +114,8 @@ export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps
         />
         <Card.Body>
           {invitation && renderInvitation ? (
-            <Card.Row>{renderInvitation({ data: invitation, sender: message.sender })}</Card.Row>
+            // A block in the content track, not a Card.Row, whose single-line truncation would stop its text wrapping.
+            renderInvitation({ data: invitation, sender: message.sender })
           ) : (
             <>
               <Row.Person actor={message.sender} role='from' />

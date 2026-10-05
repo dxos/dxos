@@ -91,7 +91,9 @@
     grid-template-columns: subgrid;
     min-width: 0;
   }
-  :is(.dx-card-body, .dx-card-section) > * {
+  /* A plugin surface (`<dx-surface>`, box-less in dev builds) adds no box, so its children take the content track too. */
+  :is(.dx-card-body, .dx-card-section) > *,
+  :is(.dx-card-body, .dx-card-section) > dx-surface > * {
     grid-column: content;
   }
   /* Also through a plugin surface (`<dx-surface>`, box-less), e.g. the Body a `CardContent` surface renders. */
