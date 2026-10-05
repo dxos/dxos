@@ -28,6 +28,8 @@ const start = (options: Subprocess.SpawnOptions): Effect.Effect<Subprocess.Child
       env: { ...process.env, ...options.env },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
+    // Stays for the child's lifetime: an `error` with no listener (say, after startup was interrupted) crashes the host.
+    child.on('error', (error) => log('subprocess error', { command: options.command, error: error.message }));
     // A missing executable is reported by an `error` event after `spawn` returns, not by a throw.
     const onError = (error: Error) =>
       resume(
