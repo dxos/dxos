@@ -6,12 +6,15 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import type * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
+import type * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
 import type * as Stream from 'effect/Stream';
 
-import { Annotation } from '@dxos/echo';
+import { Annotation, type Database } from '@dxos/echo';
 import { type SpaceId, URI } from '@dxos/keys';
 import type { SerializedError } from '@dxos/protocols';
 
@@ -254,6 +257,229 @@ export interface Process {
     readonly outputCount: number;
   };
 }
+
+//
+// Handle.
+//
+
+export interface Status {
+  readonly state: State;
+  readonly exit: Option.Option<Exit.Exit<void>>;
+
+  readonly startedAt: Date;
+  readonly completedAt: Option.Option<Date>;
+}
+
+export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
+  readonly pid: ID;
+  readonly parentId: ID | null;
+
+  /**
+   * Process definition key ({@link Operation.Durable.key}) for this process.
+   */
+  readonly key: string;
+
+  /**
+   * Parameters of the process.
+   */
+  readonly params: Params;
+
+  /**
+   * What the process is running on behalf of. See {@link Environment}.
+   */
+  readonly environment: Environment;
+
+  submitInput(input: _Input): Effect.Effect<void>;
+  subscribeOutputs(): Stream.Stream<_Output>;
+
+  /**
+   * Subscribe to ephemeral trace messages for this process.
+   * Replays buffered events, then streams new ones as they arrive.
+   * The stream completes when the process reaches a terminal state.
+   *
+   * When consuming this stream from a short-lived parent effect (e.g. React
+   * `useEffect` that `runPromise(Effect.forEach(subscribe))` and returns), fork
+   * the collector with {@link Effect.forkDetach}, not {@link Effect.forkChild} — the
+   * parent scope closes as soon as `forEach` finishes and interrupts scoped forks
+   * before live `pushEphemeral` events arrive. Interrupt the daemon fiber explicitly
+   * on dispose (see `ProcessOperationInvoker.fiberFromProcess` in `@dxos/compute-runtime`).
+   */
+  subscribeEphemeral(): Stream.Stream<Trace.Message>;
+
+  terminate(): Effect.Effect<void>;
+  readonly status: Status;
+
+  /**
+   * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
+   * A host that suspends the process between turns (a Durable Object) mirrors this onto its own
+   * scheduler, since the runtime's alarm is an in-memory timer.
+   */
+  readonly alarmDueAt: number | null;
+  statusAtom: Atom.Atom<Status>;
+
+  /**
+   * Resolves when the process reaches {@link State.IDLE} (nothing in-flight; waiting for input),
+   * or a terminal state ({@link State.SUCCEEDED}, {@link State.TERMINATED}, {@link State.FAILED}).
+   *
+   * Does not resolve while the process is {@link State.HYBERNATING} (e.g. alarm pending or non-terminal child).
+   * The effect keeps waiting until that external work finishes and the process becomes idle or terminal.
+   *
+   * If the process fails, this effect throws a defect.
+   */
+  runToCompletion(): Effect.Effect<void>;
+
+  /**
+   * Resolves when the process settles its current foreground turn: {@link State.IDLE} or
+   * {@link State.SUCCEEDED}, or {@link State.HYBERNATING} with no pending alarm
+   * (i.e. only background children remain in flight).
+   *
+   * Unlike {@link runToCompletion}, this does NOT wait for background children (e.g. delegated
+   * sub-agents) to finish — so a supervisor's chat turn returns as soon as its reply is complete,
+   * while sub-agents continue running and report back out of band. Still waits through
+   * alarm-pending hybernation (more queued turn work). Defects on {@link State.FAILED}.
+   */
+  runUntilSettled(): Effect.Effect<void>;
+
+  /**
+   * Submits each input in order, then streams outputs until the process reaches {@link State.IDLE}
+   * or {@link State.SUCCEEDED}. While {@link State.HYBERNATING}, keeps waiting for outputs
+   * or a terminal state. The stream fails with a defect if the process reaches {@link State.FAILED}
+   * or {@link State.TERMINATED}.
+   */
+  runAndExit(options: { readonly inputs: readonly _Input[] }): Stream.Stream<_Output>;
+
+  /**
+   * Hydrates a dormant persisted process using the supplied definition.
+   * No-op when the handle is already live (returns self).
+   */
+  hydrate(definition: Operation.Durable<_Input, _Output, any, any>): Effect.Effect<Handle<_Input, _Output, _Rpcs>>;
+
+  readonly rpc: RpcClient.RpcClient<_Rpcs>;
+}
+
+export namespace Handle {
+  // Widened to `any` Rpcs so the implemented `rpc: RpcClient<any>` is assignable
+  // regardless of a handle's concrete RPC group (variance, see design spec §4.4).
+  export type Any = Handle<any, any, any>;
+}
+
+/**
+ * Options for spawning a process.
+ */
+export interface SpawnOptions {
+  /** Parent process ID — child inherits the parent's trace context. */
+  readonly parentProcessId?: ID;
+
+  /**
+   * Process name for debugging purposes.
+   */
+  readonly name?: string;
+
+  /**
+   * Target object that this process is assigned to.
+   * Ergonomic shorthand folded into {@link TargetAnnotation} on the process annotations.
+   */
+  // TODO(dmaretskyi): Consider opaques metadata instead of opinionated `target` field.
+  readonly target?: URI.URI;
+
+  /**
+   * Tracing metadata for this invocation.
+   */
+  readonly traceMeta?: Trace.Meta;
+
+  readonly environment?: Environment;
+
+  /**
+   * Who the process's database writes are attributed to (see `Database.Origin`); also the origin of every process it
+   * invokes. Persisted with the process, so a restored process keeps it.
+   */
+  readonly origin?: Database.Origin;
+
+  /**
+   * User-facing notifications requested for this process's lifecycle phases.
+   * Ergonomic shorthand folded into {@link NotifyAnnotation} on the process annotations.
+   */
+  readonly notify?: Operation.NotifyOptions;
+
+  /**
+   * User-defined annotations to attach to the process.
+   * Caller-supplied entries are merged over the {@link target}/{@link notify} shorthands.
+   */
+  readonly annotations?: Annotation.Dictionary;
+}
+
+export interface ListOptions {
+  /**
+   * Filter processes by process definition key.
+   */
+  readonly key?: string;
+
+  /**
+   * Filter processes by parent process ID.
+   */
+  readonly parentProcessId?: ID;
+
+  /**
+   * Filter processes by state.
+   */
+  readonly state?: State;
+
+  /**
+   * Filter processes by target object ID.
+   */
+  readonly target?: URI.URI;
+}
+
+//
+// Manager.
+//
+
+/**
+ * Where a process runs: in this runtime, or on EDGE.
+ */
+export type Location = 'local' | 'edge';
+
+export interface ManagerSpawnOptions extends SpawnOptions {
+  /** Defaults to `local`; `edge` requires `environment.space`, since EDGE hosts processes per space. */
+  readonly location?: Location;
+}
+
+export interface ManagerListOptions extends ListOptions {
+  /** Defaults to `local`. */
+  readonly location?: Location;
+
+  /** Space to list on EDGE; required when `location` is `edge`. */
+  readonly space?: SpaceId;
+}
+
+export interface ManagerAttachOptions {
+  /** Defaults to `local`. */
+  readonly location?: Location;
+
+  /** Space hosting the process on EDGE; required when `location` is `edge`. */
+  readonly space?: SpaceId;
+}
+
+/**
+ * Process control over every runtime a caller can address, chosen per call by {@link Location}.
+ *
+ * A caller that only knows where it wants a process to run uses this rather than picking between the
+ * local and remote managers itself. Only the definition's key reaches EDGE, so an `edge` spawn
+ * succeeds only for a key EDGE hosts; the definition still supplies the handle's codecs and RPC group.
+ * Every verb dies when the requested location cannot be served (e.g. `edge` without EDGE process control).
+ */
+export interface Manager {
+  spawn<I, O, Rpcs extends Rpc.Any = never>(
+    definition: Operation.Durable<I, O, any, Rpcs>,
+    options?: ManagerSpawnOptions,
+  ): Effect.Effect<Handle<I, O, Rpcs>>;
+
+  list(options?: ManagerListOptions): Effect.Effect<readonly Handle.Any[]>;
+
+  attach(pid: ID, options?: ManagerAttachOptions): Effect.Effect<Handle.Any>;
+}
+
+export class ManagerService extends Context.Service<ManagerService, Manager>()('@dxos/compute/Process.Manager') {}
 
 /**
  * New process is spawned.

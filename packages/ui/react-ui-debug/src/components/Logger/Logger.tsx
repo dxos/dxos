@@ -44,7 +44,7 @@ import { translationKey } from '#translations';
 
 import { formatLogEntry, packageName } from './format.ts';
 import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer.ts';
-import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
+import { LoggerProvider, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
 import { type LevelName, LEVELS, composeFilter } from './recorder.ts';
 
 //
@@ -168,14 +168,12 @@ const LoggerRoot = ({
     setCurrent(undefined);
   }, []);
   // Copy the checked rows when any are checked, else the whole buffer.
-  const copyAll = useCallback(() => {
+  const getCopyText = useCallback(() => {
     const selected = checked.size > 0 ? rows.filter((row) => checked.has(row.id)) : rows;
-    copyToClipboard(
-      JSON.stringify(
-        selected.map(({ entry }) => formatLogEntry(entry)),
-        null,
-        2,
-      ),
+    return JSON.stringify(
+      selected.map(({ entry }) => formatLogEntry(entry)),
+      null,
+      2,
     );
   }, [rows, checked]);
   const toggleExpand = useCallback((id: number) => {
@@ -213,7 +211,7 @@ const LoggerRoot = ({
       checked={checked}
       toggleChecked={toggleChecked}
       clear={clear}
-      copyAll={copyAll}
+      getCopyText={getCopyText}
     >
       {children}
     </LoggerProvider>
@@ -230,7 +228,7 @@ type LoggerToolbarProps = ComposableProps;
 
 const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
   const { t } = useTranslation(translationKey);
-  const { filter, setFilter, recording, setRecording, clear, copyAll } = useLoggerContext('Logger.Toolbar');
+  const { filter, setFilter, recording, setRecording, clear, getCopyText } = useLoggerContext('Logger.Toolbar');
 
   // A bare level matching the filter selects it; a scoped filter shows no selection.
   const selectedLevel = (LEVELS as readonly string[]).includes(filter) ? filter : '';
@@ -268,7 +266,7 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
         label={t('record.label')}
       />
       <Button icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
-      <Button icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
+      <SystemButton.Clipboard iconOnly label={t('copy.label')} onCopy={getCopyText} />
     </Toolbar.Root>
   );
 });

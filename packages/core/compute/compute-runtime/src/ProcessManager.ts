@@ -96,174 +96,6 @@ const EMPTY_RPC_CLIENT: RpcClient.RpcClient<any> = Effect.runSync(
   ),
 );
 
-export interface Status {
-  readonly state: Process.State;
-  readonly exit: Option.Option<Exit.Exit<void>>;
-
-  readonly startedAt: Date;
-  readonly completedAt: Option.Option<Date>;
-}
-
-export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
-  readonly pid: Process.ID;
-  readonly parentId: Process.ID | null;
-
-  /**
-   * Process definition key ({@link Operation.Durable.key}) for this process.
-   */
-  readonly key: string;
-
-  /**
-   * Parameters of the process.
-   */
-  readonly params: Process.Params;
-
-  /**
-   * What the process is running on behalf of. See {@link Process.Environment}.
-   */
-  readonly environment: Process.Environment;
-
-  submitInput(input: _Input): Effect.Effect<void>;
-  subscribeOutputs(): Stream.Stream<_Output>;
-
-  /**
-   * Subscribe to ephemeral trace messages for this process.
-   * Replays buffered events, then streams new ones as they arrive.
-   * The stream completes when the process reaches a terminal state.
-   *
-   * When consuming this stream from a short-lived parent effect (e.g. React
-   * `useEffect` that `runPromise(Effect.forEach(subscribe))` and returns), fork
-   * the collector with {@link Effect.forkDetach}, not {@link Effect.forkChild} — the
-   * parent scope closes as soon as `forEach` finishes and interrupts scoped forks
-   * before live `pushEphemeral` events arrive. Interrupt the daemon fiber explicitly
-   * on dispose (see {@link ProcessOperationInvoker.fiberFromProcess}).
-   */
-  subscribeEphemeral(): Stream.Stream<Trace.Message>;
-
-  terminate(): Effect.Effect<void>;
-  readonly status: Status;
-
-  /**
-   * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
-   * A host that suspends the process between turns (a Durable Object) mirrors this onto its own
-   * scheduler, since the runtime's alarm is an in-memory timer.
-   */
-  readonly alarmDueAt: number | null;
-  statusAtom: Atom.Atom<Status>;
-
-  /**
-   * Resolves when the process reaches {@link Process.State.IDLE} (nothing in-flight; waiting for input),
-   * or a terminal state ({@link Process.State.SUCCEEDED}, {@link Process.State.TERMINATED}, {@link Process.State.FAILED}).
-   *
-   * Does not resolve while the process is {@link Process.State.HYBERNATING} (e.g. alarm pending or non-terminal child).
-   * The effect keeps waiting until that external work finishes and the process becomes idle or terminal.
-   *
-   * If the process fails, this effect throws a defect.
-   */
-  runToCompletion(): Effect.Effect<void>;
-
-  /**
-   * Resolves when the process settles its current foreground turn: {@link Process.State.IDLE} or
-   * {@link Process.State.SUCCEEDED}, or {@link Process.State.HYBERNATING} with no pending alarm
-   * (i.e. only background children remain in flight).
-   *
-   * Unlike {@link runToCompletion}, this does NOT wait for background children (e.g. delegated
-   * sub-agents) to finish — so a supervisor's chat turn returns as soon as its reply is complete,
-   * while sub-agents continue running and report back out of band. Still waits through
-   * alarm-pending hybernation (more queued turn work). Defects on {@link Process.State.FAILED}.
-   */
-  runUntilSettled(): Effect.Effect<void>;
-
-  /**
-   * Submits each input in order, then streams outputs until the process reaches {@link Process.State.IDLE}
-   * or {@link Process.State.SUCCEEDED}. While {@link Process.State.HYBERNATING}, keeps waiting for outputs
-   * or a terminal state. The stream fails with a defect if the process reaches {@link Process.State.FAILED}
-   * or {@link Process.State.TERMINATED}.
-   */
-  runAndExit(options: { readonly inputs: readonly _Input[] }): Stream.Stream<_Output>;
-
-  /**
-   * Hydrates a dormant persisted process using the supplied definition.
-   * No-op when the handle is already live (returns self).
-   */
-  hydrate(definition: Operation.Durable<_Input, _Output, any, any>): Effect.Effect<Handle<_Input, _Output, _Rpcs>>;
-
-  readonly rpc: RpcClient.RpcClient<_Rpcs>;
-}
-
-export namespace Handle {
-  // Widened to `any` Rpcs so the implemented `rpc: RpcClient<any>` is assignable
-  // regardless of a handle's concrete RPC group (variance, see design spec §4.4).
-  export type Any = Handle<any, any, any>;
-}
-
-/**
- * Options for spawning a process.
- */
-export interface SpawnOptions {
-  /** Parent process ID — child inherits the parent's trace context. */
-  readonly parentProcessId?: Process.ID;
-
-  /**
-   * Process name for debugging purposes.
-   */
-  readonly name?: string;
-
-  /**
-   * Target object that this process is assigned to.
-   * Ergonomic shorthand folded into {@link Process.TargetAnnotation} on the process annotations.
-   */
-  // TODO(dmaretskyi): Consider opaques metadata instead of opinionated `target` field.
-  readonly target?: URI.URI;
-
-  /**
-   * Tracing metadata for this invocation.
-   */
-  readonly traceMeta?: Trace.Meta;
-
-  readonly environment?: Process.Environment;
-
-  /**
-   * Who the process's database writes are attributed to (see `Database.Origin`); also the origin of every process it
-   * invokes. Persisted with the process, so a restored process keeps it.
-   */
-  readonly origin?: Database.Origin;
-
-  /**
-   * User-facing notifications requested for this process's lifecycle phases.
-   * Ergonomic shorthand folded into {@link Process.NotifyAnnotation} on the process annotations.
-   */
-  readonly notify?: Operation.NotifyOptions;
-
-  /**
-   * User-defined annotations to attach to the process.
-   * Caller-supplied entries are merged over the {@link target}/{@link notify} shorthands.
-   */
-  readonly annotations?: Annotation.Dictionary;
-}
-
-export interface ListOptions {
-  /**
-   * Filter processes by process definition key.
-   */
-  readonly key?: string;
-
-  /**
-   * Filter processes by parent process ID.
-   */
-  readonly parentProcessId?: Process.ID;
-
-  /**
-   * Filter processes by state.
-   */
-  readonly state?: Process.State;
-
-  /**
-   * Filter processes by target object ID.
-   */
-  readonly target?: URI.URI;
-}
-
 const matchesListOptions = (
   fields: {
     readonly key: string;
@@ -271,7 +103,7 @@ const matchesListOptions = (
     readonly state: Process.State;
     readonly annotations: Annotation.Dictionary;
   },
-  options?: ListOptions,
+  options?: Process.ListOptions,
 ): boolean => {
   if (options?.key !== undefined && fields.key !== options.key) {
     return false;
@@ -300,33 +132,33 @@ export interface Manager {
    */
   spawn<I, O, Rpcs extends Rpc.Any = never>(
     definition: Operation.Durable<I, O, any, Rpcs>,
-    options?: SpawnOptions,
-  ): Effect.Effect<Handle<I, O, Rpcs>>;
+    options?: Process.SpawnOptions,
+  ): Effect.Effect<Process.Handle<I, O, Rpcs>>;
 
   /**
    * Attach to an existing process.
    */
-  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>>;
+  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Handle<I, O, Rpcs>>;
 
   /**
    * Lists live processes and, when no live match exists, non-terminal processes
-   * persisted in durable storage. Dormant entries expose {@link Handle.pid} and
-   * metadata but require {@link Handle.hydrate} before inputs can be submitted.
+   * persisted in durable storage. Dormant entries expose {@link Process.Handle.pid} and
+   * metadata but require {@link Process.Handle.hydrate} before inputs can be submitted.
    */
-  list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]>;
+  list(options?: Process.ListOptions): Effect.Effect<readonly Process.Handle.Any[]>;
 
   runAllProcessesToCompletion(): Effect.Effect<void>;
 
   /**
    * Suspends all live processes, clears in-memory handle state, and persists durable records to KV.
    * Mimics app teardown. Idempotent — safe to call multiple times before {@link startup}.
-   * Live processes must be rehydrated externally via {@link Handle.hydrate} after {@link startup}.
+   * Live processes must be rehydrated externally via {@link Process.Handle.hydrate} after {@link startup}.
    */
   shutdown(): Effect.Effect<void>;
 
   /**
    * Marks the manager as ready after {@link shutdown}, mimicking a fresh boot from KV storage.
-   * Does not rehydrate processes — callers supply definitions via {@link Handle.hydrate}.
+   * Does not rehydrate processes — callers supply definitions via {@link Process.Handle.hydrate}.
    */
   startup(): Effect.Effect<void>;
 
@@ -491,7 +323,7 @@ export class Impl implements Manager {
 
   /**
    * Suspends every live process handle and drops all in-memory manager state.
-   * Durable records remain in KV for external {@link Handle.hydrate} after {@link startup}.
+   * Durable records remain in KV for external {@link Process.Handle.hydrate} after {@link startup}.
    */
   shutdown(): Effect.Effect<void> {
     return this.#lifecycleSemaphore.withPermits(1)(
@@ -532,8 +364,8 @@ export class Impl implements Manager {
 
   spawn<I, O, _Rpcs extends Rpc.Any>(
     definition: Operation.Durable<I, O, any, _Rpcs>,
-    options?: SpawnOptions,
-  ): Effect.Effect<Handle<I, O, _Rpcs>> {
+    options?: Process.SpawnOptions,
+  ): Effect.Effect<Process.Handle<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
@@ -756,7 +588,7 @@ export class Impl implements Manager {
       // Runtime→public boundary: the live handle stores its RPC client untyped (`RpcClient<any>`),
       // while the public surface is the precise `Handle<I, O, _Rpcs>`. `RpcClient` is invariant, so
       // bridging the two requires a cast here (see design spec §4.4).
-      return handle as unknown as Handle<I, O, _Rpcs>;
+      return handle as unknown as Process.Handle<I, O, _Rpcs>;
     }).pipe(Effect.withSpan('ProcessManager.spawn', { attributes: { [SpanAttributes.PROCESS.key]: definition.key } }));
   }
 
@@ -953,12 +785,12 @@ export class Impl implements Manager {
   #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(
     id: Process.ID,
     definition: Operation.Durable<I, O, any, any>,
-  ): Effect.Effect<Handle<I, O, Rpcs>> {
+  ): Effect.Effect<Process.Handle<I, O, Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const existing = this.#handles.get(id);
       if (existing) {
         log('lifecycle: hydrate skipped (already live)', { pid: id });
-        return existing as unknown as Handle<I, O, Rpcs>;
+        return existing as unknown as Process.Handle<I, O, Rpcs>;
       }
 
       const record = yield* this.#store.getProcess(id);
@@ -983,7 +815,7 @@ export class Impl implements Manager {
 
       log('lifecycle: hydrate', { pid: id, key: record.key });
       const handle = yield* this.#rehydrate(record, definition);
-      return handle as unknown as Handle<I, O, Rpcs>;
+      return handle as unknown as Process.Handle<I, O, Rpcs>;
     }).pipe(
       Effect.withSpan('ProcessManager.hydrate', {
         attributes: { [SpanAttributes.PROCESS.id]: id, [SpanAttributes.PROCESS.key]: definition.key },
@@ -1025,7 +857,7 @@ export class Impl implements Manager {
     }).pipe(Effect.withSpan('ProcessManager.discardRecord'));
   }
 
-  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>> {
+  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Handle<I, O, Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const handle = this.#handles.get(id);
       if (!handle) {
@@ -1033,13 +865,13 @@ export class Impl implements Manager {
         return yield* Effect.die(new Error(`Process not found: ${id}`));
       }
       log('lifecycle: attached', { key: handle.key, state: handle.snapshotStatus().state });
-      return handle as unknown as Handle<I, O, Rpcs>;
+      return handle as unknown as Process.Handle<I, O, Rpcs>;
     });
   }
 
-  list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]> {
+  list(options?: Process.ListOptions): Effect.Effect<readonly Process.Handle.Any[]> {
     return Effect.gen({ self: this }, function* () {
-      const results: Handle.Any[] = [];
+      const results: Process.Handle.Any[] = [];
       const seenIds = new Set<Process.ID>();
 
       for (const handle of this.#handles.values()) {
@@ -1112,27 +944,27 @@ export class Impl implements Manager {
 
 /**
  * Read-only handle view of a persisted process that is not currently live.
- * Returned by {@link Impl.list} until {@link Handle.hydrate} is called.
+ * Returned by {@link Impl.list} until {@link Process.Handle.hydrate} is called.
  */
-class DormantHandle<I, O> implements Handle<I, O, any> {
+class DormantHandle<I, O> implements Process.Handle<I, O, any> {
   readonly pid: Process.ID;
   readonly parentId: Process.ID | null;
   readonly key: string;
   readonly params: Process.Params;
   readonly environment: Process.Environment;
-  readonly status: Status;
-  readonly statusAtom: Atom.Atom<Status>;
+  readonly status: Process.Status;
+  readonly statusAtom: Atom.Atom<Process.Status>;
   /** Carried on the persisted record, so a dormant handle still reports a pending alarm. */
   readonly alarmDueAt: number | null;
   // Dormant handles expose no live RPC surface; the empty client serves no requests. Stored untyped
   // (`RpcClient<any>`) so the dormant handle is assignable to `Handle.Any` (see design spec §4.4).
   readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
-  readonly #rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>;
+  readonly #rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Handle<I, O, any>>;
   readonly #discard: () => Effect.Effect<void>;
 
   constructor(
     record: PersistedProcess,
-    rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>,
+    rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Handle<I, O, any>>,
     discard: () => Effect.Effect<void>,
   ) {
     this.#rehydrate = rehydrate;
@@ -1158,7 +990,7 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
     this.alarmDueAt = record.alarmDueAt;
   }
 
-  hydrate = (definition: Operation.Durable<I, O, any, any>): Effect.Effect<Handle<I, O, any>> =>
+  hydrate = (definition: Operation.Durable<I, O, any, any>): Effect.Effect<Process.Handle<I, O, any>> =>
     this.#rehydrate(definition);
 
   submitInput = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
