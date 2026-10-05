@@ -3,6 +3,7 @@
 //
 
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { type Scene } from '@dxos/diagram';
 import { SceneSvg } from '@dxos/plugin-illustrator/SceneSvg';
@@ -11,6 +12,8 @@ import type * as Protocol from '../../workspace/Protocol.ts';
 
 export type DiagramIslandProps = {
   readonly objects: readonly Scene.WorldObject[];
+  /** True while the engine's full search is still running and a better layout may replace this one. */
+  readonly refining: boolean;
   /** Resolves a box's `ref` — an index IRI, or a path or name — to the resource it depicts. */
   readonly describe: (target: string) => Promise<Protocol.Entity>;
 };
@@ -34,7 +37,7 @@ const localName = (iri: string): string => decodeURIComponent(iri.split('#').pop
  * between a legible floor and its natural size, and refitted as the split pane is resized. A box
  * whose `ref` names an index resource is selectable, and selecting it shows that resource's facts.
  */
-export const DiagramIsland = ({ objects, describe }: DiagramIslandProps) => {
+export const DiagramIsland = ({ objects, refining, describe }: DiagramIslandProps) => {
   const wrapper = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<readonly string[]>([]);
   // A large diagram is legible only at its natural size, which the split pane rarely has room for.
@@ -76,14 +79,14 @@ export const DiagramIsland = ({ objects, describe }: DiagramIslandProps) => {
   }, [objects, expanded]);
 
   const selectedRef = selection.length === 1 ? refs[selection[0]] : undefined;
-  return (
-    <div className={expanded ? 'bg-baseSurface fixed inset-0 z-50 flex flex-col p-4' : 'relative'}>
-      <button
-        className='text-description hover:text-baseText absolute right-1 top-1 z-10 text-xs'
-        onClick={() => setExpanded((value) => !value)}
-      >
-        {expanded ? 'close' : 'expand'}
-      </button>
+  const body = (
+    <div className={expanded ? 'bg-baseSurface fixed inset-0 z-50 flex flex-col gap-2 p-4' : ''}>
+      <div className='text-description flex justify-end gap-3 text-xs'>
+        {refining && <span>Refining layout…</span>}
+        <button className='hover:text-baseText' onClick={() => setExpanded((value) => !value)}>
+          {expanded ? 'close' : 'expand'}
+        </button>
+      </div>
       <div ref={wrapper} className={expanded ? 'flex-1 overflow-auto' : 'overflow-x-auto'}>
         <SceneSvg
           objects={objects}
@@ -98,6 +101,8 @@ export const DiagramIsland = ({ objects, describe }: DiagramIslandProps) => {
       {selectedRef && <EntityCard target={selectedRef} describe={describe} />}
     </div>
   );
+  // Fixed positioning would be relative to the canvas pane, which scrolls and clips; the body is the viewport.
+  return expanded ? createPortal(body, document.body) : body;
 };
 
 /** What a selected box depicts: the resolved IRI, a few of its facts, and what points at it. */
