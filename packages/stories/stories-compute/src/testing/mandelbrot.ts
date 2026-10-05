@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import * as StorageService from '@dxos/compute/StorageService';
 import { Annotation } from '@dxos/echo';
+import { StepAnnotation } from '@dxos/react-ui-form';
 import { trim } from '@dxos/util';
 
 export const MANDELBROT_PROCESS_KEY = 'org.dxos.stories.compute.mandelbrot';
@@ -16,13 +17,11 @@ export const MANDELBROT_PROCESS_KEY = 'org.dxos.stories.compute.mandelbrot';
 export const DEFAULT_SIZE = 160;
 export const SIZES = [80, 160, 320] as const;
 
-/** Delay between pushed frames, bounded so a client cannot turn the process into a hot loop. */
+/** Delay between pushed frames; its range (see {@link RANGE}) keeps a client from turning the process into a hot loop. */
 export const DEFAULT_INTERVAL = 1_000;
-const MIN_INTERVAL = 100;
 
 /** Frames a render runs to before the process finishes. */
 export const DEFAULT_FRAME_COUNT = 20;
-const MAX_INTERVAL = 60_000;
 
 /** Most frames a process will owe at once, however many are requested. */
 const MAX_CREDITS = 10;
@@ -30,14 +29,27 @@ const MAX_CREDITS = 10;
 /** A process that receives no request for this long exits, so an abandoned one stops costing anything. */
 const IDLE_TIMEOUT = 30_000;
 
-const ZOOM = 0.7;
+/** Scale of each frame relative to the last; its range keeps a frame from stalling or leaping past the detail. */
+export const DEFAULT_ZOOM = 0.7;
 
 /** View width of the whole set, where iterations start. */
 const FULL_WIDTH = 3;
 
+/**
+ * Bounds of each numeric param. Declared as schema checks, so the form's number inputs clamp to them and a
+ * request outside them fails to decode rather than reaching the process.
+ */
+const RANGE = {
+  coordinate: { minimum: -2, maximum: 2 },
+  width: { minimum: 1e-12, maximum: 3 },
+  interval: { minimum: 100, maximum: 60_000 },
+  zoom: { minimum: 0.5, maximum: 0.95 },
+  frameCount: { minimum: 1, maximum: 1_000 },
+} as const;
+
 export const Point = Schema.Struct({
-  x: Schema.Number.pipe(Schema.annotate({ title: 'Start X' })),
-  y: Schema.Number.pipe(Schema.annotate({ title: 'Start Y' })),
+  x: Schema.Number.pipe(Schema.check(Schema.isBetween(RANGE.coordinate)), Schema.annotate({ title: 'Start X' })),
+  y: Schema.Number.pipe(Schema.check(Schema.isBetween(RANGE.coordinate)), Schema.annotate({ title: 'Start Y' })),
 });
 export type Point = Schema.Schema.Type<typeof Point>;
 
@@ -75,6 +87,7 @@ export const randomFormValues = (): MandelbrotFormValues => {
     size: DEFAULT_SIZE,
     interval: DEFAULT_INTERVAL,
     frameCount: DEFAULT_FRAME_COUNT,
+    zoom: DEFAULT_ZOOM,
     ...startingPointParams(start),
   };
 };
@@ -82,16 +95,17 @@ export const randomFormValues = (): MandelbrotFormValues => {
 /** Square resolution in pixels. */
 export const Size = Schema.Literals(SIZES);
 
-/** Preset, then resolution beside interval, frame count beside view width, and the start point's coordinates. */
+/** Resolution beside interval, frame count beside zoom, the view width, the start point's coordinates, then the preset that fills them. */
 const PARAMS_LAYOUT = trim`
   <grid cols="2">
-    <field name="preset" span="2"/>
     <field name="size"/>
     <field name="interval"/>
     <field name="frameCount"/>
-    <field name="width"/>
+    <field name="zoom"/>
+    <field name="width" span="2"/>
     <field name="center.x"/>
     <field name="center.y"/>
+    <field name="preset" span="2"/>
   </grid>
 `;
 
@@ -103,14 +117,24 @@ export const MandelbrotParams = Schema.Struct({
     Schema.optional,
   ),
   width: Schema.Number.pipe(
+    Schema.check(Schema.isBetween(RANGE.width)),
     Schema.annotate({ title: 'View width', description: 'Width of the first frame on the complex plane.' }),
     Schema.optional,
   ),
   interval: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isBetween(RANGE.interval)),
+    StepAnnotation.set(100),
     Schema.annotate({ title: 'Interval (ms)', description: 'Delay between frames.' }),
     Schema.optional,
   ),
+  zoom: Schema.Number.pipe(
+    Schema.check(Schema.isBetween(RANGE.zoom)),
+    StepAnnotation.set(0.05),
+    Schema.annotate({ title: 'Zoom', description: 'Scale of each frame relative to the last.' }),
+    Schema.optional,
+  ),
   frameCount: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isBetween(RANGE.frameCount)),
     Schema.annotate({ title: 'Frames', description: 'Frames to render before the process finishes.' }),
     Schema.optional,
   ),
@@ -131,7 +155,7 @@ export type MandelbrotFormValues = Schema.Schema.Type<typeof MandelbrotFormValue
 
 /**
  * Grants the process `frames` more frames to push, optionally with new {@link MandelbrotParams}; a
- * `center` or `width` restarts the zoom at frame 0.
+ * `center`, `width` or `zoom` restarts the zoom at frame 0.
  */
 export const MandelbrotInput = Schema.Struct({
   frames: Schema.Number,
@@ -189,11 +213,12 @@ type RenderedFrame = {
   exhausted: boolean;
 };
 
-const computeFrame = (frame: number, size: number, center: Point, width: number): RenderedFrame => {
-  const viewWidth = width * Math.pow(ZOOM, frame);
+const computeFrame = (frame: number, size: number, center: Point, width: number, zoom: number): RenderedFrame => {
+  const viewWidth = width * Math.pow(zoom, frame);
   const scale = viewWidth / size;
-  // Deeper views need more iterations to resolve the boundary, wherever the zoom started.
-  const depth = Math.log(FULL_WIDTH / viewWidth) / Math.log(1 / ZOOM);
+  // Deeper views need more iterations to resolve the boundary, wherever the zoom started; measured in
+  // default-zoom steps so the iteration budget tracks magnification, not the frame count.
+  const depth = Math.log(FULL_WIDTH / viewWidth) / Math.log(1 / DEFAULT_ZOOM);
   const maxIterations = Math.round(64 + Math.max(0, depth) * 24);
 
   const counts = new Uint32Array(size * size);
@@ -249,6 +274,7 @@ const MandelbrotState = Schema.Struct({
   width: Schema.Number,
   interval: Schema.Number,
   frameCount: Schema.Number,
+  zoom: Schema.Number,
   lastRequest: Schema.Number,
   /** Whether the pending alarm is a frame rather than the idle check. */
   rendering: Schema.Boolean,
@@ -268,6 +294,7 @@ const initialState = (): MandelbrotState => {
     width: start.viewWidth,
     interval: DEFAULT_INTERVAL,
     frameCount: DEFAULT_FRAME_COUNT,
+    zoom: DEFAULT_ZOOM,
     lastRequest: Date.now(),
     rendering: false,
   };
@@ -303,7 +330,7 @@ export const MandelbrotProcess = Operation.makeDurable(
 
       return {
         onInput: Effect.fnUntraced(function* (input: MandelbrotInput) {
-          const restart = input.center !== undefined || input.width !== undefined;
+          const restart = input.center !== undefined || input.width !== undefined || input.zoom !== undefined;
           const next: MandelbrotState = {
             ...state,
             lastRequest: Date.now(),
@@ -312,11 +339,9 @@ export const MandelbrotProcess = Operation.makeDurable(
             size: input.size ?? state.size,
             center: input.center ?? state.center,
             width: input.width ?? state.width,
-            interval:
-              input.interval !== undefined
-                ? Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, input.interval))
-                : state.interval,
-            frameCount: input.frameCount !== undefined ? Math.max(1, Math.floor(input.frameCount)) : state.frameCount,
+            interval: input.interval ?? state.interval,
+            frameCount: input.frameCount ?? state.frameCount,
+            zoom: input.zoom ?? state.zoom,
           };
           const start = !next.rendering && next.credits > 0;
           yield* save(start ? { ...next, rendering: true } : next);
@@ -326,7 +351,13 @@ export const MandelbrotProcess = Operation.makeDurable(
         }),
         onAlarm: Effect.fnUntraced(function* () {
           if (state.credits > 0) {
-            const { output, next, exhausted } = computeFrame(state.frame, state.size, state.center, state.width);
+            const { output, next, exhausted } = computeFrame(
+              state.frame,
+              state.size,
+              state.center,
+              state.width,
+              state.zoom,
+            );
             const frame = state.frame + 1;
             yield* save({ ...state, credits: state.credits - 1, frame, center: next });
             ctx.submitOutput(output);
