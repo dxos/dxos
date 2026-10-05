@@ -39,7 +39,6 @@ import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
-import { reactCompilerHooks } from './src/vite/react-compiler-hooks.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
@@ -152,7 +151,7 @@ const SOLID_SOURCES = [
 ];
 
 /**
- * Sources neither React pass touches; regexes, because Rolldown hook filters match string globs
+ * Sources plugin-react leaves untouched; regexes, because Rolldown hook filters match string globs
  * against a cwd-relative id that `**` cannot climb out of.
  */
 const REACT_EXCLUDE = [
@@ -634,9 +633,9 @@ export default defineConfig((env) => ({
     // Must be placed before React plugin to process Solid files first.
     solid({ include: SOLID_SOURCES }),
 
-    // React Compiler via oxc (`oxc-transform-react`) rather than Babel.
+    // React Compiler via oxc (`oxc-transform-react`) rather than Babel, on `.jsx`/`.tsx` only because
+    // over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
     react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
-    reactCompilerHooks({ exclude: REACT_EXCLUDE, compiler: reactCompilerOptions }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 
