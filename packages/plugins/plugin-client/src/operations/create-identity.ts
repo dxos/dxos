@@ -13,9 +13,9 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { ClientEvents } from '#types';
 
-import { CreateIdentity } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
-const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.CreateIdentity> = ClientOperation.CreateIdentity.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (profile) {
       const manager = yield* Capability.get(Capabilities.PluginManager);

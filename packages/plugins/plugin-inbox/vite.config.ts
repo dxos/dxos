@@ -6,7 +6,6 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    'ns/SystemTags': 'src/SystemTags.ts',
     'ns/MailSync': 'src/MailSync.ts',
     'ns/Containers': 'src/Containers.ts',
     'InboxSendSkill': 'src/skills/InboxSendSkill.ts',

@@ -26,7 +26,7 @@ import { trim } from '@dxos/util';
 
 import { InboxOperation } from '#types';
 
-import { type SystemTagId, findOrCreateSystemTag } from '../../types/SystemTags.ts';
+import * as SystemTags from '../../types/SystemTags.ts';
 import * as FeedCursor from '../FeedCursor.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
@@ -229,20 +229,20 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
       reportStatus({ current: 0, total: batch.length });
 
       // Lazily resolved canonical tag URIs (one findOrCreate per category actually used).
-      const tagUris = new Map<SystemTagId, string>();
-      const tagUriFor = (id: SystemTagId) =>
+      const tagUris = new Map<SystemTags.SystemTagId, string>();
+      const tagUriFor = (id: SystemTags.SystemTagId) =>
         Effect.gen(function* () {
           const existing = tagUris.get(id);
           if (existing) {
             return existing;
           }
-          const tag = yield* Effect.promise(() => findOrCreateSystemTag(db, id));
+          const tag = yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, id));
           const uri = Obj.getURI(tag).toString();
           tagUris.set(id, uri);
           return uri;
         });
 
-      const applyTag = (message: Message.Message, id: SystemTagId) =>
+      const applyTag = (message: Message.Message, id: SystemTags.SystemTagId) =>
         Effect.gen(function* () {
           const uri = yield* tagUriFor(id);
           Tagging.set(message, uri, { index: tagIndex });

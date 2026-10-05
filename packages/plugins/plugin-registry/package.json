@@ -98,9 +98,9 @@
       "import": "./dist/lib/ns/PluginStorage.mjs"
     },
     "./RegistryOperation": {
-      "source": "./src/RegistryOperation.ts",
-      "types": "./dist/types/src/RegistryOperation.d.ts",
-      "import": "./dist/lib/ns/RegistryOperation.mjs"
+      "source": "./src/types/RegistryOperation.ts",
+      "types": "./dist/types/src/types/RegistryOperation.d.ts",
+      "import": "./dist/lib/RegistryOperation.mjs"
     },
     "./RegistryPlugin": {
       "source": "./src/RegistryPlugin.ts",

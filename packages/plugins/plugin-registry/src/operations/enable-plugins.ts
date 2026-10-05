@@ -8,9 +8,9 @@ import * as Result from 'effect/Result';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 
-import { EnablePlugins } from './definitions.ts';
+import * as RegistryOperation from '../types/RegistryOperation.ts';
 
-const handler: Operation.WithHandler<typeof EnablePlugins> = EnablePlugins.pipe(
+const handler: Operation.WithHandler<typeof RegistryOperation.EnablePlugins> = RegistryOperation.EnablePlugins.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ ids }) {
       const manager = yield* Plugin.Service;

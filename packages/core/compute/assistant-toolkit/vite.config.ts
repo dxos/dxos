@@ -7,7 +7,6 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'ns/DelegationStrategy': 'src/DelegationStrategy.ts',
-    'ns/AgentOperation': 'src/AgentOperation.ts',
     'ns/WebSearchSkill': 'src/skills/websearch/WebSearchSkill.ts',
     'ns/SlashCommand': 'src/SlashCommand.ts',
     'ns/SkillManagerSkill': 'src/skills/skill-manager/SkillManagerSkill.ts',
@@ -23,7 +22,7 @@ export default defineConfig({
     'index': 'src/index.ts',
     'testing': 'src/testing/index.ts',
     'Memory': 'src/types/Memory.ts',
-    'AgentOperation': 'src/operations/definitions.ts',
+    'AgentOperation': 'src/types/AgentOperation.ts',
   },
   jsx: 'react',
   test: { node: true },
