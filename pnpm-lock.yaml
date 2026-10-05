@@ -9187,6 +9187,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/network-manager':
+        specifier: workspace:*
+        version: link:../../core/mesh/network-manager
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -9208,6 +9211,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -18598,6 +18604,9 @@ importers:
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -18643,6 +18652,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -18655,6 +18667,9 @@ importers:
       '@dxos/web-context-react':
         specifier: workspace:*
         version: link:../../common/web-context-react
+      '@dxos/worker-framework':
+        specifier: workspace:*
+        version: link:../worker-framework
       babel-preset-solid:
         specifier: 'catalog:'
         version: 1.9.9(@babel/core@7.28.0)(solid-js@1.9.11)
@@ -18680,9 +18695,15 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/vite-plugin-module-url':
+        specifier: workspace:*
+        version: link:../../../tools/vite-plugin-module-url
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0(effect@4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2))(react@19.2.7)(scheduler@0.27.0)
+      '@effect/platform-browser':
+        specifier: 'catalog:'
+        version: 4.0.0(effect@4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2))
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.0(effect@4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2))(vitest@4.1.10)
@@ -24914,6 +24935,9 @@ importers:
 
   tools/vite-plugin-module-url:
     devDependencies:
+      rolldown:
+        specifier: 'catalog:'
+        version: 1.2.4
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)

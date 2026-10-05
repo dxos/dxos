@@ -8,3 +8,4 @@ export * from './context.ts';
 export * from './core/index.ts';
 export * from './devtools.ts';
 export * from './plugin-process-manager/index.ts';
+export * from './worker/index.ts';

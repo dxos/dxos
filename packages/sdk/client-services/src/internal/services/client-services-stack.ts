@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
 import { LayerStack } from '@dxos/compute-runtime';
+import type * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { type Config, ConfigService } from '@dxos/config';
 import { type QueryExecutorMode } from '@dxos/echo-host';
@@ -41,6 +42,8 @@ export type ClientServicesStackOptions = {
    * @default true
    */
   autoConnect?: boolean;
+  /** @see ServiceStackServices.externalRouter */
+  externalRouter?: boolean;
 };
 
 /**
@@ -92,6 +95,25 @@ export const layerClientServices = (
 > => layerBuildEagerSpecs.pipe(Layer.provideMerge(layerSpecsFromConfig(options)));
 
 /**
+ * The {@link clientServiceSpecs} the config selects, for an embedder that aggregates them into a
+ * stack of its own rather than through {@link layerClientServices}.
+ */
+export const clientServiceSpecsFromConfig = (
+  config: Config,
+  options: ClientServicesStackOptions = {},
+): LayerSpec.LayerSpec[] =>
+  clientServiceSpecs({
+    ...runtimePropsFromConfig(config, options.runtimeProps),
+    edgeFeatures: config.get('runtime.client.edgeFeatures'),
+    edgeAvailable: !!config.get('runtime.services.edge.url'),
+    signalManager: options.signalManager,
+    transportFactory: options.transportFactory,
+    connectionLog: options.connectionLog ?? true,
+    autoConnect: options.autoConnect ?? true,
+    externalRouter: options.externalRouter,
+  });
+
+/**
  * Allows outbound network activity to begin; for embedders that build the stack with
  * `autoConnect: false`.
  */
@@ -114,18 +136,7 @@ const layerSpecsFromConfig = (
   Layer.unwrap(
     Effect.gen(function* () {
       const config = yield* ConfigService;
-      return LayerStack.layer({
-        layers: clientServiceSpecs({
-          ...runtimePropsFromConfig(config, options.runtimeProps),
-          edgeFeatures: config.get('runtime.client.edgeFeatures'),
-          edgeAvailable: !!config.get('runtime.services.edge.url'),
-          signalManager: options.signalManager,
-          transportFactory: options.transportFactory,
-          connectionLog: options.connectionLog ?? true,
-          autoConnect: options.autoConnect ?? true,
-        }),
-        services: AMBIENT_SERVICES,
-      });
+      return LayerStack.layer({ layers: clientServiceSpecsFromConfig(config, options), services: AMBIENT_SERVICES });
     }),
   );
 

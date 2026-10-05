@@ -77,6 +77,7 @@ import {
   startupProfiler,
   translations,
 } from './util/index.ts';
+import clientWorkerPluginUrl from './workers/client-plugin.ts?module-url';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
@@ -135,7 +136,7 @@ declare global {
     VITE_DX_STARTUP_TIMEOUT?: string;
     /** Log per-plugin activation in the boot loader — see `verboseStatus` below. */
     VITE_DX_BOOT_VERBOSE?: string;
-    /** `memory` keeps the database out of OPFS; see `workers/dedicated-worker.ts`. */
+    /** `memory` keeps the database out of OPFS (`runtime.client.storage.persistent: false`). */
     VITE_DX_STORAGE?: string;
   }
 
@@ -518,8 +519,15 @@ const main = async () => {
           signalTelemetryEnabled: !observabilityDisabled,
           singleClientMode: useSingleClientMode,
           servicesMode,
-          // Host and dedicated worker both use OPFS-backed SQLite.
-          storage: { sqliteMode: defs.Runtime_Client_Storage_SqliteMode.OPFS },
+          // Host and dedicated worker both use OPFS-backed SQLite, unless the database is kept in
+          // memory for webviews that cannot hand a worker an OPFS sync access handle — WebKitGTK, so
+          // the Linux desktop app. Nothing survives a reload; for demos and automated runs only.
+          storage: {
+            sqliteMode: defs.Runtime_Client_Storage_SqliteMode.OPFS,
+            ...(import.meta.env.VITE_DX_STORAGE === 'memory' && { persistent: false }),
+          },
+          // What the dedicated worker serves: it loads each of these plugins by URL.
+          workerPlugins: [clientWorkerPluginUrl],
         },
       },
     },

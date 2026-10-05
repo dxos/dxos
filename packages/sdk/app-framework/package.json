@@ -127,6 +127,21 @@
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
     },
+    "./PluginWorker": {
+      "source": "./src/worker/PluginWorker.ts",
+      "types": "./dist/types/src/worker/PluginWorker.d.ts",
+      "import": "./dist/lib/worker/PluginWorker.mjs"
+    },
+    "./WorkerCapabilities": {
+      "source": "./src/worker/WorkerCapabilities.ts",
+      "types": "./dist/types/src/worker/WorkerCapabilities.d.ts",
+      "import": "./dist/lib/worker/WorkerCapabilities.mjs"
+    },
+    "./WorkerEvents": {
+      "source": "./src/worker/WorkerEvents.ts",
+      "types": "./dist/types/src/worker/WorkerEvents.d.ts",
+      "import": "./dist/lib/worker/WorkerEvents.mjs"
+    },
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
@@ -142,6 +157,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -157,10 +173,12 @@
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/rpc": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
+    "@dxos/worker-framework": "workspace:*",
     "babel-preset-solid": "catalog:",
     "cjs-module-lexer": "catalog:",
     "esbuild": "catalog:",
@@ -171,7 +189,9 @@
     "@dxos/brand": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/vite-plugin-module-url": "workspace:*",
     "@effect/atom-react": "catalog:",
+    "@effect/platform-browser": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",

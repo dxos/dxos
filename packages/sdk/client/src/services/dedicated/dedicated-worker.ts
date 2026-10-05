@@ -11,7 +11,6 @@ import type * as SqlClient from 'effect/sql/SqlClient';
 import { WorkerRuntime } from '@dxos/client-services';
 import { LayerStack } from '@dxos/compute-runtime';
 import { Config } from '@dxos/config';
-import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as Worker from '@dxos/worker-framework/Worker';
@@ -27,35 +26,6 @@ export type RunDedicatedWorkerOptions = {
   sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 };
 
-const OPFS_PROBE_FILE = '.dxos-opfs-probe';
-
-class OpfsUnavailableError extends BaseError.extend('OpfsUnavailableError', 'OPFS storage is unusable.') {}
-
-/** Only the WebWorker lib declares this method, and this package compiles against DOM. */
-type SyncAccessFileHandle = FileSystemFileHandle & { createSyncAccessHandle(): Promise<{ close(): void }> };
-
-const hasSyncAccessHandle = (file: FileSystemFileHandle): file is SyncAccessFileHandle =>
-  'createSyncAccessHandle' in file && typeof file.createSyncAccessHandle === 'function';
-
-/**
- * Takes and releases the kind of handle the SQLite VFS opens, so an OPFS that cannot serve one is
- * reported here rather than failing every database open for the life of the page. There is no
- * in-memory fallback: it would show none of the stored data and keep nothing written to it.
- */
-const probeOpfs = Effect.tryPromise({
-  try: async () => {
-    const root = await navigator.storage.getDirectory();
-    const file = await root.getFileHandle(OPFS_PROBE_FILE, { create: true });
-    if (!hasSyncAccessHandle(file)) {
-      throw new Error('OPFS has no sync access handles.');
-    }
-    const handle = await file.createSyncAccessHandle();
-    handle.close();
-    await root.removeEntry(OPFS_PROBE_FILE).catch((err) => log.warn('OPFS probe file not removed', { err }));
-  },
-  catch: OpfsUnavailableError.wrap(),
-}).pipe(Effect.orDie);
-
 /** Runs the dedicated worker loop. Exported so apps can use a custom worker entrypoint and inject setup (e.g. observability). */
 export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): void => {
   Worker.run({
@@ -65,7 +35,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         const config = new Config(configValues ?? {});
         if (!options.sqliteLayer) {
           log('dedicated-worker: probing OPFS');
-          yield* probeOpfs;
+          yield* WorkerRuntime.probeOpfs;
         }
 
         if (options.onBeforeStart) {
