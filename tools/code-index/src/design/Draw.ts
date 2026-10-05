@@ -7,23 +7,13 @@
 import type * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
 
-import {
-  Aesthetics,
-  Architecture,
-  Diagnostics,
-  Mermaid,
-  MermaidEngine,
-  Objective,
-  type Scene,
-  Score,
-  View,
-} from '@dxos/diagram';
+import { Aesthetics, Architecture, Diagnostics, Dsl, Objective, type Scene, Score, View } from '@dxos/diagram';
 
 import * as Compact from './Compact.ts';
 
 /**
- * Lays out and judges compact diagrams. Node only: `MermaidEngine` runs ELK, whose bundled fake
- * worker Bun's CJS interop cannot construct — the Bun CLI reaches this module through a Node child
+ * Lays out and judges compact diagrams. Node only: the semantic engine also tries ELK's placements,
+ * and elkjs's bundled fake worker Bun's CJS interop cannot construct — the Bun CLI reaches this module through a Node child
  * (`draw-main.ts`).
  */
 
@@ -31,7 +21,7 @@ export type Row = Score.Scored & { spread?: number };
 
 export type Judged = {
   readonly name: string;
-  readonly mermaid: string;
+  readonly dsl: string;
   readonly overall: number | undefined;
   readonly scores: readonly Row[];
   readonly svg: string;
@@ -40,6 +30,21 @@ export type Judged = {
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
+
+/** What the diagram says, for the architecture judge: its groups, boxes and labelled edges. */
+const contentOf = (dsl: string, layout: string): Architecture.Content => {
+  const diagram = Dsl.read(dsl).diagram;
+  return {
+    layout,
+    groups: (diagram?.groups ?? []).map(({ id, label }) => ({ id, label })),
+    nodes: (diagram?.nodes ?? []).map(({ id, label, group }) => ({ id, label, ...(group ? { group } : {}) })),
+    edges: (diagram?.edges ?? []).map(({ from, to, label }) => ({
+      from: from.node,
+      to: to.node,
+      ...(label ? { label } : {}),
+    })),
+  };
+};
 
 /** Mean of repeated scores for one scorer, keeping the first error if every run failed. */
 const average = (runs: readonly Score.Scored[]): Row => {
@@ -53,22 +58,22 @@ const average = (runs: readonly Score.Scored[]): Row => {
 };
 
 /**
- * Lays out one mermaid source and scores it with the layout objective plus the architecture and
+ * Lays out one DSL source and scores it with the layout objective plus the architecture and
  * aesthetics judges, `runs` times for the judges (they drift about ±0.05 between identical calls).
  * No caption is passed, because a caption biases the judge towards the story it tells.
  */
 export const judge = (
   name: string,
-  mermaid: string,
+  dsl: string,
   { runs = 1, judges = true }: { runs?: number; judges?: boolean } = {},
 ): Effect.Effect<Judged, never, DecisionModel.DecisionModel> =>
   Effect.gen(function* () {
-    const objects = objectsOf(yield* Effect.promise(() => MermaidEngine.compile(mermaid)));
+    const objects = objectsOf((yield* Dsl.compile(dsl)).commands);
     const layout = `${View.ascii(objects)}\n\n${View.rows(objects)}`;
     const subject = {
       objects,
       report: Diagnostics.analyze(objects),
-      content: Architecture.contentOf(Mermaid.parse(mermaid), { layout }),
+      content: contentOf(dsl, layout),
     };
     const objective = yield* Score.evaluate(Score.fromObjective(Objective.DEFAULT), subject);
     const judgeRuns = judges
@@ -80,15 +85,15 @@ export const judge = (
     const judged =
       judgeRuns.length > 0 ? judgeRuns[0].map((_, index) => average(judgeRuns.map((run) => run[index]))) : [];
     const scores: Row[] = [...objective, ...judged];
-    return { name, mermaid, overall: Score.overall(scores), scores, svg: svgOf(objects), layout };
+    return { name, dsl, overall: Score.overall(scores), scores, svg: svgOf(objects), layout };
   });
 
 /** Every variant judged, best overall first; a variant whose judges all failed sorts last. */
 export const best = (
-  diagrams: readonly Compact.Diagram[],
+  diagrams: readonly Compact.Compacted[],
   options: { runs?: number; judges?: boolean } = {},
 ): Effect.Effect<Judged[], never, DecisionModel.DecisionModel> =>
-  Effect.forEach(diagrams, (diagram) => judge(diagram.variant.name, diagram.mermaid, options), {
+  Effect.forEach(diagrams, (diagram) => judge(diagram.variant.name, diagram.dsl, options), {
     concurrency: 4,
   }).pipe(Effect.map((judged) => [...judged].sort((left, right) => (right.overall ?? -1) - (left.overall ?? -1))));
 

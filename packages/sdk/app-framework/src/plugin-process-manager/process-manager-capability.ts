@@ -11,9 +11,9 @@ import * as Tracer from 'effect/Tracer';
 import {
   LayerStack,
   ProcessManager,
-  ProcessMonitor,
   RemoteProcessManager,
   RemoteTraceMonitor,
+  UnifiedProcessManager,
 } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -201,18 +201,23 @@ export default Capability.makeModule(
     );
 
     // App-framework has no EDGE runtime, so the remote process view is empty;
-    // the aggregate monitor therefore equals the local process tree.
+    // the aggregate manager therefore equals the local process tree.
     const remoteProcessManagerLayer = RemoteProcessManager.layerNoop.pipe(Layer.provide(baseLayer));
     // Remote ephemeral trace (DX-1125): use the first contributed swarm-backed monitor, else no-op.
     const remoteTraceMonitorLayer =
       remoteTraceMonitors.length > 0
         ? Layer.succeed(RemoteTraceMonitor.Service, remoteTraceMonitors[0])
         : RemoteTraceMonitor.layerNoop;
-    const processMonitorLayer = ProcessMonitor.layer.pipe(
+    const unifiedProcessManagerLayer = UnifiedProcessManager.layer.pipe(
       Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, remoteTraceMonitorLayer, baseLayer)),
     );
 
-    const runtimeLayer = Layer.mergeAll(baseLayer, processManagerLayer, operationInvokerLayer, processMonitorLayer);
+    const runtimeLayer = Layer.mergeAll(
+      baseLayer,
+      processManagerLayer,
+      operationInvokerLayer,
+      unifiedProcessManagerLayer,
+    );
 
     const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 
@@ -230,10 +235,10 @@ export default Capability.makeModule(
       runSync: (effect) => managedRuntime.runSync(effect as Effect.Effect<any, any, any>),
     };
 
-    // Eagerly extract the process monitor. Safe because it does not require a
+    // Eagerly extract the process manager. Safe because it does not require a
     // fresh scope and is a stable reference for the lifetime of the runtime.
-    const processMonitor = managedRuntime.runSync(
-      Effect.flatMap(Process.ProcessMonitorService, Effect.succeed) as Effect.Effect<Process.Monitor, never, never>,
+    const unifiedProcessManager = managedRuntime.runSync(
+      Effect.flatMap(Process.ManagerService, Effect.succeed) as Effect.Effect<Process.Manager, never, never>,
     );
 
     // Publish the manager into the ambient-layer holder so that
@@ -262,7 +267,7 @@ export default Capability.makeModule(
     return [
       Capability.contribute(Capabilities.ProcessManagerRuntime, processManagerRuntime),
       Capability.contribute(Capabilities.ServiceResolver, serviceResolver),
-      Capability.contribute(Capabilities.ProcessMonitor, processMonitor),
+      Capability.contribute(Capabilities.ProcessManager, unifiedProcessManager),
       Capability.contribute(Capabilities.OperationInvoker, operationInvoker),
       Capability.contribute(Capabilities.OperationHandlers, handlerSet),
     ];

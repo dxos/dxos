@@ -103,12 +103,100 @@ export const make = () =>
         - Groups should hold what depends on each other; dependencies should run one way between them.
         - Keep the best-scoring version; if a change lowers the score, go back.
 
+        ## Semantic diagrams
+
+        ${Operation.toolName(DrawingOperation.Draw)} also takes SEMANTIC statements: you state the boxes, arrows and
+        groups, plus only the placement or routing you care about, and the engine does the rest — boxes on
+        a grid, arrows through the gutters with the fewest bends, ports spread along each side, labels
+        beside their own arrow. Prefer this to coordinates for any boxes-and-arrows diagram, and to
+        mermaid when you want a say in where things go. Write it directly; there is no intermediate step.
+
+        \`\`\`
+        diagram flow=down                     # optional: flow=down|up|right|left
+        group req "Requesters" {
+          node Trig "TriggerDispatcher" ref="packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts"
+          node Agent "AgentService" right-of Trig
+        }
+        group local "Local runtime" below req {
+          node PM "ProcessManager" below Agent
+          node Invoker "ProcOpInvoker" right-of PM
+          node Handle "ProcessHandle" below PM
+          node Store "ProcessStore" left-of Handle
+          node Def "Process def" right-of Handle
+        }
+        group remote "EDGE runtime" right-of local {
+          node RPM "RemoteProcessMgr"
+          node RHandle "RemoteProcHandle" right-of RPM
+          node Queued "QueuedRemoteCtl" below RHandle
+          node EdgeCtl "EdgeProcControl" left-of Queued
+        }
+        edge Agent -> PM "spawn local"
+        edge Agent -> RPM:top "spawn on EDGE"
+        edge Trig -> PM "spawn"
+        edge PM owns Handle "no cap"
+        edge PM -> Store "persist"
+        edge PM -> Invoker
+        edge Invoker -> PM "spawn child"
+        edge Handle -> Def "run"
+        edge Handle -> Store "delete on exit"
+        edge RPM -> RHandle "make"
+        edge RHandle -> Queued "control"
+        edge Queued -> EdgeCtl "deliver"
+        \`\`\`
+
+        - \`node <id> ["label"] [placement…] [ref="…"] [shape=rect|ellipse|diamond|triangle] [color=…]
+          [fill=…] [stroke=…]\` — one box; the label defaults to the id. Every box is the same size.
+        - Placement relations: \`right-of X\` / \`left-of X\` (same row), \`below X\` / \`above X\` (same
+          column), \`same-row X\`, \`same-col X\`. They are rules; prefix \`~\` (\`~below X\`) to make one
+          a preference. The engine keeps related boxes adjacent when it can. X may be in another group.
+        - Pins: \`@cell(c,r)\` puts the box in grid column c, row r (from 0); \`@ x,y\` pins its top-left
+          exactly. Prefer relations — a pin leaves the engine nothing to optimise.
+        - \`group <id> ["label"] [right-of|left-of|below|above <group>] [gap=N] [color=…] { node… edge… }\`
+          — a dashed frame. Members are laid out first as one compact unit and no other box enters the
+          frame. A group relation places the whole frame beside the other; \`gap\` adds N units of space.
+          Groups do not nest; keep to three or fewer.
+        - \`edge A -> B ["label"]\`: \`<->\` draws two arrows, \`--\` a line with no head. Optional
+          \`head=arrow|triangle|crowsfoot|none\`, \`tail=circle\`, \`stroke=dashed|dotted\`, \`color=…\`.
+        - Relationships: put a word in place of \`->\` to say what the edge MEANS; the markers follow
+          from it, so never pick heads yourself. The LEFT end is always the child, the whole, the owner
+          or the "one" side:
+          \`Dog extends Animal\` (hollow triangle at Animal), \`Square implements Shape\` (dashed, hollow
+          triangle), \`Order composes LineItem\` (filled diamond at Order: the parts die with it),
+          \`Team owns Member\` (hollow diamond at Team), \`Customer one-to-many Order\` (bar at Customer,
+          crow's foot at Order), \`Student many-to-many Course\` (crow's feet at both),
+          \`App depends-on Log\` (dashed, open arrow). Plain \`->\` is an association. Use a word only
+          when the meaning is clear; a label can still say more (\`edge PM owns Handle "no cap"\`).
+        - Sides: \`A:right -> B:top\`, or a choice \`B:top|left\`. Leave sides off and the router picks the
+          pair with the fewest bends (two stacked boxes with a third between them connect left to left
+          down the free gutter, for instance). Name a side only to force a specific look.
+        - Fans: \`edge A -> B, C\` is one arrow per target. Add \`bus\` (\`edge A -> B, C "label" bus\`) to
+          draw one trunk that splits, labelled once; \`edge B, C -> A bus\` gathers into one trunk. To keep
+          a label per branch, give separate edges from the same source the same \`bus=<name>\`.
+        - Waypoints: \`via X,_\` makes the route run vertically at x=X, \`via _,Y\` horizontally at y=Y,
+          \`via X,Y\` passes the point; several waypoints are visited in order. In grid units,
+          \`via cell(1.5,_)\` is the gutter between columns 1 and 2. Use them sparingly.
+        - \`diagram\` (optional, once): \`flow=\` is the way arrows should read (default down); \`grid=WxH\`
+          (cell pitch) and \`box=WxH\` (box size) override the measured defaults — normally leave them.
+        - Ids are bare words (\`A-z 0-9 _ -\`) or quoted. Statement and clause words (\`node\`, \`edge\`,
+          \`group\`, \`diagram\`, \`cell\`, \`via\`, \`bus\`, the element kinds) must be quoted as ids.
+
+        How to write one well: declare groups in reading order with their nodes inside; start with no
+        hints at all, then add relations for the arrangement you mean — a chain as each node \`below\` the
+        previous, a hub with one neighbour per side, groups \`below\`/\`right-of\` each other. Label only
+        the edges that say something, in a few words. Add sides or waypoints last, to fix one edge.
+
+        The result has one object per node (id = node id, its shape is element \`box\`), one per group
+        (\`frame\`, \`label\`), and an \`edges\` object of connectors named \`<from>-<to>-<n>\`. Scene
+        statements may follow in the same document to decorate it: \`elements PM { text note 0,-30 "hot" }\`.
+        \`problems\` reports unknown nodes and bad words as errors (nothing is applied), and relations or
+        pins the engine had to relax as warnings (the drawing is applied without them). Then read
+        \`diagnostics\` as for generation and adjust relations to remove crossings.
+
         ## Drawing it yourself
 
-        ${Operation.toolName(DrawingOperation.Draw)} takes the native text DSL, in which you choose
-        every coordinate. Prefer ${Operation.toolName(DrawingOperation.Generate)} whenever a layout
-        engine can do the job — it is faster and usually better. Reach for the DSL when the picture
-        is not a graph the engine understands: a precise arrangement, a free-form illustration, a
+        The same tool takes scene statements, in which you choose every coordinate. For a graph,
+        prefer the semantic statements above, or ${Operation.toolName(DrawingOperation.Generate)}.
+        Reach for coordinates when the picture is not a graph: a precise arrangement, a free-form illustration, a
         figure with circles, arcs or text you place yourself, or a fix to one object of a diagram
         that generation otherwise got right.
 

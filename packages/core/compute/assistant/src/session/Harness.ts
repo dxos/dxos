@@ -258,7 +258,7 @@ const lookupOwningHost = (
     const processes = yield* processManager.list({ target: conversation });
     const host = processes.find(
       (process) =>
-        !isTerminalProcess(process.status.state) &&
+        !Process.isTerminal(process.status.state) &&
         Option.getOrElse(
           Annotation.getDictionary(process.params.annotations, Process.HarnessHostAnnotation),
           () => false,
@@ -274,10 +274,3 @@ const lookupOwningHost = (
     // in `@dxos/functions-runtime`, which depends on this package — importing it would cycle.
     return host.rpc as unknown as RpcClient.RpcClient<HarnessControlRpcs>;
   });
-
-// TERMINATING counts as terminal: the handle is already `#finished` and no longer accepts input.
-const isTerminalProcess = (state: Process.State): boolean =>
-  state === Process.State.SUCCEEDED ||
-  state === Process.State.FAILED ||
-  state === Process.State.TERMINATED ||
-  state === Process.State.TERMINATING;

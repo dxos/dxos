@@ -17,7 +17,11 @@
     "test": "test-storybook --url http://127.0.0.1:9009"
   },
   "dependencies": {
-    "@babel/parser": "catalog:"
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-subduction": "catalog:",
+    "@babel/parser": "catalog:",
+    "@dxos/client": "workspace:*",
+    "oxc-resolver": "catalog:"
   },
   "devDependencies": {
     "@dxos/agent-claude": "workspace:*",

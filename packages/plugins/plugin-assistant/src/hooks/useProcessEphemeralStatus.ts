@@ -60,7 +60,7 @@ const resolveSubscribePids = (agentPid: Process.ID, processes: readonly Process.
 const attachActiveHandle = (
   processManager: ProcessManager.Manager,
   pid: Process.ID,
-): Effect.Effect<ProcessManager.Handle<any, any, never> | undefined> =>
+): Effect.Effect<Process.Handle<any, any, never> | undefined> =>
   Effect.gen(function* () {
     const maxAttempts = 15;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -87,7 +87,7 @@ export const useProcessEphemeralStatus = (
   // Optional capabilities: the live status is a progressive enhancement, so the component still
   // renders (e.g. in standalone stories) when there is no plugin manager / process runtime.
   const runtime = Hooks.useOptionalCapability(Capabilities.ProcessManagerRuntime);
-  const monitor = Hooks.useOptionalCapability(Capabilities.ProcessMonitor);
+  const monitor = Hooks.useOptionalCapability(Capabilities.ProcessManager);
   const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
   const [status, setStatus] = useState<string | undefined>();
   const fibersRef = useRef<Fiber.Fiber<void, unknown>[]>([]);

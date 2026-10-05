@@ -18,11 +18,11 @@ import * as Chat from '@dxos/assistant/Chat';
 import {
   FeedTraceSink,
   ProcessManager,
-  ProcessMonitor,
   RemoteProcessManager,
   RemoteTraceMonitor,
   TriggerDispatcher,
   TriggerStateStore,
+  UnifiedProcessManager,
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
@@ -101,7 +101,7 @@ export type AssistantTestServices =
   | ProcessManager.Service
   | RemoteProcessManager.Service
   | ProcessManager.ProcessOperationInvoker.Service
-  | Process.ProcessMonitorService
+  | Process.ManagerService
   | AtomRegistry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider
   | KeyValueStore.KeyValueStore
@@ -139,10 +139,10 @@ export const AssistantTestLayer = (
     // Captures must sit above the layers they read (a provideMerge chain feeds upward).
     Layer.provideMerge(captureAgentService(agentServiceHolder)),
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-    Layer.provideMerge(ProcessMonitor.layer),
     Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
-    // Below `AgentService` in the chain, which now requires the remote manager too: a local test
-    // stack has no EDGE, so both the monitor's remote half and `location: 'edge'` see nothing.
+    Layer.provideMerge(UnifiedProcessManager.layer),
+    // A local test stack has no EDGE, so both the manager's remote half and `location: 'edge'` see
+    // nothing.
     Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(RemoteTraceMonitor.layerNoop),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),

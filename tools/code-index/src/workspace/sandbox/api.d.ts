@@ -8,7 +8,7 @@
 /** One SPARQL SELECT row: variable name to its term's lexical value. */
 declare type Row = Record<string, string>;
 
-declare type Kind = 'markdown' | 'mermaid' | 'table' | 'json' | 'text' | 'graph';
+declare type Kind = 'markdown' | 'diagram' | 'table' | 'json' | 'text' | 'graph';
 
 /** One node of a `display.graph` presentation. */
 declare type GraphNode = {
@@ -25,6 +25,51 @@ declare type GraphNode = {
 };
 
 declare type GraphEdge = { from: string; to: string; kind?: string };
+
+/** One box of a `display.diagram` graph. */
+declare type DiagramNode = {
+  /** Any string — a package name, a path; edges and `group` refer to boxes by it. */
+  id: string;
+  /** What the box says (default: the id). At most ~17 characters reads on one line. */
+  label?: string;
+  /** The id of the group the box sits in. */
+  group?: string;
+  /**
+   * What the box depicts, which the user sees when they click it: an IRI from a query row (the
+   * index then shows that resource's facts), or a repository-relative path.
+   */
+  ref?: string;
+};
+
+/**
+ * `from` relates to `to`. `relation` names what the edge means and the arrow follows from it; the
+ * `from` end is the child, the whole, the owner or the "one" side: `extends`, `implements`,
+ * `composes`, `owns`, `one-to-many`, `many-to-many`, `depends-on`. Absent is a plain arrow.
+ */
+declare type DiagramEdge = {
+  from: string;
+  to: string;
+  /** Label only the edges that say something; unlabelled edges route more cleanly. */
+  label?: string;
+  relation?: 'extends' | 'implements' | 'composes' | 'owns' | 'one-to-many' | 'many-to-many' | 'depends-on';
+};
+
+/** A framed, tinted cluster of boxes. Groups do not nest. */
+declare type DiagramGroup = { id: string; label?: string };
+
+/** A diagram as data, for one built from query rows; it is written out as the diagram DSL. */
+declare type DiagramGraph = {
+  /** The way arrows read (default `down`). */
+  flow?: 'down' | 'up' | 'right' | 'left';
+  /**
+   * Drop every unlabelled, untyped edge a longer path already implies. Pass it for dependency and
+   * import graphs, where most edges are transitive and drawing them all makes a wall of lines.
+   */
+  reduce?: boolean;
+  nodes: DiagramNode[];
+  edges?: DiagramEdge[];
+  groups?: DiagramGroup[];
+};
 
 declare type GraphData = { nodes: GraphNode[]; edges: GraphEdge[] };
 
@@ -60,13 +105,19 @@ declare const storage: {
  * the canvas, which opens as a split screen beside the chat.
  */
 declare const display: {
-  /** Markdown (GFM), rendered without raw HTML; a diagram goes in its own `mermaid` call. */
+  /** Markdown (GFM), rendered without raw HTML; a diagram goes in its own `diagram` call. */
   markdown(content: string, title?: string): Promise<void>;
   /**
-   * A Mermaid flowchart (`graph TD` / `flowchart LR`): `Id[Label]` nodes, flat `subgraph id [Label] … end`
-   * groups, `A --> B` and `A -->|label| B` edges. Other diagram kinds are shown as source, not drawn.
+   * A boxes-and-arrows diagram, laid out and drawn by the illustrator's semantic engine. Pass the
+   * diagram DSL (see `DIAGRAM DSL` in your instructions) — statements naming boxes, edges and
+   * groups, plus only the placement you care about — or a `DiagramGraph` built from query rows,
+   * which is written out as the same DSL. Put an IRI from the query in each box's `ref` so the
+   * user can click through to it. Rejects (the call throws, with the line and column) source that
+   * does not read, has no boxes, or names an index IRI with no facts. Resolves to the edges between
+   * two IRI boxes that no triple links directly — check those; an edge may still be right if it
+   * summarises a longer path.
    */
-  mermaid(source: string, title?: string): Promise<void>;
+  diagram(diagram: string | DiagramGraph, title?: string): Promise<{ unbacked: string[] }>;
   /** An array of uniform objects, rendered as a table. */
   table(rows: readonly Record<string, unknown>[], title?: string): Promise<void>;
   /** Any value, rendered as pretty JSON. */
@@ -75,7 +126,7 @@ declare const display: {
   text(content: string, title?: string): Promise<void>;
   /**
    * An interactive force-directed graph: for exploring a structure too big for one diagram. Prefer
-   * `mermaid` for a final answer of a dozen boxes.
+   * `diagram` for a final answer of a dozen boxes.
    */
   graph(graph: GraphData, title?: string): Promise<void>;
   /** Empties the canvas. */

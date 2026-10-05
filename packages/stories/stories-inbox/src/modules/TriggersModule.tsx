@@ -108,7 +108,7 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
                         trigger.remote = checked;
                       });
                     }}
-                    label={trigger.remote ? 'Remote (edge)' : 'Local'}
+                    label={trigger.remote ? 'EDGE' : 'Local'}
                   />
                   {lastInvocation && (
                     <div className='text-xs'>

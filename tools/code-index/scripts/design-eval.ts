@@ -14,9 +14,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
+import { Mermaid } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Crawler from '../src/Crawler.ts';
@@ -31,6 +33,7 @@ import * as Select from '../src/design/Select.ts';
 import * as SystemOne from '../src/design/SystemOne.ts';
 import * as Zoom from '../src/design/Zoom.ts';
 import * as Store from '../src/Store.ts';
+import * as Diagram from '../src/workspace/Diagram.ts';
 import * as Models from '../src/workspace/Models.ts';
 import * as Workspace from '../src/workspace/Workspace.ts';
 
@@ -291,8 +294,8 @@ const program = Effect.gen(function* () {
         before: yield* shown(area.prompt, before, refs),
         after: yield* shown(area.prompt, after, refs),
       };
-      writeFileSync(join(options.out, `${area.name}.before.mmd`), before.diagrams[0]?.mermaid ?? '');
-      writeFileSync(join(options.out, `${area.name}.after.mmd`), after.diagrams[0]?.mermaid ?? '');
+      writeFileSync(join(options.out, `${area.name}.before.dx`), before.diagrams[0]?.dsl ?? '');
+      writeFileSync(join(options.out, `${area.name}.after.dx`), after.diagrams[0]?.dsl ?? '');
       yield* Design.write(join(options.out, area.name, 'before'), before);
       yield* Design.write(join(options.out, area.name, 'after'), after);
       for (const [name, entry] of Object.entries(compare)) {
@@ -364,16 +367,10 @@ const program = Effect.gen(function* () {
     if (SystemOne.available() && !options.skipDiagrams) {
       const variants = Compact.variants(scored.grouping).map((variant) => Compact.build(scored, variant));
       const [best] = yield* Draw.best(variants, { runs: options.runs });
-      const handDrawn = yield* Draw.judge(
-        area.name,
-        source
-          .split('\n')
-          .filter((line) => !/^%%(?! ref)/.test(line.trim()))
-          .join('\n'),
-        {
-          runs: options.runs,
-        },
-      );
+      // The illustrator's reference corpus is still mermaid; it is read once here and judged as DSL.
+      const handDrawn = yield* Draw.judge(area.name, Result.getOrThrow(Diagram.fromValue(Mermaid.parse(source))), {
+        runs: options.runs,
+      });
       const chosen = variants.find((variant) => variant.variant.name === best.name);
       result.diagram = {
         variant: best.name,
@@ -383,7 +380,7 @@ const program = Effect.gen(function* () {
         scores: [...best.scores],
       };
       result.handDrawn = { overall: handDrawn.overall, scores: [...handDrawn.scores] };
-      writeFileSync(join(options.out, `${area.name}.mmd`), best.mermaid);
+      writeFileSync(join(options.out, `${area.name}.dx`), best.dsl);
       writeFileSync(join(options.out, `${area.name}.svg`), best.svg);
       writeFileSync(join(options.out, `${area.name}.hand.svg`), handDrawn.svg);
       console.log(

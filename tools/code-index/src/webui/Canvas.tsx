@@ -3,13 +3,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Result from 'effect/Result';
 import { type ComponentType } from 'react';
-import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
+import { type Accessor, For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
 
 import type { Scene } from '@dxos/diagram';
 
+import * as Diagram from '../workspace/Diagram.ts';
 import type * as Fold from '../workspace/Fold.ts';
-import { prepare } from './diagram.ts';
+import { api } from './client.ts';
 import type { Reply, Request } from './diagram.worker.ts';
 import { ForceGraph } from './ForceGraph.tsx';
 import { DiagramIsland } from './react/Diagram.tsx';
@@ -22,37 +24,66 @@ import { MarkdownIsland } from './react/Markdown.tsx';
  * than a detail inside it.
  */
 
-/** One worker for the page, started by the first diagram; layouts queue on it in order. */
+/** The latest layout of one source: quick first for a large diagram, then final. */
+type Layout = { readonly objects?: Scene.WorldObject[]; readonly final: boolean; readonly error?: string };
+
+/** One worker for the page, started by the first diagram. */
 let worker: Worker | undefined;
 let requestSeq = 0;
-const pending = new Map<number, { resolve: (objects: Scene.WorldObject[]) => void; reject: (error: Error) => void }>();
+const pending = new Map<number, (layout: Layout) => void>();
 
-const layoutInWorker = (source: string): Promise<Scene.WorldObject[]> => {
-  if (!worker) {
-    worker = new Worker(new URL('./diagram.worker.ts', import.meta.url), { type: 'module' });
-    worker.addEventListener('message', (event: MessageEvent<Reply>) => {
-      const reply = event.data;
-      const request = pending.get(reply.id);
+/**
+ * Layouts by source, for the page's lifetime: a layout takes seconds to minutes and the same panel
+ * is drawn again whenever the canvas re-renders or the project is reopened.
+ */
+const layouts = new Map<string, Accessor<Layout>>();
+
+const startWorker = (): Worker => {
+  const started = new Worker(new URL('./diagram.worker.ts', import.meta.url), { type: 'module' });
+  started.addEventListener('message', (event: MessageEvent<Reply>) => {
+    const reply = event.data;
+    const update = pending.get(reply.id);
+    if ('error' in reply) {
       pending.delete(reply.id);
-      if ('error' in reply) {
-        request?.reject(new Error(reply.error));
-      } else {
-        request?.resolve(reply.objects);
+      update?.({ final: true, error: reply.error });
+    } else {
+      if (reply.final) {
+        pending.delete(reply.id);
       }
-    });
-    // The worker failing to load leaves no reply coming, so every waiting panel shows the failure.
-    worker.addEventListener('error', (event) => {
-      const waiting = [...pending.values()];
-      pending.clear();
-      worker = undefined;
-      waiting.forEach((request) => request.reject(new Error(event.message || 'The diagram worker failed to start.')));
-    });
-  }
-  const id = requestSeq++;
-  return new Promise((resolve, reject) => {
-    pending.set(id, { resolve, reject });
-    worker?.postMessage({ id, source } satisfies Request);
+      update?.({ objects: reply.objects, final: reply.final });
+    }
   });
+  // The worker failing to load leaves no reply coming, so every waiting panel shows the failure.
+  started.addEventListener('error', (event) => {
+    const waiting = [...pending.values()];
+    pending.clear();
+    worker = undefined;
+    waiting.forEach((update) => update({ final: true, error: event.message || 'The diagram worker failed to start.' }));
+  });
+  return started;
+};
+
+const layoutInWorker = (source: string): Accessor<Layout> => {
+  const cached = layouts.get(source);
+  if (cached) {
+    return cached;
+  }
+  worker ??= startWorker();
+  const id = requestSeq++;
+  const [layout, setLayout] = createSignal<Layout>({ final: false });
+  pending.set(id, (next) => {
+    // A failure keeps the quick layout on screen if there was one, and is not remembered, so a
+    // panel drawn again after a worker crash tries again.
+    if (next.error !== undefined) {
+      layouts.delete(source);
+      setLayout((current) => (current.objects ? { ...current, final: true } : next));
+    } else {
+      setLayout(next);
+    }
+  });
+  worker.postMessage({ id, source } satisfies Request);
+  layouts.set(source, layout);
+  return layout;
 };
 
 /** A React component drawn in the Solid canvas; its root lives exactly as long as this element. */
@@ -69,53 +100,38 @@ const ReactIsland = <Props extends object>(props: { component: ComponentType<Pro
   return <div ref={container} />;
 };
 
-/** A `display.mermaid` panel, laid out and drawn by plugin-illustrator rather than mermaid.js. */
-const Diagram = (props: { source: string }) => {
-  const [objects, setObjects] = createSignal<Scene.WorldObject[]>();
-  const [error, setError] = createSignal<string>();
-  const prepared = createMemo(() => prepare(props.source));
-
-  createEffect(() => {
-    const current = prepared();
-    setObjects(undefined);
-    setError(undefined);
-    if (current.kind !== 'flowchart') {
-      return;
-    }
-    layoutInWorker(current.source).then(
-      (laidOut) => {
-        // A newer source may have been sent while this one was being laid out.
-        if (prepared() === current) {
-          setObjects(laidOut);
-        }
-      },
-      // A model writes unparseable diagrams often enough that the source has to stay visible —
-      // otherwise the user sees an empty panel and the agent believes it answered.
-      (cause: Error) => prepared() === current && setError(cause.message),
-    );
+/** A `display.diagram` panel: its DSL source, laid out and drawn by plugin-illustrator. */
+const DiagramPanel = (props: { content: string }) => {
+  const read = createMemo(() => Diagram.read(props.content));
+  const layout = createMemo(() => {
+    const current = read();
+    return Result.isSuccess(current) ? layoutInWorker(current.success)() : undefined;
   });
 
-  const unsupported = () => {
-    const current = prepared();
-    return current.kind === 'unsupported'
-      ? `The illustrator lays out flowcharts only; this ${current.type} is shown as its source.`
-      : undefined;
+  // The source stays visible on failure — otherwise the user sees an empty panel and the agent
+  // believes it answered.
+  const failure = () => {
+    const current = read();
+    return Result.isFailure(current) ? current.failure.message : layout()?.objects ? undefined : layout()?.error;
   };
 
   return (
     <Show
-      when={error() === undefined && unsupported() === undefined}
+      when={failure() === undefined}
       fallback={
         <div class='p-2'>
-          <p class='text-errorText text-sm'>{error() ?? unsupported()}</p>
-          <pre class='mt-2 overflow-x-auto text-xs'>{props.source}</pre>
+          <p class='text-errorText text-sm'>{failure()}</p>
+          <pre class='mt-2 overflow-x-auto text-xs'>{props.content}</pre>
         </div>
       }
     >
-      <Show when={objects()} fallback={<p class='text-description p-2 text-sm'>Laying out…</p>}>
-        {(laidOut) => (
+      <Show when={layout()?.objects} fallback={<p class='text-description p-2 text-sm'>Laying out…</p>}>
+        {(objects) => (
           <div class='p-2'>
-            <ReactIsland component={DiagramIsland} props={{ objects: laidOut() }} />
+            <ReactIsland
+              component={DiagramIsland}
+              props={{ objects: objects(), refining: !layout()?.final, describe: api.describe }}
+            />
           </div>
         )}
       </Show>
@@ -164,8 +180,8 @@ const Panel = (props: { presentation: Fold.Presentation }) => (
       <span class='uppercase'>{props.presentation.kind}</span>
       <Show when={props.presentation.title}>{(title) => <span class='text-baseText'>{title()}</span>}</Show>
     </header>
-    <Show when={props.presentation.kind === 'mermaid'}>
-      <Diagram source={props.presentation.content} />
+    <Show when={props.presentation.kind === 'diagram'}>
+      <DiagramPanel content={props.presentation.content} />
     </Show>
     <Show when={props.presentation.kind === 'graph'}>
       <ForceGraph content={props.presentation.content} />

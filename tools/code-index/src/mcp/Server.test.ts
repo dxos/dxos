@@ -305,7 +305,7 @@ describe('mcp Server', () => {
     expect(stats.derived).toContainEqual({ graph: Ontology.derivedGraphIri('names').value, quads: 5 });
   });
 
-  test('design returns the pruned graph and a mermaid draft, scored by baseline without a key', async () => {
+  test('design returns the pruned graph and a DSL draft, scored by baseline without a key', async () => {
     // Tests never call System One or Anthropic; without keys the tool walks and scores by text and degree.
     vi.stubEnv('TYPESAFE_API_KEY', '');
     vi.stubEnv('DX_ANTHROPIC_API_KEY', '');
@@ -322,7 +322,7 @@ describe('mcp Server', () => {
         to: Ontology.fileIri('src/b.ts').value,
         kind: 'imports',
       });
-      expect(result.mermaid).toContain('%% ref');
+      expect(result.diagram).toContain('ref="');
     } finally {
       vi.unstubAllEnvs();
     }

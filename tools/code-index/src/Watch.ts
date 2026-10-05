@@ -31,10 +31,13 @@ export const DEFAULT_DEBOUNCE_MS = 300;
 const IGNORED = ['node_modules', '.git', 'dist', 'target', '.moon'];
 
 /**
- * What the watcher reports: each phase of a pass, a pass that finished, and one that failed (or a
- * watch that could not be renewed). A schema, since `IndexThread` posts these between threads.
+ * What the watcher reports: a pass starting, each phase of it, a pass that finished, and one that
+ * failed (or a watch that could not be renewed). A schema, since `IndexThread` posts these between
+ * threads.
  */
 export const Event = Schema.Union([
+  /** Carries the reasoner count so a reader can tell how many phases the pass has before it ends. */
+  Schema.TaggedStruct('Started', { reasoners: Schema.Number }),
   Schema.TaggedStruct('Progress', { progress: Indexer.Progress }),
   Schema.TaggedStruct('Passed', {
     indexed: Schema.Number,
@@ -51,6 +54,7 @@ export type Event = typeof Event.Type;
 /** The console lines `serve` has always written: a pass that changed something, and every failure. */
 export const log = (event: Event): Effect.Effect<void> => {
   switch (event._tag) {
+    case 'Started':
     case 'Progress':
       return Effect.void;
     case 'Passed':
@@ -161,14 +165,17 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
       }
     });
 
-    const pass = Indexer.run({
-      root: options.root,
-      reasoners: options.reasoners,
-      summarize: false,
-      // One core stays free for the server's thread, which otherwise queues behind the parsers for CPU.
-      workers: Math.max(1, Math.min(availableParallelism() - 1, 8)),
-      onProgress: (progress) => report({ _tag: 'Progress', progress }),
-    }).pipe(
+    const pass = Effect.andThen(
+      report({ _tag: 'Started', reasoners: options.reasoners.length }),
+      Indexer.run({
+        root: options.root,
+        reasoners: options.reasoners,
+        summarize: false,
+        // One core stays free for the server's thread, which otherwise queues behind the parsers for CPU.
+        workers: Math.max(1, Math.min(availableParallelism() - 1, 8)),
+        onProgress: (progress) => report({ _tag: 'Progress', progress }),
+      }),
+    ).pipe(
       Effect.scoped,
       Effect.flatMap((result) =>
         report({
