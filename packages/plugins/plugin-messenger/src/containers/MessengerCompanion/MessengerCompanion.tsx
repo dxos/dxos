@@ -12,7 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Flex, Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, useMulticastObservable, useTranslation } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { type InvitationRenderer, NotificationsPanel } from '#components';
@@ -38,6 +38,7 @@ export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) =>
   const { invokePromise } = useOperationInvoker();
   const client = useCapability(ClientCapabilities.Client);
   const containers = useOptionalAtomCapability(MessengerCapabilities.NotificationsContainers);
+  const inboxStatus = useMulticastObservable(client.halo.inbox.status);
 
   const handleOpen = useCallback(
     (message: Message.Message) => {
@@ -64,7 +65,7 @@ export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) =>
       <Panel.Root>
         <Panel.Body>
           <Flex center classNames='h-full text-fg-subtle' role='status'>
-            {t('empty.message')}
+            {t(inboxStatus === 'account-required' ? 'account-required.message' : 'empty.message')}
           </Flex>
         </Panel.Body>
       </Panel.Root>
@@ -78,6 +79,7 @@ export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) =>
       containers={containers}
       renderInvitation={renderInvitation}
       onOpen={handleOpen}
+      inboxStatus={inboxStatus}
     />
   );
 };

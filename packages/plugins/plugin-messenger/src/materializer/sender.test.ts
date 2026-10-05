@@ -99,4 +99,30 @@ describe('Sender', () => {
     const tooLarge = await EffectEx.runPromise(Effect.flip(sender.send(bobDid, large)));
     expect(tooLarge._tag).toEqual('InboxPayloadTooLargeError');
   });
+
+  test('fails with a typed error when EDGE refuses an identity without an account', async ({ expect }) => {
+    const { alice, bob, inboxRelay } = await createClients();
+    await expect.poll(() => alice.halo.contacts.get().length).toEqual(1);
+    const aliceDid = alice.halo.identity.get()?.did;
+    const bobDid = bob.halo.identity.get()?.did;
+    invariant(aliceDid && bobDid);
+    inboxRelay.accountless.add(aliceDid);
+
+    const sender = makeSender(() => alice.halo);
+    const error = await EffectEx.runPromise(Effect.flip(sender.send(bobDid, Message.make({ sender: {} }))));
+    expect(error._tag).toEqual('InboxAccountRequiredError');
+  });
+
+  test('a recipient without an account sees the inbox as unavailable', async ({ expect }) => {
+    const { alice, bob, inboxRelay } = await createClients();
+    await expect.poll(() => alice.halo.contacts.get().length).toEqual(1);
+    const bobDid = bob.halo.identity.get()?.did;
+    invariant(bobDid);
+    expect(bob.halo.inbox.status.get()).toEqual('available');
+    inboxRelay.accountless.add(bobDid);
+
+    // The delivery rings Bob's devices, whose pull EDGE then refuses.
+    await EffectEx.runAndForwardErrors(makeSender(() => alice.halo).send(bobDid, Message.make({ sender: {} })));
+    await expect.poll(() => bob.halo.inbox.status.get()).toEqual('account-required');
+  });
 });

@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { type InboxService } from '@dxos/protocols/rpc';
 import { Container, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -69,6 +70,8 @@ export type NotificationsPanelProps = {
   renderInvitation?: InvitationRenderer;
   /** Goes to what a message links to; called after the message is marked read. */
   onOpen?: (message: Message.Message) => void;
+  /** Explains an empty list that is empty because EDGE refuses to deliver, not because nothing arrived. */
+  inboxStatus?: InboxService.Status;
 };
 
 /**
@@ -80,6 +83,7 @@ export const NotificationsPanel = ({
   containers,
   renderInvitation,
   onOpen,
+  inboxStatus = 'available',
 }: NotificationsPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [filter, setFilter] = useState<NotificationFilter>('all');
@@ -193,7 +197,13 @@ export const NotificationsPanel = ({
       <Panel.Body asChild>
         {items.length === 0 ? (
           <Flex center classNames='h-full text-fg-subtle' role='status'>
-            {t(filter === 'all' ? 'empty.message' : 'empty-filtered.message')}
+            {t(
+              inboxStatus === 'account-required'
+                ? 'account-required.message'
+                : filter === 'all'
+                  ? 'empty.message'
+                  : 'empty-filtered.message',
+            )}
           </Flex>
         ) : (
           <Mosaic.Container asChild withFocus>

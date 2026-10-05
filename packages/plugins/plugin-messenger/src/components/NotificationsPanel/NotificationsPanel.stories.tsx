@@ -27,7 +27,14 @@ import { NotificationsPanel, type NotificationsPanelProps } from './Notification
 /** Stands in for the deck companion's node id, so the toolbar takes attention like it does in the deck. */
 const ATTENDABLE_ID = 'notifications-panel';
 
-const DefaultStory = ({ onOpen }: Pick<NotificationsPanelProps, 'onOpen'>) => {
+const NO_CONTAINERS: readonly Notifications.Notifications[] = [];
+
+type StoryProps = Pick<NotificationsPanelProps, 'onOpen' | 'inboxStatus'> & {
+  /** Lists no containers, as the panel sees an inbox that never delivered anything. */
+  empty?: boolean;
+};
+
+const DefaultStory = ({ onOpen, inboxStatus, empty }: StoryProps) => {
   const { spaceId } = useClientStory();
   const space = useSpace(spaceId);
   const containers = useQuery(space?.db, Filter.type(Notifications.Notifications));
@@ -38,7 +45,8 @@ const DefaultStory = ({ onOpen }: Pick<NotificationsPanelProps, 'onOpen'>) => {
   return (
     <NotificationsPanel
       attendableId={ATTENDABLE_ID}
-      containers={containers}
+      containers={empty ? NO_CONTAINERS : containers}
+      inboxStatus={inboxStatus}
       renderInvitation={({ data, sender }) => (
         <Card.Text>{`${sender.name} invited you to ${data.spaceName}.`}</Card.Text>
       )}
@@ -84,3 +92,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const AccountRequired: Story = {
+  args: {
+    inboxStatus: 'account-required',
+    empty: true,
+  },
+};

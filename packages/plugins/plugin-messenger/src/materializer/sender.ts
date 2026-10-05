@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type Halo } from '@dxos/client-protocol';
-import { InboxPayloadTooLargeError } from '@dxos/protocols';
+import { InboxAccountRequiredError, InboxPayloadTooLargeError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { InboxService } from '@dxos/protocols/rpc';
 import { Message } from '@dxos/types';
@@ -35,7 +35,9 @@ export const makeSender = (halo: SenderHalo): MessengerCapabilities.Sender => ({
         catch: (error) =>
           InboxPayloadTooLargeError.is(error)
             ? new InboxPayloadTooLargeError({ cause: error })
-            : new MessageSendError({ cause: error, context: { recipientDid } }),
+            : InboxAccountRequiredError.is(error)
+              ? new InboxAccountRequiredError({ cause: error })
+              : new MessageSendError({ cause: error, context: { recipientDid } }),
       });
     }).pipe(Effect.withSpan('MessengerCapabilities.Sender.send')),
 });
