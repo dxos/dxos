@@ -3,7 +3,7 @@
 //
 
 // A PR keeps one review store: a fresh `fast.ts` run reviews the whole PR diff, inherits the
-// statuses the PR's earlier stores already settled, and replaces them.
+// dismissals the PR's earlier stores recorded, and replaces them.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -14,11 +14,11 @@ const fileOf = (location: string): string => location.replace(/(:\d+){1,2}$/, ''
 /**
  * Statuses to carry from prior index rows onto `next` rows, keyed by the next row's id: a row
  * matches on rule and exact location, else on rule and file when that pair is unique on both
- * sides (the code above it moved). Only settled statuses carry, so a stale `unresolved` never
- * masks a row the new run raised again.
+ * sides (the code above it moved). Only `ignored` carries: a `resolved` row means the code was
+ * fixed, so the same finding raised again is a regression to look at, not one already settled.
  */
 export const carryStatuses = (prior: ResolutionEntry[], next: ResolutionEntry[]): Map<string, ResolutionStatus> => {
-  const settled = prior.filter((entry) => entry.status !== 'unresolved' && entry.ruleId && entry.location);
+  const settled = prior.filter((entry) => entry.status === 'ignored' && entry.ruleId && entry.location);
   const statuses = new Map<string, ResolutionStatus>();
   const used = new Set<ResolutionEntry>();
   for (const entry of next) {

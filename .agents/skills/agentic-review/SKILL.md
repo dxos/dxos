@@ -242,9 +242,10 @@ review runs the subagent workflow above. Then fix or dismiss each issue, set its
 `resolved` or `ignored`, and commit the store with the fixes.
 
 - **One store per PR.** `fast.ts` reviews the whole PR diff from its merge-base with main, then
-  supersedes every store the PR added before it: a `resolved`/`ignored` row whose rule and
-  location (or rule and file, when that pair is unique) match a row of the new index carries
-  its status over, and the old store directory is deleted. Commit that deletion with the new
+  supersedes every store the PR added before it: an `ignored` row whose rule and location (or
+  rule and file, when that pair is unique) match a row of the new index carries its status over
+  — a `resolved` finding raised again is a regression, so it stays `unresolved` — and the old
+  store directory is deleted. Commit that deletion with the new
   store. `--base=<ref>` reviews less than the whole PR, so it keeps the earlier stores.
 - **Changed files ignore merges.** `--pr-only` / `--fast` review only files a non-merge commit
   on HEAD's first-parent line touched and that still differ from the base, so a merge from

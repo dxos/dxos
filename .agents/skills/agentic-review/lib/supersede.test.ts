@@ -20,10 +20,10 @@ const row = (id: string, status: ResolutionEntry['status'], ruleId: string, loca
 describe('carryStatuses', () => {
   test('matches on rule and exact location', () => {
     const statuses = carryStatuses(
-      [row('old-1', 'ignored', 'no-casts', 'a.ts:10:3'), row('old-2', 'resolved', 'no-casts', 'a.ts:20')],
+      [row('old-1', 'ignored', 'no-casts', 'a.ts:10:3'), row('old-2', 'ignored', 'no-casts', 'a.ts:20')],
       [row('new-1', 'unresolved', 'no-casts', 'a.ts:20'), row('new-2', 'unresolved', 'no-casts', 'a.ts:10:3')],
     );
-    expect(Object.fromEntries(statuses)).toEqual({ 'new-1': 'resolved', 'new-2': 'ignored' });
+    expect(Object.fromEntries(statuses)).toEqual({ 'new-1': 'ignored', 'new-2': 'ignored' });
   });
 
   test('falls back to rule and file only when the pair is unique on both sides', () => {
@@ -43,10 +43,18 @@ describe('carryStatuses', () => {
     ).toBe(0);
   });
 
-  test('never carries unresolved or a different rule', () => {
+  test('never carries unresolved, resolved, or a different rule', () => {
     const statuses = carryStatuses(
-      [row('old-1', 'unresolved', 'no-casts', 'a.ts:10'), row('old-2', 'ignored', 'no-sleep', 'b.ts:5')],
-      [row('new-1', 'unresolved', 'no-casts', 'a.ts:10'), row('new-2', 'unresolved', 'no-casts', 'b.ts:5')],
+      [
+        row('old-1', 'unresolved', 'no-casts', 'a.ts:10'),
+        row('old-2', 'ignored', 'no-sleep', 'b.ts:5'),
+        row('old-3', 'resolved', 'no-casts', 'c.ts:7'),
+      ],
+      [
+        row('new-1', 'unresolved', 'no-casts', 'a.ts:10'),
+        row('new-2', 'unresolved', 'no-casts', 'b.ts:5'),
+        row('new-3', 'unresolved', 'no-casts', 'c.ts:7'),
+      ],
     );
     expect(statuses.size).toBe(0);
   });

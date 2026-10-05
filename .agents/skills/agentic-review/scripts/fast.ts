@@ -6,8 +6,8 @@
 // Fast PR review: Jev (TypeSafe System One) alone, no subagents. Runs prepare (`--fast`, a
 // merge-aware diff of the whole PR from its merge-base with main), fills every group with System
 // One, and finalizes, leaving a single REVIEW.md in `.agents/reviews/<short-sha>/` to commit. The
-// PR's earlier review stores are then superseded: their `resolved`/`ignored` statuses carry onto
-// matching rows of the new index and the old stores are deleted, so a PR keeps one review. Pairs
+// PR's earlier review stores are then superseded: their `ignored` statuses carry onto matching
+// rows of the new index and the old stores are deleted, so a PR keeps one review. Pairs
 // System One is unsure of, and `system-one: off` rules, are counted in its appendix and not
 // reviewed — that is the trade for the speed.
 //
@@ -98,7 +98,7 @@ if (priors.length > 0) {
     rmSync(join(root, REVIEWS_DIR, review.slug), { recursive: true, force: true });
   }
   console.log(
-    `\nfast: superseded ${priors.map((review) => review.slug).join(', ')}; carried ${statuses.size} settled status(es) into ${slug}.`,
+    `\nfast: superseded ${priors.map((review) => review.slug).join(', ')}; carried ${statuses.size} ignored status(es) into ${slug}.`,
   );
 }
 
