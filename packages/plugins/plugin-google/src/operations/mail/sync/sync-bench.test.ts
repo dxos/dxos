@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { seedMailboxBinding } from '@dxos/plugin-inbox/testing/sync';
 
 import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';

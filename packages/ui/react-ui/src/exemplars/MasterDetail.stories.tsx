@@ -10,20 +10,16 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations } from '#translations';
 
-import {
-  Button,
-  Container,
-  Empty,
-  type ListboxOption,
-  Panel,
-  ScrollArea,
-  Splitter,
-  type SplitterMode,
-  Toolbar,
-  Typography,
-  Listbox as UiListbox,
-  Tabs as UiTabs,
-} from '../next/components/index.ts';
+import { Button } from '../next/components/Button/Button.tsx';
+import { Container } from '../next/components/Container/Container.tsx';
+import { Empty } from '../next/components/Empty/Empty.tsx';
+import * as ListboxModule from '../next/components/Listbox/Listbox.tsx';
+import * as Panel from '../next/components/Panel/Panel.tsx';
+import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
+import * as Splitter from '../next/components/Splitter/Splitter.tsx';
+import * as TabsModule from '../next/components/Tabs/Tabs.tsx';
+import * as Toolbar from '../next/components/Toolbar/Toolbar.tsx';
+import * as Typography from '../next/components/Typography/Typography.tsx';
 import { withLayout, withTheme } from '../testing/index.ts';
 
 // Master-detail is not a component: the list's own Root owns the selection, and a Splitter with `collapseBelow` lays
@@ -38,7 +34,7 @@ type StoryArgs = {
   resizable: boolean;
 };
 
-type Project = ListboxOption & { owner: string; status: string; updated: string };
+type Project = ListboxModule.Option & { owner: string; status: string; updated: string };
 
 const OWNERS = ['Alice Green', 'Bob Grey', 'Carol Black', 'Erin White'];
 const STATUSES = ['Active', 'Paused', 'Done'];
@@ -70,7 +66,7 @@ const PROJECTS: Project[] = NAMES.map((name, index) => ({
 
 const projectOf = (value?: string) => PROJECTS.find((project) => project.value === value);
 
-const tasksOf = (project: Project): ListboxOption[] =>
+const tasksOf = (project: Project): ListboxModule.Option[] =>
   ['Plan', 'Build', 'Review', 'Ship'].map((step) => ({
     value: `${project.value}-${step.toLowerCase()}`,
     label: `${step} ${project.label}`,
@@ -106,7 +102,7 @@ const MasterPane = ({ title, count, children }: PropsWithChildren<{ title: strin
       <Toolbar.Root>
         <Toolbar.Text>{title}</Toolbar.Text>
         <Toolbar.Text classNames='flex-none'>
-          <Typography tone='muted'>{count}</Typography>
+          <Typography.Text tone='muted'>{count}</Typography.Text>
         </Toolbar.Text>
       </Toolbar.Root>
     </Panel.Header>
@@ -145,12 +141,12 @@ const Fields = ({ fields }: { fields: [label: string, value: string][] }) => (
         <Container gutter='rail'>
           <Container gutter='inherit' layout='row' columns='minmax(0, 6rem) minmax(0, 1fr)' gap='sm'>
             {fields.flatMap(([label, value]) => [
-              <Typography key={`${label}-label`} tone='muted'>
+              <Typography.Text key={`${label}-label`} tone='muted'>
                 {label}
-              </Typography>,
-              <Typography key={`${label}-value`} truncate>
+              </Typography.Text>,
+              <Typography.Text key={`${label}-value`} truncate>
                 {value}
-              </Typography>,
+              </Typography.Text>,
             ])}
           </Container>
         </Container>
@@ -181,7 +177,7 @@ const projectFields = (project: Project): [string, string][] => [
 ];
 
 /** The selected project, or `Empty` when nothing is selected. */
-const ProjectDetail = ({ item }: { item?: ListboxOption }) => {
+const ProjectDetail = ({ item }: { item?: ListboxModule.Option }) => {
   const project = projectOf(item?.value);
   return (
     <DetailPane title={project?.label ?? 'No selection'}>
@@ -196,7 +192,7 @@ const ProjectDetail = ({ item }: { item?: ListboxOption }) => {
 
 /** The detail reads the selection from the list's own Root context; no master-detail state of its own. */
 const ListboxDetail = () => {
-  const { selectedItems } = UiListbox.useContext();
+  const { selectedItems } = ListboxModule.useContext();
   return <ProjectDetail item={selectedItems[0]} />;
 };
 
@@ -204,20 +200,20 @@ const ListboxDetail = () => {
  * The list: while collapsed, choosing a row (even the selected one, after Back) opens the detail; while both panes
  * show, the detail is already beside it, so the mode stays on the list and a later collapse lands there.
  */
-const ListboxMaster = ({ items, label }: { items: ListboxOption[]; label: string }) => {
+const ListboxMaster = ({ items, label }: { items: ListboxModule.Option[]; label: string }) => {
   const { collapsed, setMode } = Splitter.useContext();
   const open = () => collapsed && setMode('end');
   return (
     <MasterPane title={label} count={items.length}>
-      <UiListbox.Content
+      <ListboxModule.Content
         scroll={false}
         aria-label={label}
         onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && open()}
       >
         {items.map((item) => (
-          <UiListbox.Item key={item.value} item={item} onClick={open} data-testid={`item-${item.value}`} />
+          <ListboxModule.Item key={item.value} item={item} onClick={open} data-testid={`item-${item.value}`} />
         ))}
-      </UiListbox.Content>
+      </ListboxModule.Content>
     </MasterPane>
   );
 };
@@ -228,10 +224,10 @@ const ListboxMaster = ({ items, label }: { items: ListboxOption[]; label: string
 
 const ListboxStory = ({ width, size: defaultSize, collapseBelow, resizable }: StoryArgs) => {
   const [size, setSize] = useState(defaultSize);
-  const [mode, setMode] = useState<SplitterMode>('start');
+  const [mode, setMode] = useState<Splitter.Mode>('start');
   return (
     <Host width={width}>
-      <UiListbox.Root items={PROJECTS} classNames='dx-fill'>
+      <ListboxModule.Root items={PROJECTS} classNames='dx-fill'>
         <Splitter.Root
           orientation='horizontal'
           mode={mode}
@@ -250,7 +246,7 @@ const ListboxStory = ({ width, size: defaultSize, collapseBelow, resizable }: St
             <ListboxDetail />
           </Splitter.Panel>
         </Splitter.Root>
-      </UiListbox.Root>
+      </ListboxModule.Root>
     </Host>
   );
 };
@@ -264,9 +260,9 @@ const TabsMaster = () => {
   const { collapsed, setMode } = Splitter.useContext();
   return (
     <MasterPane title='Projects' count={PROJECTS.length}>
-      <UiTabs.List aria-label='Projects' data-testid='master-list'>
+      <TabsModule.List aria-label='Projects' data-testid='master-list'>
         {PROJECTS.map((project) => (
-          <UiTabs.Trigger
+          <TabsModule.Trigger
             key={project.value}
             value={project.value}
             icon={project.icon}
@@ -275,22 +271,22 @@ const TabsMaster = () => {
             data-testid={`item-${project.value}`}
           />
         ))}
-      </UiTabs.List>
+      </TabsModule.List>
     </MasterPane>
   );
 };
 
 /** Each tab's panel is the detail pane itself (`asChild`); before a tab is chosen the pane shows `Empty`. */
 const TabsDetail = () => {
-  const { value } = UiTabs.useContext();
+  const { value } = TabsModule.useContext();
   return (
     <>
       {PROJECTS.map((project) => (
-        <UiTabs.Content key={project.value} value={project.value} asChild>
+        <TabsModule.Content key={project.value} value={project.value} asChild>
           <DetailPane title={project.label}>
             <Fields fields={projectFields(project)} />
           </DetailPane>
-        </UiTabs.Content>
+        </TabsModule.Content>
       ))}
       {!value && (
         <DetailPane title='No selection'>
@@ -303,7 +299,7 @@ const TabsDetail = () => {
 
 const TabsStory = ({ width, size, collapseBelow, resizable }: StoryArgs) => (
   <Host width={width}>
-    <UiTabs.Root orientation='vertical' classNames='dx-fill'>
+    <TabsModule.Root orientation='vertical' classNames='dx-fill'>
       <Splitter.Root
         orientation='horizontal'
         defaultMode='start'
@@ -320,7 +316,7 @@ const TabsStory = ({ width, size, collapseBelow, resizable }: StoryArgs) => (
           <TabsDetail />
         </Splitter.Panel>
       </Splitter.Root>
-    </UiTabs.Root>
+    </TabsModule.Root>
   </Host>
 );
 
@@ -330,7 +326,7 @@ const TabsStory = ({ width, size, collapseBelow, resizable }: StoryArgs) => (
 
 /** The outer detail holds its own master-detail: the project's tasks, collapsing at a narrower width. */
 const NestedDetail = () => {
-  const { selectedItems } = UiListbox.useContext();
+  const { selectedItems } = ListboxModule.useContext();
   const project = projectOf(selectedItems[0]?.value);
   if (!project) {
     return <ProjectDetail />;
@@ -339,7 +335,7 @@ const NestedDetail = () => {
   const tasks = tasksOf(project);
   return (
     <DetailPane title={project.label}>
-      <UiListbox.Root key={project.value} items={tasks} classNames='dx-fill'>
+      <ListboxModule.Root key={project.value} items={tasks} classNames='dx-fill'>
         <Splitter.Root orientation='horizontal' defaultMode='start' collapseBelow='24rem' size={12}>
           <Splitter.Panel position='start'>
             <ListboxMaster items={tasks} label='Tasks' />
@@ -349,13 +345,13 @@ const NestedDetail = () => {
             <TaskDetail />
           </Splitter.Panel>
         </Splitter.Root>
-      </UiListbox.Root>
+      </ListboxModule.Root>
     </DetailPane>
   );
 };
 
 const TaskDetail = () => {
-  const { selectedItems } = UiListbox.useContext();
+  const { selectedItems } = ListboxModule.useContext();
   const task = selectedItems[0];
   return (
     <DetailPane title={task?.label ?? 'No selection'} backTestId='task-back' data-testid='task-detail'>
@@ -374,10 +370,10 @@ const TaskDetail = () => {
 };
 
 const NestedStory = ({ width, size, collapseBelow, resizable }: StoryArgs) => {
-  const [mode, setMode] = useState<SplitterMode>('start');
+  const [mode, setMode] = useState<Splitter.Mode>('start');
   return (
     <Host width={width}>
-      <UiListbox.Root items={PROJECTS} classNames='dx-fill'>
+      <ListboxModule.Root items={PROJECTS} classNames='dx-fill'>
         <Splitter.Root
           orientation='horizontal'
           mode={mode}
@@ -395,7 +391,7 @@ const NestedStory = ({ width, size, collapseBelow, resizable }: StoryArgs) => {
             <NestedDetail />
           </Splitter.Panel>
         </Splitter.Root>
-      </UiListbox.Root>
+      </ListboxModule.Root>
     </Host>
   );
 };

@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 
 import { AgentClaudePlugin } from './agent-claude-plugin.ts';

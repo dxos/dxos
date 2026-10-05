@@ -13,11 +13,11 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { ScrollArea } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -69,7 +69,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         // Hosts the ProgressRegistry the Progress Monitor row registers into (and its meter reads).
         ProgressPlugin.make(),

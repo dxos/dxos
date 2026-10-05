@@ -11,7 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Image, Typography } from '../index.ts';
+import * as Typography from '../Typography/Typography.tsx';
+import { Image } from './Image.tsx';
 
 /** Inline SVG, so the stories never fetch from the network. */
 const LANDSCAPE = `data:image/svg+xml,${encodeURIComponent(
@@ -54,7 +55,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
         onClick={() => setClicks((count) => count + 1)}
         data-testid={`clickable-${size}`}
       />
-      <Typography data-testid={`clicks-${size}`}>Opened {clicks}</Typography>
+      <Typography.Text data-testid={`clicks-${size}`}>Opened {clicks}</Typography.Text>
       <Image
         src={STRIP}
         alt='Red strip'

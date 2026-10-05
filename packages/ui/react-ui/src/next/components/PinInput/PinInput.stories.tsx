@@ -12,7 +12,8 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Field, PinInput } from '../index.ts';
+import * as Field from '../Field/Field.tsx';
+import { PinInput } from './PinInput.tsx';
 
 /** Types with the runner's real keyboard, so zag's `beforeinput` validation (numeric cells) sees trusted input. */
 const realType = async (text: string) => {

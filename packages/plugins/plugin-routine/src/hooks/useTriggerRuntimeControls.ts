@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import { useEffect, useState } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/compute-runtime';
 import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, Filter, Query } from '@dxos/echo';
@@ -29,7 +29,7 @@ export const useTriggerRuntimeControls = (db: Database.Database | undefined): Tr
 
   const [dispatcher, setDispatcher] = useState<Context.Service.Shape<typeof TriggerDispatcher> | undefined>(undefined);
 
-  const init = useSpaceCallback(
+  const init = Hooks.useSpaceCallback(
     db?.spaceId,
     [TriggerDispatcher],
     Effect.fnUntraced(function* () {
@@ -44,7 +44,7 @@ export const useTriggerRuntimeControls = (db: Database.Database | undefined): Tr
 
   const state = useAtomValue(dispatcher?.state ?? Atom.make(undefined));
 
-  const start = useSpaceCallback(
+  const start = Hooks.useSpaceCallback(
     db?.spaceId,
     [TriggerDispatcher],
     Effect.fnUntraced(function* () {
@@ -53,7 +53,7 @@ export const useTriggerRuntimeControls = (db: Database.Database | undefined): Tr
     }),
   );
 
-  const stop = useSpaceCallback(
+  const stop = Hooks.useSpaceCallback(
     db?.spaceId,
     [TriggerDispatcher],
     Effect.fnUntraced(function* () {

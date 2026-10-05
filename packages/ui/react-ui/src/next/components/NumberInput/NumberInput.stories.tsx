@@ -14,7 +14,9 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Field, Input, NumberInput } from '../index.ts';
+import * as Field from '../Field/Field.tsx';
+import { Input } from '../Input/Input.tsx';
+import { NumberInput } from './NumberInput.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => {
   const [value, setValue] = useState('8');

@@ -12,13 +12,13 @@ import React, {
   useMemo,
 } from 'react';
 
-import { type ListboxOption, Listbox as UiListbox } from '@dxos/react-ui';
+import * as UiListbox from '@dxos/react-ui/Listbox';
 
 type NextRootProps = ComponentPropsWithoutRef<typeof UiListbox.Root>;
 type NextItemProps = ComponentPropsWithoutRef<typeof UiListbox.Item>;
 
 // Lets an Item be addressed by `id`, as the current Listbox's are, while Ark needs the option object.
-const OptionsContext = createContext<ReadonlyMap<string, ListboxOption>>(new Map());
+const OptionsContext = createContext<ReadonlyMap<string, UiListbox.Option>>(new Map());
 
 //
 // Root

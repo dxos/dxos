@@ -4,9 +4,12 @@
 
 import React from 'react';
 
-import { useOptionalAtomCapability } from '@dxos/app-framework/ui';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { Button, Icon, Popover, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -18,8 +21,8 @@ import { BeaconCapabilities } from '../capabilities/beacon-service.ts';
 export const BeaconStatusIndicator = () => {
   // The status bar paints with the shell, but the beacon service activates on `SpacesAvailable` — which
   // the forked client initialization can land long after — so absence is a normal early state here.
-  const state = useOptionalAtomCapability(BeaconCapabilities.State);
-  const { t } = useTranslation(meta.profile.key);
+  const state = Hooks.useOptionalAtomCapability(BeaconCapabilities.State);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 
   const iconClass = onlineCount > 0 ? 'text-green-500' : state?.status === 'connecting' ? 'animate-pulse' : undefined;
@@ -28,7 +31,7 @@ export const BeaconStatusIndicator = () => {
     <Popover.Root positioning={{ placement: 'left' }}>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <Button
+          <Button.Root
             variant='ghost'
             icon='ph--broadcast--regular'
             iconOnly
@@ -45,8 +48,8 @@ export const BeaconStatusIndicator = () => {
 };
 
 const BeaconPopover = () => {
-  const state = useOptionalAtomCapability(BeaconCapabilities.State);
-  const { t } = useTranslation(meta.profile.key);
+  const state = Hooks.useOptionalAtomCapability(BeaconCapabilities.State);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 
   if (!state) {
@@ -57,7 +60,10 @@ const BeaconPopover = () => {
     <div className='flex flex-col gap-2 w-popover-min-width p-2'>
       {/* Header. */}
       <div className='flex items-center gap-2 mb-1'>
-        <Icon icon='ph--broadcast--regular' classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-fg-muted')} />
+        <Icon.Icon
+          icon='ph--broadcast--regular'
+          classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-fg-muted')}
+        />
         <span className='font-medium text-sm'>{t('beacon-title.label')}</span>
       </div>
 
@@ -96,7 +102,7 @@ const BeaconPopover = () => {
 const PeerRow = ({ peer }: { peer: BeaconPeer }) => {
   return (
     <div className='flex items-center gap-2 text-sm'>
-      <Icon
+      <Icon.Icon
         icon={peer.online ? 'ph--circle-bg' : 'ph--circle--regular'}
         classNames={mx(peer.online ? 'text-green-500' : 'text-fg-muted')}
         size='xs'

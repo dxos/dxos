@@ -8,18 +8,14 @@ import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/react-client/halo';
-import {
-  Avatar,
-  Button,
-  Flex,
-  SystemButton,
-  ThemedClassName,
-  Tooltip,
-  toAvatarHue,
-  useId,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Util from '@dxos/react-ui/Util';
 import { getHashStyles } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
@@ -44,7 +40,7 @@ export const filterContacts = (contacts: Contact[], filter: string): Contact[] =
 
 export type ContactSpace = { id: string; key: PublicKey; name?: string };
 
-export type ContactListProps = ThemedClassName<{
+export type ContactListProps = Util.ThemedClassName<{
   contacts: Contact[];
   spaces: ContactSpace[];
   filter?: string;
@@ -52,7 +48,7 @@ export type ContactListProps = ThemedClassName<{
 }>;
 
 export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelectSpace }: ContactListProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   // filterContacts returns the input array unchanged when the filter is empty, so copy before sorting to avoid mutating the caller's prop.
   const visible = useMemo(
     () =>
@@ -90,8 +86,8 @@ type ContactListItemProps = Pick<ContactListProps, 'spaces' | 'onSelectSpace'> &
 
 /** The avatar in the icon rail, the name over its shared-space tags, and the key with its copy button at the end. */
 const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProps) => {
-  const { t } = useTranslation(translationKey);
-  const labelId = useId('contactListItem__label');
+  const { t } = Hooks.useTranslation(translationKey);
+  const labelId = Hooks.useId('contactListItem__label');
   const identityKey = requirePublicKey(contact.identityKey);
   const fallback = keyToFallback(identityKey);
   const displayName = contactDisplayName(contact);
@@ -105,7 +101,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
         <Avatar.Root
           aria-labelledby={labelId}
           size='md'
-          hue={toAvatarHue(profileString(contact, 'hue') ?? fallback.hue)}
+          hue={Avatar.toAvatarHue(profileString(contact, 'hue') ?? fallback.hue)}
           fallback={profileString(contact, 'emoji') ?? fallback.emoji}
         />
       </Listbox.ItemIcon>
@@ -113,7 +109,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
       {common.length > 0 && (
         <Listbox.ItemDescription classNames='flex flex-wrap gap-1 pt-2'>
           {common.map((space) => (
-            <Button
+            <Button.Root
               key={space.id}
               size='sm'
               hue={getHashStyles(space.id).hue}
@@ -121,11 +117,11 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
               data-testid='contact-list.space'
             >
               {space.name ?? t('unnamed-space.label')}
-            </Button>
+            </Button.Root>
           ))}
         </Listbox.ItemDescription>
       )}
-      <Flex align='center' gap='xs' classNames='text-sm text-fg-muted'>
+      <Layout.Flex align='center' gap='xs' classNames='text-sm text-fg-muted'>
         <Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
           <span className='font-mono truncate max-w-48'>{contact.did ?? identityKey.truncate()}</span>
         </Tooltip.Trigger>
@@ -136,7 +132,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
           value={contact.did ?? identityKey.toHex()}
           label={t(contact.did ? 'copy-did.label' : 'copy-key.label')}
         />
-      </Flex>
+      </Layout.Flex>
     </Listbox.Item>
   );
 };

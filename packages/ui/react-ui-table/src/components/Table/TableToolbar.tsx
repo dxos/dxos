@@ -6,7 +6,6 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useContext, useEffect, useMemo } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ActionGraphEdges,
   type ActionGraphNodes,
@@ -19,6 +18,7 @@ import {
   createMenuItemGroup,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+import * as Util from '@dxos/react-ui/Util';
 
 import { translationKey } from '#translations';
 
@@ -118,7 +118,7 @@ export type TableToolbarProps = Pick<ActionToolbarProps, 'attendableId'> &
     customActions?: Atom.Atom<ActionGraphProps>;
   };
 
-export const TableToolbar = composable<HTMLDivElement, TableToolbarProps>(
+export const TableToolbar = Util.composable<HTMLDivElement, TableToolbarProps>(
   ({ attendableId, viewDirty, onAdd, onSave, onExport, customActions, ...props }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
@@ -135,7 +135,7 @@ export const TableToolbar = composable<HTMLDivElement, TableToolbarProps>(
     const menuActions = useMenuActions(actionsCreator);
 
     return (
-      <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />
+      <ActionToolbar {...menuActions} attendableId={attendableId} {...Util.composableProps(props)} ref={forwardedRef} />
     );
   },
 );

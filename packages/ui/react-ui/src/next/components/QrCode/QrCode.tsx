@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { QrCode as QrCodePrimitive } from '@ark-ui/react/qr-code';
 import React, { forwardRef } from 'react';
 
@@ -9,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 
 export type QrCodeErrorCorrection = 'L' | 'M' | 'Q' | 'H';
 
@@ -46,7 +48,7 @@ export const QrCode = forwardRef<HTMLDivElement, QrCodeProps>(
       </QrCodePrimitive.Frame>
       {icon && (
         <QrCodePrimitive.Overlay className={recipes.qrCodeOverlay()}>
-          <Icon icon={icon} />
+          <Icon.Icon icon={icon} />
         </QrCodePrimitive.Overlay>
       )}
     </QrCodePrimitive.Root>

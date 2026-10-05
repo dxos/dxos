@@ -5,8 +5,8 @@
 import React, { forwardRef } from 'react';
 
 import { type Size } from '../../sizes.ts';
-import { Button, type ButtonProps } from '../Button/index.ts';
-import { Menu } from '../Menu/index.ts';
+import { Button, type ButtonProps } from '../Button/Button.tsx';
+import * as Menu from '../Menu/Menu.tsx';
 
 /**
  * One entry in a {@link MenuButton}'s menu: a caller describes the menu it wants instead of assembling the Menu parts.

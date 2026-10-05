@@ -7,9 +7,10 @@ import React, { useMemo } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ObjectCard } from '@dxos/app-toolkit/ui';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Obj } from '@dxos/echo';
-import { Block, Button } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createIssue, createPullRequest, createRepo } from '../testing/index.ts';
@@ -114,9 +115,9 @@ const PopoverStory = () => {
         <ObjectCard.Header
           subject={subject}
           menu={
-            <Block rail='end'>
-              <Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
-            </Block>
+            <Layout.Block rail='end'>
+              <Button.Root variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
+            </Layout.Block>
           }
         >
           {LONG_TITLE}

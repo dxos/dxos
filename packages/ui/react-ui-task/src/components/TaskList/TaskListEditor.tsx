@@ -15,20 +15,15 @@ import React, {
 
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import {
-  Button,
-  ControlFrame,
-  Field,
-  Icon,
-  Input,
-  SystemButton,
-  Tag,
-  composable,
-  composableProps,
-  useDynamicRef,
-  useTranslation,
-} from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Util from '@dxos/react-ui/Util';
 import { type Task } from '@dxos/types';
 import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -83,7 +78,7 @@ export type TaskListEditorProps = ComposableProps<{
  * room to answer and to read — the detail article — and under a list they grew the strip by a line
  * per entry, pushing the list itself off the screen.
  */
-export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
+export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProps>(
   (
     {
       placeholder,
@@ -96,8 +91,8 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(translationKey);
-    const { className, ...rest } = composableProps(props);
+    const { t } = Hooks.useTranslation(translationKey);
+    const { className, ...rest } = Util.composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
     const { tasks, selected, columns, showEstimates, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
       useTaskListContext('TaskList.Editor');
@@ -245,7 +240,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     // Read through a ref so the extension is built once: a new extensions array rebuilds the editor
     // and drops focus, and `handleSubmit` changes on every keystroke of the title. Synced in an effect
     // so the keymap only ever sees a committed render's handler.
-    const submitRef = useDynamicRef(handleSubmit);
+    const submitRef = Hooks.useDynamicRef(handleSubmit);
     const extensions = useMemo(
       () => [...(descriptionExtensions ?? []), submitOnModEnter({ onSubmit: () => submitRef.current() })],
       [descriptionExtensions],
@@ -371,12 +366,12 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         ) : (
           // Creating, there is no task to carry a status yet.
           <span className={mx(TRACK.status, 'flex items-center justify-center h-(--dx-control) self-start')}>
-            <Icon icon='ph--plus--regular' tone='subtle' />
+            <Icon.Icon icon='ph--plus--regular' tone='subtle' />
           </span>
         )}
         {/* The field's root is the grid item, so it takes the placement. */}
         <Field.Root classNames='row-start-1 col-start-[title] col-end-[assignee] min-w-0'>
-          <Input
+          <Input.Root
             // An input clips its overflow rather than wrapping it, so a long title ends mid-word against the trailing
             // controls with nothing to say it continues; the ellipsis says so.
             classNames='grow text-ellipsis'
@@ -406,7 +401,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         </Field.Root>
         {hasDescription && (
           // A control frame, as the title's Input is: the well, and the focus ring while the editor has focus.
-          <ControlFrame
+          <Input.Frame
             rows={2}
             data-testid='taskList.edit.description'
             classNames='row-start-2 col-[title/assignee] min-w-0'
@@ -438,7 +433,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                 }
               }}
             />
-          </ControlFrame>
+          </Input.Frame>
         )}
         {showEstimates &&
           (editing ? (
@@ -482,15 +477,15 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
               )}
             >
               {files.map((file, index) => (
-                <Tag
+                <Tag.Tag
                   key={`${file.name}-${index}`}
                   hue='neutral'
                   classNames='inline-flex items-center gap-1'
                   data-testid='taskList.edit.file'
                 >
-                  <Icon icon='ph--paperclip--regular' size='xs' />
+                  <Icon.Icon icon='ph--paperclip--regular' size='xs' />
                   <span data-testid='taskList.edit.file.name'>{file.name}</span>
-                  <Button
+                  <Button.Root
                     variant='ghost'
                     size='sm'
                     iconOnly
@@ -500,7 +495,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                     classNames='p-0 min-h-0 h-auto'
                     onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
                   />
-                </Tag>
+                </Tag.Tag>
               ))}
             </div>
           )}

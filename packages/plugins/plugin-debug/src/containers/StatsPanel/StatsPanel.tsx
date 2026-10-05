@@ -6,10 +6,10 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { STAT_CARD_HUES, StatCard } from '@dxos/devtools';
-import { Container } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
 
 // Fallback so the atom hook is called unconditionally when no store is contributed (host plugin not
 // loaded); the panel then renders its empty state.
@@ -47,7 +47,7 @@ export type StatsPanelProps = {
  * on each write). Purely generic — it displays whatever each plugin stores.
  */
 export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
-  const store = useOptionalCapability(AppCapabilities.StatsPanel);
+  const store = Hooks.useOptionalCapability(AppCapabilities.StatsPanel);
   const stats = useAtomValue(store?.statsAtom ?? EMPTY);
   const compartments = Object.entries(stats);
   if (compartments.length === 0) {
@@ -60,7 +60,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
   }
 
   return (
-    <Container gap='md' gutter='none'>
+    <Layout.Container gap='md' gutter='none'>
       {compartments.map(([pluginKey, value]) => (
         <StatCard.Root key={pluginKey}>
           <StatCard.Header icon='ph--chart-bar--regular' hue={STAT_CARD_HUES.system} title={pluginKey} />
@@ -69,7 +69,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
           ))}
         </StatCard.Root>
       ))}
-    </Container>
+    </Layout.Container>
   );
 };
 

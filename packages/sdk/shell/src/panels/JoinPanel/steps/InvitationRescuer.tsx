@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Invitation_State } from '@dxos/react-client/invitations';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Action, ActionBar, InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
@@ -29,7 +29,7 @@ const InvitationActions = ({
   Kind,
   failReason,
 }: InvitationRescuerProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   if (failReason) {
     return (
@@ -75,7 +75,7 @@ const InvitationActions = ({
 
 export const InvitationRescuer = (props: InvitationRescuerProps) => {
   const { Kind, invitationState, active, send } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   return (
     <>

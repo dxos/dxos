@@ -8,7 +8,7 @@ import React, { type CSSProperties, type PropsWithChildren, createContext, useCo
 import { log } from '@dxos/log';
 import { useComposedRefs } from '@dxos/react-hooks';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 

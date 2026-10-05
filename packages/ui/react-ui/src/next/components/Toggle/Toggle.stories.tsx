@@ -12,7 +12,9 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { byTestId, controlSize, expectScoped, expectTooltip, realHover, realUnhover, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Toggle, Toolbar, Typography } from '../index.ts';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import { Toggle } from './Toggle.tsx';
 
 /** Icon-only toggles (one pressed, one disabled), a labelled toggle, a controlled one, and one with an `activeIcon`. */
 const DefaultStory = ({ size }: SizeArgs) => {
@@ -31,7 +33,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
         onPressedChange={setWrap}
       />
       <Toggle icon='ph--star--regular' activeIcon='ph--star--fill' label='Pin' iconOnly data-testid={`pin-${size}`} />
-      <Typography data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Typography>
+      <Typography.Text data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Typography.Text>
     </Toolbar.Root>
   );
 };

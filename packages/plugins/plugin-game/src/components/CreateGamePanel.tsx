@@ -5,12 +5,12 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { GameCapabilities } from '#types';
@@ -36,7 +36,7 @@ type VariantSelection = Schema.Schema.Type<typeof VariantSelection>;
  * it in a Game.
  */
 export const CreateGamePanel = ({ target, onCreateObject, onCancel, variants: variantsProp }: CreateGamePanelProps) => {
-  const capabilityVariants = useCapabilities(GameCapabilities.VariantProvider);
+  const capabilityVariants = Hooks.useCapabilities(GameCapabilities.VariantProvider);
   const variants = variantsProp ?? capabilityVariants;
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const selected = useMemo(() => variants.find((v) => v.id === selectedId), [variants, selectedId]);
@@ -102,7 +102,7 @@ type VariantPickerProps = {
 };
 
 const VariantPicker = ({ variants, onSave, onCancel }: VariantPickerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const sorted = useMemo(() => [...variants].sort((a, b) => a.label.localeCompare(b.label)), [variants]);
   const { results, handleSearch } = useSearchListResults({
     items: sorted,

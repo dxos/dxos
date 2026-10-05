@@ -4,8 +4,9 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Checkbox, useTranslation } from '@dxos/react-ui';
 import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 
@@ -27,7 +28,7 @@ export type FileTreeProps = {
  * trailing edge, and the file on screen as the current row.
  */
 export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange }: FileTreeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // The model is rebuilt whenever the selection moves, so the reader's collapses live outside it.
   const [closed, setClosed] = useState<ReadonlySet<string>>(() => new Set());
 
@@ -74,7 +75,7 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
           <Tree.ItemIndicator />
           <Tree.ItemIcon icon={item?.file ? undefined : 'ph--folder--regular'}>
             {item?.file && (
-              <Checkbox
+              <Input.Checkbox
                 checked={reviewed.has(item.path)}
                 onCheckedChange={({ checked }) => onReviewedChange(item.path, checked === true)}
                 // Checking a file off is not a request to open it.

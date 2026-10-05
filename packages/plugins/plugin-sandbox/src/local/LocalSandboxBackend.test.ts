@@ -9,7 +9,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { canRunLocalSandboxes } from '../testing/probe.ts';
 import { LocalSandboxBackend, type LocalSandboxOptions, sniffMimeType, toolchainDirs } from './LocalSandboxBackend.ts';

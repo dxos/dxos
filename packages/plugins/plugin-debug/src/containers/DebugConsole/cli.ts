@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as Devtools from '@dxos/app-framework/Devtools';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import type * as Operation from '@dxos/compute/Operation';
@@ -97,7 +98,8 @@ const evalSnippet = (code: string): Promise<unknown> => {
       return new Function('dxos', 'composer', `'use strict'; return (async () => { ${code} })();`);
     }
   };
-  return Promise.resolve(compile()(Reflect.get(globalThis, '__DXOS__'), globalThis.composer));
+  const composer: Devtools.ComposerDevtools | undefined = globalThis.composer;
+  return Promise.resolve(compile()(Reflect.get(globalThis, '__DXOS__'), composer));
 };
 
 const makeCommand = (options: DebugCliOptions = {}) => {

@@ -10,9 +10,13 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Field, Icon, Panel, Switch, Toolbar } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { TogglePanel, type TogglePanelRootProps } from './TogglePanel.tsx';
 
@@ -76,7 +80,7 @@ const DefaultStory = (props: TogglePanelRootProps) => {
       <Panel.Header>
         <Toolbar.Root>
           <Field.Root>
-            <Switch checked={running} onCheckedChange={({ checked }) => setRunning(checked)} />
+            <Input.Switch checked={running} onCheckedChange={({ checked }) => setRunning(checked)} />
           </Field.Root>
           <div className='grow' />
           <div>{count}</div>
@@ -86,7 +90,7 @@ const DefaultStory = (props: TogglePanelRootProps) => {
         <TogglePanel.Root {...props}>
           <TogglePanel.Content>
             <TogglePanel.Header
-              icon={running ? <Icon icon={'ph--circle-notch--regular'} size='md' tone='subtle' spin /> : undefined}
+              icon={running ? <Icon.Icon icon={'ph--circle-notch--regular'} size='md' tone='subtle' spin /> : undefined}
             >
               Test
             </TogglePanel.Header>

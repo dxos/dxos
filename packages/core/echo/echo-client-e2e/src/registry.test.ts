@@ -11,7 +11,7 @@ import { describe, test } from 'vitest';
 import { DXN, Filter, Obj, Query, Registry, Type } from '@dxos/echo';
 import { makeRegistry, registryLayer, registryLayerWithUpstream } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 const makeObj = (props: { key?: string; version?: string; value: number }) =>
   Obj.make(TestSchema.Expando, {

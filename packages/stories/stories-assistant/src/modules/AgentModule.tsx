@@ -5,7 +5,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Client } from '@dxos/agent-claude/client';
-import { Button, Field, Icon, Input, Panel } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import { ContentBlock } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -141,7 +145,7 @@ export const AgentModule = () => {
     <Panel.Root classNames='dx-fill flex flex-col gap-2 p-2 overflow-hidden'>
       <Panel.Header classNames='shrink-0 justify-end'>
         <div className='flex items-center gap-1 text-xs text-fg-muted'>
-          <Icon icon='ph--git-commit--regular' size='md' />
+          <Icon.Icon icon='ph--git-commit--regular' size='md' />
           {session ? `session ${session.slice(0, 8)}` : 'no session'}
         </div>
       </Panel.Header>
@@ -165,7 +169,7 @@ export const AgentModule = () => {
 
       <div className='flex gap-2 items-center shrink-0'>
         <Field.Root>
-          <Input
+          <Input.Root
             classNames='flex-1 min-w-0'
             placeholder='Ask the agent…'
             value={prompt}
@@ -179,14 +183,14 @@ export const AgentModule = () => {
             }}
           />
         </Field.Root>
-        <Button
+        <Button.Root
           classNames='shrink-0'
           icon='ph--paper-plane-right--regular'
           label='Send'
           disabled={running}
           onClick={() => void send()}
         />
-        <Button
+        <Button.Root
           classNames='shrink-0'
           icon='ph--git-branch--regular'
           label='Fork'

@@ -10,9 +10,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZE_ARG_TYPES, type SizeArgs } from '../../testing/stories.tsx';
-import { Button, Panel, ScrollContainer, type ScrollContainerRootProps, Toolbar, Typography } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import * as Panel from '../Panel/Panel.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as ScrollContainer from './ScrollContainer.tsx';
 
-type StoryArgs = SizeArgs & Pick<ScrollContainerRootProps, 'pin'>;
+type StoryArgs = SizeArgs & Pick<ScrollContainer.RootProps, 'pin'>;
 
 const DefaultStory = ({ pin }: StoryArgs) => {
   const [rows, setRows] = useState(() => Array.from({ length: 100 }, (_, index) => `Entry ${index + 1}`));
@@ -33,7 +37,7 @@ const DefaultStory = ({ pin }: StoryArgs) => {
             <ScrollContainer.Fade />
             <ScrollContainer.Viewport data-testid='viewport'>
               {rows.map((row) => (
-                <Typography key={row}>{row}</Typography>
+                <Typography.Text key={row}>{row}</Typography.Text>
               ))}
             </ScrollContainer.Viewport>
             <ScrollContainer.Fade edge='bottom' />

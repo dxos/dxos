@@ -13,26 +13,23 @@ import { invariant } from '@dxos/invariant';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
+import * as UiInput from '../../namespaces/Input.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import {
-  Button,
-  Checkbox,
-  Container,
-  DateInput,
-  Field,
-  type FieldValence,
-  Input,
-  NumberInput,
-  PasswordInput,
-  PinInput,
-  Switch,
-  Textarea,
-  Typography,
-} from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Checkbox } from '../Checkbox/Checkbox.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Input } from '../Input/Input.tsx';
+import { NumberInput } from '../NumberInput/NumberInput.tsx';
+import { PasswordInput } from '../PasswordInput/PasswordInput.tsx';
+import { PinInput } from '../PinInput/PinInput.tsx';
+import { Switch } from '../Switch/Switch.tsx';
+import { Textarea } from '../Textarea/Textarea.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Field from './Field.tsx';
 
-const VALENCES: FieldValence[] = ['success', 'info', 'warning', 'error'];
+const VALENCES: Field.Valence[] = ['success', 'info', 'warning', 'error'];
 
 /**
  * Every current `Field` part as a Next field (DESIGN.md follow-up 54): text, textarea, the segmented date, time and
@@ -52,15 +49,15 @@ const EveryField = ({ size }: SizeArgs) => (
     </Field.Root>
     <Field.Root>
       <Field.Label>Birthday</Field.Label>
-      <DateInput defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
+      <UiInput.Date defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Wake up</Field.Label>
-      <DateInput type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
+      <UiInput.Date type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
     </Field.Root>
     <Field.Root>
       <Field.Label>Meeting</Field.Label>
-      <DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
+      <UiInput.Date type='datetime-local' defaultValue='2026-09-29T14:00' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Code</Field.Label>
@@ -153,7 +150,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
     </Container>
     {/* A header whose label is text (no single control to name): its action still ends the row. */}
     <Field.Header data-testid={`text-header-${size}`}>
-      <Typography truncate>Tags</Typography>
+      <Typography.Text truncate>Tags</Typography.Text>
       <Button iconOnly variant='ghost' icon='ph--plus--regular' label='Add tag' />
     </Field.Header>
     {/* A row with its own columns spaces them by its gap. */}

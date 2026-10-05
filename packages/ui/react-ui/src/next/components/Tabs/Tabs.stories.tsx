@@ -12,11 +12,13 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { controlSize, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Input, Tabs, type TabsOrientation, type TabsSelectedVariant, Typography } from '../index.ts';
+import { Input } from '../Input/Input.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Tabs from './Tabs.tsx';
 
 type StoryArgs = SizeArgs & {
-  orientation?: TabsOrientation;
-  selectedVariant?: TabsSelectedVariant;
+  orientation?: Tabs.Orientation;
+  selectedVariant?: Tabs.SelectedVariant;
   keepMounted?: boolean;
 };
 
@@ -35,10 +37,10 @@ const DefaultStory = ({ size, orientation, selectedVariant, keepMounted }: Story
       <Tabs.Trigger value='settings' icon='ph--gear--regular' label='Settings' iconOnly />
     </Tabs.List>
     <Tabs.Content value='overview'>
-      <Typography>A summary of the project.</Typography>
+      <Typography.Text>A summary of the project.</Typography.Text>
     </Tabs.Content>
     <Tabs.Content value='tasks'>
-      <Typography>Three open tasks.</Typography>
+      <Typography.Text>Three open tasks.</Typography.Text>
     </Tabs.Content>
     <Tabs.Content value='settings'>
       <Input aria-label='Name' defaultValue='Apollo' />

@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useClient } from '@dxos/react-client';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -31,10 +32,10 @@ export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> & {
  * one in — the client stays open throughout, so nothing reloads.
  */
 export const ResetDialog = ({ mode, invitationCode, onBeforeReset }: ResetDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
-  const onIdentityDeleted = useCapabilities(ClientCapabilities.OnIdentityDeleted);
+  const onIdentityDeleted = Hooks.useCapabilities(ClientCapabilities.OnIdentityDeleted);
 
   const handleReset = useCallback(async () => {
     if (onBeforeReset) {

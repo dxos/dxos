@@ -6,7 +6,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { DXN, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity.ts';

@@ -6,7 +6,13 @@ import React, { useCallback, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Button, Card, Group, Icon, Link, Switch, Tag, type TagHue, Typography, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Typography from '@dxos/react-ui/Typography';
 import { ACCENT_HUES } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -72,7 +78,7 @@ export const PluginItem = ({
   failure,
   readOnly,
 }: PluginItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
   const icon = rawIcon?.key ?? 'ph--circle--regular';
   // The manifest's hue is a free string; only a palette hue reaches the icon.
@@ -109,25 +115,27 @@ export const PluginItem = ({
             {name ?? id}
           </Card.Title>
           {failure && <PluginFailureBadge failure={failure} />}
-          {deviceOnly && <Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' tone='muted' />}
+          {deviceOnly && (
+            <Icon.Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' tone='muted' />
+          )}
         </Card.Header>
         {description && (
-          <Typography tone='muted' lines={4}>
+          <Typography.Text tone='muted' lines={4}>
             {description}
-          </Typography>
+          </Typography.Text>
         )}
         {displayTags.length > 0 && (
-          <Group>
+          <Button.Group>
             {displayTags.map((tag) => (
-              <Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
+              <Tag.Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
                 {tag.toUpperCase()}
-              </Tag>
+              </Tag.Tag>
             ))}
-          </Group>
+          </Button.Group>
         )}
         <Card.Footer justify='between'>
-          <Group>
-            <Button
+          <Button.Group>
+            <Button.Root
               variant='ghost'
               iconOnly
               icon='ph--gear--regular'
@@ -135,25 +143,25 @@ export const PluginItem = ({
               disabled={!hasSettings}
               onClick={handleSettings}
             />
-            <Link asChild variant='neutral'>
+            <Typography.Link asChild variant='neutral'>
               <button type='button' onClick={handleClick}>
                 {t('details.label')}
               </button>
-            </Link>
-          </Group>
+            </Typography.Link>
+          </Button.Group>
           {isUpdating ? (
-            <Button variant='primary' disabled label={t('updating.label')} />
+            <Button.Root variant='primary' disabled label={t('updating.label')} />
           ) : showUpdateButton ? (
-            <Button variant='primary' label={t('update.label')} onClick={handleUpdate} />
+            <Button.Root variant='primary' label={t('update.label')} onClick={handleUpdate} />
           ) : showInstallButton ? (
-            <Button
+            <Button.Root
               variant='primary'
               disabled={isInstalling}
               label={isInstalling ? t('installing.label') : t('install.label')}
               onClick={handleInstall}
             />
           ) : (
-            <Switch
+            <Input.Switch
               aria-label={name ?? id}
               checked={isEnabled}
               disabled={readOnly}
@@ -166,7 +174,7 @@ export const PluginItem = ({
   );
 };
 
-const tagColors: Record<RegistryTagType, TagHue> = {
+const tagColors: Record<RegistryTagType, Tag.TagHue> = {
   new: 'rose',
   // Tier hues ramp green -> blue -> purple so the ordering reads without knowing the labels.
   beta: 'green',

@@ -9,7 +9,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList } from '@dxos/async';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { toServiceError } from '@dxos/protocols';

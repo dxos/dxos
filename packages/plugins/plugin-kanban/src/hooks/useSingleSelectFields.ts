@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { type Database, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 
 /**
  * Names of the single-select properties of the type with the given URI, which can pivot a kanban.

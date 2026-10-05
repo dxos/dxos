@@ -13,7 +13,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { SAMPLE_MESSAGES, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as Corpus from '@dxos/plugin-testing/Corpus';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -88,7 +89,7 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [Message.Message],
@@ -96,7 +97,7 @@ const meta = {
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
 
-              for (const { from, subject, body } of SAMPLE_MESSAGES) {
+              for (const { from, subject, body } of Corpus.SAMPLE_MESSAGES) {
                 defaultSpace.db.add(
                   Message.make({
                     sender: { email: from.email, name: from.name },

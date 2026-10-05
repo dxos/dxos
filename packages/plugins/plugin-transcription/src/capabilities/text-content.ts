@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Feed, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Message, Transcript } from '@dxos/types';
 

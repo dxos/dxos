@@ -17,22 +17,18 @@ import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
-import {
-  AgentHandlers,
-  AgentSkill,
-  DelegationSkill,
-  DelegationSkillHandlers,
-  PlanningHandlers,
-  PlanningSkill,
-  makeDelegationStrategy,
-} from '@dxos/assistant-toolkit';
+import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
+import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
+import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
+import * as DelegationStrategy from '@dxos/assistant-toolkit/DelegationStrategy';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -45,7 +41,7 @@ import { ExampleHandlers } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
@@ -64,8 +60,8 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { type StoryDecoratorsProps, createStoryDecorators } from '@dxos/storybook-testing';
 import { Outline, Task, TaskSet } from '@dxos/types';
@@ -149,15 +145,15 @@ type DecoratorsProps = Merge<
  * hooks always resolve.
  */
 const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: ReactNode }) => {
-  const atomRegistry = useCapability(Capabilities.AtomRegistry);
-  const skillDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const skillDefinitions = Hooks.useCapabilities(AppCapabilities.SkillDefinition);
   const [space] = useSpaces();
   // Reactive: the chat is created asynchronously (module.setup on SpacesAvailable), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
   const chats = useQuery(space?.db, Filter.type(Chat.Chat));
 
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (!space) {
       return;
     }
@@ -301,12 +297,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // Supervisor behaviour, so a delegating story spawns its sub-agent. The app's copy rides
         // plugin-assistant's `AssistantStart`-gated skill-definition module, which loses the race
         // against `AgentService`'s layer — that layer reads this capability once, at build time.
-        Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
+        Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, DelegationStrategy.make()),
         Capability.contributeAll(Capabilities.OperationHandler, [
           MarkdownOperationHandlerSet.handlers,
-          PlanningHandlers,
-          DelegationSkillHandlers,
-          AgentHandlers,
+          PlanningSkill.Handlers,
+          DelegationSkill.Handlers,
+          AgentOperationHandlerSet.handlers,
           ExampleHandlers,
           CalculatorHandlers,
         ]),
