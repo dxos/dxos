@@ -499,6 +499,14 @@ export default defineConfig((env) => ({
     format: 'es' as const,
 
     plugins: () => [...sharedPlugins(env)],
+    rolldownOptions: {
+      output: {
+        // The client plugin the worker hosts reaches `HubHttpClient` only through a lazy module, so default
+        // splitting gives it a chunk of its own, which edge-client's barrel chunk re-exports while it imports
+        // `BaseHttpClient` back from that barrel: a chunk cycle that runs the subclass first.
+        codeSplitting: { groups: [{ name: 'edge-client', test: /[\\/]edge-client[\\/]/ }] },
+      },
+    },
   },
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
