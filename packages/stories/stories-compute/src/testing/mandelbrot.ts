@@ -176,31 +176,72 @@ const toBase64 = (bytes: Uint8Array): string => {
 /** Decodes {@link MandelbrotOutput.data} to one intensity byte per pixel. */
 export const decodeFrame = (data: string): Uint8Array => Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
 
-const computeFrame = (frame: number, size: number, center: Point, width: number): MandelbrotOutput => {
+/** Smallest pixel pitch, relative to the center's magnitude, before doubles stop resolving the view. */
+const PRECISION_LIMIT = 1e-12;
+
+type RenderedFrame = {
+  output: MandelbrotOutput;
+  /** Where the next frame zooms: the slowest-escaping pixel near the middle, so the zoom stays on the boundary. */
+  next: Point;
+  /** The view is now finer than doubles resolve; a deeper frame would only repeat pixels. */
+  exhausted: boolean;
+};
+
+const computeFrame = (frame: number, size: number, center: Point, width: number): RenderedFrame => {
   const viewWidth = width * Math.pow(ZOOM, frame);
   const scale = viewWidth / size;
   // Deeper views need more iterations to resolve the boundary, wherever the zoom started.
   const depth = Math.log(FULL_WIDTH / viewWidth) / Math.log(1 / ZOOM);
   const maxIterations = Math.round(64 + Math.max(0, depth) * 24);
-  const bytes = new Uint8Array(size * size);
+
+  const counts = new Uint32Array(size * size);
+  let min = Infinity;
+  let max = 0;
+  let next = center;
+  let nextCount = -1;
   for (let row = 0; row < size; row++) {
     for (let column = 0; column < size; column++) {
-      const iterations = escapeIterations(
-        center.x + (column - size / 2) * scale,
-        center.y + (row - size / 2) * scale,
-        maxIterations,
-      );
-      bytes[row * size + column] =
-        iterations >= maxIterations ? 0 : 1 + Math.floor(254 * Math.sqrt(iterations / maxIterations));
+      const x = center.x + (column - size / 2) * scale;
+      const y = center.y + (row - size / 2) * scale;
+      const count = escapeIterations(x, y, maxIterations);
+      counts[row * size + column] = count;
+      if (count < maxIterations) {
+        min = Math.min(min, count);
+        max = Math.max(max, count);
+        // Only the middle half is a candidate, so the view drifts rather than jumps.
+        const central = Math.abs(column - size / 2) < size / 4 && Math.abs(row - size / 2) < size / 4;
+        if (central && count > nextCount) {
+          nextCount = count;
+          next = { x, y };
+        }
+      }
     }
   }
-  return { frame, size, data: toBase64(bytes) };
+
+  // Stretched over this frame's own escape range (log scale), so contrast survives however deep the zoom.
+  const range = Math.log(max + 1) - Math.log(min + 1);
+  const bytes = new Uint8Array(size * size);
+  counts.forEach((count, index) => {
+    bytes[index] =
+      count >= maxIterations
+        ? 0
+        : range > 0
+          ? 1 + Math.floor((254 * (Math.log(count + 1) - Math.log(min + 1))) / range)
+          : 128;
+  });
+
+  const magnitude = Math.max(1, Math.abs(center.x), Math.abs(center.y));
+  return {
+    output: { frame, size, data: toBase64(bytes) },
+    next,
+    exhausted: scale < magnitude * PRECISION_LIMIT,
+  };
 };
 
 /**
  * Renders a Mandelbrot zoom on credit: each input grants `frames` more frames, which the process pushes
  * one per `interval` and then waits. It never computes more than it was granted (capped at
- * {@link MAX_CREDITS}), and finishes after `frameCount` frames, or once no request has arrived for {@link IDLE_TIMEOUT}.
+ * {@link MAX_CREDITS}), and finishes after `frameCount` frames (or once the zoom outruns double precision), or once no request has arrived for {@link IDLE_TIMEOUT}.
  */
 export const MandelbrotProcess = Operation.makeDurable(
   { key: MANDELBROT_PROCESS_KEY, input: MandelbrotInput, output: MandelbrotOutput, services: [] },
@@ -256,8 +297,10 @@ export const MandelbrotProcess = Operation.makeDurable(
           Effect.gen(function* () {
             if (credits > 0) {
               credits--;
-              ctx.submitOutput(computeFrame(frame++, size, center, width));
-              if (frame >= frameCount) {
+              const { output, next, exhausted } = computeFrame(frame++, size, center, width);
+              ctx.submitOutput(output);
+              center = next;
+              if (frame >= frameCount || exhausted) {
                 ctx.succeed();
                 return;
               }
