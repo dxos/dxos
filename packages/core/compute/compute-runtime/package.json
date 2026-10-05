@@ -56,7 +56,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai-anthropic": "catalog:",

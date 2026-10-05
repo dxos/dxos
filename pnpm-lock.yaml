@@ -4847,9 +4847,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../operation
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
