@@ -143,9 +143,9 @@ export const TestPopover: Story = {
     await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
 
     const description = within(canvasElement).getByText(/^## Summary/);
-    const lines = Math.round(
-      (description.clientHeight - 2 * Number.parseFloat(getComputedStyle(description).paddingTop)) / lineHeight,
-    );
+    const descriptionStyle = getComputedStyle(description);
+    const padding = Number.parseFloat(descriptionStyle.paddingTop) + Number.parseFloat(descriptionStyle.paddingBottom);
+    const lines = Math.round((description.clientHeight - padding) / Number.parseFloat(descriptionStyle.lineHeight));
     await expect(lines).toBe(3);
     const row = description.closest<HTMLElement>('.dx-card-row');
     const icon = row?.querySelector<HTMLElement>('.dx-block, [data-rail="start"]');
