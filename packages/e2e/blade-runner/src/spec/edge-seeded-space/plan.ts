@@ -50,6 +50,12 @@ export type EdgeSeededSpaceSpec = {
   editsPerRound: number;
   /** Documents each identity creates per round, so new trees keep arriving at EDGE. */
   newDocumentsPerRound: number;
+  /**
+   * Recycle the space's replicator instance before every round but the first, as the platform does
+   * routinely (DX-1275), through EDGE's test-only `recycleSubductionInstance` route — so the rounds
+   * measure recovery from a cold instance. Needs a stack with test endpoints (the local harness).
+   */
+  recycleEachRound: boolean;
   /** Ceiling on a round: from its first edit until every identity holds every edit of it. */
   roundBudgetMs: number;
   /** Ceiling on one edit: from the edit flushing locally until every other identity holds it. */
@@ -72,6 +78,7 @@ export const DEFAULT_SPEC: EdgeSeededSpaceSpec = {
   rounds: 10,
   editsPerRound: 2,
   newDocumentsPerRound: 1,
+  recycleEachRound: false,
   roundBudgetMs: 30_000,
   editBudgetMs: 10_000,
   joinBudgetMs: 30_000,
@@ -96,6 +103,8 @@ export type JoinMeasurement = {
 
 export type RoundMeasurement = {
   round: number;
+  /** The recycle call before the round, which reads the fresh instance's diagnostics; absent when not recycled. */
+  recycleMs?: number;
   /** First edit to every identity holding every edit of the round. */
   roundMs?: number;
   /** Per edit: flushed locally to held by every other identity. */
@@ -226,7 +235,8 @@ export class EdgeSeededSpace implements TestPlan<EdgeSeededSpaceSpec, EdgeSeeded
       // Rounds.
       const seq = new Array<number>(spec.identities).fill(0);
       for (let round = 0; round < spec.rounds; round++) {
-        rounds.push(await this._runRound(spec, clients, space, expected, seq, round));
+        const recycleMs = spec.recycleEachRound && round > 0 ? await recycleReplicator(edgeUrl, space) : undefined;
+        rounds.push({ ...(await this._runRound(spec, clients, space, expected, seq, round)), recycleMs });
         log.info('round measured', { ...rounds[rounds.length - 1] });
       }
 
@@ -437,6 +447,14 @@ export class EdgeSeededSpace implements TestPlan<EdgeSeededSpaceSpec, EdgeSeeded
   }
 }
 
+/** Recycles the space's replicator instance and returns how long the route took, fresh instance's read included. */
+const recycleReplicator = async (edgeUrl: string, spaceId: string): Promise<number> => {
+  const began = Date.now();
+  const response = await fetch(`${edgeUrl}/db/test/spaces/${spaceId}/recycleSubductionInstance`, { method: 'POST' });
+  invariant(response.ok, `recycle failed: HTTP ${response.status} ${await response.text()}`);
+  return Date.now() - began;
+};
+
 const expectedDigest = (expected: Map<string, Set<string>>): SpaceDigest => ({
   docs: Object.fromEntries(
     [...expected.entries()].map(([docId, tokens]) => [
@@ -463,11 +481,11 @@ const renderSummary = (result: EdgeSeededSpaceResult, spec: EdgeSeededSpaceSpec)
         `| ${join.joiner} | ${join.ok ? '✅' : '❌'} | ${seconds(join.admittedMs)} | ${seconds(join.spaceReadyMs)} | ${seconds(join.pullMs)} | ${join.error ?? ''} |`,
     ),
     '',
-    '| Round | | Round | Slowest edit | Error |',
-    '| --- | --- | --- | --- | --- |',
+    '| Round | | Recycle | Round | Slowest edit | Error |',
+    '| --- | --- | --- | --- | --- | --- |',
     ...result.rounds.map(
       (round) =>
-        `| ${round.round} | ${round.ok ? '✅' : '❌'} | ${seconds(round.roundMs)} | ${seconds(
+        `| ${round.round} | ${round.ok ? '✅' : '❌'} | ${seconds(round.recycleMs)} | ${seconds(round.roundMs)} | ${seconds(
           round.editLatenciesMs.length > 0 ? Math.max(...round.editLatenciesMs) : undefined,
         )} | ${round.error ?? ''} |`,
     ),
