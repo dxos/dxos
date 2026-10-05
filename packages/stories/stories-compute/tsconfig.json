@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -31,6 +34,9 @@
       "path": "../../core/compute/edge-compute"
     },
     {
+      "path": "../../sdk/app-framework"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -43,10 +49,13 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-dnd"
+      "path": "../../ui/react-ui-debug"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
+      "path": "../storybook-testing"
     }
   ]
 }

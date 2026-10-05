@@ -12,11 +12,8 @@ export const MANDELBROT_PROCESS_KEY = 'org.dxos.stories.compute.mandelbrot';
 export const WIDTH = 160;
 export const HEIGHT = 120;
 
-/** Rows computed per alarm; small enough that each step yields the runtime quickly. */
-const BAND = 8;
-
-/** Delay between bands, so progress is visible and the runtime stays responsive. */
-const STEP_INTERVAL = 50;
+/** Delay between frames; the process hybernates in between rather than looping. */
+const FRAME_INTERVAL = 1_000;
 
 /** Seahorse valley: detail persists at every zoom depth. */
 const CENTER = { x: -0.743643887037151, y: 0.13182590420533 };
@@ -24,12 +21,10 @@ const INITIAL_SCALE = 3 / WIDTH;
 const ZOOM = 0.7;
 
 export const MandelbrotOutput = Schema.Struct({
-  /** Zoom frame the band belongs to. */
+  /** Zoom depth of the frame. */
   frame: Schema.Number,
-  /** First row of the band. */
-  y: Schema.Number,
   maxIterations: Schema.Number,
-  /** Escape iteration per pixel, row-major, `WIDTH` per row. */
+  /** Escape iteration per pixel, row-major, `WIDTH` x `HEIGHT`. */
   data: Schema.Array(Schema.Number),
 });
 
@@ -48,42 +43,36 @@ const escapeIterations = (cx: number, cy: number, maxIterations: number): number
   return iteration;
 };
 
-const computeBand = (frame: number, startRow: number): MandelbrotOutput => {
+const computeFrame = (frame: number): MandelbrotOutput => {
   const scale = INITIAL_SCALE * Math.pow(ZOOM, frame);
   // Deeper frames need more iterations to resolve the boundary.
   const maxIterations = Math.round(64 + frame * 24);
   const data: number[] = [];
-  for (let row = startRow; row < Math.min(startRow + BAND, HEIGHT); row++) {
+  for (let row = 0; row < HEIGHT; row++) {
     for (let column = 0; column < WIDTH; column++) {
       data.push(
         escapeIterations(CENTER.x + (column - WIDTH / 2) * scale, CENTER.y + (row - HEIGHT / 2) * scale, maxIterations),
       );
     }
   }
-  return { frame, y: startRow, maxIterations, data };
+  return { frame, maxIterations, data };
 };
 
 /**
- * Renders an endless Mandelbrot zoom one band per alarm, until it is terminated.
- * The alarm loop leaves the process HYBERNATING between bands rather than blocking its runtime.
+ * Renders an endless Mandelbrot zoom, one frame per alarm every second, until it is terminated.
+ * Each frame is scheduled by an alarm, so the process hybernates between frames instead of looping.
  */
 export const MandelbrotProcess = Operation.makeDurable(
   { key: MANDELBROT_PROCESS_KEY, input: Schema.Void, output: MandelbrotOutput, services: [] },
   (ctx) =>
     Effect.sync(() => {
       let frame = 0;
-      let row = 0;
       return {
-        onSpawn: () => ctx.setAlarm(STEP_INTERVAL),
+        onSpawn: () => ctx.setAlarm(0),
         onAlarm: () =>
           Effect.gen(function* () {
-            ctx.submitOutput(computeBand(frame, row));
-            row += BAND;
-            if (row >= HEIGHT) {
-              row = 0;
-              frame++;
-            }
-            yield* ctx.setAlarm(STEP_INTERVAL);
+            ctx.submitOutput(computeFrame(frame++));
+            yield* ctx.setAlarm(FRAME_INTERVAL);
           }),
       };
     }),

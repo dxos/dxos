@@ -11,8 +11,7 @@ import React, { useEffect, useState } from 'react';
 
 import * as Process from '@dxos/compute/Process';
 import { EffectEx } from '@dxos/effect';
-import { Block, Button, Card, Focus } from '@dxos/react-ui';
-import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 
 import { HEIGHT, type MandelbrotOutput, WIDTH } from '../testing/index.ts';
 
@@ -55,18 +54,17 @@ const colorFor = (iterations: number, maxIterations: number): [number, number, n
   return [Math.round(255 * Math.min(1, 3 * t)), Math.round(255 * t * t), Math.round(255 * (1 - t) * 0.8 + 50 * t)];
 };
 
-const paintBand = (context: CanvasRenderingContext2D, band: MandelbrotOutput) => {
-  const rows = band.data.length / WIDTH;
-  const image = context.createImageData(WIDTH, rows);
-  band.data.forEach((iterations, index) => {
-    const [red, green, blue] = colorFor(iterations, band.maxIterations);
+const paintFrame = (context: CanvasRenderingContext2D, output: MandelbrotOutput) => {
+  const image = context.createImageData(WIDTH, HEIGHT);
+  output.data.forEach((iterations, index) => {
+    const [red, green, blue] = colorFor(iterations, output.maxIterations);
     image.data.set([red, green, blue, 255], index * 4);
   });
-  context.putImageData(image, 0, band.y);
+  context.putImageData(image, 0, 0);
 };
 
 /**
- * Paints each output band onto the canvas and returns the frame being rendered; the subscription
+ * Paints each output frame onto the canvas and returns the frame being rendered; the subscription
  * also drives a remote handle's status polling.
  */
 const useMandelbrot = (handle: ProcessItem['handle'], canvas: HTMLCanvasElement | null): number | undefined => {
@@ -77,10 +75,10 @@ const useMandelbrot = (handle: ProcessItem['handle'], canvas: HTMLCanvasElement 
       return;
     }
     const fiber = Effect.runFork(
-      Stream.runForEach(handle.subscribeOutputs(), (band) =>
+      Stream.runForEach(handle.subscribeOutputs(), (output) =>
         Effect.sync(() => {
-          paintBand(context, band);
-          setFrame(band.frame);
+          paintFrame(context, output);
+          setFrame(output.frame);
         }),
       ),
     );
@@ -91,8 +89,14 @@ const useMandelbrot = (handle: ProcessItem['handle'], canvas: HTMLCanvasElement 
   return frame;
 };
 
-export const ProcessTile: MosaicStackTileComponent<ProcessItem> = (props) => {
-  const { handle, location } = props.data;
+export type ProcessTileProps = {
+  data: ProcessItem;
+  /** Removes the card once its process has ended. */
+  onRemove?: (item: ProcessItem) => void;
+};
+
+export const ProcessTile = ({ data: item, onRemove }: ProcessTileProps) => {
+  const { handle, location } = item;
   const status = useAtomValue(handle.statusAtom);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const frame = useMandelbrot(handle, canvas);
@@ -105,49 +109,41 @@ export const ProcessTile: MosaicStackTileComponent<ProcessItem> = (props) => {
   };
 
   return (
-    <Mosaic.Tile {...props} asChild>
-      <Focus.Item asChild>
-        <Card.Root classNames='dx-hover' data-testid='process-tile'>
-          <Card.Header>
-            <Card.Title classNames='font-mono'>{handle.pid}</Card.Title>
-            <Block rail='end'>
-              <Button
-                iconOnly
-                variant='ghost'
-                icon='ph--x-circle--regular'
-                label='Kill'
-                disabled={terminal}
-                onClick={handleKill}
-                data-testid='process-kill'
-              />
-            </Block>
-          </Card.Header>
-          <Card.Row>
-            <div className='grid grid-cols-[auto_1fr] gap-x-3 text-sm'>
-              <span className='text-fg-muted'>Location</span>
-              <span data-testid='process-location'>{location}</span>
-              <span className='text-fg-muted'>State</span>
-              <span data-testid='process-state'>{status.state}</span>
-              <span className='text-fg-muted'>Elapsed</span>
-              <span className='font-mono'>{formatElapsed(end - status.startedAt.getTime())}</span>
-              <span className='text-fg-muted'>Frame</span>
-              <span className='font-mono' data-testid='process-output'>
-                {frame ?? '—'}
-              </span>
-            </div>
-          </Card.Row>
-          <Card.Row>
-            <canvas
-              ref={setCanvas}
-              width={WIDTH}
-              height={HEIGHT}
-              className='w-full aspect-[4/3] rounded-sm bg-black [image-rendering:pixelated]'
-            />
-          </Card.Row>
-        </Card.Root>
-      </Focus.Item>
-    </Mosaic.Tile>
+    <Card.Root grid data-testid='process-tile'>
+      <Card.Header>
+        <Card.Title truncate classNames='font-mono'>
+          {handle.pid}
+        </Card.Title>
+        {terminal ? (
+          <Card.Action system='delete' onClick={() => onRemove?.(item)} data-testid='process-remove' />
+        ) : (
+          <Card.Action icon='ph--stop-circle--regular' label='Kill' onClick={handleKill} data-testid='process-kill' />
+        )}
+      </Card.Header>
+      <Card.Row
+        icon={location === 'edge' ? 'ph--cloud--regular' : 'ph--laptop--regular'}
+        data-testid='process-location'
+      >
+        <Card.Text>{location}</Card.Text>
+      </Card.Row>
+      <Card.Row icon='ph--pulse--regular' data-testid='process-state'>
+        <Card.Text>{status.state}</Card.Text>
+      </Card.Row>
+      <Card.Row
+        icon='ph--timer--regular'
+        trailing={<Card.Text variant='muted'>frame {frame ?? '—'}</Card.Text>}
+        data-testid='process-output'
+      >
+        <Card.Text classNames='font-mono'>{formatElapsed(end - status.startedAt.getTime())}</Card.Text>
+      </Card.Row>
+      <Card.Row span='full'>
+        <canvas
+          ref={setCanvas}
+          width={WIDTH}
+          height={HEIGHT}
+          className='w-full aspect-[4/3] rounded-sm bg-black [image-rendering:pixelated]'
+        />
+      </Card.Row>
+    </Card.Root>
   );
 };
-
-ProcessTile.displayName = 'ProcessTile';

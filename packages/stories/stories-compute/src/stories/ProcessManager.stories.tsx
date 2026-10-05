@@ -2,109 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Cause from 'effect/Cause';
-import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
-import * as Process from '@dxos/compute/Process';
 import { Config } from '@dxos/config';
-import { useClient } from '@dxos/react-client';
-import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Focus, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { Dnd } from '@dxos/react-ui-dnd';
-import { Mosaic } from '@dxos/react-ui-mosaic';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
+import { ModuleContainer, createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
 
-import { CommandModule, type ProcessItem, ProcessTile } from '../components/index.ts';
-import { MandelbrotProcess, type RemoteMode, makeComputeLayer } from '../testing/index.ts';
+import { ComputeProvider, StoryRole, moduleSurfaces } from '../modules/index.ts';
 
-type StoryProps = {
-  remote: RemoteMode;
-};
+const surfacesPlugin = () => makeModuleSurfacesPlugin('org.dxos.stories.compute.modules', moduleSurfaces);
 
-const DefaultStory = ({ remote }: StoryProps) => {
-  const client = useClient();
-  const { space } = useClientStory();
-  const registry = useContext(RegistryContext);
-  const [items, setItems] = useState<ProcessItem[]>([]);
+/** Remote processes run on a second in-memory runtime behind the EDGE control surface. */
+const SimulatedProvider = ({ children }: PropsWithChildren) => (
+  <ComputeProvider remote='simulated'>{children}</ComputeProvider>
+);
 
-  // Created in the effect so a StrictMode remount builds a fresh runtime rather than reusing a disposed one.
-  const [runtime, setRuntime] = useState<ManagedRuntime.ManagedRuntime<Process.ManagerService, never>>();
-  useEffect(() => {
-    const next = ManagedRuntime.make(makeComputeLayer({ registry, remote, client }));
-    setRuntime(next);
-    return () => {
-      setItems([]);
-      void next.dispose();
-    };
-  }, [registry, remote, client]);
-
-  const [error, setError] = useState<string>();
-  const [viewport, setViewport] = useState<HTMLElement | null>(null);
-
-  const handleCreate = useCallback(
-    (location: Process.Location) => {
-      if (!runtime || !space) {
-        return;
-      }
-      setError(undefined);
-      void runtime
-        .runPromiseExit(
-          Effect.gen(function* () {
-            const manager = yield* Process.ManagerService;
-            return yield* manager.spawn(MandelbrotProcess, {
-              name: 'Mandelbrot',
-              location,
-              environment: { space: space.id },
-            });
-          }),
-        )
-        .then((exit) =>
-          Exit.match(exit, {
-            onSuccess: (handle) => setItems((prev) => [{ id: handle.pid, location, handle }, ...prev]),
-            onFailure: (cause) => setError(Cause.pretty(cause)),
-          }),
-        );
-    },
-    [runtime, space],
-  );
-
-  return (
-    <div className='dx-cover grid grid-cols-[20rem_1fr] divide-x divide-separator'>
-      <CommandModule remote={remote} ready={!!runtime && !!space} error={error} onCreate={handleCreate} />
-      <Dnd.Root>
-        <Panel.Root>
-          <Panel.Header>
-            <Toolbar.Root>
-              <Toolbar.Text>Processes: {items.length}</Toolbar.Text>
-            </Toolbar.Root>
-          </Panel.Header>
-          <Panel.Body asChild>
-            <Focus.Group asChild>
-              <Mosaic.Container asChild orientation='vertical' autoScroll={viewport}>
-                <ScrollArea.Root orientation='vertical'>
-                  <ScrollArea.Viewport ref={setViewport}>
-                    <Mosaic.Stack
-                      items={items}
-                      getId={(item) => item.id}
-                      Tile={ProcessTile}
-                      draggable={false}
-                      orientation='vertical'
-                    />
-                  </ScrollArea.Viewport>
-                </ScrollArea.Root>
-              </Mosaic.Container>
-            </Focus.Group>
-          </Panel.Body>
-        </Panel.Root>
-      </Dnd.Root>
-    </div>
-  );
-};
+/** Remote processes run on the dev EDGE service. */
+const EdgeProvider = ({ children }: PropsWithChildren) => <ComputeProvider remote='edge'>{children}</ComputeProvider>;
 
 /** Client config pointing at the dev EDGE service, for the story that spawns there for real. */
 const edgeConfig = new Config({
@@ -115,25 +30,26 @@ const edgeConfig = new Config({
   },
 });
 
-const meta: Meta<typeof DefaultStory> = {
+const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-compute/ProcessManager',
-  render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: { layout: 'fullscreen', controls: { disable: true } },
+  render: ModuleContainer,
+  parameters: { layout: 'fullscreen', controls: { disable: true }, translations: [...debugTranslations] },
+  args: {
+    layout: [[StoryRole.Command, StoryRole.Logging], [StoryRole.Processes]],
+    columns: '1fr_2fr',
+    rows: ['1fr_2fr'],
+  },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Remote processes run on a second in-memory runtime behind the EDGE control surface. */
 export const Default: Story = {
-  args: { remote: 'simulated' },
-  decorators: [withClientProvider({ createIdentity: true, createSpace: true })],
+  decorators: createStoryDecorators({ plugins: [surfacesPlugin()], Wrapper: SimulatedProvider }),
 };
 
-/** Remote processes run on the dev EDGE service, which must host the Mandelbrot process key. */
+/** EDGE must host the Mandelbrot process key for remote spawns to succeed. */
 export const Edge: Story = {
-  args: { remote: 'edge' },
-  decorators: [withClientProvider({ createIdentity: true, createSpace: true, config: edgeConfig })],
+  decorators: createStoryDecorators({ plugins: [surfacesPlugin()], Wrapper: EdgeProvider, config: edgeConfig }),
 };

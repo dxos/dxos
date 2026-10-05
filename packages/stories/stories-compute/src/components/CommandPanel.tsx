@@ -12,7 +12,7 @@ const LOCATIONS: { value: Process.Location; label: string }[] = [
   { value: 'edge', label: 'Remote (EDGE)' },
 ];
 
-export type CommandModuleProps = {
+export type CommandPanelProps = {
   /** Label for the remote runtime in use. */
   remote: string;
   /** False until the runtime and space exist. */
@@ -21,7 +21,7 @@ export type CommandModuleProps = {
   onCreate: (location: Process.Location) => void;
 };
 
-export const CommandModule = ({ remote, ready = true, error, onCreate }: CommandModuleProps) => {
+export const CommandPanel = ({ remote, ready = true, error, onCreate }: CommandPanelProps) => {
   const [location, setLocation] = useState<Process.Location>('local');
 
   return (
