@@ -19,4 +19,5 @@ export * as Process from './Process.ts';
 export * as Runnable from './Runnable.ts';
 export * as ServiceResolver from './ServiceResolver.ts';
 export * as StorageService from './StorageService.ts';
+export * as Subprocess from './Subprocess.ts';
 export * as Trace from './Trace.ts';

@@ -22,6 +22,12 @@ import { type ContentBlock, Message } from '@dxos/types';
 import { AgentError } from '../errors.ts';
 import * as AcpSession from './AcpSession.ts';
 import * as Projection from './Projection.ts';
+import * as Protocol from './Protocol.ts';
+
+export { AgentError };
+
+/** Environment variable an agent started for a turn finds Composer's tools token in. */
+export const TOOLS_TOKEN_ENV = Protocol.MCP_TOKEN_ENV;
 
 /** How long a session with no turns stays connected; the next prompt after that reloads it. */
 export const IDLE_TIMEOUT = Duration.minutes(30);

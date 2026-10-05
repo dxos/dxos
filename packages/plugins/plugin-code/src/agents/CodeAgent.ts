@@ -58,13 +58,22 @@ export type ComposerTools = {
   readOnlyTools: readonly string[];
 };
 
+/** A coding agent, as a plugin contributes it. */
+export type CodeAgent = {
+  /** The agent-registry entry. */
+  agent: AssistantCapabilities.Agent;
+  /**
+   * How a turn reaches the agent, for a process that runs it another way; it shares the entry's
+   * sessions, so an answer given through the entry reaches whichever runs the turn.
+   */
+  options: AcpAgent.AgentOptions;
+};
+
 /**
  * A coding agent the desktop app runs through its agent helper, as the agent-registry entry a plugin
  * contributes. Where the helper cannot run (the web app) the agent is listed but unavailable.
  */
-export const make = (
-  definition: Definition,
-): Effect.Effect<AssistantCapabilities.Agent, never, Scope.Scope | Capability.Service> =>
+export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Scope.Scope | Capability.Service> =>
   Effect.gen(function* () {
     const manager = yield* Capability.Service;
     const sessions = yield* AcpAgent.Sessions.make();
@@ -219,7 +228,7 @@ export const make = (
       device: () => toPublicKey(manager.getAll(ClientCapabilities.Client).at(0)?.halo.device?.deviceKey)?.toHex(),
     };
 
-    return {
+    const agent: AssistantCapabilities.Agent = {
       id: definition.id,
       label: definition.label,
       icon: definition.icon,
@@ -234,7 +243,8 @@ export const make = (
           }
           return yield* AcpAgent.respond(sessions, { chat, feed: feed.value, message, requestId, optionId });
         }),
-    } satisfies AssistantCapabilities.Agent;
+    };
+    return { agent, options };
   });
 
 /**

@@ -20,6 +20,7 @@ import {
   AiContext,
   Alarm,
   HarnessControl,
+  type HarnessControlRpcs,
   type PendingState,
   SessionStore,
   SkillHooks,
@@ -86,6 +87,17 @@ export interface AgentProcessOptions {
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
 
+/** What an agent process is handed: a prompt as plain text or as content blocks. */
+export const AgentInput = Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]);
+export type AgentInput = Schema.Schema.Type<typeof AgentInput>;
+
+/**
+ * A process that can run a chat in place of {@link AgentProcess}: it takes the same input and serves
+ * the same `HarnessControl` RPCs, so a session drives it without knowing which one it is. Its
+ * requirements are its own; the host resolves them when it spawns the process.
+ */
+export type AgentProcessDefinition = Process.Process<AgentInput, void, any, HarnessControlRpcs>;
+
 /**
  * How long to wait before re-reading a queue that contradicts a write this process just made, and
  * how many times. A hosted runtime serves the read from an eventually-consistent index, and the lag
@@ -128,8 +140,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
   Process.make(
     {
       key: AGENT_PROCESS_KEY,
-      // Accepts plain text or content blocks.
-      input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
+      input: AgentInput,
       output: Schema.Void,
       // The conversation's own data model. `SessionStore` reads the queue with a TYPED query
       // (`Filter.type(Message)`/`Filter.type(Alarm)`), so without these registered every read comes

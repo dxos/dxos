@@ -113,6 +113,11 @@
       "types": "./dist/types/src/StorageService.d.ts",
       "import": "./dist/lib/StorageService.mjs"
     },
+    "./Subprocess": {
+      "source": "./src/Subprocess.ts",
+      "types": "./dist/types/src/Subprocess.d.ts",
+      "import": "./dist/lib/Subprocess.mjs"
+    },
     "./Template": {
       "source": "./src/types/Template.ts",
       "types": "./dist/types/src/types/Template.d.ts",

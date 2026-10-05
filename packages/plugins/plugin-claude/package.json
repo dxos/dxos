@@ -131,22 +131,28 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@agentclientprotocol/sdk": "catalog:",
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/link": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-code": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/assistant": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@effect/vitest": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

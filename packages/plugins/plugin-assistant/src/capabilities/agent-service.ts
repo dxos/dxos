@@ -13,7 +13,7 @@ import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import { AssistantOptions } from '#types';
+import { AssistantCapabilities, AssistantOptions } from '#types';
 
 import { resolveTurnProducer } from './turn-producers.ts';
 
@@ -45,6 +45,7 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
           return AgentServiceRuntime.layer({
             delegationStrategy: strategies[0],
             makeTurnProducer: (options) => resolveTurnProducer(manager, codeMode)(options),
+            processes: () => manager.getAll(AssistantCapabilities.AgentProcess),
           });
         }),
       ),

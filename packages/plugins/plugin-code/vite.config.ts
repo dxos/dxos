@@ -16,6 +16,7 @@ export default defineConfig({
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     translations: 'src/translations.ts',
+    AcpAgent: 'src/agents/AcpAgent.ts',
     CodeAgent: 'src/agents/CodeAgent.ts',
     CodeCapabilities: 'src/types/CodeCapabilities.ts',
     CodeEvents: 'src/types/CodeEvents.ts',

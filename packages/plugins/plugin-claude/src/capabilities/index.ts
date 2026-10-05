@@ -15,9 +15,17 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const ClaudeCodeAgent = Capability.lazyModule(
   'ClaudeCodeAgent',
-  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  {
+    provides: [AssistantCapabilities.Agent, AssistantCapabilities.AgentProcess],
+    activatesOn: ActivationEvents.Startup,
+  },
   () => import('./claude-code-agent.ts'),
 );
+
+export const Subprocess = AppCapability.layerSpec(() => import('./subprocess.ts'), {
+  name: 'Subprocess',
+  environments: ['node'],
+});
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
