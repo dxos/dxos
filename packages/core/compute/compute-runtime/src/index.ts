@@ -7,6 +7,7 @@ export * from './errors.ts';
 export * as FeedTraceSink from './FeedTraceSink.ts';
 export * from './functions-trace.ts';
 export * as LayerStack from './LayerStack.ts';
+export * as LocatedProcessManager from './LocatedProcessManager.ts';
 export * from './protocol.ts';
 export * as ProcessHandle from './ProcessHandle.ts';
 export * as ProcessManager from './ProcessManager.ts';

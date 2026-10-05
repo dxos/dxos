@@ -24,7 +24,6 @@ import { log } from '@dxos/log';
 // same error shape as the domain type they extend.
 import type { SerializedError } from '@dxos/protocols';
 
-import type * as ProcessManager from './ProcessManager.ts';
 import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
 import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
@@ -113,7 +112,7 @@ export interface SpawnRequest extends Idempotent {
   readonly annotations?: Annotation.Dictionary;
 }
 
-/** Filters mirroring `ProcessManager.ListOptions`. */
+/** Filters mirroring `Process.ListOptions`. */
 export interface ListRequest {
   readonly spaceId: SpaceId;
   readonly key?: string;
@@ -123,7 +122,7 @@ export interface ListRequest {
 
 /**
  * Full control surface for processes hosted by a remote runtime, mirroring the local
- * `ProcessManager.Manager`/`ProcessManager.Handle` verbs.
+ * `ProcessManager.Manager`/`Process.Handle` verbs.
  *
  * Stated in domain types, not wire types: the `ProcessProtocol` shapes are the transport's business
  * and decoding them is the implementation's job, so a consumer of this interface never sees them.
@@ -198,19 +197,18 @@ export interface Manager {
    * Spawn one of the host's processes and return a handle on it. Present exactly when
    * {@link control} is: a monitor-only manager can read and cancel but not spawn.
    *
-   * Deliberately NOT a `ProcessManager.Manager`: a remote process is not a local one and consuming
-   * code picks between the two itself (unifying them, where a caller wants that, belongs a layer
-   * above — `AgentService` does it per session).
+   * Deliberately NOT a `ProcessManager.Manager`: a remote process is not a local one. A caller that
+   * wants one surface over both uses `Process.Manager` (`LocatedProcessManager`), which picks per call.
    */
   readonly spawn?: <_Input, _Output, _Rpcs extends Rpc.Any = never>(
     options: SpawnOptions<_Input, _Output, _Rpcs>,
-  ) => Effect.Effect<ProcessManager.Handle<_Input, _Output, _Rpcs>>;
+  ) => Effect.Effect<Process.Handle<_Input, _Output, _Rpcs>>;
 
   /** Handles on the host's matching processes; metadata views until `Handle.hydrate` supplies a definition. */
-  readonly list?: (options: ListOptions) => Effect.Effect<readonly ProcessManager.Handle.Any[]>;
+  readonly list?: (options: ListOptions) => Effect.Effect<readonly Process.Handle.Any[]>;
 
   /** Handle on one process by id. */
-  readonly attach?: (target: ProcessTarget) => Effect.Effect<ProcessManager.Handle.Any>;
+  readonly attach?: (target: ProcessTarget) => Effect.Effect<Process.Handle.Any>;
 
   /**
    * Re-read the host's processes for a space into {@link processTreeAtom}. Needed at startup: the
@@ -222,7 +220,7 @@ export interface Manager {
 
 /**
  * What {@link Manager.spawn} takes: the space to spawn in, the host's key for the process, and the
- * `ProcessManager.SpawnOptions` a remote host can honour.
+ * `Process.SpawnOptions` a remote host can honour.
  *
  * Only the `key` crosses the wire — the host resolves it against the processes it hosts — so a
  * definition is not what identifies a remote process. It supplies the input/output codecs and the
@@ -276,7 +274,7 @@ export const makeControlVerbs = (
     spaceId: SpaceId,
     info: Snapshot,
     definition?: Operation.Durable<_Input, _Output, any, _Rpcs>,
-  ): Effect.Effect<ProcessManager.Handle<_Input, _Output, _Rpcs>> =>
+  ): Effect.Effect<Process.Handle<_Input, _Output, _Rpcs>> =>
     RemoteProcessHandle.RemoteProcessHandle.make<_Input, _Output, _Rpcs>({
       info,
       control,

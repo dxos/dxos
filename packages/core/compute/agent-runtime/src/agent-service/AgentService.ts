@@ -12,9 +12,8 @@ import * as Semaphore from 'effect/Semaphore';
 
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
+import { LocatedProcessManager, ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
 import {
-  type AgentLocation,
   AgentService,
   type Conversation,
   type GetSessionOptions,
@@ -47,7 +46,7 @@ type AgentRpcs = ReturnType<typeof AgentProcess> extends Operation.Durable<any, 
  */
 type AgentHandle =
   ReturnType<typeof AgentProcess> extends Operation.Durable<infer Input, infer Output, any, infer Rpcs>
-    ? ProcessManager.Handle<Input, Output, Rpcs>
+    ? Process.Handle<Input, Output, Rpcs>
     : never;
 
 // TERMINATING counts as terminal: the handle is already `#finished`, so adopting one would drop
@@ -165,47 +164,20 @@ export const layer = (
       // each of its verbs takes the space it addresses, so this is what `hydrate` has to walk.
       const remoteSpaces = new Set<SpaceId>();
 
+      const processes = LocatedProcessManager.make(processManager, remote);
+
       /**
-       * The two process verbs a session needs, over the location it asked for.
-       *
-       * The choice is made here rather than behind a façade presenting the remote manager as a local
-       * one: a remote process is not a local one (the two manager tags say so), and unifying them for
-       * a caller that wants a single agent surface is this layer's job.
-       *
-       * `edge` needs the space, since one remote manager spans them, and a chat with no space cannot
-       * name where its agent would run.
+       * The two process verbs a session needs, over the location it asked for. An `edge` request
+       * records its space, since one remote manager spans them all and `hydrate` has to walk them.
        */
-      const processesFor = (location: AgentLocation | undefined, spaceId: SpaceId | undefined) => {
-        if (location !== 'edge') {
-          return {
-            list: (options: ProcessManager.ListOptions) => processManager.list(options),
-            spawn: (definition: ReturnType<typeof makeExecutable>, options: ProcessManager.SpawnOptions) =>
-              processManager.spawn(definition, options),
-          };
+      const processesFor = (location: Process.Location | undefined, spaceId: SpaceId | undefined) => {
+        if (location === 'edge' && spaceId) {
+          remoteSpaces.add(spaceId);
         }
-        if (!spaceId) {
-          throw new Error('Agent requested on edge, but its conversation has no space.');
-        }
-        const withRemote = <A>(use: (manager: RemoteProcessManager.Manager) => Effect.Effect<A>) =>
-          use(remote).pipe(Effect.orDie);
-        remoteSpaces.add(spaceId);
         return {
-          list: (options: ProcessManager.ListOptions) =>
-            withRemote((manager) => {
-              if (!manager.list) {
-                throw new Error('Agent requested on edge, but RemoteProcessManager offers no process control.');
-              }
-              return manager.list({ spaceId, ...options });
-            }),
-          spawn: (definition: ReturnType<typeof makeExecutable>, options: ProcessManager.SpawnOptions) =>
-            withRemote((manager) => {
-              if (!manager.spawn) {
-                throw new Error('Agent requested on edge, but RemoteProcessManager offers no process control.');
-              }
-              // Only the key crosses the wire; the definition stays local, supplying the codecs and
-              // the RPC group the returned handle is typed by.
-              return manager.spawn({ spaceId, key: definition.key, definition, ...options });
-            }),
+          list: (options: Process.ListOptions) => processes.list({ ...options, location, space: spaceId }),
+          spawn: (definition: ReturnType<typeof makeExecutable>, options: Process.SpawnOptions) =>
+            processes.spawn(definition, { ...options, location }),
         };
       };
 
@@ -218,7 +190,7 @@ export const layer = (
           model: string | undefined;
           provider: DXN.DXN | undefined;
           instructions: string | undefined;
-          location: AgentLocation;
+          location: Process.Location;
           handle: AgentHandle;
           session: Session;
         }
@@ -286,7 +258,7 @@ export const layer = (
                 // model and steering are whatever the chat points at when the process is spawned.
                 const model = chat.session?.model;
                 const instructions = chat.instructions?.uri;
-                const location: AgentLocation = options?.location ?? 'local';
+                const location: Process.Location = options?.location ?? 'local';
                 const cached = sessionCache.get(chat.id);
                 if (cached) {
                   if (
