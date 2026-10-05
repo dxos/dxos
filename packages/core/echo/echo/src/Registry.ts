@@ -58,6 +58,8 @@ export interface Registry {
   /**
    * All locally-stored entities.
    * Does not include upstream entities — use {@link list} for that.
+   *
+   * @performance O(n); allocates a new array on every read.
    */
   readonly local: readonly Entity.Unknown[];
 
@@ -65,24 +67,32 @@ export interface Registry {
    * Add or replace one or more entities in the local registry.
    * Existing entries with the same id are replaced.
    * Also indexes type entities by DXN for fast lookup.
+   *
+   * @performance O(n) in entities, each indexed by id and URI, then one `changed` emission.
    */
   add(entities: readonly Entity.Unknown[]): void;
 
   /**
    * Remove an entity by id from the local registry.
    * @returns true if an entity was removed, false if it was not found.
+   *
+   * @performance O(u) in the URI index, which it scans for entries pointing at the entity.
    */
   remove(id: string): boolean;
 
   /**
    * Remove all locally-stored entities.
    * Does not affect the upstream registry.
+   *
+   * @performance O(1) map clears plus one `changed` emission.
    */
   clear(): void;
 
   /**
    * Get an entity by id.
    * Searches the local registry first, then falls back to the upstream registry.
+   *
+   * @performance O(1) map lookup, then the same in the upstream on a miss.
    */
   get(id: string): Entity.Unknown | undefined;
 
@@ -91,12 +101,16 @@ export interface Registry {
    * persisted, its identifier EID), a keyed entity by its `dxn:<key>[:<version>]`. Accepts legacy
    * DXN forms (normalized internally). Searches the local registry first, then falls back to the
    * upstream registry. Narrow the result with `Type.isType` when a type entity is required.
+   *
+   * @performance O(1) map lookup after URI normalization, then the same in the upstream on a miss.
    */
   getByURI(uri: string): Entity.Unknown | undefined;
 
   /**
    * List all entities.
    * Local entities take precedence over upstream entities with the same id.
+   *
+   * @performance O(n) in local plus upstream entities; allocates a merged array per call.
    */
   list(): Entity.Unknown[];
 
@@ -111,12 +125,16 @@ export interface Registry {
    * Only locally-evaluable AST nodes are supported: `select`, `filter`, `limit`, `from`, `options`,
    * and boolean combinators, plus full-text filters as case-insensitive all-terms containment.
    * Server-side concerns (order, traversal, vector search, timestamp filters) throw or match nothing.
+   *
+   * @performance O(n · filter size) linear scan of `list()` on every read; results are not cached between reads.
    */
   query: Database.QueryFn;
 }
 
 /**
  * Type guard for {@link Registry}.
+ *
+ * @performance O(1) brand check; no allocation.
  */
 export const isRegistry = (obj: unknown): obj is Registry =>
   obj != null && typeof obj === 'object' && TypeId in obj && (obj as { [TypeId]?: unknown })[TypeId] === TypeId;
@@ -146,6 +164,8 @@ export class Service extends Context.Service<Service, Registry>()('@dxos/echo/Re
 /**
  * Executes a query against the registry and returns the results.
  * Analogous to {@link Database.query} `.run` for the in-process registry.
+ *
+ * @performance O(n · filter size) linear scan of the registry.
  */
 export const runQuery: {
   <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
@@ -168,5 +188,7 @@ export const runQuery: {
  * rather than through a plain lookup, which freezes at whatever was registered on first evaluation.
  *
  * @example `const type = get(Registry.typeAtom(db.graph.registry, typename));`
+ *
+ * @performance O(1) memoized atom-family lookup, but rescans `list()` in O(n) on every registry change.
  */
 export const typeAtom = registryAtoms.makeTypeAtom;

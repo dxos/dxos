@@ -1,17 +1,24 @@
 /*
- * Tooltip: short portalled text on the popup level; `.nx-popup` supplies size, level and radius.
+ * Tooltip: short portalled text on the inverted surface (dark on a light theme, light on a dark one), as the current
+ * Tooltip; `.dx-popup` supplies size, radius and shadow.
  */
 
 @layer dx-components {
-  .nx-tooltip {
+  /* Publishing the fill as `--surface-bg` gives the arrow (`arrow.css`) the same inverted colour. */
+  .dx-tooltip {
+    --surface-bg: var(--color-inverse-surface);
+    background-color: var(--surface-bg);
+    color: var(--color-inverse-fg);
     min-width: 0;
     max-width: 20rem;
-    padding: var(--nx-gap-size);
+    /* A single line reads as a chip: one control inset above and below, the gap either side. */
+    padding-block: var(--dx-control-inset);
+    padding-inline: var(--dx-gap-size);
     overflow-wrap: break-word;
   }
 
   /* One truncating line; its tooltip opens only while the text is cut off. */
-  .nx-text-tooltip {
+  .dx-text-tooltip {
     display: block;
     min-width: 0;
     overflow: hidden;

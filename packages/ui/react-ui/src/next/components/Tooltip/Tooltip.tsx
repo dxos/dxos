@@ -22,12 +22,13 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
+import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
 
 /** Short enough to feel responsive, long enough that sweeping the pointer across a toolbar shows nothing. */
-const OPEN_DELAY = 300;
+const OPEN_DELAY = 600;
 
 export type TooltipSide = 'top' | 'right' | 'bottom' | 'left';
 
@@ -59,21 +60,21 @@ const TooltipRoot = ({
   </OpenDelayContext.Provider>
 );
 
-TooltipRoot.displayName = 'Next.Tooltip.Root';
+TooltipRoot.displayName = 'Tooltip.Root';
 
 //
 // Trigger
 //
 
-type TooltipTriggerProps = TooltipPrimitive.TriggerProps & {
-  /** Shorthand, as on the current `Tooltip.Trigger`: the trigger brings its own Root and a Content showing this. */
+type TooltipTriggerProps = Omit<TooltipPrimitive.TriggerProps, 'content'> & {
+  /** Shorthand, as on the current `Tooltip.Trigger`: the trigger brings its own Root and a Content showing this (any node, so it replaces the HTML `content` attribute). */
   content?: ReactNode;
   /** With `content`, the side the tooltip opens on; below by default. */
   side?: TooltipSide;
 };
 
 /**
- * Use `asChild` to describe a `Next.Button`. Opens on hover after the Root's delay and on keyboard
+ * Use `asChild` to describe a `Button`. Opens on hover after the Root's delay and on keyboard
  * focus only; the delay runs here because zag skips it while any tooltip is marked open, so a click would flash one
  * (DESIGN.md follow-up 33). With `content` it needs no Root or Content around it.
  */
@@ -89,7 +90,7 @@ const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(
     ),
 );
 
-TooltipTrigger.displayName = 'Next.Tooltip.Trigger';
+TooltipTrigger.displayName = 'Tooltip.Trigger';
 
 const TooltipTriggerImpl = forwardRef<HTMLButtonElement, TooltipPrimitive.TriggerProps>(
   (
@@ -191,39 +192,45 @@ const TooltipTriggerImpl = forwardRef<HTMLButtonElement, TooltipPrimitive.Trigge
 //
 
 type TooltipContentProps = ThemedClassName<TooltipPrimitive.ContentProps> & {
-  /** Portalled content leaves the trigger's sized scope, so it takes its own size; `sm` reads as a caption. */
+  /** Overrides the size inherited from the trigger's nearest sized ancestor (Phase 4 decision 2); `sm` without one. */
   size?: Size;
-  /** Point at the trigger with an arrow in the popup's surface colour. */
+  /** Point at the trigger with an arrow in the tooltip's inverted surface colour. */
   arrow?: boolean;
   /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
   container?: RefObject<HTMLElement | null>;
 };
 
-/** Portalled text at `level='popup'`, capped at 20rem wide, with an arrow unless `arrow={false}`. */
+/**
+ * Portalled text on the inverted surface (as the current Tooltip; no `data-surface`, whose popup fill it would fight),
+ * capped at 20rem wide, with an arrow unless `arrow={false}`.
+ */
 const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
-  ({ classNames, size = 'sm', arrow = true, container, children, ...props }, forwardedRef) => (
-    <Portal container={container}>
-      <TooltipPrimitive.Positioner>
-        <TooltipPrimitive.Content
-          {...props}
-          data-surface='popup'
-          data-size={size}
-          className={mx(recipes.popup(), recipes.tooltipContent(), classNames)}
-          ref={forwardedRef}
-        >
-          {children}
-          {arrow && (
-            <TooltipPrimitive.Arrow className={recipes.arrow()}>
-              <TooltipPrimitive.ArrowTip className={recipes.arrowTip()} />
-            </TooltipPrimitive.Arrow>
-          )}
-        </TooltipPrimitive.Content>
-      </TooltipPrimitive.Positioner>
-    </Portal>
-  ),
+  ({ classNames, size, arrow = true, container, children, ...props }, forwardedRef) => {
+    const tooltip = useTooltipContext();
+    const popupSize = usePopupSize(size, tooltip.open, [tooltip.getTriggerProps().id], 'sm');
+    return (
+      <Portal container={container}>
+        <TooltipPrimitive.Positioner>
+          <TooltipPrimitive.Content
+            {...props}
+            data-size={popupSize}
+            className={mx(recipes.popup(), recipes.tooltipContent(), classNames)}
+            ref={forwardedRef}
+          >
+            {children}
+            {arrow && (
+              <TooltipPrimitive.Arrow className={recipes.arrow()}>
+                <TooltipPrimitive.ArrowTip className={recipes.arrowTip()} />
+              </TooltipPrimitive.Arrow>
+            )}
+          </TooltipPrimitive.Content>
+        </TooltipPrimitive.Positioner>
+      </Portal>
+    );
+  },
 );
 
-TooltipContent.displayName = 'Next.Tooltip.Content';
+TooltipContent.displayName = 'Tooltip.Content';
 
 export const Tooltip = {
   Root: TooltipRoot,
@@ -274,6 +281,6 @@ export const TextTooltip = forwardRef<HTMLSpanElement, TextTooltipProps>(
   },
 );
 
-TextTooltip.displayName = 'Next.TextTooltip';
+TextTooltip.displayName = 'TextTooltip';
 
 export type { TextTooltipProps, TooltipContentProps, TooltipRootProps, TooltipTriggerProps };

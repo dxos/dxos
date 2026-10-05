@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { type ThemedClassName, type UseEditableOptions, useEditable, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, type UseEditableOptions, useEditable, useThemeMode } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -114,7 +114,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
       revertAll,
     ]);
 
-    const { themeMode } = useThemeContext();
+    const themeMode = useThemeMode();
     const commitOnBlur = options.blurBehavior !== 'revert';
     const extensions = useMemo(
       () => [

@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Schema from 'effect/Schema';
 import * as Semaphore from 'effect/Semaphore';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';

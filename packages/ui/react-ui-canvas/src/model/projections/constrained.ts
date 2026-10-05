@@ -8,8 +8,8 @@
 // against its nearest neighbour, then re-solves. Uses `@dxos/diagram`'s longest-path ranking per axis.
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Layout } from '@dxos/diagram';
 

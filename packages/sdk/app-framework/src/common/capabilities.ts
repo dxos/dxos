@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Command$ from 'effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import type * as Exit$ from 'effect/Exit';
 import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
-import type * as Command$ from 'effect/unstable/cli/Command';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import type { FC, PropsWithChildren } from 'react';
 
 import type {
@@ -142,7 +142,7 @@ export const TraceSink = Capability$.make<TraceSinkFactory>()('org.dxos.app-fram
 /**
  * Source of ephemeral trace messages broadcast by remote runtimes over the space swarm (DX-1125).
  * Contributed by a client-aware plugin; the process-manager capability wires the first contribution
- * (or a no-op) into the aggregate {@link ProcessMonitor} so its `subscribeToTraceMessages` surfaces
+ * (or a no-op) into the aggregate {@link ProcessManager} so its `subscribeToTraceMessages` surfaces
  * remote progress alongside local.
  *
  * @category Capability
@@ -177,14 +177,14 @@ export const ServiceResolver = Capability$.makeSingleton<ServiceResolver$.Servic
 );
 
 /**
- * Process monitor backing the shared {@link ProcessManagerRuntime}. Exposes the
+ * Process manager backing the shared {@link ProcessManagerRuntime}. Exposes the
  * live process tree (including inactive/terminated entries) via
- * {@link Process$.Monitor#processTreeAtom}.
+ * {@link Process$.Manager#processTreeAtom}.
  *
  * @category Capability
  */
-export const ProcessMonitor = Capability$.makeSingleton<Process$.Monitor>()(
-  'org.dxos.app-framework.capability.processMonitor',
+export const ProcessManager = Capability$.makeSingleton<Process$.Manager>()(
+  'org.dxos.app-framework.capability.processManager',
 );
 
 /**

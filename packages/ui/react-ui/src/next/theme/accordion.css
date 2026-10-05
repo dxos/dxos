@@ -1,0 +1,119 @@
+/*
+ * Accordion: a column of items, each a block-row trigger (leading icon, label, trailing caret) over content whose
+ * height animates from Ark's `--height`, like Collapsible. `data-border` frames the column with separator lines and a
+ * rounded edge; without it only the dividers between items remain. Items do not clip, so the trigger's inset focus
+ * ring is not cut at the frame's corners; the end items carry the rounding instead.
+ */
+
+@layer dx-components {
+  .dx-accordion {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .dx-accordion[data-border] {
+    border: 1px solid var(--color-separator);
+    border-radius: var(--radius-md, 0.375rem);
+  }
+  .dx-accordion[data-border] > .dx-accordion-item:first-child {
+    border-start-start-radius: inherit;
+    border-start-end-radius: inherit;
+  }
+  .dx-accordion[data-border] > .dx-accordion-item:last-child {
+    border-end-start-radius: inherit;
+    border-end-end-radius: inherit;
+  }
+
+  .dx-accordion-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .dx-accordion-item + .dx-accordion-item {
+    border-top: 1px solid var(--color-separator-subtle, var(--color-separator));
+  }
+
+  .dx-accordion-item-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--dx-gap-size);
+    width: 100%;
+    min-height: var(--dx-block-size);
+    padding: 0 var(--dx-gap-size);
+    border: none;
+    border-radius: inherit;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+    text-align: start;
+    cursor: pointer;
+  }
+  /* An open item's trigger keeps its top corners only; its content continues below it. */
+  .dx-accordion-item-trigger[data-state='open'] {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+  .dx-accordion-item-trigger:not([data-disabled]):hover {
+    background: var(--color-hover-surface);
+  }
+  .dx-accordion-item-trigger[data-disabled] {
+    cursor: default;
+  }
+
+  .dx-accordion-item-icon,
+  .dx-accordion-item-indicator {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+  }
+
+  .dx-accordion-item-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dx-accordion-item-indicator {
+    transition: transform var(--dx-disclosure-duration) var(--dx-disclosure-ease-open);
+  }
+  .dx-accordion-item-indicator[data-state='open'] {
+    transform: rotate(90deg);
+  }
+
+  .dx-accordion-item-content {
+    overflow: hidden;
+  }
+  .dx-accordion-item-content[data-state='open'] {
+    animation: dx-accordion-open var(--dx-disclosure-duration) var(--dx-disclosure-ease-open);
+  }
+  .dx-accordion-item-content[data-state='closed'] {
+    animation: dx-accordion-close var(--dx-disclosure-duration) var(--dx-disclosure-ease-close);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dx-accordion-item-indicator {
+      transition: none;
+    }
+    .dx-accordion-item-content[data-state] {
+      animation: none;
+    }
+  }
+
+  @keyframes dx-accordion-open {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--height);
+    }
+  }
+  @keyframes dx-accordion-close {
+    from {
+      height: var(--height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}

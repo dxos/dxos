@@ -291,6 +291,35 @@ export const ToolkitFailed: Story = {
   },
 };
 
+const evalCode = (code: string) => ({ code: trim`${code}` });
+
+/** Code mode's `eval`: printed output comes back as plain text, and a throw fails the call with it. */
+export const ToolkitCodeMode: Story = {
+  args: {
+    content: toolkit([
+      call(
+        'tc-1',
+        'eval',
+        evalCode(`
+          const tasks = await query({ typename: 'com.example.type.task' });
+          print('count', tasks.length);
+          print('titles', tasks.map((task) => task.title));
+        `),
+      ),
+      result('tc-1', 'eval', 'count 2\ntitles [\n  "Write the docs",\n  "Fix the build"\n]'),
+      call(
+        'tc-2',
+        'eval',
+        evalCode(`
+          print('updating', 2, 'tasks');
+          await ops['dxn:com.example.operation.score']({ title: 42 });
+        `),
+      ),
+      failure('tc-2', 'eval', 'updating 2 tasks\nError: Expected string, actual 42\n  at ["title"]'),
+    ]),
+  },
+};
+
 /** The pre-fold shape, kept so a regression to one panel per message is visible. */
 export const ToolkitUnmerged: Story = {
   args: {
@@ -306,6 +335,35 @@ export const ToolkitOperations: Story = {
       result('tc-1', 'markdown-update', { ok: true }),
       operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
       result('tc-2', 'space-query', { hits: 12 }),
+    ]),
+  },
+};
+
+/** A code-mode `eval` call: named after the operation its code invokes, not after the `eval` tool. */
+export const ToolkitCodeModeNamed: Story = {
+  args: {
+    content: toolkit([
+      {
+        ...call('tc-1', 'eval', { code: "await ops.createTask({ title: 'Ship the release notes' })" }),
+        displayName: 'Create task',
+        displayIcon: 'ph--check-square--regular',
+      },
+      result('tc-1', 'eval', { output: 'Created task 01J9…', ok: true }),
+    ]),
+  },
+};
+
+/** A code-mode `eval` call spanning several operations: listed by name, in the order the code calls them. */
+export const ToolkitCodeModeNamedMultiple: Story = {
+  args: {
+    content: toolkit([
+      {
+        ...call('tc-1', 'eval', {
+          code: "const [task] = await query('com.example.type.task');\nawait ops.updateTask({ task, status: 'done' });\nawait ops.createTask({ title: 'Follow up' });",
+        }),
+        displayName: 'Update task, Create task',
+      },
+      result('tc-1', 'eval', { output: 'ok', ok: true }),
     ]),
   },
 };

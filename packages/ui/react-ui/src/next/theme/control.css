@@ -1,112 +1,204 @@
 /*
- * Leaf parts. The block is the row height; controls are `--nx-control-size` tall and centred in it (decision 12), so
+ * Leaf parts. The block is the row height; controls are `--dx-control-size` tall and centred in it (decision 12), so
  * rails and first-line text centring are unchanged.
  */
 
 @layer dx-components {
   /* Focus ring: its own themable variables rather than ui-theme's ring, so a theme can recolour it (decision 8). */
   :root {
-    --nx-focus-ring-color: var(--color-orange-500, oklch(70.5% 0.213 47.604));
-    --nx-focus-ring-width: 2px;
+    --dx-focus-ring-color: var(--color-focus, oklch(70.5% 0.213 47.604));
+    --dx-focus-ring-width: 2px;
+    /* One timing for every open/close: content arriving decelerates, content leaving accelerates away. */
+    --dx-disclosure-duration: var(--duration-tree-disclosure, 200ms);
+    --dx-disclosure-ease-open: ease-out;
+    --dx-disclosure-ease-close: ease-in;
+    /*
+     * Portalled layers stack above the app shell (Main's sidebars and drawer use 6–8): toasts, then dialogs (a modal
+     * dialog is not covered by a notification), then popups (so a menu opened inside a dialog shows), then the Tour,
+     * which spotlights anything.
+     */
+    --dx-layer-toast: 30;
+    --dx-layer-dialog: 40;
+    --dx-layer-popup: 50;
+    --dx-layer-tour: 60;
   }
-  .nx-focus-ring:focus {
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --dx-disclosure-duration: 0ms;
+    }
+  }
+  .dx-focus-ring:focus {
     outline: none;
   }
-  .nx-focus-ring:focus-visible {
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  .dx-focus-ring:focus-visible {
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
   }
   /*
-   * Tailwind's forms plugin paints a blue ring and border on every focused field from the base layer; a Next field
-   * either draws its own ring (`.nx-focus-ring`) or delegates it to its wrapper (DateInput, Combobox), so neither
+   * Tailwind's forms plugin paints a blue ring and border on every focused field from the base layer; a dx field
+   * either draws its own ring (`.dx-focus-ring`) or delegates it to its wrapper (DateInput, Combobox), so neither
    * may show the plugin's.
    */
-  :is(input, textarea, select)[class*='nx-']:focus {
+  :is(input, textarea, select)[class*='dx-']:focus {
     border-color: transparent;
     outline: none;
   }
-  :is(input, textarea, select)[class*='nx-']:focus:not(.nx-focus-ring:focus-visible) {
+  :is(input, textarea, select)[class*='dx-']:focus:not(.dx-focus-ring:focus-visible) {
     box-shadow: none;
   }
 
-  .nx-typography {
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
-    padding-block: calc((var(--nx-block-size) - var(--nx-line-height)) / 2);
+  .dx-typography {
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+    padding-block: calc((var(--dx-block-size) - var(--dx-line-height)) / 2);
   }
 
-  .nx-typography[data-truncate] {
+  .dx-typography[data-truncate] {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .nx-typography[data-tone='description'] {
-    color: var(--color-description);
+  /* Clamped text wraps even where a container (a card row) keeps its content to one line. */
+  .dx-typography[data-lines] {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--dx-lines);
+    min-width: 0;
+    overflow: hidden;
+    white-space: normal;
+  }
+  .dx-typography[data-tone='muted'] {
+    color: var(--color-fg-muted);
+  }
+  .dx-typography[data-tone='subtle'] {
+    color: var(--color-fg-subtle);
+  }
+  .dx-typography[data-mono] {
+    font-family: var(--font-mono, ui-monospace, monospace);
   }
 
-  .nx-icon {
+  .dx-icon {
     flex-shrink: 0;
-    width: var(--nx-icon-size);
-    height: var(--nx-icon-size);
+    width: var(--dx-icon-size);
+    height: var(--dx-icon-size);
+  }
+  .dx-icon[data-tone='muted'] {
+    color: var(--color-fg-muted);
+  }
+  .dx-icon[data-tone='subtle'] {
+    color: var(--color-fg-subtle);
+  }
+  /* A per-instance size outranks the scope's (and a control's) icon size. */
+  .dx-icon.dx-icon[data-icon-size='xs'] {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  .dx-icon.dx-icon[data-icon-size='sm'] {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  .dx-icon.dx-icon[data-icon-size='md'] {
+    width: 1rem;
+    height: 1rem;
+  }
+  .dx-icon.dx-icon[data-icon-size='lg'] {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  .dx-icon.dx-icon[data-icon-size='xl'] {
+    width: 1.5rem;
+    height: 1.5rem;
   }
   /* A busy indicator (e.g. a loading Select's spinner); still under `prefers-reduced-motion`. */
-  .nx-icon[data-spin] {
-    animation: nx-spin 1s linear infinite;
+  .dx-icon[data-spin] {
+    animation: dx-spin 1s linear infinite;
   }
   @media (prefers-reduced-motion: reduce) {
-    .nx-icon[data-spin] {
+    .dx-icon[data-spin] {
       animation: none;
     }
   }
-  @keyframes nx-spin {
+  @keyframes dx-spin {
     to {
       transform: rotate(360deg);
     }
   }
 
-  .nx-control {
+  .dx-control {
     box-sizing: border-box;
-    height: var(--nx-control-size);
+    height: var(--dx-control-size);
     align-self: center;
     padding-block: 0;
-    padding-inline: var(--nx-gap-size);
+    padding-inline: var(--dx-gap-size);
     border: none;
     border-radius: var(--radius-sm, 0.25rem);
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
   }
-  .nx-control .nx-icon {
-    width: var(--nx-control-icon);
-    height: var(--nx-control-icon);
+  .dx-control .dx-icon {
+    /* A one-line label can outgrow its row; the icon keeps its size rather than absorbing the squeeze. */
+    flex-shrink: 0;
+    width: var(--dx-control-icon);
+    height: var(--dx-control-icon);
   }
 
-  /* Controls fill with the host-derived well (a small step off whatever surface hosts them), not a fixed raised fill. */
-  .nx-input {
+  /*
+   * Controls fill with ui-theme's input fill, tuned to contrast whatever surface hosts them (the current controls'
+   * `bg-input-bg`): the host-derived well resolves at the root, so on a raised host (card, dialog) it matched the host.
+   */
+  .dx-input {
     width: 100%;
     min-width: 0;
-    background: var(--color-input-surface);
+    background: var(--color-input-bg);
   }
-  .nx-input[data-variant='subdued'] {
+  .dx-input[data-variant='subdued'] {
     background: transparent;
+  }
+  /* Keys, ids and code; an adorned row's input inherits the font. */
+  .dx-input[data-variant='mono'] {
+    font-family: var(--font-mono, ui-monospace, monospace);
   }
 
   /*
    * An adorned Input is a control row (like DateInput's): the adornments and a bare input, with the ring drawn on the
    * row as an outline (wrapper rings, Phase 3 follow-up 6) from the input's focus.
    */
-  .nx-input-row {
+  .dx-input-row {
     display: flex;
     align-items: center;
-    gap: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
   }
-  .nx-input-row:has(> .nx-input-field:focus-visible) {
-    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
-    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  .dx-input-row:has(> .dx-input-field:focus-visible) {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
   }
-  .nx-input-row:has(> .nx-input-field:disabled) {
+  .dx-input-row:is([data-disabled], :has(> .dx-input-field:disabled)) {
     opacity: 0.5;
   }
-  .nx-input-field {
+  /* A ControlFrame's own content (an editor, a custom control) fills the row and rings it from any focus inside. */
+  .dx-control-frame > :not(.dx-input-adornment) {
+    flex: 1;
+    min-width: 0;
+  }
+  /* A multi-line frame: `--dx-rows` lines tall at least, growing with its content; the first line and the adornments
+     sit where a single-line control's do, like a Textarea's. The content stretches (through any `display: contents`
+     wrapper, which a child selector would miss) so a scrolling editor's scroller ends at the frame's foot. */
+  .dx-control-frame[data-rows] {
+    height: auto;
+    min-height: calc(var(--dx-rows) * var(--dx-line-height) + var(--dx-control-size) - var(--dx-line-height));
+    align-items: stretch;
+    padding-block: calc((var(--dx-control-size) - var(--dx-line-height)) / 2);
+  }
+  .dx-control-frame[data-rows] > .dx-input-adornment {
+    align-self: start;
+    height: var(--dx-line-height);
+  }
+  /* `:has()` cannot nest, so focus deeper in the content (an editor's own element) is a descendant selector instead. */
+  .dx-control-frame:has(> :not(.dx-input-adornment):focus-visible, > :not(.dx-input-adornment) :focus-visible) {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
+  }
+  .dx-input-field {
     flex: 1;
     min-width: 0;
     height: 100%;
@@ -118,137 +210,181 @@
     color: inherit;
   }
   /* A trailing icon-only Button ends flush with the row, its inset cell standing in for the row's padding. */
-  .nx-input-adornment {
+  .dx-input-adornment {
     display: flex;
     align-items: center;
     flex-shrink: 0;
-    gap: var(--nx-control-inset);
-    color: var(--color-description);
+    gap: var(--dx-control-inset);
+    color: var(--color-fg-muted);
   }
-  .nx-input-row:has(> .nx-input-adornment:last-child > .nx-button[data-square]:last-child) {
+  .dx-input-row:has(> .dx-input-adornment:last-child > .dx-button[data-square]:last-child) {
     padding-inline-end: 0;
   }
-  .nx-input-adornment > .nx-button[data-square] {
+  /*
+   * A trailing icon-only Button fills a block-wide end cell, so a control spanning to the row's end
+   * centres its icon on the same column as the row's own actions (a header's icon-only Buttons, a list row's remove).
+   */
+  .dx-input-adornment > .dx-button[data-square] {
     margin: 0;
-    height: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
-    width: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
-    margin-inline: var(--nx-control-inset);
+    min-width: 0;
+    height: calc(var(--dx-control-size) - 2 * var(--dx-control-inset));
+    width: calc(var(--dx-control-size) - 2 * var(--dx-control-inset));
+    margin-inline: calc((var(--dx-block-size) - var(--dx-control-size)) / 2 + var(--dx-control-inset));
+  }
+  /* Compact icon-only buttons abut, one segmented run (a stepper's − and +); the last centres on the end cell. */
+  .dx-input-adornment > .dx-button[data-square][data-compact] {
+    margin-inline: 0;
+  }
+  .dx-input-adornment > .dx-button[data-square][data-compact]:last-child {
+    margin-inline-end: calc((var(--dx-block-size) - var(--dx-control-icon)) / 2 - var(--dx-control-inset));
+  }
+  .dx-input-adornment > .dx-button[data-compact] + .dx-button[data-compact] {
+    margin-inline-start: calc(-1 * var(--dx-control-inset));
   }
 
-  .nx-button {
+  .dx-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     /* Spaces a leading or trailing icon from the label like a row's items. */
-    gap: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
     width: fit-content;
-    min-width: var(--nx-control-size);
-    background: var(--color-input-surface);
+    min-width: var(--dx-control-size);
+    /* A button is one line at control height; a wrapped label would overflow it. The explicit `min-width` replaces the
+       flex minimum of its content, so without `flex-shrink: 0` a crowded row would squeeze the label out of it. */
+    white-space: nowrap;
+    flex-shrink: 0;
+    background: var(--color-input-bg);
     cursor: pointer;
   }
-  .nx-button:hover:not(:disabled) {
-    background: var(--color-hover-surface);
+  .dx-button:hover:not(:disabled) {
+    background: var(--color-input-bg-hover, var(--color-hover-surface));
   }
   /* Variants map the current Button's (ui-theme `button.css`) onto the same color tokens. */
-  .nx-button[data-variant='primary'] {
+  .dx-button[data-variant='primary'] {
     background: var(--color-accent-bg);
     color: var(--color-accent-fg);
   }
-  .nx-button[data-variant='primary']:hover:not(:disabled) {
+  .dx-button[data-variant='primary']:hover:not(:disabled) {
     background: var(--color-accent-bg-hover, var(--color-accent-bg));
   }
-  .nx-button[data-variant='ghost'] {
+  .dx-button[data-variant='ghost'] {
     background: transparent;
   }
   /*
    * A border, not an inset shadow, so the focus ring (an inset shadow) still shows over it; the separator rather than
    * the current Button's `--color-base-surface`, which vanishes on a base surface.
    */
-  .nx-button[data-variant='outline'] {
+  .dx-button[data-variant='outline'] {
     border: 1px solid var(--color-separator);
     background: transparent;
   }
-  .nx-button[data-variant='destructive'] {
+  .dx-button[data-variant='destructive'] {
     background: var(--color-error-bg);
     color: var(--color-accent-fg);
   }
-  .nx-button[data-variant='destructive']:hover:not(:disabled) {
+  .dx-button[data-variant='destructive']:hover:not(:disabled) {
     background: var(--color-error-bg-hover);
   }
   /* Without `data-valence` it adopts an enclosing valence surface's colours (e.g. a Banner), else neutral. */
-  .nx-button[data-variant='valence'] {
-    --nx-valence-bg: var(--dx-valence-bg, var(--color-neutral-bg));
-    --nx-valence-bg-hover: var(--dx-valence-bg-hover, var(--color-neutral-bg-hover));
-    background: var(--nx-valence-bg);
+  .dx-button[data-variant='valence'] {
+    --dx-button-valence-bg: var(--dx-valence-bg, var(--color-neutral-bg));
+    --dx-button-valence-bg-hover: var(--dx-valence-bg-hover, var(--color-neutral-bg-hover));
+    background: var(--dx-button-valence-bg);
     color: var(--color-inverse-fg);
   }
-  .nx-button[data-variant='valence']:hover:not(:disabled) {
-    background: var(--nx-valence-bg-hover);
+  .dx-button[data-variant='valence']:hover:not(:disabled) {
+    background: var(--dx-button-valence-bg-hover);
   }
-  .nx-button[data-valence='neutral'] {
-    --nx-valence-bg: var(--color-neutral-bg);
-    --nx-valence-bg-hover: var(--color-neutral-bg-hover);
+  .dx-button[data-valence='neutral'] {
+    --dx-button-valence-bg: var(--color-neutral-bg);
+    --dx-button-valence-bg-hover: var(--color-neutral-bg-hover);
   }
-  .nx-button[data-valence='info'] {
-    --nx-valence-bg: var(--color-info-bg);
-    --nx-valence-bg-hover: var(--color-info-bg-hover);
+  .dx-button[data-valence='info'] {
+    --dx-button-valence-bg: var(--color-info-bg);
+    --dx-button-valence-bg-hover: var(--color-info-bg-hover);
   }
-  .nx-button[data-valence='success'] {
-    --nx-valence-bg: var(--color-success-bg);
-    --nx-valence-bg-hover: var(--color-success-bg-hover);
+  .dx-button[data-valence='success'] {
+    --dx-button-valence-bg: var(--color-success-bg);
+    --dx-button-valence-bg-hover: var(--color-success-bg-hover);
   }
-  .nx-button[data-valence='warning'] {
-    --nx-valence-bg: var(--color-warning-bg);
-    --nx-valence-bg-hover: var(--color-warning-bg-hover);
+  .dx-button[data-valence='warning'] {
+    --dx-button-valence-bg: var(--color-warning-bg);
+    --dx-button-valence-bg-hover: var(--color-warning-bg-hover);
   }
-  .nx-button[data-valence='error'] {
-    --nx-valence-bg: var(--color-error-bg);
-    --nx-valence-bg-hover: var(--color-error-bg-hover);
+  .dx-button[data-valence='error'] {
+    --dx-button-valence-bg: var(--color-error-bg);
+    --dx-button-valence-bg-hover: var(--color-error-bg-hover);
   }
   /* A Tag's hue in place of the variant's fill; the tag palette has no hover step, so hover shifts brightness. */
-  .nx-button[data-hue] {
-    background: var(--nx-hue-bg);
-    color: var(--nx-hue-fg);
+  .dx-button[data-hue] {
+    background: var(--dx-hue-bg);
+    color: var(--dx-hue-fg);
   }
-  .nx-button[data-hue]:hover:not(:disabled) {
-    background: var(--nx-hue-bg);
+  .dx-button[data-hue]:hover:not(:disabled) {
+    background: var(--dx-hue-bg);
     filter: brightness(0.94);
   }
-  :where(.dark) .nx-button[data-hue]:hover:not(:disabled) {
+  :where(.dark) .dx-button[data-hue]:hover:not(:disabled) {
     filter: brightness(1.12);
   }
+  .dx-button[data-align='start'] {
+    justify-content: flex-start;
+  }
   /* Dense: one inset of inline padding; an icon-only button gives up its square for it. */
-  .nx-button[data-compact] {
+  .dx-button[data-compact] {
     min-width: 0;
-    padding-inline: var(--nx-control-inset);
+    padding-inline: var(--dx-control-inset);
   }
-  .nx-button[data-square]:is([data-compact], [data-caret]) {
+  .dx-button[data-square]:is([data-compact], [data-caret]) {
     width: auto;
-    padding-inline: var(--nx-control-inset);
+    padding-inline: var(--dx-control-inset);
   }
-  /* The caret is a smaller trailing icon, set closer to what it follows than a label is. */
-  .nx-button[data-caret] > .nx-icon:last-child {
-    width: calc(var(--nx-control-icon) * 0.75);
-    height: calc(var(--nx-control-icon) * 0.75);
-    margin-inline-start: calc(var(--nx-control-inset) - var(--nx-gap-size));
+  /* The caret is a smaller trailing icon, a full gap from a label so the two read apart. */
+  .dx-button[data-caret] > .dx-icon:last-child {
+    width: calc(var(--dx-control-icon) * 0.75);
+    height: calc(var(--dx-control-icon) * 0.75);
   }
-  .nx-button:disabled {
+  /*
+   * With no label (a menu button) the icon keeps its square's padding, the caret sits a narrow gap after it, and the
+   * padding after the caret matches the icon's, so the two ends read alike.
+   */
+  .dx-button[data-square][data-caret]:not([data-compact]) {
+    gap: 0;
+    padding-inline: calc((var(--dx-control-size) - var(--dx-control-icon)) / 2);
+  }
+  .dx-button[data-square][data-caret]:not([data-compact]) > .dx-icon:last-child {
+    margin-inline-start: calc((var(--dx-half-block-size) - var(--dx-control-icon) * 0.75) / 2);
+  }
+  .dx-button:disabled {
     opacity: 0.5;
     cursor: default;
   }
   /* Inset on every side, so an icon-only button occupies a block-sized cell and its icon lines up with a rail Block's. */
-  .nx-button[data-square] {
-    width: var(--nx-control-size);
-    margin: var(--nx-control-inset);
+  .dx-button[data-square] {
+    width: var(--dx-control-size);
+    margin: var(--dx-control-inset);
+    padding-inline: 0;
+  }
+  /* In a Block the cell is the Block's (it centres its child), so the button's own inset would be counted twice. */
+  .dx-block > .dx-button[data-square] {
+    margin: 0;
+  }
+  /* Raw DOM (an editor widget, a table cell's HTML) positions its own box, so its square button has no block-cell inset. */
+  .dx-button.dx-button-square {
+    width: var(--dx-control-size);
     padding-inline: 0;
   }
 
-  .nx-label {
-    font-size: var(--nx-label-font-size);
-    line-height: var(--nx-label-line-height);
+  .dx-label {
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
   }
-  /* Visually hidden, still in the accessibility tree (Tailwind's `sr-only`). */
-  .nx-label[data-sr-only] {
+  /* Visually hidden, still in the accessibility tree (Tailwind's `sr-only`): a Label, a dialog's Title or Description, or a
+     tree's Label. */
+  .dx-label[data-sr-only],
+  [data-scope='dialog'][data-sr-only],
+  .dx-tree-label[data-sr-only] {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -261,42 +397,155 @@
   }
 
   /* Field (decision 13): a flex stack in the content track; the field pads its control out to a block. */
-  .nx-field {
+  .dx-field {
     display: flex;
     flex-direction: column;
     min-width: 0;
   }
-  .nx-field > .nx-control {
-    margin-block: var(--nx-control-inset);
+  /* A control's own `center` would centre it across a stacked field; it starts under its label instead. */
+  .dx-field > .dx-control {
+    align-self: start;
+    margin-block: var(--dx-control-inset);
   }
-  /* The label row is a small block row (size sm by default), so trailing icons and icon buttons fit at its end. */
-  .nx-field-header {
+  /* An icon-only Button's inset centres it in a block; in a field it starts at the label's edge as an Input does. */
+  .dx-field > .dx-button[data-square] {
+    margin-inline: 0;
+  }
+
+  /*
+   * A row field (Phase 4 decision 3) is a subgrid row of its parent's `columns`: stacked below the pane's collapse
+   * width; above it the header spans the row and the helper text and the control share the next line, split at the
+   * interior `control` line and top-aligned, as the current Form's settings rows are.
+   */
+  .dx-field[data-layout='row'] {
+    display: grid;
+    grid-column: content;
+    grid-template-columns: subgrid;
+    align-items: start;
+  }
+  /* A box-less control root (Select, Combobox, NumberInput) is `display: contents`; its children are the grid items. */
+  .dx-field[data-layout='row'] > *,
+  .dx-field[data-layout='row'] > :is(.dx-select, .dx-combobox, .dx-control-root) > * {
+    grid-column: content;
+  }
+  /* The current Form's settings card: a trim-md inset and a trim-xl gap between the description and the control. */
+  .dx-field[data-layout='row'][data-surface] {
+    column-gap: var(--spacing-trim-xl);
+    padding: var(--spacing-trim-md);
+    border: 1px solid var(--color-separator);
+    border-radius: var(--radius-md, 0.375rem);
+  }
+  /* A settings row's title is content and its description secondary content (the current Form's settings chrome). */
+  .dx-field[data-layout='row'] > .dx-field-header > :is(.dx-label, .dx-typography) {
+    font-size: var(--text-lg);
+    line-height: var(--text-lg--line-height);
+    color: var(--color-fg);
+  }
+  /* A standalone title is text, not a label; it drops Typography's block padding so both kinds sit alike. */
+  .dx-field[data-layout='row'] > .dx-field-header > .dx-typography {
+    padding-block: 0;
+  }
+  /* A control (also one under a box-less Select or Combobox root) tops its line rather than centring on a taller description. */
+  .dx-field[data-layout='row'] > .dx-control,
+  .dx-field[data-layout='row'] > :is(.dx-select, .dx-combobox) > .dx-control {
+    align-self: start;
+  }
+  /* Controls keep their own width at the end of the control track (the current Form's settings `justify-end`). */
+  .dx-field[data-layout='row'] > :not(.dx-field-header, .dx-field-helper, .dx-field-error),
+  .dx-field[data-layout='row'] > :is(.dx-select, .dx-combobox, .dx-control-root) > * {
+    justify-self: end;
+    max-width: 100%;
+  }
+  /* A scrolling block (a log, a list) has no width of its own to keep, so it fills the row under the title. */
+  .dx-field[data-layout='row'] > .dx-scroll-root {
+    justify-self: stretch;
+  }
+  /* The space under the title is the header's own, so the description and control below it still share a top. */
+  .dx-field[data-layout='row'] > .dx-field-header {
+    margin-block-end: var(--spacing-trim-sm);
+  }
+  .dx-field[data-layout='row'] > .dx-field-helper {
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    color: var(--color-fg-muted);
+    margin-block-end: var(--dx-gap-size);
+  }
+  @container (width >= 24rem) {
+    .dx-field[data-layout='row'] > *,
+    .dx-field[data-layout='row'] > :is(.dx-select, .dx-combobox, .dx-control-root) > * {
+      grid-column: control / content-end;
+      grid-row: 2;
+    }
+    .dx-field[data-layout='row'] > .dx-field-header {
+      grid-row: 1;
+    }
+    .dx-field[data-layout='row'] > .dx-field-helper {
+      grid-column: content-start / control;
+      margin-block-end: 0;
+    }
+    .dx-field[data-layout='row'] > :is(.dx-field-header, .dx-field-error, .dx-scroll-root) {
+      grid-column: content;
+    }
+    .dx-field[data-layout='row'] > .dx-field-error {
+      grid-row: auto;
+    }
+  }
+  /*
+   * The label row takes its field's size, so a trailing icon-only Button or Block fills the same block-wide end cell as
+   * the control's own trailing icon below it (one column, one icon size); the row is only control-tall, its buttons
+   * dropping their block inset, and its text is the size's label step.
+   */
+  .dx-field-header {
     display: flex;
     align-items: center;
-    gap: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
+    gap: var(--dx-gap-size);
+    min-height: var(--dx-control-size);
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
   }
   /* A trailing Block matches an icon-only Button's visible box and block-sized cell, so static and interactive icons align. */
-  .nx-field-header > .nx-block {
-    width: var(--nx-control-size);
-    height: var(--nx-control-size);
-    margin: var(--nx-control-inset);
+  .dx-field-header > .dx-block {
+    width: var(--dx-control-size);
+    height: var(--dx-control-size);
+    margin: 0 var(--dx-control-inset);
   }
-  .nx-field-header > .nx-label {
+  .dx-field-header > .dx-button[data-square] {
+    margin-block: 0;
+  }
+  /* Trailing actions sit at the row's end whatever the label is (a Label, or Typography for a row with no one control). */
+  .dx-field-header > :is(.dx-block, .dx-button):not(:is(.dx-block, .dx-button) ~ *) {
+    margin-inline-start: auto;
+  }
+  .dx-field-header > :is(.dx-label, .dx-typography) {
     flex: 1;
     min-width: 0;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
   }
-  .nx-field-helper,
-  .nx-field-error {
+  /* The required mark trails the label text in the error colour; hidden from the name, since `aria-required` says it. */
+  /*
+   * A field's label reads a step below its value, in ui-theme's subdued text; a Checkbox or Switch's own label is the
+   * control's text, not a field label, so it keeps the base colour.
+   */
+  :is(.dx-field, .dx-field-header) > :is(.dx-label, .dx-typography) {
+    color: var(--color-fg-subtle);
+  }
+  /* The required mark is the current Form's: a warning-coloured `*` a small gap after the label at every size. */
+  .dx-field-required {
+    margin-inline-start: max(0.125em, var(--dx-control-inset));
+    color: var(--color-warning-text, currentColor);
+  }
+  .dx-field-error {
     font-size: var(--text-sm);
     line-height: var(--text-sm--line-height);
   }
-  .nx-field-helper {
-    color: var(--color-description);
+  /* Help text is interface text like the label: the same subdued colour, one size step smaller so the two stay distinct. */
+  .dx-field-helper {
+    font-size: var(--dx-helper-font-size);
+    line-height: var(--dx-helper-line-height);
+    color: var(--color-fg-subtle);
   }
-  .nx-field-error {
+  .dx-field-error {
     color: var(--color-error-text);
   }
 
@@ -304,102 +553,372 @@
    * Validation valence (the current Field's): the control takes the valence's border as a 1px inset line and its
    * focus ring, and the HelperText its text colour; `error` also makes the field invalid (ErrorText).
    */
-  .nx-field[data-valence='success'] {
-    --nx-valence-border: var(--color-success-border);
-    --nx-valence-text: var(--color-success-text);
+  .dx-field[data-valence='success'] {
+    --dx-valence-border: var(--color-success-border);
+    --dx-valence-text: var(--color-success-text);
   }
-  .nx-field[data-valence='info'] {
-    --nx-valence-border: var(--color-info-border);
-    --nx-valence-text: var(--color-info-text);
+  .dx-field[data-valence='info'] {
+    --dx-valence-border: var(--color-info-border);
+    --dx-valence-text: var(--color-info-text);
   }
-  .nx-field[data-valence='warning'] {
-    --nx-valence-border: var(--color-warning-border);
-    --nx-valence-text: var(--color-warning-text);
+  .dx-field[data-valence='warning'] {
+    --dx-valence-border: var(--color-warning-border);
+    --dx-valence-text: var(--color-warning-text);
   }
-  .nx-field[data-valence='error'] {
-    --nx-valence-border: var(--color-error-border);
-    --nx-valence-text: var(--color-error-text);
+  .dx-field[data-valence='error'] {
+    --dx-valence-border: var(--color-error-border);
+    --dx-valence-text: var(--color-error-text);
   }
-  .nx-field[data-valence] {
-    --nx-focus-ring-color: var(--nx-valence-border);
+  .dx-field[data-valence] {
+    --dx-focus-ring-color: var(--dx-valence-border);
   }
   /* Select and Combobox roots take no box, so their controls are the field's grandchildren. */
-  .nx-field[data-valence] > .nx-control,
-  .nx-field[data-valence] > :is(.nx-select, .nx-combobox) > .nx-control {
-    box-shadow: inset 0 0 0 1px var(--nx-valence-border);
+  .dx-field[data-valence] > .dx-control,
+  .dx-field[data-valence] > :is(.dx-select, .dx-combobox) > .dx-control {
+    box-shadow: inset 0 0 0 1px var(--dx-valence-border);
   }
-  .nx-field[data-valence] > .nx-control:focus-visible,
-  .nx-field[data-valence] > :is(.nx-select, .nx-combobox) > .nx-control:focus-visible {
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-valence-border);
+  .dx-field[data-valence] > .dx-control:focus-visible,
+  .dx-field[data-valence] > :is(.dx-select, .dx-combobox) > .dx-control:focus-visible {
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-valence-border);
   }
-  .nx-field[data-valence] > .nx-field-helper {
-    color: var(--nx-valence-text);
+  .dx-field[data-valence] > .dx-field-helper {
+    color: var(--dx-valence-text);
   }
 
-  .nx-checkbox {
+  .dx-checkbox {
     display: inline-flex;
     align-items: center;
     /* Start, not centre: in a column (Field) the cross axis is horizontal, so centre would float it mid-track. */
     align-self: start;
-    gap: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    gap: var(--dx-gap-size);
+    min-height: var(--dx-block-size);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     cursor: pointer;
   }
   /* The box is icon-sized, so it reads like the icons beside it rather than like a text control. */
-  .nx-checkbox-control {
+  .dx-checkbox-control {
     box-sizing: border-box;
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    width: var(--nx-icon-size);
-    height: var(--nx-icon-size);
+    width: var(--dx-icon-size);
+    height: var(--dx-icon-size);
     /* Centred in a block-sized cell, so a checkbox takes the same space as an icon-only Button and labels align. */
-    margin-inline: calc((var(--nx-block-size) - var(--nx-icon-size)) / 2);
+    margin-inline: calc((var(--dx-block-size) - var(--dx-icon-size)) / 2);
     border-radius: var(--radius-sm, 0.25rem);
-    background: var(--color-input-surface);
+    background: var(--color-input-bg);
   }
   /* Absolute, not a percentage: the Ark indicator wrapper has no definite height, so 75% fell back to 150px. */
-  .nx-checkbox-control .nx-icon {
-    width: calc(var(--nx-icon-size) * 0.75);
-    height: calc(var(--nx-icon-size) * 0.75);
+  .dx-checkbox-control .dx-icon {
+    width: calc(var(--dx-icon-size) * 0.75);
+    height: calc(var(--dx-icon-size) * 0.75);
   }
-  .nx-checkbox-control[data-state='checked'],
-  .nx-checkbox-control[data-state='indeterminate'] {
+  .dx-checkbox-control[data-state='checked'],
+  .dx-checkbox-control[data-state='indeterminate'] {
     background: var(--color-accent-bg);
     color: var(--color-accent-fg);
   }
 
-  .nx-checkbox-control[data-focus-visible] {
-    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
-    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  .dx-checkbox-control[data-focus-visible] {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
+  }
+
+  /*
+   * An input box around content that is not an Input (a CodeMirror editor styled to match): the input's surface,
+   * hairline border and padding, a focus-within shift and the focus ring whether the box or its content is focused.
+   * Callers add only sizing and layout.
+   */
+  .dx-input-box {
+    /* A zone, so what sits on it (the placeholder above all) derives from the input's colour, not the host's. */
+    --surface-bg: var(--color-input-surface);
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--color-input-separator);
+    border-radius: var(--radius-xs, 0.125rem);
+    background-color: var(--surface-bg);
+    transition:
+      background-color 150ms,
+      border-color 150ms;
+  }
+  .dx-input-box:focus {
+    outline: none;
+  }
+  .dx-input-box:focus-within {
+    border-color: var(--color-separator);
+    background-color: var(--color-focus-surface);
+  }
+  .dx-input-box:not([disabled]):is(:focus-visible, :has(:focus-visible)) {
+    border-color: var(--dx-focus-ring-color);
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
+  }
+
+  /*
+   * Native inputs for raw DOM (a markdown task, a table cell's HTML), themed with the control's tokens: the checkbox
+   * (reset by the base styles) takes the control fills, its checked glyph drawn by the reset; the switch draws a track and knob sized by its own knobs.
+   */
+  .dx-checkbox-native {
+    flex-shrink: 0;
+    width: var(--dx-icon-size);
+    height: var(--dx-icon-size);
+    margin: 0;
+    border: 1px solid var(--color-un-accent);
+    border-radius: var(--radius-xs, 0.125rem);
+    background-color: var(--color-un-accent);
+    color: var(--color-accent-fg);
+    accent-color: var(--color-un-accent);
+    cursor: pointer;
+  }
+  .dx-checkbox-native:checked {
+    border-color: var(--color-accent-bg);
+    background-color: var(--color-accent-bg);
+    accent-color: var(--color-accent-bg);
+  }
+  .dx-checkbox-native:not(:disabled):hover {
+    background-color: var(--color-un-accent-hover);
+  }
+  .dx-checkbox-native:checked:not(:disabled):hover {
+    border-color: var(--color-accent-bg-hover);
+    background-color: var(--color-accent-bg-hover);
+  }
+  :is(.dx-checkbox-native, .dx-switch-native):focus-visible {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: 1px;
+  }
+  .dx-switch-native {
+    --dx-switch-h: 1.25rem;
+    --dx-switch-knob: 0.75rem;
+    --dx-switch-border: 1px;
+    --dx-switch-inset: calc((var(--dx-switch-h) - var(--dx-switch-border) * 2 - var(--dx-switch-knob)) / 2);
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    appearance: none;
+    margin: 0;
+    width: calc(var(--dx-switch-knob) * 2 + (var(--dx-switch-inset) + var(--dx-switch-border)) * 2);
+    height: var(--dx-switch-h);
+    border: var(--dx-switch-border) solid var(--color-un-accent);
+    border-radius: 9999px;
+    background: var(--color-un-accent);
+    cursor: pointer;
+    transition: background-color 100ms;
+  }
+  .dx-switch-native::before {
+    content: '';
+    position: absolute;
+    display: block;
+    width: var(--dx-switch-knob);
+    height: var(--dx-switch-knob);
+    margin: var(--dx-switch-inset);
+    border-radius: 9999px;
+    background: white;
+    transition: transform 100ms;
+  }
+  .dx-switch-native:checked {
+    border-color: var(--color-accent-bg);
+    background: var(--color-accent-bg);
+  }
+  .dx-switch-native:checked::before {
+    transform: translateX(100%);
+  }
+  .dx-switch-native:not(:disabled):hover {
+    background: var(--color-un-accent-hover);
+  }
+  .dx-switch-native:checked:not(:disabled):hover {
+    border-color: var(--color-accent-bg-hover);
+    background: var(--color-accent-bg-hover);
   }
 
   /* The select root takes no box, so its label and trigger are laid out as the parent's children. */
-  .nx-select {
+  .dx-select {
     display: contents;
   }
-  :is(.nx-field, .nx-grid[data-layout='stack']) > .nx-select > .nx-control {
-    margin-block: var(--nx-control-inset);
+  :is(.dx-field, .dx-container[data-layout='stack']) > .dx-select > .dx-control {
+    margin-block: var(--dx-control-inset);
   }
 
-  .nx-select-trigger {
+  .dx-select-trigger {
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--nx-control-inset);
+    /* A full gap between a leading option icon and its label, as in Button. */
+    gap: var(--dx-gap-size);
+    /* The caret centres on the block-wide end cell, the column of the row's trailing actions. */
+    padding-inline-end: calc((var(--dx-block-size) - var(--dx-control-icon)) / 2);
     width: 100%;
     min-width: 0;
-    background: var(--color-input-surface);
+    background: var(--color-input-bg);
     cursor: pointer;
     text-align: start;
   }
-  .nx-select-trigger[aria-busy='true'] {
+  .dx-select-trigger[aria-busy='true'] {
     cursor: progress;
   }
   /* The value takes the free space, so a leading option icon sits at the start and the caret at the end. */
-  .nx-select-trigger > [data-part='value-text'] {
+  .dx-select-trigger > [data-part='value-text'] {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /*
+   * `fixed`: the value's cell (with the chosen icon's) also holds every option's icon and label, hidden and
+   * zero-height, so the trigger is as wide as the widest of them whichever is chosen.
+   */
+  .dx-select-trigger[data-fixed] {
+    display: inline-grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 0;
+    width: auto;
+    justify-self: start;
+  }
+  .dx-field > .dx-select > .dx-select-trigger[data-fixed] {
+    align-self: start;
+  }
+  .dx-select-trigger[data-fixed] > * {
+    grid-row: 1;
+  }
+  .dx-select-trigger[data-fixed] > .dx-icon {
+    grid-column: 1;
+    margin-inline-end: var(--dx-gap-size);
+  }
+  .dx-select-trigger[data-fixed] > [data-part='value-text'] {
+    grid-column: 2;
+  }
+  .dx-select-trigger[data-fixed] > [data-part='indicator'] {
+    grid-column: 3;
+    margin-inline-start: var(--dx-control-inset);
+  }
+  .dx-select-value-sizer {
+    grid-column: 1 / 3;
+    display: flex;
+    flex-direction: column;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+  .dx-select-value-sizer > * {
+    display: flex;
+    align-items: center;
+    gap: var(--dx-gap-size);
+    white-space: nowrap;
+  }
+
+  /* Portalled content leaves every sized scope, so it sets its own metrics and level. */
+  /* zag copies the content's z-index onto its positioner, so setting it here lifts the whole popup. */
+  .dx-popup {
+    z-index: var(--dx-layer-popup);
+    min-width: var(--reference-width, 8rem);
+    padding-block: var(--dx-control-inset);
+    border-radius: var(--radius-sm, 0.25rem);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+    /* Ringed with the separator, as the current popovers are, so the popup reads against a surface of near its tone; a
+       shadow ring rather than a border keeps the popup's box (and so its placement) unchanged. */
+    box-shadow:
+      0 0 0 1px var(--color-separator),
+      var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+    --dx-arrow-border: var(--color-separator);
+  }
+  /* An outline, not the shared inset ring: outlines paint after descendants, so item highlights cannot cover it. */
+  .dx-popup:focus {
+    outline: none;
+  }
+  .dx-popup:focus-visible {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
+  }
+  /*
+   * A scrolling popup (Menu, Select, Combobox): the ScrollArea frame is the surface and the Ark content its viewport,
+   * since zag scrolls the highlighted item into view only inside a scrolling content element.
+   */
+  .dx-scroll-root.dx-popup {
+    /* Inline-size containment would size the popup without its items. */
+    container-type: normal;
+    max-width: var(--available-width, none);
+    max-height: min(var(--available-height, 20rem), 20rem);
+    padding-block: 0;
+    /* The viewport's focus ring is inset at the frame's edge, so the overlay thumb sits inside it. */
+    --scroll-thumb-inset: var(--dx-focus-ring-width);
+  }
+  /* A menu grows to the space available on its side (the viewport less the safe area) before it scrolls. */
+  .dx-scroll-root.dx-popup.dx-menu {
+    max-height: var(--available-height, 20rem);
+  }
+  /* Only while it overflows, a popup reserves the thumb's strip (the thumb, one ring inset either side) at its end. */
+  .dx-scroll-root.dx-popup[data-overflow-y] > .dx-scroll-viewport {
+    padding-inline-end: calc(var(--dx-scroll-width) + 2 * var(--scroll-thumb-inset));
+  }
+  .dx-scroll-root.dx-popup:has(> .dx-scroll-viewport[hidden]) {
+    display: none;
+  }
+  /* Inset equally on every side, so a highlighted item reads as a row inside the popup rather than a band across it. */
+  .dx-popup > .dx-scroll-viewport {
+    padding: var(--dx-control-inset);
+    scroll-padding-block: var(--dx-control-inset);
+    border-radius: inherit;
+  }
+  .dx-popup > .dx-scroll-viewport:focus {
+    outline: none;
+  }
+  .dx-popup > .dx-scroll-viewport:focus-visible {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
+  }
+  /* The arrow continues the focus ring, so the ring outlines the popup and its arrow as one shape. */
+  .dx-popup:is(:focus-visible, :has(> .dx-scroll-viewport:focus-visible)) {
+    --dx-arrow-border: var(--dx-focus-ring-color);
+    --dx-arrow-border-width: var(--dx-focus-ring-width);
+  }
+  /*
+   * The ring is inset, so it crosses the arrow's base: the arrow rises above it, clipped to its outer half plus the
+   * ring's band, so its fill opens the ring under the base without covering an item's highlight further in.
+   */
+  .dx-popup:is(:focus-visible, :has(> .dx-scroll-viewport:focus-visible)) > .dx-arrow {
+    z-index: 1;
+  }
+  .dx-popup:has(> [data-placement^='bottom']) > .dx-arrow {
+    clip-path: inset(0 0 calc(50% - var(--dx-focus-ring-width)) 0);
+  }
+  .dx-popup:has(> [data-placement^='top']) > .dx-arrow {
+    clip-path: inset(calc(50% - var(--dx-focus-ring-width)) 0 0 0);
+  }
+  .dx-popup:has(> [data-placement^='right']) > .dx-arrow {
+    clip-path: inset(0 calc(50% - var(--dx-focus-ring-width)) 0 0);
+  }
+  .dx-popup:has(> [data-placement^='left']) > .dx-arrow {
+    clip-path: inset(0 0 0 calc(50% - var(--dx-focus-ring-width)));
+  }
+  /* A small caption naming the Menu or Select group that follows. */
+  .dx-popup-group-label {
+    display: flex;
+    align-items: center;
+    min-height: var(--dx-control-size);
+    padding-inline: var(--dx-gap-size);
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
+    color: var(--color-fg-muted);
+  }
+  .dx-select-item {
+    display: flex;
+    align-items: center;
+    gap: var(--dx-gap-size);
+    height: var(--dx-block-size);
+    padding-inline: var(--dx-gap-size);
+    cursor: pointer;
+  }
+  .dx-select-item[data-highlighted] {
+    background: var(--color-hover-surface);
+    border-radius: var(--radius-xs, 0.125rem);
+  }
+  .dx-select-item[data-disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+  /* One line: a popup capped at the viewport's width truncates its longest labels rather than wrapping them. */
+  .dx-select-item [data-part='item-text'] {
     flex: 1;
     min-width: 0;
     overflow: hidden;
@@ -407,72 +926,43 @@
     white-space: nowrap;
   }
 
-  /* Portalled content leaves every sized scope, so it sets its own metrics and level. */
-  .nx-popup {
-    min-width: var(--reference-width, 8rem);
-    padding-block: var(--nx-control-inset);
-    border-radius: var(--radius-sm, 0.25rem);
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
-    box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
-  }
-  /* An outline, not the shared inset ring: outlines paint after descendants, so item highlights cannot cover it. */
-  .nx-popup:focus {
-    outline: none;
-  }
-  .nx-popup:focus-visible {
-    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
-    outline-offset: calc(-1 * var(--nx-focus-ring-width));
-  }
-  /* A small caption naming the Menu or Select group that follows. */
-  .nx-popup-group-label {
-    display: flex;
-    align-items: center;
-    min-height: var(--nx-control-size);
-    padding-inline: var(--nx-gap-size);
-    font-size: var(--nx-label-font-size);
-    line-height: var(--nx-label-line-height);
-    color: var(--color-description);
-  }
-  .nx-select-item {
-    display: flex;
-    align-items: center;
-    gap: var(--nx-gap-size);
-    height: var(--nx-block-size);
-    padding-inline: var(--nx-gap-size);
-    cursor: pointer;
-  }
-  .nx-select-item[data-highlighted] {
-    background: var(--color-hover-surface);
-  }
-  .nx-select-item[data-disabled] {
-    opacity: 0.5;
-    cursor: default;
-  }
-  .nx-select-item [data-part='item-text'] {
-    flex: 1;
-  }
-
   /* Padded top and bottom so an action row reads apart from the fields above it. */
-  .nx-group {
+  .dx-group {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--nx-gap-size);
-    padding-block: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
+    gap: var(--dx-gap-size);
+    padding-block: var(--dx-gap-size);
+    min-height: var(--dx-block-size);
   }
-  .nx-group[data-justify='end'] {
+  /* A compact group is one joined run: no gap, no block padding, and adjacent buttons drop the inset between them. */
+  .dx-group[data-compact] {
+    flex-wrap: nowrap;
+    gap: 0;
+    padding-block: 0;
+  }
+  .dx-group[data-compact] > .dx-button:not(:last-child) {
+    margin-inline-end: 0;
+  }
+  .dx-group[data-compact] > .dx-button:not(:first-child) {
+    margin-inline-start: 0;
+  }
+  /* A nested group is one cell of its parent's row, which already carries the padding. */
+  .dx-group > .dx-group {
+    padding-block: 0;
+    min-height: 0;
+  }
+  .dx-group[data-justify='end'] {
     justify-content: flex-end;
   }
-  .nx-group[data-justify='between'] {
+  .dx-group[data-justify='between'] {
     justify-content: space-between;
   }
   /* Equal shares of the width; a lone child stretches across (the current `Form.Submit`). */
-  .nx-group[data-fill] {
+  .dx-group[data-fill] {
     flex-wrap: nowrap;
   }
-  .nx-group[data-fill] > * {
+  .dx-group[data-fill] > * {
     flex: 1 1 0;
     min-width: 0;
   }
@@ -481,59 +971,83 @@
    * The gap is one control inset: square icon-only Buttons already sit in an inset cell, and every other control takes the
    * same inline margin, so any two adjacent items are three insets apart.
    */
-  .nx-toolbar {
+  /* A field in a toolbar (a search or filter input) takes the row's remaining width. */
+  .dx-toolbar > .dx-field {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* A row's cross axis is vertical, so the start alignment a Field column needs would pin it to the toolbar's top. */
+  .dx-toolbar > .dx-checkbox {
+    align-self: center;
+  }
+  .dx-toolbar {
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    gap: var(--nx-control-inset);
+    gap: var(--dx-control-inset);
     width: 100%;
-    min-height: var(--nx-block-size);
-    overflow-x: auto;
-    scrollbar-width: none;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    min-height: var(--dx-block-size);
+    /* Half a gap of inline padding (px-1 at md), so the end items are not flush with a pane's edge. */
+    padding-inline: calc(var(--dx-gap-size) / 2);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
   }
-  .nx-toolbar > .nx-control:not([data-square]),
-  .nx-toolbar > .nx-select > .nx-control {
-    margin-inline: var(--nx-control-inset);
+  /* The toolbar's ScrollArea frame takes the place the toolbar would, and never sizes it without its items. */
+  .dx-scroll-root.dx-toolbar-scroll {
+    flex-shrink: 0;
+    width: 100%;
+    container-type: normal;
   }
-  .nx-toolbar > .nx-input {
+  .dx-toolbar > .dx-control:not([data-square]),
+  .dx-toolbar > .dx-field > .dx-control,
+  .dx-toolbar > .dx-select > .dx-control {
+    margin-inline: var(--dx-control-inset);
+  }
+  .dx-toolbar > .dx-input {
     flex: 1;
   }
-  .nx-toolbar > .nx-select > .nx-select-trigger {
+  /* An inactive toolbar's controls recede but stay operable. */
+  .dx-toolbar[data-inactive] > * {
+    opacity: 0.2;
+  }
+  .dx-toolbar > .dx-select > .dx-select-trigger {
     width: fit-content;
   }
-  /* Text takes the free space and truncates, padded like a control so it lines up with a neighbouring Button's label. */
-  .nx-toolbar-text {
+  .dx-toolbar-gap {
     flex: 1;
     min-width: 0;
-    padding-inline: var(--nx-gap-size);
+  }
+  /* Text takes the free space and truncates, padded like a control so it lines up with a neighbouring Button's label. */
+  .dx-toolbar-text {
+    flex: 1;
+    min-width: 0;
+    padding-inline: var(--dx-gap-size);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
   /* A link is control-tall with a control's inline margin and padding, so its ring matches a Button's. */
-  .nx-toolbar-link {
+  .dx-toolbar-link {
     display: inline-flex;
     align-items: center;
-    height: var(--nx-control-size);
-    margin-inline: var(--nx-control-inset);
-    padding-inline: var(--nx-gap-size);
+    height: var(--dx-control-size);
+    margin-inline: var(--dx-control-inset);
+    padding-inline: var(--dx-gap-size);
     border-radius: var(--radius-sm, 0.25rem);
     color: var(--color-accent-text);
     text-decoration: none;
     white-space: nowrap;
   }
-  .nx-toolbar-link:hover {
+  .dx-toolbar-link:hover {
     color: var(--color-accent-text-hover, var(--color-accent-text));
     text-decoration: underline;
   }
-  .nx-toolbar-link[aria-disabled='true'] {
+  .dx-toolbar-link[aria-disabled='true'] {
     opacity: 0.5;
     cursor: default;
     text-decoration: none;
   }
-  .nx-button[data-drag-handle] {
+  .dx-button[data-drag-handle] {
     cursor: grab;
   }
 }

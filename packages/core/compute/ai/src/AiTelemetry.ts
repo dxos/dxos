@@ -4,11 +4,11 @@
 
 // @import-as-namespace
 
+import type * as Prompt from 'effect/ai/Prompt';
+import type * as Response from 'effect/ai/Response';
+import type * as Telemetry from 'effect/ai/Telemetry';
 import * as Effect from 'effect/Effect';
 import type * as Tracer from 'effect/Tracer';
-import type * as Prompt from 'effect/unstable/ai/Prompt';
-import type * as Response from 'effect/unstable/ai/Response';
-import type * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { SpanAttributes } from '@dxos/effect';
 import { log } from '@dxos/log';

@@ -5,83 +5,99 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import {
+  Block,
+  Button,
+  Checkbox,
+  DragHandle,
+  Icon,
+  Input,
+  Panel,
+  Select,
+  type SelectOption,
+  Switch,
+  ToggleGroup,
+  Toolbar,
+} from '../index.ts';
 
-const OPTIONS: Next.SelectOption[] = [
+const OPTIONS: SelectOption[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
 ];
 
 /**
- * A toolbar of every control kind; a non-looping toolbar with a drag handle, text and a link; and a disabled toolbar.
+ * A toolbar of every control kind; a non-looping toolbar with a drag handle, text and a link; a disabled toolbar; and
+ * a toolbar with a Switch and a `gap` separator pushing its last button to the end.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
-    <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Next.Block>
-        <Next.Icon icon='ph--circle--regular' />
-      </Next.Block>
-      <Next.Button icon='ph--plus--regular' label={`Add ${size}`} iconOnly data-testid={`add-${size}`} />
-      <Next.Button icon='ph--minus--regular' label={`Remove ${size}`} iconOnly data-testid={`remove-${size}`} />
-      <Next.Toolbar.Separator data-testid={`separator-${size}`} />
-      <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
-      <Next.Input placeholder='Search' aria-label={`Search ${size}`} data-testid={`input-${size}`} />
-      <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
-        <Next.Select.Trigger placeholder='Color' aria-label={`Color ${size}`} data-testid={`select-${size}`} />
-        <Next.Select.Content size={size}>
+    <Toolbar.Root data-testid={`toolbar-${size}`}>
+      <Block>
+        <Icon icon='ph--circle--regular' />
+      </Block>
+      <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+      <Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
+      <Toolbar.Separator data-testid={`separator-${size}`} />
+      <Button data-testid={`button-${size}`}>Save</Button>
+      <Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
+      <Select.Root items={OPTIONS}>
+        <Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
+        <Select.Content>
           {OPTIONS.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-      <Next.Toolbar.ToggleGroup type='single' defaultValue='list' aria-label={`View ${size}`}>
-        <Next.Toolbar.ToggleGroupItem
-          value='list'
-          icon='ph--list--regular'
-          label={`List ${size}`}
-          iconOnly
-          data-testid={`list-${size}`}
-        />
-        <Next.Toolbar.ToggleGroupItem
+        </Select.Content>
+      </Select.Root>
+      <Toolbar.ToggleGroup type='single' defaultValue='list' aria-label='View'>
+        <ToggleGroup.Item value='list' icon='ph--list--regular' label='List' iconOnly data-testid={`list-${size}`} />
+        <ToggleGroup.Item
           value='grid'
           icon='ph--squares-four--regular'
-          label={`Grid ${size}`}
+          label='Grid'
           iconOnly
           data-testid={`grid-${size}`}
         />
-      </Next.Toolbar.ToggleGroup>
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root loop={false} data-testid={`document-${size}`}>
-      <Next.Toolbar.DragHandle label={`Drag ${size}`} data-testid={`drag-${size}`} />
-      <Next.Toolbar.Text data-testid={`text-${size}`}>
+      </Toolbar.ToggleGroup>
+    </Toolbar.Root>
+    <Toolbar.Root loop={false} data-testid={`document-${size}`}>
+      <DragHandle label='Drag' data-testid={`drag-${size}`} />
+      <Toolbar.Text data-testid={`text-${size}`}>
         A document title long enough to be truncated by the toolbar at every size
-      </Next.Toolbar.Text>
-      <Next.Toolbar.Link href='https://dxos.org' data-testid={`link-${size}`}>
+      </Toolbar.Text>
+      <Toolbar.Link href='https://dxos.org' data-testid={`link-${size}`}>
         Docs
-      </Next.Toolbar.Link>
-      <Next.Button data-testid={`share-${size}`}>Share</Next.Button>
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root disabled data-testid={`disabled-${size}`}>
-      <Next.Button icon='ph--plus--regular' label={`Add disabled ${size}`} iconOnly />
-      <Next.Button>Save</Next.Button>
-      <Next.Input aria-label={`Disabled search ${size}`} />
-      <Next.Toolbar.Link href='https://dxos.org'>Docs</Next.Toolbar.Link>
-    </Next.Toolbar.Root>
+      </Toolbar.Link>
+      <Button data-testid={`share-${size}`}>Share</Button>
+    </Toolbar.Root>
+    <Toolbar.Root disabled data-testid={`disabled-${size}`}>
+      <Button icon='ph--plus--regular' label='Add disabled' iconOnly />
+      <Button>Save</Button>
+      <Input aria-label='Disabled search' />
+      <Toolbar.Link href='https://dxos.org'>Docs</Toolbar.Link>
+    </Toolbar.Root>
+    <Toolbar.Root data-testid={`settings-${size}`}>
+      <Button data-testid={`bold-${size}`}>Bold</Button>
+      <Switch label='Wrap' data-testid={`wrap-${size}`} />
+      <Toolbar.Separator variant='gap' data-testid={`gap-${size}`} />
+      <Button data-testid={`done-${size}`}>Done</Button>
+    </Toolbar.Root>
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/toolbar',
+  title: 'ui/react-ui-core/components/Toolbar',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[40rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[40rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -91,6 +107,38 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/** A search-style toolbar at every size: an input taking the remaining width, a text button and an icon button. */
+export const InputAndButton: Story = {
+  args: { allSizes: true },
+  parameters: { sizes: { gutter: 'none' } },
+  render: ({ size = 'md' }) => (
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root data-testid={`input-toolbar-${size}`}>
+          <Checkbox />
+          <Select.Root items={OPTIONS}>
+            <Select.Trigger placeholder='Color' aria-label='Color' />
+            <Select.Content>
+              {OPTIONS.map((item) => (
+                <Select.Item key={item.value} item={item} />
+              ))}
+            </Select.Content>
+          </Select.Root>
+          <Input
+            placeholder={`Search (${size})`}
+            aria-label='Search'
+            end={<Icon icon='ph--magnifying-glass--regular' />}
+          />
+          <Button>Go</Button>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
+        <br />
+      </Panel.Body>
+    </Panel.Root>
+  ),
+};
+
 /**
  * A toolbar is one block tall and every control in it is control-tall and centred (decision 12). The toolbar role comes
  * from the machine that implements its keyboard contract (decision 9): arrow keys, Home and End rove across its items,
@@ -99,9 +147,12 @@ export const Default: Story = {};
  * or Select trigger); a Separator sits the same three insets from its neighbours and is skipped by the roving focus.
  * A `Toolbar.ToggleGroup`'s items join the toolbar's roving focus, so the group adds no tab stop. A DragHandle is a
  * ghost icon-only Button outside the roving focus; Text truncates in the free space; a Link is an item. With
- * `loop={false}` arrows stop at the ends; a `disabled` toolbar disables every control and has no tab stop.
+ * `loop={false}` arrows stop at the ends; a `disabled` toolbar disables every control and has no tab stop. Items that
+ * overflow scroll sideways in a thin horizontal ScrollArea (no native bar) whose viewport is the toolbar. A Switch's
+ * input joins the roving focus, and a `gap` separator grows to push the items after it to the end.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const toolbar = byTestId(canvasElement, `toolbar-${size}`).getBoundingClientRect();
@@ -115,11 +166,22 @@ export const Test: Story = {
 
     const canvas = within(canvasElement);
     const toolbars = canvas.getAllByRole('toolbar');
-    await expect(toolbars).toHaveLength(3 * SIZES.length);
+    await expect(toolbars).toHaveLength(4 * SIZES.length);
     for (const toolbar of toolbars) {
       await expect(toolbar).toHaveAttribute('aria-orientation', 'horizontal');
     }
     await expectScoped(canvasElement);
+
+    // Overflowing items scroll sideways in a thin horizontal ScrollArea whose viewport is the toolbar itself.
+    const scroller = byTestId(canvasElement, 'toolbar-md');
+    const frame = scroller.parentElement;
+    await expect(frame).toHaveClass('dx-scroll-root');
+    await expect(frame).toHaveAttribute('data-orientation', 'horizontal');
+    await expect(frame).toHaveAttribute('data-width', 'thin');
+    await expect(scroller).toHaveClass('dx-scroll-viewport');
+    await expect(getComputedStyle(scroller).overflowX).toBe('auto');
+    await expect(getComputedStyle(scroller).overflowY).toBe('hidden');
+    await expect(getComputedStyle(scroller).scrollbarWidth).toBe('none');
 
     // The separator is a control-tall vertical rule and no item: roving focus passes over it.
     const separator = byTestId(canvasElement, 'separator-md');
@@ -165,7 +227,7 @@ export const Test: Story = {
     await expect(grid).toHaveFocus();
 
     // A toolbar ToggleGroup's items are toolbar items: one tab stop in all, and the group itself takes none.
-    const view = within(sizeRow(canvasElement, 'md')).getByRole('radiogroup', { name: 'View md' });
+    const view = within(sizeRow(canvasElement, 'md')).getByRole('radiogroup', { name: 'View' });
     await expect(view.tabIndex).toBe(-1);
     await expect(byTestId(canvasElement, 'list-md').tabIndex).toBe(-1);
     await userEvent.keyboard(' ');
@@ -174,7 +236,7 @@ export const Test: Story = {
 
     // Drag handle, text, link and loop={false}.
     const drag = byTestId(canvasElement, 'drag-md');
-    await expect(drag).toHaveAttribute('aria-label', 'Drag md');
+    await expect(drag).toHaveAttribute('aria-label', 'Drag');
     await expect(drag).toHaveAttribute('data-variant', 'ghost');
     await expect(drag.tabIndex).toBe(-1);
     await expect(drag).not.toHaveAttribute('data-toolbar-item');
@@ -207,5 +269,66 @@ export const Test: Story = {
     }
     await expect(disabled.querySelector('a')).toHaveAttribute('aria-disabled', 'true');
     await expect(disabled.querySelectorAll('[tabindex="0"]')).toHaveLength(0);
+
+    // Switch and gap.
+    const settings = byTestId(canvasElement, 'settings-md');
+    const done = byTestId(canvasElement, 'done-md');
+    const doneStyle = getComputedStyle(done);
+    // The last item ends its margin plus the toolbar's inline padding short of the edge.
+    await expect(settings.getBoundingClientRect().right - done.getBoundingClientRect().right).toBeCloseTo(
+      parseFloat(doneStyle.marginRight) + parseFloat(getComputedStyle(settings).paddingRight),
+      0,
+    );
+    await expect(byTestId(canvasElement, 'gap-md').getBoundingClientRect().width).toBeGreaterThan(100);
+    await expect(within(settings).queryByRole('separator')).toBeNull();
+    const wrap = within(settings).getByRole('switch', { name: 'Wrap' });
+    await userEvent.click(byTestId(canvasElement, 'bold-md'));
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(wrap).toHaveFocus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(done).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(wrap).toHaveFocus();
+    await expect(settings.querySelectorAll('[tabindex="0"]')).toHaveLength(1);
+  },
+};
+
+/** A toolbar that is also a landmark (an app bar) keeps the `role` it is given; arrows still move between its items. */
+export const Banner: Story = {
+  render: () => (
+    <Toolbar.Root role='banner'>
+      <Button label='Back' />
+      <Button label='Menu' />
+    </Toolbar.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('banner')).toBeInTheDocument();
+    const back = canvas.getByRole('button', { name: 'Back' });
+    back.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Menu' })).toHaveFocus());
+  },
+};
+
+/** `inactive` dims the controls of a toolbar whose host is not in play, and leaves them operable. */
+const InactiveStory = () => {
+  const [count, setCount] = useState(0);
+  return (
+    <Toolbar.Root inactive>
+      <Button label={`Pressed ${count}`} onClick={() => setCount((count) => count + 1)} />
+    </Toolbar.Root>
+  );
+};
+
+export const Inactive: Story = {
+  render: () => <InactiveStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Pressed 0' });
+    await expect(button).toBeEnabled();
+    await expect(Number(getComputedStyle(button).opacity)).toBeLessThan(1);
+    await userEvent.click(button);
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Pressed 1' })).toBeInTheDocument());
   },
 };

@@ -6,7 +6,7 @@
 import { type StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type InlineConfig } from 'vite';
+import { type InlineConfig, type Plugin } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
 
@@ -158,6 +158,30 @@ const watchIgnored = ['**/dist/**', '**/out/**', '**/.moon/**', '**/temp/**', '*
  * `useFsEvents` is false, which would be far worse than what it replaces.
  */
 const watchOptions = { ignored: watchIgnored, useFsEvents: false, usePolling: false };
+
+/**
+ * Re-arms the watch on a file after every change it reports.
+ *
+ * Under `useFsEvents: false` each transformed file outside `root` is watched through its own
+ * descriptor, which is bound to the file's inode. Editors and agents that save by writing a
+ * temporary file and renaming it over the original replace that inode; chokidar 3 re-attaches the
+ * watch on an inode change only on Linux, so on macOS the first such save is reported and every
+ * later one is silently lost — the server keeps serving the stale transform until restarted.
+ */
+const rearmWatchPlugin = (): Plugin => ({
+  name: 'dxos:rearm-watch',
+  apply: 'serve',
+  configureServer: (server) => {
+    server.watcher.on('change', (path) => {
+      // Vite also emits `change` for virtual module ids (`\0virtual:…`), which are not files and crash `fs.stat`.
+      if (path.includes('\0') || !path.startsWith('/')) {
+        return;
+      }
+      server.watcher.unwatch(path);
+      server.watcher.add(path);
+    });
+  },
+});
 
 // Minimal structural view of a Babel AST node for a dependency-free traversal.
 type AstNode = { type: string } & Record<string, unknown>;
@@ -433,6 +457,8 @@ export const createConfig = ({
               });
             },
           },
+
+          !isVitestRun && rearmWatchPlugin(),
 
           // `?module-url` imports: stories that hand module URLs to a worker to `import()`.
           ModuleUrlPlugin(),

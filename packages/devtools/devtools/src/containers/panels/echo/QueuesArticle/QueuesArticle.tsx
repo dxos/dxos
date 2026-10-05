@@ -61,21 +61,21 @@ export const QueuesArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {/* <DataSpaceSelector /> */}
           <Searchbar onChange={setQueueInput} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         {/* TODO(burdon): Convert to MasterDetailTable. */}
-        <div className='flex grow flex-col overflow-hidden divide-y divide-subdued-separator'>
+        <div className='flex grow flex-col overflow-hidden divide-y divide-separator-subtle'>
           <DynamicTable rows={rows} properties={properties} features={features} onRowClick={handleRowClicked} />
           <div className={mx('flex overflow-auto', 'h-1/2')}>
             {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

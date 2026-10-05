@@ -43,7 +43,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     const registry = yield* Capabilities.AtomRegistry;
     const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
-    const monitor = yield* Capabilities.ProcessMonitor;
+    const monitor = yield* Capabilities.ProcessManager;
     const manager = yield* Capabilities.PluginManager;
     const invoker = yield* Capabilities.OperationInvoker;
     const operationHandlers = yield* Capabilities.OperationHandler;
@@ -74,7 +74,7 @@ export default Capability.makeModule(
     // Tracks the last-seen state per process so we only toast on transitions.
     const lastState = new Map<Process.ID, Process.State>();
 
-    const handleProcesses = (processes: readonly Process.Info[]) => {
+    const handleProcesses = (processes: readonly Process.Process[]) => {
       const seen = new Set<Process.ID>();
       for (const process of processes) {
         seen.add(process.pid);

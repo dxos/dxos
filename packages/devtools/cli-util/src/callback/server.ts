@@ -5,13 +5,13 @@
 import * as BunHttpServer from '@effect/platform-bun/BunHttpServer';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as HttpRouter from 'effect/http/HttpRouter';
+import * as HttpServerRequest from 'effect/http/HttpServerRequest';
+import * as HttpServerResponse from 'effect/http/HttpServerResponse';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
-import * as HttpRouter from 'effect/unstable/http/HttpRouter';
-import * as HttpServerRequest from 'effect/unstable/http/HttpServerRequest';
-import * as HttpServerResponse from 'effect/unstable/http/HttpServerResponse';
 import { getPort } from 'get-port-please';
 
 import { openBrowser } from '#platform';

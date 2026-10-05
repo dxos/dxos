@@ -12,10 +12,10 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
@@ -597,14 +597,11 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const target = Obj.getURI(session.chat);
         // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
         // on every call; naming the group restores it.
-        const handles: readonly ProcessManager.Handle<
-          string | readonly ContentBlock.Any[],
-          void,
-          HarnessControlRpcs
-        >[] = yield* processManager.list({
-          target,
-          key: AGENT_PROCESS_KEY,
-        });
+        const handles: readonly Process.Handle<string | readonly ContentBlock.Any[], void, HarnessControlRpcs>[] =
+          yield* processManager.list({
+            target,
+            key: AGENT_PROCESS_KEY,
+          });
         const [handle] = handles;
 
         // The spawn stamped the harness-host annotation so the process is discoverable as the owner.

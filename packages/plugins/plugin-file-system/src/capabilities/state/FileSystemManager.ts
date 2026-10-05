@@ -5,8 +5,8 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import localforage from 'localforage';
 
 import { log } from '@dxos/log';

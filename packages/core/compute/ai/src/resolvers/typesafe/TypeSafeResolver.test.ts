@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AiError from 'effect/ai/AiError';
+import * as Decision from 'effect/ai/Decision';
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as Decision from 'effect/unstable/ai/Decision';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -172,6 +172,100 @@ describe('TypeSafe resolver', () => {
     // A provider that does not serve the model does not resolve it.
     const exit = await Effect.runPromiseExit(ask(Model.cloudflareJev, { provider: Provider.typesafe.id }));
     expect(exit._tag).toBe('Failure');
+  });
+
+  test('clef and the default alias go to Workers AI with their own back-end name', async ({ expect }) => {
+    const sent: { url: string; model: unknown }[] = [];
+    const recording = Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make((request) =>
+        Effect.sync(() => {
+          const body =
+            request.body._tag === 'Uint8Array' ? JSON.parse(new TextDecoder().decode(request.body.body)) : {};
+          sent.push({ url: request.url, model: body.model });
+          return HttpClientResponse.fromWeb(
+            request,
+            Response.json({ model: body.model, answers: { urgent: { type: 'noul', noul: 0.9 } } }),
+          );
+        }),
+      ),
+    );
+    let configured = Model.cloudflareClefFlash.id;
+    const routed = AiModelResolver.buildAiService.pipe(
+      Layer.provide(
+        TypeSafeResolver.make({
+          workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => 'http://workers-ai.test/v1/systemone' },
+          defaultModel: () => configured,
+        }),
+      ),
+      Layer.provide(recording),
+    );
+    const ask = (id: Model.Model['id']) =>
+      DecisionModel.decide(Urgency, { input: OUTAGE }).pipe(
+        Effect.provide(AiService.decisionModel(id).pipe(Layer.provide(routed))),
+      );
+
+    await EffectEx.runPromise(ask(Model.cloudflareClef.id));
+    await EffectEx.runPromise(ask(Model.defaultDecisionModel));
+    configured = Model.cloudflareJev.id;
+    await EffectEx.runPromise(ask(Model.defaultDecisionModel));
+
+    expect(sent).toEqual([
+      { url: 'http://workers-ai.test/v1/systemone', model: 'clef' },
+      { url: 'http://workers-ai.test/v1/systemone', model: 'clef-flash' },
+      { url: 'http://workers-ai.test/v1/systemone', model: 'jev-latest' },
+    ]);
+  });
+
+  test('clef receives images as data URLs and jev refuses them', async ({ expect }) => {
+    const bodies: Record<string, unknown>[] = [];
+    const recording = Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make((request) =>
+        Effect.sync(() => {
+          const body =
+            request.body._tag === 'Uint8Array' ? JSON.parse(new TextDecoder().decode(request.body.body)) : {};
+          bodies.push(body);
+          return HttpClientResponse.fromWeb(
+            request,
+            Response.json({ model: body.model, answers: { urgent: { type: 'noul', noul: 0.9 } } }),
+          );
+        }),
+      ),
+    );
+    const routed = AiModelResolver.buildAiService.pipe(
+      Layer.provide(
+        TypeSafeResolver.make({
+          typesafe: { apiKey: Effect.succeed(undefined), endpoint: () => 'http://typesafe.test/v1/systemone' },
+          workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => 'http://workers-ai.test/v1/systemone' },
+        }),
+      ),
+      Layer.provide(recording),
+    );
+    const images: DecisionModel.Image[] = [
+      { mediaType: 'image/png', data: new Uint8Array([137, 80, 78, 71]) },
+      { mediaType: 'image/webp', data: 'UklGRg==' },
+    ];
+    const ask = (model: Model.Model) =>
+      DecisionModel.decide(Urgency, { input: OUTAGE, images }).pipe(
+        Effect.provide(AiService.decisionModel(model.id).pipe(Layer.provide(routed))),
+      );
+
+    await EffectEx.runPromise(ask(Model.cloudflareClef));
+    expect(bodies[0].images).toEqual(['data:image/png;base64,iVBORw==', 'data:image/webp;base64,UklGRg==']);
+
+    const error = await EffectEx.runPromise(ask(Model.typesafeJev).pipe(Effect.flip));
+    expect(AiError.isAiError(error) && error.reason._tag).toBe('InvalidUserInputError');
+    expect(bodies).toHaveLength(1);
+  });
+
+  test('a remote image URL is refused, since System One does not fetch one', async ({ expect }) => {
+    const error = await EffectEx.runPromise(
+      TypeSafeResolver.toDataUrl({ mediaType: 'image/png', data: new URL('https://example.com/a.png') }).pipe(
+        Effect.flip,
+      ),
+    );
+    expect(error.reason._tag).toBe('InvalidUserInputError');
   });
 
   test('a model whose provider has no route does not resolve', async ({ expect }) => {

@@ -100,12 +100,13 @@ export const CreateObjectPanel = ({
       // A live create always has a form to show — the object's own — so only a draft can skip
       // straight to creating from an entry that declares no inputs.
       if (mode !== 'live' && metadata && !metadata.inputSchema && !metadata.customPanel && !schema) {
-        await onCreateObject?.({ metadata });
+        // No form to show, so the caller's defaults (a name typed into a link, say) are the data.
+        await onCreateObject?.({ metadata, data: initialFormValues });
       } else {
         onTypenameChange?.(id);
       }
     },
-    [mode, schema, resolve, onCreateObject, onTypenameChange],
+    [mode, schema, resolve, initialFormValues, onCreateObject, onTypenameChange],
   );
 
   const inputSchema = useMemo(() => {
@@ -229,7 +230,8 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
@@ -248,13 +250,13 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
           >
             <Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}
-              size={8}
+              size='xl'
               classNames={getIconHueStyles(option.iconHue)}
             />
             <div className='flex flex-col min-w-0 grow gap-0.5'>
               <span className='truncate'>{option.label}</span>
               {(option.plugin || option.description) && (
-                <span className='truncate text-description text-xs'>
+                <span className='truncate text-fg-muted text-xs'>
                   {option.plugin ? t('plugin-subtitle.label', { plugin: option.plugin }) : option.description}
                 </span>
               )}
@@ -290,7 +292,8 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
 
   // TODO(burdon): Change to Masonry.
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus

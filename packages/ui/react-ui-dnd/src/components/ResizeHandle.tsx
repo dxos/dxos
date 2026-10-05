@@ -9,7 +9,7 @@ import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/type
 import React, { useLayoutEffect, useRef } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { type ThemedClassName, useElevationContext } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
 import { type Side, type Size } from '../types.ts';
@@ -85,7 +85,6 @@ export const ResizeHandle = ({
     onChange: onSizeChange,
   });
   const dragStartSize = useRef<Size>(size);
-  const elevation = useElevationContext();
 
   const orientation = side.startsWith('inline') ? 'horizontal' : 'vertical';
   const client = orientation === 'horizontal' ? 'clientX' : 'clientY';
@@ -144,7 +143,7 @@ export const ResizeHandle = ({
       data-side={side}
       className={mx(
         'group absolute flex focus-visible:outline-hidden',
-        surfaceZIndex({ elevation, level: 'tooltip' }),
+        surfaceZIndex({ level: 'tooltip' }),
         // Both the grab button (w-4/h-4) and its hover line are centered on the underlying edge: the
         // button is offset by half its size (-2) so it straddles the edge, and the line is centered
         // within the button (start-1/2 / top-1/2) so it sits on the edge too.

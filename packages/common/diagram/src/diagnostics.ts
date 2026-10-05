@@ -137,13 +137,13 @@ const sharedRun = ([a, b]: Segment, [c, d]: Segment): number => {
   return 0;
 };
 
-type Label = { ref: string; rect: Rect };
+export type Label = { ref: string; rect: Rect };
 
 /**
  * Absolute extents of free text elements, estimated from the font metrics as the renderers draw it:
  * `x, y` is the top-left, one line per `\n`.
  */
-const labels = (objects: readonly Scene.WorldObject[]): Label[] =>
+export const labels = (objects: readonly Scene.WorldObject[]): Label[] =>
   objects.flatMap((object) =>
     object.elements.flatMap((element) => {
       if (element.kind !== 'text') {

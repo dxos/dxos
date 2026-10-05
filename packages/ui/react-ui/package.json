@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Low-level React components for DXOS, applying a theme to a core group of primitives",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,12 +27,7 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./next": {
-      "source": "./src/next/index.ts",
-      "types": "./dist/types/src/next/index.d.ts",
-      "import": "./dist/lib/next.mjs"
-    },
-    "./next/theme.css": {
+    "./theme.css": {
       "style": "./src/next/theme/index.css",
       "default": "./src/next/theme/index.css"
     },
@@ -69,10 +64,8 @@
     "@zag-js/core": "catalog:",
     "@zag-js/react": "catalog:",
     "date-fns": "catalog:",
-    "dompurify": "catalog:",
     "error-stack-parser": "catalog:",
     "i18next": "catalog:",
-    "react-aria-components": "catalog:",
     "react-error-boundary": "catalog:",
     "react-i18next": "catalog:"
   },
@@ -81,7 +74,6 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@phosphor-icons/react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tanstack/react-virtual": "catalog:",
     "@testing-library/react": "catalog:",
@@ -91,6 +83,7 @@
     "@zag-js/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
+    "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
   },

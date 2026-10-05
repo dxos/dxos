@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcServer from 'effect/rpc/RpcServer';
+import type * as SqlClient from 'effect/sql/SqlClient';
 
 import { WorkerRuntime } from '@dxos/client-services';
 import { LayerStack } from '@dxos/compute-runtime';

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as Statement from 'effect/unstable/sql/Statement';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as Statement from 'effect/sql/Statement';
 
 import { EncodedReference, QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META } from '@dxos/echo/internal';

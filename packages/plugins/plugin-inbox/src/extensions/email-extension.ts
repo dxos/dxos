@@ -7,7 +7,7 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { REPLY_REGEXP } from '../util/index.ts';
 
-const quotedLineDecoration = Decoration.line({ class: 'text-subdued' });
+const quotedLineDecoration = Decoration.line({ class: 'text-fg-subtle' });
 
 const buildDecorations = (view: EditorView): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();

@@ -14,6 +14,11 @@
  */
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// Built once: constructing an `Intl` formatter resolves the locale each time, and every toolbar formats.
+let relativeFormatter: Intl.RelativeTimeFormat | undefined;
+const relativeFormat = (): Intl.RelativeTimeFormat =>
+  (relativeFormatter ??= new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' }));
+
 export type FormatTimeOptions = {
   now?: number;
   /** Rendered for anything under a minute — translated by the caller ("just now"). */
@@ -36,7 +41,7 @@ export const formatTime = (created: string, { now = Date.now(), justNow }: Forma
     return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   }
 
-  const format = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+  const format = relativeFormat();
   // The raw elapsed, not rounded minutes: 30-59s rounds to one minute and would skip the label.
   if (elapsed < 60_000) {
     if (justNow) {

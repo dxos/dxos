@@ -5,8 +5,7 @@
 import { JSONPath } from 'jsonpath-plus';
 import React, { type PropsWithChildren, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Field, ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Field, Input, NumberInput, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter/index.ts';
@@ -161,7 +160,7 @@ const SyntaxFilter = forwardRef<HTMLInputElement, SyntaxFilterProps>(
 
     return (
       <Field.Root validationValence={filterError ? 'error' : 'success'}>
-        <Field.Input
+        <Input
           classNames={['p-1 px-2 font-mono', filterError && 'border-rose-500', classNames]}
           variant='subdued'
           value={filterText}
@@ -192,15 +191,13 @@ const SyntaxDepth = forwardRef<HTMLInputElement, SyntaxDepthProps>(({ classNames
   const { depth, setDepth } = useSyntaxContext(SYNTAX_DEPTH_NAME);
   return (
     <Field.Root>
-      <Field.Input
-        classNames={['p-1 px-2 font-mono', classNames]}
-        variant='subdued'
-        type='number'
+      <NumberInput
+        classNames={['font-mono', classNames]}
         min={0}
         step={1}
         aria-label='Depth'
-        value={depth}
-        onChange={(event) => setDepth(Math.max(0, Number(event.target.value) || 0))}
+        value={String(depth)}
+        onValueChange={(_, valueAsNumber) => setDepth(Math.max(0, valueAsNumber || 0))}
         ref={forwardedRef}
       />
     </Field.Root>
@@ -220,7 +217,7 @@ type SyntaxViewportProps = ComposableProps;
 /** Optional scroll wrapper. Compose around `Syntax.Code` to make it scrollable. */
 const SyntaxViewport = composable<HTMLDivElement, SyntaxViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='all' thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} orientation='all' ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type QueryInfo, removeEmpty } from '../../hooks/index.ts';
+import { type QueryMetrics } from '@dxos/echo-client';
 
 /** Milliseconds above which a duration reads as a warning. */
 export const SLOW_TIME = 250;
@@ -18,13 +18,26 @@ export const Unit = {
 /** Suffix naming the averaging window of a rate, e.g. ` (10s)`. */
 export const rateInterval = (seconds?: number): string => (seconds ? ` (${seconds}s)` : '');
 
-/** Groups queries by their filter shape (options and type identity stripped), keyed by the shape's JSON. */
-export const groupQueriesByFilter = (queries: QueryInfo[] = []): Map<string, QueryInfo[]> =>
-  queries.reduce((acc, query) => {
-    const raw = removeEmpty(query.filter);
-    delete raw.options;
-    raw.type = raw.type?.itemId;
-    const key = JSON.stringify(raw);
-    acc.set(key, [...(acc.get(key) ?? []), query]);
-    return acc;
-  }, new Map<string, QueryInfo[]>());
+/** Milliseconds above which a query reads as slow (amber); above {@link SLOW_TIME} it reads as an error. */
+export const SLUGGISH_QUERY_TIME = 50;
+
+/** Text colour for a query duration: amber when sluggish, red when slow. */
+export const queryTimeClassName = (time: number): string | undefined =>
+  time > SLOW_TIME ? 'text-error-text' : time > SLUGGISH_QUERY_TIME ? 'text-warning-text' : undefined;
+
+/** Mean execution time of a query (ms); zero before it has executed. */
+export const averageQueryTime = ({ totalTime, executions }: QueryMetrics): number =>
+  executions > 0 ? totalTime / executions : 0;
+
+/** Times a query was fired: one-shot runs plus reactive subscriptions. */
+export const queryFiredCount = ({ runs, subscriptions }: QueryMetrics): number => runs + subscriptions;
+
+/**
+ * Query text without the boilerplate every query shares (`Query.select(…)`, `Filter.`), so the part
+ * that tells queries apart survives truncation in a narrow column.
+ */
+export const shortQueryText = (query: string): string =>
+  query
+    .replace(/^Query\.select\(([\s\S]*)\)$/, '$1')
+    .replace(/^Filter\.type\(([^(),]+)\)/, '$1')
+    .replace(/\bFilter\./g, '');

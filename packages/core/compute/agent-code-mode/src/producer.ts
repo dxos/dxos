@@ -2,25 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
-import * as Tool from 'effect/unstable/ai/Tool';
 
 import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import { callTool } from '@dxos/ai';
 import { AiRequest, AiSession, createToolkit, formatSystemPrompt, getOperationFromTool } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import type { ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
-import { makeEvalToolkit } from './eval-tool.ts';
-import { describeFields } from './fields.ts';
+import { type CallLabel, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
+import { describeTypes } from './fields.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
@@ -105,8 +105,10 @@ const runCodeModeTurn = ({
     const runtime = yield* Effect.context<Database.Service | Operation.Service>();
 
     const history = yield* Effect.promise(() => session.getHistory());
+    // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
+    let labelCall = labelEvalCall([]);
     const request = new AiRequest.Request({
-      onOutput: (message) => Effect.promise(() => session.appendTurnMessage(message)),
+      onOutput: (message) => Effect.promise(() => session.appendTurnMessage(labelEvalCalls(message, labelCall))),
     });
 
     yield* request.begin({
@@ -123,6 +125,7 @@ const runCodeModeTurn = ({
       yield* Effect.promise(() => session.context.sync());
       const skills = session.context.getSkills();
       const operations = yield* projectOperations(skills);
+      labelCall = labelEvalCall(operations);
       const toolkit = makeEvalToolkit({
         dialect,
         sandbox,
@@ -140,7 +143,10 @@ const runCodeModeTurn = ({
         instructions,
       }).pipe(Effect.orDie);
 
-      const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
+      const { done, finishReason } = yield* request.runAgentTurn({
+        system,
+        toolkit,
+      });
       if (done) {
         break;
       }
@@ -168,6 +174,28 @@ const runCodeModeTurn = ({
   );
 
 /**
+ * Labels the message's `eval` calls before it reaches the feed, which is what the thread renders: a
+ * code-mode turn's every call is an eval, and the label is the only thing that tells them apart.
+ */
+const labelEvalCalls = (
+  message: Message.Message,
+  labelCall: (block: ContentBlock.ToolCall) => CallLabel | undefined,
+): Message.Message => {
+  const labels = message.blocks.map((block) => (block._tag === 'toolCall' ? labelCall(block) : undefined));
+  if (labels.some((label) => label !== undefined)) {
+    Obj.update(message, (message) => {
+      message.blocks.forEach((block, index) => {
+        const label = labels[index];
+        if (block._tag === 'toolCall' && label !== undefined) {
+          Object.assign(block, label);
+        }
+      });
+    });
+  }
+  return message;
+};
+
+/**
  * The operation a tool invokes, when one backs it.
  *
  * Absent for a provider-defined or MCP tool, which carries no annotation context — and on which
@@ -182,25 +210,15 @@ const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined =
 };
 
 /**
- * Every object type the workspace has registered, with its fields.
+ * Every object and relation type the workspace has registered, with its fields.
  *
  * Stated in the prompt rather than left to be discovered: a dialect that binds the real modules
  * invites the model to introspect a schema for the shape it needs, and that costs turns it should
  * be spending on the task.
  */
-const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.gen(function* () {
-  const { db } = yield* Database.Service;
-  return db.registry
-    .list()
-    .filter((entity) => Type.isType(entity) && Type.isObject(entity))
-    .map((type) => ({
-      typename: Type.getTypename(type) ?? '',
-      // The same `fields` record the sandbox's bound type carries, which is what the model would
-      // otherwise go looking for.
-      fields: describeFields(('fields' in type && type.fields) || {}),
-    }))
-    .filter(({ typename }) => typename.length > 0);
-});
+const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.map(Database.Service, ({ db }) =>
+  describeTypes(db),
+);
 
 /**
  * Projects the skills' tools into callable operations. Resolution goes through the ordinary toolkit

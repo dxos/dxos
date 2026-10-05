@@ -33,12 +33,13 @@ import { type Topology } from 'topojson-specification';
 import {
   type ThemedClassName,
   type ThemeMode,
+  composable,
+  composableProps,
   useComposedRefs,
   useControlledState,
   useDynamicRef,
-  useThemeContext,
+  useThemeMode,
 } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -262,7 +263,7 @@ type GlobeCanvasProps = {
  * https://github.com/topojson/world-atlas
  */
 const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styles: stylesProp }: GlobeCanvasProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
   const { size, center, zoom, translation, rotation, setZoom, setTranslation, setRotation, registerController } =
     useGlobeContext();

@@ -212,6 +212,11 @@ outlines, sheets, contacts, …), distinct from its tasks and its outline.
   import the PR with `github-import-pull-request` (its URL, or `owner/repo#number`), and attach the
   returned `pullRequest` reference with `tasks-add-artifact { task, object }`. Import as soon as
   the PR exists, not when it merges; importing again returns the same object.
+- **Attach the PR to the task it implements.** A PR covering a whole tree goes on its root; a PR
+  that fixes one sub-task goes on that sub-task, even when the root already has its own PR. A
+  task holds one open PR at a time: a second, different open PR on the same task is refused —
+  attach it to the sub-task it fixes (create one if needed), never paste its URL into a
+  description instead.
 - **When the change has a visual side** (UI, layout, rendering), capture screenshots or a short
   screen recording, upload each with the File skill (`createUpload`, the returned `curl`, then
   `file-create-from-upload`), and attach the resulting `File` to the task with
@@ -243,8 +248,8 @@ invisible to the space unless it reports itself. Keep a session object for your 
   or the root task's when you claim a tree — on `tasks-record-session` and in `remoteSession` on
   `tasks-update`, so Composer lists the run by what it is doing rather than by a bare harness id. A
   `remoteSession` with no `title` names a still-untitled session after the task it claims; a
-  session that already has a title keeps it. If your harness can rename its own session (a
-  session-title tool), give it the same name.
+  session that already has a title keeps it. Rename your harness's own session to the same name at
+  the same moment, with its session-title tool if it has one; do not ask first.
 - **When you stop**, record once more with `state: "finished"` (or `"failed"`) so the session is not
   left looking like it is still running.
 
@@ -336,7 +341,11 @@ spaceId }`. Report the new project id.
 1. **At task start** — `space-query-objects { typename: 'org.dxos.type.project' }`, then `projects-get` + `tasks-list` (project ref
    and `spaceId` on both, `includeSubtasks: true` on `tasks-list`) to reload state; create the project if none exists for this stream.
 2. **As you work** — update task status in the **same turn** the work completes. Never leave
-   statuses stale, and never batch-update everything at the end.
+   statuses stale, and never batch-update everything at the end. **Keeping the ledger current is
+   your job, not a request: never ask the user for permission before updating a task** — status,
+   assignee, description, sub-tasks, artifacts, or a follow-up task. Make the update and mention
+   it in your reply if it matters. The ledger is the user's view of your work, so a stale one is
+   the failure; an update they would word differently is cheap for them to change.
 3. **When parking a task** — leave a one-line note in its `description` (what's blocked, what's
    next) so it's resumable.
 4. **When you finish a task, move it to `review` if there is something for someone to review,
@@ -352,9 +361,9 @@ spaceId }`. Report the new project id.
 6. **A follow-up you discover mid-task is a task, never a chip** — record it with `tasks-create`
    (`/project track`). `spawn` is the one sanctioned use of a chip, and it only ever acts on a
    task already recorded in the ledger.
-7. **A task with sub-tasks is one unit of work** — claim, branch and open the PR for the ROOT task,
-   never a lone sub-task; the PR covers every sub-task, and is attached to the root
-   (`tasks-add-artifact` redirects it there). Claiming or starting any task claims its whole tree.
+7. **A task with sub-tasks is one unit of work** — claim the ROOT task; claiming or starting any
+   task claims its whole tree. One PR for the whole tree goes on the root; a sub-task fixed by its
+   own PR carries that PR (see "Artifacts").
 
 ## Common mistakes
 
@@ -368,6 +377,7 @@ spaceId }`. Report the new project id.
 | Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.    |
 | Flat task list with no milestone grouping                          | Create one milestone per phase; file each task under it with `tasks-create`'s `milestone`.    |
 | Leaving task status stale after work lands                         | `tasks-update { status }` in the same turn the work completes, not batched at the end.        |
+| Asking "should I mark this done?" / "want me to update the task?"  | Just update it: the ledger is yours to keep current; say what changed if it matters.          |
 | Marking a task `done` while its PR is still open                   | Set `review` with the PR attached; `done` once it has merged.                                 |
 | Losing the resume pointer                                          | `tasks-update-outline` the `Resume:` line at every checkpoint, not just at the very end.      |
 | Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.                |

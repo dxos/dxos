@@ -6,10 +6,10 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import type * as Scope from 'effect/Scope';
-import type * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
 import { QueuedRemoteControl, RemoteProcessManager, RemoteTraceMonitor } from '@dxos/compute-runtime';
@@ -24,14 +24,14 @@ import * as EdgeProcessControl from './EdgeProcessControl.ts';
 
 /**
  * EDGE implementation of {@link RemoteProcessManager.Service} — the client's view of processes
- * running on EDGE, which is where a hosted process belongs in the aggregate `ProcessMonitor` tree.
+ * running on EDGE, which is where a hosted process belongs in the aggregate `Process.Manager` tree.
  *
  * One manager serves every space: `control`'s verbs each take the space they address, so nothing
  * here is space-scoped and a stack needs no instance per space.
  *
  * `processTree` is the atom rather than a live read, because the index is per-space and this manager
  * spans them — every spawn publishes the space it addressed into it (that is what the aggregate
- * `ProcessMonitor` renders as the remote half). `cancel` force-cancels the current run of
+ * `Process.Manager` renders as the remote half). `cancel` force-cancels the current run of
  * an edge trigger (its in-flight execution and `runAgain` continuation chain) via
  * {@link EdgeHttpClient.cancelTriggerRun}.
  *
@@ -44,7 +44,7 @@ const makeManager = (
   control?: RemoteProcessManager.Control,
   remoteTrace?: RemoteTraceMonitor.Monitor,
 ): RemoteProcessManager.Manager => {
-  const processTreeAtom = Atom.make<readonly Process.Info[]>([]);
+  const processTreeAtom = Atom.make<readonly Process.Process[]>([]);
   registry.mount(processTreeAtom);
   return {
     processTree: Effect.sync(() => registry.get(processTreeAtom)),

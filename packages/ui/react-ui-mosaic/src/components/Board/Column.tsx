@@ -14,15 +14,23 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import {
+  Button,
+  DragHandle,
+  Focus,
+  ScrollArea,
+  type ThemedClassName,
+  Toolbar,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks/index.ts';
-import { Focus } from '../Focus/index.ts';
 import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic/index.ts';
 import { BoardColumnProvider, useBoardColumn } from './BoardColumnContext.ts';
 import { useBoard } from './BoardContext.ts';
@@ -119,18 +127,13 @@ const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
           data-testid='board-column-header'
           ref={forwardedRef}
         >
-          <Toolbar.DragHandle ref={dragHandleRef} testId='mosaicBoard.columnDragHandle' />
+          <DragHandle ref={dragHandleRef} data-testid='mosaicBoard.columnDragHandle' />
           <Toolbar.Text classNames='grow px-0' data-testid='mosaicBoard.columnTitle'>
             {label}
           </Toolbar.Text>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <ActionMenu disabled={!columnMenuItems?.length} actions={columnMenuItems}>
-            <Toolbar.IconButton
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label={t('action-menu.label')}
-            />
+            <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('action-menu.label')} />
           </ActionMenu>
         </Toolbar.Root>
       </>
@@ -168,7 +171,7 @@ const BoardColumnBody = composable<HTMLDivElement, BoardColumnBodyProps>(
         debug={debug}
         ref={forwardedRef}
       >
-        <ScrollArea.Root orientation='vertical' thin centered padding>
+        <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
             <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
           </ScrollArea.Viewport>
@@ -201,7 +204,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
     return (
       <Toolbar.Root classNames={mx('rounded-b-sm border-t border-separator', classNames)} ref={forwardedRef}>
         {handleAdd && (
-          <IconButton
+          <Button
             data-testid='board-column-add-item'
             classNames='group-hover/column:opacity-100 md:opacity-0 transition transition-opacity duration-500'
             variant='ghost'

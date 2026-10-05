@@ -28,6 +28,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
+import * as DurableOperation from './DurableOperation.ts';
 import type { ProcessNotFoundError } from './errors.ts';
 import { ProcessManagerService } from './process-manager-service.ts';
 import type * as ProcessManager from './ProcessManager.ts';
@@ -47,7 +48,7 @@ export interface ProcessOperationInvoker {
   invokeFiber: <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment'>,
+    options?: Pick<Process.SpawnOptions, 'traceMeta' | 'environment'>,
   ) => Effect.Effect<OperationFiber<O>>;
 
   /**
@@ -61,7 +62,7 @@ export class Service extends Context.Service<
   Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker
 >()('@dxos/functions/ProcessOperationInvoker') {}
 
-const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effect.Effect<OperationFiber<T>> =>
+const fiberFromProcess = <T>(handle: Process.Handle<any, T, never>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {
     // `forkDaemon` so the collector fiber's lifetime is independent of whichever
     // scope originated the `invoke`/`attach` call. Otherwise, subsequent
@@ -157,7 +158,7 @@ export const make = (opts: {
   const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment' | 'notify'> & {
+    options?: Pick<Process.SpawnOptions, 'traceMeta' | 'environment' | 'notify'> & {
       /**
        * If true, do NOT link the spawned process to the current process as a
        * child. Used by {@link schedule} so that fire-and-forget operations
@@ -170,7 +171,7 @@ export const make = (opts: {
     },
   ): Effect.Effect<OperationFiber<O>> =>
     Effect.gen(function* () {
-      const executable = Process.fromOperation(op, opts.handlerSet);
+      const executable = DurableOperation.fromOperation(op, opts.handlerSet);
 
       log('spawing process', { opKey: op.meta.key, ...options });
       const handle = yield* opts.manager.spawn(executable, {

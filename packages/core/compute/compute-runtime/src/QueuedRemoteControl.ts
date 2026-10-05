@@ -9,9 +9,9 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
+import type * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
-import type * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import * as Process from '@dxos/compute/Process';
 import type { Annotation } from '@dxos/echo';
@@ -23,15 +23,6 @@ import type * as RemoteProcessManager from './RemoteProcessManager.ts';
 
 const toProcessId = Schema.decodeUnknownSync(Process.ID);
 const toSpaceId = (value: string): SpaceId => value as SpaceId;
-
-/** States a host will never move out of, and therefore the point at which queued work is dead. */
-const TERMINAL_STATES: readonly Process.State[] = [
-  Process.State.SUCCEEDED,
-  Process.State.FAILED,
-  Process.State.TERMINATED,
-];
-
-const isTerminal = (state: Process.State): boolean => TERMINAL_STATES.includes(state);
 
 export interface Backoff {
   readonly initial: Duration.Duration;
@@ -183,7 +174,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
     const reconcile = (snapshot: RemoteProcessManager.Snapshot): Effect.Effect<RemoteProcessManager.Snapshot> =>
       Effect.gen(function* () {
         const localPid = localPidOf(snapshot.pid);
-        if (isTerminal(snapshot.state)) {
+        if (Process.isExited(snapshot.state)) {
           yield* forget(localPid);
           return snapshot;
         }

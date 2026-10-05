@@ -143,7 +143,7 @@ const KindPill = ({ kind }: { kind: string }) => (
   <span
     className={mx(
       'px-1.5 rounded-full border text-[10px] leading-4 uppercase tracking-wide',
-      KIND_STYLE[kind] ?? 'border-separator text-description',
+      KIND_STYLE[kind] ?? 'border-separator text-fg-muted',
     )}
   >
     {kind}
@@ -153,7 +153,7 @@ const KindPill = ({ kind }: { kind: string }) => (
 /** Change in a 0–1 score; higher is better. */
 const Delta = ({ value }: { value: number }) =>
   Math.abs(value) < 0.005 ? (
-    <span className='text-subdued'>·</span>
+    <span className='text-fg-subtle'>·</span>
   ) : (
     <span className={value > 0 ? 'text-emerald-600' : 'text-rose-500'}>
       {value > 0 ? '+' : '−'}
@@ -163,7 +163,7 @@ const Delta = ({ value }: { value: number }) =>
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className='flex flex-col gap-1'>
-    <h2 className='text-xs uppercase tracking-wide text-description'>{title}</h2>
+    <h2 className='text-xs uppercase tracking-wide text-fg-muted'>{title}</h2>
     {children}
   </section>
 );
@@ -227,14 +227,14 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
       <Section title='Score'>
         <Flex align='baseline' gap='sm'>
           <span
-            className={mx('text-3xl font-mono', total === undefined ? 'text-description' : scoreColor(total))}
+            className={mx('text-3xl font-mono', total === undefined ? 'text-fg-muted' : scoreColor(total))}
             data-testid='scene-view.scorecard.score'
           >
             {total?.toFixed(2) ?? '—'}
           </span>
           {total !== undefined && baselineTotal !== undefined && <Delta value={total - baselineTotal} />}
         </Flex>
-        <div className='text-xs text-description'>
+        <div className='text-xs text-fg-muted'>
           0 is bad, 1 is good. A broken constraint scores 0 overall; otherwise the mean of the other scores.
           {engine && ` Engine layout (its own routes): ${engineScore(engine)?.toFixed(2) ?? '—'}.`}
         </div>
@@ -249,10 +249,9 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
           return (
             <Grid
               key={id}
-              cols={['5.5rem', '1fr', '3rem', '2.5rem']}
+              cols={['5.5rem', 'fill', '3rem', '2.5rem']}
               gap='sm'
               align='center'
-              grow={false}
               classNames='text-xs'
               data-testid={`scene-view.scorecard.${id}`}
             >
@@ -268,7 +267,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
                   />
                 </span>
               </span>
-              <span title={title} className={mx('font-mono text-end', error ? 'text-description' : scoreColor(score))}>
+              <span title={title} className={mx('font-mono text-end', error ? 'text-fg-muted' : scoreColor(score))}>
                 {error ? '—' : score.toFixed(2)}
               </span>
               <span title={title} className='font-mono text-end'>
@@ -280,10 +279,10 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
       </Section>
 
       <Section title='Metrics'>
-        <Grid cols={['1fr', 'auto']} grow={false} classNames='gap-x-4 font-mono text-xs'>
+        <Grid cols={['fill', 'auto']} classNames='gap-x-4 font-mono text-xs'>
           {Object.entries(report.metrics).map(([key, value]) => (
             <Fragment key={key}>
-              <span className='text-description'>{key}</span>
+              <span className='text-fg-muted'>{key}</span>
               <span className='text-end'>{format(value)}</span>
             </Fragment>
           ))}
@@ -291,7 +290,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
       </Section>
 
       <Section title={`Diagnostics · ${errors.length} errors · ${warnings.length} warnings`}>
-        {report.diagnostics.length === 0 && <span className='text-description'>None.</span>}
+        {report.diagnostics.length === 0 && <span className='text-fg-muted'>None.</span>}
         {report.diagnostics.map((diagnostic, index) => (
           <button
             key={index}
@@ -314,7 +313,7 @@ type EditorProps = { store: SceneStore; root: SceneId; engine?: Objective.Evalua
 const Editor = ({ store, root, engine }: EditorProps) => {
   const atoms = useMemo(() => createSceneViewAtoms(root), [root]);
   return (
-    <Grid cols={['1fr', '24rem']} grow={false} classNames='dx-fill'>
+    <Grid cols={['fill', '24rem']} classNames='dx-fill'>
       <SceneView.Root store={store} root={root} atoms={atoms}>
         <SceneView.Canvas liveDepth={0} />
         <SceneView.Actions />

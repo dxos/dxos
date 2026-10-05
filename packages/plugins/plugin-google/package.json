@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-google",
-  "version": "0.10.0",
+  "version": "0.12.0",
   "description": "DXOS plugin that syncs Gmail, Google Calendar and Google Contacts into the workspace.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#apis": {
@@ -111,7 +111,6 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -137,6 +136,7 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
+    "@dxos/client": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/random": "workspace:*",

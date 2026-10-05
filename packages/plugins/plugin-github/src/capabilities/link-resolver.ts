@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Database, Filter } from '@dxos/echo';
@@ -58,9 +58,9 @@ export default Capability.makeModule(
  * The default source: each of the space's GitHub connection tokens in turn — a space can hold
  * several, and only some may reach a private repository — then anonymous, which reaches a public one.
  */
-const fetchFromGitHub: GitHubCapabilities.GitHubLinkSource = (link, { space }) =>
+const fetchFromGitHub: GitHubCapabilities.GitHubLinkSource = (link, { db }) =>
   Effect.gen(function* () {
-    const tokens = space ? yield* connectionTokens(space) : [];
+    const tokens = db ? yield* connectionTokens(db) : [];
     for (const token of [...tokens, '']) {
       const object = yield* fetchLink(link).pipe(
         Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })),
@@ -78,7 +78,7 @@ const fetchFromGitHub: GitHubCapabilities.GitHubLinkSource = (link, { space }) =
   );
 
 /** The tokens of the space's GitHub connections, in query order. */
-const connectionTokens = (space: NonNullable<PreviewCapabilities.PreviewLinkContext['space']>) =>
+const connectionTokens = (db: NonNullable<PreviewCapabilities.PreviewLinkContext['db']>) =>
   Effect.gen(function* () {
     const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
     const tokens: string[] = [];
@@ -90,7 +90,7 @@ const connectionTokens = (space: NonNullable<PreviewCapabilities.PreviewLinkCont
       tokens.push(accessToken.token);
     }
     return tokens;
-  }).pipe(Effect.provide(Database.layer(space.db)));
+  }).pipe(Effect.provide(Database.layer(db)));
 
 const fetchLink = (link: GitHubLink) =>
   Effect.gen(function* () {

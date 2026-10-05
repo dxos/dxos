@@ -6,7 +6,7 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/react-client/echo';
-import { Select, Toolbar } from '@dxos/react-ui';
+import { Button, Select, Toolbar } from '@dxos/react-ui';
 
 export type SpaceToolbarProps = {
   spaces?: Space[];
@@ -50,21 +50,23 @@ export const SpaceToolbar = ({
 
   return (
     <Toolbar.Root>
-      <Toolbar.IconButton icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
+      <Button icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
       <div className='flex w-32'>
-        <Select.Root value={selected?.toHex()} onValueChange={handleChange}>
-          <Select.TriggerButton classNames='w-full' />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {spaces.map((space) => (
-                  <Select.Option key={space.key.toHex()} value={space.key.toHex()}>
-                    <span className='font-mono'>{space.key.truncate()}</span>
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
+        <Select.Root
+          items={spaces.map((space) => ({ value: space.key.toHex(), label: space.key.truncate() }))}
+          value={selected ? [selected.toHex()] : []}
+          onValueChange={({ value: [value] }) => value && handleChange(value)}
+        >
+          <Select.Trigger classNames='w-full' />
+          <Select.Content>
+            {spaces.map((space) => (
+              <Select.Item
+                key={space.key.toHex()}
+                classNames='font-mono'
+                item={{ value: space.key.toHex(), label: space.key.truncate() }}
+              />
+            ))}
+          </Select.Content>
         </Select.Root>
       </div>
       <div className='flex gap-1'>
@@ -74,20 +76,20 @@ export const SpaceToolbar = ({
       <div className='grow' />
       {space && (
         <>
-          <Toolbar.IconButton
+          <Button
             icon={space.isOpen ? 'ph--trash--regular' : 'ph--clock-counter-clockwise--regular'}
             iconOnly
             label={space.isOpen ? 'Close space' : 'Open space'}
             onClick={() => onToggleOpen(selected)}
           />
-          <Toolbar.IconButton icon='ph--upload-simple--regular' label='Import space.' onClick={handleImport} />
-          <Toolbar.IconButton
+          <Button icon='ph--upload-simple--regular' label='Import space.' onClick={handleImport} />
+          <Button
             icon='ph--download-simple--regular'
             iconOnly
             label='Download backup'
             onClick={() => onExport(selected)}
           />
-          <Toolbar.IconButton
+          <Button
             icon='ph--user-plus--regular'
             iconOnly
             label='Share'

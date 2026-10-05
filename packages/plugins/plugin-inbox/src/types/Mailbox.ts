@@ -4,7 +4,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
@@ -142,13 +141,6 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
   }).pipe(
     FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
-    /**
-     * Reading a mailbox is a chain: the message replaces the message plank rather than growing the
-     * deck, and picking a different message drops the attachment that belonged to the last one.
-     */
-    AppAnnotation.DeckAnnotation.set({
-      levels: [{ key: 'mailbox' }, { key: 'message' }, { key: 'attachment' }],
-    }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
     /**
      * Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.

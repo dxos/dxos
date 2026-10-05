@@ -9,6 +9,7 @@ import { Context } from '@dxos/context';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
+import { FeedProtocol } from '@dxos/protocols';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost } from './echo-host.ts';
@@ -56,6 +57,26 @@ describe('EchoHost.updateIndexes', () => {
       host.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [written] }),
     );
     expect(rows.map((row) => row.objectId)).toEqual([written]);
+  });
+});
+
+describe('EchoHost trace indexing', () => {
+  test('updateIndexes does not wait out the trace throttle', async () => {
+    const { host, runtime, spaceId } = await setup();
+    await host.updateIndexes();
+    const update = vi.spyOn(host.indexEngine, 'update');
+    await RuntimeProvider.runPromise(runtime)(
+      host.feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: EntityId.random(),
+          feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          data: new Uint8Array([123, 125]),
+        },
+      ]),
+    );
+    await host.updateIndexes();
+    expect(update).toHaveBeenCalled();
   });
 });
 

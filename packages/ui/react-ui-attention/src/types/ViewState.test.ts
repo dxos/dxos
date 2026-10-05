@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { createDefaultBackends } from '../core/index.ts';

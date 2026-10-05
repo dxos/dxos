@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sandbox",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "DXOS Sandbox plugin for running isolated shell environments",
   "homepage": "https://dxos.org",
@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -26,6 +26,16 @@
       "node": "./dist/lib/capabilities.node.mjs",
       "tauri": "./dist/lib/capabilities.tauri.mjs",
       "browser": "./dist/lib/capabilities.browser.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/components.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/containers.mjs"
     },
     "#local-backend": {
       "source": {
@@ -50,6 +60,11 @@
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
       "default": "./dist/lib/skills.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
@@ -104,6 +119,21 @@
       "source": "./src/services/HttpBackend.ts",
       "types": "./dist/types/src/services/HttpBackend.d.ts",
       "import": "./dist/lib/HttpBackend.mjs"
+    },
+    "./Repository": {
+      "source": "./src/types/Repository.ts",
+      "types": "./dist/types/src/types/Repository.d.ts",
+      "import": "./dist/lib/Repository.mjs"
+    },
+    "./RepositoryOperation": {
+      "source": "./src/types/RepositoryOperation.ts",
+      "types": "./dist/types/src/types/RepositoryOperation.d.ts",
+      "import": "./dist/lib/RepositoryOperation.mjs"
+    },
+    "./RepositoryService": {
+      "source": "./src/types/RepositoryService.ts",
+      "types": "./dist/types/src/types/RepositoryService.d.ts",
+      "import": "./dist/lib/RepositoryService.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -129,6 +159,15 @@
       ],
       "HttpBackend": [
         "dist/types/src/services/HttpBackend.d.ts"
+      ],
+      "Repository": [
+        "dist/types/src/types/Repository.d.ts"
+      ],
+      "RepositoryOperation": [
+        "dist/types/src/types/RepositoryOperation.d.ts"
+      ],
+      "RepositoryService": [
+        "dist/types/src/types/RepositoryService.d.ts"
       ]
     }
   },
@@ -141,27 +180,49 @@
   "dependencies": {
     "@carderne/sandbox-runtime": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@tauri-apps/plugin-shell": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
-    "@dxos/config": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   }
 }

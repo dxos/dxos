@@ -16,6 +16,12 @@ import { isTauri } from '@dxos/util';
 import { initEchoHostWasm } from '../util/automerge-wasm.ts';
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, WorkerLogProcessor, initializeObservability } from '../util/index.ts';
 
+/**
+ * Echo's hot paths log at verbose per document and message, and every forwarded line costs a postMessage;
+ * `dxlog` or `runtime.client.log.filter` raises it.
+ */
+const DB_WORKER_LOG_FILTER = 'info';
+
 // This worker hosts echo and can saturate its own loop, so the log sink runs in a nested
 // worker of its own. The IdbLogStore is the read handle for observability exports; the
 // nested worker owns writes and eviction.
@@ -26,6 +32,7 @@ const observabilityWorker = new Worker(new URL('./observability-worker.ts', impo
 });
 const logProcessor = new WorkerLogProcessor({
   worker: observabilityWorker,
+  logFilter: log.runtimeConfig.options.filter ?? DB_WORKER_LOG_FILTER,
   traceContext: ObservabilityExtension.Otel.activeTraceContext,
 });
 log.addProcessor(logProcessor.processor);
@@ -38,6 +45,10 @@ PluginWorker.run({
   storageLockKey: STORAGE_LOCK_KEY,
   onBeforeStart: (config) =>
     Effect.gen(function* () {
+      const logFilter = config.get('runtime.client.log.filter');
+      if (logFilter) {
+        logProcessor.setFilter(logFilter);
+      }
       observability = initializeObservability(config, isTauri(), logStore, undefined, {
         post: (message) => observabilityWorker.postMessage(message),
       });

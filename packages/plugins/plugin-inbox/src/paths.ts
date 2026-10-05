@@ -89,10 +89,4 @@ export const getCalendarEventPath = (spaceId: string, calendarId: string, eventI
  */
 export const getCalendarRangeSelectionId = (contextId: string): string => `${contextId}/plan-range`;
 
-/**
- * Builds the node ID for an event's companion node by appending the pre-computed linked segment
- * to the calendar's attendable ID. The segment must already be a linked segment (see EventArticle).
- */
-export const getEventNodeId = (attendableId: string, eventSegment: string): string => `${attendableId}/${eventSegment}`;
-
 export { getCalendarPath, getCalendarsPath };
