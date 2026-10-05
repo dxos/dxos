@@ -51,6 +51,12 @@ import { type LevelName, LEVELS, composeFilter } from './recorder.ts';
 // Shared
 //
 
+/** Whether a row matches the search box: a case-insensitive match on its file and message. */
+const matchesText = (record: ReturnType<typeof formatLogEntry>, textFilter: string): boolean => {
+  const needle = textFilter.trim().toLowerCase();
+  return needle ? `${record.file ?? ''} ${record.message ?? ''}`.toLowerCase().includes(needle) : true;
+};
+
 /** Per-file level overrides are global to the logger, not scoped to an attention context. */
 const LOG_LEVELS_CONTEXT = 'logger';
 
@@ -167,15 +173,18 @@ const LoggerRoot = ({
     setChecked(new Set());
     setCurrent(undefined);
   }, []);
-  // Copy the checked rows when any are checked, else the whole buffer.
+  // Copy the checked rows when any are checked, else the rows the search leaves visible.
   const getCopyText = useCallback(() => {
-    const selected = checked.size > 0 ? rows.filter((row) => checked.has(row.id)) : rows;
+    const selected =
+      checked.size > 0
+        ? rows.filter((row) => checked.has(row.id))
+        : rows.filter((row) => matchesText(formatLogEntry(row.entry), textFilter));
     return JSON.stringify(
       selected.map(({ entry }) => formatLogEntry(entry)),
       null,
       2,
     );
-  }, [rows, checked]);
+  }, [rows, checked, textFilter]);
   const toggleExpand = useCallback((id: number) => {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -438,13 +447,10 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   const { rows, expanded, toggleExpand, current, setCurrent, checked, toggleChecked, textFilter } =
     useLoggerContext('Logger.List');
 
-  // Compute the display record once; filter the buffer by a case-insensitive match on file + message.
-  const needle = textFilter.trim().toLowerCase();
+  // Compute the display record once; the same predicate decides what the toolbar's copy takes.
   const visible = rows
     .map((row) => ({ ...row, record: formatLogEntry(row.entry) }))
-    .filter(({ record }) =>
-      needle ? `${record.file ?? ''} ${record.message ?? ''}`.toLowerCase().includes(needle) : true,
-    );
+    .filter(({ record }) => matchesText(record, textFilter));
 
   if (visible.length === 0) {
     return (

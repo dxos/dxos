@@ -339,10 +339,9 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
 
   /** Cursor just past the last event the host holds, for a subscription that wants only new events. */
   get #endCursor(): Effect.Effect<number> {
-    // A read at or beyond the end returns an empty page carrying the current end cursor.
-    return this.#control
-      .readEvents({ ...this.#target, cursor: Number.MAX_SAFE_INTEGER })
-      .pipe(Effect.map((page) => page.cursor));
+    // A read at or beyond the end returns an empty page carrying the current end cursor; retried like
+    // every other page, since a failure here would end the subscription before it starts polling.
+    return this.#readPage(Number.MAX_SAFE_INTEGER).pipe(Effect.map((page) => page.cursor));
   }
 
   #readEventsFromEnd(): Stream.Stream<RemoteProcessManager.Event> {

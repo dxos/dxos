@@ -13,6 +13,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
@@ -166,6 +167,33 @@ describe('RemoteProcessHandle event polling', () => {
     expect(textsOf([...collected])).toEqual(['after-outage']);
   });
 
+  test('a failed initial cursor read is retried before outputs are polled', async ({ expect }) => {
+    let failures = 1;
+    const control: RemoteProcessManager.Control = {
+      ...makeControl([]),
+      // The end cursor is read at `MAX_SAFE_INTEGER`; the output then lands at the cursor it returned.
+      readEvents: ({ cursor }) =>
+        cursor === Number.MAX_SAFE_INTEGER
+          ? failures-- > 0
+            ? Effect.die(new Error('connection reset'))
+            : Effect.succeed({ events: [], cursor: 0, truncated: false, snapshot: snapshot(Process.State.RUNNING) })
+          : Effect.succeed({
+              events: cursor === 0 ? [{ _tag: 'output' as const, seq: 0, data: 'hello' }] : [],
+              cursor: 1,
+              truncated: false,
+              snapshot: snapshot(Process.State.RUNNING),
+            }),
+    };
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(control, undefined, Duration.millis(1), EchoOutput);
+        return yield* Stream.runCollect(handle.subscribeOutputs().pipe(Stream.take(1)));
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect([...collected]).toEqual(['hello']);
+  });
+
   test('a host that stays unreachable still ends the subscription', async ({ expect }) => {
     const control: RemoteProcessManager.Control = {
       ...makeControl([]),
@@ -258,10 +286,17 @@ const makeLiveSource = () => {
 
 const registryLayer = () => Layer.succeed(Registry.AtomRegistry, Registry.make());
 
+/** Supplies the output codec `subscribeOutputs` needs; the process itself never runs here. */
+const EchoOutput = Operation.makeDurable(
+  { key: 'org.dxos.test.process', input: Schema.Void, output: Schema.String, services: [] },
+  () => Effect.succeed({}),
+);
+
 const makeHandle = (
   control: RemoteProcessManager.Control,
   remoteTrace?: RemoteTraceMonitor.Monitor,
   pollInterval?: Duration.Duration,
+  definition?: Operation.Durable<void, string, never, never>,
 ) =>
   Effect.gen(function* () {
     const registry = yield* Registry.AtomRegistry;
@@ -272,6 +307,7 @@ const makeHandle = (
       registry,
       ...(remoteTrace !== undefined ? { remoteTrace } : {}),
       ...(pollInterval !== undefined ? { pollInterval } : {}),
+      ...(definition !== undefined ? { definition } : {}),
     });
   });
 
