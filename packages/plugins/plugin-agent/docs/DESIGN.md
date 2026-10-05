@@ -210,6 +210,98 @@ What the shared app changes:
 4. Discord-side work: verification, Message Content intent approval, and an install page in
    Composer.
 
+## Channel-agnostic agents (next milestone)
+
+**Goal:** plugin-agent knows nothing about Discord. An agent talks in any conversation a channel
+backend provides — Discord, freeq, Bluesky, the local feed — through plugin-thread's
+`ThreadCapabilities.ChannelBackend`, implemented by each backend plugin. plugin-discord owns
+everything Discord-specific (token, gateway, binding form, bot status).
+
+### Today
+
+`ChannelBackendProvider` has `kind`, `label`, `createFields`, `makeConfig`, `subscribe` and `send`
+(plus optional `readOnly`). plugin-thread (local feed), plugin-freeq and plugin-bluesky implement it;
+both of the latter now `dependsOn: ['org.dxos.plugin.thread']`. **plugin-discord implements nothing**;
+plugin-agent talks to Discord itself (`sendDiscordMessage`, the Discord branches of `sendMessage`,
+`ensureThreadChat`, `start/stop/getDiscordBotStatus`, `DiscordBinding`).
+
+### Extending `ChannelBackendProvider`
+
+All additions are **optional**, so freeq, Bluesky and the feed backend keep compiling unchanged:
+
+```ts
+interface ChannelBackendProvider {
+  // …existing members…
+
+  /** A direct channel to a person, for backends that have one (Discord DM, IRC private message). */
+  openDirect?: (
+    person: Person.Person,
+    context: { db: Database.Database },
+  ) => Effect.Effect<Channel.Channel | undefined, Error, Capability.Service>;
+
+  /** Threads inside a channel, for backends that have them (Discord threads). */
+  threads?: {
+    /** Opens (or returns) the thread for a message; its id is backend-scoped. */
+    open: (
+      channel: Channel.Channel,
+      options: { messageId?: string; title?: string },
+    ) => Effect.Effect<ThreadRef, Error, Capability.Service>;
+    send: (
+      channel: Channel.Channel,
+      thread: ThreadRef,
+      message: Message.Message,
+    ) => Effect.Effect<void, Error, Capability.Service>;
+  };
+
+  /** A connection that must be started (a bot gateway, an IRC socket); absent means always available. */
+  connection?: {
+    start: (channel: Channel.Channel) => Effect.Effect<ConnectionStatus, Error, Capability.Service>;
+    stop: (channel: Channel.Channel) => Effect.Effect<ConnectionStatus, Error, Capability.Service>;
+    status: (channel: Channel.Channel) => Effect.Effect<ConnectionStatus, Error, Capability.Service>;
+  };
+}
+
+type ThreadRef = { channel: Ref.Ref<Channel.Channel>; id: string };
+type ConnectionStatus = { running: boolean; detail?: string; error?: string };
+```
+
+`openDirect` replaces `discordUserId` (a person's handle is the backend's business, read from
+`Person.identities` by the backend that understands it). `threads` covers Discord threads without
+making every backend model them. `connection` gives the agent a backend-neutral Start/Stop/status; freeq
+can implement it over its existing `ConnectionManager`.
+
+### What moves where
+
+| Today (plugin-agent)                                                     | After                                                                                                                                            |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DiscordBinding` (agent, token, app id, channel ids)                     | plugin-discord's backend config (`makeConfig`) on a `Channel`; plugin-agent keeps a generic `AgentChannels { agent, channels: Ref<Channel>[] }`  |
+| `sendDiscordMessage`                                                     | `channel.sendToChannel { channel, thread?, text }` in plugin-thread, dispatching to the backend's `send` / `threads.send`                        |
+| `sendMessage` Discord branches; `Relay.replyChannelId: string`           | send to a `Channel`; `Relay.replyChannel: Ref<Channel>` (+ optional thread id); delivery `'discord'` → `'channel'`                               |
+| Discord DM via `discordUserId`                                           | the backend's `openDirect(person)`, then `send`                                                                                                  |
+| `ensureThreadChat` (`source: discord.com`)                               | `ensureChannelChat { agent, channel, thread? }` — one chat per channel thread, keyed by the `Channel` (+ thread id) foreign key, backend-neutral |
+| `start/stop/getDiscordBotStatus`                                         | `channel.connect/disconnect/status` dispatching to `connection`                                                                                  |
+| `DiscordBindingForm`, `DiscordBotStatus`                                 | plugin-discord, rendered on the Agent through a generic "connections" surface                                                                    |
+| `[discord #channel; addressed: …]` header (`instructions.ts` + EDGE bot) | `[<backend label> #channel; addressed: …]`                                                                                                       |
+
+### What stays per backend
+
+Receiving on the server. `subscribe` is an in-page callback and cannot drive agent turns on EDGE;
+the Discord gateway Durable Object (compute-service) stays Discord's, but it resolves Discord ids to
+`Channel` refs and calls `ensureChannelChat` instead of `ensureThreadChat`. A future backend that
+needs server-side receiving brings its own EDGE worker the same way.
+
+### Order of work
+
+1. Add the optional members to `ChannelBackendProvider` (plugin-thread) and the generic operations
+   (`sendToChannel`, `openDirect`, `connect/disconnect/status`); tests against the feed backend.
+2. plugin-discord implements a Discord `ChannelBackend` (`send`, `threads`, `openDirect`,
+   `connection` over the EDGE bot routes), and takes over the binding form and status UI.
+3. plugin-agent switches to channels: `AgentChannels`, `ensureChannelChat`, `Relay.replyChannel`,
+   `sendMessage` via channels; delete the Discord operations and `DiscordBinding`.
+4. EDGE bot passes `Channel` refs (edge PR), keeping mention gating and threads.
+5. Stories: the playground's Discord panel becomes a feed-backend channel, so the agent is exercised
+   through the same capability Discord uses.
+
 ## Known gaps
 
 - **Bot tokens live inline in the space.** KMS manages OAuth tokens only; storing a pasted key in KMS

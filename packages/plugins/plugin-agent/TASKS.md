@@ -26,7 +26,22 @@ across them, relays messages between people and watches facts for the people who
 - [ ] **Agentic review** — run `bun .agents/skills/agentic-review/scripts/fast.ts` (needs `TYPESAFE_API_KEY`), commit the store, work the index.
 - [ ] **Model Fixture CI** — failing on main too; read the Depot log and fix upstream.
 
-## Phase 2: durable intent
+## Phase 2: channel-agnostic agents
+
+plugin-agent loses every Discord-specific operation; agents use plugin-thread's `ChannelBackend`,
+implemented by plugin-discord, plugin-freeq, plugin-bluesky. Design: DESIGN.md "Channel-agnostic
+agents".
+
+### Tasks
+
+- [x] **Backends depend on plugin-thread** — plugin-freeq and plugin-bluesky `dependsOn: ['org.dxos.plugin.thread']` (2ded7e8d518).
+- [ ] **Extend `ChannelBackendProvider`** — optional `openDirect`, `threads`, `connection`; generic `sendToChannel`, `openDirect`, `connect/disconnect/status` operations in plugin-thread.
+- [ ] **Discord `ChannelBackend`** — plugin-discord implements it (`send`, `threads`, `openDirect`, `connection` over the EDGE bot routes) and `dependsOn` plugin-thread; takes over the binding form and bot status.
+- [ ] **plugin-agent on channels** — `AgentChannels`, `ensureChannelChat`, `Relay.replyChannel`, channel-based `sendMessage`; delete `sendDiscordMessage`, `start/stop/getDiscordBotStatus`, `ensureThreadChat`, `DiscordBinding`.
+- [ ] **EDGE bot passes `Channel` refs** — calls `ensureChannelChat` (edge PR).
+- [ ] **Stories on a feed channel** — the playground exercises the agent through the same capability.
+
+## Phase 3: durable intent
 
 ### Tasks
 
