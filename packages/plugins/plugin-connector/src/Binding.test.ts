@@ -257,7 +257,7 @@ describe('Binding.sync', () => {
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
   };
 
-  const recordingMonitor: Trigger.Monitor = {
+  const recordingMonitor: Trigger.Manager = {
     triggers: Atom.make<readonly Trigger.State[]>([]),
     localDispatcherEnabled: false,
     invokeTrigger: ({ trigger }) => Effect.sync(() => void fired.push(trigger.id)),
@@ -287,7 +287,7 @@ describe('Binding.sync', () => {
     manager.contribute({
       module: 'test',
       interface: Capabilities.ServiceResolver,
-      implementation: ServiceResolver.fromContext(Context.make(Trigger.TriggerMonitorService, recordingMonitor)),
+      implementation: ServiceResolver.fromContext(Context.make(Trigger.ManagerService, recordingMonitor)),
     });
     return manager;
   };
@@ -713,7 +713,7 @@ describe('Binding.syncAll', () => {
     ),
   );
 
-  const recordingMonitor: Trigger.Monitor = {
+  const recordingMonitor: Trigger.Manager = {
     triggers: Atom.make<readonly Trigger.State[]>([]),
     localDispatcherEnabled: false,
     invokeTrigger: ({ trigger }) =>
@@ -932,7 +932,7 @@ describe('Binding.syncAll', () => {
     manager.contribute({
       module: 'test',
       interface: Capabilities.ServiceResolver,
-      implementation: ServiceResolver.fromContext(Context.make(Trigger.TriggerMonitorService, recordingMonitor)),
+      implementation: ServiceResolver.fromContext(Context.make(Trigger.ManagerService, recordingMonitor)),
     });
     return manager;
   };
