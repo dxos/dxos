@@ -56,4 +56,13 @@ export class QueryServiceImpl implements QueryService.Handlers {
   ['QueryService.reindex'](): Effect.Effect<void, Error> {
     return Effect.fail(new NotImplementedError({ message: 'Reindex is not implemented.' }));
   }
+
+  /**
+   * Accepted and discarded: this runtime answers queries against the remote host rather than a
+   * local index, so it has nothing to index a pushed registry into. Failing instead would break
+   * every client that mirrors its registry on connect.
+   */
+  ['QueryService.updateRegistry'](_request: QueryService.RegistryUpdateRequest): Effect.Effect<void, Error> {
+    return Effect.void;
+  }
 }

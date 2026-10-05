@@ -9,6 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
+import { ORIGIN_AUTOMERGE } from '../registry-keys.ts';
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import { FtsIndex } from './fts-index.ts';
@@ -56,6 +57,7 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-1',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {
@@ -106,6 +108,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-1',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -129,6 +132,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-1',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -172,6 +176,7 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-100',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {
@@ -186,6 +191,7 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-200',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {
@@ -200,6 +206,7 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-1000',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {
@@ -254,6 +261,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-s1',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -269,6 +277,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-s2',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -333,6 +342,7 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-1',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {
@@ -348,6 +358,7 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-2',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {
@@ -423,6 +434,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-space',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -438,6 +450,7 @@ describe('FtsIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -453,6 +466,7 @@ describe('FtsIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -507,6 +521,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-space',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -522,6 +537,7 @@ describe('FtsIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -577,6 +593,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-s1',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -592,6 +609,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-s2',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -607,6 +625,7 @@ describe('FtsIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -654,6 +673,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-person',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -668,6 +688,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-task',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -728,6 +749,7 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-1',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {
@@ -792,6 +814,7 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-1',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {

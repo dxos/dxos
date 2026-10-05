@@ -15,6 +15,7 @@ import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
 import { IndexEngine, type IndexingResult } from './index-engine.ts';
 import { type IndexCursor } from './index-tracker.ts';
 import { type DocumentActivity, EntityMetaIndex, type IndexerObject } from './indexes/index.ts';
+import { ORIGIN_AUTOMERGE } from './registry-keys.ts';
 import { TestSqliteLayer as TestLayer } from './testing/index.ts';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
@@ -112,6 +113,7 @@ class ActivityMockDataSource implements IndexDataSource {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: { id: this.objectId, [ATTR_TYPE]: TYPE_DEFAULT, title: 'Activity' },
@@ -155,6 +157,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: documentId },
@@ -190,6 +193,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Hello' },
@@ -198,12 +202,12 @@ describe('IndexEngine', () => {
       dataSource.push([object]);
       yield* engine.update(Context.default(), dataSource, { spaceId: null });
       const [created] = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
-      expect(created.version).toBe(1);
+      expect(created.seq).toBe(1);
 
       dataSource.push([{ ...object, data: { ...object.data, title: 'Hello World' } }]);
       yield* engine.update(Context.default(), dataSource, { spaceId: null });
       const [updated] = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
-      expect(updated.version).toBe(2);
+      expect(updated.seq).toBe(2);
     }, Effect.provide(TestLayer)),
   );
 
@@ -220,6 +224,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -240,7 +245,7 @@ describe('IndexEngine', () => {
       const results1 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
       expect(results1).toHaveLength(1);
       expect(results1[0].objectId).toBe(obj1.data.id);
-      expect(results1[0].version).toBeGreaterThan(0);
+      expect(results1[0].seq).toBeGreaterThan(0);
 
       // Verify FTS index gets updated.
       yield* engine.updateSecondaryIndexes(Context.default());
@@ -260,6 +265,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: { id: obj1.data.id, [ATTR_TYPE]: obj1.data[ATTR_TYPE], title: 'Hello World' },
@@ -274,7 +280,7 @@ describe('IndexEngine', () => {
       const results2 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
       expect(results2).toHaveLength(1);
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
-      expect(results2[0].version).toBeGreaterThan(results1[0].version);
+      expect(results2[0].seq).toBeGreaterThan(results1[0].seq);
 
       yield* engine.updateSecondaryIndexes(Context.default());
       const ftsResults2 = yield* engine.queryText({
@@ -301,6 +307,7 @@ describe('IndexEngine', () => {
           queueNamespace: null,
           documentId: 'd1',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {
@@ -316,6 +323,7 @@ describe('IndexEngine', () => {
           queueNamespace: null,
           documentId: 'd2',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {
@@ -331,6 +339,7 @@ describe('IndexEngine', () => {
           queueNamespace: null,
           documentId: 'd3',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: {
@@ -391,6 +400,7 @@ describe('IndexEngine', () => {
           queueNamespace: null,
           documentId: 'doc-done-test',
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Done test' },
@@ -427,6 +437,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: { id: id1, [ATTR_TYPE]: TYPE_A, title: 'Doc in space1' },
@@ -437,6 +448,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: { id: id2, [ATTR_TYPE]: TYPE_B, title: 'Doc in space2' },
@@ -480,6 +492,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -551,6 +564,7 @@ describe('IndexEngine', () => {
       queueId: null,
       queueNamespace: null,
       recordId: null,
+      origin: ORIGIN_AUTOMERGE,
       createdAt: null,
       updatedAt: Date.now(),
       data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title },

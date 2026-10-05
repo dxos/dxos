@@ -9,6 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
+import { ORIGIN_AUTOMERGE } from '../registry-keys.ts';
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import type { IndexerObject } from './interface.ts';
@@ -34,6 +35,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -70,6 +72,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -114,6 +117,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -156,6 +160,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -177,6 +182,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -212,6 +218,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -246,6 +253,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: null,
         documentId: 'doc-123',
         recordId: 1,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -274,6 +282,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: null,
         documentId: 'doc-123',
         recordId: 1,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -304,6 +313,7 @@ describe('ReverseRefIndex.queryReferrers', () => {
     queueNamespace: null,
     documentId,
     recordId: null,
+    origin: ORIGIN_AUTOMERGE,
     createdAt: null,
     updatedAt: Date.now(),
     data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, ...data },
@@ -389,6 +399,7 @@ describe('ReverseRefIndex.queryReferrers', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {

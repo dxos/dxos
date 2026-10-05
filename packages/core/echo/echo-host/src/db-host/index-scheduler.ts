@@ -24,6 +24,7 @@ export type IndexRunReason =
   | 'trace-blocks'
   | 'documents-saved'
   | 'batch-continuation'
+  | 'registry-update'
   | 'rpc-update-indexes'
   | 'feed-scoped-query'
   | 'epoch';

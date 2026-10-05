@@ -11,6 +11,7 @@ import type * as Statement from 'effect/sql/Statement';
 import type { SpaceId } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
+import { ORIGIN_REGISTRY } from '../registry-keys.ts';
 import {
   SqlBoundVariableLimit,
   chunkArray,
@@ -251,8 +252,11 @@ export class FtsIndex implements Index {
             terms.map((term) => sql`f.text LIKE ${'%' + term + '%'}`)
           : // MATCH - fast index lookup.
             [sql`f.text MATCH ${escapeFts5Query(trimmed)}`];
-      const text = sql.and(textConditions);
-      const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, text);
+      // Registry snapshots share this virtual table but belong to no space, so a text search —
+      // always space- or queue-scoped — must never surface one. A literal, so it costs the chunk
+      // planner's budget nothing; `ORIGIN_REGISTRY` is our own constant.
+      const base = sql.and([...textConditions, sql.literal(`m.origin != '${ORIGIN_REGISTRY}'`)]);
+      const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, base);
 
       const statements = planFtsStatements(
         sql,
@@ -265,7 +269,7 @@ export class FtsIndex implements Index {
         sql,
         statements.length,
         Effect.forEach(statements, (statement) => {
-          const conditions: Statement.Fragment[] = [text];
+          const conditions: Statement.Fragment[] = [base];
           if (statement.sources) {
             conditions.push(sql`(${buildFtsSourceCondition(sql, statement.sources, includeAllQueues)})`);
           }

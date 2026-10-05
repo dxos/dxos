@@ -15,6 +15,7 @@ import { EffectEx } from '@dxos/effect';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
+import { toServiceError } from '@dxos/protocols';
 import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { countWork } from '@dxos/util';
@@ -37,6 +38,16 @@ export type QueryServiceProps = {
    * fallback, so the index is their only source of truth.
    */
   updateIndexes: () => Promise<void>;
+
+  /**
+   * Hands the client's registry snapshot to the host's registry data source and brings the index
+   * up to date over it. Resolves once the pushed entities are queryable.
+   */
+  updateRegistry: (
+    clientId: string,
+    entries: readonly QueryService.RegistryEntry[],
+    opts?: { releasing?: boolean },
+  ) => Promise<void>;
 
   /**
    * True once every indexed object has a snapshot. The compiled executor reads that store rather
@@ -217,6 +228,15 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   ['QueryService.reindex'](): Effect.Effect<void, Error> {
     // No-op: SQL indexer handles re-indexing automatically.
     return Effect.sync(() => log.warn('reindex() is deprecated and no longer has any effect'));
+  }
+
+  ['QueryService.updateRegistry'](request: QueryService.RegistryUpdateRequest): Effect.Effect<void, Error> {
+    // `tryPromise`, not `promise`: a failed reclaim is a `SqlError` the caller can act on, and
+    // `promise` would turn it into a defect that never reaches the declared error channel.
+    return Effect.tryPromise({
+      try: () => this._params.updateRegistry(request.clientId, request.entries, { releasing: request.releasing }),
+      catch: toServiceError,
+    });
   }
 
   ['QueryService.execQuery'](

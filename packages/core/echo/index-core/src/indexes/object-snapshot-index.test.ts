@@ -9,6 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
+import { ORIGIN_AUTOMERGE } from '../registry-keys.ts';
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import type { IndexerObject } from './interface.ts';
@@ -38,6 +39,7 @@ describe('ObjectSnapshotIndex', () => {
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
@@ -48,6 +50,7 @@ describe('ObjectSnapshotIndex', () => {
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: Date.now(),
           data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'beta' },
@@ -82,6 +85,7 @@ describe('ObjectSnapshotIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'present' },
@@ -116,6 +120,7 @@ describe('ObjectSnapshotIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, index: i },

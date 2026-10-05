@@ -20,7 +20,13 @@ import {
   ATTR_TYPE,
 } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
-import { EntityMetaIndex, type IndexerObject, ObjectSnapshotIndex, ReverseRefIndex } from '@dxos/index-core';
+import {
+  EntityMetaIndex,
+  type IndexerObject,
+  ObjectSnapshotIndex,
+  ORIGIN_AUTOMERGE,
+  ReverseRefIndex,
+} from '@dxos/index-core';
 import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 
 import { QueryPlanner } from '../query-planner.ts';
@@ -71,6 +77,7 @@ const seed = Effect.gen(function* () {
     queueNamespace: null,
     queuePosition: null,
     recordId: null,
+    origin: ORIGIN_AUTOMERGE,
     createdAt: 1000,
     updatedAt: 2000,
     data: { id, [ATTR_TYPE]: type, [ATTR_DELETED]: false, ...extra, ...data },

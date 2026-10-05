@@ -16,11 +16,22 @@ export {
   EntityMetaIndex,
   type QueueRef,
   type QueueWindow,
+  buildExcludeRegistryCondition,
   buildQueueWindow,
   buildSourceCondition,
   buildTypeDxnCondition,
 } from './indexes/entity-meta-index.ts';
 export { localEntityId } from './entity-ids.ts';
+export {
+  type IndexOrigin,
+  ORIGIN_AUTOMERGE,
+  ORIGIN_FEED,
+  ORIGIN_REGISTRY,
+  REGISTRY_SPACE_ID,
+  type RegistryIdentity,
+  contentHash,
+  splitRegistryKey,
+} from './registry-keys.ts';
 export {
   type Referrer,
   type ReverseRef,

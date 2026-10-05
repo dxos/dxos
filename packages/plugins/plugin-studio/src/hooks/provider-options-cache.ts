@@ -4,6 +4,8 @@
 
 import * as Redacted from 'effect/Redacted';
 
+import { fnv1a32 } from '@dxos/util';
+
 import type * as GenerationService from '../types/GenerationService.ts';
 
 /** How long a loaded list is reused; catalogues (models, voices) change rarely and cost a request. */
@@ -20,12 +22,7 @@ const cache = new Map<string, Entry>();
 
 /** Non-reversible fingerprint (FNV-1a) so the cache key never carries the credential itself. */
 const fingerprint = (value: string): string => {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return hash.toString(16);
+  return fnv1a32(value).toString(16);
 };
 
 // A provider id names the vendor, shared by its per-kind services (Higgsfield lists Soul models

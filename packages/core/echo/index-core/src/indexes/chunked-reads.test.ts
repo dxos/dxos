@@ -11,6 +11,7 @@ import * as Statement from 'effect/sql/Statement';
 import { ATTR_DELETED, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
+import { ORIGIN_AUTOMERGE } from '../registry-keys.ts';
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
 import { MAX_CHUNKED_STATEMENTS, SqlBoundVariableLimit } from '../utils.ts';
 import { EntityMetaIndex, type QueueRef, type QueueWindow } from './entity-meta-index.ts';
@@ -62,6 +63,7 @@ const seed = Effect.fnUntraced(function* () {
         queueNamespace: null,
         documentId: `doc-${spaceIndex}-${index}`,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: 1_000 + index,
         updatedAt: 2_000 + spaceIndex,
         data: {
@@ -84,6 +86,7 @@ const seed = Effect.fnUntraced(function* () {
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: 3_000 + spaceIndex,
           queuePosition: itemIndex === 0 ? firstPosition : ++position,
