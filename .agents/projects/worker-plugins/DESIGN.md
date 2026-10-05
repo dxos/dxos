@@ -83,3 +83,7 @@ same unit of contribution a tab uses.
 - D6 relies on Vite treating a worker build's first output chunk as the worker entry (true while it has
   one entry) and copying every other output file into the tab's build; `vite-plugin-module-url`'s test
   covers both.
+
+- Rolldown's default splitting of the worker build can form chunk cycles. One ran `HubHttpClient`'s chunk
+  before `BaseHttpClient`'s, so Composer keeps `edge-client` in one chunk group. One harmless cycle
+  remains (no class crosses it); a new one surfaces as `Class extends value undefined` at worker start.
