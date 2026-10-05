@@ -246,6 +246,8 @@ const ObjectFormDialogBody = ({
 
   const type = typename ? typeByTypename.get(typename) : undefined;
   const [object, setObject] = useState<Obj.Unknown | undefined>();
+  // State, not a ref: the panel portals into the footer, so it has to re-render once the footer mounts.
+  const [actionsContainer, setActionsContainer] = useState<HTMLDivElement | null>(null);
   // Read inside the create effect so a caller passing an inline object literal does not re-run it.
   const defaultsRef = useRef(defaults);
   defaultsRef.current = defaults;
@@ -383,6 +385,7 @@ const ObjectFormDialogBody = ({
           onCancel={handleCancel}
           onTargetChange={setTarget}
           onTypenameChange={setTypename}
+          actionsContainer={actionsContainer}
         />
       </Dialog.Body>
       {object ? (
@@ -394,15 +397,15 @@ const ObjectFormDialogBody = ({
             {t('object-form-confirm.label')}
           </Button.Root>
         </Dialog.Footer>
+      ) : showTypeSelector && registryAvailable ? (
+        <Dialog.Footer>
+          <Dialog.CloseTrigger asChild>
+            <PluginRegistryButton.Root />
+          </Dialog.CloseTrigger>
+        </Dialog.Footer>
       ) : (
-        showTypeSelector &&
-        registryAvailable && (
-          <Dialog.Footer>
-            <Dialog.CloseTrigger asChild>
-              <PluginRegistryButton.Root />
-            </Dialog.CloseTrigger>
-          </Dialog.Footer>
-        )
+        // The draft form portals its Cancel and Create here; empty (any other step), the footer collapses.
+        <Dialog.Footer ref={setActionsContainer} />
       )}
     </>
   );
