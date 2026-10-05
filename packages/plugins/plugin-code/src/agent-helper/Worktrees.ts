@@ -8,6 +8,8 @@ import { execFile } from 'node:child_process';
 import { mkdir, readdir, realpath, stat } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 
+import { BaseError } from '@dxos/errors';
+
 import type * as Protocol from '../agents/Protocol.ts';
 
 const GIT_TIMEOUT_MS = 60_000;
@@ -15,13 +17,13 @@ const GIT_TIMEOUT_MS = 60_000;
 /** A key names one worktree directory; nothing in it may climb out of the root. */
 const KEY = /^[A-Za-z0-9_-]{1,128}$/;
 
-/** A refusal the page can act on, as opposed to a fault in the helper. */
-export class WorktreeError extends Error {
+/** A refusal the page can act on, as opposed to a fault in the helper; `status` is the HTTP answer. */
+export class WorktreeError extends BaseError.extend('WorktreeError', 'Worktree request refused.') {
   constructor(
     readonly status: 400 | 409,
     message: string,
   ) {
-    super(message);
+    super({ message });
   }
 }
 

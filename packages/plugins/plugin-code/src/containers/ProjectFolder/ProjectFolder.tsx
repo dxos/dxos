@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
 import type * as Project from '@dxos/compute/Project';
 import { log } from '@dxos/log';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -49,7 +49,7 @@ export const ProjectFolder = ({ project }: ProjectFolderProps) => {
 
   return (
     <Form.FieldSet label={t('project-folder.label')} description={t('project-folder.description')}>
-      <div className='flex items-center gap-2' data-testid='codePlugin.projectFolder'>
+      <Flex align='center' gap='sm' data-testid='codePlugin.projectFolder'>
         <span className='grow min-w-0 truncate font-mono text-sm' title={folder}>
           {folder ?? t('project-folder.empty.label')}
         </span>
@@ -59,7 +59,7 @@ export const ProjectFolder = ({ project }: ProjectFolderProps) => {
             {t('project-folder.clear.label')}
           </Button>
         )}
-      </div>
+      </Flex>
     </Form.FieldSet>
   );
 };
