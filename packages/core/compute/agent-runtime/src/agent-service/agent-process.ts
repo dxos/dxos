@@ -638,20 +638,21 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               } else if (toolCallManager.isToolCall(event.pid)) {
                 const manager = yield* Process.ManagerService;
                 const attachExit = yield* manager.attach(event.pid).pipe(Effect.exit);
-                if (Exit.isFailure(attachExit)) {
-                  // Completed tool children are not rehydrated on reload; the result is in the tool
-                  // result queue or was delivered synchronously before the interrupted turn.
-                  if (
-                    toolCallManager.isToolCall(event.pid) ||
-                    toolResults.some((item) => item.pid === event.pid) ||
-                    toolCallManager.isReported(event.pid)
-                  ) {
-                    log.verbose('childEvent skipped (process gone, result already handled)', { pid: event.pid });
-                    return;
-                  }
-                  return yield* Effect.failCause(attachExit.cause).pipe(Effect.orDie);
+                if (
+                  Exit.isFailure(attachExit) &&
+                  isToolResultHandled(toolResults, event.pid, (pid) => toolCallManager.isReported(pid))
+                ) {
+                  // Completed tool children are not rehydrated on reload; this result is already queued or
+                  // was delivered before the interrupted turn.
+                  log.verbose('childEvent skipped (process gone, result already handled)', { pid: event.pid });
+                  return;
                 }
-                const result = yield* Process.awaitOutput(attachExit.value).pipe(
+                const result = yield* (
+                  Exit.isFailure(attachExit)
+                    ? // Unreported and unreachable: answered as an error so the call does not stay pending forever.
+                      Effect.failCause(attachExit.cause)
+                    : Process.awaitOutput(attachExit.value)
+                ).pipe(
                   Effect.exit,
                   Effect.map(
                     Exit.match({
@@ -866,6 +867,16 @@ export const isAgentWorkPending = ({
   pendingAlarms.length > 0 ||
   delegations.length > 0 ||
   toolCallManager.hasPendingToolResults();
+
+/**
+ * Whether a tool call's result is already accounted for — queued for the next turn or delivered to the
+ * agent — so a finished child that can no longer be reattached needs no answer of its own.
+ */
+export const isToolResultHandled = (
+  queue: readonly ToolResultEvent[],
+  pid: Process.ID,
+  isReported: (pid: Process.ID) => boolean,
+): boolean => queue.some((item) => item.pid === pid) || isReported(pid);
 
 /**
  * Discards tool results at the head of the queue whose values already reached the agent.
