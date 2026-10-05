@@ -893,6 +893,8 @@ const handlers = {
       size: `${viewport.width * scale}x${viewport.height * scale}`,
       timeline: timelineFile,
       steps: timeline.length,
+      // The recorder kept writing, but what it wrote after this point is not the app.
+      ...(recorded?.lost ? { lost: recorded.lost } : {}),
     };
   },
 };
