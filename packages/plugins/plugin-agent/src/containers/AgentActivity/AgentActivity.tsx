@@ -9,7 +9,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import type * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -17,6 +17,8 @@ import { type Channel, Message } from '@dxos/types';
 
 import { AgentActivity as AgentActivityComponent } from '#components';
 import { AgentChannels, AgentOperation } from '#types';
+
+import { useAgentChannelList, useAgentConversations } from '../useAgentConversations.ts';
 
 export type AgentActivityProps = {
   role?: string;
@@ -28,25 +30,9 @@ export const AgentActivity = ({ role, agent }: AgentActivityProps) => {
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(agent);
 
-  // Child-of filters rather than `.children()` traversals, which EDGE's query planner cannot run.
-  const channelsFilter = useMemo(
-    () => Filter.and(Filter.type(AgentChannels.AgentChannels), Filter.childOf(agent)),
-    [agent],
-  );
-  // `Filter.and` widens to the child-of filter's untyped result, so the element type is restated here.
-  const list: AgentChannels.AgentChannels | undefined = useQuery(db, channelsFilter).at(0);
+  const list = useAgentChannelList(agent);
   const [values] = useObject(list);
-
-  const chatFilter = useMemo(() => Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)), [agent]);
-  const chats: Chat.Chat[] = useQuery(db, chatFilter);
-  // Channel chats carry their conversation key from creation, so membership alone decides the list; ULID ids sort by age.
-  const conversations = useMemo(
-    () =>
-      chats
-        .filter((chat) => AgentChannels.conversationOf(chat) !== undefined)
-        .sort((left, right) => right.id.localeCompare(left.id)),
-    [chats],
-  );
+  const conversations = useAgentConversations(agent);
 
   const handleSave = useCallback(
     ({ channels }: AgentChannels.Properties) => {

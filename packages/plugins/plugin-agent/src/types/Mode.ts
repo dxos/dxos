@@ -57,8 +57,7 @@ export const CurrentModeAnnotation = Annotation.make({
 export const getCurrent = (chat: Chat.Chat): string =>
   Annotation.get(chat, CurrentModeAnnotation).pipe(Option.getOrElse(() => DEFAULT));
 
-export const setCurrent = (chat: Chat.Chat, name: string): void => {
-  Obj.update(chat, (chat) => {
-    Annotation.set(chat, CurrentModeAnnotation, name);
-  });
+/** Sets the chat's current mode; call inside the caller's `Obj.update`, so it batches with the chat's other writes. */
+export const setCurrent = (chat: Obj.Mutable<Chat.Chat>, name: string): void => {
+  Annotation.set(chat, CurrentModeAnnotation, name);
 };

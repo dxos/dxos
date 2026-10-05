@@ -14,15 +14,15 @@ import { AgentOperationError } from './errors.ts';
  * The agent's own task list, created on first use and parented to the agent so it cascades with it.
  * A child-of filter rather than `.children()`, which EDGE's query planner cannot run.
  */
-export const ensureAgentTaskSet = (agent: Agent.Agent): Effect.Effect<TaskSet.TaskSet, never, Database.Service> =>
-  Effect.gen(function* () {
+export const ensureAgentTaskSet: (agent: Agent.Agent) => Effect.Effect<TaskSet.TaskSet, never, Database.Service> =
+  Effect.fnUntraced(function* (agent) {
     const existing = yield* Database.query(Filter.and(Filter.type(TaskSet.TaskSet), Filter.childOf(agent))).run;
     const found = existing.sort((left, right) => left.id.localeCompare(right.id)).at(0);
     if (found) {
       return found;
     }
     return yield* Database.add(TaskSet.make({ name: `${agent.name ?? 'Agent'} tasks`, [Obj.Parent]: agent }));
-  }).pipe(Effect.orDie);
+  }, Effect.orDie);
 
 /** A person or organization to relay to, or an error the agent can act on. */
 export const asParty = (

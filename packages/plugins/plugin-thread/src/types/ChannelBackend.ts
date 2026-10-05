@@ -33,10 +33,10 @@ export const resolveProvider = (
 ): ThreadCapabilities.ChannelBackendProvider | undefined => providers.find((provider) => provider.kind === kind);
 
 /** The contributed provider for a channel, or a typed failure naming the missing kind. */
-export const getProvider = (
+export const getProvider: (
   channel: Channel.Channel,
-): Effect.Effect<ThreadCapabilities.ChannelBackendProvider, ChannelBackendNotFoundError, Capability.Service> =>
-  Effect.gen(function* () {
+) => Effect.Effect<ThreadCapabilities.ChannelBackendProvider, ChannelBackendNotFoundError, Capability.Service> =
+  Effect.fnUntraced(function* (channel) {
     const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
     const provider = resolveProvider(providers, channel.backend.kind);
     if (!provider) {

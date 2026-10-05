@@ -77,7 +77,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
             return { delivered: false, reason: sent.reason };
           }
           // Replies in the direct conversation, and later deliveries, belong to this person's chat.
-          ChatParticipant.set(sent.chat, recipient);
+          Obj.update(sent.chat, (chat) => ChatParticipant.set(chat, recipient));
           return { delivered: true, via: 'channel', chat: Ref.make(sent.chat) };
         }
 

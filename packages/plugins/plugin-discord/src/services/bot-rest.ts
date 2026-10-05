@@ -58,24 +58,23 @@ const decodeBody = (value: unknown): DiscordBody =>
   Schema.decodeUnknownOption(DiscordBody)(value).pipe(Option.getOrElse((): DiscordBody => ({})));
 
 /** One authenticated JSON POST; the token goes only into the header, never into errors or logs. */
-const post = (token: string, path: string, payload: unknown) =>
-  Effect.gen(function* () {
-    const base = yield* DiscordApiBase;
-    return yield* Effect.tryPromise({
-      try: async (): Promise<DiscordResponse> => {
-        // Read at call time, not captured, so a test or host can substitute `fetch`.
-        const response = await globalThis.fetch(`${base}${path}`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        // Error bodies are not always JSON (a proxy's HTML 502), and only the status matters then.
-        const body = await response.json().catch(() => undefined);
-        return { ok: response.ok, status: response.status, body: decodeBody(body) };
-      },
-      catch: (cause) => new DiscordChannelError({ message: `Discord request to ${path} failed.`, cause }),
-    });
+const post = Effect.fnUntraced(function* (token: string, path: string, payload: unknown) {
+  const base = yield* DiscordApiBase;
+  return yield* Effect.tryPromise({
+    try: async (): Promise<DiscordResponse> => {
+      // Read at call time, not captured, so a test or host can substitute `fetch`.
+      const response = await globalThis.fetch(`${base}${path}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      // Error bodies are not always JSON (a proxy's HTML 502), and only the status matters then.
+      const body = await response.json().catch(() => undefined);
+      return { ok: response.ok, status: response.status, body: decodeBody(body) };
+    },
+    catch: (cause) => new DiscordChannelError({ message: `Discord request to ${path} failed.`, cause }),
   });
+});
 
 /** Turns a Discord error response into a reason the agent can relay to a person. */
 const failureReason = (response: DiscordResponse): string => {
@@ -90,8 +89,8 @@ const failureReason = (response: DiscordResponse): string => {
 };
 
 /** Opens (or returns) the bot's DM channel with a Discord user. */
-export const openDirectMessage = (token: string, userId: string): Effect.Effect<string, DiscordChannelError> =>
-  Effect.gen(function* () {
+export const openDirectMessage: (token: string, userId: string) => Effect.Effect<string, DiscordChannelError> =
+  Effect.fnUntraced(function* (token, userId) {
     const response = yield* post(token, '/users/@me/channels', { recipient_id: userId });
     const id = response.body.id;
     if (!response.ok || typeof id !== 'string') {
@@ -101,24 +100,23 @@ export const openDirectMessage = (token: string, userId: string): Effect.Effect<
   });
 
 /** Posts text into a Discord channel, thread or DM channel, split past the length limit; returns the post ids. */
-export const postText = (
+export const postText: (
   token: string,
   channelId: string,
   text: string,
-): Effect.Effect<string[], DiscordChannelError> =>
-  Effect.gen(function* () {
-    const messageIds: string[] = [];
-    for (const content of chunkText(text)) {
-      const response = yield* post(token, `/channels/${encodeURIComponent(channelId)}/messages`, {
-        content,
-        // The bot must never ping anyone by echoing a mention it was given.
-        allowed_mentions: { parse: [] },
-      });
-      const id = response.body.id;
-      if (!response.ok || typeof id !== 'string') {
-        return yield* Effect.fail(new DiscordChannelError({ message: failureReason(response) }));
-      }
-      messageIds.push(id);
+) => Effect.Effect<string[], DiscordChannelError> = Effect.fnUntraced(function* (token, channelId, text) {
+  const messageIds: string[] = [];
+  for (const content of chunkText(text)) {
+    const response = yield* post(token, `/channels/${encodeURIComponent(channelId)}/messages`, {
+      content,
+      // The bot must never ping anyone by echoing a mention it was given.
+      allowed_mentions: { parse: [] },
+    });
+    const id = response.body.id;
+    if (!response.ok || typeof id !== 'string') {
+      return yield* Effect.fail(new DiscordChannelError({ message: failureReason(response) }));
     }
-    return messageIds;
-  });
+    messageIds.push(id);
+  }
+  return messageIds;
+});

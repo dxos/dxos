@@ -12,7 +12,7 @@ import { Organization, Person } from '@dxos/types';
 
 import { Goal, type Trigger, TriggerOperation } from '#types';
 
-import { triggerRegistry } from '../triggers.ts';
+import { MAX_TRIGGERS, triggerRegistry } from '../triggers.ts';
 import { AgentOperationError } from './errors.ts';
 
 const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = TriggerOperation.WatchFacts.pipe(
@@ -28,6 +28,10 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       recipient,
       ongoing,
     }) {
+      if (triggerRegistry.isFull) {
+        return yield* Effect.fail(registryFull());
+      }
+
       const agent = yield* Database.load(agentRef);
       const requester = yield* Database.load(requesterRef);
       // The schema cannot express a Person | Organization ref, so the constraint is checked here.
@@ -66,7 +70,9 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         ...(ongoing ? { ongoing } : {}),
         createdAt: DateTime.formatIso(yield* DateTime.now),
       };
-      triggerRegistry.add(trigger);
+      if (!triggerRegistry.add(trigger)) {
+        return yield* Effect.fail(registryFull());
+      }
       yield* Database.flush();
       return { trigger: trigger.id, goal: Ref.make(goal) };
     }),
@@ -74,3 +80,8 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
 );
 
 export default handler;
+
+const registryFull = () =>
+  new AgentOperationError({
+    message: `Already watching for ${MAX_TRIGGERS} things; cancel a watch before adding another.`,
+  });

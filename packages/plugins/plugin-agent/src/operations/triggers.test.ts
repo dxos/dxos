@@ -280,20 +280,18 @@ const TestLayer = AssistantTestLayer({
   aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
 });
 
-const texts = (chat: Chat.Chat) =>
-  Effect.gen(function* () {
-    const feed = yield* Database.load(chat.feed);
-    const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    return messages.map((message) => Message.extractText(message));
-  });
+const texts = Effect.fnUntraced(function* (chat: Chat.Chat) {
+  const feed = yield* Database.load(chat.feed);
+  const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+  return messages.map((message) => Message.extractText(message));
+});
 
 /** Submits a prompt as `name` in the chat and waits for the turn, and its end-request hooks, to finish. */
-const say = (chat: Chat.Chat, name: string, prompt: string) =>
-  Effect.gen(function* () {
-    const session = yield* AgentService.getSession(chat);
-    yield* session.submitPrompt(prompt, { sender: { name } });
-    yield* session.waitForCompletion();
-  });
+const say = Effect.fnUntraced(function* (chat: Chat.Chat, name: string, prompt: string) {
+  const session = yield* AgentService.getSession(chat);
+  yield* session.submitPrompt(prompt, { sender: { name } });
+  yield* session.waitForCompletion();
+});
 
 describe('end-of-turn triggers', () => {
   afterEach(() => {

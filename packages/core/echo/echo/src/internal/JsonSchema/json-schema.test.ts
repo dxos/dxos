@@ -8,6 +8,7 @@ import * as Struct from 'effect/Struct';
 import { describe, expect, test } from 'vitest';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -66,12 +67,15 @@ describe('effect-to-json', () => {
       }),
     );
     const jsonSchema = toJsonSchema(Test);
-    expect(getNormalizedEchoAnnotations(jsonSchema.properties!.nested!)?.formInline).toBe(true);
+    const nested = jsonSchema.properties?.nested;
+    invariant(nested);
+    expect(getNormalizedEchoAnnotations(nested)?.formInline).toBe(true);
 
     const property = SchemaAST.getPropertySignatures(toEffectSchema(jsonSchema).ast).find(
       ({ name }) => name === 'nested',
     );
-    expect(FormInlineAnnotation.getFromAst(property!.type).pipe(Option.getOrUndefined)).toBe(true);
+    invariant(property);
+    expect(FormInlineAnnotation.getFromAst(property.type).pipe(Option.getOrUndefined)).toBe(true);
   });
 
   test('reference annotation', () => {

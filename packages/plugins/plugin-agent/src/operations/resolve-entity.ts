@@ -43,7 +43,11 @@ const handler: Operation.WithHandler<typeof MemoryOperation.ResolveEntity> = Mem
         const missing = handles.filter((handle) => !hasHandle(match, handle));
         if (missing.length > 0) {
           Obj.update(match, (match) => {
-            match.identities = [...(match.identities ?? []), ...missing];
+            if (match.identities) {
+              match.identities.push(...missing);
+            } else {
+              match.identities = [...missing];
+            }
           });
         }
         return { entity: Ref.make<Obj.Unknown>(match), created: false };

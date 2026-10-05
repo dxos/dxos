@@ -9,6 +9,12 @@ import { type Trigger } from '#types';
  * process restarts, and on EDGE they are only seen by agent processes in the same isolate. Promote
  * them to ECHO objects once their shape settles.
  */
+/**
+ * Most triggers the process holds at once: ongoing triggers never fire away, so without a cap the
+ * registry (and the end-of-turn scan over it) would grow with every watch an agent is asked for.
+ */
+export const MAX_TRIGGERS = 256;
+
 export class TriggerRegistry {
   #triggers: readonly Trigger.Trigger[] = [];
   readonly #listeners = new Set<() => void>();
@@ -27,8 +33,19 @@ export class TriggerRegistry {
     return this.#triggers.find((trigger) => trigger.id === id);
   }
 
-  add(trigger: Trigger.Trigger): void {
-    this.#set([...this.#triggers.filter(({ id }) => id !== trigger.id), trigger]);
+  /** Whether a new trigger would exceed {@link MAX_TRIGGERS}. */
+  get isFull(): boolean {
+    return this.#triggers.length >= MAX_TRIGGERS;
+  }
+
+  /** Adds or replaces the trigger; false (and unchanged) when it is new and the registry is full. */
+  add(trigger: Trigger.Trigger): boolean {
+    const others = this.#triggers.filter(({ id }) => id !== trigger.id);
+    if (others.length >= MAX_TRIGGERS) {
+      return false;
+    }
+    this.#set([...others, trigger]);
+    return true;
   }
 
   /** Removes the trigger; false when there was none. */

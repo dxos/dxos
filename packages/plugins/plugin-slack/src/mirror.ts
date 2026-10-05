@@ -33,29 +33,28 @@ export const getMessageTs = (message: Message.Message): string | undefined =>
  * message the backend posted (and mirrored at once) is not appended again by the next sync.
  * Returns the messages actually appended.
  */
-export const appendToMirror = (
+export const appendToMirror: (
   feed: Feed.Feed,
   messages: readonly Message.Message[],
-): Effect.Effect<Message.Message[], never, Database.Service> =>
-  Effect.gen(function* () {
-    const keys = messages.flatMap((message) => {
-      const ts = getMessageTs(message);
-      return ts === undefined ? [] : [{ source: SLACK_SOURCE, id: ts }];
-    });
-    const existing =
-      keys.length === 0
-        ? []
-        : yield* Database.query(Query.select(Filter.foreignKeys(Message.Message, keys)).from(feed)).run;
-    const seen = new Set(existing.map(getMessageTs));
-    const fresh = messages.filter((message) => {
-      const ts = getMessageTs(message);
-      return ts === undefined || !seen.has(ts);
-    });
-    if (fresh.length > 0) {
-      yield* Feed.append(feed, fresh).pipe(Effect.provideService(Database.Origin, 'system'));
-    }
-    return fresh;
+) => Effect.Effect<Message.Message[], never, Database.Service> = Effect.fnUntraced(function* (feed, messages) {
+  const keys = messages.flatMap((message) => {
+    const ts = getMessageTs(message);
+    return ts === undefined ? [] : [{ source: SLACK_SOURCE, id: ts }];
   });
+  const existing =
+    keys.length === 0
+      ? []
+      : yield* Database.query(Query.select(Filter.foreignKeys(Message.Message, keys)).from(feed)).run;
+  const seen = new Set(existing.map(getMessageTs));
+  const fresh = messages.filter((message) => {
+    const ts = getMessageTs(message);
+    return ts === undefined || !seen.has(ts);
+  });
+  if (fresh.length > 0) {
+    yield* Feed.append(feed, fresh).pipe(Effect.provideService(Database.Origin, 'system'));
+  }
+  return fresh;
+});
 
 /**
  * Brings a Slack channel onto the Slack backend and returns its config. Idempotent: a channel

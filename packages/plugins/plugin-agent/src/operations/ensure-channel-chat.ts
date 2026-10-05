@@ -23,25 +23,24 @@ type ContextBindings = { skills: Ref.Ref<Skill.Skill>[]; objects: Ref.Ref<Obj.Un
  * The skills and objects bound to the agent's current chat, so a conversation runs with the same
  * context as the agent's own chat; an agent without a chat contributes itself only.
  */
-export const loadAgentBindings = (agent: Agent.Agent) =>
-  Effect.gen(function* () {
-    const chat = yield* Agent.loadChat(agent);
-    if (!chat) {
-      return { skills: [], objects: [Ref.make<Obj.Unknown>(agent)] } satisfies ContextBindings;
-    }
+export const loadAgentBindings = Effect.fnUntraced(function* (agent: Agent.Agent) {
+  const chat = yield* Agent.loadChat(agent);
+  if (!chat) {
+    return { skills: [], objects: [Ref.make<Obj.Unknown>(agent)] } satisfies ContextBindings;
+  }
 
-    const feed = yield* Database.load(chat.feed);
-    const runtime = yield* Effect.context<Database.Service>();
-    const AiContext = yield* Effect.promise(aiContextRuntime);
-    const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-    return {
-      skills: binder.getSkills().map(Skill.makeRef),
-      objects: binder
-        .getObjects()
-        .filter((object) => !Obj.instanceOf(Chat.Chat, object))
-        .map((object) => Ref.make(object)),
-    } satisfies ContextBindings;
-  });
+  const feed = yield* Database.load(chat.feed);
+  const runtime = yield* Effect.context<Database.Service>();
+  const AiContext = yield* Effect.promise(aiContextRuntime);
+  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+  return {
+    skills: binder.getSkills().map(Skill.makeRef),
+    objects: binder
+      .getObjects()
+      .filter((object) => !Obj.instanceOf(Chat.Chat, object))
+      .map((object) => Ref.make(object)),
+  } satisfies ContextBindings;
+});
 
 export type EnsureChannelChatProps = {
   agent: Agent.Agent;

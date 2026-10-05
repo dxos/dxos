@@ -53,8 +53,10 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureParticipantChat
         // Runs on the same model as the agent's own conversation.
         Chat.seedSession(draft, primary?.session);
         // Annotated before it is added: queries re-emit on membership only, so a reader would never see later annotations.
-        ChatParticipant.set(draft, person);
-        Mode.setCurrent(draft, Mode.DEFAULT);
+        Obj.update(draft, (draft) => {
+          ChatParticipant.set(draft, person);
+          Mode.setCurrent(draft, Mode.DEFAULT);
+        });
         const chat = yield* Database.add(draft);
 
         const runtime = yield* Effect.context<Database.Service>();

@@ -70,8 +70,6 @@ export const ConnectionStatus = Schema.Struct({
 
 export interface ConnectionStatus extends Schema.Schema.Type<typeof ConnectionStatus> {}
 
-const ChannelInput = Ref.Ref(Channel.Channel).annotate({ description: 'The channel.' });
-
 /** Sends text to a channel, or to a thread inside it, through the channel's backend. */
 export const SendToChannel = Operation.make({
   meta: {
@@ -82,7 +80,7 @@ export const SendToChannel = Operation.make({
   },
   services: [Database.Service, Capability.Service],
   input: Schema.Struct({
-    channel: ChannelInput,
+    channel: Ref.Ref(Channel.Channel).annotate({ description: 'The channel to send to.' }),
     thread: Schema.optional(
       Schema.String.annotate({ description: 'A backend-scoped thread id (a Discord thread or DM channel id).' }),
     ),
@@ -106,7 +104,7 @@ export const OpenDirect = Operation.make({
   },
   services: [Database.Service, Capability.Service],
   input: Schema.Struct({
-    channel: ChannelInput.annotate({ description: 'The channel whose account sends the direct message.' }),
+    channel: Ref.Ref(Channel.Channel).annotate({ description: 'The channel whose account sends the direct message.' }),
     person: Ref.Ref(Person.Person).annotate({ description: 'The person to reach.' }),
   }),
   output: Schema.Struct({
@@ -126,7 +124,9 @@ export const ConnectChannel = Operation.make({
     icon: 'ph--play--regular',
   },
   services: [Database.Service, Capability.Service],
-  input: Schema.Struct({ channel: ChannelInput }),
+  input: Schema.Struct({
+    channel: Ref.Ref(Channel.Channel).annotate({ description: 'The channel to connect.' }),
+  }),
   output: Schema.Struct({ status: ConnectionStatus }),
 });
 
@@ -139,7 +139,9 @@ export const DisconnectChannel = Operation.make({
     icon: 'ph--stop--regular',
   },
   services: [Database.Service, Capability.Service],
-  input: Schema.Struct({ channel: ChannelInput }),
+  input: Schema.Struct({
+    channel: Ref.Ref(Channel.Channel).annotate({ description: 'The channel to disconnect.' }),
+  }),
   output: Schema.Struct({ status: ConnectionStatus }),
 });
 
@@ -152,6 +154,8 @@ export const GetChannelStatus = Operation.make({
     icon: 'ph--pulse--regular',
   },
   services: [Database.Service, Capability.Service],
-  input: Schema.Struct({ channel: ChannelInput }),
+  input: Schema.Struct({
+    channel: Ref.Ref(Channel.Channel).annotate({ description: 'The channel to report on.' }),
+  }),
   output: Schema.Struct({ status: ConnectionStatus }),
 });

@@ -29,9 +29,10 @@ export const PARTICIPANT_SOURCE = 'org.dxos.agent/participant';
 export const get = (chat: Chat.Chat): string | undefined =>
   Annotation.get(chat, ParticipantAnnotation).pipe(Option.getOrUndefined);
 
-/** Marks the chat as the conversation with `person`; replaces any earlier participant. */
-export const set = (chat: Chat.Chat, person: Obj.Unknown): void => {
-  Obj.update(chat, (chat) => {
-    Annotation.set(chat, ParticipantAnnotation, person.id);
-  });
+/**
+ * Marks the chat as the conversation with `person`; replaces any earlier participant.
+ * Call inside the caller's `Obj.update`, so it batches with the chat's other writes.
+ */
+export const set = (chat: Obj.Mutable<Chat.Chat>, person: Obj.Unknown): void => {
+  Annotation.set(chat, ParticipantAnnotation, person.id);
 };

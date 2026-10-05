@@ -17,12 +17,12 @@ import { DiscordChannelError } from '../errors.ts';
 export const discordBotPath = (applicationId: string) => `/compute/discord/bots/${encodeURIComponent(applicationId)}`;
 
 /** Calls a bot route and decodes the `DiscordBotStatus` EDGE answers every verb with. */
-export const callBot = (
+export const callBot: (
   edge: EdgeHttpClient,
   applicationId: string,
   args: EdgeRequestArgs,
-): Effect.Effect<DiscordChannel.BotStatus, DiscordChannelError> =>
-  Effect.gen(function* () {
+) => Effect.Effect<DiscordChannel.BotStatus, DiscordChannelError> = Effect.fnUntraced(
+  function* (edge, applicationId, args) {
     const data = yield* Effect.tryPromise({
       try: () => edge.request(Context.default(), discordBotPath(applicationId), args),
       catch: (cause) => new DiscordChannelError({ message: 'EDGE Discord bot request failed.', cause }),
@@ -32,7 +32,8 @@ export const callBot = (
         (cause) => new DiscordChannelError({ message: 'Unexpected Discord bot status from EDGE.', cause }),
       ),
     );
-  });
+  },
+);
 
 /**
  * The bot status as a backend-neutral connection status. EDGE keys a bot by application id, so a

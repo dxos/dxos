@@ -33,8 +33,8 @@ describe('EdgeHttpClient.aiRequest', () => {
   });
 
   test('re-bases the request path onto the EDGE /ai/generate/anthropic route', async ({ expect }) => {
-    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
-      const url = String(input instanceof URL ? input : (input.url ?? input));
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input);
       // `/auth` preflight: respond non-401 so no auth header is attached.
       if (url.endsWith('/auth')) {
         return new Response(null, { status: 200 });

@@ -23,27 +23,26 @@ const handler: Operation.WithHandler<typeof RelayOperation.UpdateRelay> = RelayO
 export default handler;
 
 /** Moves the relay and its task together, so the agent's task list never disagrees with the relay. */
-export const applyStatus = (relay: Relay.Relay, status: Relay.Status, outcome?: string) =>
-  Effect.gen(function* () {
-    const now = new Date().toISOString();
-    Obj.update(relay, (relay) => {
-      relay.status = status;
-      if (status === 'delivered' && relay.deliveredAt === undefined) {
-        relay.deliveredAt = now;
-      }
-      if (status === 'reported') {
-        relay.reportedAt = now;
-      }
-      if (outcome !== undefined) {
-        relay.outcome = outcome;
-      }
-    });
-
-    const task = yield* Database.load(relay.task).pipe(Effect.option);
-    if (task._tag === 'Some') {
-      Task.setStatus(task.value, Relay.taskStatus[status], {
-        actor: { role: 'assistant' },
-        description: outcome ? `Relay ${status}: ${outcome}` : `Relay ${status}.`,
-      });
+export const applyStatus = Effect.fnUntraced(function* (relay: Relay.Relay, status: Relay.Status, outcome?: string) {
+  const now = new Date().toISOString();
+  Obj.update(relay, (relay) => {
+    relay.status = status;
+    if (status === 'delivered' && relay.deliveredAt === undefined) {
+      relay.deliveredAt = now;
+    }
+    if (status === 'reported') {
+      relay.reportedAt = now;
+    }
+    if (outcome !== undefined) {
+      relay.outcome = outcome;
     }
   });
+
+  const task = yield* Database.load(relay.task).pipe(Effect.option);
+  if (task._tag === 'Some') {
+    Task.setStatus(task.value, Relay.taskStatus[status], {
+      actor: { role: 'assistant' },
+      description: outcome ? `Relay ${status}: ${outcome}` : `Relay ${status}.`,
+    });
+  }
+});

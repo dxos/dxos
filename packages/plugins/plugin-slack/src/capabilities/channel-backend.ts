@@ -59,30 +59,27 @@ export const slackChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
       unsubscribe?.();
     };
   },
-  send: (channel, message) =>
-    Effect.gen(function* () {
-      const { config } = yield* loadConfig(channel);
-      return yield* post(channel, config, config.conversationId, message);
-    }),
+  send: Effect.fnUntraced(function* (channel, message) {
+    const { config } = yield* loadConfig(channel);
+    return yield* post(channel, config, config.conversationId, message);
+  }),
   // Posting from the article would bypass the agent and post as its bot, so the composer stays hidden.
   readOnly: () => true,
-  openDirect: (channel, person) =>
-    Effect.gen(function* () {
-      const userId = person.identities?.find((identity) => identity.label === 'slack')?.value;
-      if (userId === undefined) {
-        return undefined;
-      }
-      const { config } = yield* loadConfig(channel);
-      return yield* withToken(config, SlackApi.openConversation(userId));
-    }),
+  openDirect: Effect.fnUntraced(function* (channel, person) {
+    const userId = person.identities?.find((identity) => identity.label === 'slack')?.value;
+    if (userId === undefined) {
+      return undefined;
+    }
+    const { config } = yield* loadConfig(channel);
+    return yield* withToken(config, SlackApi.openConversation(userId));
+  }),
   threads: {
-    send: (channel, thread, message) =>
-      Effect.gen(function* () {
-        const { config } = yield* loadConfig(channel);
-        return TS_PATTERN.test(thread)
-          ? yield* post(channel, config, config.conversationId, message, thread)
-          : yield* post(channel, config, thread, message);
-      }),
+    send: Effect.fnUntraced(function* (channel, thread, message) {
+      const { config } = yield* loadConfig(channel);
+      return TS_PATTERN.test(thread)
+        ? yield* post(channel, config, config.conversationId, message, thread)
+        : yield* post(channel, config, thread, message);
+    }),
   },
 };
 
@@ -99,76 +96,72 @@ const load = <T>(ref: Ref.Ref<T>, what: string) =>
     catch: (cause) => new SlackChannelError({ message: `Could not load the ${what}.`, cause }),
   });
 
-const loadConfig = (channel: Channel.Channel) =>
-  Effect.gen(function* () {
-    const config = yield* load(channel.backend.config, 'Slack channel config');
-    if (!SlackChannel.instanceOf(config)) {
-      return yield* Effect.fail(new SlackChannelError({ message: 'The channel has no Slack config.' }));
-    }
-    return { config };
-  });
+const loadConfig = Effect.fnUntraced(function* (channel: Channel.Channel) {
+  const config = yield* load(channel.backend.config, 'Slack channel config');
+  if (!SlackChannel.instanceOf(config)) {
+    return yield* Effect.fail(new SlackChannelError({ message: 'The channel has no Slack config.' }));
+  }
+  return { config };
+});
 
 /** Runs a Slack API call with the config's token, mapping Slack's refusal to a reason a person can act on. */
-const withToken = <T, E>(
+const withToken = Effect.fnUntraced(function* <T, E>(
   config: SlackChannel.SlackChannel,
   effect: Effect.Effect<T, E, SlackApi.SlackCredentials | HttpClient.HttpClient>,
-) =>
-  Effect.gen(function* () {
-    const accessToken = yield* load(config.accessToken, 'Slack token');
-    return yield* effect.pipe(
-      Effect.provide(
-        Layer.merge(Layer.succeed(SlackApi.SlackCredentials, { token: accessToken.token }), FetchHttpClient.layer),
-      ),
-      Effect.mapError((error) => new SlackChannelError({ message: slackFailureReason(error), cause: error })),
-    );
-  });
+) {
+  const accessToken = yield* load(config.accessToken, 'Slack token');
+  return yield* effect.pipe(
+    Effect.provide(
+      Layer.merge(Layer.succeed(SlackApi.SlackCredentials, { token: accessToken.token }), FetchHttpClient.layer),
+    ),
+    Effect.mapError((error) => new SlackChannelError({ message: slackFailureReason(error), cause: error })),
+  );
+});
 
 /**
  * Posts a message's text and returns the receipt. A post into the channel's own conversation is
  * mirrored into its feed straight away; a DM lives in another conversation, which nothing mirrors.
  */
-const post = (
+const post = Effect.fnUntraced(function* (
   channel: Channel.Channel,
   config: SlackChannel.SlackChannel,
   conversationId: string,
   message: Message.Message,
   threadTs?: string,
-) =>
-  Effect.gen(function* () {
-    const response = yield* withToken(
-      config,
-      SlackApi.postMessage(conversationId, Message.extractText(message), { threadTs }),
-    );
-    const ts = response.ts;
-    if (ts === undefined) {
-      return yield* Effect.fail(new SlackChannelError({ message: 'Slack accepted the post but returned no ts.' }));
-    }
-    const postedIn = response.channel ?? conversationId;
-    if (postedIn === config.conversationId) {
-      yield* mirror(channel, config.feed, message, ts, threadTs);
-    }
-    return { messageIds: [ts], properties: { slack: { channel: postedIn, ts, threadTs } } };
-  });
+) {
+  const response = yield* withToken(
+    config,
+    SlackApi.postMessage(conversationId, Message.extractText(message), { threadTs }),
+  );
+  const ts = response.ts;
+  if (ts === undefined) {
+    return yield* Effect.fail(new SlackChannelError({ message: 'Slack accepted the post but returned no ts.' }));
+  }
+  const postedIn = response.channel ?? conversationId;
+  if (postedIn === config.conversationId) {
+    yield* mirror(channel, config.feed, message, ts, threadTs);
+  }
+  return { messageIds: [ts], properties: { slack: { channel: postedIn, ts, threadTs } } };
+});
 
-const mirror = (
+const mirror = Effect.fnUntraced(function* (
   channel: Channel.Channel,
   feedRef: Ref.Ref<Feed.Feed>,
   message: Message.Message,
   ts: string,
   threadTs: string | undefined,
-) =>
-  Effect.gen(function* () {
-    const db = Obj.getDatabase(channel);
-    if (!db) {
-      return;
-    }
-    const feed = yield* load(feedRef, 'Slack mirror feed');
-    const mirrored = Message.make({
-      [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: ts }] },
-      created: tsToIso(ts),
-      threadId: threadTs,
-      sender: message.sender,
-      blocks: message.blocks,
-    });
-    yield* appendToMirror(feed, [mirrored]).pipe(Effect.provide(Database.layer(db)));
+) {
+  const db = Obj.getDatabase(channel);
+  if (!db) {
+    return;
+  }
+  const feed = yield* load(feedRef, 'Slack mirror feed');
+  const mirrored = Message.make({
+    [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: ts }] },
+    created: tsToIso(ts),
+    threadId: threadTs,
+    sender: message.sender,
+    blocks: message.blocks,
   });
+  yield* appendToMirror(feed, [mirrored]).pipe(Effect.provide(Database.layer(db)));
+});

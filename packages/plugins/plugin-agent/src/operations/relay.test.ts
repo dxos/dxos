@@ -60,17 +60,16 @@ const TestLayer = AssistantTestLayer({
 });
 
 /** An agent that converses in one channel on the test backend. */
-const setupAgent = (options: { channels?: boolean } = {}) =>
-  Effect.gen(function* () {
-    const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Concierge' });
-    const agent = yield* Database.load(agentRef);
-    const channel = yield* Database.add(makeTestChannel());
-    if (options.channels !== false) {
-      yield* Database.add(AgentChannels.make({ agent, channels: [channel] }));
-    }
-    yield* Database.flush();
-    return { agent, agentRef, channel };
-  });
+const setupAgent = Effect.fnUntraced(function* (options: { channels?: boolean } = {}) {
+  const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Concierge' });
+  const agent = yield* Database.load(agentRef);
+  const channel = yield* Database.add(makeTestChannel());
+  if (options.channels !== false) {
+    yield* Database.add(AgentChannels.make({ agent, channels: [channel] }));
+  }
+  yield* Database.flush();
+  return { agent, agentRef, channel };
+});
 
 const resolve = (name: string, handle?: string) =>
   Operation.invoke(MemoryOperation.ResolveEntity, {

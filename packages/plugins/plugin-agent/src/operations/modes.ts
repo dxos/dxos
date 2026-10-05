@@ -143,6 +143,6 @@ export const switchChatMode = Effect.fnUntraced(function* (agent: Agent.Agent, c
     yield* Effect.promise(() => binder.bind({ skills: toBind }));
   }
 
-  Mode.setCurrent(chat, mode.name);
+  Obj.update(chat, (chat) => Mode.setCurrent(chat, mode.name));
   return { mode: mode.name, skills: [...wanted] };
 }, Effect.scoped);

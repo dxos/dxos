@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.AssignChatParticipant
         if (!Obj.instanceOf(Person.Person, person)) {
           return yield* Effect.fail(new AgentOperationError({ message: 'A chat participant must be a person.' }));
         }
-        ChatParticipant.set(chat, person);
+        Obj.update(chat, (chat) => ChatParticipant.set(chat, person));
         return {};
       }),
     ),

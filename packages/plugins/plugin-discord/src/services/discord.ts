@@ -45,12 +45,11 @@ export const resolveDiscordToken = (
   Credential.getApiKeyValue({ accessTokenId: accessToken.id });
 
 /** Load a connection's `AccessToken` and resolve its secret. */
-const resolveConnectionToken = (connectionRef: Ref.Ref<Connection.Connection>) =>
-  Effect.gen(function* () {
-    const connection = yield* Database.load(connectionRef);
-    const accessToken = yield* Database.load(connection.accessToken);
-    return yield* resolveDiscordToken(accessToken);
-  });
+const resolveConnectionToken = Effect.fnUntraced(function* (connectionRef: Ref.Ref<Connection.Connection>) {
+  const connection = yield* Database.load(connectionRef);
+  const accessToken = yield* Database.load(connection.accessToken);
+  return yield* resolveDiscordToken(accessToken);
+});
 
 /**
  * Build a `DiscordREST` layer from a persisted {@link Connection} ref.

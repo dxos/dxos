@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 
 import { ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import { AgentOperation, Mode } from '#types';
@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof AgentOperation.CreateAgent> = AgentO
       yield* ensureModes(agent);
       const chat = yield* Agent.loadChat(agent);
       if (chat) {
-        Mode.setCurrent(chat, Mode.DEFAULT);
+        Obj.update(chat, (chat) => Mode.setCurrent(chat, Mode.DEFAULT));
       }
       return { agent: Ref.make(agent) };
     }),

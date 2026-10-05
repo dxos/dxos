@@ -53,8 +53,8 @@ export const loadForAgent = (agent: Agent.Agent): Effect.Effect<AgentChannels | 
   );
 
 /** The agent's channels, loaded. */
-export const loadChannels = (agent: Agent.Agent): Effect.Effect<Channel.Channel[], never, Database.Service> =>
-  Effect.gen(function* () {
+export const loadChannels: (agent: Agent.Agent) => Effect.Effect<Channel.Channel[], never, Database.Service> =
+  Effect.fnUntraced(function* (agent) {
     const list = yield* loadForAgent(agent);
     return yield* Effect.forEach(list?.channels ?? [], (ref) => Database.load(ref).pipe(Effect.orDie));
   });
