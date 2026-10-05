@@ -14,8 +14,8 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
  */
 export const JsonModule = ({ data }: { data?: { subject?: unknown } }) => (
   <Panel.Root>
-    <Panel.Content classNames='overflow-auto p-2 text-sm'>
+    <Panel.Body classNames='overflow-auto p-2 text-sm'>
       <JsonHighlighter data={data?.subject} />
-    </Panel.Content>
+    </Panel.Body>
   </Panel.Root>
 );

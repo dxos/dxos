@@ -184,6 +184,34 @@ as a `MACOS_PROVISION_PROFILE_<CHANNEL>` secret, select it in `deploy-tauri.yaml
 `CHANNEL_BUNDLE_IDS` in `_worker.ts`. For staging, also drop its exemption from the release check in
 `deploy-tauri.yaml`. The AASA change only takes effect once the production web app is deployed.
 
+### iOS passkeys
+
+The iOS app creates and redeems `composer.space` passkeys through AuthenticationServices
+(`ios/PasskeyBridge.m`, `src/passkey/ios.rs`), never WebAuthn: its page origin is `tauri://localhost`.
+That needs the `webcredentials:composer.space` associated domain:
+
+- **Domain:** the `composer.space` AASA lists `9428WC5MR8.org.dxos.composer` under `webcredentials`. iOS
+  has one App ID for every channel, so there is nothing to register per channel.
+- **Profile:** the `org.dxos.composer` App ID has Associated Domains enabled, and the App Store profile in
+  `IOS_MOBILE_PROVISION` allows any domain.
+- **Declaration:** `ios/app_iOS.entitlements` declares the domain. `gen/apple/project.yml` only names the
+  file, as Tauri's template does, so `xcodegen` writes it empty; `scripts/ios-init.sh` copies the
+  declaration in after `xcodegen`, which also covers a clean `tauri ios init`.
+- **Signing:** with App Store Connect API-key credentials, the Tauri CLI exports the IPA without the app's
+  entitlements (tauri-apps/tauri#15663). The deploy workflow's "Restore the app's entitlements in the IPA"
+  step re-signs the app with the profile's entitlements plus `ios/app_iOS.entitlements`, and fails the job
+  if any declared entitlement is missing.
+
+TestFlight builds use the `testflight` environment (`.github/workflows/env/testflight`): production EDGE,
+hub and telemetry, since testers sign in with production accounts, tagged `testflight` and wearing the dev
+channel mark.
+
+To check a build, run `codesign -d --entitlements - <Composer.app>` and look for
+`com.apple.developer.associated-domains`. On a device, a missing association surfaces as
+`ASAuthorizationError` 1004 ("Unable to verify webcredentials association"), reported as a failed
+login rather than a dismissed prompt. The simulator needs enrolled Face ID (Features > Face ID) before
+it offers to save a passkey.
+
 ### Publishing
 
 After all builds complete, the `publish_tauri` job publishes the release to CrabNebula Cloud, making it available for distribution and auto-updates.

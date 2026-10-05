@@ -73,7 +73,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
     () => stringField(subject, 'name') ?? stringField(subject, 'title') ?? stringField(subject, 'type') ?? 'Object',
     [subject],
   );
-  const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{title}</span>, [title]);
+  const Fallback = useCallback(() => <span className='p-1 text-sm text-fg-muted'>{title}</span>, [title]);
 
   return (
     <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
@@ -492,22 +492,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       </div>
     ) : hasSuggestions ? null : (
       <Banner.Root>
-        <Banner.Content classNames='m-trim-md'>
-          <Banner.Body>
-            <span>
-              <Trans
-                {...{
-                  t,
-                  i18nKey: 'no-comments.message',
-                  components: {
-                    commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
-                    versionsIcon: <Icon icon='ph--git-branch--regular' size={4} classNames='dx-icon-inline' />,
-                  },
-                }}
-              />
-            </span>
-          </Banner.Body>
-        </Banner.Content>
+        <Banner.Body>
+          <span>
+            <Trans
+              {...{
+                t,
+                i18nKey: 'no-comments.message',
+                components: {
+                  commentIcon: (
+                    <Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                  ),
+                  versionsIcon: (
+                    <Icon icon='ph--git-branch--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                  ),
+                },
+              }}
+            />
+          </span>
+        </Banner.Body>
       </Banner.Root>
     );
 
@@ -518,20 +520,20 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         value={showResolvedThreads ? 'all' : 'unresolved'}
         onValueChange={handleChangeViewState}
       >
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Tabs.Tablist>
-              <Tabs.Button classNames='text-sm' value='unresolved'>
+            <Tabs.List>
+              <Tabs.Trigger classNames='text-sm' value='unresolved'>
                 {t('show-unresolved.label')}
-              </Tabs.Button>
-              <Tabs.Button classNames='text-sm' value='all'>
+              </Tabs.Trigger>
+              <Tabs.Trigger classNames='text-sm' value='all'>
                 {t('show-all.label')}
-              </Tabs.Button>
-            </Tabs.Tablist>
+              </Tabs.Trigger>
+            </Tabs.List>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root thin>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
             <ScrollArea.Viewport>
               <Suggestions
                 document={markdownDoc}
@@ -545,11 +547,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 hiddenAuthors={hiddenAuthors}
                 onToggleAuthor={handleToggleAuthor}
               />
-              <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
-              <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
+              <Tabs.Content value='all'>{showResolvedThreads && comments}</Tabs.Content>
+              <Tabs.Content value='unresolved'>{!showResolvedThreads && comments}</Tabs.Content>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Tabs.Root>
     </Panel.Root>
   );

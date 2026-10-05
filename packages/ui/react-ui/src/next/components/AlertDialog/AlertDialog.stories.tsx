@@ -9,10 +9,10 @@ import React, { useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
 import { byTestId, expectPopupSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { AlertDialog, Button, DIALOG_AUTOFOCUS_ATTRIBUTE, Group, Typography } from '../index.ts';
 
 type ConfirmProps = {
   /** Overrides the size the dialog inherits from its trigger's row. */
@@ -24,29 +24,29 @@ type ConfirmProps = {
 };
 
 const Confirm = ({ contentSize, testId, autofocusAction, onAction }: ConfirmProps) => (
-  <Next.AlertDialog.Root>
-    <Next.AlertDialog.Trigger asChild>
-      <Next.Button data-testid={`${testId}-trigger`}>Delete space</Next.Button>
-    </Next.AlertDialog.Trigger>
-    <Next.AlertDialog.Content size={contentSize} data-testid={testId}>
-      <Next.AlertDialog.Header>
-        <Next.AlertDialog.Title>Delete space?</Next.AlertDialog.Title>
-      </Next.AlertDialog.Header>
-      <Next.AlertDialog.Body>
-        <Next.AlertDialog.Description>Its objects are removed for every member.</Next.AlertDialog.Description>
-      </Next.AlertDialog.Body>
-      <Next.AlertDialog.Footer>
-        <Next.AlertDialog.Cancel>Cancel</Next.AlertDialog.Cancel>
-        <Next.AlertDialog.Action
+  <AlertDialog.Root>
+    <AlertDialog.Trigger asChild>
+      <Button data-testid={`${testId}-trigger`}>Delete space</Button>
+    </AlertDialog.Trigger>
+    <AlertDialog.Content size={contentSize} data-testid={testId}>
+      <AlertDialog.Header>
+        <AlertDialog.Title>Delete space?</AlertDialog.Title>
+      </AlertDialog.Header>
+      <AlertDialog.Body>
+        <AlertDialog.Description>Its objects are removed for every member.</AlertDialog.Description>
+      </AlertDialog.Body>
+      <AlertDialog.Footer>
+        <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+        <AlertDialog.Action
           variant='destructive'
           onClick={onAction}
-          {...(autofocusAction && { [Next.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' })}
+          {...(autofocusAction && { [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' })}
         >
           Delete
-        </Next.AlertDialog.Action>
-      </Next.AlertDialog.Footer>
-    </Next.AlertDialog.Content>
-  </Next.AlertDialog.Root>
+        </AlertDialog.Action>
+      </AlertDialog.Footer>
+    </AlertDialog.Content>
+  </AlertDialog.Root>
 );
 
 /**
@@ -56,7 +56,7 @@ const Confirm = ({ contentSize, testId, autofocusAction, onAction }: ConfirmProp
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [deleted, setDeleted] = useState(0);
   return (
-    <Next.Group>
+    <Group>
       <Confirm testId={`confirm-${size}`} onAction={() => setDeleted((count) => count + 1)} />
       <Confirm
         contentSize='lg'
@@ -64,13 +64,13 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         autofocusAction
         onAction={() => setDeleted((count) => count + 1)}
       />
-      <Next.Typography data-testid={`deleted-${size}`}>Deleted {deleted}</Next.Typography>
-    </Next.Group>
+      <Typography data-testid={`deleted-${size}`}>Deleted {deleted}</Typography>
+    </Group>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/AlertDialog',
+  title: 'ui/react-ui-core/components/AlertDialog',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
@@ -107,7 +107,7 @@ export const Test: Story = {
     await fireEvent.pointerUp(outside);
     await fireEvent.click(outside);
     await new Promise((resolve) => setTimeout(resolve, 100));
-    await expect(body.getByRole('alertdialog')).toBe(dialog);
+    await waitFor(() => expect(body.getByRole('alertdialog')).toBe(dialog));
 
     await userEvent.click(cancel);
     await waitFor(() => expect(body.queryByRole('alertdialog')).toBeNull());

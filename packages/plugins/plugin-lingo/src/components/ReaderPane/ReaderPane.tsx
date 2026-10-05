@@ -6,7 +6,7 @@ import { tooltips } from '@codemirror/view';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { type Segmentation } from '@dxos/nlp';
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   type Extension,
@@ -54,7 +54,7 @@ export const ReaderPane = ({
   onActivate,
   classNames,
 }: ReaderPaneProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
 
   // Callbacks are read through a ref so they stay out of the extension identity. An extension array
   // that changes rebuilds the editor, and a caller passing an inline handler would then tear the

@@ -4,7 +4,7 @@
 
 import React, { type ComponentType, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Column } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { Window, type WindowController, type WindowState, useListModel } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
 
@@ -97,13 +97,11 @@ export const MessageWindow = ({
         }
 
         return (
-          <Column.Root gutter={gutter}>
-            <Column.Center>
-              <Chrome message={message} index={index} selected={selectedIds.has(message.id)} onSelect={onSelect}>
-                <Item content={renderer(message)} message={message} Custom={Custom} />
-              </Chrome>
-            </Column.Center>
-          </Column.Root>
+          <Container gutter={gutter ?? 'lg'}>
+            <Chrome message={message} index={index} selected={selectedIds.has(message.id)} onSelect={onSelect}>
+              <Item content={renderer(message)} message={message} Custom={Custom} />
+            </Chrome>
+          </Container>
         );
       }}
     </Window>

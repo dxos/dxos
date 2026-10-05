@@ -15,7 +15,7 @@ export const StatusPanel = ({ titleId }: { titleId?: string }) => {
       <p id={titleId} className='font-medium text-center'>
         {t('resetting.message')}
       </p>
-      <Progress indeterminate>{t('resetting.message')}</Progress>
+      <Progress indeterminate label={t('resetting.message')} />
     </div>
   );
 };

@@ -17,6 +17,7 @@ import * as Scope from 'effect/Scope';
 import { AgentInput, type AgentProcessDefinition } from '@dxos/agent-runtime';
 import { Alarm, HarnessControl, type PendingState, SessionStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Subprocess from '@dxos/compute/Subprocess';
 import * as Trace from '@dxos/compute/Trace';
@@ -47,7 +48,7 @@ export type Options = Omit<AcpAgent.AgentOptions, 'connect'> & {
  * running between turns, so a follow-up does not pay for starting it again.
  */
 export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
-  Process.make(
+  Operation.makeDurable(
     {
       key: CLAUDE_CODE_PROCESS_KEY,
       input: AgentInput,

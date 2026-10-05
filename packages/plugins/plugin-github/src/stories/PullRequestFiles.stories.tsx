@@ -23,7 +23,7 @@ const DefaultStory = ({ diff }: StoryArgs) => {
   const files = usePullRequestFiles(diff, STORAGE_KEY);
   return (
     <Panel.Root>
-      <Panel.Content>
+      <Panel.Body>
         <PullRequestFiles
           tree={files.tree}
           file={files.file}
@@ -32,7 +32,7 @@ const DefaultStory = ({ diff }: StoryArgs) => {
           onSelect={files.select}
           onReviewedChange={files.setReviewed}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

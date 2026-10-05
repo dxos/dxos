@@ -112,6 +112,16 @@ export const ToolCall = Schema.TaggedStruct('toolCall', {
    */
   operationIcon: Schema.optional(Schema.String),
 
+  /**
+   * Human-readable label for the call where the tool name says nothing about what it does — a code-mode
+   * `eval`, named after the operations its code invokes. Presentational only: unlike `operationName`,
+   * it does not claim an operation backs the call.
+   */
+  displayName: Schema.optional(Schema.String),
+
+  /** Phosphor icon identifier (`ph--<name>--<variant>`) shown with {@link displayName}. */
+  displayIcon: Schema.optional(Schema.String),
+
   ...Base.fields,
 });
 

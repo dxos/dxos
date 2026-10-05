@@ -11,8 +11,8 @@ import { expect } from 'vitest';
 
 import { HarnessControl } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import { ProcessManager } from '@dxos/compute-runtime';
 import * as ComputeAgentService from '@dxos/compute/AgentService';
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -24,7 +24,7 @@ import { AGENT_PROCESS_KEY, AgentInput, type AgentProcessDefinition } from './ag
 const ECHO_PROCESS_KEY = 'com.example.process.echo';
 
 /** Answers each prompt with its own text, so a test can tell which process ran the chat. */
-const EchoProcess: AgentProcessDefinition = Process.make(
+const EchoProcess: AgentProcessDefinition = Operation.makeDurable(
   {
     key: ECHO_PROCESS_KEY,
     input: AgentInput,
@@ -68,8 +68,8 @@ const makeChat = Effect.fnUntraced(function* (process?: string) {
 });
 
 const runningKeys = Effect.gen(function* () {
-  const manager = yield* ProcessManager.Service;
-  const processes = yield* manager.list({});
+  const manager = yield* Process.ManagerService;
+  const processes = yield* manager.handles();
   return processes.map((process) => process.key);
 });
 
@@ -115,8 +115,8 @@ describe('AgentService process selection', () => {
           chat.session = { ...chat.session, process: ECHO_PROCESS_KEY };
         });
         yield* ComputeAgentService.getSession(chat);
-        const manager = yield* ProcessManager.Service;
-        const live = (yield* manager.list({})).filter((process) => process.status.state !== Process.State.TERMINATED);
+        const manager = yield* Process.ManagerService;
+        const live = (yield* manager.handles()).filter((process) => process.status.state !== Process.State.TERMINATED);
         expect(live.map((process) => process.key)).toEqual([ECHO_PROCESS_KEY]);
       },
       Effect.provide(TestLayer),

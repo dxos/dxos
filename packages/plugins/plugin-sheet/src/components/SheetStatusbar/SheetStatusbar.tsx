@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute-hyperformula';
-import { Icon } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Icon, composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { SheetUtil } from '#types';
@@ -36,7 +35,7 @@ export const SheetStatusbar = composable<HTMLDivElement, SheetStatusbarProps>((p
       ref={forwardedRef}
       {...rest}
       className={mx(
-        'flex shrink-0 justify-between items-center px-4 py-1 text-sm dx-toolbar-surface border-y !border-subdued-separator',
+        'flex shrink-0 justify-between items-center px-4 py-1 text-sm dx-toolbar-surface border-y !border-separator-subtle',
         className,
       )}
     >

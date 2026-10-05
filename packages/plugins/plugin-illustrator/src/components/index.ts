@@ -4,3 +4,4 @@
 
 export * from './CreateDrawingPanel.tsx';
 export * from './SceneSvg.tsx';
+export * from './SceneSvgFile.tsx';

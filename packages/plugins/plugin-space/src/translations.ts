@@ -296,7 +296,6 @@ export const translations = [
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
         'space-id.title': 'Space ID',
         'space-id.description': 'The unique identifier for this space. Use this to connect external services.',
-        'copy-space-id.label': 'Copy space ID',
 
         'space-controls.title': 'Space Controls',
         'space-controls.description': 'Advanced controls for this space.',
@@ -345,7 +344,7 @@ export const translations = [
         'layout-table.label': 'Table',
         'layout-duplicates.label': 'Duplicates',
         'open-object.label': 'Open object',
-        'search-placeholder.label': 'Filter...',
+        'search-placeholder.label': 'Filter objects...',
         'search-no-results.message': 'No matches.',
         'item-count.label_zero': 'No items',
         'item-count.label_one': '1 item',

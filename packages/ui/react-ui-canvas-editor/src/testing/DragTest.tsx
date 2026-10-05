@@ -87,7 +87,7 @@ const DragElement = forwardRef<HTMLDivElement, DragElementProps>(({ classNames, 
         classNames,
       )}
     >
-      <Icon icon={'ph--crosshair-simple--regular'} size={16} />
+      <Icon icon={'ph--crosshair-simple--regular'} size='xl' />
     </div>
   );
 });

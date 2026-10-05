@@ -11,6 +11,7 @@
 //
 
 import * as Scene from '../scene.ts';
+import * as Semantic from '../semantic.ts';
 
 /** Element kinds as the DSL spells them; each is also the scene element's `kind`. */
 export const ELEMENT_KINDS = [
@@ -25,20 +26,32 @@ export const ELEMENT_KINDS = [
 ] as const;
 export type ElementKind = (typeof ELEMENT_KINDS)[number];
 
+/** Statements that state intent and leave layout to the engine. */
+export const SEMANTIC_KEYWORDS = ['diagram', 'group', 'node', 'edge'] as const;
+
 /** Statement keywords. */
-export const STATEMENT_KEYWORDS = ['object', 'elements', 'move', 'remove'] as const;
+export const STATEMENT_KEYWORDS = ['object', 'elements', 'move', 'remove', ...SEMANTIC_KEYWORDS] as const;
+
+/** Keywords inside semantic statements: `@cell(c,r)`, `via …`, `bus`. */
+export const CLAUSE_KEYWORDS = ['cell', 'via', 'bus'] as const;
 
 /**
  * Words the grammar reserves, so the printer knows to quote an id that collides with one.
  * `_` is reserved too: it is the unbound arrow end.
  */
-export const RESERVED: ReadonlySet<string> = new Set<string>([...STATEMENT_KEYWORDS, ...ELEMENT_KINDS, '_']);
+export const RESERVED: ReadonlySet<string> = new Set<string>([
+  ...STATEMENT_KEYWORDS,
+  ...ELEMENT_KINDS,
+  ...CLAUSE_KEYWORDS,
+  '_',
+]);
 
-/** Attribute value shapes; `enum` carries the literals the schema allows. */
+/** Attribute value shapes; `enum` carries the literals the schema allows, `size` is `WxH`. */
 export type AttrType =
   | { type: 'number' }
   | { type: 'string' }
   | { type: 'boolean' }
+  | { type: 'size' }
   | { type: 'enum'; values: readonly string[] };
 
 export type AttrSpec = AttrType & { name: string };
@@ -74,6 +87,7 @@ export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
   arrow: [
     { name: 'head', type: 'enum', values: Scene.ArrowHead.literals },
     { name: 'tail', type: 'enum', values: Scene.ArrowTail.literals },
+    { name: 'relation', type: 'enum', values: Scene.Relation.literals },
     ...STYLE,
   ],
   portal: [{ name: 'ref', type: 'string' }, ...STYLE],
@@ -85,6 +99,39 @@ export const OBJECT_ATTRS: readonly AttrSpec[] = [
   { name: 'index', type: 'string' },
   { name: 'ref', type: 'string' },
 ];
+
+/** `diagram` attributes. */
+export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
+  { name: 'flow', type: 'enum', values: Semantic.FLOWS },
+  { name: 'grid', type: 'size' },
+  { name: 'box', type: 'size' },
+];
+
+/** `group` attributes. */
+export const GROUP_ATTRS: readonly AttrSpec[] = [
+  { name: 'gap', type: 'number' },
+  { name: 'color', type: 'enum', values: Scene.Color.literals },
+];
+
+/** `node` attributes. */
+export const NODE_ATTRS: readonly AttrSpec[] = [
+  { name: 'ref', type: 'string' },
+  { name: 'shape', type: 'enum', values: Scene.BoxKind.literals },
+  { name: 'color', type: 'enum', values: Scene.Color.literals },
+  { name: 'fill', type: 'enum', values: Scene.Fill.literals },
+  { name: 'stroke', type: 'enum', values: Scene.Stroke.literals },
+];
+
+/** `edge` attributes. */
+export const EDGE_ATTRS: readonly AttrSpec[] = [
+  { name: 'head', type: 'enum', values: Scene.ArrowHead.literals },
+  { name: 'tail', type: 'enum', values: Scene.ArrowTail.literals },
+  { name: 'stroke', type: 'enum', values: Scene.Stroke.literals },
+  { name: 'color', type: 'enum', values: Scene.Color.literals },
+];
+
+/** Placement relations a `node` or `group` may state; `~` before one makes it a preference. */
+export const RELATION_WORDS: readonly string[] = Semantic.RELATION_KINDS;
 
 /** An id that needs no quoting: a bare word that is not reserved. */
 export const BARE_ID = /^[A-Za-z_][A-Za-z0-9_-]*$/;

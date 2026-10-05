@@ -9,10 +9,9 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 import { type Database, Filter } from '@dxos/echo';
 import { type PaginationResult, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { Card, Icon, ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Block, Card, Focus, Icon, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { CardTile, ContactAvatar, Row } from '@dxos/react-ui-card';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
 import { type Actor, type Message, Person } from '@dxos/types';
 
@@ -281,7 +280,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
           selectedIds={effectiveSelectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root padding centered>
+          <ScrollArea.Root>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={StackTile}
@@ -297,8 +296,9 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                 <div role='status' className='grid place-items-center px-2 py-3'>
                   <Icon
                     icon='ph--spinner-gap--regular'
-                    size={5}
-                    classNames='text-subdued [animation:spin_1s_linear_infinite]'
+                    size='lg'
+                    classNames='[animation:spin_1s_linear_infinite]'
+                    tone='subtle'
                   />
                 </div>
               )}
@@ -434,7 +434,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         title={
           <>
             <span className='grow truncate font-medium'>{subject}</span>
-            <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
+            <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>{date}</span>
           </>
         }
       />
@@ -449,7 +449,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
         {snippet && (
           <Card.Row>
-            <Card.Text variant='description'>
+            <Card.Text variant='muted'>
               {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
             </Card.Text>
           </Card.Row>
@@ -582,7 +582,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
           ))}
           {remaining > 0 && (
             <Card.Row>
-              <Card.Text variant='description'>{`+${remaining} more`}</Card.Text>
+              <Card.Text variant='muted'>{`+${remaining} more`}</Card.Text>
             </Card.Row>
           )}
         </Card.Body>
@@ -627,16 +627,16 @@ const ConversationMessageRow = ({
 
   return (
     <Card.Row classNames='items-start'>
-      <Card.Block classNames='h-8 items-center'>
+      <Block classNames='h-8 items-center'>
         <ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />
-      </Card.Block>
+      </Block>
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
         <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
           <span className='truncate'>{from}</span>
           <span className='ml-auto ps-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
         </button>
         {snippet && (
-          <button type='button' className='text-start text-sm text-description line-clamp-2 dx-link-hover'>
+          <button type='button' className='text-start text-sm text-fg-muted line-clamp-2 dx-link-hover'>
             {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
           </button>
         )}

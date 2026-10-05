@@ -199,7 +199,7 @@ export const steps = [
       await demo.click({ selector: '[data-testid="spacePlugin.space"] >> nth=0', hud: false });
       await demo.click({ selector: '[data-testid="spacePlugin.spaceHome"]', hud: false });
       await page.locator('[data-testid="deck.plank"][data-attendable-id$="/home"]').first().waitFor();
-      const close = page.locator('button:has-text("Close companion")').first();
+      const close = page.locator('role=button[name="Close companion"]').first();
       if (await close.isVisible().catch(() => false)) {
         await close.click();
       }
@@ -276,7 +276,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       // A link opens a preview card; its menu opens the object in the deck.
       await demo.click({ selector: `${EDITOR} dx-anchor:has-text("${DOCUMENT}") >> nth=0`, label: DOCUMENT });
-      await demo.click({ selector: '[role="dialog"] button:has-text("Actions") >> nth=0', label: 'Actions' });
+      await demo.click({ selector: '[role="dialog"] button[aria-label="Actions"] >> nth=0', label: 'Actions' });
       await demo.click({ selector: 'role=menuitem[name="Open"]', label: 'Open' });
       await page
         .locator('[data-testid="deck.plank"]', { hasText: DOCUMENT })
@@ -302,10 +302,11 @@ export const steps = [
       for (const { id, name } of PLUGINS) {
         await demo.fill({ selector: filter, value: '', hud: false });
         await demo.type({ selector: filter, value: name, label: 'Filter' });
-        const toggle = `input[id="${id}-input"]`;
+        const input = `input[role="switch"][aria-label="${name}"]`;
+        const toggle = `[data-scope="switch"][data-part="root"]:has(${input})`;
         await page.locator(toggle).waitFor({ state: 'visible', timeout: 10_000 });
         await page.waitForTimeout(BEAT / 2);
-        if (!(await page.locator(toggle).isChecked())) {
+        if (!(await page.locator(input).isChecked())) {
           await demo.click({ selector: toggle, label: `Enable ${name}` });
         }
         await page.waitForFunction((id) => composer.plugins().some((plugin) => plugin.id === id && plugin.active), id, {
@@ -450,7 +451,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       // The table sits under its type in the Database section; the type's own row has the same name.
       await demo.click({
-        selector: `[data-testid="deck.sidebar"] [data-testid="treeItem.heading"] span:text-is("${TABLE}") >> nth=1`,
+        selector: `[data-testid="deck.sidebar"] [data-testid="treeItem.heading"]:text-is("${TABLE}") >> nth=1`,
         label: TABLE,
       });
       // The grid renders empty cells ahead of the data, so count the cells that hold text in each column.
@@ -474,9 +475,9 @@ export const steps = [
   {
     name: "Map the table's rows",
     run: async ({ demo, page }) => {
-      const close = page.locator('button:has-text("Close companion")').first();
+      const close = page.locator('role=button[name="Close companion"]').first();
       if (await close.isVisible().catch(() => false)) {
-        await demo.click({ selector: 'button:has-text("Close companion") >> nth=0', label: 'Close companion' });
+        await demo.click({ selector: 'role=button[name="Close companion"] >> nth=0', label: 'Close companion' });
       }
       await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
       await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.map"]', label: 'Map' });
@@ -493,7 +494,10 @@ export const steps = [
   {
     name: 'Toggle from the map to the globe',
     run: async ({ demo, page }) => {
-      await demo.click({ selector: '[data-testid="deck.plank"] button:has-text("Toggle") >> nth=0', label: 'Globe' });
+      await demo.click({
+        selector: '[data-testid="deck.plank"] >> role=button[name=/Toggle/] >> nth=0',
+        label: 'Globe',
+      });
       await page.locator('[data-testid="deck.plank"] canvas').first().waitFor({ state: 'visible', timeout: 10_000 });
       await page.waitForTimeout(BEAT * 3);
     },

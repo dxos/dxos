@@ -63,6 +63,17 @@ describe('withViewTransition', () => {
     await expect(done).resolves.toBeUndefined();
   });
 
+  test('a transition superseded by the next one leaves no unhandled rejection', async () => {
+    const fake = installDocument({ ready: Promise.reject(new DOMException('Transition was skipped', 'AbortError')) });
+    const ran = vi.fn();
+    const running = EffectEx.runPromise(withViewTransition(Effect.sync(() => ran())));
+    await flush();
+    await fake.callback()();
+    await running;
+    await flush();
+    expect(ran).toHaveBeenCalledOnce();
+  });
+
   test('settles the callback when interrupted before the old state is captured', async () => {
     const fake = installDocument();
     const ran = vi.fn();
@@ -76,7 +87,7 @@ describe('withViewTransition', () => {
 });
 
 const installDocument = (
-  options: { api?: boolean; reducedMotion?: boolean; visibility?: DocumentVisibilityState } = {},
+  options: { api?: boolean; reducedMotion?: boolean; visibility?: DocumentVisibilityState; ready?: Promise<void> } = {},
 ): FakeDocument => {
   const fake: FakeDocument = {
     callbacks: [],
@@ -93,7 +104,7 @@ const installDocument = (
     ...(options.api !== false && {
       startViewTransition: ({ update }: { update: UpdateCallback }) => {
         fake.callbacks.push(update);
-        return {};
+        return { ready: options.ready ?? Promise.resolve() };
       },
     }),
   });

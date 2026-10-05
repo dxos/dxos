@@ -12,8 +12,13 @@ import {
   StageRunner,
   appendRows,
   attachAll,
+  countersLabel,
   installProbes,
+  installReactProbe,
+  latencySummary,
   launchInstrumentedBrowser,
+  listTargets,
+  parseCounters,
   publishPosthogBatch,
   readProcessFootprint,
   startProfiling,
@@ -22,6 +27,8 @@ import {
   writePosthogBatch,
   writeRunReport,
 } from '@dxos/perf-harness';
+
+import { PERF_PORT, SERVING_MODE } from './perf/server.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
 
@@ -45,12 +52,15 @@ const SCALES = new Set((process.env.DX_PERF_SCALES ?? FIXTURES.map(({ scale }) =
 /** Repeats of the whole flow per fixture (`DX_PERF_ITERATIONS`); the nightly scores their median. */
 const ITERATIONS = Math.max(1, Number.parseInt(process.env.DX_PERF_ITERATIONS ?? '1', 10) || 1);
 
-const storyUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
+/** The costed work counters (`DX_PERF_COUNTERS`: `all`, `none`, or e.g. `trace,react`). */
+const COUNTERS = parseCounters(process.env.DX_PERF_COUNTERS);
+
+const storyUrl = (storyId: string) => `http://localhost:${PERF_PORT}/iframe.html?id=${storyId}&viewMode=story`;
 
 /** The closing line the scripted model emits only after its twentieth tool result. */
 const DONE = /Done — ran 20 calculations/;
 
-/** Idle after ready before the first measured stage, since a dev server keeps streaming modules in. */
+/** Idle after ready before the first measured stage, so boot's trailing work (and a dev server's module stream) lands outside it. */
 const SETTLE_MS = 10_000;
 
 /** Wait after the turns before the retained-memory read: twice the registry's 5 s idle TTL. */
@@ -58,8 +68,8 @@ const IDLE_MS = 10_000;
 
 const BUDGET_MS = 120_000;
 
-/** Writing the busy space is minutes of feed appends in the browser. */
-const SEED_BUDGET_MS = 900_000;
+/** Seeding the busy space measured 23–25 s on a 4-core sandbox; a seed past this has stalled, not slowed. */
+const SEED_BUDGET_MS = 180_000;
 
 const chatPrompt = (page: Page): Locator =>
   page
@@ -67,7 +77,7 @@ const chatPrompt = (page: Page): Locator =>
     .locator('xpath=ancestor::*[contains(@class,"cm-editor")]//*[contains(@class,"cm-content")]');
 
 /**
- * Seeds the space, then reloads and measures the reopened profile: a busy space is one somebody
+ * Seeds the space, then reopens it and measures the returning profile: a busy space is one somebody
  * returns to, and seeding inside the measured boot would charge the writes to it.
  */
 const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
@@ -83,11 +93,12 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     const network = trackNetwork(page);
 
     const comparability: Comparability = {
-      servingMode: 'dev',
+      servingMode: SERVING_MODE,
       pluginSet: 'storybook',
       profileState: 'returning',
       settleMs: SETTLE_MS,
       instruments: 'profiler',
+      counters: countersLabel(COUNTERS),
     };
 
     const runner = new StageRunner({
@@ -101,9 +112,14 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
       network,
       comparability,
       screenshotDir: path.join(artifactDir, 'stages'),
+      counters: COUNTERS,
+      counterDir: path.join(artifactDir, 'counters'),
     });
 
     await installProbes(page);
+    if (COUNTERS.react) {
+      await installReactProbe(page);
+    }
 
     await runner.stage('seed', async () => {
       await page.goto(storyUrl(storyId), { timeout: BUDGET_MS });
@@ -116,11 +132,27 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
         timeout: SEED_BUDGET_MS,
         polling: 1_000,
       });
+      log.info('seeded', {
+        scale,
+        iteration,
+        seed: await page.evaluate(() => Reflect.get(globalThis, '__dxosPerfSeed')),
+      });
       await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
     });
 
+    // Unloaded with every session closed, and only once the old workers are gone: a shared worker a
+    // debugger held across the unload is reused by the next load, which then renders nothing, and a
+    // worker still listed while it shuts down would be attached at boot's opening boundary.
+    runner.detach();
+    await page.goto('about:blank');
+    await expect
+      .poll(async () => (await listTargets(debugPort)).filter((target) => target.type !== 'page').length, {
+        timeout: BUDGET_MS,
+      })
+      .toBe(0);
+
     await runner.stage('boot', async () => {
-      await page.reload({ timeout: BUDGET_MS });
+      await page.goto(storyUrl(storyId), { timeout: BUDGET_MS });
       await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
     });
 
@@ -189,6 +221,10 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     }
     for (const row of rows) {
       log.info('stage', summarize(row));
+      if (row.latency) {
+        log.info('submit path', { stage: row.stage, steps: row.latency.submitPath });
+        log.info('turn path', { stage: row.stage, steps: row.latency.turnPath });
+      }
     }
     runner.dispose();
 
@@ -221,4 +257,10 @@ const summarize = (row: StageRow) => ({
   heapMB: Math.round(row.heapUsedTotalBytes / MB),
   domNodes: row.domNodes,
   lagMaxMs: row.responsiveness.lagMaxMs,
+  ...(row.latency
+    ? {
+        submitToRequestMs: row.latency.submitToRequestMs,
+        turnToRequest: latencySummary(row.latency.turnToRequestMs),
+      }
+    : {}),
 });

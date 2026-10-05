@@ -74,6 +74,14 @@ export const McpRequestFrame = Schema.TaggedStruct('request', {
 });
 export type McpRequestFrame = Schema.Schema.Type<typeof McpRequestFrame>;
 
+/** Helper to page: a `register` or `unregister` took effect, and whether the server is registered now. */
+export const McpAckFrame = Schema.TaggedStruct('ack', { server: Schema.String, registered: Schema.Boolean });
+export type McpAckFrame = Schema.Schema.Type<typeof McpAckFrame>;
+
+/** Everything the helper sends the page. */
+export const McpHelperFrame = Schema.Union([McpRequestFrame, McpAckFrame]);
+export type McpHelperFrame = Schema.Schema.Type<typeof McpHelperFrame>;
+
 /** Page to helper: starts or stops relaying a server id, or answers a request. */
 export const McpHostFrame = Schema.Union([
   Schema.TaggedStruct('register', { server: Schema.String, token: Schema.String }),

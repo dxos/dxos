@@ -8,9 +8,9 @@ import * as Layer from 'effect/Layer';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Process from '@dxos/compute/Process';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
 import { AssistantCapabilities, AssistantOptions } from '#types';
@@ -27,12 +27,9 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
   LayerSpec.make(
     {
       affinity: 'application',
-      // `RemoteProcessManager` is what a session asking for `location: 'edge'` is spawned on. Declared,
-      // not read optionally: a tag this spec does not require is never in its context, so the optional
-      // read this used to do always came back empty and edge sessions failed with the manager present in
-      // the app. plugin-routine contributes it for every stack, falling back to `layerNoop` where no edge
-      // service is configured.
-      requires: [ProcessManager.ProcessManagerService, RemoteProcessManager.Service, Capability.Service],
+      // Declared, not read optionally: a tag this spec does not require is never in its context. The
+      // manager spans the local and remote runtimes; plugin-routine contributes it for every stack.
+      requires: [Process.ManagerService, Capability.Service],
       provides: [AgentService.AgentService],
     },
     () =>

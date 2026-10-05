@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { Button, Icon, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Flex, Icon, useTranslation } from '@dxos/react-ui';
 import { ContentBlock } from '@dxos/types';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { safeParseJson } from '@dxos/util';
@@ -31,31 +31,35 @@ export const RequestWidget = ({ children, message }: RequestWidgetProps) => {
   const { requestId, title, options, resolution } = request.value;
   const chosen = options.find((option) => option.id === resolution?.optionId);
   return (
-    <div className='flex flex-col gap-2 p-2 border border-subdued-separator rounded-md' data-testid='assistant.request'>
-      <div className='flex items-center gap-2 text-sm'>
-        <Icon icon='ph--shield-warning--regular' size={4} />
-        <span>{title}</span>
-      </div>
-      {resolution ? (
-        <div className='text-sm text-subdued'>
-          {chosen ? t('request.answered.label', { option: chosen.label }) : t('request.cancelled.label')}
-        </div>
-      ) : (
-        <div role='group' className='flex flex-wrap gap-2'>
-          {options.map((option) => (
-            <Button
-              key={option.id}
-              variant={option.kind.startsWith('allow') ? 'primary' : 'default'}
-              data-action='respond'
-              data-message={message}
-              data-request={requestId}
-              data-option={option.id}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </div>
-      )}
-    </div>
+    <Card.Root data-testid='assistant.request'>
+      <Card.Header>
+        <Block>
+          <Icon icon='ph--shield-warning--regular' />
+        </Block>
+        <Card.Title>{title}</Card.Title>
+      </Card.Header>
+      <Card.Body>
+        {resolution ? (
+          <Card.Description>
+            {chosen ? t('request.answered.label', { option: chosen.label }) : t('request.cancelled.label')}
+          </Card.Description>
+        ) : (
+          <Flex role='group' wrap gap='sm'>
+            {options.map((option) => (
+              <Button
+                key={option.id}
+                variant={option.kind.startsWith('allow') ? 'primary' : 'default'}
+                data-action='respond'
+                data-message={message}
+                data-request={requestId}
+                data-option={option.id}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </Flex>
+        )}
+      </Card.Body>
+    </Card.Root>
   );
 };
