@@ -8,9 +8,9 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/rpc/RpcClient';
 import * as RpcServer from 'effect/rpc/RpcServer';
+import * as Scope from 'effect/Scope';
 
 import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';

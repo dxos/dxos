@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-import type * as Scope from 'effect/Scope';
 import type * as RpcClient from 'effect/rpc/RpcClient';
+import type * as Scope from 'effect/Scope';
 
 import { type LayerStack } from '@dxos/compute-runtime';
 import { Hook } from '@dxos/effect';

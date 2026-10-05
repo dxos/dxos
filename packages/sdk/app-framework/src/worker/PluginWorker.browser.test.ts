@@ -11,9 +11,9 @@ import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunn
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/rpc/RpcClient';
 import * as RpcServer from 'effect/rpc/RpcServer';
+import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';

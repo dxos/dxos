@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import * as Rpc from 'effect/rpc/Rpc';
 import * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as Schema from 'effect/Schema';
 
 /** Served by {@link EchoWorkerPlugin} through the worker's router. */
 export class EchoRpcs extends RpcGroup.make(
