@@ -302,7 +302,7 @@ const LabelNodeView = ({ node, editing }: NodeViewProps) => {
       part='label'
       text={label}
       editing={editing}
-      classNames={mx('dx-fullscreen flex items-center justify-center text-center', sizeClass(node, 'text-2xl'))}
+      classNames={mx('dx-cover flex items-center justify-center text-center', sizeClass(node, 'text-2xl'))}
     >
       {label}
     </TextPart>
@@ -318,7 +318,7 @@ export const ClassNodeView = ({ node, editing }: NodeViewProps) => {
     return null;
   }
   return (
-    <div className={mx('dx-fullscreen flex flex-col font-mono divide-y divide-separator', sizeClass(node, 'text-sm'))}>
+    <div className={mx('dx-cover flex flex-col font-mono divide-y divide-separator', sizeClass(node, 'text-sm'))}>
       <TextPart part='name' text={node.name} editing={editing} classNames='px-2 py-1 text-center font-bold'>
         {node.name}
       </TextPart>
@@ -343,13 +343,13 @@ export const ClassNodeView = ({ node, editing }: NodeViewProps) => {
 
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
 export const UnknownNodeView = ({ node }: NodeViewProps) => (
-  <div className='dx-fullscreen flex items-center justify-center text-xs text-fg-muted'>{node.type}</div>
+  <div className='dx-cover flex items-center justify-center text-xs text-fg-muted'>{node.type}</div>
 );
 
 export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
   const text = isNoteNode(node) ? node.text : '';
   return (
-    <TextPart part='text' text={text} editing={editing} classNames='dx-fullscreen p-3'>
+    <TextPart part='text' text={text} editing={editing} classNames='dx-cover p-3'>
       {text}
     </TextPart>
   );
@@ -361,9 +361,9 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, contentBounds(child)) : undefined), [node, child]);
   return (
-    <div className={mx('dx-fullscreen', tier === 'dot' && 'bg-primary-500/40')}>
+    <div className={mx('dx-cover', tier === 'dot' && 'bg-primary-500/40')}>
       {tier === 'preview' && child && (
-        <div className='dx-fullscreen flex flex-col items-center justify-center gap-1 pointer-events-none'>
+        <div className='dx-cover flex flex-col items-center justify-center gap-1 pointer-events-none'>
           <span className='text-2xl'>{child.name ?? child.id}</span>
           <span className='text-fg-muted'>
             {Object.keys(child.nodes).length} nodes · {Object.keys(child.links).length} links

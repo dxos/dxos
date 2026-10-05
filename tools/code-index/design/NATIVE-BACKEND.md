@@ -1,23 +1,24 @@
 # Native backend: one Rust library for the quad store and the rules
 
-Status: design + first vertical slice (`tools/code-index-native`). The JS backend
-(Quadstore/LevelDB + `eyereasoner`) stays the default until the native one has
-run in anger; `CODE_INDEX_BACKEND=native` selects it (`Store.layer(dir, 'native')` in code).
+`tools/code-index-native` is the store behind `Store`: oxigraph (RocksDB) for the quads and SPARQL,
+and a purpose-built N3 engine that runs against the same indexes, loaded into the Bun or Node
+process as a Node-API addon. It is the only backend. A store records the backend that wrote it
+beside the ontology version; a store stamped otherwise (the retired `js` backend) or not at all is
+emptied by a writer, which reindexes it, and refused by a reader with a request to run
+`code-index index`.
 
 ## Why
 
-Two costs dominate an indexing pass on this repo, and both are structural:
+Two costs dominate an indexing pass, and both are structural:
 
-1. **Commit** (~369s cold). Quadstore writes every quad into six LevelDB indexes
-   from JavaScript, one file at a time, and its cost grows with the store.
-2. **Reason**. Every pass serialises the narrowed premises to N3 text, hands the
-   string to EYE (Prolog compiled to WASM), parses the derivations back, and
-   rewrites each reasoner's graph — over **all** facts, even when one file changed.
+1. **Commit.** Every quad lands in six indexes; doing that from JavaScript one file at a time costs
+   more as the store grows. A native store bulk-loads a commit off the event loop.
+2. **Reason.** Handing the facts to an external reasoner means serialising the premises to N3 text
+   and parsing the derivations back, over **all** facts, even when one file changed.
 
-The fix for (1) is a native store; the fix for (2) is a rule engine that runs
-_against_ that store and maintains its conclusions incrementally. Putting both in
-one library is what removes the serialisation step: the engine reads the store's
-indexes directly.
+The fix for (1) is a native store; the fix for (2) is a rule engine that runs _against_ that store
+and maintains its conclusions incrementally. Putting both in one library is what removes the
+serialisation step: the engine reads the store's indexes directly.
 
 ## Survey
 
@@ -69,6 +70,12 @@ recomputation cheap:
 - **One snapshot of the premises.** Every base fact with a predicate some rule reads is loaded into
   an in-memory, position-indexed set once per `reasonAll`; joins probe it instead of seeking RocksDB
   and re-interning each result. (A rule that leaves a body predicate unbound falls back to the store.)
+  Decoding a quad out of oxigraph costs a RocksDB read per non-inline term — about 10 µs a quad,
+  17 s for this repository's 1.4M premises — so the snapshot is decoded on every core, and each
+  run keeps it on disk (`premises.bin`, `src/snapshot.rs`): the next run reads it back (≈1 s) and
+  applies the journal's net change, which is exactly the base's change since that run. The file is
+  trusted only under a token the engine state records once the run commits, so anything that
+  resets the engine state (`invalidate`, `clear`, an overflowing journal) also retires the file.
 - **Dependency order.** The file's forward rules are grouped into strongly connected components of
   "reads what the other concludes" (through the backward rules each calls), run dependencies first;
   only a cyclic group repeats until nothing is new. This is also what makes an aggregate see the
@@ -87,17 +94,15 @@ these strata do the same within a cyclic group, and DRed-maintained strata keep 
 ## Semantics (one change, made deliberately)
 
 - Each rule file is a **stratum**, run in filename order, writing `graph:derived/<name>`.
-- Stratum _i_ sees the file graphs plus the derived graphs of strata **before** it.
-  The JS backend fed each reasoner every _other_ derived graph — including later
-  ones from the _previous_ pass — so an earlier file could see a later file's stale
-  output (`40-composer` saw `90-aliases`' types from the last run). That made the
-  result depend on history. The design doc (`ONTOLOGY.md` § Reasoning) already said
-  "before it"; both backends now implement what it says in `reasonAll` (the JS one hides later
-  reasoners' graphs from each pass), covered by `Reasoner.test.ts` § ordered reasoners.
+- Stratum _i_ sees the file graphs plus the derived graphs of strata **before** it, as
+  `ONTOLOGY.md` § Reasoning says — never a later stratum's output from a previous pass, which
+  would make the result depend on history. Covered by `Reasoner.test.ts` § ordered reasoners.
 - A derived graph holds every fact the stratum's rule heads produce (its
-  materialisation `M_i`), including the rare head that restates a premise. EYE's
-  `derivations` mode drops those. Keeping them makes the stored graph exactly the
-  maintenance state, so no side table is needed.
+  materialisation `M_i`), including a head that restates a premise — a fact of a file
+  graph **or of an earlier stratum's graph** (EYE's `derivations` mode would drop those).
+  Keeping them makes the stored graph exactly the maintenance state, so no side table is
+  needed: `15-types` restates what `10-effect` already concluded (`rdf:type deus:EffectLayer`,
+  `deus:providesService`), `90-aliases` restates each alias's own `rdf:type deus:Symbol`.
 - The legacy `Store.reason(name, rules)` call keeps its contract (premises = file
   graphs + every other derived graph; returns conclusions; `materialize` replaces
   the graph) and is evaluated natively in full. `Reasoner.run` uses the new
@@ -105,11 +110,10 @@ these strata do the same within a cyclic group, and DRed-maintained strata keep 
 
 ## Storage layout (`<store>/native/`)
 
-- `oxigraph/` — the quads. File graphs `graph:<path>#<mtime>` as today; the ledger and its
-  `pending_graph` protocol stay in SQLite, unchanged, so the native side only has to make "swap
+- `oxigraph/` — the quads. File graphs are `graph:<path>#<mtime>`; the ledger and its
+  `pending_graph` protocol live in SQLite, so the native side only has to make "swap
   this file's graph" atomic, which it does in **one RocksDB transaction**. Derived graphs are
-  `graph:derived/<name>`. SPARQL runs with the default graph as the union of all graphs, as
-  Quadstore's `unionDefaultGraph` did.
+  `graph:derived/<name>`. SPARQL runs with the default graph as the union of all graphs.
 - `journal/` — a second, tiny oxigraph store for engine bookkeeping, invisible to every query:
   the journal, the rule-set signature, the overflow flag. (oxigraph's union default graph includes
   the real default graph, so the bookkeeping cannot simply live there — tested.)
@@ -169,33 +173,39 @@ per selected glob, each reading every `deus:path`) would otherwise repeat it.
   store; Bun and Node both load Node-API addons, so vitest exercises the same
   binary. A sidecar would add process supervision, a second crash-recovery story
   and a serialisation hop on every `match`, for no isolation we need.
-- The TS `Store.Api` interface is unchanged apart from one addition, `reasonAll`, which
-  `Reasoner.run` now calls (the JS backend implements it as the old loop). The ledger and commit
-  protocol moved nowhere; only the quad half sits behind `internal/graph.ts`, implemented by
-  `internal/quadstore.ts` (the previous code, moved) and `internal/native.ts`. LDkit gets a custom
-  `IQueryEngine` that forwards SPARQL to oxigraph, so lenses and the sandbox's
-  `rdf.query` keep working.
-- `putDocument` passes the JSON-LD text through; oxigraph parses it natively.
+- The ledger and commit protocol live in `Store.ts`; only the quad half sits behind
+  `internal/graph.ts`, implemented by `internal/native.ts`. `Reasoner.run` calls `reasonAll`,
+  the incremental path. LDkit gets a custom `IQueryEngine` that forwards SPARQL to oxigraph, so
+  lenses and the sandbox's `rdf.query` work over the same store.
+- `putDocuments` passes the workers' N-Triples through; oxigraph bulk-loads a commit's quads off
+  the event loop, then removes the stale ones in one transaction.
 
 ## Volume (the sibling TypeScript-type-facts workstream)
 
 More quads per node raise commit and store size linearly; nothing in the engine
 scans the whole store unless the rule set changed. Two things keep reasoning
 proportional to the change rather than the store: predicate-indexed lookups (a rule
-only touches the predicates it names, as the JS narrowing did) and the journal.
+only touches the predicates it names) and the journal.
 New predicates need no engine change; a rule over them is just another file.
 
-## CI
+## Building and CI
 
-`.depot/actions/setup` deliberately does not install Rust (1.2 GB). The crate's
-`cargo test` and the TS suite over the native backend therefore run locally
-(`moon run code-index-native:cargo-test`, `moon run code-index:native-test`) and are not in the
-`:test` sweep. Putting them in CI is a decision about the toolchain cost and is
-left to the reviewers.
+The addon is built by `moon run code-index-native:cargo-build` (`scripts/build.sh`: a release build
+with the `napi` feature, copied to `code-index-native.node`, which `internal/native.ts` loads).
+`code-index:test` depends on it, so the TS suite always runs against a current addon, and
+`code-index-native:test` runs the crate's own `cargo test` in the `:test` sweep. The toolchain is
+pinned by the crate's `rust-toolchain.toml` (kept equal to `rust` in `.prototools`); RocksDB is
+compiled from source, which needs a C++ compiler and libclang for its bindgen step.
+
+CI installs both in `.depot/actions/setup`: the pinned toolchain with rustup's minimal profile, and
+libclang from apt where it is missing. The cargo registry is cached on `Cargo.lock`. The crate's
+`target/` is not: moon's remote cache already restores `code-index-native.node` and skips
+`cargo-test` when the crate's inputs are unchanged, so only a job whose crate inputs changed
+compiles, and restoring gigabytes of build output into every job would cost more than it saves.
 
 ## Benchmarks
 
-Two, both rerunnable, both local-only (no Rust in CI):
+Two, both rerunnable, both local-only:
 
 - `moon run code-index-native:cargo-bench` — a synthetic corpus shaped like a real index (exported
   symbols with references, layers over service tags, operations and handlers, plugins adding
@@ -204,10 +214,10 @@ Two, both rerunnable, both local-only (no Rust in CI):
   commit with incremental reasoning, and the store size. It asserts incremental equals
   recomputation, so a fast wrong answer fails rather than reports. `CODE_INDEX_BENCH_FILES` scales
   it (default 5000).
-- `moon run code-index:bench` (`bun scripts/bench.ts`) — this repository through the CLI, per
-  backend: cold index into an empty store, then a warm pass after touching one file (content
-  unchanged, mtime restored), then the store size. Prints the markdown table the PR carries.
+- `moon run code-index:bench` (`bun scripts/bench.ts`) — this repository through the CLI: cold
+  index into an empty store, then a warm pass after touching one file (content unchanged, mtime
+  restored), then the store size. Prints a markdown table.
 
-Conclusions were checked against EYE on this repository: every rule file's count matches except
-`60-canonical` (files added since the baseline) and `90-aliases`, where 1,310 of 1,373 native
-conclusions restate a premise (the documented difference above) and the remaining 63 are EYE's 63.
+The `constructs-*.expected.n3` fixtures `tests/engine.rs` checks the engine against are what EYE
+derived from `constructs.data.n3` with each rule file; they are golden files, edited by hand
+only when a semantic difference above is deliberate.

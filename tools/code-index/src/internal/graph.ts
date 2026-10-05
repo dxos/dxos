@@ -6,11 +6,9 @@ import type { Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject } from
 import type * as Effect from 'effect/Effect';
 import type { Lens, Schema } from 'ldkit';
 
-import type * as Ontology from '../Ontology.ts';
-
 /**
- * The quad-store half of `Store`, behind which the two backends differ. The ledger and its commit
- * protocol sit above this and are shared, so both backends make the same crash-safety guarantees.
+ * The quad-store half of `Store`, implemented by `native.ts`. The ledger and its commit protocol sit
+ * above this, so the quad store only has to make one batch of graph swaps atomic.
  */
 
 export type Binding = Record<string, string>;
@@ -24,17 +22,20 @@ export type ReasonOutcome = {
   readonly name: string;
   readonly derived: number;
   readonly durationMs: number;
-  /** Maintained from the changes since the last pass rather than recomputed (native backend only). */
+  /** Maintained from the changes since the last pass rather than recomputed. */
   readonly incremental: boolean;
 };
 
+/** One file's graph swap: `clear` is emptied and `triples` (N-Triples) land in `graph`. */
+export type DocumentWrite = {
+  readonly clear: readonly string[];
+  readonly graph: string;
+  readonly triples: string;
+};
+
 export interface Graph<E> {
-  /** Replaces the contents of `clear` with the document's quads, homed in `graph`, atomically. */
-  readonly swap: (
-    clear: readonly string[],
-    graph: Quad_Graph,
-    document: Ontology.FileDocument,
-  ) => Effect.Effect<void, E>;
+  /** Every write of a batch in one transaction: nothing observes a half-written graph. */
+  readonly swap: (writes: readonly DocumentWrite[]) => Effect.Effect<void, E>;
   readonly drop: (graph: string) => Effect.Effect<void, E>;
   readonly putQuads: (quads: readonly Quad[]) => Effect.Effect<void, E>;
   readonly delQuads: (quads: readonly Quad[]) => Effect.Effect<void, E>;

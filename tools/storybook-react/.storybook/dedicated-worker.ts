@@ -6,6 +6,6 @@ import { runDedicatedWorker } from '@dxos/client/worker';
 
 import { initEchoHostWasm } from './automerge-wasm.ts';
 
-// Stands in for `@dxos/client/dedicated-worker` under `slimWasmPlugin`: the echo host this worker
+// Stands in for `@dxos/client/dedicated-worker` under `perfBundlePlugin`: the echo host this worker
 // runs needs the slim-resolved wasm initialized before it starts.
 runDedicatedWorker({ onBeforeStart: () => initEchoHostWasm() });

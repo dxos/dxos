@@ -5,22 +5,25 @@
 //
 
 import * as DecisionModel from 'effect/ai/DecisionModel';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type * as Store from '../Store.ts';
+import * as Store from '../Store.ts';
 import * as Cache from './Cache.ts';
 import * as Compact from './Compact.ts';
 import * as Explore from './Explore.ts';
 import * as Graph from './Graph.ts';
+import * as QueryExplorer from './QueryExplorer.ts';
+import * as Select from './Select.ts';
 import * as SystemOne from './SystemOne.ts';
 import * as Zoom from './Zoom.ts';
 
 /**
- * The design pipeline up to, but not including, layout: explore → zoom → compact variants. Layout
+ * The design pipeline up to, but not including, layout: explore → zoom (or select) → compact variants. Layout
  * and judging need ELK and therefore Node (`Draw.ts`), so this half stays runnable under Bun and
  * hands its variants over as files.
  */
@@ -44,6 +47,8 @@ export type Timings = { exploreMs: number; zoomMs: number; totalMs: number };
 
 export type Result = {
   readonly candidates: Graph.Candidates;
+  /** The queries the query explorer ran, failures included; absent for the other explorers. */
+  readonly queries?: readonly QueryExplorer.QueryRecord[];
   readonly scored: Graph.Scored;
   readonly diagrams: readonly Compact.Diagram[];
   readonly usage: Zoom.Usage;
@@ -61,14 +66,52 @@ export const run = <E, R>(
     const explored = Date.now();
     const { scored, usage } = yield* Zoom.zoom({ ...options, candidates });
     const zoomed = Date.now();
-    const diagrams = Compact.variants(scored.grouping).map((variant) => Compact.build(scored, variant));
-    return {
+    return finish(candidates, scored, usage, { started, explored, zoomed });
+  });
+
+const finish = (
+  candidates: Graph.Candidates,
+  scored: Graph.Scored,
+  usage: Zoom.Usage,
+  { started, explored, zoomed }: { started: number; explored: number; zoomed: number },
+): Result => ({
+  candidates,
+  scored,
+  diagrams: Compact.variants(scored.grouping).map((variant) => Compact.build(scored, variant)),
+  usage,
+  timings: { exploreMs: explored - started, zoomMs: zoomed - explored, totalMs: zoomed - started },
+});
+
+/**
+ * The query pipeline: a small model's SPARQL queries, unioned, then selected (implementation details
+ * hidden, System One relevance boosted by degree, kept connected). `scorer` is `system-one` with a
+ * key and `baseline` without; there is no hybrid blend, since selection does the baseline's job.
+ */
+export const runSelected = (
+  options: Omit<Options, 'scorer'> & { readonly maxNodes?: number; readonly maxQueries?: number },
+): Effect.Effect<Result, Store.StoreError, Store.Store | LanguageModel.LanguageModel | DecisionModel.DecisionModel> =>
+  Effect.gen(function* () {
+    const store = yield* Store.Store;
+    const started = Date.now();
+    const exploration = yield* QueryExplorer.explore({
+      prompt: options.prompt,
+      maxNodes: options.maxNodes,
+      maxQueries: options.maxQueries,
+    });
+    const explored = Date.now();
+    const candidates = exploration.candidates;
+    const indexDegree = yield* Select.indexDegrees(
+      store,
+      candidates.nodes.map((node) => node.iri),
+    );
+    const { scored, usage } = yield* Zoom.zoom({
+      ...options,
+      scorer: SystemOne.available() ? 'system-one' : 'baseline',
       candidates,
-      scored,
-      diagrams,
-      usage,
-      timings: { exploreMs: explored - started, zoomMs: zoomed - explored, totalMs: zoomed - started },
-    };
+      select: Select.selector({ prompt: options.prompt, indexDegree }),
+    });
+    const zoomed = Date.now();
+    return { ...finish(candidates, scored, usage, { started, explored, zoomed }), queries: exploration.queries };
   });
 
 /** The pruned graph alone: what the force view and the MCP tool present. */
@@ -94,6 +137,7 @@ export const write = (dir: string, result: Result): Effect.Effect<string[], Desi
         },
         'pruned.json': pruned(result.scored),
         'diagrams.json': result.diagrams,
+        ...(result.queries ? { 'queries.json': result.queries } : {}),
         'run.json': { prompt: result.scored.prompt, usage: result.usage, timings: result.timings },
       };
       return Object.entries(files).map(([name, value]) => {
@@ -118,34 +162,50 @@ export type GraphData = {
   readonly edges: readonly { from: string; to: string; kind: string }[];
 };
 
+/** Most below-threshold nodes a presentation carries; past this they only crowd the force layout. */
+export const HIDDEN_LIMIT = 100;
+
 /**
- * The scored graph as a force-view presentation: every candidate, so the below-threshold ones are a
- * click away, and every edge of a relevant kind between them plus the relays pruning added.
+ * The scored graph as a force-view presentation: every kept node, the best below-threshold ones so
+ * they are a click away, and every edge of a relevant kind between them plus the relays pruning
+ * added. A hidden node's card omits its doc and snippet, which are most of a node's weight on the wire.
  */
-export const toGraphData = (scored: Graph.Scored): GraphData & { grouping: string; scorer: string } => ({
-  grouping: scored.grouping,
-  scorer: scored.scorer,
-  nodes: scored.nodes.map((node) => ({
-    id: node.iri,
-    label: node.label,
-    ...(node.package ? { group: node.package } : {}),
-    score: Number(node.score.toFixed(3)),
-    kept: node.kept,
-    card: {
-      path: node.path,
-      kind: node.kind,
-      package: node.package,
+export const toGraphData = (scored: Graph.Scored): GraphData & { grouping: string; scorer: string } => {
+  const hidden = scored.nodes
+    .filter((node) => !node.kept)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, HIDDEN_LIMIT);
+  const shown = new Set([...scored.nodes.filter((node) => node.kept), ...hidden].map((node) => node.iri));
+  const nodes = scored.nodes.filter((node) => shown.has(node.iri));
+  return {
+    grouping: scored.grouping,
+    scorer: scored.scorer,
+    nodes: nodes.map((node) => ({
+      id: node.iri,
+      label: node.label,
+      ...(node.package ? { group: node.package } : {}),
       score: Number(node.score.toFixed(3)),
-      declarations: node.symbols.join(', '),
-      doc: node.doc,
-      snippet: node.snippet,
-      why: node.why,
-    },
-  })),
-  edges: Graph.dedupe(
-    scored.edges.filter((edge) => edge.kind === Graph.RELAY || (scored.relations[edge.kind] ?? 0) >= 0.5),
-  ).map(({ from, to, kind }) => ({ from, to, kind })),
-});
+      kept: node.kept,
+      card: {
+        path: node.path,
+        kind: node.kind,
+        package: node.package,
+        score: Number(node.score.toFixed(3)),
+        declarations: node.symbols.join(', '),
+        ...(node.kept ? { doc: node.doc, snippet: node.snippet } : {}),
+        why: node.why,
+      },
+    })),
+    edges: Graph.dedupe(
+      scored.edges.filter(
+        (edge) =>
+          shown.has(edge.from) &&
+          shown.has(edge.to) &&
+          (edge.kind === Graph.RELAY || (scored.relations[edge.kind] ?? 0) >= 0.5),
+      ),
+    ).map(({ from, to, kind }) => ({ from, to, kind })),
+  };
+};
 
 /** Explore (deterministic) and zoom with whichever decision model is in context. */
 const scoreFor = (
@@ -169,19 +229,44 @@ const scoreFor = (
   });
 
 /**
- * The deterministic explorer plus zoom, as the sandbox's `design.subgraph` runs it: the hybrid scorer
- * when a decision model is in context, the baseline otherwise — the chat must work with no key at all.
+ * The scored graph a chat or MCP design question gets: the query pipeline when an explorer model is
+ * at hand, else the deterministic explorer and zoom.
+ */
+const scoreWith = (
+  store: Store.Api,
+  cache: Cache.Api,
+  scorer: Zoom.Scorer,
+  explorer: Option.Option<LanguageModel.LanguageModel>,
+  { prompt, budget = 30, threshold = 0.3 }: { prompt: string; budget?: number; threshold?: number },
+): Effect.Effect<Graph.Scored, Store.StoreError, DecisionModel.DecisionModel> =>
+  Option.match(explorer, {
+    onNone: () => scoreFor(store, cache, scorer, { prompt, budget, threshold }),
+    onSome: (model) =>
+      runSelected({ prompt, model: SystemOne.MODEL.id.toString(), cache, budget, threshold }).pipe(
+        Effect.map((result) => result.scored),
+        Effect.provideService(Store.Store, store),
+        Effect.provideService(LanguageModel.LanguageModel, model),
+      ),
+  });
+
+/**
+ * What the sandbox's `design.subgraph` returns: the query pipeline when the workspace hands it an
+ * explorer model, else the deterministic explorer plus zoom; System One when a decision model is in
+ * context, the baseline otherwise — the chat must work with no key at all.
  */
 export const subgraph = (
   store: Store.Api,
   cache: Cache.Api,
   model: Option.Option<DecisionModel.DecisionModel>,
   options: { prompt: string; budget?: number; threshold?: number },
+  explorer: Option.Option<LanguageModel.LanguageModel> = Option.none(),
 ): Effect.Effect<GraphData & { grouping: string; scorer: string }, Store.StoreError> =>
   Option.match(model, {
-    onNone: () => scoreFor(store, cache, 'baseline', options).pipe(Effect.provide(SystemOne.refusing)),
+    onNone: () => scoreWith(store, cache, 'baseline', explorer, options).pipe(Effect.provide(SystemOne.refusing)),
     onSome: (service) =>
-      scoreFor(store, cache, 'hybrid', options).pipe(Effect.provideService(DecisionModel.DecisionModel, service)),
+      scoreWith(store, cache, 'hybrid', explorer, options).pipe(
+        Effect.provideService(DecisionModel.DecisionModel, service),
+      ),
   }).pipe(Effect.map(toGraphData));
 
 /**
@@ -192,15 +277,19 @@ export const answer = (
   store: Store.Api,
   cache: Cache.Api,
   options: { prompt: string; budget?: number; threshold?: number },
+  explorer: Option.Option<LanguageModel.LanguageModel> = Option.none(),
 ) =>
   Effect.gen(function* () {
-    const scorer: Zoom.Scorer = SystemOne.available() ? 'hybrid' : 'baseline';
-    const scored = yield* scoreFor(store, cache, scorer, options).pipe(
-      Effect.provide(SystemOne.available() ? SystemOne.layer : SystemOne.refusing),
-    );
+    const scored = yield* scoreWith(
+      store,
+      cache,
+      SystemOne.available() ? 'hybrid' : 'baseline',
+      explorer,
+      options,
+    ).pipe(Effect.provide(SystemOne.available() ? SystemOne.layer : SystemOne.refusing));
     const [variant] = Compact.variants(scored.grouping);
     return {
-      scorer,
+      scorer: scored.scorer,
       grouping: scored.grouping,
       nodes: scored.nodes
         .filter((node) => node.kept)

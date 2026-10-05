@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import { DataFactory } from 'n3';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -12,6 +14,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
+import { encodeDocument } from './internal/ntriples.ts';
 import * as Ontology from './Ontology.ts';
 import * as Store from './Store.ts';
 
@@ -217,6 +220,14 @@ describe('Store', () => {
     expect(derived[0].subject.value).toEqual(Ontology.fileIri('src/a.ts').value);
   });
 
+  test('a path with brackets is stored as written', async () => {
+    // Route segments such as `[id]` are legal in an IRI the index mints but not in strict N-Triples.
+    await withStore((store) => store.putDocument(document('src/[id]/page.ts', 1)));
+    const graph = Ontology.graphIri('src/[id]/page.ts', 1);
+    expect((await withStore((store) => store.match(undefined, undefined, undefined, graph))).length).toBeGreaterThan(0);
+    await withStore((store) => store.removeFile('src/[id]/page.ts'));
+  });
+
   test('a dotfile path survives serialization', async () => {
     // `.agents/x.ts` under a `file:` prefix would serialize as an illegal prefixed name; both the
     // dump and the reasoner's input have to stay parseable.
@@ -314,7 +325,9 @@ describe('Store', () => {
 
   test('a batch commits every document in it', async () => {
     await withStore((store) =>
-      store.putDocuments([document('src/one.ts', 1), document('src/two.ts', 1), document('src/one.ts', 2)]),
+      store.putDocuments(
+        [document('src/one.ts', 1), document('src/two.ts', 1), document('src/one.ts', 2)].map(encodeDocument),
+      ),
     );
     const states = await withStore((store) => store.fileStates());
     // The later revision of a path in the same batch wins, and no graph is left pending.
@@ -403,5 +416,183 @@ describe('Store', () => {
   test('clear empties both databases', async () => {
     const stats = await withStore((store) => Effect.flatMap(store.clear(), () => store.stats()));
     expect(stats).toMatchObject({ files: 0, quads: 0 });
+  });
+});
+
+describe('Store backend stamp', () => {
+  const dirs: string[] = [];
+  const fresh = async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'code-index-backend-'));
+    dirs.push(dir);
+    return dir;
+  };
+
+  afterAll(async () => {
+    await Promise.all(dirs.map((dir) => rm(dir, { recursive: true, force: true })));
+  });
+
+  const open = <A, E>(
+    dir: string,
+    f: (store: Store.Api) => Effect.Effect<A, E>,
+    options?: Store.LayerOptions,
+  ): Promise<A> =>
+    EffectEx.runPromise(Effect.scoped(Effect.provide(Effect.flatMap(Store.Store, f), Store.layer(dir, options))));
+
+  /** Rewrites the recorded backend as an older tool would have left it; `undefined` removes the stamp. */
+  const restamp = (dir: string, backend: string | undefined) => {
+    const database = new DatabaseSync(join(dir, 'index.sqlite'));
+    try {
+      database.prepare('DELETE FROM meta WHERE key = ?').run('backend');
+      if (backend !== undefined) {
+        database.prepare('INSERT INTO meta (key, value) VALUES (?, ?)').run('backend', backend);
+      }
+    } finally {
+      database.close();
+    }
+  };
+
+  const ledger = (dir: string) => {
+    const database = new DatabaseSync(join(dir, 'index.sqlite'));
+    try {
+      return database.prepare('SELECT path FROM files ORDER BY path').all();
+    } finally {
+      database.close();
+    }
+  };
+
+  /** A store holding one file and a reasoning mark, stamped `backend`, with a `js` store's graph directory. */
+  const oldStore = async (backend: string | undefined) => {
+    const dir = await fresh();
+    await open(dir, (store) =>
+      Effect.gen(function* () {
+        yield* store.putDocument(document('src/a.ts', 1));
+        yield* store.recordReasoned('rules', yield* store.generation(), 3);
+      }),
+    );
+    restamp(dir, backend);
+    await mkdir(join(dir, 'graph'));
+    return dir;
+  };
+
+  test('a js store is reset by a writer, which rebuilds it natively', async () => {
+    const dir = await oldStore('js');
+    const [stats, backend, reasoned] = await open(dir, (store) =>
+      Effect.all([store.stats(), store.getMeta('backend'), store.reasoned('rules')]),
+    );
+    expect(stats).toMatchObject({ files: 0, quads: 0 });
+    expect(backend).toEqual('native');
+    expect(reasoned).toBeUndefined();
+    expect(existsSync(join(dir, 'graph'))).toBe(false);
+
+    const files = await open(dir, (store) =>
+      Effect.flatMap(store.putDocument(document('src/a.ts', 2)), () => store.listFiles()),
+    );
+    expect(files.map(({ path }) => path)).toEqual(['src/a.ts']);
+    expect(await open(dir, (store) => store.listFiles(), { readOnly: true })).toHaveLength(1);
+  });
+
+  test('a store without a recorded backend resets on the next write', async () => {
+    const dir = await oldStore(undefined);
+    const [stats, backend] = await open(dir, (store) => Effect.all([store.stats(), store.getMeta('backend')]));
+    expect(stats).toMatchObject({ files: 0, quads: 0 });
+    expect(backend).toEqual('native');
+  });
+
+  test('a reader refuses a js store and touches nothing', async () => {
+    const dir = await oldStore('js');
+    await expect(open(dir, (store) => store.stats(), { readOnly: true })).rejects.toThrow(
+      /was written by the js backend, which is no longer supported; run `code-index index` to rebuild it/,
+    );
+    expect(ledger(dir)).toEqual([{ path: 'src/a.ts' }]);
+    expect(existsSync(join(dir, 'graph'))).toBe(true);
+  });
+
+  test('a reader refuses a store without a recorded backend', async () => {
+    const dir = await oldStore(undefined);
+    await expect(open(dir, (store) => store.stats(), { readOnly: true })).rejects.toThrow(
+      /does not record which backend wrote it; run `code-index index` to rebuild it/,
+    );
+    expect(ledger(dir)).toEqual([{ path: 'src/a.ts' }]);
+  });
+
+  test('a reader opens a current store', async () => {
+    const dir = await oldStore('native');
+    const [file, reasoned] = await open(
+      dir,
+      (store) => Effect.all([store.getFile('src/a.ts'), store.reasoned('rules')]),
+      {
+        readOnly: true,
+      },
+    );
+    expect(file).toBeDefined();
+    expect(reasoned).toEqual(3);
+  });
+});
+
+describe('Store responsiveness', () => {
+  let dir: string;
+
+  beforeAll(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'code-index-responsive-'));
+  });
+
+  afterAll(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  // A transitive closure over a long chain is quadratic, so the pass runs long enough to observe.
+  const CHAIN = 200;
+  const CLOSURE = `
+    @prefix deus: <${Ontology.PREFIX}>.
+    { ?a deus:extends ?b . ?b deus:extends ?c } => { ?a deus:extends ?c }.
+  `;
+
+  test('a reasoning pass leaves the event loop free to answer queries', async () => {
+    const graph = Ontology.graphIri('src/chain.ts', 1);
+    const node = (index: number) => Ontology.symbolIri('src/chain.ts', `n${index}`);
+    const chain = Array.from({ length: CHAIN }, (_, index) =>
+      DataFactory.quad(node(index), Ontology.extends_, node(index + 1), graph),
+    );
+    const ask = `ASK { <${node(0).value}> <${Ontology.extends_.value}> ?next }`;
+
+    const { answered, derived, slowestMs } = await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.provide(
+          Effect.flatMap(Store.Store, (store) =>
+            Effect.gen(function* () {
+              yield* store.putQuads(chain);
+              let reasoning = true;
+              let answered = 0;
+              let slowestMs = 0;
+              const [outcomes] = yield* Effect.all(
+                [
+                  store
+                    .reasonAll([{ name: 'closure', rules: CLOSURE }])
+                    .pipe(Effect.ensuring(Effect.sync(() => (reasoning = false)))),
+                  Effect.whileLoop({
+                    while: () => reasoning,
+                    body: () => Effect.timed(store.ask(ask)),
+                    step: ([duration]) => {
+                      if (reasoning) {
+                        answered++;
+                        slowestMs = Math.max(slowestMs, Duration.toMillis(duration));
+                      }
+                    },
+                  }),
+                ],
+                { concurrency: 'unbounded' },
+              );
+              return { answered, derived: outcomes[0].derived, slowestMs };
+            }),
+          ),
+          Store.layer(dir),
+        ),
+      ),
+    );
+
+    expect(derived).toBe((CHAIN * (CHAIN + 1)) / 2 - CHAIN);
+    // Run on the event loop, the pass would let no query through until it finished.
+    expect(answered).toBeGreaterThan(3);
+    expect(slowestMs).toBeLessThan(1_000);
   });
 });

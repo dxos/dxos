@@ -3,5 +3,5 @@
 //
 
 // Plain JS with a hand-written .d.ts: the package's `/slim` types omit the wasm-bindgen default
-// init that its runtime (pinned to the non-browser resolution by `slimWasmPlugin`) re-exports.
+// init that its runtime (pinned to the non-browser resolution by `perfBundlePlugin`) re-exports.
 export { default } from '@automerge/automerge-subduction/slim';

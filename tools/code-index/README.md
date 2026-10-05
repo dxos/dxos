@@ -1,11 +1,21 @@
 # @dxos/code-index
 
 Indexes a repository into a SQLite ledger and a persistent RDF quad store — one named graph per
-file, speaking the DEUS code vocabulary. Query it with SPARQL or LDkit, extend it with N3 (EYE)
-rules.
+file, speaking the DEUS code vocabulary. Query it with SPARQL or LDkit, extend it with N3 rules.
+The quad store (oxigraph over RocksDB) and the rule engine are a Rust Node-API addon,
+[`tools/code-index-native`](../code-index-native) — see
+[`design/NATIVE-BACKEND.md`](./design/NATIVE-BACKEND.md).
 
 - [`design/ONTOLOGY.md`](./design/ONTOLOGY.md) — the vocabulary and document shape (source of truth).
 - [`SPEC.mdl`](./SPEC.mdl) — modules, commit protocol, features and tests.
+
+The addon needs a Rust toolchain ([rustup](https://rustup.rs); the crate's `rust-toolchain.toml`
+pins the version, and building RocksDB needs a C++ compiler and libclang). Build it once, and again
+after the crate changes — `moon run code-index:test` does this itself:
+
+```bash
+moon run code-index-native:cargo-build
+```
 
 ```bash
 bun tools/code-index/bin/code-index.ts index          # incremental pass, closed by the reasoner
@@ -22,7 +32,9 @@ bun tools/code-index/bin/code-index.ts query 'PREFIX deus: <https://dxos.org/voc
 
 The store defaults to `<git root>/node_modules/.code-index`, so every command finds the same index
 from anywhere in the repository. Each pass prints a phase breakdown
-(`scan · parse · commit · reason · total`).
+(`scan · parse · commit · reason · summary · total`). `parse` and `commit` are summed across the
+concurrent worker batches, so on a wide pool `parse` exceeds `total`; `summary` records the counts
+`mcp`'s `vocabulary` and `stats` read (see below).
 
 Indexing ends by rerunning the N3 rules — every `.n3` in the bundled `rules/` directory, in filename
 order, or whatever `--rules <file|dir>` names — over the whole graph, replacing each reasoner's
@@ -51,7 +63,7 @@ cheapest way to exercise a turn without a browser. Anthropic needs `DX_ANTHROPIC
 
 **One tool.** The agent's only action is `exec`, which runs TypeScript in a Bun child process whose
 sole capabilities are namespaces bridged over stdio: `rdf` (SPARQL over this index), `storage`
-(per-project memory), `display` (the only channel to the screen — Mermaid, tables, markdown, force
+(per-project memory), `display` (the only channel to the screen — illustrator diagrams, tables, markdown, force
 graphs), `design` (scored subgraphs for design questions) and `print` (the model's own return channel). The tool's documentation *is*
 [`src/workspace/sandbox/api.d.ts`](./src/workspace/sandbox/api.d.ts), so the surface cannot drift
 from what the model is told. The isolation is process-level — fresh interpreter, scrubbed
@@ -63,15 +75,28 @@ snippet.
 live session saw and there is no second copy to keep in step. The project id is in the URL
 (`/p/<id>`); a bare load adopts the last one that browser opened.
 
+**Replies stream.** The agent drives the model with `streamText` and appends each text delta as it
+arrives, so the thread types the answer out and a reload mid-turn picks up the partial text. Once a
+message settles, its deltas are deleted and one `AssistantMessage` takes their place, so the log keeps
+a row per message rather than per token. Each `exec` run renders inline, at its point in the reply,
+through the assistant thread's collapsible tool panel.
+
+**The index stays current.** The server holds the store, so it indexes on its own: an incremental
+pass at startup, then one after every burst of changes to a directory the index covers
+(`src/Watch.ts`). The passes run on a worker thread (`src/IndexThread.ts`) that shares the store
+with the server, so a reindex never stalls the web UI. `--no-watch` serves the store as it is.
+
 **No build step.** Vite runs inside the server process in middleware mode and resolves `@dxos/*`
-through the `source` condition, so the UI — Solid, with `@dxos/react-ui-thread` mounted as a React
+through the `source` condition, so the UI — Solid, with `@dxos/react-ui-assistant` mounted as a React
 island — is transformed from the working tree with nothing to rebuild first.
 
 ## Querying it from an MCP client
 
 `code-index mcp` serves the index to an MCP client (Claude Code, Claude Desktop) over stdio. It is
 read-only: it opens an existing store, never indexes or writes, and takes the same `--root` /
-`--store` flags and `CODE_INDEX_BACKEND` as every other command. Index first, then register it:
+`--store` flags as every other command. A store written by another ontology version or by the
+retired JS backend is refused with a request to run `code-index index`, which rebuilds it. Index
+first, then register it:
 
 ```bash
 bun tools/code-index/bin/code-index.ts index
@@ -92,20 +117,35 @@ one — add it locally):
 }
 ```
 
-| Tool         | What it answers |
-| ------------ | --------------- |
-| `vocabulary` | The `deus:` classes and predicates in the graph, asserted and derived, with quad counts, plus the namespace prefixes. Start here. |
-| `describe`   | A resource's outgoing and incoming triples (bounded), from an IRI or a file path, package name or symbol name; an ambiguous name returns candidates. |
-| `query`      | A SPARQL SELECT as `{ vars, rows }`, capped at `limit` (default 200, at most 2000) with `truncated` reported. |
-| `ask`        | A SPARQL ASK, as a boolean. |
-| `files`      | Indexed files, filtered by path prefix and language. |
-| `stats`      | Files, quads and per-reasoner derived counts, and the backend in use. |
+| Tool         | Parameters | What it answers |
+| ------------ | ---------- | --------------- |
+| `vocabulary` | — | Every documented `deus:` class and predicate with its meaning, subject class, range and quad count (0 when this graph never states it), plus undocumented terms the graph contains and the namespace prefixes. Start here. |
+| `describe`   | `target`, `limit` | One resource's outgoing triples and incoming triples (spread across predicates, with `incomingCounts` per predicate). `target` is an IRI, a file path or its tail, a package name, a symbol or canonical name (`Operation.make`), an operation key, an ECHO typename, a plugin id, a spec id, or a module member as imported (`effect/Layer#effect`). Exact matches outrank partial ones and package-public symbols rank first; ties return up to 20 `candidates` with `candidatesTotal`, and a miss returns a `hint`. |
+| `usages`     | `symbol`, `kind`, `includeTests`, `limit` | Every symbol using a declaration, through `export *` barrels, named re-exports, namespaces (`Order.natural`) and bare specifiers, grouped by package: each file with its role (`impl`, `test`, `story`), the symbols using it and `via` (`direct` or `barrel`), plus `reexportedBy` and `total` counts that the file `limit` (default 500, at most 5000) never hides. `kind` narrows to `api` or `impl` uses; `includeTests: false` drops test files. An alias resolves to its declaration; several declarations return `candidates`. |
+| `query`      | `sparql`, `limit`, `timeoutMs` | A SPARQL SELECT as `{ vars, rows }`, capped at `limit` (default 200, at most 2000) with `truncated` reported. |
+| `ask`        | `sparql`, `timeoutMs` | A SPARQL ASK, as a boolean. |
+| `files`      | `prefix`, `language`, `limit` | Indexed files, filtered by path prefix and language. |
+| `stats`      | — | Files, quads and per-reasoner derived counts. |
+| `design`     | `prompt`, `budget`, `threshold` | The files that answer a design question and how they connect, with a mermaid draft (see Design questions). Explored by query and selected when the server has an Anthropic key, by the text-seeded walk otherwise; scored by System One when it has `TYPESAFE_API_KEY`, by a text/degree baseline otherwise. |
+
+`query` and `ask` declare any known prefix (`deus:`, `file:`, `pkg:`, `module:`, `graph:`, `rdf:`,
+`rdfs:`, `xsd:`, …) a query uses without declaring, and say so in `prefixesInjected`; name a `deus:`
+term the vocabulary lacks in `warnings`, with the closest known terms; and pass the engine's parse
+or evaluation message through on failure. Each query is cancelled after `timeoutMs` (default 30 s,
+at most 120 s) with an error suggesting how to narrow it. The query runs on a libuv thread and
+cancellation reaches the evaluator, which stops at its next quad read.
+
+`vocabulary` and `stats` read counts the last `code-index index` pass recorded in SQLite `meta`;
+counting the graph itself is a scan of every quad (10–15 s on this repository). When the store has
+changed since — a `serve` watcher's passes skip the summary — the first call counts live and the
+result is kept for the life of the process.
 
 stdout belongs to the protocol; the startup line and every log go to stderr. The store is
-single-writer and neither backend can be read beside a live writer — LevelDB has no read-only mode,
-and oxigraph documents a read-only RocksDB open next to a writer as undefined behaviour — so `mcp`
-cannot run while `serve` or `index` holds the store. It fails at startup naming the process that
-does; stop it, or point `--store` at a copy of the store directory.
+single-writer and cannot be read beside a live writer — oxigraph documents a read-only RocksDB
+open next to a writer as undefined behaviour — so `mcp`
+cannot run while `serve`, `index` or another `mcp` holds the store. It fails at startup naming the
+process that does (its PID and which command it is); stop it, or point `--store` at a copy of the
+store directory.
 
 ## Design questions
 
@@ -115,13 +155,21 @@ services?" with a compact diagram, in three stages (`src/design/`):
 1. **Explore** (recall) — a few hundred candidate _files_, each with a card (primary declaration,
    kind, package, doc, snippet, degree, why it was included), and typed edges: imports plus the
    framework relations (`providesService`, `implementsOperation`, `contributesCapability`, …) lifted
-   from symbols to their files. `--explorer bfs` (default, no model) seeds by text match and walks a
-   fixed relation set; `--explorer llm` lets a workspace-agent turn choose seeds and relations
-   (`--provider anthropic --model claude-haiku-4-5-20251001`).
+   from symbols to their files. `--explorer query` (default) has a small model (Haiku with an Anthropic
+   key, else the Ollama default; `--provider`/`--model` override) run up to `--max-queries` SPARQL
+   queries over the documented vocabulary, bounded in rows and time, with failed queries fed back;
+   every file any query returns, plus the text-match seeds, is unioned with its provenance, and files
+   linking two of them join as bridges. `--explorer bfs` (the previous default, no model) seeds by
+   text match and walks a fixed relation set; `--explorer llm` lets a workspace-agent turn choose seeds
+   and relations for that walk.
 2. **Zoom** (precision) — System One judges each card, each relation kind and the grouping level, 16
    calls at a time, cached in `<store>/design-cache.jsonl` so a rerun bills nothing it already asked.
-   Pruning keeps `--budget` nodes over `--threshold`, and a dropped node between two survivors becomes
-   a relay edge. `--scorer baseline` scores by text match, degree and hop distance instead.
+   After the query explorer, selection (`src/design/Select.ts`) hides tests, stories, generated,
+   `internal/` and file-local files unless the prompt asks for them, scales each file's relevance by
+   its degree in the candidates and in the index, and grows the kept set outward from the best file
+   so it stays connected. After the other explorers, pruning keeps `--budget` nodes over
+   `--threshold`. Either way a dropped node between two survivors becomes a relay edge.
+   `--scorer baseline` scores by text match, degree and hop distance instead.
 3. **Draw** — four compact variants (≲ 14 nodes, ≤ 3 groups, `%% ref` per node, no caption), each
    laid out by `MermaidEngine` and scored by the layout objective plus `Architecture.judge()` and
    `Aesthetics.judge()`; the best is written as `diagram.mmd` and `diagram.svg`. Layout runs in a Node
@@ -139,12 +187,13 @@ nodes are one click away. `moon run code-index:design-eval` measures all of it a
 hand-drawn diagrams in `plugin-illustrator/docs/diagrams`.
 
 Tests run on Node under vitest (the CLI runs on Bun; the SQLite driver and the worker platform are
-chosen from the ambient runtime). The sandbox tests spawn the real child process and skip where Bun
-is absent:
+chosen from the ambient runtime), against the addon, which the task builds first. The sandbox tests
+spawn the real child process and skip where Bun is absent:
 
 ```bash
 moon run code-index:test
+moon run code-index-native:cargo-test   # the crate's own engine and store tests
 ```
 
-The store is single-writer (LevelDB or RocksDB), so `serve` and any other `code-index` command,
+The store is single-writer (RocksDB), so `serve` and any other `code-index` command,
 `mcp` included, cannot run at the same time.

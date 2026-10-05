@@ -6,20 +6,13 @@ tags:
 
 tasks:
   test:
-    options:
-      mergeOutputs: replace
-    outputs: []
-  # The Store, Reasoner and Indexer suites again, against the native backend. Needs a Rust toolchain,
-  # which CI does not install (design/NATIVE-BACKEND.md § CI).
-  native-test:
-    command: vitest run --project=node src/Store.test.ts src/Reasoner.test.ts src/Indexer.test.ts
-    env:
-      CODE_INDEX_BACKEND: native
+    # The store is the Rust addon, so the suite needs it built first.
     deps:
       - code-index-native:cargo-build
     options:
-      runInCI: false
-  # Cold index, warm one-file reindex and store size on this repository, for each backend.
+      mergeOutputs: replace
+    outputs: []
+  # Cold index, warm one-file reindex and store size on this repository.
   bench:
     command: bun scripts/bench.ts
     deps:

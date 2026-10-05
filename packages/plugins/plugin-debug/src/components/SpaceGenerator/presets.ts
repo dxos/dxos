@@ -162,7 +162,6 @@ export const generator = () => ({
           const researchPrompt = space.db.add(
             Instructions.make({
               name: 'Research',
-              description: 'Research organization',
 
               // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
               // Remove the mock prompt to do the actual research.

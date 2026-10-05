@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "@automerge/automerge": "catalog:",
-    "@automerge/automerge-repo": "catalog:",
     "@automerge/automerge-subduction": "catalog:",
     "@babel/parser": "catalog:",
     "@dxos/client": "workspace:*",

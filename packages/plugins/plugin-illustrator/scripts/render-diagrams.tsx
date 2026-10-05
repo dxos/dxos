@@ -4,73 +4,123 @@
 
 //
 // Renders the diagram corpus (`docs/diagrams/*.mmd`) headlessly through the SVG variant, writing a
-// standalone `.svg` beside each source, and prints the Tier-1 report per diagram. With
+// `.dx.svg` beside each source (the picture, carrying the drawing's ECHO objects and its mermaid source, so it
+// opens as an image anywhere and imports back as an editable drawing; `--plain` writes a bare `.svg`), and
+// prints the Tier-1 report per diagram. With
 // `--scoreboard` it prints the Tier-2 table instead (every flowchart strategy × soft metrics).
 // Passing `.mmd` paths renders just those files instead of the corpus; `--layering down` (or a comma list of
 // `down`, `up`, `free`) restricts the candidate layerings the engine chooses among.
-// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.mmd …]` (vite-node; bun cannot load elkjs).
+// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.mmd …]` (tsx from source; bun cannot load elkjs).
 //
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { availableParallelism } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { Worker } from 'node:worker_threads';
 
-import { Diagnostics, Mermaid, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
+import { Diagnostics, Mermaid, MermaidEngine, type Scene, SVG_SCHEMA } from '@dxos/diagram';
 
-import { SceneSvg } from '../src/components/SceneSvg.tsx';
+import { DrawingFile, SvgBuilder } from '#model';
+import { Drawing } from '#types';
+
+import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
+import { type Reply } from './emit-worker.ts';
 
 const DIAGRAMS = join(dirname(fileURLToPath(import.meta.url)), '../docs/diagrams');
-
-/**
- * The renderer styles with Tailwind utilities; a file on disk has no stylesheet, so the export
- * inlines the handful it uses (light theme, Tailwind's neutral palette).
- */
-const STYLE = `
-  svg { font-family: ui-sans-serif, system-ui, sans-serif; color: #262626; background: #ffffff; }
-  .stroke-current { stroke: currentColor; }
-  .fill-current { fill: currentColor; }
-  .fill-transparent { fill: transparent; }
-  .fill-none { fill: none; }
-  .stroke-none { stroke: none; }
-  .fill-neutral-100 { fill: #f5f5f5; }
-  .fill-neutral-800 { fill: #262626; }
-  .stroke-neutral-800 { stroke: #262626; }
-  svg { --surface-bg: #ffffff; }
-  .text-neutral-400 { color: #a3a3a3; }
-  .text-sky-500 { color: #0ea5e9; }
-  .text-emerald-500 { color: #10b981; }
-  .text-amber-500 { color: #f59e0b; }
-  .text-violet-500 { color: #8b5cf6; }
-  .text-orange-500 { color: #f97316; }
-  .text-rose-500 { color: #f43f5e; }
-  .stroke-neutral-500\\/20 { stroke: rgba(115, 115, 115, 0.2); }
-`;
 
 const layeringArg = process.argv[process.argv.indexOf('--layering') + 1];
 const LAYERING = process.argv.includes('--layering')
   ? layeringArg.split(',').filter((value): value is MermaidEngine.Layering => ['down', 'up', 'free'].includes(value))
   : undefined;
 
+const PLAIN = process.argv.includes('--plain');
+
+/** The `.dx.svg` for a compiled diagram: the drawing built in memory as the app would store it. */
+const toDxSvg = (
+  name: string,
+  source: string,
+  commands: readonly Scene.Command[],
+  objects: readonly Scene.WorldObject[],
+) => {
+  const canvas = Drawing.makeCanvas({ schema: SVG_SCHEMA });
+  SvgBuilder.apply(canvas, commands);
+  const drawing = Drawing.make({ name, canvas });
+  return DrawingFile.toDxSvg(
+    toSvgFile(objects),
+    DrawingFile.toPayload({ drawing, canvas, source: { language: 'mermaid', text: source } }),
+  );
+};
+
+/**
+ * Routing the candidates is nearly all of the run and each is independent, so they fan out over a
+ * worker per core as the engine places them; it still selects among them in generation order, so
+ * the output is the same as routing them in turn.
+ */
+const makeWorkerPool = (size: number) => {
+  type Task = {
+    job: MermaidEngine.EmitJob;
+    resolve: (commands: Scene.Command[]) => void;
+    reject: (error: Error) => void;
+  };
+  const queue: Task[] = [];
+  const running = new Map<Worker, Task>();
+  const idle: Worker[] = [];
+  const dispatch = (worker: Worker) => {
+    const task = queue.shift();
+    if (task) {
+      running.set(worker, task);
+      worker.postMessage(task.job);
+    } else {
+      idle.push(worker);
+    }
+  };
+  const workers = Array.from({ length: size }, () => {
+    const worker = new Worker(new URL('./emit-worker.ts', import.meta.url));
+    worker.on('message', (reply: Reply) => {
+      const task = running.get(worker);
+      running.delete(worker);
+      if ('error' in reply) {
+        task?.reject(new Error(reply.error));
+      } else {
+        task?.resolve(reply.commands);
+      }
+      dispatch(worker);
+    });
+    // A job's own failure comes back as a reply; this is the worker itself dying, which leaves the
+    // pool unable to promise the rest, so everything outstanding fails rather than hanging.
+    worker.on('error', (error) => {
+      const outstanding = [...running.values(), ...queue.splice(0)];
+      running.clear();
+      outstanding.forEach((task) => task.reject(error));
+    });
+    idle.push(worker);
+    return worker;
+  });
+  const emitCandidate = (job: MermaidEngine.EmitJob): Promise<Scene.Command[]> =>
+    new Promise((resolve, reject) => {
+      queue.push({ job, resolve, reject });
+      const worker = idle.pop();
+      if (worker) {
+        dispatch(worker);
+      }
+    });
+  return { emitCandidate, close: () => Promise.all(workers.map((worker) => worker.terminate())) };
+};
+
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
 
 type Strategy = { id: string; compile: (source: string) => Promise<readonly Scene.Command[]> };
 
+// One core stays with the main thread, which places the candidates while the workers route them.
+const pool = makeWorkerPool(Math.max(1, availableParallelism() - 1));
+const { emitCandidate } = pool;
+
 const strategies: Strategy[] = [
   { id: 'layered', compile: async (source) => Mermaid.compile(source) },
-  { id: 'elk', compile: (source) => MermaidEngine.compile(source) },
+  { id: 'elk', compile: (source) => MermaidEngine.compile(source, { emitCandidate }) },
 ];
-
-/** Standalone SVG: the component's markup plus width/height from its viewBox and the inline styles. */
-const toSvg = (objects: readonly Scene.WorldObject[]): string => {
-  const markup = renderToStaticMarkup(<SceneSvg objects={objects} grid={UmlGrid.GRID} />);
-  const viewBox = /viewBox="([^"]+)"/.exec(markup)?.[1].split(' ').map(Number) ?? [0, 0, 0, 0];
-  return markup
-    .replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" width="${viewBox[2]}" height="${viewBox[3]}" `)
-    .replace('<defs>', `<style>${STYLE}</style><defs>`);
-};
 
 const files = process.argv.slice(2).filter((arg) => arg.endsWith('.mmd'));
 const paths =
@@ -83,7 +133,7 @@ const paths =
 const sources = paths.map((path) => ({
   name: basename(path, '.mmd'),
   source: readFileSync(path, 'utf8'),
-  svgPath: path.replace(/\.mmd$/, '.svg'),
+  svgPath: path.replace(/\.mmd$/, PLAIN ? '.svg' : '.dx.svg'),
 }));
 
 if (process.argv.includes('--scoreboard')) {
@@ -104,9 +154,13 @@ if (process.argv.includes('--scoreboard')) {
 } else {
   let failed = false;
   for (const { name, source, svgPath } of sources) {
-    const objects = objectsOf(await MermaidEngine.compile(source, LAYERING ? { layering: LAYERING } : {}));
+    const commands = await MermaidEngine.compile(source, {
+      emitCandidate,
+      ...(LAYERING ? { layering: LAYERING } : {}),
+    });
+    const objects = objectsOf(commands);
     const report = Diagnostics.analyze(objects);
-    writeFileSync(svgPath, toSvg(objects));
+    writeFileSync(svgPath, PLAIN ? toSvgFile(objects) : toDxSvg(name, source, commands, objects));
     const { crossings, bends, nodes, connectors } = report.metrics;
     console.log(`${name}: ${nodes} nodes, ${connectors} connectors, ${crossings} crossings, ${bends} bends`);
     for (const diagnostic of report.diagnostics) {
@@ -116,3 +170,5 @@ if (process.argv.includes('--scoreboard')) {
   }
   process.exitCode = failed ? 1 : 0;
 }
+
+await pool.close();

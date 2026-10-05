@@ -101,12 +101,19 @@
 } => { ?b deus:specifies ?s }.
 
 # A block describes what it specifies, and every symbol of its package it mentions by the name an
-# importer writes (`Store.layer`).
+# importer writes: the qualified name of a namespaced module's identifier (`Store.layer`), else the
+# declared name — never the bare name of a namespaced one, or `layer` would match `Store.layer`.
 { ?b deus:specifies ?s } => { ?b deus:describes ?s }.
 {
   ?b deus:mentions ?mention. ?b deus:inPackage ?package.
   ?s deus:canonicalName ?mention. ?file deus:declares ?s. ?file deus:inPackage ?package.
   (?s { ?s deus:kind "reexport" } ?aliases) log:collectAllIn ?scope. ?aliases list:length 0.
+} => { ?b deus:describes ?s }.
+{
+  ?b deus:mentions ?mention. ?b deus:inPackage ?package.
+  ?s deus:name ?mention; deus:exported true. ?file deus:declares ?s. ?file deus:inPackage ?package.
+  (?n { ?s deus:canonicalName ?n } ?canonical) log:collectAllIn ?scope1. ?canonical list:length 0.
+  (?s { ?s deus:kind "reexport" } ?aliases) log:collectAllIn ?scope2. ?aliases list:length 0.
 } => { ?b deus:describes ?s }.
 
 # ---------------------------------------------------------------------------------------------------

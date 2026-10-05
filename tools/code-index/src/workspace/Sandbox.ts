@@ -5,6 +5,7 @@
 //
 
 import * as DecisionModel from 'effect/ai/DecisionModel';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
@@ -16,10 +17,14 @@ import { homedir, tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import * as Declarations from '../Declarations.ts';
 import * as Cache from '../design/Cache.ts';
 import * as Design from '../design/Design.ts';
+import * as Server from '../mcp/Server.ts';
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
+import * as Summary from '../Summary.ts';
+import * as Diagram from './Diagram.ts';
 import * as Events from './Events.ts';
 import * as Log from './Log.ts';
 
@@ -94,47 +99,23 @@ const MAX_ROWS = 500;
 const truncate = (text: string): string =>
   text.length <= MAX_OUTPUT ? text : `${text.slice(0, MAX_OUTPUT)}\n… output truncated (${text.length} chars)`;
 
-/**
- * What the graph actually contains, rather than what the indexer asserts. The distinction matters:
- * the classes and relations an agent most wants — `EffectLayer`, `providesService` — are concluded
- * by the N3 rules and appear nowhere in the JSON-LD context. Reporting the context instead sent the
- * agent brute-forcing predicate names for four turns before it found `providesService` by hand.
- */
-const VOCABULARY_QUERY = `PREFIX deus: <${Ontology.PREFIX}>
-  SELECT ?kind ?term (COUNT(*) AS ?count) WHERE {
-    { ?s a ?term . BIND('class' AS ?kind) }
-    UNION
-    { ?s ?term ?o . BIND('property' AS ?kind) }
-    FILTER(STRSTARTS(STR(?term), '${Ontology.PREFIX}'))
-  } GROUP BY ?kind ?term ORDER BY ?kind DESC(?count)`;
-
-export type VocabularyTerm = { readonly term: string; readonly kind: string; readonly count: number };
-
-/** The `deus:` classes and predicates in the graph, by local name — what `rdf.vocabulary()` returns. */
-export const readVocabulary = (store: Store.Api): Effect.Effect<VocabularyTerm[], Store.StoreError> =>
-  store.select(VOCABULARY_QUERY).pipe(
-    Effect.map((rows) =>
-      rows.map((row) => ({
-        term: row.term.slice(Ontology.PREFIX.length),
-        kind: row.kind,
-        count: Number(row.count),
-      })),
-    ),
-  );
-
 type HostCall = { readonly id: number; readonly method: string; readonly params: Record<string, unknown> };
 
 const make = Effect.gen(function* () {
   const store = yield* Store.Store;
   const log = yield* Log.Log;
 
-  // A whole-graph scan, so it is computed once and shared by every snippet in the process.
-  const vocabulary = yield* Effect.cached(readVocabulary(store));
+  // A whole-graph scan unless the last pass recorded it, so it is read once per process.
+  const vocabulary = yield* Effect.cached(Effect.map(Summary.load(store), (summary) => summary.vocabulary));
 
   // Optional, so the chat runs with no decision model at all; `design.subgraph` then scores by baseline.
   const decisions = yield* Effect.serviceOption(DecisionModel.DecisionModel);
+  // Optional too: with a model `design.subgraph` explores by query, without one by the deterministic walk.
+  const explorer = yield* Effect.serviceOption(LanguageModel.LanguageModel);
   // Opened on first use: most sessions never ask a design question.
   const designCache = yield* Effect.cached(Cache.open(join(store.dir, 'design-cache.jsonl')));
+  // The MCP handlers, so `symbols.usages` resolves a name exactly as the `usages` tool does.
+  const mcp = yield* Effect.cached(Server.handlers(store));
 
   /** One host call. A failure here is the snippet's failure, not the run's: it sees the message. */
   const handle = (
@@ -170,23 +151,57 @@ const make = Effect.gen(function* () {
         return log
           .listKeys(projectId)
           .pipe(Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })));
-      case 'display':
-        return Effect.sync(() => {
-          presented.push(
-            new Events.Presented({
-              kind: Events.toKind(String(params.kind)),
-              title: typeof params.title === 'string' ? params.title : undefined,
-              content: String(params.content),
-            }),
-          );
-        });
+      case 'display': {
+        const kind = Events.toKind(String(params.kind));
+        // A diagram is checked here so a bad one fails the snippet, which the model reads and can fix,
+        // instead of reaching the user as an error panel.
+        const content =
+          kind === 'diagram'
+            ? Diagram.stored(String(params.content)).pipe(
+                Effect.mapError(({ message }) => new SandboxError({ message })),
+              )
+            : Effect.succeed(String(params.content));
+        return content.pipe(
+          Effect.map((content) => {
+            presented.push(
+              new Events.Presented({
+                kind,
+                title: typeof params.title === 'string' ? params.title : undefined,
+                content,
+              }),
+            );
+          }),
+        );
+      }
       case 'design.subgraph':
         return designCache.pipe(
           Effect.flatMap((cache) =>
-            Design.subgraph(store, cache, decisions, {
-              prompt: String(params.prompt),
-              budget: typeof params.budget === 'number' ? params.budget : undefined,
-              threshold: typeof params.threshold === 'number' ? params.threshold : undefined,
+            Design.subgraph(
+              store,
+              cache,
+              decisions,
+              {
+                prompt: String(params.prompt),
+                budget: typeof params.budget === 'number' ? params.budget : undefined,
+                threshold: typeof params.threshold === 'number' ? params.threshold : undefined,
+              },
+              explorer,
+            ),
+          ),
+          Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
+        );
+      case 'symbols.declarations':
+        return Declarations.find(store, String(params.name)).pipe(
+          Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
+        );
+      case 'symbols.usages':
+        return mcp.pipe(
+          Effect.flatMap((handlers) =>
+            handlers.usages({
+              symbol: String(params.symbol),
+              kind: params.kind === 'api' || params.kind === 'impl' || params.kind === 'all' ? params.kind : undefined,
+              includeTests: typeof params.includeTests === 'boolean' ? params.includeTests : undefined,
+              limit: typeof params.limit === 'number' ? params.limit : undefined,
             }),
           ),
           Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),

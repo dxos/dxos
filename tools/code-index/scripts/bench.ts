@@ -3,12 +3,12 @@
 //
 
 /**
- * Benchmarks both store backends on a real repository, through the CLI exactly as a user runs it:
+ * Benchmarks the store on a real repository, through the CLI exactly as a user runs it:
  * a cold index into an empty store, a warm pass after touching one file, a pass with nothing changed,
  * then the store's size.
  * Prints a markdown table, or with `--json` the raw results instead.
  *
- *   bun scripts/bench.ts [--root <repo>] [--backends js,native] [--touch <repo-relative file>] [--json]
+ *   bun scripts/bench.ts [--root <repo>] [--touch <repo-relative file>] [--json]
  *
  * The touched file's content is unchanged and its mtime is restored afterwards; the pass reindexes it
  * because the mtime is the incremental key. Run on an otherwise idle machine — `parse` is CPU-bound.
@@ -28,12 +28,19 @@ const CLI = fileURLToPath(new URL('../bin/code-index.ts', import.meta.url));
 type Pass = {
   readonly indexed: number;
   readonly derived: number;
-  readonly timings: { scanMs: number; parseMs: number; commitMs: number; reasonMs: number; totalMs: number };
+  readonly timings: {
+    scanMs: number;
+    parseMs: number;
+    analyzeMs?: number;
+    encodeMs?: number;
+    commitMs: number;
+    reasonMs: number;
+    totalMs: number;
+  };
   readonly reasoners: readonly { name: string; derived: number; durationMs: number; incremental?: boolean }[];
 };
 
 type Result = {
-  readonly backend: string;
   readonly cold: Pass;
   readonly warm: Pass;
   readonly unchanged: Pass;
@@ -44,7 +51,6 @@ type Result = {
 const { values } = parseArgs({
   options: {
     root: { type: 'string' },
-    backends: { type: 'string', default: 'js,native' },
     touch: { type: 'string' },
     json: { type: 'boolean', default: false },
   },
@@ -57,13 +63,8 @@ if (values.root !== undefined && values.touch === undefined) {
 }
 const touch = values.touch ?? 'tools/code-index/src/Store.ts';
 
-const cli = async (backend: string, args: string[]): Promise<string> =>
-  (
-    await run('bun', [CLI, ...args], {
-      env: { ...process.env, CODE_INDEX_BACKEND: backend },
-      maxBuffer: 1 << 30,
-    })
-  ).stdout;
+const cli = async (args: string[]): Promise<string> =>
+  (await run('bun', [CLI, ...args], { maxBuffer: 1 << 30 })).stdout;
 
 const size = async (path: string): Promise<number> => {
   const info = await stat(path);
@@ -77,12 +78,11 @@ const size = async (path: string): Promise<number> => {
   return total;
 };
 
-const results: Result[] = [];
-for (const backend of values.backends.split(',')) {
-  const store = await mkdtemp(join(tmpdir(), `code-index-bench-${backend}-`));
+const measure = async (): Promise<Result> => {
+  const store = await mkdtemp(join(tmpdir(), 'code-index-bench-'));
   try {
     const index = async (): Promise<Pass> =>
-      JSON.parse(await cli(backend, ['index', '--root', root, '--store', store, '--json']));
+      JSON.parse(await cli(['index', '--root', root, '--store', store, '--json']));
     const cold = await index();
     const touched = join(root, touch);
     const before = await stat(touched);
@@ -96,12 +96,14 @@ for (const backend of values.backends.split(',')) {
     } finally {
       await utimes(touched, before.atime, before.mtime);
     }
-    const stats = JSON.parse(await cli(backend, ['stats', '--root', root, '--store', store, '--json']));
-    results.push({ backend, cold, warm, unchanged, bytes: await size(store), quads: stats.quads });
+    const stats = JSON.parse(await cli(['stats', '--root', root, '--store', store, '--json']));
+    return { cold, warm, unchanged, bytes: await size(store), quads: stats.quads };
   } finally {
     await rm(store, { recursive: true, force: true });
   }
-}
+};
+
+const result = await measure();
 
 const seconds = (ms: number) => (ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`);
 const rows: [string, (result: Result) => string][] = [
@@ -109,6 +111,8 @@ const rows: [string, (result: Result) => string][] = [
   ['quads', (result) => String(result.quads)],
   ['cold: total (wall)', (result) => seconds(result.cold.timings.totalMs)],
   ['cold: parse (summed over batches)', (result) => seconds(result.cold.timings.parseMs)],
+  ['cold: of which analyze (in workers)', (result) => seconds(result.cold.timings.analyzeMs ?? 0)],
+  ['cold: of which encode (in workers)', (result) => seconds(result.cold.timings.encodeMs ?? 0)],
   ['cold: commit (summed over batches)', (result) => seconds(result.cold.timings.commitMs)],
   ['cold: reason', (result) => seconds(result.cold.timings.reasonMs)],
   ['warm, one file: total', (result) => seconds(result.warm.timings.totalMs)],
@@ -126,11 +130,11 @@ const rows: [string, (result: Result) => string][] = [
   ['store size', (result) => `${(result.bytes / 1e6).toFixed(0)} MB`],
 ];
 if (values.json) {
-  console.log(JSON.stringify(results, null, 2));
+  console.log(JSON.stringify(result, null, 2));
 } else {
-  console.log(`| | ${results.map((result) => result.backend).join(' | ')} |`);
-  console.log(`|---|${results.map(() => '---').join('|')}|`);
+  console.log('| | |');
+  console.log('|---|---|');
   for (const [label, cell] of rows) {
-    console.log(`| ${label} | ${results.map(cell).join(' | ')} |`);
+    console.log(`| ${label} | ${cell(result)} |`);
   }
 }

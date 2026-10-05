@@ -301,6 +301,11 @@ Deeper conventions:
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. Always surface the Composer preview URL next to the PR link.
+- **Every PR body is built from the `pr-description` skill's templates.** Summary
+  and Safety always; Bugfix, Architecture (diagrams, new cross-component
+  dependencies) and UI (screenshots, Autocue videos) whenever they apply, and
+  several can apply at once. This holds for every PR an agent opens or edits,
+  whether or not `submit-pr` is in use.
 - Consumer-relevant changes need a `.changeset/*.md`: written when opening the
   PR and rewritten before landing, as a summary of the whole PR — see
   [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
@@ -322,15 +327,16 @@ prompt writes it to the transcript permanently; a file can be deleted.
   rather than a guarantee git gives you. Verify with `git ls-files | grep -i secret`; the only
   expected hits are `scripts/secrets.mjs` and its edge-compute twin, which are tooling, not
   credentials.
-- **The user creates the file** (agents cannot sign in or complete an OAuth consent) and
-  names the path in chat. One file per credential, `chmod 600`, `key=value` lines.
-- **The agent deletes it** when the task that needed it is done, and revokes the grant if
-  the credential was minted for that task alone.
+- **The agent creates the empty file** (`umask 077`, `chmod 600`, `KEY=` lines with no value)
+  and names its path; **the user pastes the value** (agents cannot sign in or complete an OAuth
+  consent). One file per credential.
+- **The agent never deletes it.** The file outlives any one task — a review or test that needs it
+  re-runs as the work moves — so the user decides when to remove it or revoke the grant.
 - Prefer a credential that can be renewed over one that expires mid-task: an OAuth access
   token lasts an hour, so a long task needs the refresh token **plus** the `client_id` and
   `client_secret` it was minted under — a refresh token alone cannot be exchanged.
 - Never echo a credential's value back into chat, a log, a commit message, or an error
-  report. Read it, use it, delete it.
+  report. Read it and use it; leave the file where it is.
 
 Example (Gmail, for the live tag-sync test — see `packages/plugins/plugin-inbox/docs/TAG-SYNC.md`):
 
@@ -360,7 +366,7 @@ Do not paste real credential values into any shell command, and do not paste the
   use `agents/superpowers/…` instead.
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
-  operations, testing, code-style, submit-pr, land, …).
+  operations, testing, code-style, submit-pr, pr-description, land, …).
 - **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
   job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
   (`.agents/skills/depot-ci/SKILL.md`).

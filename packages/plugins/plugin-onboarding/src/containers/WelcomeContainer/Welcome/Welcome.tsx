@@ -72,7 +72,7 @@ const passkeyErrorKey = (error: WelcomeError, passkeyOnly: boolean): string =>
 
 // Flat, full-width tabs with a bottom border that highlights the active one.
 const tabClassNames =
-  'flex-1 rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
+  'flex-1 h-auto rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
   'border-b-2 border-transparent text-fg-muted transition-colors hover:text-white ' +
   'aria-selected:border-white aria-selected:text-white';
 
@@ -385,13 +385,14 @@ export const Welcome = ({
       className={mx(
         'relative grid grid-cols-1 md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
         'border-2 border-sky-950 rounded-xl lg:translate-x-[-40%]',
+        '[--dx-control-inset:0px] [--dx-control-size:var(--dx-block-size)]',
       )}
       style={{
         backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
       }}
     >
       <Flex column gap='2xl' classNames='z-10 p-8 md:px-16'>
-        <ComposerLogoMark classNames='text-[80px]' />
+        <ComposerLogoMark classNames='text-[80px] leading-[1.5]' />
 
         {state === WelcomeState.INIT && !signupEnabled && loginTab}
 
@@ -765,7 +766,7 @@ const LoginTab = ({
             <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
           </Button>
           {error?.startsWith('passkey-') && (
-            <Field.Root>
+            <Field.Root invalid>
               <ValidationMessage>{t(passkeyErrorKey(error, moreOptions.length === 0))}</ValidationMessage>
             </Field.Root>
           )}
@@ -813,7 +814,7 @@ const LoginTab = ({
         </Container>
       )}
       {!methodAvailable[primary] && moreOptions.length === 0 && (
-        <Field.Root>
+        <Field.Root invalid>
           <ValidationMessage>{t('login-unavailable.message')}</ValidationMessage>
         </Field.Root>
       )}
@@ -882,7 +883,7 @@ const InlineForm = ({
 }) => {
   const { classNames: inputClasses, ref, ...rest } = inputProps;
   return (
-    <Field.Root>
+    <Field.Root invalid={!!validation}>
       <div className='flex flex-col md:gap-1 flex-row gap-0 sm:items-stretch'>
         <Input
           {...rest}

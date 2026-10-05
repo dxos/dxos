@@ -14,7 +14,7 @@ let initialized: Promise<void> | undefined;
 
 /**
  * Initializes the automerge and subduction wasm for this realm (page or worker) under
- * `slimWasmPlugin`, whose `slim` entrypoints do no wasm work at module evaluation. Idempotent.
+ * `perfBundlePlugin`, whose `slim` entrypoints do no wasm work at module evaluation. Idempotent.
  */
 export const initEchoHostWasm = (): Promise<void> => {
   initialized ??= Promise.all([

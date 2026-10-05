@@ -73,14 +73,12 @@ app rather than Vite's dev server transforming and streaming thousands of unbund
 responsiveness metrics under `test-results/perf/`.
 
 ```bash
-moon run assistant-e2e:e2e-perf        # builds the stories, then runs the flow on the build
-moon run assistant-e2e:e2e-perf-dev    # `storybook dev` on :9009 (reused if running), for iterating
+moon run assistant-e2e:e2e-perf                      # builds the stories, then runs the flow on the build
+DX_PERF_SERVER=dev moon run assistant-e2e:e2e-perf   # `storybook dev` on :9009 (reused if running) instead
 ```
 
-`e2e-perf-dev` (`DX_PERF_SERVER=dev`) skips the rebuild, but its rows carry `servingMode: 'dev'` and
-are not comparable with the budgets, which are calibrated on the build. The build resolves automerge
-to its `slim` entrypoints (`DX_SLIM_WASM`, see `tools/storybook-react/.storybook/slim-wasm.ts`):
-the default entrypoints' top-level await deadlocks the bundled story on its import cycles.
+Rows from the dev server carry `servingMode: 'dev'` and are not comparable with the budgets, which
+are calibrated on the build. What the build needs to boot is in `tools/storybook-react/.storybook/perf-bundle.ts`.
 
 `DX_PERF_SCALES` picks the spaces (`blank`, `busy`; both by default) and `DX_PERF_ITERATIONS` repeats
 the flow. With `DX_POSTHOG_API_KEY` set, each iteration publishes its rows as `ci.perf-stage`.

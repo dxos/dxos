@@ -152,7 +152,7 @@ type MessageThreadProps = {
   history: Message[];
 };
 
-const MESSAGE_COLS = ['var(--dx-rail-item)', '1fr', 'var(--dx-rail-item)'];
+const MESSAGE_COLS = ['var(--dx-rail-item)', 'fill', 'var(--dx-rail-item)'] as const;
 
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history }: MessageThreadProps, forwardedRef) => {
@@ -160,7 +160,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
       <ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
         <ScrollArea.Viewport classNames='gap-6 p-2'>
           {history.map((message, i) => (
-            <Grid key={i} cols={MESSAGE_COLS} grow={false}>
+            <Grid key={i} cols={MESSAGE_COLS}>
               <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
               <div className='overflow-auto'>
                 <MessageItem message={message} />
@@ -169,7 +169,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
           ))}
 
           {state === 'pending' && (
-            <Grid cols={MESSAGE_COLS} grow={false}>
+            <Grid cols={MESSAGE_COLS}>
               <div className='p-1'>
                 <Icon icon='ph--spinner--regular' size='xl' spin />
               </div>

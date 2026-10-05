@@ -54,7 +54,7 @@ export type FormViewportProps = PropsWithChildren<{
 /**
  * The gutter Container that owns the form's rails; with `scroll`, the Body of a pane of its own. Composable, so a
  * form component can be the `asChild` child of a host that merges its layout props and ref onto it. The gutter defaults
- * to the enclosing panel's (`sm`, the form inset), else `sm`.
+ * to the host's: a panel's (`sm`, the form inset) or a dialog or popover body's (`inherit`, joining its rails), else `sm`.
  */
 export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
   ({ children, scroll, size, width = 'document', gutter, ...props }, forwardedRef) => {
@@ -98,10 +98,10 @@ export type FormContentProps = PropsWithChildren<{}>;
  * settings row and section below it shares. Forwards its ref so a consumer can scope its own key handling to the form.
  */
 export const FormContent = forwardRef<HTMLDivElement, FormContentProps>(({ children }, forwardedRef) => {
-  const { form, testId, variant } = useFormContext('Form.Content');
+  const { form, readonly, testId, variant } = useFormContext('Form.Content');
   const localRef = useRef<HTMLDivElement>(null);
   const ref = useComposedRefs(forwardedRef, localRef);
-  useKeyHandler(localRef, form);
+  useKeyHandler(localRef, form, { readonly });
   const settings = variant === 'settings';
   // A settings form is a reading-width column of its own tracks (the current Form's `dx-document` settings content).
   return (

@@ -107,24 +107,21 @@ SelectLabel.displayName = 'Select.Label';
 // Trigger
 //
 
-/** How wide the trigger is: `fill` takes its cell's width; `options` fits the widest option (or the placeholder). */
-type SelectTriggerFit = 'fill' | 'options';
-
 type SelectTriggerProps = ThemedClassName<Omit<SelectPrimitive.TriggerProps, 'children'>> & {
   placeholder?: string;
   /** Options are still arriving (an async lookup): a spinner replaces the caret and the trigger is `aria-busy`. */
   loading?: boolean;
   /**
-   * `fill` (default) stretches the trigger across its cell. `options` sizes it to the widest option's icon and label
-   * (or the placeholder, if wider), so choosing a different option never changes its width: the labels are laid out,
-   * hidden, in the value's cell, which CSS sizes without measuring.
+   * By default the trigger stretches across its cell. `fixed` sizes it to the widest option's icon and label (or the
+   * placeholder, if wider), so choosing a different option never changes its width: the labels are laid out, hidden,
+   * in the value's cell, which CSS sizes without measuring.
    */
-  fit?: SelectTriggerFit;
+  fixed?: boolean;
 };
 
 /** Shows the chosen option (its icon when exactly one is chosen; `multiple` lists the labels) and a caret. */
 const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
-  ({ classNames, placeholder, loading, fit = 'fill', ...props }, forwardedRef) => {
+  ({ classNames, placeholder, loading, fixed, ...props }, forwardedRef) => {
     const toolbarItem = useToolbarItem(props.disabled);
     const { selectedItems, collection } = useSelectContext();
     const selected = selectedItems.length === 1 ? selectedItems[0] : undefined;
@@ -137,13 +134,13 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
           props.onFocus?.(event);
           toolbarItem?.onFocus();
         }}
-        data-fit={fit === 'fill' ? undefined : fit}
+        data-fixed={fixed || undefined}
         className={mx(recipes.selectTrigger(), classNames)}
         ref={forwardedRef}
       >
         {selected?.icon && <Icon icon={selected.icon} hue={selected.iconHue} />}
         <SelectPrimitive.ValueText placeholder={placeholder} />
-        {fit === 'options' && (
+        {fixed && (
           <span aria-hidden data-scope='select' data-part='value-sizer' className={recipes.selectValueSizer()}>
             {placeholder && <span>{placeholder}</span>}
             {collection.items.map((item) => (
@@ -188,6 +185,11 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
   ({ classNames, size, container, children, ...props }, forwardedRef) => {
     const select = useSelectContext();
     const popupSize = usePopupSize(size, select.open, [select.getTriggerProps().id]);
+    // With nothing to choose (a trigger still loading its options) the popup would open as an empty frame.
+    if (select.collection.items.length === 0) {
+      return null;
+    }
+
     return (
       <Portal container={container}>
         <SelectPrimitive.Positioner>
@@ -370,6 +372,5 @@ export type {
   SelectPositioning,
   SelectRootProps,
   SelectSeparatorProps,
-  SelectTriggerFit,
   SelectTriggerProps,
 };

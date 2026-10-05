@@ -52,7 +52,7 @@ const Code = ({ code }: { code: string }) => {
   return (
     <div className='relative p-2 border border-separator rounded-sm group'>
       <SystemButton.Clipboard iconOnly value={code} classNames='absolute top-2 right-2 invisible group-hover:visible' />
-      <Grid cols={4} grow={false} data-testid='recoveryCode.code' data-code={code}>
+      <Grid cols={4} data-testid='recoveryCode.code' data-code={code}>
         {words.map((word, i) => (
           <Flex key={i} gap='sm' align='center' classNames='p-2'>
             <div className='w-4 text-xs text-center text-fg-subtle'>{i + 1}</div>

@@ -53,6 +53,13 @@ export class Registry {
   static layerEmpty = Layer.succeed(Store, {} as Api);
   static #secret = 2;
   instanceField = 3;
+  static make(): Registry;
+  static make(size: number): Registry;
+  static make(size?: number): Registry { return new Registry(); }
+  static get current(): number { return 1; }
+  private static hidden(): void {}
+  static #create(): void {}
+  instanceMethod(): void {}
 }
 
 export default Layer.succeed(Store, {} as Api);
@@ -118,6 +125,9 @@ describe('typescript analyzer', () => {
     expect(document.parseError).toBeUndefined();
     expect(document.inPackage).toEqual(Ontology.packageIri('@dxos/code-index').value);
     expect(document.language).toEqual('typescript');
+    expect(document.testFile).toBeUndefined();
+    expect(analyzeTypeScript({ ...context, path: 'src/Store.test.ts' }).testFile).toBe(true);
+    expect(analyzeTypeScript({ ...context, path: 'src/view.spec.tsx' }).testFile).toBe(true);
   });
 
   test('imports split into value, type-only and external', () => {
@@ -266,6 +276,21 @@ describe('typescript analyzer', () => {
     expect(document.declares.map((declared) => declared.name)).not.toContain('Registry.instanceField');
   });
 
+  test('a static method is a function declaration, typed by its signature', () => {
+    const method = symbol('Registry.make');
+    expect(method).toMatchObject({ kind: 'function', exported: true });
+    expect(method.hasType).toBeDefined();
+    // The body is implementation; the signature is the API.
+    expect(method.snippet).toEqual('class Registry {\n  static make(size?: number): Registry { /*...*/ }\n}');
+    // Overload signatures declare nothing of their own.
+    expect(document.declares.filter((declared) => declared.name === 'Registry.make')).toHaveLength(1);
+    // Accessors, private and instance methods are not module-level declarations.
+    const names = document.declares.map((declared) => declared.name);
+    for (const name of ['Registry.current', 'Registry.hidden', 'Registry.#create', 'Registry.instanceMethod']) {
+      expect(names).not.toContain(name);
+    }
+  });
+
   test('a default-exported expression is a declaration with construction', () => {
     // `export default Capability.makeModule(…)` binds no name, but it declares a value all the same.
     expect(symbol('default')).toMatchObject({ kind: 'variable', exported: true });
@@ -376,9 +401,266 @@ describe('typescript analyzer', () => {
     expect(person?.implDependsOn).not.toContain(sym('src/ns.ts', 'Task'));
   });
 
+  test('an import used only in top-level statements is a value import', () => {
+    const suite = analyzeTypeScript({
+      ...context,
+      path: 'src/Store.test.ts',
+      source: [
+        "import { describe, test } from 'vitest';",
+        "import { load } from './config.ts';",
+        "import { Normalize } from './normalize.ts';",
+        "import { StoreError } from './errors.ts';",
+        "import { type Input } from './input.ts';",
+        '',
+        "describe('store', () => {",
+        "  test('loads', () => {",
+        '    const input: Input = load();',
+        '    let error: StoreError | undefined;',
+        '  });',
+        '});',
+        '',
+        'Normalize.register();',
+      ].join('\n'),
+    });
+    expect(suite.imports).toEqual(expect.arrayContaining([file('src/config.ts'), file('src/normalize.ts')]));
+    // Inside a top-level call, a type annotation is still erased.
+    expect(suite.importsType).toEqual([file('src/errors.ts'), file('src/input.ts')]);
+    // No declaration exists to carry the edges, so the file's top-level symbol does.
+    expect(suite.declares).toHaveLength(1);
+    const [topLevel] = suite.declares;
+    expect(topLevel).toMatchObject({
+      '@id': sym('src/Store.test.ts', Ontology.TOP_LEVEL),
+      'name': Ontology.TOP_LEVEL,
+      'kind': Ontology.TOP_LEVEL,
+      'exported': false,
+      'line': 7,
+    });
+    expect(topLevel.implDependsOn).toEqual(
+      expect.arrayContaining([sym('src/config.ts', 'load'), sym('src/normalize.ts', 'Normalize')]),
+    );
+    expect(topLevel.apiDependsOn).toEqual(
+      expect.arrayContaining([sym('src/errors.ts', 'StoreError'), sym('src/input.ts', 'Input')]),
+    );
+    expect(topLevel.implDependsOn).not.toContain(sym('src/errors.ts', 'StoreError'));
+    // Callback locals bind to nothing at the top level; they are not declarations gone unresolved.
+    expect(suite.unresolvedReferences).toBe(0);
+  });
+
+  test('a file whose top-level statements reference nothing has no top-level symbol', () => {
+    const plain = analyzeTypeScript({
+      ...context,
+      path: 'src/plain.ts',
+      source: ["import { load } from './config.ts';", '', 'export const value = load();', 'console.log(1);'].join('\n'),
+    });
+    expect(plain.declares.map((declared) => declared.name)).toEqual(['value']);
+  });
+
+  test('a local re-export keeps a value import, a type re-export does not', () => {
+    const barrel = analyzeTypeScript({
+      ...context,
+      path: 'src/barrel.ts',
+      source: [
+        "import { load } from './config.ts';",
+        "import { StoreError } from './errors.ts';",
+        'export { load };',
+        'export type { StoreError };',
+      ].join('\n'),
+    });
+    expect(barrel.imports).toEqual([file('src/config.ts')]);
+    expect(barrel.importsType).toEqual([file('src/errors.ts')]);
+  });
+
   test('a parse failure still yields a file node', () => {
     const broken = analyzeTypeScript({ ...context, path: 'src/e.ts', source: 'const = ;\n' });
     expect(broken.parseError?.length).toBeGreaterThan(0);
     expect(broken.path).toEqual('src/e.ts');
+  });
+});
+
+describe('call sites', () => {
+  const callSites = (path: string, lines: readonly string[]): Ontology.CallSiteNode[] =>
+    (analyzeTypeScript({ ...context, path, source: lines.join('\n') })['@included'] ?? []).flatMap((node) =>
+      node['@type'] === 'CallSite' ? [node] : [],
+    );
+  const site = (sites: readonly Ontology.CallSiteNode[], id: string) => {
+    const found = sites.find((candidate) => candidate['@id'] === id);
+    if (!found) {
+      throw new Error(`no call site ${id} among ${sites.map((candidate) => candidate['@id']).join(', ')}`);
+    }
+    return found;
+  };
+  const OPERATION = [
+    "import * as Operation from '@dxos/compute/Operation';",
+    "import { DXN } from '@dxos/echo';",
+    "import { Input } from './input.ts';",
+    'export const Create = Operation.make({',
+    "  meta: { key: DXN.make('org.x.create'), name: 'Create', deep: { a: { b: { c: 1 } } }, short: { a: 2 } },",
+    "  flag: true, n: 3, offset: -1, tags: ['a', 'b'], input: Input,",
+    '});',
+  ];
+
+  test('call sites carry callee, enclosing symbol, line and flattened literals', () => {
+    const sites = callSites('src/op.ts', OPERATION);
+    const make = site(sites, `${sym('src/op.ts', 'Create')}/call/Operation.make/0`);
+    expect(make).toEqual({
+      '@id': `${sym('src/op.ts', 'Create')}/call/Operation.make/0`,
+      '@type': 'CallSite',
+      'callee': [member2('@dxos/compute/Operation', 'make'), sym('packages/compute/src/Operation.ts', 'make')],
+      'enclosedBy': sym('src/op.ts', 'Create'),
+      'line': 4,
+      // A single-string call whose callee resolves reads as its string; nothing past three keys.
+      'literal': [
+        'meta.key=org.x.create',
+        'meta.name=Create',
+        'meta.short.a=2',
+        'flag=true',
+        'n=3',
+        'offset=-1',
+        'tags=a',
+        'tags=b',
+      ],
+    });
+  });
+
+  test('nested call sites point at the call they are an argument of', () => {
+    const dxn = site(callSites('src/op.ts', OPERATION), `${sym('src/op.ts', 'Create')}/call/DXN.make/0`);
+    expect(dxn.argOf).toEqual(`${sym('src/op.ts', 'Create')}/call/Operation.make/0`);
+    expect(dxn.argKey).toEqual('meta.key');
+    expect(dxn.literal).toEqual(['0=org.x.create']);
+
+    const sites = callSites('src/surface.ts', [
+      "import * as Effect from 'effect/Effect';",
+      "import * as Capability from '@dxos/compute/Operation';",
+      "import { Caps } from './input.ts';",
+      'export default Capability.makeModule(() =>',
+      "  Effect.succeed(Capability.contribute(Caps.ReactSurface, [Surface.create({ id: 'a' })])),",
+      ');',
+      "import { Surface } from './normalize.ts';",
+    ]);
+    const enclosing = sym('src/surface.ts', 'default');
+    const create = site(sites, `${enclosing}/call/Surface.create/0`);
+    expect(create.argOf).toEqual(`${enclosing}/call/Capability.contribute/0`);
+    expect(create.argKey).toEqual('1');
+    expect(create.calleePath).toEqual('create');
+    const contribute = site(sites, `${enclosing}/call/Capability.contribute/0`);
+    expect(contribute.argOf).toEqual(`${enclosing}/call/Effect.succeed/0`);
+    expect(contribute.argKey).toEqual('0');
+    // `argOf` never crosses a function boundary, and `makeModule` carries nothing of its own.
+    expect(site(sites, `${enclosing}/call/Effect.succeed/0`).argOf).toBeUndefined();
+    expect(sites.map((candidate) => candidate['@id'])).not.toContain(`${enclosing}/call/Capability.makeModule/0`);
+  });
+
+  test('IRIs are keyed by enclosing symbol, callee and ordinal, not line', () => {
+    const before = callSites('src/s.ts', [
+      "import { Surface } from './normalize.ts';",
+      "export const surfaces = [Surface.create({ id: 'a' }), Surface.create({ id: 'b' })];",
+    ]);
+    const after = callSites('src/s.ts', [
+      "import { Surface } from './normalize.ts';",
+      '',
+      "export const other = Surface.create({ id: 'z' });",
+      '',
+      "export const surfaces = [Surface.create({ id: 'a' }), Surface.create({ id: 'b' })];",
+    ]);
+    const at = (sites: readonly Ontology.CallSiteNode[]) =>
+      sites.map((candidate) => `${candidate['@id'].split('#')[1]} ${candidate.line} ${candidate.literal}`);
+    expect(at(before)).toEqual(['surfaces/call/Surface.create/0 2 id=a', 'surfaces/call/Surface.create/1 2 id=b']);
+    expect(at(after)).toEqual([
+      'other/call/Surface.create/0 3 id=z',
+      'surfaces/call/Surface.create/0 5 id=a',
+      'surfaces/call/Surface.create/1 5 id=b',
+    ]);
+    // A same-callee call inserted first shifts only that callee's ordinals.
+    const inserted = callSites('src/s.ts', [
+      "import { Surface } from './normalize.ts';",
+      "export const surfaces = [Surface.create({ id: 'new' }), Surface.create({ id: 'a' })];",
+    ]);
+    expect(at(inserted)).toEqual(['surfaces/call/Surface.create/0 2 id=new', 'surfaces/call/Surface.create/1 2 id=a']);
+  });
+
+  test('file-level calls are enclosed by the file', () => {
+    const sites = callSites('src/a.test.ts', [
+      "import { describe, test } from 'vitest';",
+      "describe('Store', () => { test('x', () => {}); });",
+    ]);
+    expect(sites).toEqual([
+      {
+        '@id': `${file('src/a.test.ts')}#/call/describe/0`,
+        '@type': 'CallSite',
+        'callee': [member2('vitest', 'describe')],
+        'enclosedBy': file('src/a.test.ts'),
+        'line': 2,
+        'literal': ['0=Store'],
+      },
+      {
+        '@id': `${file('src/a.test.ts')}#/call/test/0`,
+        '@type': 'CallSite',
+        'callee': [member2('vitest', 'test')],
+        'enclosedBy': file('src/a.test.ts'),
+        'line': 2,
+        'literal': ['0=x'],
+      },
+    ]);
+  });
+
+  test('only resolvable callees, and only sites that carry something', () => {
+    const sites = callSites('src/n.ts', [
+      "import * as Effect from 'effect/Effect';",
+      "import { Normalize } from './normalize.ts';",
+      "export const a = JSON.stringify('x');",
+      "export const b = () => { const foo = { bar: (x: string) => x }; return foo.bar('x'); };",
+      'export const c = Effect.gen(function* () { yield* Effect.void; });',
+      "export const d = Normalize.pipe(Normalize.stage('kept'));",
+    ]);
+    expect(sites.map((candidate) => candidate['@id'].split('#')[1])).toEqual(['d/call/Normalize.stage/0']);
+  });
+
+  test('curried chains are one site, arguments numbered across the chain', () => {
+    const sites = callSites('src/c.ts', [
+      "import * as Context from 'effect/Context';",
+      "import * as Schema from 'effect/Schema';",
+      "import { DXN, Type } from '@dxos/echo';",
+      "export const T = Type.makeObject(DXN.make('a', '0.1.0'))(Schema.Struct({ name: Schema.String }));",
+      "export class S extends Context.Service<S, {}>()('id') {}",
+    ]);
+    const make = `${sym('src/c.ts', 'T')}/call/Type.makeObject/0`;
+    expect(site(sites, make).literal).toBeUndefined();
+    expect(site(sites, `${sym('src/c.ts', 'T')}/call/DXN.make/0`)).toMatchObject({
+      argOf: make,
+      argKey: '0',
+      literal: ['0=a', '1=0.1.0'],
+    });
+    expect(site(sites, `${sym('src/c.ts', 'T')}/call/Schema.Struct/0`)).toMatchObject({ argOf: make, argKey: '1' });
+    expect(site(sites, `${sym('src/c.ts', 'S')}/call/Context.Service/0`).literal).toEqual(['0=id']);
+  });
+
+  test('literals are capped in length, count and array size', () => {
+    const many = Array.from({ length: 40 }, (_, index) => `k${index}: ${index}`).join(', ');
+    const elements = Array.from({ length: 20 }, (_, index) => `'e${index}'`).join(', ');
+    const sites = callSites('src/caps.ts', [
+      "import { Normalize } from './normalize.ts';",
+      `export const long = Normalize.make('${'x'.repeat(300)}', 'line\\nbreak', 'ok');`,
+      `export const wide = Normalize.make({ ${many} });`,
+      `export const list = Normalize.make([${elements}]);`,
+    ]);
+    expect(site(sites, `${sym('src/caps.ts', 'long')}/call/Normalize.make/0`).literal).toEqual(['2=ok']);
+    expect(site(sites, `${sym('src/caps.ts', 'wide')}/call/Normalize.make/0`).literal).toHaveLength(32);
+    expect(site(sites, `${sym('src/caps.ts', 'list')}/call/Normalize.make/0`).literal).toHaveLength(16);
+  });
+
+  test('a file stops at 2000 call sites', () => {
+    const calls = Array.from({ length: 2010 }, (_, index) => `Normalize.make(${index});`);
+    const sites = callSites('src/generated.ts', ["import { Normalize } from './normalize.ts';", ...calls]);
+    expect(sites).toHaveLength(2000);
+    expect(sites.at(-1)?.literal).toEqual(['0=1999']);
+  });
+
+  test('a same-file string const is read as its value', () => {
+    const sites = callSites('src/k.ts', [
+      "import { Surface } from './normalize.ts';",
+      "const JOIN = 'join' as const;",
+      'export const join = Surface.create({ id: JOIN });',
+    ]);
+    expect(site(sites, `${sym('src/k.ts', 'join')}/call/Surface.create/0`).literal).toEqual(['id=join']);
   });
 });

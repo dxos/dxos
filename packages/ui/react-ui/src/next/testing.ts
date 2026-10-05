@@ -187,7 +187,9 @@ export const expectNonScrollingPopup = async (popup: HTMLElement) => {
   await expect(popup.scrollHeight, 'popup fits').toBeLessThanOrEqual(popup.clientHeight);
   await expect(popupFrame(popup)).not.toHaveAttribute('data-overflow-y');
   await expect(popupFrame(popup).querySelector('[data-scroll-thumb]')).toBeNull();
-  await expect(getComputedStyle(popup).paddingRight, 'no reserve').toBe('0px');
+  // Its inline inset is the same on both sides; a reserved strip would widen only the end.
+  const style = getComputedStyle(popup);
+  await expect(style.paddingRight, 'no reserve').toBe(style.paddingLeft);
 };
 
 /** Hovers with a real pointer (the storybook runner's Playwright), since synthetic events never apply `:hover`. */
@@ -223,10 +225,16 @@ export const watchResizeObserverLoop = (root: HTMLElement) => {
   };
 };
 
+// Theme utilities share the `dx-` prefix but style any element (a story's layout wrapper), so they mark no part.
+const THEME_UTILITY = /^dx-(scope|expand|fill|fullscreen|grow|shrink|.+-surface)$/;
+
 /** Every themed part carries Ark's scope/part attributes (decision 10). */
 export const expectScoped = async (root: HTMLElement) => {
-  for (const part of root.querySelectorAll('[class*="dx-"]:not(.dx-scope)')) {
-    await expect(part.hasAttribute('data-scope'), part.className).toBe(true);
+  for (const part of root.querySelectorAll('[class*="dx-"]')) {
+    const themed = [...part.classList].some((name) => name.startsWith('dx-') && !THEME_UTILITY.test(name));
+    if (themed) {
+      await expect(part.hasAttribute('data-scope'), part.className).toBe(true);
+    }
   }
 };
 

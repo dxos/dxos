@@ -13,18 +13,3 @@ tasks:
       - storybook-react:bundle-perf
     options:
       cache: false
-  # The same flow against `storybook dev` on :9009, for iterating locally without rebuilding; its
-  # numbers are not comparable with `e2e-perf`'s and are not what the budgets are calibrated on.
-  e2e-perf-dev:
-    command: pnpm exec playwright test --config=src/playwright/playwright-perf.config.ts
-    env:
-      DX_PERF_SERVER: dev
-    deps:
-      # The config starts a bare `storybook dev`, which resolves packages from source but needs their
-      # built and generated artifacts; the same closure `storybook-react:serve` builds.
-      - '#ts-vite-build:build'
-      - '#ts-compile:build'
-      - '#vendor:build'
-      - '#storybook:#prebuild'
-    options:
-      cache: false

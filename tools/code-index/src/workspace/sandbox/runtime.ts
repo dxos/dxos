@@ -81,7 +81,8 @@ const present = (kind: string, content: string, title?: string) => call('display
 
 const display = {
   markdown: (content: string, title?: string) => present('markdown', content, title),
-  mermaid: (source: string, title?: string) => present('mermaid', source, title),
+  diagram: (diagram: unknown, title?: string) =>
+    present('diagram', typeof diagram === 'string' ? diagram : safeStringify(diagram), title),
   table: (rows: readonly Record<string, unknown>[], title?: string) =>
     present('table', safeStringify(rows), title) as Promise<void>,
   json: (value: unknown, title?: string) => present('json', safeStringify(value), title),
@@ -92,6 +93,11 @@ const display = {
 
 const design = {
   subgraph: (prompt: string, options: Record<string, unknown> = {}) => call('design.subgraph', { ...options, prompt }),
+};
+
+const symbols = {
+  declarations: (name: string) => call('symbols.declarations', { name }),
+  usages: (symbol: string, options: Record<string, unknown> = {}) => call('symbols.usages', { ...options, symbol }),
 };
 
 const dispatch = (line: string): void => {
@@ -122,14 +128,14 @@ const evaluate = async (code: string): Promise<unknown> => {
   const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor as new (
     ...args: string[]
   ) => (...values: unknown[]) => Promise<unknown>;
-  const compile = (body: string) => new AsyncFunction('rdf', 'storage', 'display', 'design', 'print', body);
+  const compile = (body: string) => new AsyncFunction('rdf', 'storage', 'display', 'design', 'symbols', 'print', body);
   let body: (...values: unknown[]) => Promise<unknown>;
   try {
     body = compile(`return (\n${code}\n);`);
   } catch {
     body = compile(code);
   }
-  return body(rdf, storage, display, design, print);
+  return body(rdf, storage, display, design, symbols, print);
 };
 
 const main = async (): Promise<void> => {
