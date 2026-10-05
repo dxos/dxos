@@ -5,7 +5,11 @@
 import { describe, it, test } from '@effect/vitest';
 import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 
+import { getWorkMarks, resetWorkMarks } from '@dxos/util';
+
+import * as AiTelemetry from '../AiTelemetry.ts';
 import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
 
 const { text, reasoning, toolCall, promptIncludes, layer, __testing } = ScriptedLanguageModel;
@@ -123,6 +127,45 @@ describe('ScriptedLanguageModel', () => {
         expect((yield* LanguageModel.generateText({ prompt: 'beta' })).text).toEqual('1:beta');
       },
       Effect.provide(layer((request, index) => ({ parts: [text(`${index}:${request.text}`)] }))),
+    ),
+  );
+
+  it.effect(
+    'brackets every call with request and response marks',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        resetWorkMarks();
+        yield* LanguageModel.generateText({ prompt: 'first' });
+        const stream = LanguageModel.streamText({ prompt: 'second' });
+        // A stream marks when it runs, not when it is built.
+        expect(getWorkMarks()).toHaveLength(2);
+        yield* Stream.runDrain(stream);
+        expect(getWorkMarks().map(({ name }) => name)).toEqual([
+          AiTelemetry.REQUEST_MARKS.request,
+          AiTelemetry.REQUEST_MARKS.response,
+          AiTelemetry.REQUEST_MARKS.request,
+          AiTelemetry.REQUEST_MARKS.response,
+        ]);
+      },
+      Effect.provide(layer([{ parts: [text('one')] }, { parts: [text('two')] }])),
+    ),
+  );
+
+  it.effect(
+    'marks no response for a call that fails',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        resetWorkMarks();
+        const failed = yield* LanguageModel.generateText({ prompt: 'one' }).pipe(Effect.exit);
+        const streamed = yield* Stream.runDrain(LanguageModel.streamText({ prompt: 'two' })).pipe(Effect.exit);
+        expect([failed._tag, streamed._tag]).toEqual(['Failure', 'Failure']);
+        expect(getWorkMarks().map(({ name }) => name)).toEqual([
+          AiTelemetry.REQUEST_MARKS.request,
+          AiTelemetry.REQUEST_MARKS.request,
+        ]);
+      },
+      // An empty script fails every call as exhausted.
+      Effect.provide(layer([])),
     ),
   );
 

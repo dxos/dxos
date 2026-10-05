@@ -30,6 +30,9 @@ import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 /** How long to wait before re-reading a process's event log after an empty page. */
 const DEFAULT_POLL_INTERVAL = Duration.millis(250);
 
+/** Retries of a failed event-page read, backing off from the poll interval, before the read dies. */
+const READ_RETRIES = 5;
+
 export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
   /** Snapshot the handle starts from — from a spawn, list or status response. */
   readonly info: RemoteProcessManager.Snapshot;
@@ -259,7 +262,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   #readRing(start: number): Stream.Stream<RemoteProcessManager.Event> {
     return Stream.paginate(start, (cursor: number) =>
       Effect.gen({ self: this }, function* () {
-        const page = yield* this.#control.readEvents({ ...this.#target, cursor });
+        const page = yield* this.#readPage(cursor);
         yield* this.#setInfo(page.snapshot);
         if (page.truncated) {
           log.warn('remote process event history truncated', { pid: page.snapshot.pid, cursor });
@@ -336,10 +339,9 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
 
   /** Cursor just past the last event the host holds, for a subscription that wants only new events. */
   get #endCursor(): Effect.Effect<number> {
-    // A read at or beyond the end returns an empty page carrying the current end cursor.
-    return this.#control
-      .readEvents({ ...this.#target, cursor: Number.MAX_SAFE_INTEGER })
-      .pipe(Effect.map((page) => page.cursor));
+    // A read at or beyond the end returns an empty page carrying the current end cursor; retried like
+    // every other page, since a failure here would end the subscription before it starts polling.
+    return this.#readPage(Number.MAX_SAFE_INTEGER).pipe(Effect.map((page) => page.cursor));
   }
 
   #readEventsFromEnd(): Stream.Stream<RemoteProcessManager.Event> {
@@ -359,7 +361,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   ): Stream.Stream<RemoteProcessManager.Event> {
     return Stream.paginate(start, (cursor: number) =>
       Effect.gen({ self: this }, function* () {
-        const page = yield* this.#control.readEvents({ ...this.#target, cursor });
+        const page = yield* this.#readPage(cursor);
         yield* this.#setInfo(page.snapshot);
         if (page.truncated) {
           // The host dropped events before `cursor` from its bounded ring, so this page does not
@@ -380,6 +382,27 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
           yield* Effect.sleep(this.#pollInterval);
         }
         return [page.events, Option.some(page.cursor)] as const;
+      }),
+    );
+  }
+
+  /**
+   * One page of the host's event log, retried with backoff when the read fails.
+   *
+   * A subscription is a long-lived poll, so without the retry one failed request — a dropped
+   * connection, a host restarting — ends it for good, and its consumer stops receiving events from a
+   * process that is still running. Bounded so a host that is truly gone still ends the stream.
+   */
+  #readPage(cursor: number, attempt = 0): Effect.Effect<RemoteProcessManager.EventPage> {
+    return this.#control.readEvents({ ...this.#target, cursor }).pipe(
+      Effect.catchDefect((defect) => {
+        if (attempt >= READ_RETRIES) {
+          return Effect.die(defect);
+        }
+        log.warn('remote process event read failed; retrying', { pid: this.pid, cursor, attempt, defect });
+        return Effect.sleep(Duration.times(this.#pollInterval, 2 ** attempt)).pipe(
+          Effect.andThen(this.#readPage(cursor, attempt + 1)),
+        );
       }),
     );
   }
