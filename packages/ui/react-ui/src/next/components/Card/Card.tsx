@@ -359,14 +359,23 @@ CardRow.displayName = 'Card.Row';
 
 type CardTextProps = ThemedClassName<ComponentPropsWithoutRef<'p'>> & {
   truncate?: boolean;
+  /** At most this many lines, the last ending in an ellipsis. */
+  lines?: number;
   /** `description` reads as secondary text. */
   variant?: 'default' | 'muted';
 };
 
 /** Card text on Typography, with the current `Card.Text` variants. */
 const CardText = forwardRef<HTMLParagraphElement, CardTextProps>(
-  ({ classNames, truncate, variant = 'default', ...props }, forwardedRef) => (
-    <Typography.Text {...props} classNames={classNames} truncate={truncate} tone={variant} ref={forwardedRef} />
+  ({ classNames, truncate, lines, variant = 'default', ...props }, forwardedRef) => (
+    <Typography.Text
+      {...props}
+      classNames={classNames}
+      truncate={truncate}
+      lines={lines}
+      tone={variant}
+      ref={forwardedRef}
+    />
   ),
 );
 

@@ -57,7 +57,7 @@ export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
     const selectedPids = useSelection(attendableId, 'multi');
     const { multi: setSelected } = useSelectionActions(attendableId);
 
-    const monitor = Hooks.useCapability(Capabilities.ProcessMonitor);
+    const monitor = Hooks.useCapability(Capabilities.ProcessManager);
     const processesAtom = useMemo(
       () => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty,
       [monitor],

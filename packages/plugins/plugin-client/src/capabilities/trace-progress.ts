@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 
 /**
  * Projects remote (edge-runtime) `status.update` trace events into the {@link AppCapabilities.ProgressRegistry}
- * (DX-1125). Subscribes to the aggregate {@link Process.Monitor.subscribeToTraceMessages}, whose remote
+ * (DX-1125). Subscribes to the aggregate {@link Process.Manager.subscribeToTraceMessages}, whose remote
  * source is the swarm-backed monitor contributed by `remote-trace-monitor`.
  *
  * Only edge-runtime messages are projected here: local progress already flows through the
@@ -30,7 +30,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
 
-    const monitor = yield* Capabilities.ProcessMonitor;
+    const monitor = yield* Capabilities.ProcessManager;
     const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
     const resolver = yield* Capabilities.ServiceResolver;
 

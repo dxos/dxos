@@ -48,7 +48,7 @@ export const useSessionTimeline = (
   space: Space | undefined,
   { chats, tasks }: UseSessionTimelineOptions,
 ): SessionTimeline => {
-  const monitor = Hooks.useOptionalCapability(Capabilities.ProcessMonitor);
+  const monitor = Hooks.useOptionalCapability(Capabilities.ProcessManager);
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
   );

@@ -40,11 +40,11 @@ import { Organization } from '@dxos/types';
 import * as DurableOperation from './DurableOperation.ts';
 import { ProcessStore } from './process-store.ts';
 import * as ProcessManager from './ProcessManager.ts';
-import * as ProcessMonitor from './ProcessMonitor.ts';
 import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 import * as RemoteProcessManager from './RemoteProcessManager.ts';
 import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 import { TestDatabaseLayer } from './testing/index.ts';
+import * as UnifiedProcessManager from './UnifiedProcessManager.ts';
 
 //
 // Test services (for unit tests without full ECHO stack).
@@ -345,7 +345,7 @@ const ProcessWithRpcs = Operation.makeDurable(
     }),
 );
 
-const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
+const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, UnifiedProcessManager.layer).pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
   Layer.provideMerge(RemoteProcessManager.layerNoop),
   Layer.provideMerge(RemoteTraceMonitor.layerNoop),
@@ -366,7 +366,10 @@ const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, P
 const capturedTraceMessages: Trace.Message[] = [];
 
 // Variant of {@link TestLayer} whose {@link Trace.TraceSink} records every message for assertions.
-const CapturingTraceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
+const CapturingTraceTestLayer = Layer.mergeAll(
+  ProcessManager.ProcessOperationInvoker.layer,
+  UnifiedProcessManager.layer,
+).pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
   Layer.provideMerge(RemoteProcessManager.layerNoop),
   Layer.provideMerge(RemoteTraceMonitor.layerNoop),
@@ -845,12 +848,39 @@ describe('ManagerImpl', () => {
     }, Effect.provide(TestLayer)),
   );
 
-  describe('ProcessMonitor', () => {
+  describe('UnifiedProcessManager', () => {
+    it.effect(
+      'spawn and handles default to the local runtime',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* Process.ManagerService;
+
+        const executable = makeWaitingExecutable();
+        const handle = yield* manager.spawn(executable);
+        const handles = yield* manager.handles({ key: executable.key });
+        expect(handles.map((listed) => listed.pid)).toEqual([handle.pid]);
+
+        yield* handle.terminate();
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'an edge location dies when the remote manager offers no process control',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* Process.ManagerService;
+        const location: Process.Location = { kind: 'edge', space: Key.SpaceId.random() };
+
+        const spawned = yield* Effect.exit(manager.spawn(makeWaitingExecutable(), { location }));
+        expect(Exit.hasDies(spawned)).toBe(true);
+        const listed = yield* Effect.exit(manager.handles({ location }));
+        expect(Exit.hasDies(listed)).toBe(true);
+      }, Effect.provide(TestLayer)),
+    );
+
     it.effect(
       'processTree lists spawned process with expected pid and state',
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
-        const monitor = yield* Process.ProcessMonitorService;
+        const monitor = yield* Process.ManagerService;
 
         const handle = yield* manager.spawn(makeWaitingExecutable());
 
@@ -870,7 +900,7 @@ describe('ManagerImpl', () => {
       'a finished process is released, leaving its summary in processTree and nothing in the registry',
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
-        const monitor = yield* Process.ProcessMonitorService;
+        const monitor = yield* Process.ManagerService;
         const registry = yield* Registry.AtomRegistry;
 
         const handle = yield* manager.spawn(makeWaitingExecutable());
@@ -891,7 +921,7 @@ describe('ManagerImpl', () => {
       'processTree records parentPid for child processes',
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
-        const monitor = yield* Process.ProcessMonitorService;
+        const monitor = yield* Process.ManagerService;
 
         const parent = yield* manager.spawn(makeWaitingExecutable());
         const child = yield* manager.spawn(makeWaitingExecutable(), { parentProcessId: parent.pid });
@@ -913,7 +943,7 @@ describe('ManagerImpl', () => {
       'processTree exposes input, output, and wall-time metrics',
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
-        const monitor = yield* Process.ProcessMonitorService;
+        const monitor = yield* Process.ManagerService;
 
         const handle = yield* manager.spawn(makeSumAggregator());
         yield* handle.submitInput(1);
@@ -937,7 +967,7 @@ describe('ManagerImpl', () => {
       'processTree serializes a FAILED process error from the underlying Error object',
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
-        const monitor = yield* Process.ProcessMonitorService;
+        const monitor = yield* Process.ManagerService;
         const executable = Operation.makeDurable(
           { key: 'test.explicit-fail', input: Schema.Void, output: Schema.Void, services: [] },
           (ctx) =>
@@ -1277,7 +1307,7 @@ describe('ProcessOperationInvoker edge dispatch', () => {
   });
 
   const makeEdgeLayer = (invoke: RemoteOperationInvoker.Invoker['invoke']) =>
-    Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
+    Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, UnifiedProcessManager.layer).pipe(
       Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
       Layer.provideMerge(RemoteProcessManager.layerNoop),
       Layer.provideMerge(RemoteTraceMonitor.layerNoop),
@@ -1317,7 +1347,7 @@ describe('ProcessOperationInvoker edge dispatch', () => {
       const treeSize = yield* Effect.gen(function* () {
         const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
         yield* invoker.invoke(DeployedDouble, { value: 1 }, { on: 'edge' });
-        const monitor = yield* Process.ProcessMonitorService;
+        const monitor = yield* Process.ManagerService;
         const tree = yield* monitor.processTree;
         return tree.length;
       }).pipe(Effect.provide(layer));
@@ -1468,7 +1498,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   );
 
   const makeInheritanceTestLayer = (invokerLayer: typeof ProcessManager.ProcessOperationInvoker.layer) =>
-    Layer.mergeAll(invokerLayer, ProcessMonitor.layer).pipe(
+    Layer.mergeAll(invokerLayer, UnifiedProcessManager.layer).pipe(
       Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
       Layer.provideMerge(RemoteProcessManager.layerNoop),
       Layer.provideMerge(RemoteTraceMonitor.layerNoop),
@@ -1553,7 +1583,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     Effect.fn(function* ({ expect }) {
       const { db } = yield* Database.Service;
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-      const monitor = yield* Process.ProcessMonitorService;
+      const monitor = yield* Process.ManagerService;
 
       const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
 

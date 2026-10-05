@@ -129,13 +129,16 @@ type TreeRootProps<T extends { id: string } = any> = {
   /**
    * Let a row grow past one block for cells placed on further grid lines (a description under the label): the first
    * line stays one block and later lines size to their content. A fixed window assumes one block per row, so pair it
-   * with `virtual='variable'` or none.
+   * with `virtual='measured'`, `'variable'` or none.
    */
   multiline?: boolean;
   selectionMode?: 'single' | 'multiple';
   /** Move selection with the roving tabstop, for a list whose selection only highlights a row. */
   selectionFollowsFocus?: boolean;
-  /** `fixed` windows the rows (each one block tall); `variable` skips painting rows out of view. */
+  /**
+   * `fixed` windows the rows (each one block tall); `measured` windows rows of any height, measuring each as it mounts;
+   * `variable` mounts every row and skips painting those out of view.
+   */
   virtual?: TreeVirtual;
   draggable?: boolean;
   /**
@@ -605,7 +608,7 @@ const TreeRoot = <T extends { id: string }>({
         onExpandedChange={handleExpandedChange}
         onSelectionChange={handleSelectionChange}
         onFocusChange={handleFocusChange}
-        scrollToIndexFn={virtual === 'fixed' ? scrollToNode : undefined}
+        scrollToIndexFn={Listbox.isWindowed(virtual) ? scrollToNode : undefined}
         data-size={size}
         data-multiline={multiline ? '' : undefined}
         className='dx-tree'
@@ -738,8 +741,11 @@ type TreeContentProps = {
 
 const renderDefaultRow = (node: TreeNode) => <TreeItem node={node} />;
 
-/** The rows a fixed window measures its pitch from: an animating row is mid-way between zero and one block. */
-const SETTLED_ROWS = ':is([data-tree-row], [data-tree-group]):not([data-disclosure])';
+/** One element per mounted row (a group header included), in row order. */
+const ROWS = ':is([data-tree-row], [data-tree-group])';
+
+/** The rows a window measures: an animating row is mid-way between zero and its height. */
+const SETTLED_ROWS = `${ROWS}:not([data-disclosure])`;
 
 /**
  * The tree element as the viewport of a thin ScrollArea. Rows are rendered flat in visible (pre-order) order, never
@@ -752,13 +758,14 @@ const TreeContent = ({ children, gutter, rowInset }: TreeContentProps) => {
   const renderRow = typeof children === 'function' ? children : renderDefaultRow;
   const trailing = typeof children === 'function' ? null : children;
   const { rows } = walk;
-  const windowed = virtual === 'fixed';
+  const windowed = Listbox.isWindowed(virtual);
   const focused = windowed && focusedValue ? walk.rowIndex.get(focusedValue) : undefined;
   const windowing = Listbox.useVirtualRows({
     mode: virtual,
     count: rows.length,
     pinned: focused,
     measure: SETTLED_ROWS,
+    rows: ROWS,
   });
 
   useEffect(() => {
@@ -775,14 +782,14 @@ const TreeContent = ({ children, gutter, rowInset }: TreeContentProps) => {
   const content: ReactNode[] = [];
   let next = 0;
   for (const span of windowing.spans) {
-    content.push(<Listbox.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(span.first - next)} />);
+    content.push(<Listbox.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(next, span.first)} />);
     for (let index = span.first; index <= span.last; index++) {
       const node = rows[index];
       content.push(<Fragment key={node.value}>{renderRow(node)}</Fragment>);
     }
     next = span.last + 1;
   }
-  content.push(<Listbox.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(rows.length - next)} />);
+  content.push(<Listbox.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(next, rows.length)} />);
 
   return (
     <ScrollArea.Root>

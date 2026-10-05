@@ -84,6 +84,11 @@ const RUN_METRICS: ReadonlyArray<{ id: string; keys: string[]; reduce: 'max' | '
   },
   { id: 'run > peak app footprint', keys: ['appFootprintBytes'], reduce: 'max', when: 'footprintProcesses' },
   { id: 'run > total blocking time', keys: ['tbtMs'], reduce: 'sum' },
+  // Levels, so the worst stage: only a stage that asked a model has the columns, and `when` drops the rest.
+  { id: 'run > submit to request p50', keys: ['submitToRequestP50Ms'], reduce: 'max', when: 'submitToRequestCount' },
+  { id: 'run > submit to request max', keys: ['submitToRequestMaxMs'], reduce: 'max', when: 'submitToRequestCount' },
+  { id: 'run > turn to request p50', keys: ['turnToRequestP50Ms'], reduce: 'max', when: 'turnToRequestCount' },
+  { id: 'run > turn to request max', keys: ['turnToRequestMaxMs'], reduce: 'max', when: 'turnToRequestCount' },
 ];
 
 /**

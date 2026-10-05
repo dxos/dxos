@@ -80,11 +80,14 @@ describe.skipIf(Sandbox.interpreter() === undefined)('Sandbox', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  const run = (code: string, timeoutMs = 30_000): Promise<Sandbox.Result> =>
-    EffectEx.runPromise(
+  const run = (code: string, timeoutMs = 30_000, paths: readonly string[] = []): Promise<Sandbox.Result> => {
+    const storeDir = paths.length === 0 ? 'index' : `index-${paths.join('+').replace(/\W/g, '_')}`;
+    return EffectEx.runPromise(
       Effect.gen(function* () {
         const store = yield* Store.Store;
-        yield* store.putDocument(document('packages/a/src/index.ts'));
+        for (const path of ['packages/a/src/index.ts', ...paths]) {
+          yield* store.putDocument(document(path));
+        }
         const sandbox = yield* Sandbox.Sandbox;
         const log = yield* Log.Log;
         yield* log.createProject({ id: PROJECT });
@@ -93,12 +96,14 @@ describe.skipIf(Sandbox.interpreter() === undefined)('Sandbox', () => {
         Effect.provide(
           Layer.provideMerge(
             Sandbox.layer,
-            Layer.merge(Store.layer(join(dir, 'index')), Log.layer(join(dir, 'index'))),
+            // Extra documents get their own store, so they never leak into the tests sharing the default one.
+            Layer.merge(Store.layer(join(dir, storeDir)), Log.layer(join(dir, storeDir))),
           ),
         ),
         Effect.scoped,
       ),
     );
+  };
 
   test('a whole-expression snippet returns its value', async () => {
     const result = await run('1 + 1');
@@ -144,14 +149,66 @@ describe.skipIf(Sandbox.interpreter() === undefined)('Sandbox', () => {
 
   test('`display` output is returned separately from the transcript', async () => {
     const result = await run(`
-      await display.mermaid('graph TD\\n  a --> b', 'A diagram');
+      await display.diagram({ nodes: [{ id: 'a' }], edges: [{ from: 'a', to: 'b' }] }, 'A diagram');
       print('the diagram is up');
     `);
     expect(result.ok).toBe(true);
     // The presentation goes to the screen and the print goes to the model; neither leaks into the
     // other, which is the whole basis for telling the agent the user sees only what it displays.
     expect(result.output).toEqual('the diagram is up');
-    expect(result.presented.map((event) => [event.kind, event.title])).toEqual([['mermaid', 'A diagram']]);
+    expect(result.presented.map((event) => [event.kind, event.title])).toEqual([['diagram', 'A diagram']]);
+  });
+
+  test('`display.diagram` stores DSL as written, and a graph value printed as DSL', async () => {
+    const result = await run(`
+      await display.diagram({ flow: 'right', nodes: [{ id: '@dxos/a', label: 'A' }], edges: [{ from: '@dxos/a', to: 'b' }] });
+      await display.diagram('node x\\nnode y below x\\nedge x owns y');
+    `);
+    expect(result.ok).toBe(true);
+    expect(result.presented.map((event) => event.content)).toEqual([
+      'diagram flow=right\nnode "@dxos/a" "A"\nnode b\nedge "@dxos/a" -> b',
+      'node x\nnode y below x\nedge x owns y',
+    ]);
+  });
+
+  test('a diagram that does not read fails the snippet, so the model sees where', async () => {
+    const result = await run(`
+      await display.diagram('node a\\nedge a -> b');
+    `);
+    expect(result.ok).toBe(false);
+    expect(result.output).toMatch(/does not read:\n {2}2:\d+ /);
+    expect(result.presented).toEqual([]);
+  });
+
+  test('a box whose ref is an index IRI with no facts fails the snippet', async () => {
+    const result = await run(`
+      await display.diagram('node a ref="https://dxos.org/deus/file/no/such/file.ts"');
+    `);
+    expect(result.ok).toBe(false);
+    expect(result.output).toContain('https://dxos.org/deus/file/no/such/file.ts');
+    expect(result.presented).toEqual([]);
+  });
+
+  test('`display.diagram` resolves to the IRI edges no triple links', async () => {
+    const file = Ontology.fileIri('packages/a/src/index.ts').value;
+    const other = Ontology.fileIri('packages/b/src/index.ts').value;
+    const pkg = Ontology.packageIri('@dxos/test').value;
+    const result = await run(
+      `
+      const { unbacked } = await display.diagram(\`
+node pkg ref="${pkg}"
+node file ref="${file}"
+node other ref="${other}"
+edge file -> pkg "in"
+edge file -> other "imports"
+\`);
+      print(JSON.stringify(unbacked));
+    `,
+      30_000,
+      ['packages/b/src/index.ts'],
+    );
+    expect(result.ok).toBe(true);
+    expect(result.output).toEqual('["file -> other"]');
   });
 
   test('`display.clear` drops what this run had published', async () => {
@@ -186,7 +243,7 @@ describe.skipIf(Sandbox.interpreter() === undefined)('Sandbox', () => {
   test('an unrecognised kind renders as text rather than being dropped', () => {
     // The snippet is model-authored, so a typo must not lose a result the user was promised.
     expect(Events.toKind('diagramme')).toEqual('text');
-    expect(Events.toKind('mermaid')).toEqual('mermaid');
+    expect(Events.toKind('diagram')).toEqual('diagram');
   });
 
   test('the host environment is not inherited', async () => {

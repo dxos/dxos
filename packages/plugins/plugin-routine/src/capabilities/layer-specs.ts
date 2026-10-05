@@ -26,10 +26,12 @@ import {
   TriggerDispatcher,
   TriggerMonitor,
   TriggerStateStore,
+  UnifiedProcessManager,
 } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Registry } from '@dxos/echo';
 import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
@@ -319,6 +321,24 @@ const RemoteTraceMonitorSpec = LayerSpec.make(
     ),
 );
 
+/**
+ * Application-scoped {@link Process.ManagerService}: one surface over the local process manager and the
+ * remote one, so a consumer such as `AgentService` names where a process runs instead of holding both.
+ */
+const ProcessManagerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      ProcessManager.ProcessManagerService,
+      RemoteProcessManager.Service,
+      RemoteTraceMonitor.Service,
+      AtomRegistry.AtomRegistry,
+    ],
+    provides: [Process.ManagerService],
+  },
+  () => UnifiedProcessManager.layer,
+);
+
 const TriggerDispatcherSpec = LayerSpec.make(
   {
     affinity: 'space',
@@ -357,6 +377,7 @@ export default Capability.makeModule(() =>
       RemoteOperationInvokerSpec,
       RemoteTraceMonitorSpec,
       RemoteProcessManagerSpec,
+      ProcessManagerSpec,
     ]),
     Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),

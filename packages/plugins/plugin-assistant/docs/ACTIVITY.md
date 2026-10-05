@@ -19,7 +19,7 @@ aspect, and every view joins two or more.
 
 | Record                              | Where it lives                                                                                            | Lifetime                          | Records                                                                                                                                                                                                                                                |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Process.Process`                   | In-memory process tree, read through `Capabilities.ProcessMonitor` (`processTreeAtom`)                    | While the runtime is up           | What is running _now_: pid tree, state, `startedAt`/`completedAt`, wall time, input/output counts.                                                                                                                                                     |
+| `Process.Process`                   | In-memory process tree, read through `Capabilities.ProcessManager` (`processTreeAtom`)                    | While the runtime is up           | What is running _now_: pid tree, state, `startedAt`/`completedAt`, wall time, input/output counts.                                                                                                                                                     |
 | `Trace.Message`                     | ECHO feed(s) in the space (`FeedTraceSink`), queried by `useTraceMessages`                                | Durable                           | What happened: batched `Trace.Event`s with a `Meta` naming the pid, parent pid, conversation, trigger.                                                                                                                                                 |
 | `Chat.Chat`                         | ECHO object, `@dxos/assistant/Chat`                                                                       | Durable                           | A **session**: its message `feed`, its `tasks` checklist, its `instructions`; parented under a project.                                                                                                                                                |
 | `Task.Task` (in a set)              | ECHO objects, `@dxos/types` `Task`/`TaskSet`; the project's `taskSet` is the ledger                       | Durable                           | The unit of work: `status`, `dependsOn`, `parentTask`, `assignee`, `history` (created/updated only).                                                                                                                                                   |
@@ -48,8 +48,8 @@ interface Info {
   join, one hop further along.
 - `State` is a flat enum; "active" for every view is `RUNNING | HYBERNATING` (a suspended
   process is `IDLE`; a finished one `SUCCEEDED | FAILED | TERMINATED`).
-- `Monitor` (`processTreeAtom`, `list(filter)`, `subscribeToTraceMessages(filter)`) aggregates
-  local and remote runtimes. `MonitorFilter` narrows by `key`, `target`, `state`, `space`,
+- `Manager` (`processTreeAtom`, `list(filter)`, `subscribeToTraceMessages(filter)`, `spawn`, `handles`) spans
+  local and remote runtimes. `Process.Filter` narrows by `key`, `target`, `state`, `space`,
   `parentPid` — so "every process in this space" is one call.
 - A process disappears from the tree once terminal and reaped; the trace feed is the only durable
   memory of it.
@@ -160,7 +160,7 @@ Notes on the joins:
 
 | Assumption                                                                                             | Holds? | Where it is decided                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ------------------------------------------------------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Every agentic operation runs in a process managed by a platform process manager (local or edge).       | yes    | The app's `Capabilities.OperationInvoker` _is_ `ProcessOperationInvoker` (`app-framework/…/process-manager-capability.ts`), so a UI-invoked operation is a top-level process; `AgentService.getSession` spawns the agent as a process targeting the chat; tools and delegations are child processes (`invokeFiber` with `parentProcessId`). Edge runs its own manager; `Process.Monitor` aggregates both.                   |
+| Every agentic operation runs in a process managed by a platform process manager (local or edge).       | yes    | The app's `Capabilities.OperationInvoker` _is_ `ProcessOperationInvoker` (`app-framework/…/process-manager-capability.ts`), so a UI-invoked operation is a top-level process; `AgentService.getSession` spawns the agent as a process targeting the chat; tools and delegations are child processes (`invokeFiber` with `parentProcessId`). Edge runs its own manager; `Process.Manager` spans both.                        |
 | A chat session (`Chat`) is long-lived and has an attached feed.                                        | yes    | `Chat.feed` is owning (`SetParent`). The chat outlives every process that serves it: each prompt after the agent has completed spawns a **new** agent process against the same chat, so one session accumulates several pids over its life.                                                                                                                                                                                 |
 | Some sessions have a directly connected `TaskSet`; others reach `TaskSet`s of other objects via tools. | partly | A chat never holds a `TaskSet`. It holds a **checklist** — `Chat.tasks: Ref<Task>[]`, non-owning. Tasks the chat creates (`Chat.addTask`) are parented to the chat; tasks delegated from a project stay parented in the project's `TaskSet` and are only _referenced_. The planning tools (`update_tasks`, `ask_question`) operate on `Harness.getChat().tasks`, so "the tasks a session can see" is exactly its checklist. |
 | Triggered long-running operations (sync, scheduled routines) go through the same runtime.              | yes    | `TriggerDispatcher.invokeTrigger` spawns `DurableOperation.fromOperation(runnable)` through `ProcessManager.spawn` with `traceMeta.trigger`; an edge trigger runs the same way on the edge's manager (`EdgeTriggerManager`). Their `operation.start/end` and `status.update` events land in the same feed and hub as an agent's (§2.4).                                                                                     |
@@ -181,7 +181,7 @@ flowchart TB
   EPH{isEphemeral?} -->|yes| HUB["handle buffer + ProcessManager hub<br/>→ Monitor.subscribeToTraceMessages<br/>→ swarm broadcast from edge"]
   SINK[Trace.Sink] -->|durable only| FEED[("FeedTraceSink<br/>Trace.Message feeds in the space")]
   subgraph state["Runtime state (not trace)"]
-    PM["ProcessManager<br/>live handles + persisted process store"] --> MON["Process.Monitor.processTreeAtom<br/>Process.Process: state, startedAt, completedAt, metrics"]
+    PM["ProcessManager<br/>live handles + persisted process store"] --> MON["Process.Manager.processTreeAtom<br/>Process.Process: state, startedAt, completedAt, metrics"]
   end
   subgraph objects["ECHO objects (mutated directly, not through trace)"]
     CHAT[Chat.tasks checklist]
@@ -454,7 +454,7 @@ The developer's view of one space's runtime, mounted as a deck companion (`trace
 ```mermaid
 flowchart TB
   subgraph inputs
-    M[ProcessMonitor.processTreeAtom] --> D1[debounce 500ms]
+    M[Process.Manager.processTreeAtom] --> D1[debounce 500ms]
     S[space.db.query FeedTraceSink → Trace.Message] --> G
     D1 --> G[getExecutionGraph atom]
     D1 --> PT
@@ -499,7 +499,7 @@ flowchart LR
   Q1[useProjectChats: all Chat in space, filter peekProject == project] --> H
   Q2[project tasks, ledger order] --> H
   H[useSessionTimeline] --> |useTraceMessages debounce 500ms| B
-  H --> |ProcessMonitor.processTreeAtom| B
+  H --> |Process.Manager.processTreeAtom| B
   H --> |now tick 5s| B
   B[buildSessionTimeline] --> ST["SessionTimeline { lanes, markers, range }"]
   ST --> GR[Gantt.Root → Legend / Chart / Meta]

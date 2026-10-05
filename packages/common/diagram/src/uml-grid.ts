@@ -528,7 +528,12 @@ export const emit = (
       const style = relationStyle(relation.kind);
       // The final segment renders as an arrow for the head; earlier waypoints as a polyline.
       if (points.length > 2) {
-        elements.push({ kind: 'line', id: `${id}-path`, points: points.slice(0, -1), ...style });
+        elements.push({
+          kind: 'line',
+          id: `${id}-path`,
+          points: points.slice(0, -1),
+          ...(style.stroke ? { stroke: style.stroke } : {}),
+        });
       }
       elements.push({
         kind: 'arrow',

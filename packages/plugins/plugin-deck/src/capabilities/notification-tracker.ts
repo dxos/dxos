@@ -43,7 +43,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     const registry = yield* Capabilities.AtomRegistry;
     const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
-    const monitor = yield* Capabilities.ProcessMonitor;
+    const monitor = yield* Capabilities.ProcessManager;
     const manager = yield* Capabilities.PluginManager;
     const invoker = yield* Capabilities.OperationInvoker;
     const operationHandlers = yield* Capabilities.OperationHandler;

@@ -194,6 +194,7 @@
       "@dxos/sql-sqlite",
       "@dxos/stories-assistant",
       "@dxos/stories-brain",
+      "@dxos/stories-compute",
       "@dxos/stories-inbox",
       "@dxos/stories-lens",
       "@dxos/stories-projects",

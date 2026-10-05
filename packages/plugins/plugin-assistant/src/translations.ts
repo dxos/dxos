@@ -200,7 +200,7 @@ export const translations: Theme.Resource[] = [
         'chat-view.thinking.label': 'Thinking',
         'chat-view.debug.label': 'Debug',
         'chat-environment.local.label': 'Local',
-        'chat-environment.remote.label': 'Remote (EDGE)',
+        'chat-environment.remote.label': 'EDGE',
         'mcp-server-add.label': 'Add MCP server',
         'mcp-server-remove.label': 'Remove MCP server',
         'mcp-server-name.label': 'Server name',

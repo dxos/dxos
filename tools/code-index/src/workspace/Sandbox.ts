@@ -24,6 +24,7 @@ import * as Server from '../mcp/Server.ts';
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
 import * as Summary from '../Summary.ts';
+import * as Diagram from './Diagram.ts';
 import * as Events from './Events.ts';
 import * as Log from './Log.ts';
 
@@ -95,6 +96,12 @@ export const interpreter = (): string | undefined => {
 /** SPARQL rows are truncated hard: a query with no LIMIT must not be able to fill the context. */
 const MAX_ROWS = 500;
 
+/** Edges checked against the index per diagram; past this a diagram is too big to read anyway. */
+const MAX_CHECKED_EDGES = 80;
+
+/** An IRI the indexer could have minted and that a SPARQL `<…>` can hold as written. */
+const isIndexIri = (ref: string): boolean => ref.startsWith(Ontology.IRI_BASE) && !/[\s<>"{}|^`\\]/.test(ref);
+
 const truncate = (text: string): string =>
   text.length <= MAX_OUTPUT ? text : `${text.slice(0, MAX_OUTPUT)}\n… output truncated (${text.length} chars)`;
 
@@ -115,6 +122,51 @@ const make = Effect.gen(function* () {
   const designCache = yield* Effect.cached(Cache.open(join(store.dir, 'design-cache.jsonl')));
   // The MCP handlers, so `symbols.usages` resolves a name exactly as the `usages` tool does.
   const mcp = yield* Effect.cached(Server.handlers(store));
+
+  /**
+   * Fails on a box whose `ref` is an index IRI with no facts: a made-up IRI would draw fine and then
+   * show the user nothing when they click it, so the model hears about it instead.
+   */
+  const missingRefs = (source: string): Effect.Effect<void, SandboxError> =>
+    Effect.forEach(
+      [...new Set(Diagram.refs(source))].filter(isIndexIri),
+      (iri) =>
+        store
+          .ask(`ASK { { <${iri}> ?p ?o } UNION { ?s ?p <${iri}> } }`)
+          .pipe(Effect.map((found) => (found ? [] : [iri]))),
+      { concurrency: 4 },
+    ).pipe(
+      Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
+      Effect.flatMap((missing) => {
+        const unknown = missing.flat();
+        return unknown.length === 0
+          ? Effect.void
+          : Effect.fail(
+              new SandboxError({
+                message: `These refs name nothing in the index; use IRIs a query returned:\n${unknown.map((iri) => `  ${iri}`).join('\n')}`,
+              }),
+            );
+      }),
+    );
+
+  /**
+   * The edges between two IRI boxes that no triple links in either direction. Drawn anyway — an
+   * edge may summarise a path of several facts — but returned so the model can check them.
+   */
+  const unbackedEdges = (source: string): Effect.Effect<string[], SandboxError> =>
+    Effect.forEach(
+      Diagram.refEdges(source)
+        .filter(({ from, to }) => isIndexIri(from) && isIndexIri(to))
+        .slice(0, MAX_CHECKED_EDGES),
+      ({ from, to, text }) =>
+        store
+          .ask(`ASK { { <${from}> ?p <${to}> } UNION { <${to}> ?p <${from}> } }`)
+          .pipe(Effect.map((linked) => (linked ? [] : [text]))),
+      { concurrency: 4 },
+    ).pipe(
+      Effect.map((results) => results.flat()),
+      Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
+    );
 
   /** One host call. A failure here is the snippet's failure, not the run's: it sees the message. */
   const handle = (
@@ -150,16 +202,34 @@ const make = Effect.gen(function* () {
         return log
           .listKeys(projectId)
           .pipe(Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })));
-      case 'display':
-        return Effect.sync(() => {
-          presented.push(
-            new Events.Presented({
-              kind: Events.toKind(String(params.kind)),
-              title: typeof params.title === 'string' ? params.title : undefined,
-              content: String(params.content),
-            }),
-          );
-        });
+      case 'display': {
+        const kind = Events.toKind(String(params.kind));
+        // A diagram is checked here so a bad one fails the snippet, which the model reads and can fix,
+        // instead of reaching the user as an error panel.
+        const content =
+          kind === 'diagram'
+            ? Diagram.stored(String(params.content)).pipe(
+                Effect.mapError(({ message }) => new SandboxError({ message })),
+                Effect.tap(missingRefs),
+              )
+            : Effect.succeed(String(params.content));
+        return content.pipe(
+          Effect.tap((content) =>
+            Effect.sync(() =>
+              presented.push(
+                new Events.Presented({
+                  kind,
+                  title: typeof params.title === 'string' ? params.title : undefined,
+                  content,
+                }),
+              ),
+            ),
+          ),
+          Effect.flatMap((content) =>
+            kind === 'diagram' ? Effect.map(unbackedEdges(content), (unbacked) => ({ unbacked })) : Effect.void,
+          ),
+        );
+      }
       case 'design.subgraph':
         return designCache.pipe(
           Effect.flatMap((cache) =>

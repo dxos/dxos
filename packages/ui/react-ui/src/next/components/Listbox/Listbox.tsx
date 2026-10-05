@@ -32,7 +32,7 @@ import { Empty } from '../Empty/Empty.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import { RowContext, handleGridKeyDown, isFromControl, useRowTabStops } from './grid.ts';
-import { type VirtualMode, VirtualSpacer, useVirtualRows } from './virtual.tsx';
+import { type VirtualMode, VirtualSpacer, isWindowed, useVirtualRows } from './virtual.tsx';
 
 type ListboxOption = {
   value: string;
@@ -87,7 +87,7 @@ type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'd
    * order. Without it rows lay out by part (a leading cell, the text over its description, trailing parts).
    */
   columns?: string;
-  /** Long lists: `fixed` windows equal-height rows, `variable` defers off-screen rows (`content-visibility`). */
+  /** Long lists: `fixed` windows equal-height rows, `measured` windows rows of any height, `variable` defers off-screen rows (`content-visibility`). */
   virtual?: VirtualMode;
   size?: Size;
 };
@@ -144,7 +144,7 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
           deselectable={deselectable}
           disabled={disabled}
           loopFocus={loopFocus}
-          scrollToIndexFn={virtual === 'fixed' ? ({ index }) => scrollToIndexRef.current?.(index) : undefined}
+          scrollToIndexFn={isWindowed(virtual) ? ({ index }) => scrollToIndexRef.current?.(index) : undefined}
           data-size={size}
           className={mx(recipes.listbox(), classNames)}
           ref={forwardedRef}
@@ -198,7 +198,7 @@ const ListboxViewport = composable<
   const [element, setElement] = useState<HTMLDivElement | null>(null);
   const rows = Children.toArray(children);
   const windowing = useVirtualRows({ mode: virtual, count: rows.length });
-  scrollToIndexRef.current = virtual === 'fixed' ? windowing.scrollToIndex : null;
+  scrollToIndexRef.current = isWindowed(virtual) ? windowing.scrollToIndex : null;
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, setElement, windowing.listRef);
   useRowTabStops(element);
 
@@ -238,7 +238,7 @@ const ListboxViewport = composable<
           return;
         }
         contentProps.onKeyDown?.(event);
-        if (hostScrolls && virtual !== 'fixed') {
+        if (hostScrolls && !isWindowed(virtual)) {
           // zag scrolls the highlighted row into view only when the listbox itself overflows; here the host scrolls.
           const content = event.currentTarget;
           requestAnimationFrame(() =>
@@ -248,7 +248,7 @@ const ListboxViewport = composable<
       }}
       ref={ref}
     >
-      {virtual === 'fixed' ? (
+      {isWindowed(virtual) ? (
         <>
           <VirtualSpacer height={windowing.before} />
           {rows.slice(windowing.first, windowing.last + 1)}

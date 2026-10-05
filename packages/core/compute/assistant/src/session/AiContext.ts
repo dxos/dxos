@@ -61,6 +61,21 @@ export class Bindings {
   }
 }
 
+/**
+ * Bindings appended in this realm, per feed id (stable whether or not the feed is persisted yet).
+ *
+ * Lets {@link Binder.sync} skip its re-read when nothing here could have changed the bindings: the
+ * re-read is a feed-scoped query, which waits for an index pass over every pending write, and it
+ * exists only for read-your-writes — a binding written elsewhere arrives through the live query.
+ */
+const bindingWrites = new Map<string, number>();
+
+const bindingWriteCount = (feed: Feed.Feed): number => bindingWrites.get(feed.id) ?? 0;
+
+const countBindingWrite = (feed: Feed.Feed): void => {
+  bindingWrites.set(feed.id, (bindingWrites.get(feed.id) ?? 0) + 1);
+};
+
 export type BinderOptions = {
   feed: Feed.Feed;
   runtime: Context.Context<Database.Service>;
@@ -80,6 +95,9 @@ export class Binder extends Resource {
   private readonly _runtime: Context.Context<Database.Service>;
 
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
+
+  /** {@link bindingWriteCount} at the last read of the bindings query. */
+  #readWrites = 0;
 
   /**
    * Keys of the refs the feed already binds, whether or not their targets resolve here: a registry
@@ -145,6 +163,7 @@ export class Binder extends Resource {
     this.#bindingsQuery = bindingsQuery;
 
     // Process initial state before returning.
+    this.#readWrites = bindingWriteCount(this._feed);
     const initialResults = await bindingsQuery.run();
     await this._updateBindings(initialResults);
 
@@ -157,10 +176,12 @@ export class Binder extends Resource {
   }
 
   /**
-   * Re-reads bindings from the feed to pick up changes made by other processes.
+   * Re-reads bindings from the feed to pick up changes made by other processes in this realm, such
+   * as a tool that bound a skill. A no-op when none has been written since the last read.
    */
   async sync(): Promise<void> {
-    if (this.#bindingsQuery) {
+    const writes = bindingWriteCount(this._feed);
+    if (this.#bindingsQuery && writes !== this.#readWrites) {
       let results: Binding[];
       try {
         results = await this.#bindingsQuery.run();
@@ -173,6 +194,8 @@ export class Binder extends Resource {
       }
       log('sync', { bindingItems: results.length });
       await this._updateBindings(results);
+      // Only after the update lands, so one that fails is retried by the next sync.
+      this.#readWrites = writes;
       log('sync complete', {
         skills: this._registry.get(this._skills).length,
         // Read the meta key directly: `Skill.getKey` throws on a space-authored skill, which would
@@ -275,6 +298,7 @@ export class Binder extends Resource {
         }),
       ]),
     );
+    countBindingWrite(this._feed);
   }
 
   async unbind({ skills, objects }: BindingProps): Promise<void> {
@@ -318,6 +342,7 @@ export class Binder extends Resource {
         }),
       ]),
     );
+    countBindingWrite(this._feed);
   }
 
   /**

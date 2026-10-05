@@ -92,10 +92,10 @@ export type FormContentProps = PropsWithChildren<{}>;
  * settings row and section below it shares. Forwards its ref so a consumer can scope its own key handling to the form.
  */
 export const FormContent = forwardRef<HTMLDivElement, FormContentProps>(({ children }, forwardedRef) => {
-  const { form, testId, variant } = useFormContext('Form.Content');
+  const { form, readonly, testId, variant } = useFormContext('Form.Content');
   const localRef = useRef<HTMLDivElement>(null);
   const ref = useComposedRefs(forwardedRef, localRef);
-  useKeyHandler(localRef, form);
+  useKeyHandler(localRef, form, { readonly });
   const settings = variant === 'settings';
   // A settings form is a reading-width column of its own tracks (the current Form's `dx-document` settings content).
   return (

@@ -37,12 +37,18 @@ import { translationKey } from '#translations';
 
 import { formatLogEntry, packageName } from './format.ts';
 import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer.ts';
-import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
+import { LoggerProvider, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
 import { type LevelName, LEVELS, composeFilter } from './recorder.ts';
 
 //
 // Shared
 //
+
+/** Whether a row matches the search box: a case-insensitive match on its file and message. */
+const matchesText = (record: ReturnType<typeof formatLogEntry>, textFilter: string): boolean => {
+  const needle = textFilter.trim().toLowerCase();
+  return needle ? `${record.file ?? ''} ${record.message ?? ''}`.toLowerCase().includes(needle) : true;
+};
 
 /** Per-file level overrides are global to the logger, not scoped to an attention context. */
 const LOG_LEVELS_CONTEXT = 'logger';
@@ -160,17 +166,18 @@ const LoggerRoot = ({
     setChecked(new Set());
     setCurrent(undefined);
   }, []);
-  // Copy the checked rows when any are checked, else the whole buffer.
-  const copyAll = useCallback(() => {
-    const selected = checked.size > 0 ? rows.filter((row) => checked.has(row.id)) : rows;
-    copyToClipboard(
-      JSON.stringify(
-        selected.map(({ entry }) => formatLogEntry(entry)),
-        null,
-        2,
-      ),
+  // Copy the checked rows when any are checked, else the rows the search leaves visible.
+  const getCopyText = useCallback(() => {
+    const selected =
+      checked.size > 0
+        ? rows.filter((row) => checked.has(row.id))
+        : rows.filter((row) => matchesText(formatLogEntry(row.entry), textFilter));
+    return JSON.stringify(
+      selected.map(({ entry }) => formatLogEntry(entry)),
+      null,
+      2,
     );
-  }, [rows, checked]);
+  }, [rows, checked, textFilter]);
   const toggleExpand = useCallback((id: number) => {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -206,7 +213,7 @@ const LoggerRoot = ({
       checked={checked}
       toggleChecked={toggleChecked}
       clear={clear}
-      copyAll={copyAll}
+      getCopyText={getCopyText}
     >
       {children}
     </LoggerProvider>
@@ -223,7 +230,7 @@ type LoggerToolbarProps = ComposableProps;
 
 const LoggerToolbar = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const { filter, setFilter, recording, setRecording, clear, copyAll } = useLoggerContext('Logger.Toolbar');
+  const { filter, setFilter, recording, setRecording, clear, getCopyText } = useLoggerContext('Logger.Toolbar');
 
   // A bare level matching the filter selects it; a scoped filter shows no selection.
   const selectedLevel = (LEVELS as readonly string[]).includes(filter) ? filter : '';
@@ -261,7 +268,7 @@ const LoggerToolbar = Util.composable<HTMLDivElement>((props, forwardedRef) => {
         label={t('record.label')}
       />
       <Button.Root icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
-      <Button.Root icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
+      <SystemButton.Clipboard iconOnly label={t('copy.label')} onCopy={getCopyText} />
     </Toolbar.Root>
   );
 });
@@ -433,13 +440,10 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   const { rows, expanded, toggleExpand, current, setCurrent, checked, toggleChecked, textFilter } =
     useLoggerContext('Logger.List');
 
-  // Compute the display record once; filter the buffer by a case-insensitive match on file + message.
-  const needle = textFilter.trim().toLowerCase();
+  // Compute the display record once; the same predicate decides what the toolbar's copy takes.
   const visible = rows
     .map((row) => ({ ...row, record: formatLogEntry(row.entry) }))
-    .filter(({ record }) =>
-      needle ? `${record.file ?? ''} ${record.message ?? ''}`.toLowerCase().includes(needle) : true,
-    );
+    .filter(({ record }) => matchesText(record, textFilter));
 
   if (visible.length === 0) {
     return (

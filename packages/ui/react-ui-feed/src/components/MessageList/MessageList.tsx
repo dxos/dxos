@@ -8,6 +8,7 @@ import React, {
   type PropsWithChildren,
   type ReactNode,
   type Ref,
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -109,6 +110,8 @@ type MessageListContextValue = {
   first: number;
   last: number;
   setViewport: (viewport: HTMLElement | null) => void;
+  /** How many times the model has said this message changed in place. */
+  revisionOf: (id: string) => number;
   scrollToIndex: (index: number, options?: ScrollToOptions) => void;
   scrollToBottom: (options?: ScrollToOptions) => void;
 };
@@ -120,6 +123,19 @@ export type ScrollToOptions = {
 };
 
 const [MessageListProvider, useMessageListContext] = Hooks.createContext<MessageListContextValue>(MESSAGE_LIST_NAME);
+
+/**
+ * What an item renders with — split from the list's context because that one changes on every
+ * scroll (range, offset, cursor), and a consumer re-renders whenever its context does: every mounted
+ * row would be rebuilt per frame of a scroll that moved none of them.
+ */
+type MessageListItemContextValue = Pick<
+  MessageListContextValue,
+  'model' | 'renderer' | 'registry' | 'objectImage' | 'Custom' | 'debug' | 'reportWidgets'
+>;
+
+const [MessageListItemProvider, useMessageListItemContext] =
+  Hooks.createContext<MessageListItemContextValue>(MESSAGE_LIST_NAME);
 
 /**
  * The list's state and scroll controls, for parts that live outside the viewport — a toolbar's
@@ -362,6 +378,20 @@ const MessageListRoot = ({
   const changedAtRef = useRef(performance.now());
   useEffect(() => model.subscribe(() => (changedAtRef.current = performance.now())), [model]);
 
+  // Per-message revision, bumped when the model says a message changed in place: a streamed message
+  // keeps its identity, so a memoized row cannot tell it changed from the message alone.
+  const revisions = useRef(new Map<string, number>());
+  useEffect(
+    () =>
+      model.subscribe(({ updated }) => {
+        for (const id of updated ?? []) {
+          revisions.current.set(id, (revisions.current.get(id) ?? 0) + 1);
+        }
+      }),
+    [model],
+  );
+  const revisionOf = useCallback((id: string) => revisions.current.get(id) ?? 0, []);
+
   // The follow is an aspect the host composes, not part of the window (SPEC §Aspects) — the intent,
   // its withdrawal by a backwards scroll, and the glide all live there.
   const follow = useFollow({
@@ -531,10 +561,21 @@ const MessageListRoot = ({
           first={first}
           last={last}
           setViewport={setViewport}
+          revisionOf={revisionOf}
           scrollToIndex={scrollToIndex}
           scrollToBottom={scrollToBottom}
         >
-          {children}
+          <MessageListItemProvider
+            model={model}
+            renderer={renderer}
+            registry={registry}
+            objectImage={objectImage}
+            Custom={Custom}
+            debug={debug}
+            reportWidgets={reportWidgets}
+          >
+            {children}
+          </MessageListItemProvider>
         </MessageListProvider>
       </WidgetStateProvider>
     </SelectionGroupContext.Provider>
@@ -580,7 +621,7 @@ const isEmptyContent = (content: ItemContent, hasCustomRenderer: boolean): boole
 
 const MessageListViewport = Util.composable<HTMLDivElement, MessageListViewportExtra>(
   ({ autoHide, native, scrollbars, gutter = 'md', overlay, ...props }, forwardedRef) => {
-    const { model, renderer, Chrome, Custom, windowRef, offset, sizerExtent, first, last, setViewport } =
+    const { model, renderer, Chrome, Custom, windowRef, offset, sizerExtent, first, last, setViewport, revisionOf } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
     // The value once, per-row state derived: hooks do not run in loops, and the row loop below is
     // one. Item-shaped chrome uses `useItemSelection(id)` instead.
@@ -594,6 +635,11 @@ const MessageListViewport = Util.composable<HTMLDivElement, MessageListViewportE
       [setViewport, forwardedRef],
     );
 
+    // Stable, so a memoized row is not re-rendered for a callback that is new only by identity.
+    const onSelectRef = useRef(onSelect);
+    onSelectRef.current = onSelect;
+    const handleSelect = useCallback((id: string, additive: boolean) => onSelectRef.current?.(id, additive), []);
+
     const rows = [];
     for (let index = first; index <= last; index++) {
       const message = model.at(index);
@@ -601,31 +647,20 @@ const MessageListViewport = Util.composable<HTMLDivElement, MessageListViewportE
         continue;
       }
 
-      // The row div always exists — the measurement pass walks the window's children by index —
-      // but an empty render mounts no chrome inside it, so it measures at zero and takes no space.
-      const empty = isEmptyContent(renderer(message), Boolean(Custom));
       rows.push(
-        // Unpositioned, and that is the point. A row that changes extent reflows the ones after it,
-        // in the browser, in the same frame; placing each row ourselves meant re-placing every row
-        // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
-        <div key={message.id} data-object-id={message.id} {...windowRowProps(index, message.id)}>
-          {!empty && (
-            <Layout.Container gutter={gutter}>
-              {/* The widgets' query container: it must be an element whose width is definite, since
-                  containment stops a descendant's content sizing it (a prompt's bubble collapses). */}
-              <div className='dx-container-type-inline-size'>
-                <Chrome
-                  message={message}
-                  index={index}
-                  selected={selectedIds?.has(message.id) ?? false}
-                  onSelect={(id, additive) => onSelect?.(id, additive)}
-                >
-                  <MessageListItem message={message} />
-                </Chrome>
-              </div>
-            </Layout.Container>
-          )}
-        </div>,
+        <MessageListRow
+          key={message.id}
+          message={message}
+          revision={revisionOf(message.id)}
+          index={index}
+          // The row div always exists — the measurement pass walks the window's children by index —
+          // but an empty render mounts no chrome inside it, so it measures at zero and takes no space.
+          empty={isEmptyContent(renderer(message), Boolean(Custom))}
+          selected={selectedIds?.has(message.id) ?? false}
+          gutter={gutter}
+          Chrome={Chrome}
+          onSelect={handleSelect}
+        />,
       );
     }
 
@@ -665,6 +700,47 @@ const MessageListViewport = Util.composable<HTMLDivElement, MessageListViewportE
 MessageListViewport.displayName = MESSAGE_LIST_VIEWPORT_NAME;
 
 //
+// Row
+//
+
+type MessageListRowProps = {
+  message: Message.Message;
+  /** Stands in for the message's content: it changes when the model says the message changed in place. */
+  revision: number;
+  index: number;
+  empty: boolean;
+  selected: boolean;
+  gutter: MessageListViewportExtra['gutter'];
+  Chrome: ComponentType<MessageChromeProps>;
+  onSelect: (id: string, additive: boolean) => void;
+};
+
+/**
+ * One mounted row. Memoized because the window re-renders on every scroll event and after every
+ * measurement, and nothing in a row depends on where the window is — only on its own props.
+ */
+const MessageListRow = memo(({ message, index, empty, selected, gutter, Chrome, onSelect }: MessageListRowProps) => (
+  // Unpositioned, and that is the point. A row that changes extent reflows the ones after it,
+  // in the browser, in the same frame; placing each row ourselves meant re-placing every row
+  // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
+  <div data-object-id={message.id} {...windowRowProps(index, message.id)}>
+    {!empty && (
+      <Layout.Container gutter={gutter}>
+        {/* The widgets' query container: it must be an element whose width is definite, since
+            containment stops a descendant's content sizing it (a prompt's bubble collapses). */}
+        <div className='dx-container-type-inline-size'>
+          <Chrome message={message} index={index} selected={selected} onSelect={onSelect}>
+            <MessageListItem message={message} />
+          </Chrome>
+        </div>
+      </Layout.Container>
+    )}
+  </div>
+));
+
+MessageListRow.displayName = 'MessageList.Row';
+
+//
 // Item
 //
 
@@ -680,7 +756,7 @@ type MessageListItemExtra = {
  */
 const MessageListItem = Util.composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
   const { model, renderer, registry, objectImage, Custom, debug, reportWidgets } =
-    useMessageListContext(MESSAGE_LIST_ITEM_NAME);
+    useMessageListItemContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);
   // The item asks for its own cross-cutting data by id (SPEC §Aspects); the list never routed it.
   const decorations = useDecorations(message.id);

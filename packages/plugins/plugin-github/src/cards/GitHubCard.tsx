@@ -76,7 +76,7 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
       )}
       {description && (
         <Card.Row icon='ph--text-align-left--regular'>
-          <Card.Text classNames='line-clamp-3' variant='muted'>
+          <Card.Text lines={3} variant='muted'>
             {description}
           </Card.Text>
         </Card.Row>

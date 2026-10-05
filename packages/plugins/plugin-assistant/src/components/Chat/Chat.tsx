@@ -37,7 +37,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as Util from '@dxos/react-ui/Util';
 import { Message, Task } from '@dxos/types';
-import { keyToFallback } from '@dxos/util';
+import { keyToFallback, markWork } from '@dxos/util';
 
 import { type ChatSwitcher, useChatToolbarActions, useDebug, useSettled } from '#hooks';
 import { meta } from '#meta';
@@ -266,6 +266,7 @@ const ChatRoot = ({
             if (active && queued.length >= DEFAULT_MAX_QUEUE) {
               break;
             }
+            markWork('chat.submit');
             lastPrompt.current = ev.text;
             const context = getContext?.();
             // Await persistence (transient chat) before requesting so the agent resolves the
