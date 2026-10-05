@@ -63,7 +63,7 @@ cheapest way to exercise a turn without a browser. Anthropic needs `DX_ANTHROPIC
 
 **One tool.** The agent's only action is `exec`, which runs TypeScript in a Bun child process whose
 sole capabilities are namespaces bridged over stdio: `rdf` (SPARQL over this index), `storage`
-(per-project memory), `display` (the only channel to the screen — Mermaid, tables, markdown, force
+(per-project memory), `display` (the only channel to the screen — illustrator diagrams, tables, markdown, force
 graphs), `design` (scored subgraphs for design questions) and `print` (the model's own return channel). The tool's documentation *is*
 [`src/workspace/sandbox/api.d.ts`](./src/workspace/sandbox/api.d.ts), so the surface cannot drift
 from what the model is told. The isolation is process-level — fresh interpreter, scrubbed

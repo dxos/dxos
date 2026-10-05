@@ -165,8 +165,9 @@ const Sidebar = (props: {
               <p class='truncate'>
                 {server().files.toLocaleString()} files · {server().quads.toLocaleString()} quads
               </p>
-              <Show when={server().declarations}>
-                {(declarations) => <p class='truncate'>{declarations().toLocaleString()} declarations</p>}
+              {/* Wrapped so a count of 0, which `Show` treats as falsy, is still shown. */}
+              <Show when={((count) => (count !== undefined ? { count } : undefined))(server().declarations)}>
+                {(declarations) => <p class='truncate'>{declarations().count.toLocaleString()} declarations</p>}
               </Show>
             </>
           )}
