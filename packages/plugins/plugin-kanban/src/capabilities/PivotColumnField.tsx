@@ -5,33 +5,25 @@
 import React, { useMemo } from 'react';
 
 import { type Surface } from '@dxos/app-framework/ui';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Obj, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Field } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
-/** The form renderer's own props ride alongside `data` on the surface envelope; `type` comes from the field AST. */
 export type PivotColumnFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &
   Omit<FormFieldRendererProps, 'type'>;
 
-/**
- * Form field offering the single-select properties of the form's currently chosen typename as the
- * kanban's pivot column. It consumes the whole surface envelope, so it takes no `props` mapper.
- */
 export const PivotColumnField = ({ data, ...inputProps }: PivotColumnFieldProps) => {
   const ast = data.fieldPropertyAst;
   const target = data.target;
   const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
-  const { typename } = useFormValues('KanbanForm');
-  const [selectedSchema] = useMemo(
-    () =>
-      db
-        ? db.graph.registry
-            .list()
-            .filter(Type.isType)
-            .filter((type) => Type.getTypename(type) === typename)
-        : [],
-    [db, typename],
+  const { typename: typeUri } = useFormValues('KanbanForm');
+  const types = useQuery(db, TypeOptions.allTypesQuery);
+  const selectedSchema = useMemo(
+    () => types.filter(Type.isType).find((type) => Type.getURI(type) === typeUri),
+    [types, typeUri],
   );
   const singleSelectColumns = useMemo(() => {
     const properties = selectedSchema?.jsonSchema.properties;
@@ -47,13 +39,12 @@ export const PivotColumnField = ({ data, ...inputProps }: PivotColumnFieldProps)
     }, []);
   }, [selectedSchema]);
 
-  if (!ast || !db || !typename) {
+  if (!ast || !db || !typeUri) {
     return null;
   }
 
   const props: FormFieldRendererProps = { ...inputProps, type: ast };
 
-  // A provided field owns its row, so it carries its own label.
   return (
     <Field.Root>
       <Field.Label>{inputProps.label}</Field.Label>
