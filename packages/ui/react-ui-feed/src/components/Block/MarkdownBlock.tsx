@@ -92,10 +92,12 @@ export const MarkdownBlock = memo(
         return;
       }
 
+      // Built detached and attached once: given a `parent`, the view writes its attributes on a live
+      // element, and each write invalidates the document's style for every row that mounts.
       const instance = new EditorView({
-        parent,
         state: EditorState.create({ doc: initialTextRef.current, extensions }),
       });
+      parent.appendChild(instance.dom);
       const unregister = selectionGroupRef.current.register(instance);
       setView(instance);
 
