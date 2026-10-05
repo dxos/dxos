@@ -742,6 +742,38 @@ describe('RepoProxy', () => {
     expect(() => clientRepo.find(url)).to.throw(RepoClosedError);
     expect(() => clientRepo.create<{ text: string }>()).to.throw(RepoClosedError);
   });
+
+  test('a failed update leaves the proxy usable and is retried', { timeout: 5_000 }, async () => {
+    let failing: FailingUpdateDataService | undefined;
+    const { dataService, host } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
+    invariant(failing);
+    const service = failing;
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    await clientRepo.flush();
+    const url = handle.url;
+    invariant(url);
+
+    service.fail = true;
+    handle.change((doc: { text: string }) => {
+      doc.text = 'retried';
+    });
+    await expect.poll(() => service.failures, { timeout: 2_000 }).toBeGreaterThan(0);
+    // Lets a failure that escapes the proxy surface inside this test rather than a later one.
+    await sleep(10);
+
+    // The proxy still serves the database: the next object is created rather than refused.
+    expect(clientRepo.isOpen).toBe(true);
+    const next = clientRepo.create<{ text: string }>({ text: 'next' });
+
+    service.fail = false;
+    const hostText = async () => (await host.loadDoc<{ text: string }>(Context.default(), url))?.doc()?.text;
+    await expect.poll(hostText, { timeout: 4_000 }).toEqual('retried');
+    await next.whenReady();
+  });
 });
 
 /**
@@ -775,6 +807,20 @@ class RefusingDataService extends DataServiceImpl {
     return this.refuse
       ? Effect.fail(new EchoClientError({ message: 'document creation refused' }))
       : super['DataService.createDocument'](request);
+  }
+}
+
+/** Fails every update batch while {@link fail} is set, as a host that times out the call does. */
+class FailingUpdateDataService extends DataServiceImpl {
+  'fail' = false;
+  'failures' = 0;
+
+  override ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
+    if (this.fail) {
+      this.failures++;
+      return Effect.fail(new EchoClientError({ message: 'update timed out' }));
+    }
+    return super['DataService.update'](request);
   }
 }
 
