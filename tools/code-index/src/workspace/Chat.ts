@@ -8,6 +8,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
+import { stdout } from 'node:process';
 import { createInterface } from 'node:readline/promises';
 
 import * as Agent from './Agent.ts';
@@ -30,13 +31,19 @@ const RED = '[31m';
 /** The events that close a turn; a one-shot run stops printing at one of them. */
 const TERMINAL: readonly string[] = ['TurnEnded', 'TurnFailed'];
 
-/** One line per event, in the order the agent produced them. */
-export const render = (event: Events.Event): string | undefined => {
+/**
+ * One line per event, in the order the agent produced them. `streamed` holds the messages whose
+ * deltas were already written, so their settling event only ends the line.
+ */
+export const render = (event: Events.Event, streamed: ReadonlySet<string> = new Set()): string | undefined => {
   switch (event._tag) {
     case 'UserMessage':
       return `${BOLD}› ${event.text}${RESET}`;
+    case 'AssistantDelta':
+      // Printed by the caller without a newline, as it arrives.
+      return undefined;
     case 'AssistantMessage':
-      return `${event.text}`;
+      return event.messageId !== undefined && streamed.has(event.messageId) ? '' : `${event.text}`;
     case 'ToolCall':
       return `${DIM}exec ›${RESET}\n${DIM}${event.code.trim()}${RESET}`;
     case 'ToolResult':
@@ -85,6 +92,8 @@ export const run = ({
     const history = yield* log.read(projectId);
     const from = prompt === undefined ? 0 : (history.at(-1)?.seq ?? 0);
 
+    // Messages whose deltas reached the terminal; their settled text would print them twice.
+    const streamed = new Set<string>();
     const printer = yield* log.stream(projectId, from).pipe(
       // A one-shot run ends at the event that closes the turn; an interactive one tails forever.
       // Stopping on the event rather than on a timer is what makes the output complete — a fixed
@@ -94,7 +103,12 @@ export const run = ({
       // `TurnFailed` carries the reason) and only then may the stream end.
       Stream.takeUntil((entry) => prompt !== undefined && TERMINAL.includes(entry.event._tag)),
       Stream.runForEach((entry) => {
-        const line = render(entry.event);
+        const event = entry.event;
+        if (event._tag === 'AssistantDelta') {
+          streamed.add(event.messageId);
+          return Effect.sync(() => stdout.write(event.delta));
+        }
+        const line = render(event, streamed);
         return line === undefined ? Effect.void : Console.log(line);
       }),
       Effect.forkScoped,

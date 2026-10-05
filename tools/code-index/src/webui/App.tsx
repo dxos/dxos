@@ -19,28 +19,6 @@ import { type Session, openSession } from './session.ts';
  * a session that should be showing it.
  */
 
-const ToolTrace = (props: { session: Session }) => (
-  <Show when={props.session.state().calls.length > 0}>
-    <details class='border-separator border-t px-3 py-2 text-xs'>
-      <summary class='text-fg-muted cursor-pointer'>{props.session.state().calls.length} code runs</summary>
-      <For each={props.session.state().calls}>
-        {(call) => (
-          <div class='mt-2'>
-            <pre class='bg-baseSurface overflow-x-auto rounded p-2'>{call.code.trim()}</pre>
-            <Show when={call.output}>
-              {(output) => (
-                <pre class={`mt-1 overflow-x-auto rounded p-2 ${call.ok ? 'text-fg-muted' : 'text-errorText'}`}>
-                  {output().trim()}
-                </pre>
-              )}
-            </Show>
-          </div>
-        )}
-      </For>
-    </details>
-  </Show>
-);
-
 /** The React island, kept in step with Solid's signals by re-rendering it on every change. */
 const Chat = (props: { session: Session }) => {
   let container: HTMLDivElement | undefined;
@@ -54,7 +32,7 @@ const Chat = (props: { session: Session }) => {
 
   createEffect(() => {
     island()?.render({
-      turns: props.session.state().turns,
+      items: props.session.state().items,
       busy: props.session.busy(),
       onSend: props.session.send,
     });
@@ -145,7 +123,6 @@ export const App = () => {
             <main class='flex min-w-0 flex-1'>
               <div class='flex min-w-0 flex-1 flex-col'>
                 <Chat session={session} />
-                <ToolTrace session={session} />
               </div>
               <Show when={session.state().canvas.length > 0}>
                 <div class='border-separator flex min-w-0 flex-1 border-l'>
