@@ -192,14 +192,13 @@ const handlers = OperationHandlerSet.make(
  * Mirrors agent-process awaiting an async tool call during shutdown.
  */
 const makeParentAwaitingChild = () =>
-  Operation.makeDurable(
-    {
-      key: 'test.parent-awaiting-child',
-      input: Schema.Void,
-      output: Schema.Void,
-      services: [ProcessManager.ProcessOperationInvoker.Service],
-    },
-    (ctx) =>
+  Operation.makeDurable({
+    key: 'test.parent-awaiting-child',
+    input: Schema.Void,
+    output: Schema.Void,
+    services: [ProcessManager.ProcessOperationInvoker.Service],
+  }).pipe(
+    Operation.withDurableHandler((ctx) =>
       Effect.succeed({
         onSpawn: () => Effect.void,
         onInput: () => ctx.setAlarm(0),
@@ -220,20 +219,20 @@ const makeParentAwaitingChild = () =>
           }),
         onChildEvent: () => Effect.void,
       }),
+    ),
   );
 
 /**
  * Never exits keeps adding numbers to the accumulator.
  */
 const makeSumAggregator = () =>
-  Operation.makeDurable(
-    {
-      key: 'test.sum-aggregator',
-      input: Schema.Number,
-      output: Schema.Number,
-      services: [StorageService.StorageService],
-    },
-    (ctx) =>
+  Operation.makeDurable({
+    key: 'test.sum-aggregator',
+    input: Schema.Number,
+    output: Schema.Number,
+    services: [StorageService.StorageService],
+  }).pipe(
+    Operation.withDurableHandler((ctx) =>
       Effect.succeed({
         onSpawn: () =>
           Effect.gen(function* () {
@@ -252,36 +251,41 @@ const makeSumAggregator = () =>
         onAlarm: () => Effect.void,
         onChildEvent: () => Effect.void,
       }),
+    ),
   );
 
 /** Succeeds on its first input without producing an output. */
 const makeSucceedingExecutable = () =>
-  Operation.makeDurable({ key: 'test.succeeding', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
-    Effect.succeed({
-      onSpawn: () => Effect.void,
-      onInput: () => Effect.sync(() => ctx.succeed()),
-      onAlarm: () => Effect.void,
-      onChildEvent: () => Effect.void,
-    }),
+  Operation.makeDurable({ key: 'test.succeeding', input: Schema.Void, output: Schema.Void, services: [] }).pipe(
+    Operation.withDurableHandler((ctx) =>
+      Effect.succeed({
+        onSpawn: () => Effect.void,
+        onInput: () => Effect.sync(() => ctx.succeed()),
+        onAlarm: () => Effect.void,
+        onChildEvent: () => Effect.void,
+      }),
+    ),
   );
 
 /**
  * Waits for 500ms and then exits.
  */
 const makeWaitingExecutable = () =>
-  Operation.makeDurable({ key: 'test.waiting', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
-    Effect.succeed({
-      onSpawn: () =>
-        Effect.gen(function* () {
-          yield* ctx.setAlarm(500);
-        }),
-      onInput: () => Effect.void,
-      onAlarm: () =>
-        Effect.gen(function* () {
-          ctx.succeed();
-        }),
-      onChildEvent: () => Effect.void,
-    }),
+  Operation.makeDurable({ key: 'test.waiting', input: Schema.Void, output: Schema.Void, services: [] }).pipe(
+    Operation.withDurableHandler((ctx) =>
+      Effect.succeed({
+        onSpawn: () =>
+          Effect.gen(function* () {
+            yield* ctx.setAlarm(500);
+          }),
+        onInput: () => Effect.void,
+        onAlarm: () =>
+          Effect.gen(function* () {
+            ctx.succeed();
+          }),
+        onChildEvent: () => Effect.void,
+      }),
+    ),
   );
 
 /**
@@ -293,9 +297,13 @@ const makeStallingProcess = Effect.fnUntraced(function* () {
   const release = yield* Deferred.make<void>();
   const started = yield* Deferred.make<void>();
   let inputs = 0;
-  const executable = Operation.makeDurable(
-    { key: 'test.stalling', input: Schema.Void, output: Schema.Void, services: [] },
-    () =>
+  const executable = Operation.makeDurable({
+    key: 'test.stalling',
+    input: Schema.Void,
+    output: Schema.Void,
+    services: [],
+  }).pipe(
+    Operation.withDurableHandler(() =>
       Effect.succeed({
         onSpawn: () => Effect.void,
         onInput: () =>
@@ -307,6 +315,7 @@ const makeStallingProcess = Effect.fnUntraced(function* () {
         onAlarm: () => Effect.void,
         onChildEvent: () => Effect.void,
       }),
+    ),
   );
 
   return { executable, release, started, inputs: () => inputs };
@@ -322,15 +331,14 @@ const rpcs = RpcGroup.make(
   }),
 );
 
-const ProcessWithRpcs = Operation.makeDurable(
-  {
-    key: 'test.process-with-rpcs',
-    input: Schema.Void,
-    output: Schema.Void,
-    services: [],
-    rpcs,
-  },
-  (ctx) =>
+const ProcessWithRpcs = Operation.makeDurable({
+  key: 'test.process-with-rpcs',
+  input: Schema.Void,
+  output: Schema.Void,
+  services: [],
+  rpcs,
+}).pipe(
+  Operation.withDurableHandler((ctx) =>
     Effect.gen(function* () {
       const storage = yield* StorageService.StorageService;
       return {
@@ -344,6 +352,7 @@ const ProcessWithRpcs = Operation.makeDurable(
         }),
       };
     }),
+  ),
 );
 
 const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, UnifiedProcessManager.layer).pipe(
@@ -384,18 +393,20 @@ const CapturingTraceTestLayer = Layer.mergeAll(
 
 /** Sets an alarm on input (or at spawn, when `atSpawn` is given) and opens a span when it fires. */
 const makeTracedAlarmExecutable = (options: { atSpawn?: number; scheduleInSpan?: string } = {}) =>
-  Operation.makeDurable({ key: 'test.traced-alarm', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
-    Effect.succeed({
-      onSpawn: () => (options.atSpawn !== undefined ? ctx.setAlarm(options.atSpawn) : Effect.void),
-      onInput: () =>
-        options.scheduleInSpan ? ctx.setAlarm(0).pipe(Effect.withSpan(options.scheduleInSpan)) : ctx.setAlarm(0),
-      onAlarm: () =>
-        Effect.void.pipe(
-          Effect.withSpan('Alarm.handler'),
-          Effect.tap(() => Effect.sync(() => ctx.succeed())),
-        ),
-      onChildEvent: () => Effect.void,
-    }),
+  Operation.makeDurable({ key: 'test.traced-alarm', input: Schema.Void, output: Schema.Void, services: [] }).pipe(
+    Operation.withDurableHandler((ctx) =>
+      Effect.succeed({
+        onSpawn: () => (options.atSpawn !== undefined ? ctx.setAlarm(options.atSpawn) : Effect.void),
+        onInput: () =>
+          options.scheduleInSpan ? ctx.setAlarm(0).pipe(Effect.withSpan(options.scheduleInSpan)) : ctx.setAlarm(0),
+        onAlarm: () =>
+          Effect.void.pipe(
+            Effect.withSpan('Alarm.handler'),
+            Effect.tap(() => Effect.sync(() => ctx.succeed())),
+          ),
+        onChildEvent: () => Effect.void,
+      }),
+    ),
   );
 
 const recordedSpans: Tracer.Span[] = [];
@@ -528,9 +539,13 @@ describe('ManagerImpl', () => {
         const manager = yield* ProcessManager.Service;
         const childExited = yield* Deferred.make<void>();
         const parent = yield* manager.spawn(
-          Operation.makeDurable(
-            { key: 'test.traced-parent', input: Schema.Void, output: Schema.Void, services: [] },
-            () =>
+          Operation.makeDurable({
+            key: 'test.traced-parent',
+            input: Schema.Void,
+            output: Schema.Void,
+            services: [],
+          }).pipe(
+            Operation.withDurableHandler(() =>
               Effect.succeed({
                 onChildEvent: () =>
                   Effect.void.pipe(
@@ -538,6 +553,7 @@ describe('ManagerImpl', () => {
                     Effect.andThen(Deferred.succeed(childExited, undefined)),
                   ),
               }),
+            ),
           ),
         );
         const child = yield* manager.spawn(DurableOperation.fromOperation(Double, handlers), {
@@ -759,9 +775,13 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
       const captured = yield* Deferred.make<AbortSignal>();
-      const executable = Operation.makeDurable(
-        { key: 'test.cancellation', input: Schema.Void, output: Schema.Void, services: [] },
-        () =>
+      const executable = Operation.makeDurable({
+        key: 'test.cancellation',
+        input: Schema.Void,
+        output: Schema.Void,
+        services: [],
+      }).pipe(
+        Operation.withDurableHandler(() =>
           Effect.succeed({
             onSpawn: () =>
               Effect.gen(function* () {
@@ -771,6 +791,7 @@ describe('ManagerImpl', () => {
             onAlarm: () => Effect.void,
             onChildEvent: () => Effect.void,
           }),
+        ),
       );
       const handle = yield* manager.spawn(executable);
       const signal = yield* Deferred.await(captured);
@@ -969,15 +990,20 @@ describe('ManagerImpl', () => {
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
         const monitor = yield* Process.ManagerService;
-        const executable = Operation.makeDurable(
-          { key: 'test.explicit-fail', input: Schema.Void, output: Schema.Void, services: [] },
-          (ctx) =>
+        const executable = Operation.makeDurable({
+          key: 'test.explicit-fail',
+          input: Schema.Void,
+          output: Schema.Void,
+          services: [],
+        }).pipe(
+          Operation.withDurableHandler((ctx) =>
             Effect.succeed({
               onSpawn: () => Effect.sync(() => ctx.fail(new Error('boom failure'))),
               onInput: () => Effect.void,
               onAlarm: () => Effect.void,
               onChildEvent: () => Effect.void,
             }),
+          ),
         );
 
         const handle = yield* manager.spawn(executable);
@@ -995,15 +1021,20 @@ describe('ManagerImpl', () => {
       'a crashed process reports the failure at error level, with the failing error (DX-1250)',
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
-        const executable = Operation.makeDurable(
-          { key: 'test.explicit-fail', input: Schema.Void, output: Schema.Void, services: [] },
-          (ctx) =>
+        const executable = Operation.makeDurable({
+          key: 'test.explicit-fail',
+          input: Schema.Void,
+          output: Schema.Void,
+          services: [],
+        }).pipe(
+          Operation.withDurableHandler((ctx) =>
             Effect.succeed({
               onSpawn: () => Effect.sync(() => ctx.fail(new Error('boom failure'))),
               onInput: () => Effect.void,
               onAlarm: () => Effect.void,
               onChildEvent: () => Effect.void,
             }),
+          ),
         );
 
         const entries = yield* captureLogEntries(() => manager.spawn(executable));
@@ -1840,9 +1871,13 @@ describe('reentrancy', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
       const seen: AbortSignal[] = [];
-      const executable = Operation.makeDurable(
-        { key: 'test.cancellation-rehydrate', input: Schema.Number, output: Schema.Void, services: [] },
-        () =>
+      const executable = Operation.makeDurable({
+        key: 'test.cancellation-rehydrate',
+        input: Schema.Number,
+        output: Schema.Void,
+        services: [],
+      }).pipe(
+        Operation.withDurableHandler(() =>
           Effect.succeed({
             onSpawn: () => Effect.void,
             onInput: () =>
@@ -1852,6 +1887,7 @@ describe('reentrancy', () => {
             onAlarm: () => Effect.void,
             onChildEvent: () => Effect.void,
           }),
+        ),
       );
 
       const handle = yield* manager.spawn(executable);
@@ -1883,9 +1919,13 @@ describe('reentrancy', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
       const seen: (Database.Origin | undefined)[] = [];
-      const executable = Operation.makeDurable(
-        { key: 'test.origin-rehydrate', input: Schema.Number, output: Schema.Void, services: [] },
-        () =>
+      const executable = Operation.makeDurable({
+        key: 'test.origin-rehydrate',
+        input: Schema.Number,
+        output: Schema.Void,
+        services: [],
+      }).pipe(
+        Operation.withDurableHandler(() =>
           Effect.succeed({
             onSpawn: () => Effect.void,
             onInput: () =>
@@ -1895,6 +1935,7 @@ describe('reentrancy', () => {
             onAlarm: () => Effect.void,
             onChildEvent: () => Effect.void,
           }),
+        ),
       );
 
       const handle = yield* manager.spawn(executable, { origin: 'user' });
@@ -2007,14 +2048,13 @@ describe('durability', () => {
       const alarmResume = yield* Deferred.make<void>();
       const childEvents: string[] = [];
       const delivered = yield* Deferred.make<void>();
-      const parentDefinition = Operation.makeDurable(
-        {
-          key: 'test.parent-child-exit-at-close',
-          input: Schema.Void,
-          output: Schema.Void,
-          services: [ProcessManager.ProcessOperationInvoker.Service],
-        },
-        (ctx) =>
+      const parentDefinition = Operation.makeDurable({
+        key: 'test.parent-child-exit-at-close',
+        input: Schema.Void,
+        output: Schema.Void,
+        services: [ProcessManager.ProcessOperationInvoker.Service],
+      }).pipe(
+        Operation.withDurableHandler((ctx) =>
           Effect.succeed({
             onInput: () => ctx.setAlarm(0),
             onAlarm: () =>
@@ -2029,6 +2069,7 @@ describe('durability', () => {
                 childEvents.push(event._tag);
               }).pipe(Effect.andThen(Deferred.succeed(delivered, undefined))),
           }),
+        ),
       );
 
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
@@ -2094,9 +2135,13 @@ describe('durability', () => {
       const traceSink = yield* Trace.TraceSink;
 
       let spawnCount = 0;
-      const counting = Operation.makeDurable(
-        { key: 'test.counting-spawn', input: Schema.Void, output: Schema.Void, services: [] },
-        (ctx) =>
+      const counting = Operation.makeDurable({
+        key: 'test.counting-spawn',
+        input: Schema.Void,
+        output: Schema.Void,
+        services: [],
+      }).pipe(
+        Operation.withDurableHandler((ctx) =>
           Effect.succeed({
             onSpawn: () =>
               Effect.gen(function* () {
@@ -2107,6 +2152,7 @@ describe('durability', () => {
             onAlarm: () => Effect.void,
             onChildEvent: () => Effect.void,
           }),
+        ),
       );
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(counting);
@@ -2132,14 +2178,13 @@ describe('durability', () => {
 
       const alarmStarted = yield* Deferred.make<void>();
       const alarmResume = yield* Deferred.make<void>();
-      const blockingParent = Operation.makeDurable(
-        {
-          key: 'test.blocking-alarm-hydrate',
-          input: Schema.Void,
-          output: Schema.Void,
-          services: [],
-        },
-        (ctx) =>
+      const blockingParent = Operation.makeDurable({
+        key: 'test.blocking-alarm-hydrate',
+        input: Schema.Void,
+        output: Schema.Void,
+        services: [],
+      }).pipe(
+        Operation.withDurableHandler((ctx) =>
           Effect.succeed({
             onSpawn: () => Effect.void,
             onInput: () => ctx.setAlarm(0),
@@ -2150,6 +2195,7 @@ describe('durability', () => {
               }),
             onChildEvent: () => Effect.void,
           }),
+        ),
       );
 
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
@@ -2246,9 +2292,13 @@ describe('durability', () => {
       let handled = 0;
       let gate = true; // first manager: block; after hydrate: allow.
       const handledOnce = yield* Deferred.make<void>();
-      const blocking = Operation.makeDurable(
-        { key: 'test.blocking-input', input: Schema.String, output: Schema.Void, services: [] },
-        () =>
+      const blocking = Operation.makeDurable({
+        key: 'test.blocking-input',
+        input: Schema.String,
+        output: Schema.Void,
+        services: [],
+      }).pipe(
+        Operation.withDurableHandler(() =>
           Effect.succeed({
             onSpawn: () => Effect.void,
             onInput: () =>
@@ -2262,6 +2312,7 @@ describe('durability', () => {
             onAlarm: () => Effect.void,
             onChildEvent: () => Effect.void,
           }),
+        ),
       );
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(blocking);
@@ -2397,15 +2448,20 @@ describe('durability', () => {
       const traceSink = yield* Trace.TraceSink;
 
       const waiting = makeWaitingExecutable();
-      const other = Operation.makeDurable(
-        { key: 'test.other', input: Schema.Void, output: Schema.Void, services: [] },
-        () =>
+      const other = Operation.makeDurable({
+        key: 'test.other',
+        input: Schema.Void,
+        output: Schema.Void,
+        services: [],
+      }).pipe(
+        Operation.withDurableHandler(() =>
           Effect.succeed({
             onSpawn: () => Effect.void,
             onInput: () => Effect.void,
             onAlarm: () => Effect.void,
             onChildEvent: () => Effect.void,
           }),
+        ),
       );
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(waiting);
@@ -2567,11 +2623,13 @@ const captureLogEntries = <A, E, R>(body: () => Effect.Effect<A, E, R>): Effect.
 // A dismissed passkey prompt reaches this path wrapped in a domain error, which is why the
 // DOMException sits on `cause` rather than being the failing value itself.
 const failWith = (key: string, error: Error) =>
-  Operation.makeDurable({ key, input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
-    Effect.succeed({
-      onSpawn: () => Effect.sync(() => ctx.fail(error)),
-      onInput: () => Effect.void,
-      onAlarm: () => Effect.void,
-      onChildEvent: () => Effect.void,
-    }),
+  Operation.makeDurable({ key, input: Schema.Void, output: Schema.Void, services: [] }).pipe(
+    Operation.withDurableHandler((ctx) =>
+      Effect.succeed({
+        onSpawn: () => Effect.sync(() => ctx.fail(error)),
+        onInput: () => Effect.void,
+        onAlarm: () => Effect.void,
+        onChildEvent: () => Effect.void,
+      }),
+    ),
   );

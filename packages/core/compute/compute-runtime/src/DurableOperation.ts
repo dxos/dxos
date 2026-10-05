@@ -37,108 +37,113 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
   Operation.Definition.Input<Op>,
   Operation.Definition.Output<Op>,
   Operation.Definition.Services<Op>
-> =>
-  Operation.makeDurable(
-    {
-      key: DXN.getName(op.meta.key),
-      input: op.input,
-      output: op.output,
-      services: op.services,
-    },
-    (ctx) =>
-      Effect.gen(function* () {
-        const semaphore = yield* Semaphore.make(1);
-        // The process runtime assumes handlers are idempotent and always re-delivers an input
-        // whose handler was interrupted. Non-idempotent operations opt out of that retry here:
-        // a re-delivery that observes the durable "started" marker fails instead of repeating
-        // side effects. Idempotent operations skip the marker and are simply re-run.
-        const idempotent = Operation.isIdempotent(op);
+> => {
+  const definition: Operation.DurableDefinition<
+    Operation.Definition.Input<Op>,
+    Operation.Definition.Output<Op>,
+    Operation.Definition.Services<Op>
+  > = Operation.makeDurable({
+    key: DXN.getName(op.meta.key),
+    input: op.input,
+    output: op.output,
+    services: op.services,
+  });
 
-        return {
-          onInput: (input: Operation.Definition.Input<Op>) =>
-            Effect.gen(function* () {
-              if (!idempotent) {
-                const started = yield* OperationStartedCell.get;
-                if (started) {
-                  return yield* Effect.die(
-                    new Error(`non-idempotent operation "${op.meta.key}" was interrupted; cannot retry safely`),
-                  );
-                }
-                yield* OperationStartedCell.set(true);
+  return Operation.withDurableHandler(definition, (ctx) =>
+    Effect.gen(function* () {
+      const semaphore = yield* Semaphore.make(1);
+      // The process runtime assumes handlers are idempotent and always re-delivers an input
+      // whose handler was interrupted. Non-idempotent operations opt out of that retry here:
+      // a re-delivery that observes the durable "started" marker fails instead of repeating
+      // side effects. Idempotent operations skip the marker and are simply re-run.
+      const idempotent = Operation.isIdempotent(op);
+
+      return {
+        onInput: (input: Operation.Definition.Input<Op>) =>
+          Effect.gen(function* () {
+            if (!idempotent) {
+              const started = yield* OperationStartedCell.get;
+              if (started) {
+                return yield* Effect.die(
+                  new Error(`non-idempotent operation "${op.meta.key}" was interrupted; cannot retry safely`),
+                );
               }
+              yield* OperationStartedCell.set(true);
+            }
 
-              // Emit operation start event.
-              log('operation process invoking', { key: op.meta.key, name: op.meta.name });
-              yield* Trace.write(Trace.OperationStart, {
-                key: op.meta.key,
-                name: op.meta.name,
-                icon: op.meta.icon,
-              });
-              // Emit ephemeral operation input event for live subscribers
-              // (history tracker, devtools) without persisting raw input.
-              yield* Trace.write(Trace.OperationInput, {
-                key: op.meta.key,
-                name: op.meta.name,
-                input,
-              });
+            // Emit operation start event.
+            log('operation process invoking', { key: op.meta.key, name: op.meta.name });
+            yield* Trace.write(Trace.OperationStart, {
+              key: op.meta.key,
+              name: op.meta.name,
+              icon: op.meta.icon,
+            });
+            // Emit ephemeral operation input event for live subscribers
+            // (history tracker, devtools) without persisting raw input.
+            yield* Trace.write(Trace.OperationInput, {
+              key: op.meta.key,
+              name: op.meta.name,
+              input,
+            });
 
-              // A property the schema does not declare is a caller mistake, not a value to drop:
-              // a misspelled field left `query-objects` with no `text` and no `typename`, which
-              // its handler read as "match everything" and returned as a successful search. The
-              // edge path validates the same way in `wrapFunctionHandler`; validating here too
-              // keeps a local invocation and a remote one to one contract.
-              yield* validateOperationInput(op, input);
+            // A property the schema does not declare is a caller mistake, not a value to drop:
+            // a misspelled field left `query-objects` with no `text` and no `typename`, which
+            // its handler read as "match everything" and returned as a successful search. The
+            // edge path validates the same way in `wrapFunctionHandler`; validating here too
+            // keeps a local invocation and a remote one to one contract.
+            yield* validateOperationInput(op, input);
 
-              const opHandler = yield* OperationHandlerSet.getHandler(handlers, op).pipe(Effect.orDie);
-              const output = yield* opHandler
-                .handler(input)
-                .pipe(Effect.orDie, Effect.withSpan(op.meta.key)) as Effect.Effect<
-                Operation.Definition.Output<Op>,
-                never,
-                never
-              >;
+            const opHandler = yield* OperationHandlerSet.getHandler(handlers, op).pipe(Effect.orDie);
+            const output = yield* opHandler
+              .handler(input)
+              .pipe(Effect.orDie, Effect.withSpan(op.meta.key)) as Effect.Effect<
+              Operation.Definition.Output<Op>,
+              never,
+              never
+            >;
 
-              ctx.submitOutput(output);
-              ctx.succeed();
+            ctx.submitOutput(output);
+            ctx.succeed();
 
-              // Emit ephemeral operation output event before the persisted
-              // end event so subscribers see output + completion together.
-              yield* Trace.write(Trace.OperationOutput, {
-                key: op.meta.key,
-                name: op.meta.name,
-                output,
-              });
-              // Emit operation end event with success after side-effects complete.
-              yield* Trace.write(Trace.OperationEnd, {
-                key: op.meta.key,
-                name: op.meta.name,
-                icon: op.meta.icon,
-                outcome: 'success',
-              });
-            }).pipe(
-              Effect.catchDefect((defect) =>
-                Effect.gen(function* () {
-                  // Emit operation end event with failure. Carry the error's stable name as `errorCode`
-                  // so consumers can match on the failure kind (e.g. a run-again yield) without parsing
-                  // the message.
-                  const errorMessage = defect instanceof Error ? defect.message : String(defect);
-                  const errorCode = defect instanceof Error ? defect.name : undefined;
-                  yield* Trace.write(Trace.OperationEnd, {
-                    key: op.meta.key,
-                    name: op.meta.name,
-                    icon: op.meta.icon,
-                    outcome: 'failure',
-                    error: errorMessage,
-                    ...(errorCode ? { errorCode } : {}),
-                  });
-                  return yield* Effect.die(defect);
-                }),
-              ),
-              semaphore.withPermits(1),
+            // Emit ephemeral operation output event before the persisted
+            // end event so subscribers see output + completion together.
+            yield* Trace.write(Trace.OperationOutput, {
+              key: op.meta.key,
+              name: op.meta.name,
+              output,
+            });
+            // Emit operation end event with success after side-effects complete.
+            yield* Trace.write(Trace.OperationEnd, {
+              key: op.meta.key,
+              name: op.meta.name,
+              icon: op.meta.icon,
+              outcome: 'success',
+            });
+          }).pipe(
+            Effect.catchDefect((defect) =>
+              Effect.gen(function* () {
+                // Emit operation end event with failure. Carry the error's stable name as `errorCode`
+                // so consumers can match on the failure kind (e.g. a run-again yield) without parsing
+                // the message.
+                const errorMessage = defect instanceof Error ? defect.message : String(defect);
+                const errorCode = defect instanceof Error ? defect.name : undefined;
+                yield* Trace.write(Trace.OperationEnd, {
+                  key: op.meta.key,
+                  name: op.meta.name,
+                  icon: op.meta.icon,
+                  outcome: 'failure',
+                  error: errorMessage,
+                  ...(errorCode ? { errorCode } : {}),
+                });
+                return yield* Effect.die(defect);
+              }),
             ),
-        };
-      }),
+            semaphore.withPermits(1),
+          ),
+      };
+    }),
   );
+};
 
 /**
  * Reject an operation input the operation's own schema does not admit, naming the offending value.

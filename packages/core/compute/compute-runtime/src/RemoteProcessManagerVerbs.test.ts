@@ -255,15 +255,12 @@ const TEST_SPACE = SpaceId.random();
 const TEST_PID = Schema.decodeUnknownSync(Process.ID)('pid-1');
 
 /** Input/output codecs are the only part of the definition the remote path uses. */
-const EchoProcess = Operation.makeDurable(
-  {
-    key: TEST_KEY,
-    input: Schema.String,
-    output: Schema.String,
-    services: [],
-  },
-  () => Effect.succeed({}),
-);
+const EchoProcess = Operation.makeDurable({
+  key: TEST_KEY,
+  input: Schema.String,
+  output: Schema.String,
+  services: [],
+}).pipe(Operation.withDurableHandler(() => Effect.succeed({})));
 
 /**
  * In-memory stand-in for a remote host: echoes each input back as an output and tracks state, so the

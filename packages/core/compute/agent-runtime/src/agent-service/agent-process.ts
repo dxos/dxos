@@ -125,45 +125,44 @@ const MAX_UNSEEN_WRITE_WAKES = 20;
  * The process target is a queue DXN string.
  */
 export const AgentProcess = (options: AgentProcessOptions) =>
-  Operation.makeDurable(
-    {
-      key: AGENT_PROCESS_KEY,
-      // Accepts plain text or content blocks.
-      input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
-      output: Schema.Void,
-      // The conversation's own data model. `SessionStore` reads the queue with a TYPED query
-      // (`Filter.type(Message)`/`Filter.type(Alarm)`), so without these registered every read comes
-      // back empty on a host that did not happen to register them itself: the prompt appends fine and
-      // the agent then finds nothing to do. `Chat`/`Feed` are resolved by DXN at startup.
-      // `AiContext.Binding` and `Skill` belong here for the same reason the rest do: the host
-      // registers exactly these with the process's database, and a typed query for a type it does
-      // not know matches nothing. Without them a hosted agent reads its own skill bindings back
-      // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
-      // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
-      types: [
-        Chat.Chat,
-        Feed.Feed,
-        Message.Message,
-        Alarm.Alarm,
-        AiContext.Binding,
-        Skill.Skill,
-        McpServer.McpServer,
-        AccessToken.AccessToken,
-      ],
-      services: [
-        Database.Service,
-        OpaqueToolkit.OpaqueToolkitProvider,
-        Operation.Service,
-        Registry.Service,
-        StorageService.StorageService,
-        ProcessManager.ProcessOperationInvoker.Service,
-        AiService.AiService,
-        // Needed in the fiber's context — `Header.byokLayer`'s per-request callback reads it.
-        Credential.CredentialsService,
-      ],
-      rpcs: HarnessControl,
-    },
-    (ctx) =>
+  Operation.makeDurable({
+    key: AGENT_PROCESS_KEY,
+    // Accepts plain text or content blocks.
+    input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
+    output: Schema.Void,
+    // The conversation's own data model. `SessionStore` reads the queue with a TYPED query
+    // (`Filter.type(Message)`/`Filter.type(Alarm)`), so without these registered every read comes
+    // back empty on a host that did not happen to register them itself: the prompt appends fine and
+    // the agent then finds nothing to do. `Chat`/`Feed` are resolved by DXN at startup.
+    // `AiContext.Binding` and `Skill` belong here for the same reason the rest do: the host
+    // registers exactly these with the process's database, and a typed query for a type it does
+    // not know matches nothing. Without them a hosted agent reads its own skill bindings back
+    // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
+    // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
+    types: [
+      Chat.Chat,
+      Feed.Feed,
+      Message.Message,
+      Alarm.Alarm,
+      AiContext.Binding,
+      Skill.Skill,
+      McpServer.McpServer,
+      AccessToken.AccessToken,
+    ],
+    services: [
+      Database.Service,
+      OpaqueToolkit.OpaqueToolkitProvider,
+      Operation.Service,
+      Registry.Service,
+      StorageService.StorageService,
+      ProcessManager.ProcessOperationInvoker.Service,
+      AiService.AiService,
+      // Needed in the fiber's context — `Header.byokLayer`'s per-request callback reads it.
+      Credential.CredentialsService,
+    ],
+    rpcs: HarnessControl,
+  }).pipe(
+    Operation.withDurableHandler((ctx) =>
       Effect.gen(function* () {
         const chatDxn = Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation).pipe(
           Option.getOrUndefined,
@@ -684,6 +683,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           }),
         };
       }),
+    ),
   );
 
 interface ToolExecutionServiceOptions {
