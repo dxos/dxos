@@ -75,32 +75,6 @@ describe('Outbox', () => {
     expect(outbox.get(first.id)?.error?.message).toBe('offline');
   });
 
-  test('a retried prompt moves behind everything sent meanwhile and is dispatched again', async ({ expect }) => {
-    const registry = AtomRegistry.make();
-    const { started, pending, dispatch, reached } = createDispatch();
-    const outbox = new Outbox(registry, dispatch);
-
-    const reachedFirst = reached('first');
-    const first = outbox.add('first', { blocks: blocks('first'), known: new Set() });
-    const second = outbox.add('second', { blocks: blocks('second'), known: new Set() });
-    await reachedFirst;
-    const reachedSecond = reached('second');
-    pending.get('first')?.reject(new Error('offline'));
-    await reachedSecond;
-    pending.get('second')?.resolve();
-    await outbox.idle;
-
-    const reachedAgain = reached('first');
-    outbox.retry(first.id);
-    expect(registry.get(outbox.entries).map(({ id }) => id)).toEqual([second.id, first.id]);
-    expect(outbox.get(first.id)?.state).toBe('sending');
-    await reachedAgain;
-    expect(started).toEqual(['first', 'second', 'first']);
-    pending.get('first')?.resolve();
-    await outbox.idle;
-    expect(outbox.get(first.id)?.state).toBe('submitted');
-  });
-
   test('a prompt cancelled before it was sent is dropped rather than failed', async ({ expect }) => {
     const registry = AtomRegistry.make();
     const { pending, dispatch, reached } = createDispatch();

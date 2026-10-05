@@ -83,21 +83,6 @@ export class Outbox<T> {
     return entry;
   }
 
-  /**
-   * Sends a failed prompt again. It moves to the end, since it now reaches the agent after
-   * everything sent meanwhile — keeping its place would show it above prompts the agent reads first.
-   */
-  retry(id: string): void {
-    const entry = this.get(id);
-    if (entry?.state !== 'failed') {
-      return;
-    }
-
-    const resent: OutboxEntry = { ...entry, state: 'sending', error: undefined };
-    this._registry.update(this.entries, (entries) => [...entries.filter((candidate) => candidate.id !== id), resent]);
-    this.#schedule(id);
-  }
-
   remove(id: string): void {
     this.#payloads.delete(id);
     this._registry.update(this.entries, (entries) => entries.filter((entry) => entry.id !== id));

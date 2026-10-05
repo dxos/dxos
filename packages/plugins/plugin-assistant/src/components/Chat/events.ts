@@ -43,11 +43,6 @@ export type ChatEvent =
       type: 'rewind';
       id: string;
     }
-  /** Send again a prompt that never reached the agent (its delivery row's retry). */
-  | {
-      type: 'retry-prompt';
-      id: string;
-    }
   /** Withdraw a prompt the agent has not taken up (its delivery row's remove). */
   | {
       type: 'remove-prompt';

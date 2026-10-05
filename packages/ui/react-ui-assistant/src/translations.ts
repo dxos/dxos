@@ -15,7 +15,6 @@ export const translations = [
         'delivery-delivered.label': 'Delivered, not yet read',
         'delivery-read.label': 'Read',
         'delivery-failed.label': 'Not sent',
-        'delivery-retry.label': 'Retry',
         'delivery-remove.label': 'Remove',
         'copy.label': 'Copy',
         'just-now.label': 'just now',

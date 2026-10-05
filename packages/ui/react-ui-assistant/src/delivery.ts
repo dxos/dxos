@@ -13,7 +13,7 @@ import { Annotation, Obj } from '@dxos/echo';
  * - `sent`: the client holds it (one tick) — shown the moment it is submitted, before anything persists.
  * - `delivered`: the agent's input queue holds it (two ticks); unread until the agent takes it up.
  * - `read`: the agent took it up (two coloured ticks).
- * - `failed`: it never reached the queue; the row offers retry and remove.
+ * - `failed`: it never reached the queue; the row offers remove (the agent retries what it receives).
  */
 export const DeliveryStatus = Schema.Literals(['sent', 'delivered', 'read', 'failed']);
 export type DeliveryStatus = Schema.Schema.Type<typeof DeliveryStatus>;

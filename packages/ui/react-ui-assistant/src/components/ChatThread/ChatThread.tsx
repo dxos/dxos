@@ -106,7 +106,6 @@ const ChatThreadRoot = ({
         delivered: t('delivery-delivered.label'),
         read: t('delivery-read.label'),
         failed: t('delivery-failed.label'),
-        retry: t('delivery-retry.label'),
         remove: t('delivery-remove.label'),
       }),
     [t],
@@ -214,8 +213,6 @@ const toThreadEvent = (action: string | null | undefined, value: string): ChatTh
   switch (action) {
     case 'submit':
       return { type: 'submit', text: value };
-    case 'retry':
-      return { type: 'retry-prompt', id: value };
     case 'remove':
       return { type: 'remove-prompt', id: value };
     default:

@@ -178,14 +178,6 @@ const ChatRoot = ({
           break;
         }
 
-        case 'retry-prompt': {
-          const row = delivery.get(ev.id);
-          if (row?.status === 'failed' && row.outboxId) {
-            processor?.retryPrompt(row.outboxId);
-          }
-          break;
-        }
-
         case 'remove-prompt': {
           // Withdrawing a prompt the agent has not taken up: the queue is feed state, so removing the
           // entry is what takes it out of the agent's queue, and the outbox forgets this client's copy.

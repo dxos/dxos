@@ -361,11 +361,6 @@ export class AiChatProcessor {
     return this.#outbox.add({ request, prepare }, { blocks, known: new Set(known) }).id;
   }
 
-  /** Sends a prompt that failed to reach the agent again. */
-  retryPrompt(id: string): void {
-    this.#outbox.retry(id);
-  }
-
   /** Forgets a prompt this client sent; withdrawing one the agent's queue holds is the feed's business. */
   removePrompt(id: string): void {
     this.#outbox.remove(id);

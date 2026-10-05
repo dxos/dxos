@@ -9,7 +9,7 @@ import { getSize } from '@dxos/ui-theme';
 
 import { type DeliveryStatus } from '../delivery.ts';
 
-export type DeliveryLabels = Record<DeliveryStatus | 'retry' | 'remove', string>;
+export type DeliveryLabels = Record<DeliveryStatus | 'remove', string>;
 
 const ICONS: Record<DeliveryStatus, string> = {
   sent: 'ph--check--regular',
@@ -19,7 +19,7 @@ const ICONS: Record<DeliveryStatus, string> = {
 };
 
 /**
- * The delivery ticks under a prompt still on its way to the agent, with its retry/remove controls.
+ * The delivery ticks under a prompt still on its way to the agent, with its remove control.
  *
  * Every state is one line of the same height, so a prompt moving from sent to read never moves the
  * rows below it. The controls are `data-action` buttons the thread's delegated listener turns into
@@ -50,9 +50,6 @@ export class DeliveryWidget extends WidgetType {
       .attributes({ 'data-testid': 'chat.delivery', 'data-delivery': status });
 
     // A queued prompt the agent has not taken up can still be withdrawn; one it has, cannot.
-    if (status === 'failed') {
-      root.append(this.#action('retry'));
-    }
     if (status === 'failed' || status === 'delivered') {
       root.append(this.#action('remove'));
     }
@@ -69,7 +66,7 @@ export class DeliveryWidget extends WidgetType {
     return root.root;
   }
 
-  #action(action: 'retry' | 'remove') {
+  #action(action: 'remove') {
     return Domino.of('button')
       .attributes({ 'type': 'button', 'data-action': action, 'data-value': this.messageId })
       .classNames('underline underline-offset-2 hover:text-fg-default')
