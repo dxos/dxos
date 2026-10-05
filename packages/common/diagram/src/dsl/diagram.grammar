@@ -50,12 +50,14 @@ ObjectAttr { Origin | Attribute }
 // Semantic statements.
 //
 
-// diagram [@ x,y] [flow=down] [grid=384x224] [box=192x96]
+// diagram [@ x,y] [flow=down] [grid=384x224] [box=192x96] [aspect=4:3]
 DiagramDecl { kw<"diagram"> (Origin | Attribute)* }
 
-// group <id> ["label"] [relation <group>]* [gap=…] [color=…] { node … edge … }
+// group <id> ["label"] [relation <group>]* [compact] [gap=…] [max-width=…] [color=…] { node … edge … }
 // Groups do not nest; the grammar accepts a nested one so it can be reported rather than mis-parsed.
-GroupDecl { kw<"group"> Id Label? (Relation | Attribute)* GroupBody }
+// `compact` is a keyword, not a name, because a bare name here would read as the start of a relation.
+GroupDecl { kw<"group"> Id Label? (Relation | Attribute | Compact)* GroupBody }
+Compact { kw<"compact"> }
 GroupBody { "{" (NodeDecl | EdgeDecl | GroupDecl)* "}" }
 
 // node <id> ["label"] [@ x,y | @cell(c,r)] [~]<relation> <node> … [ref=…] [color=…] [shape=…]
@@ -71,10 +73,11 @@ Relation { Soft? RelationKind Id }
 Soft { "~" }
 RelationKind { name }
 
-// edge A[:sides] (, B…)* (-> | <-> | -- | <relationship>) C[:sides] (, D…)* ["label"] [via …] [bus[=name]] [attr=…]*
+// edge A[:[~]sides] (, B…)* (-> | <-> | -- | <relationship>) C[:[~]sides] (, D…)* ["label"] [via …] [bus[=name]] [attr=…]*
+// `~` before the sides makes them a preference the router weighs, not a rule.
 EdgeDecl { kw<"edge"> EndList EdgeOp EndList Label? (Via | Bus | Attribute)* }
 EndList { EdgeEnd ("," EdgeEnd)* }
-EdgeEnd { Id (":" SideList)? }
+EdgeEnd { Id (":" Soft? SideList)? }
 SideList { Side ("|" Side)* }
 Side { name }
 // A relationship word in place of the arrow says what the edge means and sets its markers:
@@ -130,7 +133,9 @@ Ref { name | String }
 // the only case that wanted one.
 Attribute { AttrName "=" AttrValue }
 AttrName  { name }
-AttrValue { Number | Size | String | Word }
+AttrValue { Number | Size | Ratio | String | Word }
+// `aspect=4:3`.
+Ratio { Number ":" Number }
 
 // `head=triangle`, `head=arrow` and `tail=circle` are schema literals that are also element-kind
 // keywords, and a reserved word no longer lexes as a plain name. Listing every reserved word —
@@ -141,7 +146,7 @@ Word {
   kw<"rect"> | kw<"ellipse"> | kw<"diamond"> | kw<"triangle"> |
   kw<"circle"> | kw<"line"> | kw<"curve"> | kw<"arc"> |
   kw<"text"> | kw<"arrow"> | kw<"portal"> |
-  kw<"diagram"> | kw<"group"> | kw<"node"> | kw<"edge"> | kw<"cell"> | kw<"via"> | kw<"bus">
+  kw<"diagram"> | kw<"group"> | kw<"node"> | kw<"edge"> | kw<"cell"> | kw<"via"> | kw<"bus"> | kw<"compact">
 }
 
 Id    { name | String }

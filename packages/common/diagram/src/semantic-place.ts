@@ -35,10 +35,17 @@ export type PlaceEdge = {
   upward?: boolean;
 };
 
+/** How a group may be shaped: at most `maxWidth` columns, and near-square when `compact`. */
+export type GroupShape = { maxWidth?: number; compact?: boolean };
+
 export type PlaceInput = {
   nodes: readonly PlaceNode[];
   /** Group ids in declaration order. */
   groups: readonly string[];
+  /** Shape limits by group id. */
+  shapes?: ReadonlyMap<string, GroupShape>;
+  /** Preferred columns over rows of the whole placement. */
+  aspect?: number;
   /** Node relations; `from` and `target` are node ids. */
   relations: readonly PlaceRelation[];
   /** Group relations; `from` and `target` are group ids. */
@@ -73,6 +80,10 @@ const WEIGHT = {
   hard: 10_000,
   soft: 15,
   near: 2,
+  /** Per cell a compact group's width and height differ by beyond one. */
+  square: 8,
+  /** Per unit of log ratio the placement strays from the preferred aspect. */
+  aspect: 12,
   extent: 1.5,
   slack: 3,
   infeasible: 100_000,
@@ -106,6 +117,11 @@ type Index = {
   outDegree: Int32Array;
   flow: Semantic.Flow;
   box: { x: number; y: number };
+  /** Shape per group index. */
+  shapes: (GroupShape | undefined)[];
+  /** Shape of the whole placement, for a group laid out on its own. */
+  whole?: GroupShape;
+  aspect?: number;
 };
 
 const indexOf = (input: PlaceInput): Index => {
@@ -186,7 +202,22 @@ const indexOf = (input: PlaceInput): Index => {
     outDegree,
     flow: input.flow,
     box: input.box ?? { x: 0.25, y: 0.22 },
+    shapes: input.groups.map((group) => input.shapes?.get(group)),
+    ...(input.aspect === undefined ? {} : { aspect: input.aspect }),
   };
+};
+
+/** Cost of a group's (or the whole placement's) shape against its limits. */
+const shapeCost = (shape: GroupShape | undefined, box: Bounds, hard: number): number => {
+  if (!shape) {
+    return 0;
+  }
+  const width = box.maxCol - box.minCol + 1;
+  const height = box.maxRow - box.minRow + 1;
+  return (
+    (shape.maxWidth !== undefined && width > shape.maxWidth ? hard * (width - shape.maxWidth) : 0) +
+    (shape.compact ? WEIGHT.square * Math.max(0, Math.abs(width - height) - 1) : 0)
+  );
 };
 
 //
@@ -507,6 +538,7 @@ const score = (index: Index, state: State, occupied: Map<string, number>, strict
     if (!box) {
       return;
     }
+    total += shapeCost(index.shapes[group], box, hard);
     for (let row = box.minRow; row <= box.maxRow; row++) {
       for (let col = box.minCol; col <= box.maxCol; col++) {
         const node = occupied.get(keyOf(col, row));
@@ -569,6 +601,12 @@ const score = (index: Index, state: State, occupied: Map<string, number>, strict
   );
   if (all) {
     total += WEIGHT.extent * (all.maxCol - all.minCol + 1 + (all.maxRow - all.minRow + 1));
+    total += shapeCost(index.whole, all, hard);
+    if (index.aspect !== undefined) {
+      total +=
+        WEIGHT.aspect *
+        Math.abs(Math.log((all.maxCol - all.minCol + 1) / (all.maxRow - all.minRow + 1) / index.aspect));
+    }
   }
   return total;
 };
@@ -1030,14 +1068,16 @@ const layoutGroup = (
 ): { nodes: string[]; cells: Cell[]; anchored: boolean } => {
   const members = new Set(input.nodes.filter((node) => node.group === group).map((node) => node.id));
   const sub: PlaceInput = {
-    ...input,
+    flow: input.flow,
+    ...(input.box ? { box: input.box } : {}),
     nodes: input.nodes.filter((node) => members.has(node.id)).map(({ id, pin }) => ({ id, pin })),
     groups: [],
     relations: input.relations.filter((relation) => members.has(relation.from) && members.has(relation.target)),
     groupRelations: [],
     edges: input.edges.filter((edge) => members.has(edge.from) && members.has(edge.to)),
   };
-  const index = indexOf(sub);
+  const shape = input.shapes?.get(group);
+  const index = { ...indexOf(sub), ...(shape ? { whole: shape } : {}) };
   const anchored = index.pinned.some((pinned) => pinned === 1);
   const search = new Search(index, seed);
   search.seat(

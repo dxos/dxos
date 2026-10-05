@@ -39,6 +39,8 @@ const COST = {
   sharedSide: 3,
   opposedSide: 6,
   label: 5,
+  /** A side the author only preferred; more than a bend, so it gives way to a crossing but not to a detour. */
+  unpreferred: 15,
 };
 
 /** One end of a connector: a box (zero-sized for a bus junction), the sides it may use, and a fixed port. */
@@ -47,6 +49,8 @@ export type End = {
   /** Key of the box, for port bookkeeping; undefined for a junction. */
   node?: string;
   sides: readonly Side[];
+  /** Sides the author prefers among `sides`; any other costs extra. */
+  preferred?: readonly Side[];
   /** Fixed coordinate along the side. */
   port?: number;
 };
@@ -516,6 +520,9 @@ const costOf = (
     [piece.start, startSide, 'exit'],
     [piece.end, endSide, 'entry'],
   ] as const) {
+    if (end.preferred && !end.preferred.includes(side)) {
+      total += COST.unpreferred;
+    }
     if (end.node === undefined) {
       continue;
     }
@@ -770,6 +777,34 @@ export const routeAll = (pieces: readonly Piece[], buses: readonly BusRequest[],
       break;
     }
   }
+  // A bus no junction serves is drawn as its separate edges, under the edges' own ids.
+  for (const item of items) {
+    if (item.kind !== 'bus' || item.pieces.length > 0) {
+      continue;
+    }
+    const { bus } = item;
+    item.pieces = bus.spokes.map((spoke) => {
+      const [start, end] = bus.direction === 'out' ? [bus.hub, spoke.end] : [spoke.end, bus.hub];
+      const piece: Piece = {
+        id: spoke.id,
+        start,
+        end,
+        via: [],
+        points: [],
+        ...(bus.significance === undefined ? {} : { significance: bus.significance }),
+      };
+      const segments = others(item);
+      const route = bestRoute(piece, segments, terminalsOf(piecesOf(items)), context);
+      const drawn = route ?? fallback(piece, context);
+      return {
+        ...piece,
+        points: drawn.points,
+        startSide: drawn.startSide,
+        endSide: drawn.endSide,
+        ...(route ? {} : { forced: true }),
+      };
+    });
+  }
   return piecesOf(items);
 };
 
@@ -922,84 +957,174 @@ export const separate = (pieces: readonly Piece[], context: Context): Piece[] =>
 // Labels.
 //
 
-export type LabelRequest = { id: string; text: string; points: readonly Point[] };
+export type LabelRequest = {
+  id: string;
+  text: string;
+  points: readonly Point[];
+  /** A trunk the route shares with others, where its label goes only when its own runs have no room. */
+  shared?: readonly Point[];
+};
+
+export type LabelOptions = {
+  /** Every drawn route, the label's own among them. */
+  paths: readonly (readonly Point[])[];
+  boxes: readonly Rect[];
+  /** Text already on the drawing (frame titles). */
+  avoid: readonly Rect[];
+  /** Group frames, whose dashed borders a label must not sit on. */
+  frames?: readonly Rect[];
+  bounds: Rect;
+};
+
+/** The SVG renderer draws `s` text at about this share of the tldraw metric, so a label is anchored where its text starts. */
+const VISIBLE = 0.58;
 
 const rectsOverlap = (left: Rect, right: Rect) =>
   left.x < right.x + right.w && right.x < left.x + left.w && left.y < right.y + right.h && right.y < left.y + left.h;
 
+const inflate = (rect: Rect, by: number): Rect => ({
+  x: rect.x - by,
+  y: rect.y - by,
+  w: rect.w + by * 2,
+  h: rect.h + by * 2,
+});
+
+const within = (outer: Rect, inner: Rect) =>
+  inner.x >= outer.x &&
+  inner.y >= outer.y &&
+  inner.x + inner.w <= outer.x + outer.w &&
+  inner.y + inner.h <= outer.y + outer.h;
+
+/** Gap between a rect and an axis-aligned segment; zero when they touch. */
+const gapTo = (rect: Rect, [from, to]: readonly [Point, Point]) => {
+  const dx = Math.max(Math.min(from.x, to.x) - (rect.x + rect.w), rect.x - Math.max(from.x, to.x), 0);
+  const dy = Math.max(Math.min(from.y, to.y) - (rect.y + rect.h), rect.y - Math.max(from.y, to.y), 0);
+  return Math.hypot(dx, dy);
+};
+
+const keyOf = ([from, to]: readonly [Point, Point]) => `${from.x},${from.y},${to.x},${to.y}`;
+
+/** Whether a rect straddles a frame's border, rather than lying wholly inside or outside it. */
+export const onBorder = (rect: Rect, frame: Rect, clearance = CLEAR): boolean => {
+  const grown = inflate(rect, clearance);
+  return rectsOverlap(grown, frame) && !within(frame, grown);
+};
+
+/** Clutter outweighs every preference, so a clear spot anywhere on the route beats a cluttered one at its middle. */
+const CLUTTER = 10;
+
 /**
- * Each label beside the longest run of its own route, clear of boxes, other labels and every
- * route, and inside `bounds`: above a horizontal run or right of a vertical one, then the other
- * side, then shorter runs. Falls back to the least-cluttered spot.
+ * Each label beside a run of its own route, nearer that route than any other, and clear of boxes,
+ * other labels, other routes, frame borders and frame titles: the longest run first, its middle
+ * first, above a horizontal run or right of a vertical one (where the text starts at the line).
+ * When nothing is clear, the least-cluttered spot wins.
  */
-export const placeLabels = (
-  labels: readonly LabelRequest[],
-  paths: readonly (readonly Point[])[],
-  boxes: readonly Rect[],
-  avoid: readonly Rect[],
-  bounds: Rect,
-): Scene.Text[] => {
+export const placeLabels = (labels: readonly LabelRequest[], options: LabelOptions): Scene.Text[] => {
+  const { paths, boxes, avoid, frames = [] } = options;
   const segments = paths.flatMap((points) =>
     points.slice(0, -1).map((from, index): [Point, Point] => [from, points[index + 1]]),
   );
+  // Routes may leave the frames to go around them, and a label beside such a run is still inside the drawing.
+  const xs = [
+    options.bounds.x,
+    options.bounds.x + options.bounds.w,
+    ...paths.flatMap((points) => points.map((point) => point.x)),
+  ];
+  const ys = [
+    options.bounds.y,
+    options.bounds.y + options.bounds.h,
+    ...paths.flatMap((points) => points.map((point) => point.y)),
+  ];
+  const margin = LABEL_FONT.lineH + CLEAR * 2;
+  const bounds = {
+    x: Math.min(...xs) - margin,
+    y: Math.min(...ys) - margin,
+    w: Math.max(...xs) - Math.min(...xs) + margin * 2,
+    h: Math.max(...ys) - Math.min(...ys) + margin * 2,
+  };
   const placed: Rect[] = [...avoid];
-  return labels.map(({ id, text, points }) => {
+  const runsOf = (points: readonly Point[]) =>
+    points.slice(0, -1).map((from, index): [Point, Point] => [from, points[index + 1]]);
+  return labels.map(({ id, text, points, shared = [] }) => {
     const size = { w: text.length * LABEL_FONT.charW, h: LABEL_FONT.lineH };
-    const own = points.slice(0, -1).map((from, index): [Point, Point] => [from, points[index + 1]]);
-    const mine = new Set(own.map(([from, to]) => `${from.x},${from.y},${to.x},${to.y}`));
-    const byLength = own
-      .map((segment, index) => ({
-        segment,
-        index,
-        length: Math.abs(segment[1].x - segment[0].x) + Math.abs(segment[1].y - segment[0].y),
-      }))
-      .sort((left, right) => right.length - left.length || left.index - right.index);
-    const candidates = byLength.flatMap(({ segment: [from, to] }) => {
+    const visible = size.w * VISIBLE;
+    const own = [...runsOf(points), ...runsOf(shared)];
+    const mine = new Set(own.map(keyOf));
+    const foreign = segments.filter((segment) => !mine.has(keyOf(segment)));
+    const byLength = (runs: [Point, Point][], penalty: number) =>
+      runs
+        .map((segment) => ({
+          segment,
+          penalty,
+          length: Math.abs(segment[1].x - segment[0].x) + Math.abs(segment[1].y - segment[0].y),
+        }))
+        .sort((left, right) => right.length - left.length);
+    const runs = [...byLength(runsOf(points), 0), ...byLength(runsOf(shared), 2)];
+    type Candidate = { origin: Point; preference: number };
+    const candidates = runs.flatMap(({ segment: [from, to], length, penalty }, rank): Candidate[] => {
       const vertical = Math.abs(from.x - to.x) < 0.5;
-      // Farther out only when nothing beside the run is clear, e.g. a short run between two boxes.
-      return [0, CLEAR, CLEAR * 2, CLEAR * 4, CLEAR * 6].flatMap((shift) =>
-        [0.5, 0.35, 0.65, 0.2, 0.8].flatMap((ratio) => {
-          const at = { x: from.x + (to.x - from.x) * ratio, y: from.y + (to.y - from.y) * ratio };
+      // Stops along the run, middle first, kept far enough from its ends that the text stays beside it.
+      const reach = Math.max(0, length / 2 - (vertical ? size.h : visible / 2));
+      const stops = [
+        0,
+        ...Array.from({ length: Math.floor(reach / FINE) }, (_, index) => (index + 1) * FINE).flatMap((step) => [
+          step,
+          -step,
+        ]),
+      ];
+      const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
+      return stops.flatMap((offset) => {
+        const at = vertical ? { x: mid.x, y: mid.y + offset } : { x: mid.x + offset, y: mid.y };
+        const along = Math.abs(offset) / Math.max(length, 1);
+        return [0, CLEAR, CLEAR * 2, CLEAR * 4, CLEAR * 6, CLEAR * 8].flatMap((shift) => {
+          const base = penalty + rank * 0.6 + along + shift / CLEAR / 4;
           return vertical
             ? [
-                { x: at.x + CLEAR + shift, y: at.y - size.h / 2 },
-                { x: at.x - CLEAR - size.w - shift, y: at.y - size.h / 2 },
+                { origin: { x: at.x + CLEAR + shift, y: at.y - size.h / 2 }, preference: base },
+                { origin: { x: at.x - CLEAR - visible - shift, y: at.y - size.h / 2 }, preference: base + 0.3 },
               ]
-            : [
-                { x: at.x - size.w / 2, y: at.y - size.h - CLEAR / 2 - shift },
-                { x: at.x - size.w / 2, y: at.y + CLEAR / 2 + shift },
-              ];
-        }),
-      );
+            : [visible, size.w].flatMap((centred, measure) => [
+                // Centred on the drawn text first, then on its full measure where that is what fits.
+                {
+                  origin: { x: at.x - centred / 2, y: at.y - size.h - CLEAR / 2 - shift },
+                  preference: base + measure * 0.3,
+                },
+                {
+                  origin: { x: at.x - centred / 2, y: at.y + CLEAR / 2 + shift },
+                  preference: base + 0.2 + measure * 0.3,
+                },
+              ]);
+        });
+      });
     });
+    // `extent` is the label as the shared metrics measure it, which overlap diagnostics use; `ink` is the drawn text.
     const clutter = (origin: Point) => {
-      const rect = { ...origin, ...size };
-      const outside =
-        rect.x < bounds.x ||
-        rect.y < bounds.y ||
-        rect.x + rect.w > bounds.x + bounds.w ||
-        rect.y + rect.h > bounds.y + bounds.h;
+      const extent = { ...origin, ...size };
+      const ink = { ...origin, w: visible, h: size.h };
+      const nearest = Math.min(...own.map((segment) => gapTo(ink, segment)));
       return (
-        (outside ? 4 : 0) +
-        boxes.filter((box) => rectsOverlap(rect, { x: box.x - 4, y: box.y - 4, w: box.w + 8, h: box.h + 8 })).length *
-          4 +
-        placed.filter((other) => rectsOverlap(rect, other)).length * 4 +
-        segments.filter(([from, to]) => hits(from, to, rect, 0)).length * 2 +
-        // A foreign run hugging the label makes it read as that run's.
-        segments.filter(([from, to]) => !mine.has(`${from.x},${from.y},${to.x},${to.y}`) && hits(from, to, rect, CLEAR))
-          .length
+        (within(bounds, extent) ? 0 : 4) +
+        // Text over a box or another label hides what the reader needs, so it outweighs everything else.
+        boxes.filter((box) => rectsOverlap(extent, box)).length * 8 +
+        boxes.filter((box) => rectsOverlap(ink, inflate(box, 4))).length +
+        placed.filter((other) => rectsOverlap(extent, other)).length * 8 +
+        frames.filter((frame) => onBorder(ink, frame, CLEAR / 2)).length * 3 +
+        segments.filter(([from, to]) => hits(from, to, ink, 0)).length * 2 +
+        // A foreign run hugging the label, or nearer to it than its own, makes it read as that run's.
+        foreign.filter((segment) => gapTo(ink, segment) < CLEAR * 2).length +
+        foreign.filter((segment) => gapTo(ink, segment) < nearest - 0.5).length * 2
       );
     };
-    let best = candidates[0] ?? { x: points[0].x, y: points[0].y };
-    let bestClutter = Infinity;
-    for (const candidate of candidates) {
-      const value = clutter(candidate);
-      if (value < bestClutter) {
-        best = candidate;
-        bestClutter = value;
+    let best = candidates[0]?.origin ?? { x: points[0].x, y: points[0].y };
+    let bestScore = Infinity;
+    for (const { origin, preference } of candidates) {
+      if (preference >= bestScore) {
+        continue;
       }
-      if (value === 0) {
-        break;
+      const score = clutter(origin) * CLUTTER + preference;
+      if (score < bestScore) {
+        best = origin;
+        bestScore = score;
       }
     }
     placed.push({ ...best, ...size });

@@ -11,6 +11,7 @@ import { compile, parse, toScene } from './dsl/index.ts';
 import * as MermaidEngine from './mermaid-engine.ts';
 import type * as Scene from './scene.ts';
 import { measureBox, pitchFor } from './semantic-engine.ts';
+import { onBorder } from './semantic-route.ts';
 import * as Semantic from './semantic.ts';
 
 type Rect = { x: number; y: number; w: number; h: number };
@@ -398,6 +399,176 @@ describe('semantic engine', { timeout: 120_000 }, () => {
     expect(ours.metrics.crossings * 3 + ours.metrics.bends).toBeLessThanOrEqual(
       engine.metrics.crossings * 3 + engine.metrics.bends,
     );
+  });
+
+  describe('edge labels', () => {
+    /** Gap between a rect and a polyline of axis-aligned runs. */
+    const gapTo = (rect: Rect, points: readonly Scene.Point[]) =>
+      Math.min(
+        ...points.slice(1).map((to, index) => {
+          const from = points[index];
+          const dx = Math.max(Math.min(from.x, to.x) - (rect.x + rect.w), rect.x - Math.max(from.x, to.x), 0);
+          const dy = Math.max(Math.min(from.y, to.y) - (rect.y + rect.h), rect.y - Math.max(from.y, to.y), 0);
+          return Math.hypot(dx, dy);
+        }),
+      );
+
+    /** Each label's drawn text (the SVG renderer's narrower glyphs) with its own route. */
+    const labelsOf = (objects: readonly Scene.WorldObject[]) =>
+      (objects.find((entry) => entry.id === 'edges')?.elements ?? []).flatMap((element) =>
+        element.kind === 'text'
+          ? [
+              {
+                text: element.text,
+                rect: { x: element.x, y: element.y, w: element.text.length * 12 * 0.58, h: 26 },
+                route: pathOf(objects, element.id.replace(/-label$/, '')),
+              },
+            ]
+          : [],
+      );
+
+    test('each label sits beside its own route and off every frame border', ({ expect }) => {
+      const text = `
+        diagram flow=down
+        group top "Agents" {
+          node Toolkit
+          node Assistant below Toolkit
+          node Runtime right-of Assistant
+          node Link right-of Runtime
+        }
+        group middle "Runtime" below top {
+          node Conductor below Assistant
+          node Compute below Runtime
+          node Edge right-of Compute
+        }
+        group bottom "Primitives" below middle {
+          node Umbrella below Compute
+          node Ai left-of Umbrella
+          node Ops right-of Umbrella
+        }
+        edge Compute -> Umbrella "processes, triggers"
+        edge Conductor -> Umbrella "graph nodes"
+        edge Runtime -> Umbrella "AgentService impl"
+        edge Runtime -> Compute "spawns"
+        edge Edge -> Compute "remote seams"
+        edge Conductor -> Assistant "wrapped by"
+        edge Toolkit -> Runtime "registered in"
+        edge Umbrella -> Ai
+        edge Ops -> Umbrella
+        edge Compute -> Link "test impl"
+      `;
+      const { objects } = sceneOf(text);
+      const frames = ['top', 'middle', 'bottom'].map((id) => rectOf(objects, id));
+      const labels = labelsOf(objects);
+      expect(labels).toHaveLength(8);
+      for (const { text: label, rect, route } of labels) {
+        expect(route.length, label).toBeGreaterThan(1);
+        expect(gapTo(rect, route), label).toBeLessThanOrEqual(16);
+        expect(
+          frames.some((frame) => onBorder(rect, frame, 0)),
+          label,
+        ).toBe(false);
+      }
+    });
+
+    test('a label leaves the frame band for the gutter its route crosses', ({ expect }) => {
+      const { objects } = sceneOf(PROCESS);
+      const frames = ['req', 'local', 'remote'].map((id) => rectOf(objects, id));
+      for (const { text: label, rect, route } of labelsOf(objects)) {
+        expect(gapTo(rect, route), label).toBeLessThanOrEqual(16);
+        expect(
+          frames.some((frame) => onBorder(rect, frame, 0)),
+          label,
+        ).toBe(false);
+      }
+    });
+  });
+
+  describe('soft sides', () => {
+    test('a preferred side is taken when it costs little', ({ expect }) => {
+      const { objects, problems } = sceneOf('node A @cell(0,0)\nnode B @cell(1,1)\nedge A:~right -> B');
+      expect(problems).toEqual([]);
+      const a = rectOf(objects, 'A');
+      expect(pathOf(objects, 'A-B-0')[0].x).toBe(a.x + a.w);
+    });
+
+    test('a preferred side gives way to a much better route, where a hard one would not', ({ expect }) => {
+      const soft = sceneOf('node A @cell(0,0)\nnode B @cell(1,0)\nedge A:~bottom -> B');
+      const hard = sceneOf('node A @cell(0,0)\nnode B @cell(1,0)\nedge A:bottom -> B');
+      expect(soft.problems).toEqual([]);
+      const a = rectOf(soft.objects, 'A');
+      expect(bendsOf(pathOf(soft.objects, 'A-B-0'))).toBe(0);
+      expect(pathOf(hard.objects, 'A-B-0')[0].y).toBe(a.y + a.h);
+    });
+  });
+
+  describe('group shape', () => {
+    const CHAIN =
+      'node A  node B  node C  node D  node E  node F  edge A -> B  edge B -> C  edge C -> D  edge D -> E  edge E -> F';
+    const spanOf = (objects: readonly Scene.WorldObject[], ids: readonly string[]) => {
+      const rects = ids.map((id) => rectOf(objects, id));
+      return {
+        cols: new Set(rects.map((rect) => rect.x)).size,
+        rows: new Set(rects.map((rect) => rect.y)).size,
+      };
+    };
+
+    test('`compact` keeps a group near-square', ({ expect }) => {
+      const { objects, problems } = sceneOf(`diagram flow=right\ngroup g compact { ${CHAIN} }`);
+      expect(problems).toEqual([]);
+      const { cols, rows } = spanOf(objects, ['A', 'B', 'C', 'D', 'E', 'F']);
+      expect(Math.abs(cols - rows)).toBeLessThanOrEqual(1);
+    });
+
+    test('`max-width` caps the columns a group spans', ({ expect }) => {
+      const { objects, problems } = sceneOf(`diagram flow=right\ngroup g max-width=2 { ${CHAIN} }`);
+      expect(problems).toEqual([]);
+      expect(spanOf(objects, ['A', 'B', 'C', 'D', 'E', 'F']).cols).toBeLessThanOrEqual(2);
+    });
+
+    test('`aspect` leans the whole drawing wide or tall', ({ expect }) => {
+      const wide = spanOf(sceneOf(`diagram aspect=4:1\n${CHAIN}`).objects, ['A', 'B', 'C', 'D', 'E', 'F']);
+      const tall = spanOf(sceneOf(`diagram aspect=1:4\n${CHAIN}`).objects, ['A', 'B', 'C', 'D', 'E', 'F']);
+      expect(wide.cols).toBeGreaterThan(wide.rows);
+      expect(tall.rows).toBeGreaterThan(tall.cols);
+    });
+
+    test('a frame stretched by a relation outside it is reported', ({ expect }) => {
+      const { problems } = parse(`
+        group upper { node X  node Y right-of X  node Z right-of Y }
+        group lower below upper { node A below X  node B below Z }
+        edge X -> Y
+        edge Y -> Z
+        edge A -> B
+      `);
+      expect(problems.map(({ severity, message }) => `${severity}: ${message}`).join('\n')).toMatch(
+        /warning: Group "lower" is stretched/,
+      );
+    });
+  });
+
+  test('a fan-in bus gathers its sources into one trunk with one arrowhead', ({ expect }) => {
+    const { objects, problems } = sceneOf(`
+      diagram flow=down
+      node A
+      node B
+      node C
+      node D below B
+      edge A, B, C -> D "spawns" bus
+    `);
+    expect(problems).toEqual([]);
+    const [a, b, c, d] = ['A', 'B', 'C', 'D'].map((id) => rectOf(objects, id));
+    expect(a.y).toBe(b.y);
+    expect(c.y).toBe(b.y);
+    const elements = objects.find((entry) => entry.id === 'edges')?.elements ?? [];
+    const arrows = elements.filter((element) => element.kind === 'arrow');
+    expect(arrows).toHaveLength(1);
+    expect(arrows[0].kind === 'arrow' && arrows[0].end?.y).toBe(d.y);
+    const junction = arrows[0].kind === 'arrow' ? arrows[0].start : undefined;
+    for (const id of ['A-D-0', 'B-D-1', 'C-D-2']) {
+      expect(pathOf(objects, id).at(-1)).toEqual(junction);
+    }
+    expect(elements.some((element) => element.kind === 'text' && element.text === 'spawns')).toBe(true);
   });
 
   test('scene statements in the same document pass through after the layout', ({ expect }) => {
