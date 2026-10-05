@@ -295,58 +295,55 @@ export const MandelbrotProcess = Operation.makeDurable(
 
       // One alarm serves both roles: the next frame while credits remain, otherwise the idle check. It is
       // first armed by a request, not at spawn, so a spawned process settles without one pending.
-      const schedule = () =>
-        Effect.gen(function* () {
-          const rendering = state.credits > 0;
-          yield* save({ ...state, rendering });
-          yield* ctx.setAlarm(rendering ? state.interval : IDLE_TIMEOUT);
-        });
+      const schedule = Effect.fnUntraced(function* () {
+        const rendering = state.credits > 0;
+        yield* save({ ...state, rendering });
+        yield* ctx.setAlarm(rendering ? state.interval : IDLE_TIMEOUT);
+      });
 
       return {
-        onInput: (input) =>
-          Effect.gen(function* () {
-            const restart = input.center !== undefined || input.width !== undefined;
-            const next: MandelbrotState = {
-              ...state,
-              lastRequest: Date.now(),
-              credits: Math.min(MAX_CREDITS, state.credits + Math.max(0, input.frames)),
-              frame: restart ? 0 : state.frame,
-              size: input.size ?? state.size,
-              center: input.center ?? state.center,
-              width: input.width ?? state.width,
-              interval:
-                input.interval !== undefined
-                  ? Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, input.interval))
-                  : state.interval,
-              frameCount: input.frameCount !== undefined ? Math.max(1, Math.floor(input.frameCount)) : state.frameCount,
-            };
-            const start = !next.rendering && next.credits > 0;
-            yield* save(start ? { ...next, rendering: true } : next);
-            if (start) {
-              yield* ctx.setAlarm(0);
-            }
-          }),
-        onAlarm: () =>
-          Effect.gen(function* () {
-            if (state.credits > 0) {
-              const { output, next, exhausted } = computeFrame(state.frame, state.size, state.center, state.width);
-              const frame = state.frame + 1;
-              yield* save({ ...state, credits: state.credits - 1, frame, center: next });
-              ctx.submitOutput(output);
-              if (frame >= state.frameCount || exhausted) {
-                ctx.succeed();
-                return;
-              }
-              yield* schedule();
-              return;
-            }
-            const idle = Date.now() - state.lastRequest;
-            if (idle >= IDLE_TIMEOUT) {
+        onInput: Effect.fnUntraced(function* (input: MandelbrotInput) {
+          const restart = input.center !== undefined || input.width !== undefined;
+          const next: MandelbrotState = {
+            ...state,
+            lastRequest: Date.now(),
+            credits: Math.min(MAX_CREDITS, state.credits + Math.max(0, input.frames)),
+            frame: restart ? 0 : state.frame,
+            size: input.size ?? state.size,
+            center: input.center ?? state.center,
+            width: input.width ?? state.width,
+            interval:
+              input.interval !== undefined
+                ? Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, input.interval))
+                : state.interval,
+            frameCount: input.frameCount !== undefined ? Math.max(1, Math.floor(input.frameCount)) : state.frameCount,
+          };
+          const start = !next.rendering && next.credits > 0;
+          yield* save(start ? { ...next, rendering: true } : next);
+          if (start) {
+            yield* ctx.setAlarm(0);
+          }
+        }),
+        onAlarm: Effect.fnUntraced(function* () {
+          if (state.credits > 0) {
+            const { output, next, exhausted } = computeFrame(state.frame, state.size, state.center, state.width);
+            const frame = state.frame + 1;
+            yield* save({ ...state, credits: state.credits - 1, frame, center: next });
+            ctx.submitOutput(output);
+            if (frame >= state.frameCount || exhausted) {
               ctx.succeed();
               return;
             }
-            yield* ctx.setAlarm(IDLE_TIMEOUT - idle);
-          }),
+            yield* schedule();
+            return;
+          }
+          const idle = Date.now() - state.lastRequest;
+          if (idle >= IDLE_TIMEOUT) {
+            ctx.succeed();
+            return;
+          }
+          yield* ctx.setAlarm(IDLE_TIMEOUT - idle);
+        }),
       };
     }),
 );
