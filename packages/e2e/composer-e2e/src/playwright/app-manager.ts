@@ -670,7 +670,8 @@ export class AppManager {
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
     }
-    await objectForm.getByTestId('save-button').click();
+    // The form's Create sits in the dialog's footer, outside the form element.
+    await openDialog.getByTestId('save-button').click();
     // Reopening the dialog before it has finished closing reuses the instance, which is still on
     // the form rather than back at the type list, so the next caller must start from a clean one.
     await objectForm.waitFor({ state: 'detached', timeout: 30_000 });

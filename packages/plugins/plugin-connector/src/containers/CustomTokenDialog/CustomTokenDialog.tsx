@@ -112,26 +112,29 @@ export const CustomTokenDialog = ({
 
   return (
     <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>{title}</Dialog.Title>
-        <Dialog.CloseTrigger asChild>
-          <SystemButton.Close />
-        </Dialog.CloseTrigger>
-      </Dialog.Header>
-      <Dialog.Body>
-        <Form.Root
-          autoFocus
-          schema={credentialForm.schema}
-          defaultValues={credentialForm.defaultValues ?? {}}
-          onSave={handleSave}
-        >
+      {/* The form spans the dialog, so its submit sits in the footer while reading the form's context. */}
+      <Form.Root
+        autoFocus
+        schema={credentialForm.schema}
+        defaultValues={credentialForm.defaultValues ?? {}}
+        onSave={handleSave}
+      >
+        <Dialog.Header>
+          <Dialog.Title>{title}</Dialog.Title>
+          <Dialog.CloseTrigger asChild>
+            <SystemButton.Close />
+          </Dialog.CloseTrigger>
+        </Dialog.Header>
+        <Dialog.Body>
           <Form.Content>
             <Form.Fields />
-            <Form.Submit disabled={isPending ? true : undefined} />
           </Form.Content>
-        </Form.Root>
-        {error && <p className='text-error-text'>{error}</p>}
-      </Dialog.Body>
+          {error && <p className='text-error-text'>{error}</p>}
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Form.Submit disabled={isPending ? true : undefined} />
+        </Dialog.Footer>
+      </Form.Root>
     </Dialog.Content>
   );
 };

@@ -19,6 +19,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as DragHandle from '@dxos/react-ui/DragHandle';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
@@ -95,7 +96,11 @@ const BoardColumnRoot = BoardColumnRootInner as <TColumn = unknown>(
 
 const BOARD_COLUMN_HEADER_NAME = 'Board.Column.Header';
 
-type BoardColumnHeaderProps = { label: string; dragHandleRef: ReactRef<HTMLButtonElement> };
+type BoardColumnHeaderProps = {
+  label: string;
+  /** The column's drag handle; a column that cannot be moved (e.g. uncategorized) omits it and keeps its space. */
+  dragHandleRef?: ReactRef<HTMLButtonElement>;
+};
 
 const BoardColumnHeader = Util.composable<HTMLDivElement, BoardColumnHeaderProps>(
   ({ label, dragHandleRef, ...props }, forwardedRef) => {
@@ -119,11 +124,15 @@ const BoardColumnHeader = Util.composable<HTMLDivElement, BoardColumnHeaderProps
       <>
         {/* TODO(burdon): Use Card.Header. */}
         <Toolbar.Root
-          {...Util.composableProps(props, { classNames: 'gap-0' })}
+          {...Util.composableProps(props, { classNames: 'gap-0 border-b border-separator' })}
           data-testid='board-column-header'
           ref={forwardedRef}
         >
-          <DragHandle.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.columnDragHandle' />
+          {dragHandleRef ? (
+            <DragHandle.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.columnDragHandle' />
+          ) : (
+            <Layout.Block />
+          )}
           <Toolbar.Text classNames='grow px-0' data-testid='mosaicBoard.columnTitle'>
             {label}
           </Toolbar.Text>
@@ -173,8 +182,11 @@ const BoardColumnBody = Util.composable<HTMLDivElement, BoardColumnBodyProps>(
         ref={forwardedRef}
       >
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-            <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
+          {/* A gutter Container as the viewport, as Dialog.Body does, so the cards clear the column's edges and the thumb sits in the end gutter. */}
+          <ScrollArea.Viewport asChild classNames='snap-y md:snap-none' ref={setViewport}>
+            <Layout.Container gutter='sm'>
+              <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
+            </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
