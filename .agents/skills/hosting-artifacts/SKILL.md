@@ -191,7 +191,10 @@ gh pr create --title "plugin-foo: fix toolbar" --body-file /tmp/body.md \
 - **Not from the cloud sandbox.** `.config/claude-code-setup.sh` installs gh 2.99 there, but the
   egress proxy answers `403` to the GraphQL calls `gh pr create|edit` make and `415` to the binary
   upload body (`POST uploads.github.com/user-attachments/assets` — it admits only
-  `application/json`). Measured 2026-10-05. Use R2 there until the proxy changes.
+  `application/json`). Measured 2026-10-05. Use R2 there until the proxy changes — and expect an R2
+  image embed written from the sandbox (MCP `update_pull_request` or a REST `PATCH`) to lose its `!`
+  and land as a link. The body is rewritten server-side, so the R2 image only renders inline when the
+  body is written from outside the sandbox.
 
 Read the body back after the push to confirm the references were rewritten (`gh pr view <n> --json body
 -q .body | grep user-attachments`). A surviving `./out/…` path means the attach did not happen.
