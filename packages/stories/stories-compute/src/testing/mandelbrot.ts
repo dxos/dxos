@@ -19,7 +19,7 @@ export const DEFAULT_INTERVAL = 1_000;
 const MIN_INTERVAL = 100;
 
 /** Frames a render runs to before the process finishes. */
-export const DEFAULT_FRAME_COUNT = 100;
+export const DEFAULT_FRAME_COUNT = 20;
 const MAX_INTERVAL = 60_000;
 
 /** Most frames a process will owe at once, however many are requested. */
