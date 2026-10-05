@@ -167,15 +167,18 @@ const LoggerRoot = ({
     setChecked(new Set());
     setCurrent(undefined);
   }, []);
-  // Copy the checked rows when any are checked, else the whole buffer.
+  // Copy the checked rows when any are checked, else the rows the list shows.
   const getCopyText = useCallback(() => {
-    const selected = checked.size > 0 ? rows.filter((row) => checked.has(row.id)) : rows;
+    const selected =
+      checked.size > 0
+        ? rows.filter((row) => checked.has(row.id))
+        : rows.filter((row) => matchesTextFilter(formatLogEntry(row.entry), textFilter));
     return JSON.stringify(
       selected.map(({ entry }) => formatLogEntry(entry)),
       null,
       2,
     );
-  }, [rows, checked]);
+  }, [rows, checked, textFilter]);
   const toggleExpand = useCallback((id: number) => {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -433,18 +436,21 @@ type LoggerListProps = ThemedClassName<{
   checkable?: boolean;
 }>;
 
+/** Case-insensitive match of the search text on a record's file and message; empty text matches all. */
+const matchesTextFilter = (record: ReturnType<typeof formatLogEntry>, textFilter: string): boolean => {
+  const needle = textFilter.trim().toLowerCase();
+  return needle ? `${record.file ?? ''} ${record.message ?? ''}`.toLowerCase().includes(needle) : true;
+};
+
 const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   const { t } = useTranslation(translationKey);
   const { rows, expanded, toggleExpand, current, setCurrent, checked, toggleChecked, textFilter } =
     useLoggerContext('Logger.List');
 
-  // Compute the display record once; filter the buffer by a case-insensitive match on file + message.
-  const needle = textFilter.trim().toLowerCase();
+  // Compute the display record once, then filter it as the copy action does.
   const visible = rows
     .map((row) => ({ ...row, record: formatLogEntry(row.entry) }))
-    .filter(({ record }) =>
-      needle ? `${record.file ?? ''} ${record.message ?? ''}`.toLowerCase().includes(needle) : true,
-    );
+    .filter(({ record }) => matchesTextFilter(record, textFilter));
 
   if (visible.length === 0) {
     return (

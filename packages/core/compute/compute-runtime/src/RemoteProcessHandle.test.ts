@@ -13,6 +13,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
@@ -166,6 +167,38 @@ describe('RemoteProcessHandle event polling', () => {
     expect(textsOf([...collected])).toEqual(['after-outage']);
   });
 
+  test('a failed first read, which finds where new outputs start, is retried too', async ({ expect }) => {
+    let failures = 1;
+    const control: RemoteProcessManager.Control = {
+      ...makeControl([]),
+      // The first read asks for the end of the log; later reads page from it.
+      readEvents: ({ cursor }) =>
+        failures-- > 0
+          ? Effect.die(new Error('connection reset'))
+          : Effect.sync(() => ({
+              events: cursor === 0 ? [{ _tag: 'output' as const, seq: 0, data: 'first' }] : [],
+              cursor: cursor === Number.MAX_SAFE_INTEGER ? 0 : 1,
+              truncated: false,
+              snapshot: snapshot(Process.State.RUNNING),
+            })),
+    };
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const registry = yield* Registry.AtomRegistry;
+        const handle = yield* RemoteProcessHandle.RemoteProcessHandle.make({
+          info: snapshot(Process.State.RUNNING),
+          control,
+          spaceId: SPACE_ID,
+          registry,
+          definition: OutputDefinition,
+        });
+        return yield* Stream.runCollect(handle.subscribeOutputs().pipe(Stream.take(1)));
+      }).pipe(Effect.provide(registryLayer())),
+    );
+
+    expect([...collected]).toEqual(['first']);
+  });
+
   test('a host that stays unreachable still ends the subscription', async ({ expect }) => {
     const control: RemoteProcessManager.Control = {
       ...makeControl([]),
@@ -181,6 +214,12 @@ describe('RemoteProcessHandle event polling', () => {
     expect(Exit.isFailure(exit)).toBe(true);
   });
 });
+
+/** Gives a handle the codec `subscribeOutputs` decodes with; the process itself never runs here. */
+const OutputDefinition = Operation.makeDurable(
+  { key: 'org.dxos.test.process', input: Schema.Void, output: Schema.String, services: [] },
+  () => Effect.succeed({}),
+);
 
 const TEST_PID = Schema.decodeUnknownSync(Process.ID)('test-pid');
 const SPACE_ID = SpaceId.random();
