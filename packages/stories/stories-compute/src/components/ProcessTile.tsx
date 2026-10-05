@@ -23,12 +23,9 @@ import {
   decodeFrame,
 } from '../testing/index.ts';
 
-/** Where the story runs a process; mapped to a {@link Process.Location} when it is spawned. */
-export type ProcessLocation = 'local' | 'edge';
-
 export type ProcessItem = {
   id: string;
-  location: ProcessLocation;
+  location: Process.Location;
   /** Sent with the first request; an absent `center` lets the process pick one at random. */
   params: MandelbrotParams;
   handle: Process.Handle<MandelbrotInput, MandelbrotOutput, never>;
@@ -170,10 +167,10 @@ export const ProcessTile = ({ data: item, onRemove }: ProcessTileProps) => {
         )}
       </Card.Header>
       <Card.Row
-        icon={location === 'edge' ? 'ph--cloud--regular' : 'ph--laptop--regular'}
+        icon={location.kind === 'edge' ? 'ph--cloud--regular' : 'ph--laptop--regular'}
         data-testid='process-location'
       >
-        <Card.Text>{location}</Card.Text>
+        <Card.Text>{location.kind}</Card.Text>
       </Card.Row>
       <Card.Row icon='ph--pulse--regular' data-testid='process-state'>
         <Card.Text>{status.state}</Card.Text>
