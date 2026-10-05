@@ -178,3 +178,13 @@ export class InboxPayloadTooLargeError extends BaseError.extend(
 ) {}
 
 registerErrorMessageContext('InboxPayloadTooLargeError', InboxPayloadTooLargeError);
+
+/**
+ * EDGE relays inbox messages only for identities linked to an account, so neither sending nor receiving works without one.
+ */
+export class InboxAccountRequiredError extends BaseError.extend(
+  'InboxAccountRequiredError',
+  'Inbox messages need an account linked to this identity.',
+) {}
+
+registerErrorMessageContext('InboxAccountRequiredError', InboxAccountRequiredError);

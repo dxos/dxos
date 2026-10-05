@@ -7,7 +7,7 @@ import { create } from '@bufbuild/protobuf';
 import { type Context } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { type MessageListener, type ReconnectListener } from '@dxos/edge-client';
-import { EdgeService, type InboxNotice } from '@dxos/protocols';
+import { EdgeCallFailedError, EdgeService, type InboxNotice } from '@dxos/protocols';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import {
@@ -26,6 +26,8 @@ type Device = { identity: InboxIdentitySource; listener: MessageListener };
  */
 export class MemoryEdgeInbox implements InboxRelay {
   readonly notices = new Map<string, InboxNotice[]>();
+  /** DIDs refused as EDGE refuses an identity not linked to an account. */
+  readonly accountless = new Set<string>();
   readonly #devices = new Set<Device>();
   #nextId = 0;
 
@@ -45,7 +47,14 @@ export class MemoryEdgeInbox implements InboxRelay {
       if (!identityKey) {
         throw new Error('Not authenticated: no identity.');
       }
-      return createDidFromIdentityKey(identityKey);
+      const did = await createDidFromIdentityKey(identityKey);
+      if (this.accountless.has(did)) {
+        throw new EdgeCallFailedError({
+          message: 'Identity is not associated with an account.',
+          data: { type: 'identity_not_associated_with_account' },
+        });
+      }
+      return did;
     };
 
     const edgeClient: InboxEdgeClient = {

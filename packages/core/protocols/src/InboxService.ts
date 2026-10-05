@@ -40,10 +40,18 @@ export const InboxMessage = Schema.Struct({
 export interface InboxMessage extends Schema.Schema.Type<typeof InboxMessage> {}
 
 /**
+ * Whether EDGE relays this identity's inbox: `account-required` while the identity is not linked to an account.
+ */
+export const Status = Schema.Literals(['available', 'account-required']);
+export type Status = Schema.Schema.Type<typeof Status>;
+
+/**
  * The full set of pending messages; emitted whole so an ack on another device removes entries too.
  */
 export const Messages = Schema.Struct({
   messages: mutableArray(InboxMessage),
+  /** Absent means `available`. */
+  status: Schema.optional(Status),
 });
 export interface Messages extends Schema.Schema.Type<typeof Messages> {}
 

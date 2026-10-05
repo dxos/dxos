@@ -20,7 +20,7 @@ import {
 import { EffectEx } from '@dxos/effect';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { INBOX_MAX_PAYLOAD_LENGTH, InboxPayloadTooLargeError } from '@dxos/protocols';
+import { INBOX_MAX_PAYLOAD_LENGTH, InboxAccountRequiredError, InboxPayloadTooLargeError } from '@dxos/protocols';
 import { CredentialSchema, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { InboxService } from '@dxos/protocols/rpc';
 import { Message, SpaceInvitationMessage } from '@dxos/types';
@@ -223,6 +223,46 @@ describe('InboxService', () => {
     );
     expect(InboxPayloadTooLargeError.is(error)).toBe(true);
     expect(edge.notices.get(bob.did) ?? []).toHaveLength(0);
+  });
+
+  test('a sender without an account is refused with a typed error', async ({ expect }) => {
+    const keyring = new Keyring();
+    const edge = new MemoryEdgeInbox();
+    const alice = await createIdentity(keyring);
+    const bob = await createIdentity(keyring);
+    edge.accountless.add(alice.did);
+
+    const error = await EffectEx.runPromise(
+      Effect.flip(
+        createService(edge, alice)['InboxService.sendMessage']({
+          recipientIdentityKey: bob.identityKey,
+          type: InboxService.INBOX_MESSAGE_TYPE,
+          payload: '{}',
+        }),
+      ),
+    );
+    expect(InboxAccountRequiredError.is(error)).toBe(true);
+    expect(edge.notices.get(bob.did) ?? []).toHaveLength(0);
+  });
+
+  test('a recipient without an account sees the status once, and again once linked', async ({ expect }) => {
+    const keyring = new Keyring();
+    const edge = new MemoryEdgeInbox();
+    const bob = await createIdentity(keyring);
+    edge.accountless.add(bob.did);
+    const snapshots = observe(createService(edge, bob));
+    const refused = () => snapshots.filter((snapshot) => snapshot.status === 'account-required');
+
+    await vi.waitFor(() => expect(refused()).toHaveLength(1));
+    for (let i = 0; i < 3; i++) {
+      bob.source.stateUpdate.emit();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    expect(refused()).toHaveLength(1);
+
+    edge.accountless.delete(bob.did);
+    bob.source.stateUpdate.emit();
+    await vi.waitFor(() => expect(snapshots.at(-1)?.status).toBe('available'));
   });
 
   test('without EDGE it reports an empty inbox and refuses to send', async ({ expect }) => {

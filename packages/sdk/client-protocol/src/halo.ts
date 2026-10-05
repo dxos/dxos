@@ -42,9 +42,16 @@ export interface HaloInbox {
   get messages(): MulticastObservable<readonly InboxService.InboxMessage[]>;
 
   /**
+   * `account-required` while EDGE refuses this identity's inbox because it is not linked to an
+   * account; `messages` is then empty because nothing can be delivered, not because nothing was sent.
+   */
+  get status(): MulticastObservable<InboxService.Status>;
+
+  /**
    * Signs and sends a message to a known identity.
    * Resolves once the relay has accepted it, not once the recipient has received it; rejects with
-   * `InboxPayloadTooLargeError` when the envelope exceeds what EDGE accepts.
+   * `InboxPayloadTooLargeError` when the envelope exceeds what EDGE accepts, and with
+   * `InboxAccountRequiredError` when this identity is not linked to an account.
    */
   sendMessage(request: InboxService.SendMessageRequest): Promise<void>;
 

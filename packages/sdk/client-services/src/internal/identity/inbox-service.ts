@@ -33,8 +33,10 @@ import { BaseError } from '@dxos/errors';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
+  EdgeCallFailedError,
   EdgeService,
   INBOX_MAX_PAYLOAD_LENGTH,
+  InboxAccountRequiredError,
   type InboxNotice,
   InboxPayloadTooLargeError,
   toServiceError,
@@ -95,6 +97,10 @@ type Classified =
   /** Can never become valid, so it is acked rather than left to use up the recipient's cap. */
   | { kind: 'rejected'; reason: string };
 
+/** EDGE refuses inbox calls from an identity not linked to an account; retrying cannot succeed until it is. */
+const isAccountRequired = (error: unknown): boolean =>
+  error instanceof EdgeCallFailedError && error.data?.type === 'identity_not_associated_with_account';
+
 const decodeCredential = (payload: string): Credential | undefined => {
   try {
     return fromBinary(CredentialSchema, Buffer.from(payload, 'base64'));
@@ -135,6 +141,7 @@ export class InboxServiceImpl implements InboxService.Handlers {
   /** EDGE ids acked locally; a pull already in flight must not resurrect them. */
   readonly #acked = new Set<string>();
   #loaded = false;
+  #status: InboxService.Status = 'available';
   #subscribers = 0;
   #ctx?: Context;
 
@@ -163,7 +170,9 @@ export class InboxServiceImpl implements InboxService.Handlers {
           });
         }
         const recipientDid = await createDidFromIdentityKey(request.recipientIdentityKey);
-        await this._edgeClient.sendInboxMessage(Context.default(), recipientDid, payload);
+        await this._edgeClient.sendInboxMessage(Context.default(), recipientDid, payload).catch((error) => {
+          throw isAccountRequired(error) ? new InboxAccountRequiredError({ cause: error }) : error;
+        });
       },
       catch: toServiceError,
     });
@@ -207,6 +216,7 @@ export class InboxServiceImpl implements InboxService.Handlers {
       messages: [...this.#entries.values()]
         .map((entry) => entry.message)
         .sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime()),
+      status: this.#status,
     };
   }
 
@@ -263,10 +273,20 @@ export class InboxServiceImpl implements InboxService.Handlers {
     try {
       ({ notices } = await edgeClient.listInbox(ctx));
     } catch (error) {
+      if (isAccountRequired(error)) {
+        // Published only on the transition, so the slow poll does not re-announce it.
+        if (this.#status !== 'account-required') {
+          this.#status = 'account-required';
+          this.#entries = new Map();
+          this.#publish();
+        }
+        return;
+      }
       // Offline or not yet authenticated: keep the last set and retry on the next trigger.
       log('inbox pull failed', { error });
       return;
     }
+    this.#status = 'available';
 
     const now = new Date();
     const entries = new Map<string, Entry>();

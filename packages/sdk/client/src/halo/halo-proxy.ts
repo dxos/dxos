@@ -73,6 +73,7 @@ export class HaloProxy implements Halo {
   private readonly _contactsChanged = new Event<Contact[]>();
   private readonly _credentialsChanged = new Event<Credential[]>();
   private readonly _inboxChanged = new Event<readonly InboxService.InboxMessage[]>();
+  private readonly _inboxStatusChanged = new Event<InboxService.Status>();
 
   private readonly _identity = MulticastObservable.from(this._identityChanged, null);
   private readonly _devices = MulticastObservable.from(this._devicesChanged, []);
@@ -80,6 +81,7 @@ export class HaloProxy implements Halo {
   private readonly _credentials = MulticastObservable.from(this._credentialsChanged, []);
   private readonly _inbox: HaloInbox = {
     messages: MulticastObservable.from(this._inboxChanged, []),
+    status: MulticastObservable.from(this._inboxStatusChanged, 'available'),
     sendMessage: (request) =>
       runServiceCall(this._runtime, this._serviceProvider.rpc['InboxService.sendMessage'](request), {
         timeout: RPC_TIMEOUT,
@@ -254,7 +256,10 @@ export class HaloProxy implements Halo {
 
     this._streamSubscriptions.add(
       subscribeStream(this._runtime, this._serviceProvider.rpc['InboxService.subscribe'](undefined), {
-        onData: (data) => this._inboxChanged.emit(data.messages),
+        onData: (data) => {
+          this._inboxChanged.emit(data.messages);
+          this._inboxStatusChanged.emit(data.status ?? 'available');
+        },
         // The inbox is optional: an unreachable EDGE must not affect the rest of HALO.
         onError: (error) => log.warn('inbox stream failed', { error }),
       }),
@@ -291,6 +296,7 @@ export class HaloProxy implements Halo {
     this._devicesChanged.emit([]);
     this._contactsChanged.emit([]);
     this._inboxChanged.emit([]);
+    this._inboxStatusChanged.emit('available');
   }
 
   /**
