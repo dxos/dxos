@@ -141,6 +141,13 @@ where
     })
 }
 
+/// The hash of the crate sources this addon was built from (see `build.rs`), which the CLI checks
+/// against the sources on disk.
+#[napi]
+pub fn sources_hash() -> String {
+    env!("CODE_INDEX_SOURCES").to_string()
+}
+
 /// Cancels the queries it was passed to; each stops at the next quad it reads.
 #[napi]
 pub struct QueryCancel {
