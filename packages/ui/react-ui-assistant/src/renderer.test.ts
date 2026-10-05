@@ -12,6 +12,15 @@ import { DeliveryAnnotation } from './delivery.ts';
 import { createRenderer, linkBareObjectUris } from './renderer.ts';
 
 describe('createRenderer', () => {
+  // A folded tool run (`collapseToolRuns`) and a patched streaming copy are plain spreads, not ECHO
+  // objects; reading their delivery status must not throw.
+  test('a plain message copy renders without a delivery tag', ({ expect }) => {
+    const render = createRenderer(undefined);
+    const prompt = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'hello' }] });
+    const copy: Message.Message = { ...prompt, blocks: [...prompt.blocks] };
+    expect(markdown(render(copy))).toBe('<prompt>hello</prompt>');
+  });
+
   test('a prompt row with a delivery status ends with its tag; a plain prompt carries none', ({ expect }) => {
     const render = createRenderer(undefined);
     const prompt = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'hello' }] });

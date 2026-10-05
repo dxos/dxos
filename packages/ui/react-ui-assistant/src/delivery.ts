@@ -28,8 +28,15 @@ export const DeliveryAnnotation: Annotation.Annotation<DeliveryStatus> = Annotat
   schema: DeliveryStatus,
 });
 
-export const getDelivery = (message: Obj.Unknown | Obj.Snapshot): DeliveryStatus | undefined =>
-  Option.getOrUndefined(Annotation.get(message, DeliveryAnnotation));
+/**
+ * The row's delivery status, if it has one. Takes any message-shaped value because not every row is an
+ * ECHO object: a folded tool run, or a patched streaming copy, is a plain spread, which carries no
+ * annotations — and `Annotation.get` throws on one rather than reading it as absent.
+ */
+export const getDelivery = (message: object): DeliveryStatus | undefined =>
+  Obj.isObject(message) || Obj.isSnapshot(message)
+    ? Option.getOrUndefined(Annotation.get(message, DeliveryAnnotation))
+    : undefined;
 
 /** A row the agent has not taken up yet: it cannot be rewound to, and it can still be removed. */
 export const isUnread = (status: DeliveryStatus | undefined): boolean =>
