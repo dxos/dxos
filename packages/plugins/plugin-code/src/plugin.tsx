@@ -5,6 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
+  AgentLauncher,
   AppGraphBuilder,
   BuildRunState,
   CreateObject,
@@ -15,11 +16,13 @@ import {
   Schema,
   Settings as SettingsCapability,
   SkillDefinition,
+  State,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
 
 export const CodePlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AgentLauncher),
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(BuildRunState),
   Plugin.addModule(CreateObject),
@@ -30,6 +33,7 @@ export const CodePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(SettingsCapability),
   Plugin.addModule(SkillDefinition),
+  Plugin.addModule(State),
   Plugin.addModule(Translations),
   Plugin.make,
 );

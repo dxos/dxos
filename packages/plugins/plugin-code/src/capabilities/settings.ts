@@ -9,20 +9,23 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
-import { Settings } from '#types';
+import { CodeCapabilities, Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = KvsStore.make({
       key: meta.profile.key,
       schema: Settings.Settings,
-      defaultValue: () => ({}),
+      defaultValue: () => ({ agentPermissionMode: Settings.DEFAULT_AGENT_PERMISSION_MODE }),
     });
 
-    return Capability.contribute(AppCapabilities.Settings, {
-      prefix: meta.profile.key,
-      schema: Settings.Settings,
-      atom: settingsAtom,
-    });
+    return [
+      Capability.contribute(CodeCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
+        prefix: meta.profile.key,
+        schema: Settings.Settings,
+        atom: settingsAtom,
+      }),
+    ];
   }),
 );

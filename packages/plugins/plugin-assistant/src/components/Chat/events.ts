@@ -43,6 +43,13 @@ export type ChatEvent =
       type: 'rewind';
       id: string;
     }
+  /** A person answered a request an agent raised (allow or refuse a tool call). */
+  | {
+      type: 'respond';
+      messageId: string;
+      requestId: string;
+      optionId: string;
+    }
   | {
       type: 'add';
       object: Obj.Unknown;

@@ -8,8 +8,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ProjectView from '@dxos/plugin-projects/ProjectView';
+import { isTauri } from '@dxos/util';
 
-import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
+import { CodeArticle, CodeSettings, ProjectFolder, SpecArticle } from '#containers';
 import { meta } from '#meta';
 import { CodeProject, Spec } from '#types';
 
@@ -41,6 +43,13 @@ export default Capability.makeModule(() =>
         ),
         component: CodeArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'projectFolder',
+        // Only the desktop app runs coding agents, so only it has a folder to choose.
+        filter: Surface.makeFilter(ProjectView.Settings, () => isTauri()),
+        component: ProjectFolder,
+        props: ({ data: { project } }) => ({ project }),
       }),
       Surface.create({
         id: 'codeSettings',
