@@ -58,8 +58,16 @@ export interface Snapshot extends Process.Process {
  * read advances over, so a client that reconnects resumes where it left off.
  */
 export type Event =
-  | { readonly _tag: 'output'; readonly seq: number; readonly data: unknown }
-  | { readonly _tag: 'trace'; readonly seq: number; readonly message: Trace.Message }
+  | {
+      readonly _tag: 'output';
+      readonly seq: number;
+      readonly data: unknown;
+    }
+  | {
+      readonly _tag: 'trace';
+      readonly seq: number;
+      readonly message: Trace.Message;
+    }
   | {
       readonly _tag: 'exited';
       readonly seq: number;
