@@ -9,8 +9,9 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { DEFAULT_MODEL } from '@dxos/pipeline-rdf';
 
-import { RELAY_RULES } from '#skills';
 import { FactEntry } from '#types';
+
+import { RELAY_RULES } from '../skills/relay-rules.ts';
 
 /** The prompt's first words, so a scripted model can tell compose calls apart. */
 export const COMPOSE_PROMPT = 'Compose an update for';

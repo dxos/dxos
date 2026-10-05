@@ -20,7 +20,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, GoalsSkill, ModesSkill, RELAY_RULES, RelaySkill } from '#skills';
+import { ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import {
   AgentOperation,
   FactEntry,
@@ -34,6 +34,7 @@ import {
   TriggerOperation,
 } from '#types';
 
+import { RELAY_RULES } from '../skills/relay-rules.ts';
 import { TriggerRegistry, triggerRegistry } from '../triggers.ts';
 import { COMPOSE_PROMPT } from './compose-update.ts';
 import { matchesPattern } from './match-facts.ts';

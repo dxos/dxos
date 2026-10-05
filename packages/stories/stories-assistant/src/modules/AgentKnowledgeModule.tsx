@@ -8,7 +8,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as Agent from '@dxos/assistant/Agent';
 import { Filter } from '@dxos/echo';
-import { AgentKnowledge } from '@dxos/plugin-agent/AgentKnowledge';
+import * as AgentKnowledge from '@dxos/plugin-agent/AgentKnowledge';
 import { useQuery } from '@dxos/react-client/echo';
 
 /** What the space's first agent knows — its conversations and knowledge graph — beside the chats. */
@@ -19,5 +19,5 @@ export const AgentKnowledgeModule = (_props: Surface.ComponentProps<Record<strin
     return null;
   }
 
-  return <AgentKnowledge agent={agent} />;
+  return <AgentKnowledge.Root agent={agent} />;
 };

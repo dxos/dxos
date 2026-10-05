@@ -78,6 +78,11 @@
       "types": "./dist/types/src/types/AgentChannels.d.ts",
       "import": "./dist/lib/AgentChannels.mjs"
     },
+    "./AgentKnowledge": {
+      "source": "./src/AgentKnowledge.ts",
+      "types": "./dist/types/src/AgentKnowledge.d.ts",
+      "import": "./dist/lib/AgentKnowledge.mjs"
+    },
     "./AgentOperation": {
       "source": "./src/types/AgentOperation.ts",
       "types": "./dist/types/src/types/AgentOperation.d.ts",
@@ -88,20 +93,20 @@
       "types": "./dist/types/src/AgentPlugin.d.ts",
       "import": "./dist/lib/AgentPlugin.mjs"
     },
-    "./AgentKnowledge": {
-      "source": "./src/containers/AgentKnowledge/AgentKnowledge.tsx",
-      "types": "./dist/types/src/containers/AgentKnowledge/AgentKnowledge.d.ts",
-      "import": "./dist/lib/AgentKnowledge.mjs"
-    },
     "./AgentState": {
-      "source": "./src/containers/AgentState/AgentState.tsx",
-      "types": "./dist/types/src/containers/AgentState/AgentState.d.ts",
+      "source": "./src/AgentState.ts",
+      "types": "./dist/types/src/AgentState.d.ts",
       "import": "./dist/lib/AgentState.mjs"
     },
     "./ChatParticipant": {
       "source": "./src/types/ChatParticipant.ts",
       "types": "./dist/types/src/types/ChatParticipant.d.ts",
       "import": "./dist/lib/ChatParticipant.mjs"
+    },
+    "./ConversationSkill": {
+      "source": "./src/skills/ConversationSkill.ts",
+      "types": "./dist/types/src/skills/ConversationSkill.d.ts",
+      "import": "./dist/lib/ConversationSkill.mjs"
     },
     "./FactEntry": {
       "source": "./src/types/FactEntry.ts",
@@ -112,6 +117,11 @@
       "source": "./src/types/Goal.ts",
       "types": "./dist/types/src/types/Goal.d.ts",
       "import": "./dist/lib/Goal.mjs"
+    },
+    "./GoalsSkill": {
+      "source": "./src/skills/GoalsSkill.ts",
+      "types": "./dist/types/src/skills/GoalsSkill.d.ts",
+      "import": "./dist/lib/GoalsSkill.mjs"
     },
     "./InterviewSkill": {
       "source": "./src/skills/InterviewSkill.ts",
@@ -138,6 +148,16 @@
       "types": "./dist/types/src/types/ModeOperation.d.ts",
       "import": "./dist/lib/ModeOperation.mjs"
     },
+    "./ModesSkill": {
+      "source": "./src/skills/ModesSkill.ts",
+      "types": "./dist/types/src/skills/ModesSkill.d.ts",
+      "import": "./dist/lib/ModesSkill.mjs"
+    },
+    "./NoteTakerSkill": {
+      "source": "./src/skills/NoteTakerSkill.ts",
+      "types": "./dist/types/src/skills/NoteTakerSkill.d.ts",
+      "import": "./dist/lib/NoteTakerSkill.mjs"
+    },
     "./Profile": {
       "source": "./src/types/Profile.ts",
       "types": "./dist/types/src/types/Profile.d.ts",
@@ -153,6 +173,11 @@
       "types": "./dist/types/src/types/RelayOperation.d.ts",
       "import": "./dist/lib/RelayOperation.mjs"
     },
+    "./RelaySkill": {
+      "source": "./src/skills/RelaySkill.ts",
+      "types": "./dist/types/src/skills/RelaySkill.d.ts",
+      "import": "./dist/lib/RelaySkill.mjs"
+    },
     "./Trigger": {
       "source": "./src/types/Trigger.ts",
       "types": "./dist/types/src/types/Trigger.d.ts",
@@ -163,12 +188,12 @@
       "types": "./dist/types/src/types/TriggerOperation.d.ts",
       "import": "./dist/lib/TriggerOperation.mjs"
     },
+    "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -176,23 +201,29 @@
       "AgentChannels": [
         "dist/types/src/types/AgentChannels.d.ts"
       ],
+      "AgentKnowledge": [
+        "dist/types/src/AgentKnowledge.d.ts"
+      ],
       "AgentOperation": [
         "dist/types/src/types/AgentOperation.d.ts"
       ],
-      "AgentKnowledge": [
-        "dist/types/src/containers/AgentKnowledge/AgentKnowledge.d.ts"
-      ],
       "AgentState": [
-        "dist/types/src/containers/AgentState/AgentState.d.ts"
+        "dist/types/src/AgentState.d.ts"
       ],
       "ChatParticipant": [
         "dist/types/src/types/ChatParticipant.d.ts"
+      ],
+      "ConversationSkill": [
+        "dist/types/src/skills/ConversationSkill.d.ts"
       ],
       "FactEntry": [
         "dist/types/src/types/FactEntry.d.ts"
       ],
       "Goal": [
         "dist/types/src/types/Goal.d.ts"
+      ],
+      "GoalsSkill": [
+        "dist/types/src/skills/GoalsSkill.d.ts"
       ],
       "InterviewSkill": [
         "dist/types/src/skills/InterviewSkill.d.ts"
@@ -209,6 +240,12 @@
       "ModeOperation": [
         "dist/types/src/types/ModeOperation.d.ts"
       ],
+      "ModesSkill": [
+        "dist/types/src/skills/ModesSkill.d.ts"
+      ],
+      "NoteTakerSkill": [
+        "dist/types/src/skills/NoteTakerSkill.d.ts"
+      ],
       "Profile": [
         "dist/types/src/types/Profile.d.ts"
       ],
@@ -217,6 +254,9 @@
       ],
       "RelayOperation": [
         "dist/types/src/types/RelayOperation.d.ts"
+      ],
+      "RelaySkill": [
+        "dist/types/src/skills/RelaySkill.d.ts"
       ]
     }
   },
