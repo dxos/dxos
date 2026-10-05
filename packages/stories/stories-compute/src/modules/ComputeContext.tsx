@@ -23,10 +23,11 @@ import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 
 import { type ProcessItem } from '../components/index.ts';
-import { type MandelbrotParams, MandelbrotProcess, type RemoteMode, makeComputeLayer } from '../testing/index.ts';
+import { type MandelbrotParams, MandelbrotProcess, makeComputeLayer } from '../testing/index.ts';
 
 export type ComputeContextValue = {
-  remote?: RemoteMode;
+  /** Whether processes can be spawned on EDGE as well as locally. */
+  edge: boolean;
   /** False until the runtime and space exist. */
   ready: boolean;
   items: ProcessItem[];
@@ -41,13 +42,13 @@ const ComputeContext = createContext<ComputeContextValue | undefined>(undefined)
 export const useCompute = (): ComputeContextValue =>
   useContext(ComputeContext) ?? raise(new Error('Missing ComputeProvider'));
 
-export type ComputeProviderProps = PropsWithChildren<{ remote?: RemoteMode }>;
+export type ComputeProviderProps = PropsWithChildren<{ edge?: boolean }>;
 
 /**
  * Shares one process runtime and the spawned processes between the story's modules, which render
  * as independent surfaces.
  */
-export const ComputeProvider = ({ remote, children }: ComputeProviderProps) => {
+export const ComputeProvider = ({ edge = false, children }: ComputeProviderProps) => {
   const client = useClient();
   const [space] = useSpaces();
   const registry = useContext(RegistryContext);
@@ -57,13 +58,13 @@ export const ComputeProvider = ({ remote, children }: ComputeProviderProps) => {
   // Created in the effect so a StrictMode remount builds a fresh runtime rather than reusing a disposed one.
   const [runtime, setRuntime] = useState<ManagedRuntime.ManagedRuntime<Process.ManagerService, never>>();
   useEffect(() => {
-    const next = ManagedRuntime.make(makeComputeLayer({ registry, remote, client }));
+    const next = ManagedRuntime.make(makeComputeLayer({ registry, edge, client }));
     setRuntime(next);
     return () => {
       setItems([]);
       void next.dispose();
     };
-  }, [registry, remote, client]);
+  }, [registry, edge, client]);
 
   const create = useCallback(
     (location: Process.Location, params: MandelbrotParams) => {
@@ -95,8 +96,8 @@ export const ComputeProvider = ({ remote, children }: ComputeProviderProps) => {
   const remove = useCallback((item: ProcessItem) => setItems((prev) => prev.filter(({ id }) => id !== item.id)), []);
 
   const value = useMemo<ComputeContextValue>(
-    () => ({ remote, ready: !!runtime && !!space, items, error, create, remove }),
-    [remote, runtime, space, items, error, create, remove],
+    () => ({ edge, ready: !!runtime && !!space, items, error, create, remove }),
+    [edge, runtime, space, items, error, create, remove],
   );
 
   return <ComputeContext.Provider value={value}>{children}</ComputeContext.Provider>;

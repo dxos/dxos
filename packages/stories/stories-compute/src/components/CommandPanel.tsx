@@ -16,15 +16,15 @@ const LOCATIONS: { value: Process.Location; label: string }[] = [
 ];
 
 export type CommandPanelProps = {
-  /** Remote runtime in use; absent hides the location choice and spawns locally. */
-  remote?: string;
+  /** Offer EDGE as a location; otherwise every process spawns locally. */
+  edge?: boolean;
   /** False until the runtime and space exist. */
   ready?: boolean;
   error?: string;
   onCreate: (location: Process.Location, params: MandelbrotParams) => void;
 };
 
-export const CommandPanel = ({ remote, ready = true, error, onCreate }: CommandPanelProps) => {
+export const CommandPanel = ({ edge = false, ready = true, error, onCreate }: CommandPanelProps) => {
   const [location, setLocation] = useState<Process.Location>('local');
   const [params, setParams] = useState<MandelbrotParams>(randomParams);
 
@@ -32,7 +32,14 @@ export const CommandPanel = ({ remote, ready = true, error, onCreate }: CommandP
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          {remote && (
+          <Button
+            icon='ph--plus--regular'
+            label='Create'
+            disabled={!ready}
+            onClick={() => onCreate(edge ? location : 'local', params)}
+            data-testid='process-create'
+          />
+          {edge && (
             <Select.Root
               items={LOCATIONS}
               value={[location]}
@@ -51,13 +58,6 @@ export const CommandPanel = ({ remote, ready = true, error, onCreate }: CommandP
               </Select.Content>
             </Select.Root>
           )}
-          <Button
-            icon='ph--plus--regular'
-            label='Create'
-            disabled={!ready}
-            onClick={() => onCreate(remote ? location : 'local', params)}
-            data-testid='process-create'
-          />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
@@ -75,7 +75,6 @@ export const CommandPanel = ({ remote, ready = true, error, onCreate }: CommandP
         </Form.Root>
       </Panel.Body>
       <Panel.Footer classNames='p-2 text-sm'>
-        {remote && <p className='text-fg-muted'>Remote runtime: {remote}</p>}
         {!ready && <p className='text-fg-muted'>Initializing…</p>}
         {error && (
           <p className='text-error-text' data-testid='process-error'>
