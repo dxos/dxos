@@ -24,15 +24,6 @@ import type * as RemoteProcessManager from './RemoteProcessManager.ts';
 const toProcessId = Schema.decodeUnknownSync(Process.ID);
 const toSpaceId = (value: string): SpaceId => value as SpaceId;
 
-/** States a host will never move out of, and therefore the point at which queued work is dead. */
-const TERMINAL_STATES: readonly Process.State[] = [
-  Process.State.SUCCEEDED,
-  Process.State.FAILED,
-  Process.State.TERMINATED,
-];
-
-const isTerminal = (state: Process.State): boolean => TERMINAL_STATES.includes(state);
-
 export interface Backoff {
   readonly initial: Duration.Duration;
   readonly max: Duration.Duration;
@@ -183,7 +174,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
     const reconcile = (snapshot: RemoteProcessManager.Snapshot): Effect.Effect<RemoteProcessManager.Snapshot> =>
       Effect.gen(function* () {
         const localPid = localPidOf(snapshot.pid);
-        if (isTerminal(snapshot.state)) {
+        if (Process.isExited(snapshot.state)) {
           yield* forget(localPid);
           return snapshot;
         }

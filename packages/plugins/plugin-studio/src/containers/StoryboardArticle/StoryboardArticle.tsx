@@ -11,7 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Banner, Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
+import { Empty, Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -156,14 +156,14 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
     <Splitter.Root role={role} orientation='horizontal' anchor='start' resizable defaultSize={STACK_SIZE} minSize={8}>
       <Splitter.Panel position='start'>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <ActionToolbar {...menuActions} attendableId={attendableId} />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <ScrollArea.Root>
               <ScrollArea.Viewport>
                 {frames.length === 0 ? (
-                  <Banner.Empty classNames='h-full' label={t('storyboard-empty.message')} />
+                  <Empty classNames='h-full'>{t('storyboard-empty.message')}</Empty>
                 ) : (
                   <FrameStack<Frame.Frame>
                     items={frames}
@@ -176,10 +176,10 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
                 )}
               </ScrollArea.Viewport>
             </ScrollArea.Root>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </Splitter.Panel>
-      <Splitter.Handle />
+      <Splitter.ResizeTrigger />
       <Splitter.Panel position='end'>
         {playing ? (
           <StoryboardPlayer clips={clips} attendableId={attendableId} onClose={handleStop} />

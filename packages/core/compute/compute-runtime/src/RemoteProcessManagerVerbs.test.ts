@@ -13,6 +13,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -174,7 +175,7 @@ describe('RemoteProcessManager control verbs', () => {
   test('a spawn publishes into the remote manager tree the monitor reads', async ({ expect }) => {
     const host = makeFakeHost();
     // The verbs write the atom belonging to `RemoteProcessManager.Service`, which is the remote
-    // half of the aggregate `ProcessMonitor` — a private atom would leave a hosted process invisible
+    // half of the aggregate `Process.Manager` — a private atom would leave a hosted process invisible
     // there. The merge itself is covered by the edge e2e, which has a real local manager too.
     const tree = await runWithMonitor(
       Effect.gen(function* () {
@@ -215,7 +216,7 @@ const remoteManager = Effect.gen(function* () {
   }
   return {
     spawn: <I, O, Rpcs extends Rpc.Any>(
-      definition: Process.Process<I, O, any, Rpcs>,
+      definition: Operation.Durable<I, O, any, Rpcs>,
       options?: Omit<RemoteProcessManager.SpawnOptions, 'spaceId' | 'key' | 'definition'>,
     ) => spawn<I, O, Rpcs>({ spaceId: TEST_SPACE, key: definition.key, definition, ...options }),
     list: (options?: Omit<RemoteProcessManager.ListOptions, 'spaceId'>) => list({ spaceId: TEST_SPACE, ...options }),
@@ -225,14 +226,14 @@ const remoteManager = Effect.gen(function* () {
 
 /**
  * The EDGE manager as a client sees it: a tree atom plus the verbs built over `control`, which
- * publish into that atom — the half of the aggregate `ProcessMonitor` where hosted processes belong.
+ * publish into that atom — the half of the aggregate `Process.Manager` where hosted processes belong.
  */
 const remoteLayer = (control: RemoteProcessManager.Control) =>
   Layer.effect(
     RemoteProcessManager.Service,
     Effect.gen(function* () {
       const registry = yield* Registry.AtomRegistry;
-      const processTreeAtom = Atom.make<readonly Process.Info[]>([]);
+      const processTreeAtom = Atom.make<readonly Process.Process[]>([]);
       registry.mount(processTreeAtom);
       return {
         processTree: Effect.sync(() => registry.get(processTreeAtom)),
@@ -248,13 +249,13 @@ const annotations = (value: unknown): Annotation.Dictionary =>
   Schema.decodeUnknownSync(Annotation.Dictionary)({ 'example.com/test': value });
 
 const TEST_KEY = 'dxos.org/process/echo-test';
-// A real id: the adapter passes the space through untouched, but `Process.Info` decodes it as a
+// A real id: the adapter passes the space through untouched, but `Process.Process` decodes it as a
 // branded `SpaceId`.
 const TEST_SPACE = SpaceId.random();
 const TEST_PID = Schema.decodeUnknownSync(Process.ID)('pid-1');
 
 /** Input/output codecs are the only part of the definition the remote path uses. */
-const EchoProcess = Process.make(
+const EchoProcess = Operation.makeDurable(
   {
     key: TEST_KEY,
     input: Schema.String,
@@ -342,7 +343,7 @@ type TestServices = RemoteProcessManager.Service | Registry.AtomRegistry;
 const run = <A>(effect: Effect.Effect<A, never, TestServices>, control: RemoteProcessManager.Control) =>
   EffectEx.runPromise(provide(effect, control));
 
-/** Reads the manager's own tree atom, which is what the aggregate `ProcessMonitor` renders. */
+/** Reads the manager's own tree atom, which is what the aggregate `Process.Manager` renders. */
 const runWithMonitor = run;
 
 /** Runs to an `Exit`, so a defect a verb raises can be asserted instead of failing the test. */

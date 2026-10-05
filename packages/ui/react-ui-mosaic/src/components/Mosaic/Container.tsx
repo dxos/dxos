@@ -21,7 +21,7 @@ import React, {
 } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useFocus } from '@dxos/react-ui';
 import {
   type DndContainerData,
   type DndLocation,
@@ -31,7 +31,6 @@ import {
 } from '@dxos/react-ui-dnd';
 import { isTruthy } from '@dxos/util';
 
-import { useFocus } from '../Focus/index.ts';
 import {
   MOSAIC_CONTAINER_NAME,
   MosaicContainerContextProvider,

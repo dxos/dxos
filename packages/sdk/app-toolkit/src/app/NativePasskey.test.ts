@@ -6,6 +6,9 @@ import { afterEach, describe, test, vi } from 'vitest';
 
 import * as NativePasskey from './NativePasskey.ts';
 
+const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
+vi.mock('@tauri-apps/api/core', () => ({ invoke }));
+
 /**
  * Build a minimal WebAuthn attestation object for testing.
  * The attestation object is CBOR-encoded with structure:
@@ -153,8 +156,13 @@ describe('getPasskeySupport', () => {
     { shell: true, platform: 'MacIntel', native: false, webAuthn: true, expected: 'none' },
     // A webview the shell did not vouch for gets no passkeys rather than a bridge that may be absent.
     { shell: true, platform: 'MacIntel', native: undefined, webAuthn: true, expected: 'none' },
+    { shell: true, platform: 'iPhone', native: true, webAuthn: true, expected: 'native' },
+    { shell: true, platform: 'iPhone', native: false, webAuthn: true, expected: 'none' },
+    { shell: true, platform: 'iPhone', native: undefined, webAuthn: true, expected: 'none' },
+    { shell: true, platform: 'iPad', native: true, webAuthn: true, expected: 'native' },
     { shell: true, platform: 'Linux x86_64', native: undefined, webAuthn: true, expected: 'web' },
     { shell: false, platform: 'MacIntel', native: false, webAuthn: true, expected: 'web' },
+    { shell: false, platform: 'iPhone', native: undefined, webAuthn: true, expected: 'web' },
     { shell: false, platform: 'MacIntel', native: undefined, webAuthn: false, expected: 'none' },
   ])(
     'shell $shell on $platform, host flag $native, WebAuthn $webAuthn -> $expected',
@@ -168,6 +176,43 @@ describe('getPasskeySupport', () => {
       expect(NativePasskey.getPasskeySupport()).toBe(expected);
     },
   );
+});
+
+describe('native bridge commands', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    invoke.mockReset();
+  });
+
+  // iPadOS reports itself as macOS, so the shell names its bridge rather than the page guessing from the platform.
+  test.for([
+    { bridge: 'ios', login: 'login_passkey', register: 'register_passkey' },
+    { bridge: 'macos', login: 'plugin:macos-passkey|login_passkey', register: 'plugin:macos-passkey|register_passkey' },
+    {
+      bridge: undefined,
+      login: 'plugin:macos-passkey|login_passkey',
+      register: 'plugin:macos-passkey|register_passkey',
+    },
+  ])('bridge $bridge invokes $login and $register', async ({ bridge, login, register }, { expect }) => {
+    vi.stubGlobal('__DX_NATIVE_PASSKEY_BRIDGE__', bridge);
+    invoke.mockResolvedValue({});
+    await NativePasskey.loginNativePasskey({ challenge: new Uint8Array(32) });
+    await NativePasskey.createNativePasskey({ username: 'did:test', userId: new Uint8Array(16) });
+    expect(invoke.mock.calls.map(([command]) => command)).toEqual([login, register]);
+  });
+});
+
+describe('isNativePasskeyError', () => {
+  test.for([
+    [{ name: 'NativePasskeyError', cancelled: true, domain: 'd', code: 1001, message: 'm' }, true],
+    [{ name: 'NativePasskeyError', cancelled: false, domain: 'd', message: 'm' }, true],
+    [{ name: 'NativePasskeyError', message: 'm' }, false],
+    ['Login failed', false],
+    [new Error('canceled'), false],
+    [null, false],
+  ])('%o -> %s', ([error, expected], { expect }) => {
+    expect(NativePasskey.isNativePasskeyError(error)).toBe(expected);
+  });
 });
 
 describe('extractPublicKeyFromAttestation', () => {

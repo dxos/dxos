@@ -109,9 +109,9 @@ export const PostToolbar = ({
   );
 
   return (
-    <Panel.Toolbar asChild>
+    <Panel.Header>
       <ActionToolbar {...menuActions} attendableId={attendableId} />
-    </Panel.Toolbar>
+    </Panel.Header>
   );
 };
 

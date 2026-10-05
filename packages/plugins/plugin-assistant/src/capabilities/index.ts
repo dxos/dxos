@@ -88,7 +88,8 @@ export const CompanionChatProvisioner = Capability.lazyModule(
 // Ungated: an agent blocked on a question is waiting whether or not any assistant UI is on screen.
 export const QuestionResumer = Capability.lazyModule(
   'QuestionResumer',
-  { requires: [Capabilities.OperationInvoker], provides: [] },
+  // Headless hosts (EDGE) provide no operation invoker; it resumes questions only in the app.
+  { requires: [Capabilities.OperationInvoker], provides: [], environments: ['node'] },
   () => import('./question-resumer.ts'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {

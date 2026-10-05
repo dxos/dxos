@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import './deck.css';
+
 import React, {
   type CSSProperties,
   type MouseEvent,
@@ -23,8 +25,8 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import {
+  Button,
   Flex,
-  IconButton,
   Main,
   type MainContentProps,
   ScrollArea,
@@ -34,7 +36,6 @@ import {
   useOnTransition,
   useTranslation,
 } from '@dxos/react-ui';
-import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
 import { Attention, useAttended, useAttention, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -105,6 +106,15 @@ const DEFAULT_COMPANION_SIZE = 30;
 const MIN_COMPANION_SIZE = 15;
 const MIN_PAIR_SIZE = MIN_PLANK_SIZE + MIN_COMPANION_SIZE;
 
+/**
+ * Whether a plank and its companion both fit in `availablePx` at their minimum widths. A companion that does not fit
+ * is not shown (its open state is kept for when the deck widens): otherwise the pair overflows under the end sidebar,
+ * taking the companion's close control with it. An unmeasured width (`undefined`) fits; a measured one with nothing
+ * left (other planks' spines take it all) does not.
+ */
+const companionFits = (availablePx: number | undefined): boolean =>
+  availablePx === undefined || availablePx / REM_PX >= MIN_PAIR_SIZE;
+
 // EXPERIMENT (stacked notes): while sliding, planks are sticky and pile on the left as you scroll.
 // Each pinned plank reveals a `SPINE_PX`-wide sliver (owned by `FoldSpine`, which draws it); once a
 // plank's visible width drops below `FOLD_THRESHOLD_PX` (no room for its header) it folds to a spine.
@@ -118,6 +128,11 @@ type PlankContextValue = RenderedPlanks & {
    * trailing controls never disappear behind the piled spines of the other planks. Infinity until measured.
    */
   maxPlankWidthPx: number;
+  /**
+   * The width (px) a plank and its companion share: the sliding cap before it is clamped (so it can be exhausted), or
+   * the viewport when fullbleed. Undefined until measured.
+   */
+  pairWidthPx: number | undefined;
   /** Records the tiles' geometry for the exposé transition; call before toggling it. See {@link useExposeFlip}. */
   captureExposeGeometry: () => void;
   /** Marks the plank a select exit commits to, so the deck leaves the exposé scrolled to it. */
@@ -161,6 +176,7 @@ const PlankContext = createContext<PlankContextValue>({
   planks: [],
   attendedPlankId: undefined,
   maxPlankWidthPx: Number.POSITIVE_INFINITY,
+  pairWidthPx: undefined,
   captureExposeGeometry: () => {},
   markExposeSelect: () => {},
 });
@@ -185,7 +201,6 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
   return (
     <Main.Content
       bounce
-      handlesFocus
       classNames={[
         'grid top-[env(safe-area-inset-top)]!',
         topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]!',
@@ -420,7 +435,7 @@ const PlankSplit = ({
       <Splitter.Panel position='start'>
         <DeckPlank id={id} part='main' active={active} classNames='size-full' />
       </Splitter.Panel>
-      <Splitter.Handle />
+      <Splitter.ResizeTrigger />
       <Splitter.Panel position='end'>
         {companion && <CompanionPlank id={companionId ?? id} classNames='size-full' />}
       </Splitter.Panel>
@@ -454,9 +469,17 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const breakpoint = useBreakpoints();
-  const { planks: rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect } = useContext(PlankContext);
-  const { open: companion, companionId } = useDeckCompanion(id);
+  const {
+    planks: rendered,
+    maxPlankWidthPx,
+    pairWidthPx,
+    captureExposeGeometry,
+    markExposeSelect,
+  } = useContext(PlankContext);
   const presentation = useDeckPresentation(rendered.length);
+  const { open, companionId: openCompanionId } = useDeckCompanion(id);
+  const companion = open && companionFits(pairWidthPx);
+  const companionId = companion ? openCompanionId : undefined;
   const isMobile = breakpoint === 'mobile';
   const exposed = !!state.expose;
   // Drives the exposé's attended-tile outline: attention (not `:focus-visible`) so the indicator is
@@ -511,11 +534,13 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   }, [invokePromise, id, captureExposeGeometry, markExposeSelect]);
 
   if (presentation === 'fullbleed') {
-    // A fullbleed pair flexes to the viewport rather than taking a stored total, so only the lower
-    // bound applies here — the Splitter's own clamp keeps the plank pane on screen.
+    // A fullbleed pair flexes to the viewport rather than taking a stored total, so the companion is capped to leave
+    // the plank its minimum; a stored width wider than that would push the pair past the end sidebar.
+    const fitCompanionSize =
+      pairWidthPx === undefined ? Number.POSITIVE_INFINITY : pairWidthPx / REM_PX - MIN_PLANK_SIZE;
     const soloCompanionSize = Math.max(
       MIN_COMPANION_SIZE,
-      deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE,
+      Math.min(deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE, fitCompanionSize),
     );
     // Mirrors the sliding return below so the first child keeps its component type across a
     // presentation change — the reconciliation that keeps a plank's DOM (and therefore its content
@@ -528,7 +553,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           companionId={companionId}
           active={deck.active}
           companionSize={soloCompanionSize}
-          classNames={mx('dx-fullscreen', mainPaddingTransitions)}
+          classNames={'dx-cover dx-main-content-padding-transitions'}
         />
       </Mosaic.Tile>
     );
@@ -656,19 +681,33 @@ const useMaxPlankWidth = ({
   stackRef: RefObject<HTMLDivElement | null>;
   isSliding: boolean;
   plankCount: number;
-}): { maxPlankWidthPx: number; viewportWidthPx: number } => {
-  const [measured, setMeasured] = useState({
+}): { maxPlankWidthPx: number; viewportWidthPx: number; pairWidthPx: number | undefined } => {
+  const [measured, setMeasured] = useState<{
+    maxPlankWidthPx: number;
+    viewportWidthPx: number;
+    pairWidthPx: number | undefined;
+  }>({
     maxPlankWidthPx: Number.POSITIVE_INFINITY,
     viewportWidthPx: 0,
+    pairWidthPx: undefined,
   });
 
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
-    if (!viewport || !isSliding) {
-      setMeasured({ maxPlankWidthPx: Number.POSITIVE_INFINITY, viewportWidthPx: 0 });
+    if (!viewport) {
+      setMeasured({ maxPlankWidthPx: Number.POSITIVE_INFINITY, viewportWidthPx: 0, pairWidthPx: undefined });
       return;
     }
     const measure = () => {
+      // Only a sliding deck caps its planks; a fullbleed one still needs the width to know whether its pair fits.
+      if (!isSliding) {
+        setMeasured({
+          maxPlankWidthPx: Number.POSITIVE_INFINITY,
+          viewportWidthPx: viewport.clientWidth,
+          pairWidthPx: viewport.clientWidth,
+        });
+        return;
+      }
       const stack = stackRef.current;
       const styles = stack && getComputedStyle(stack);
       const gap = styles ? parseFloat(styles.columnGap) || 0 : 0;
@@ -680,6 +719,7 @@ const useMaxPlankWidth = ({
       setMeasured({
         maxPlankWidthPx: max > 0 ? max : Number.POSITIVE_INFINITY,
         viewportWidthPx: viewport.clientWidth,
+        pairWidthPx: max,
       });
     };
     measure();
@@ -1405,7 +1445,7 @@ export const DeckPlanks = () => {
   // same reason as above: it changes per scroll frame and no render depends on it.
 
   const getPlankTiles = usePlankTiles(stackRef);
-  const { maxPlankWidthPx, viewportWidthPx } = useMaxPlankWidth({
+  const { maxPlankWidthPx, viewportWidthPx, pairWidthPx } = useMaxPlankWidth({
     viewportRef,
     stackRef,
     isSliding,
@@ -1703,8 +1743,8 @@ export const DeckPlanks = () => {
   }, []);
 
   const plankContext = useMemo<PlankContextValue>(
-    () => ({ ...rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect }),
-    [rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect],
+    () => ({ ...rendered, maxPlankWidthPx, pairWidthPx, captureExposeGeometry, markExposeSelect }),
+    [rendered, maxPlankWidthPx, pairWidthPx, captureExposeGeometry, markExposeSelect],
   );
 
   // The last tile's width as actually laid out, so the runway below can wait for the split to size the
@@ -1735,7 +1775,7 @@ export const DeckPlanks = () => {
     if (!overscroll || !isSliding || expose || !lastPlankId || !viewportWidthPx) {
       return 0;
     }
-    const paired = lastPlankCompanion;
+    const paired = lastPlankCompanion && companionFits(pairWidthPx);
     const { tileSize } = resolveTileSizes(
       deck.plankSizing,
       Navigation.segmentOf(deck.segments, lastPlankId),
@@ -1762,6 +1802,7 @@ export const DeckPlanks = () => {
     deck.plankSizing,
     deck.segments,
     maxPlankWidthPx,
+    pairWidthPx,
     viewportWidthPx,
   ]);
 
@@ -1789,7 +1830,7 @@ export const DeckPlanks = () => {
         {fullscreen && fullscreenId ? (
           <>
             <ExitFullscreenButton onExit={toggleFullscreen} />
-            <DeckPlank id={fullscreenId} part='main' fullscreen classNames={mx('dx-fullscreen', mainIntrinsicSize)} />
+            <DeckPlank id={fullscreenId} part='main' fullscreen classNames={'dx-cover dx-main-intrinsic-size'} />
           </>
         ) : (
           // Every non-fullscreen presentation renders through this one pipeline — fullbleed included
@@ -1798,7 +1839,7 @@ export const DeckPlanks = () => {
           // DOM mounted across 1↔2 plank transitions; a separate fullbleed branch here remounted the
           // surviving plank on every message open/close (the mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
           // resolves against the viewport instead of a shrink-wrapped flex row.
-          <Mosaic.Container orientation='horizontal' classNames={['dx-fullscreen', mainPaddingTransitions]}>
+          <Mosaic.Container orientation='horizontal' classNames='dx-cover dx-main-content-padding-transitions'>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
               <ScrollArea.Viewport
                 ref={viewportRef}
@@ -1868,7 +1909,7 @@ const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
         'transition-opacity opacity-(--controls-opacity)',
       )}
     >
-      <IconButton
+      <Button
         label={t('exit-fullscreen.label')}
         icon='ph--corners-in--regular'
         iconOnly

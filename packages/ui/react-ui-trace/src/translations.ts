@@ -14,6 +14,9 @@ export const translations = [
 
         'gantt-axis-time.label': 'Fit to time',
         'gantt-axis-unit.label': 'One step per event',
+        'gantt-legend-stats.label': 'Show usage',
+        'gantt-legend-title.label': 'Show titles',
+        'gantt-chart.label': 'Timeline',
 
         'trace.label': 'Trace',
         'trace-processes.label': 'Processes',

@@ -146,7 +146,7 @@ before), not reasoned about from the source.
 - [x] `scene--transform`: a shape component fills its node. `computeNodeView` rendered the component
       straight into the engine's node frame, which is not a flex container — the editor's frame body
       (`styles.frameContainer`) was, and every component was written against it, so `grow` was inert
-      and the content sat at the top. Wrapped in `dx-fullscreen flex`.
+      and the content sat at the top. Wrapped in `dx-cover flex`.
 - [x] `scene--transform`: a click on an interactive control runs its operation. The node frame takes a
       pointer press as select-and-drag and captures the pointer, so the `click` never arrived; the four
       shapes with a control (`RNG`, `Switch`, `Audio`, `GptRealtime`) now stop the gesture.
@@ -197,7 +197,7 @@ before), not reasoned about from the source.
       canvas-editor model already calls it — leaving `text` to the host.
 - [x] The remaining `scene` stories (beacon, control, template, gpt, plugins, artifact, image-gen,
       audio, voice), same treatment. All nine walked in Chromium at 1400x900: every node carries the
-      `dx-fullscreen flex` wrapper, every compute shape its chrome, and no story raises a page error.
+      `dx-cover flex` wrapper, every compute shape its chrome, and no story raises a page error.
       The only console error left is the known `chat` stub (no compute function for that node type),
       in the six circuits that wire one; `audio` and `voice` are clean of even that. Measured as
       nodes, centre offset and coverage as fractions of the viewport, and fitted zoom: beacon 4,

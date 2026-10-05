@@ -92,6 +92,57 @@ describe('projectThread', () => {
     expect(text(messages)).toEqual(['first', 'answer']);
   });
 
+  // The agent sends a turn's prompt to the thread before the feed has it; with no lineage of its own it
+  // must continue from the rewind point, not chain onto the abandoned reply that sorts before it.
+  test('a turn message the feed has not recorded yet follows the rewound head', ({ expect }) => {
+    const first = message('first');
+    const answer = message('answer');
+    const asked = message('asked');
+    const replied = message('replied');
+    const revised = message('revised');
+
+    const { messages } = projectThread({
+      feedMessages: [first, answer, asked, replied],
+      pendingMessages: [replied, revised],
+      rewindFrom: asked.id,
+    });
+    expect(text(messages)).toEqual(['first', 'answer', 'revised']);
+  });
+
+  test('a recorded continuation ends the rewind before its pointer is cleared', ({ expect }) => {
+    const first = message('first');
+    const answer = message('answer');
+    const asked = message('asked');
+    const replied = message('replied');
+    const revised = message('revised');
+    Feed.setParent(revised, answer);
+
+    const { messages } = projectThread({
+      feedMessages: [first, answer, asked, replied, revised],
+      rewindFrom: asked.id,
+    });
+    expect(text(messages)).toEqual(['first', 'answer', 'revised']);
+  });
+
+  // The rewound prompt may itself continue an earlier fork from the same head; that is not the
+  // continuation of this rewind.
+  test('a rewound turn that continues an earlier fork does not end its own rewind', ({ expect }) => {
+    const first = message('first');
+    const answer = message('answer');
+    const asked = message('asked');
+    const replied = message('replied');
+    Feed.setParent(asked, answer);
+    // Delivered twice before the feed records it, which must still render once.
+    const revised = message('revised');
+
+    const { messages } = projectThread({
+      feedMessages: [first, answer, asked, replied],
+      pendingMessages: [revised, revised],
+      rewindFrom: asked.id,
+    });
+    expect(text(messages)).toEqual(['first', 'answer', 'revised']);
+  });
+
   test('an empty feed projects nothing', ({ expect }) => {
     expect(projectThread({ feedMessages: [] }).messages).toEqual([]);
   });
@@ -274,6 +325,23 @@ describe('collapseToolRuns', () => {
     expect(collapsed).toHaveLength(3);
     expect(collapsed[0].blocks).toHaveLength(2);
     expect(collapsed[2].blocks).toHaveLength(2);
+  });
+
+  // The thread re-projects on every streamed block; a new object per pass re-renders every panel.
+  test('re-folding the same run returns the same message', ({ expect }) => {
+    const run = [toolCall('tc-1'), toolResult('tc-1'), toolCall('tc-2')];
+    const first = collapseToolRuns([message('prompt'), ...run]);
+    const second = collapseToolRuns([message('prompt'), ...run, message('answer', 'assistant')]);
+    expect(second[1]).toBe(first[1]);
+  });
+
+  test('a run that grows is folded afresh', ({ expect }) => {
+    const run = [toolCall('tc-1'), toolResult('tc-1')];
+    const before = collapseToolRuns(run);
+    const after = collapseToolRuns([...run, toolCall('tc-2')]);
+    expect(after[0]).not.toBe(before[0]);
+    expect(after[0].id).toBe(before[0].id);
+    expect(after[0].blocks).toHaveLength(3);
   });
 });
 

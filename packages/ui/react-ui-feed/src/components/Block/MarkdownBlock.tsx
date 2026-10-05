@@ -7,7 +7,7 @@ import { EditorView } from '@codemirror/view';
 import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { type ObjectLinkProps, type WidgetDef, type WidgetState, type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -55,7 +55,7 @@ export const MarkdownBlock = memo(
     hits,
     onWidgetsChange,
   }: MarkdownBlockProps) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = useThemeMode();
     const [view, setView] = useState<EditorView | null>(null);
     // React widgets render in portals into hosts the extension places in the document, so the item has
     // to own them: a widget's tree belongs to the React root that rendered the item, not to CodeMirror.
@@ -91,10 +91,12 @@ export const MarkdownBlock = memo(
         return;
       }
 
+      // Built detached and attached once: given a `parent`, the view writes its attributes on a live
+      // element, and each write invalidates the document's style for every row that mounts.
       const instance = new EditorView({
-        parent,
         state: EditorState.create({ doc: initialTextRef.current, extensions }),
       });
+      parent.appendChild(instance.dom);
       const unregister = selectionGroupRef.current.register(instance);
       setView(instance);
 

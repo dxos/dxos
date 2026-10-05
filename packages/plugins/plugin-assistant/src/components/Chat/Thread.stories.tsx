@@ -66,7 +66,7 @@ const Thread = ({ messages, viewType }: { messages: MessageType.Message[]; viewT
       objectImage={objectImage}
       onEvent={(event) => recordedEvents.push(event)}
     >
-      <ChatThread.Viewport padding />
+      <ChatThread.Viewport />
     </ChatThread.Root>
   );
 };
@@ -223,6 +223,15 @@ export const Thinking: Story = {
         // Reasoning narrates the run it sits in rather than emitting `ReasoningWidget`, so the
         // prose arrives in the run's panel — `data-reasoning-text` is no longer rendered for it.
         await expect(canvasElement.querySelectorAll('[data-testid="assistant.tool-run"]').length).toBeGreaterThan(0);
+      },
+      { timeout: 10_000 },
+    );
+    // A closed panel does not build its body, so the prose is there once the reader opens it.
+    for (const header of canvasElement.querySelectorAll<HTMLElement>('[data-testid="assistant.tool-run"]')) {
+      await userEvent.click(header);
+    }
+    await waitFor(
+      async () => {
         await expect(canvasElement.textContent ?? '').toContain('Considering the question before answering.');
       },
       { timeout: 10_000 },

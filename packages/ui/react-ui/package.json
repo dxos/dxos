@@ -27,19 +27,9 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./next": {
-      "source": "./src/next/index.ts",
-      "types": "./dist/types/src/next/index.d.ts",
-      "import": "./dist/lib/next.mjs"
-    },
-    "./next/theme.css": {
+    "./theme.css": {
       "style": "./src/next/theme/index.css",
       "default": "./src/next/theme/index.css"
-    },
-    "./next/testing": {
-      "source": "./src/next/testing/stories.tsx",
-      "types": "./dist/types/src/next/testing/stories.d.ts",
-      "import": "./dist/lib/next-testing.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -74,10 +64,8 @@
     "@zag-js/core": "catalog:",
     "@zag-js/react": "catalog:",
     "date-fns": "catalog:",
-    "dompurify": "catalog:",
     "error-stack-parser": "catalog:",
     "i18next": "catalog:",
-    "react-aria-components": "catalog:",
     "react-error-boundary": "catalog:",
     "react-i18next": "catalog:"
   },
@@ -86,7 +74,6 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@phosphor-icons/react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tanstack/react-virtual": "catalog:",
     "@testing-library/react": "catalog:",
@@ -96,6 +83,7 @@
     "@zag-js/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
+    "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
   },

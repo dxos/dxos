@@ -2,21 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { type ComponentPropsWithoutRef } from 'react';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-// Mirrors react-ui `Icon`'s `size` prop literal subset; kept inline so we don't
-// have to add `@dxos/ui-types` as a dep just for one type alias.
-type IconSize = 4 | 5 | 6 | 8;
-
 export type PluginFailureBadgeProps = {
   failure: PluginManager.PluginFailure;
-  /** Visual size of the warning icon (passed through to react-ui `<Icon />`). */
-  size?: IconSize;
+  /** Size of the warning icon. */
+  size?: ComponentPropsWithoutRef<typeof Button>['iconSize'];
 };
 
 /**
@@ -32,34 +28,31 @@ export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) =
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <IconButton
+        <Button
           variant='destructive'
           icon='ph--warning--bold'
           iconOnly
-          noTooltip
-          size={size}
+          showTooltip={false}
+          iconSize={size}
           label={t('failure-badge.label')}
           data-testid={`pluginFailureBadge.${failure.id}`}
           onClick={(event) => event.stopPropagation()}
         />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content>
-          <Popover.Viewport>
-            <div className='px-3 py-2 min-w-[18rem] max-w-[28rem] flex flex-col gap-1'>
-              <p className='font-medium text-sm'>
-                {t('failure-title.label', {
-                  phase: failure.phase === 'load' ? t('failure-phase-load.label') : t('failure-phase-activation.label'),
-                  reason:
-                    failure.reason === 'timeout' ? t('failure-reason-timeout.label') : t('failure-reason-error.label'),
-                })}
-              </p>
-              <p className='text-description text-sm break-words'>{failure.error.message}</p>
-            </div>
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content>
+        <Popover.Body>
+          <div className='px-3 py-2 min-w-[18rem] max-w-[28rem] flex flex-col gap-1'>
+            <p className='font-medium text-sm'>
+              {t('failure-title.label', {
+                phase: failure.phase === 'load' ? t('failure-phase-load.label') : t('failure-phase-activation.label'),
+                reason:
+                  failure.reason === 'timeout' ? t('failure-reason-timeout.label') : t('failure-reason-error.label'),
+              })}
+            </p>
+            <p className='text-fg-muted text-sm break-words'>{failure.error.message}</p>
+          </div>
+        </Popover.Body>
+      </Popover.Content>
     </Popover.Root>
   );
 };

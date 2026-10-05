@@ -10,7 +10,7 @@ import { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } from '
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Field, Icon, Panel, ScrollArea, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { Button, Field, Icon, Input, Panel, ScrollArea, Textarea, Toolbar, useFileDownload } from '@dxos/react-ui';
 import { arrayToString, decodeUint8ArrayFromJson, isEncodedUint8Array } from '@dxos/util';
 
 import { type ArticleProps } from '../../types.ts';
@@ -274,23 +274,18 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root classNames='col-span-2'>
-          <Toolbar.Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
+          <Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
             Run Query
-          </Toolbar.Button>
-          <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
+          </Button>
+          <Button onClick={refresh} disabled={isRefreshing}>
             Refresh
-          </Toolbar.Button>
-          <Toolbar.IconButton
-            icon='ph--download--regular'
-            label='Export database'
-            onClick={handleExport}
-            disabled={isExporting}
-          />
+          </Button>
+          <Button icon='ph--download--regular' label='Export database' onClick={handleExport} disabled={isExporting} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-cols-[240px_1fr] divide-x divide-separator h-full'>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-cols-[240px_1fr] divide-x divide-separator h-full'>
         <div className='flex flex-col h-full overflow-hidden'>
           <div className='p-2 border-b border-separator'>
             <div className='text-xs font-medium mb-2'>Database</div>
@@ -320,7 +315,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
             )}
           </div>
 
-          <ScrollArea.Root thin>
+          <ScrollArea.Root>
             <ScrollArea.Viewport classNames='p-2'>
               <div className='text-xs font-medium mb-2'>Tables</div>
               {tables.length === 0 ? (
@@ -338,7 +333,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
                       onClick={() => handleSelectTable(tableName)}
                       disabled={isRunning}
                     >
-                      <Icon icon='ph--table--regular' size={4} />
+                      <Icon icon='ph--table--regular' size='md' />
                       {tableName}
                     </button>
                   ))}
@@ -352,7 +347,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
           <div className='flex flex-col gap-2 p-2 border-b border-separator'>
             <Field.Root>
               <Field.Label>SQL</Field.Label>
-              <Field.Textarea
+              <Textarea
                 value={query}
                 onChange={({ target }) => setQuery(target.value)}
                 classNames='min-h-24 font-mono text-xs'
@@ -360,18 +355,19 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
             </Field.Root>
             <Field.Root>
               <Field.Label>Params (JSON array)</Field.Label>
-              <Field.Input
+              <Input
                 value={params}
                 onChange={({ target }) => setParams(target.value)}
                 placeholder='[]'
-                classNames='font-mono text-xs'
+                classNames='text-xs'
+                variant='mono'
               />
             </Field.Root>
           </div>
 
           {error && <div className='p-2 text-sm text-red-500 font-mono'>{error}</div>}
 
-          <ScrollArea.Root thin>
+          <ScrollArea.Root>
             <ScrollArea.Viewport>
               {rows.length === 0 && !error ? (
                 <div className='p-2 text-sm text-neutral-400'>No rows.</div>
@@ -402,7 +398,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -619,7 +615,7 @@ const BinaryCell = ({ data }: { data: Uint8Array }) => {
           <span className='rounded bg-neutral-500/15 px-1 text-neutral-400'>blob</span>
           <span>{bytes.format(data.length)}</span>
           {text ? (
-            <span className='text-base-fg'>"{truncateText(text, 48)}"</span>
+            <span className='text-fg'>"{truncateText(text, 48)}"</span>
           ) : (
             <span className='text-neutral-500'>{formatHexPreview(data)}</span>
           )}

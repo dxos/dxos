@@ -14,7 +14,7 @@ mod window_state;
 mod xattr_cmd;
 #[cfg(target_os = "macos")]
 mod menubar;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 mod passkey;
 #[cfg(target_os = "macos")]
 mod spotlight;
@@ -118,6 +118,8 @@ pub fn run() {
 
     #[cfg(target_os = "macos")]
     let native_passkeys = passkey::available(&context.config().identifier);
+    #[cfg(target_os = "ios")]
+    let native_passkeys = passkey::ios::bridge::available();
 
     let builder = tauri::Builder::default()
         .manage(asset_cache::AssetCacheState::default())
@@ -161,7 +163,7 @@ pub fn run() {
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());
 
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
     let builder = builder.plugin(passkey::init(native_passkeys));
 
     // Unregistered, a stray `invoke` fails at once instead of opening a sheet that never returns.
@@ -259,6 +261,10 @@ pub fn run() {
         audio_input::start_microphone_bridge,
         #[cfg(target_os = "ios")]
         audio_input::stop_microphone_bridge,
+        #[cfg(target_os = "ios")]
+        passkey::ios::bridge::login_passkey,
+        #[cfg(target_os = "ios")]
+        passkey::ios::bridge::register_passkey,
         web_process::take_web_process_terminations,
     ]);
 
@@ -303,6 +309,10 @@ pub fn run() {
                     "native passkeys disabled: the signed application identifier does not name {}",
                     app.config().identifier
                 );
+            }
+            #[cfg(target_os = "ios")]
+            if !native_passkeys {
+                log::warn!("native passkeys disabled: the passkey bridge is not built into this app");
             }
 
             // Desktop: create window pointing at localhost plugin (production) or Vite dev server (dev).

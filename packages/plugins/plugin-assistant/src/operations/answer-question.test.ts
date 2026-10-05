@@ -242,6 +242,9 @@ describe('AnswerQuestion', () => {
   /** Events of one type on the space's trace feed, in the order they were written. */
   const readEvents = <T>(eventType: Trace.EventType<T>) =>
     Effect.gen(function* () {
+      // The sink batches its appends, so the trace can trail the operation that wrote it.
+      yield* FeedTraceSink.flush();
+      yield* Database.flush();
       const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
       const messages = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
       return messages

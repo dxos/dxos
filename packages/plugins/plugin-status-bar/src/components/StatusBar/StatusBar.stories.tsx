@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Icon, IconButton } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { StatusBar } from './index.ts';
@@ -23,7 +23,7 @@ const DefaultStory = () => (
       </StatusBar.Button>
     </a>
     <StatusBar.Item>
-      <IconButton variant='ghost' icon='ph--lightning--regular' iconOnly label='Online' />
+      <Button variant='ghost' icon='ph--lightning--regular' iconOnly label='Online' />
     </StatusBar.Item>
   </StatusBar.EndContent>
 );

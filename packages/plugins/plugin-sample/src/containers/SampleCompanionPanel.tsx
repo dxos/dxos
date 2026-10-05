@@ -48,12 +48,12 @@ export const SampleCompanionPanel = ({ companionTo }: SampleCompanionPanelProps)
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <RelatedItemsList items={relatedItems} onNavigate={handleNavigate} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

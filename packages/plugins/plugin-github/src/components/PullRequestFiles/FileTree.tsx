@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Field, Icon, useTranslation } from '@dxos/react-ui';
-import { type ColumnRenderer, type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
+import { Checkbox, useTranslation } from '@dxos/react-ui';
+import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
@@ -58,7 +58,7 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
   );
 
   const handleSelect = useCallback(
-    ({ item }: { item: FileNode }) => {
+    ({ item }: TreeSelectEvent<FileNode>) => {
       if (item.file) {
         onSelect(item.path);
       }
@@ -66,42 +66,36 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
     [onSelect],
   );
 
-  const renderIcon = useMemo<IconRenderer<FileNode>>(
-    () =>
-      ({ item }) =>
-        item.file ? (
-          <Field.Checkbox
-            size={4}
-            checked={reviewed.has(item.path)}
-            onCheckedChange={(checked) => onReviewedChange(item.path, checked === true)}
-            // Checking a file off is not a request to open it.
-            onClick={(event) => event.stopPropagation()}
-            aria-label={t('file-reviewed.label')}
-            data-testid='pull-request.files.reviewed'
-          />
-        ) : (
-          <Icon icon='ph--folder--regular' size={4} />
-        ),
+  const renderRow = useCallback(
+    (node: TreeNode<FileNode>) => {
+      const item = node.item;
+      return (
+        <Tree.Item node={node}>
+          <Tree.ItemIndicator />
+          <Tree.ItemIcon icon={item?.file ? undefined : 'ph--folder--regular'}>
+            {item?.file && (
+              <Checkbox
+                checked={reviewed.has(item.path)}
+                onCheckedChange={({ checked }) => onReviewedChange(item.path, checked === true)}
+                // Checking a file off is not a request to open it.
+                onClick={(event) => event.stopPropagation()}
+                aria-label={t('file-reviewed.label')}
+                data-testid='pull-request.files.reviewed'
+              />
+            )}
+          </Tree.ItemIcon>
+          <Tree.ItemText />
+          {item && <DiffStat added={item.added} removed={item.removed} />}
+        </Tree.Item>
+      );
+    },
     [reviewed, onReviewedChange, t],
   );
 
-  const renderColumns = useMemo<ColumnRenderer<FileNode>>(
-    () =>
-      ({ item }) => <DiffStat added={item.added} removed={item.removed} />,
-    [],
-  );
-
   return (
-    <Tree<FileNode>
-      id={root.id}
-      model={model}
-      ariaLabel={t('files-tree.label')}
-      classNames='text-sm'
-      density='sm'
-      renderIcon={renderIcon}
-      renderColumns={renderColumns}
-      onOpenChange={handleOpenChange}
-      onSelect={handleSelect}
-    />
+    <Tree.Root id={root.id} model={model} size='sm' onOpenChange={handleOpenChange} onSelect={handleSelect}>
+      <Tree.Label srOnly>{t('files-tree.label')}</Tree.Label>
+      <Tree.Content>{renderRow}</Tree.Content>
+    </Tree.Root>
   );
 };

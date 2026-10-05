@@ -28,17 +28,18 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
+  Button,
+  DropIndicator,
   Icon,
-  IconButton,
   ScrollArea,
   Tabs,
   type ThemedClassName,
   Tooltip,
   toLocalizedString,
+  useMainLandmark,
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
-import { DropIndicator } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -131,25 +132,27 @@ const L0ItemRoot = memo(
       const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
 
       return (
-        <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
-          <Tabs.TabPrimitive
-            className={mx(
-              'group/l0item flex w-full justify-center items-center relative',
-              'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer aria-disabled:cursor-default',
-              l0Breakpoints[item.properties.l0Breakpoint],
-            )}
-            tabIndex={type === 'tab' ? 0 : undefined}
-            data-type={type}
-            data-testid={testId}
-            data-object-id={id}
-            {...(item.properties.pending === true && { 'aria-disabled': true })}
-            value={item.id}
-            onClick={handleClick}
-            onMouseEnter={onMouseEnter}
-            ref={forwardedRef}
-          >
-            {children}
-          </Tabs.TabPrimitive>
+        <Tooltip.Trigger asChild side='right' content={localizedString}>
+          <Tabs.Trigger asChild value={item.id}>
+            <button
+              type='button'
+              className={mx(
+                'group/l0item flex w-full justify-center items-center relative',
+                'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer aria-disabled:cursor-default',
+                l0Breakpoints[item.properties.l0Breakpoint],
+              )}
+              tabIndex={type === 'tab' ? 0 : undefined}
+              data-type={type}
+              data-testid={testId}
+              data-object-id={id}
+              {...(item.properties.pending === true && { 'aria-disabled': true })}
+              onClick={handleClick}
+              onMouseEnter={onMouseEnter}
+              ref={forwardedRef}
+            >
+              {children}
+            </button>
+          </Tabs.Trigger>
         </Tooltip.Trigger>
       );
     },
@@ -250,7 +253,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {closestEdge && <DropIndicator edge={closestEdge} />}
+      {(closestEdge === 'top' || closestEdge === 'bottom') && <DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
 });
@@ -266,7 +269,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
     const hueFgStyle = hue && { style: { color: `var(--color-${hue}-fg)` } };
-    return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
+    return <Icon icon={item.properties.icon} size='xl' {...hueFgStyle} />;
   }
 
   const type = l0ItemType(item);
@@ -333,9 +336,12 @@ export const L0Menu = ({
 
   // Check if any items have onRearrange to enable drag-and-drop.
   const hasRearrangeableItems = topLevelItems.some((item) => item.properties.onRearrange);
+  // The rail is a focus area of its own, before the panel beside it.
+  const landmark = useMainLandmark(0);
 
   return (
-    <Tabs.Tablist
+    <Tabs.List
+      {...landmark}
       data-tauri-drag-region='deep'
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
@@ -349,20 +355,19 @@ export const L0Menu = ({
       <ActionMenu onAction={handleAction} group={parent} actions={menuActions}>
         {/* The trigger clones this child, so the testid belongs here rather than on `ActionMenu`. */}
         <div className='grid place-items-center' data-testid='spacePlugin.addSpace'>
-          <IconButton
-            density='lg'
+          <Button
+            size='lg'
             variant='ghost'
-            size={5}
+            iconSize='lg'
             icon='ph--list--regular'
             iconOnly
-            square
             label={t('app-menu.label')}
           />
         </div>
       </ActionMenu>
 
       {/* Space list. */}
-      <ScrollArea.Root centered thin orientation='vertical'>
+      <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
           {topLevelItems.map((item) => (
             <L0Item
@@ -393,15 +398,15 @@ export const L0Menu = ({
               emoji={userAccountItem.properties.emoji}
               status={userAccountItem.properties.status}
               badge={userAccountItem.properties.badge}
-              size={10}
+              size='lg'
             />
           </L0ItemRoot>
         ) : (
           <div className='flex w-full justify-center items-center'>
-            <UserAccountAvatar size={10} />
+            <UserAccountAvatar size='lg' />
           </div>
         )}
       </div>
-    </Tabs.Tablist>
+    </Tabs.List>
   );
 };

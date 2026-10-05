@@ -17,7 +17,7 @@ export const SceneCard = ({ subject }: SceneCardProps) => (
   <Card.Body>
     <Card.Section classNames='aspect-square'>
       {/* The section centres its row; stretched, so the canvas below gets the square's height. */}
-      <Card.Row fullWidth classNames='self-stretch'>
+      <Card.Row classNames='self-stretch'>
         <SpacetimeEditor.Root scene={subject}>
           {/* A preview in a grid must not take the wheel from the grid's scroll. */}
           <SpacetimeEditor.Canvas classNames='h-full pointer-events-none' showFps={false} />

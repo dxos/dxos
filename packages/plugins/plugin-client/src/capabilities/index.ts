@@ -113,7 +113,7 @@ export const NavigationTargetLoader = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.contactPicker', 'org.dxos.role.dialog'],
   props: ({
     shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
     invitationPath = '/',
@@ -141,7 +141,7 @@ export const RemoteTraceMonitor = Capability.lazyModule(
   'RemoteTraceMonitor',
   // Startup: the process-manager runtime snapshots this capability once, in the Startup pass, and
   // bakes a no-op remote source if it has not been contributed yet — demand activation always loses
-  // that race, silencing remote traces for every ProcessMonitor consumer.
+  // that race, silencing remote traces for every Process.Manager consumer.
   { provides: [Capabilities.RemoteTraceMonitor], activatesOn: ActivationEvents.Startup },
   () => import('./remote-trace-monitor.ts'),
 );
@@ -161,7 +161,7 @@ export const TraceProgress = Capability.lazyModule(
   'TraceProgress',
   {
     // ProgressRegistry is resolved lazily per message (a host without it degrades to a no-op sink).
-    requires: [Capabilities.ProcessMonitor, Capabilities.ProcessManagerRuntime, Capabilities.ServiceResolver],
+    requires: [Capabilities.ProcessManager, Capabilities.ProcessManagerRuntime, Capabilities.ServiceResolver],
     provides: [],
     // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and
     // registry are all available by the time spaces are observed.
