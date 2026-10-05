@@ -12,6 +12,8 @@ import { chromium } from '@playwright/test';
 const args = process.argv.slice(2);
 // Binds each fresh identity to a hub account first, which a deployed origin requires for the inbox.
 const withAccount = args.includes('--account');
+// Visible windows side by side, left open at the end with Alice's notifications panel showing.
+const headed = args.includes('--headed');
 // The hub PR previews are built against (`.github/workflows/env/dev`).
 const HUB_URL = process.env.DX_HUB_URL ?? 'https://preview.dxos.network/hub/';
 const url = args.find((arg) => !arg.startsWith('--')) ?? 'http://127.0.0.1:5182/';
@@ -21,14 +23,24 @@ const RELEVANT = /inbox|invitation|messenger|notification|envelope/i;
 // Noise every local page emits; it says nothing about the inbox path.
 const NOISE = /ERR_CONNECTION_REFUSED|DX_IPDATA_API_KEY|non-secure context|undocumented API/;
 
-const browser = await chromium.launch({
-  headless: true,
-  executablePath: process.env.PW_CHROMIUM_PATH || undefined,
-  args: process.env.PW_CHROMIUM_PATH ? ['--no-sandbox'] : [],
-});
+const WINDOW = { width: 960, height: 1000 };
+const launch = (index) =>
+  chromium.launch({
+    headless: !headed,
+    executablePath: process.env.PW_CHROMIUM_PATH || undefined,
+    args: [
+      ...(process.env.PW_CHROMIUM_PATH ? ['--no-sandbox'] : []),
+      ...(headed
+        ? [`--window-position=${index * WINDOW.width},0`, `--window-size=${WINDOW.width},${WINDOW.height}`]
+        : []),
+    ],
+  });
+const browsers = [];
 
-const openUser = async (name) => {
-  const context = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+const openUser = async (name, index) => {
+  const browser = await launch(index);
+  browsers.push(browser);
+  const context = await browser.newContext({ viewport: headed ? null : { width: 1400, height: 900 } });
   const page = await context.newPage();
   const logs = [];
   page.on('console', (message) => {
@@ -78,7 +90,7 @@ const openUser = async (name) => {
 
 const step = (label) => console.log(`\n== ${label}`);
 
-const [bob, alice] = await Promise.all([openUser('bob'), openUser('alice')]);
+const [bob, alice] = await Promise.all([openUser('bob', 0), openUser('alice', 1)]);
 
 /** Bob creates a space and admits Alice through the real operation, which also sends the invitation message. */
 const invite = (spaceName) =>
@@ -201,5 +213,10 @@ try {
   for (const line of [...bob.logs, ...alice.logs]) {
     console.log(line);
   }
-  await browser.close();
+  if (headed) {
+    await alice.page.click('[id$="trigger-messenger"]').catch(() => {});
+    console.log('\nWindows left open; press Ctrl-C to close them.');
+    await new Promise(() => {});
+  }
+  await Promise.all(browsers.map((browser) => browser.close()));
 }

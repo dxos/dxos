@@ -118,3 +118,6 @@ identity with a `test+…@dxos.org` address against `DX_HUB_URL` (default the PR
 ```bash
 node packages/apps/composer-app/testing/bin/two-user-invite.mjs https://pr-<n>-composer-dev.dxos.workers.dev/ --account
 ```
+
+`--headed` opens the two browsers as visible windows side by side and leaves them open at the end,
+with Alice's notifications panel showing.
