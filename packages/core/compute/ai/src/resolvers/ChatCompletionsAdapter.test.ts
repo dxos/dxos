@@ -431,6 +431,68 @@ describe('streamed finish part', () => {
     }),
   );
 
+  // DeepSeek caches every prompt prefix without opt-in and reports the hits apart from `prompt_tokens`.
+  it.effect(
+    'splits DeepSeek prompt-cache hits out of the input tokens',
+    Effect.fn(function* (_) {
+      const parts = yield* LanguageModel.streamText({ prompt: 'hi' }).pipe(
+        Stream.runCollect,
+        Effect.provide(
+          serveSseStream([
+            delta('ok', 'stop'),
+            '',
+            chunk({
+              choices: [],
+              usage: {
+                prompt_tokens: 100,
+                completion_tokens: 5,
+                total_tokens: 105,
+                prompt_cache_hit_tokens: 64,
+                prompt_cache_miss_tokens: 36,
+              },
+            }),
+            '',
+            'data: [DONE]',
+            '',
+          ]),
+        ),
+      );
+
+      const [finish] = parts.filter((part) => part.type === 'finish');
+      expect(finish.usage.inputTokens).toMatchObject({ total: 100, cacheRead: 64, uncached: 36 });
+    }),
+  );
+
+  it.effect(
+    'reads OpenAI cached prompt tokens',
+    Effect.fn(function* (_) {
+      const parts = yield* LanguageModel.streamText({ prompt: 'hi' }).pipe(
+        Stream.runCollect,
+        Effect.provide(
+          serveSseStream([
+            delta('ok', 'stop'),
+            '',
+            chunk({
+              choices: [],
+              usage: {
+                prompt_tokens: 50,
+                completion_tokens: 2,
+                total_tokens: 52,
+                prompt_tokens_details: { cached_tokens: 20 },
+              },
+            }),
+            '',
+            'data: [DONE]',
+            '',
+          ]),
+        ),
+      );
+
+      const [finish] = parts.filter((part) => part.type === 'finish');
+      expect(finish.usage.inputTokens).toMatchObject({ total: 50, cacheRead: 20, uncached: 30 });
+    }),
+  );
+
   // A stream cut off before any `finish_reason` reports no finish, rather than a synthetic one.
   it.effect(
     'is omitted when the stream never finishes',

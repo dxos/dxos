@@ -96,6 +96,7 @@ export const start = (experiment: Experiment): Run => {
           $ai_output_tokens: call.outputTokens,
           $ai_cache_read_input_tokens: call.cacheReadTokens,
           $ai_cache_creation_input_tokens: call.cacheWriteTokens,
+          $ai_total_cost_usd: call.costUsd,
           $ai_latency: (call.end - call.start) / 1000,
           $ai_input: call.input,
           $ai_output_choices: call.output,

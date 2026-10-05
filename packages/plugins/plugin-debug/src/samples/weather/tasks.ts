@@ -38,7 +38,7 @@ const STEPS: ReadonlyArray<TaskSeed> = [
   {
     title: 'Configure the server for this space',
     description:
-      "Set the Worker URL on the Weather MCP skill's `mcpServers` as `{ name: 'weather', url, protocol: 'http' }` through the Database skill's update tool. The skill is already bound to this chat and servers are connected at the start of every turn, so `get_weather` appears on your next turn — no restart.",
+      "Connect the Worker URL to the Weather MCP skill (`org.dxos.skill.weatherMcp`) as `{ name: 'weather', url, protocol: 'http' }` with the Skill Manager's connect-mcp-server tool: it checks the server answers before saving it and returns the server's error when it does not. (Writing the skill's `mcpServers` through the Database skill's update tool also works, but reports nothing when the server fails to connect.) Servers are connected before every model call, so `get_weather` appears on your next tool-calling step of this same run — not in the response that sets the URL, and with no new message or restart needed.",
     estimate: 'xs',
   },
   {
