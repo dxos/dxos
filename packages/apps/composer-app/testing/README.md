@@ -120,4 +120,6 @@ node packages/apps/composer-app/testing/bin/two-user-invite.mjs https://pr-<n>-c
 ```
 
 `--headed` opens the two browsers as visible windows side by side and leaves them open at the end,
-with Alice's notifications panel showing.
+with Alice's notifications panel showing. `--interactive` (with `--headed`) pauses before the second invite and then drives it
+through Bob's Members panel on cue — Enter in that terminal, or creating `temp/two-user-start`. It covers
+the invite half of `QA-12` in `spec/APP.mdl`.

@@ -2,18 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
+import { chromium } from '@playwright/test';
 // Two identities on one QA server, each in its own headless Chromium profile: Bob invites Alice to a
 // space through the real `SpaceOperation.AddMembers`, and the script reports what reached Alice's inbox
 // and her notifications store. Pages are driven in-process rather than through the debug port, which
 // serves one command at a time and wedges when a caller is interrupted.
-//   node packages/apps/composer-app/testing/bin/two-user-invite.mjs [url] [--account]
-import { chromium } from '@playwright/test';
+//   node packages/apps/composer-app/testing/bin/two-user-invite.mjs [url] [--account] [--headed] [--interactive]
+import { existsSync, rmSync } from 'node:fs';
 
 const args = process.argv.slice(2);
 // Binds each fresh identity to a hub account first, which a deployed origin requires for the inbox.
 const withAccount = args.includes('--account');
 // Visible windows side by side, left open at the end with Alice's notifications panel showing.
 const headed = args.includes('--headed');
+// Pauses before the second invite, which is then driven through Bob's Members UI on cue: Enter in
+// this terminal, or the trigger file appearing (so an agent can start it).
+const interactive = args.includes('--interactive');
+const TRIGGER = 'temp/two-user-start';
 // The hub PR previews are built against (`.github/workflows/env/dev`).
 const HUB_URL = process.env.DX_HUB_URL ?? 'https://preview.dxos.network/hub/';
 const url = args.find((arg) => !arg.startsWith('--')) ?? 'http://127.0.0.1:5182/';
@@ -112,6 +117,37 @@ const invite = (spaceName) =>
     { spaceName, aliceKey: alice.key },
   );
 
+const waitForCue = async () => {
+  rmSync(TRIGGER, { force: true });
+  console.log(`\nReady. Press Enter here, or create ${TRIGGER}, to have Bob invite Alice.`);
+  await new Promise((resolve) => {
+    const timer = setInterval(() => existsSync(TRIGGER) && done(), 500);
+    const done = () => {
+      clearInterval(timer);
+      process.stdin.pause();
+      resolve();
+    };
+    process.stdin.resume();
+    process.stdin.once('data', done);
+  });
+  rmSync(TRIGGER, { force: true });
+};
+
+/** Bob creates the space, opens its Members panel, waits for the cue, then adds Alice through the picker. */
+const inviteThroughUi = async (spaceName) => {
+  await bob.page.evaluate(async (spaceName) => {
+    const space = await globalThis.dxos.client.spaces.create({ name: spaceName });
+    await space.waitUntilReady();
+    await globalThis.composer.invoke('org.dxos.operation.space.openMembers', { space });
+  }, spaceName);
+  await bob.page.locator('[data-testid="contact-picker.trigger"]').first().waitFor({ timeout: 60_000 });
+  await waitForCue();
+  await bob.page.locator('[data-testid="contact-picker.trigger"]').first().click();
+  await bob.page.locator('[data-testid="contact-picker.item"]').first().click();
+  await bob.page.locator('[data-testid="contactPicker.add"]').first().click();
+  console.log('Bob added Alice through the Members panel.');
+};
+
 const aliceState = () =>
   alice.page.evaluate(async () => {
     const { client } = globalThis.dxos;
@@ -204,8 +240,11 @@ try {
   );
 
   step('3. Bob invites Alice to "Design team" (now a contact)');
-  const design = await invite('Design team');
-  console.log(JSON.stringify(design));
+  if (interactive) {
+    await inviteThroughUi('Design team');
+  } else {
+    console.log(JSON.stringify(await invite('Design team')));
+  }
   const delivered = await waitFor("Alice's envelope tab shows 2 unread", (state) => state.badge === '2');
   console.log(JSON.stringify(delivered, null, 2));
 } finally {
