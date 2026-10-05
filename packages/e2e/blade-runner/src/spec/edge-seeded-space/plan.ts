@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -53,9 +54,16 @@ export type EdgeSeededSpaceSpec = {
   /**
    * Recycle the space's replicator instance before every round but the first, as the platform does
    * routinely (DX-1275), through EDGE's test-only `recycleSubductionInstance` route — so the rounds
-   * measure recovery from a cold instance. Needs a stack with test endpoints (the local harness).
+   * measure recovery from a cold instance. Needs a stack with test endpoints (the local harness),
+   * or {@link recycleCommand}.
    */
   recycleEachRound: boolean;
+  /**
+   * Shell command that recycles the replicator instead of the test route — for a deployed target
+   * without test endpoints, typically a redeploy of the worker hosting it, which resets every
+   * instance as a production deploy does.
+   */
+  recycleCommand?: string;
   /** Ceiling on a round: from its first edit until every identity holds every edit of it. */
   roundBudgetMs: number;
   /** Ceiling on one edit: from the edit flushing locally until every other identity holds it. */
@@ -235,7 +243,8 @@ export class EdgeSeededSpace implements TestPlan<EdgeSeededSpaceSpec, EdgeSeeded
       // Rounds.
       const seq = new Array<number>(spec.identities).fill(0);
       for (let round = 0; round < spec.rounds; round++) {
-        const recycleMs = spec.recycleEachRound && round > 0 ? await recycleReplicator(edgeUrl, space) : undefined;
+        const recycleMs =
+          spec.recycleEachRound && round > 0 ? await recycleReplicator(edgeUrl, space, spec.recycleCommand) : undefined;
         rounds.push({ ...(await this._runRound(spec, clients, space, expected, seq, round)), recycleMs });
         log.info('round measured', { ...rounds[rounds.length - 1] });
       }
@@ -448,8 +457,12 @@ export class EdgeSeededSpace implements TestPlan<EdgeSeededSpaceSpec, EdgeSeeded
 }
 
 /** Recycles the space's replicator instance and returns how long the route took, fresh instance's read included. */
-const recycleReplicator = async (edgeUrl: string, spaceId: string): Promise<number> => {
+const recycleReplicator = async (edgeUrl: string, spaceId: string, command?: string): Promise<number> => {
   const began = Date.now();
+  if (command) {
+    execSync(command, { stdio: 'ignore' });
+    return Date.now() - began;
+  }
   const response = await fetch(`${edgeUrl}/db/test/spaces/${spaceId}/recycleSubductionInstance`, { method: 'POST' });
   invariant(response.ok, `recycle failed: HTTP ${response.status} ${await response.text()}`);
   return Date.now() - began;
