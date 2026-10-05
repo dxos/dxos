@@ -71,11 +71,14 @@ command -v proto moon; ls node_modules | wc -l   # 0 => setup never ran
 | -------------------- | ------------------------------ | --------------------------------------------- |
 | `moon run <pkg>:<t>` | `pnpm exec moon run <pkg>:<t>` | `bash .config/claude-code-setup.sh` (10+ min) |
 | `pnpm format`        | works                          | `pnpm dlx oxfmt@0.63` — matches the root pin  |
-| `gh pr … --attach`   | works — setup installs gh 2.99 | the image's `gh` predates `--attach`; R2      |
+| `gh pr … --attach`   | blocked by the proxy; use R2   | same                                          |
 
 GitHub's REST API from the shell reaches **only the repositories attached to the session**: `gh api
 repos/dxos/dxos/…` works, while any other repo answers `GitHub access to this repository is not
-enabled for this session`, with or without a token. Never build a poll loop or
+enabled for this session`, with or without a token. Two more proxy limits break `gh` porcelain:
+GraphQL answers `403` (so `gh pr create|edit|view` fail; `gh api repos/…` REST works), and a request
+body that is not `application/json` answers `415`, so the `--attach` upload to
+`uploads.github.com/user-attachments/assets` cannot go through. Never build a poll loop or
 `Monitor` around it — it fails identically whether CI is red, green, or still running, so silence
 means nothing. Read run status through the `mcp__github__*` tools, which go through the server side.
 
