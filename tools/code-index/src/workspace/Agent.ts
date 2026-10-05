@@ -59,8 +59,8 @@ export const ExecTool = Tool.make('exec', {
 
 export class ExecToolkit extends Toolkit.make(ExecTool) {}
 
-/** How many model round-trips one turn may take before it is cut off. */
-export const MAX_STEPS = 12;
+/** How many model round-trips one turn may take before it is cut off; a large diagram takes several rounds of queries. */
+export const MAX_STEPS = 20;
 
 /**
  * How many steps from the end the model is warned. An agent that explores until it is cut off

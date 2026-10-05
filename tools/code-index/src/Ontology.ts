@@ -19,6 +19,9 @@ import { escapeFragment, escapePath } from './internal/iri.ts';
 
 export const PREFIX = 'https://dxos.org/vocab/deus#';
 
+/** What every resource IRI the indexer mints starts with; vocabulary terms live under `PREFIX`. */
+export const IRI_BASE = 'https://dxos.org/deus/';
+
 export const FILE_BASE = 'https://dxos.org/deus/file/';
 
 export const PACKAGE_BASE = 'https://dxos.org/deus/package/';

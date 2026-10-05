@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 // The layout-and-judge half of `code-index design`, run under Node because Bun cannot load elkjs.
-// Reads `<dir>/diagrams.json` (written by `Design.write`) and writes the chosen `diagram.mmd`,
+// Reads `<dir>/diagrams.json` (written by `Design.write`) and writes the chosen `diagram.dx`,
 // `diagram.svg`, `diagram-scores.md` and every variant's scores to `judged.json`.
 // Usage: node src/design/draw-main.ts <dir> [--runs N] [--no-judges]
 //
@@ -17,9 +17,7 @@ import { EffectEx } from '@dxos/effect';
 import * as Draw from './Draw.ts';
 import * as SystemOne from './SystemOne.ts';
 
-const Variants = Schema.Array(
-  Schema.Struct({ variant: Schema.Struct({ name: Schema.String }), mermaid: Schema.String }),
-);
+const Variants = Schema.Array(Schema.Struct({ variant: Schema.Struct({ name: Schema.String }), dsl: Schema.String }));
 
 const args = process.argv.slice(2);
 const dir = args.find((arg) => !arg.startsWith('--'));
@@ -36,7 +34,7 @@ const program = Effect.gen(function* () {
   const variants = Schema.decodeUnknownSync(Variants)(JSON.parse(readFileSync(join(dir, 'diagrams.json'), 'utf8')));
   const judged = yield* Effect.forEach(
     variants,
-    ({ variant, mermaid }) => Draw.judge(variant.name, mermaid, { runs, judges }),
+    ({ variant, dsl }) => Draw.judge(variant.name, dsl, { runs, judges }),
     {
       concurrency: 4,
     },
@@ -46,7 +44,7 @@ const program = Effect.gen(function* () {
   if (winner === undefined) {
     return yield* Effect.die(new Error('No diagram variants to draw.'));
   }
-  writeFileSync(join(dir, 'diagram.mmd'), winner.mermaid);
+  writeFileSync(join(dir, 'diagram.dx'), winner.dsl);
   writeFileSync(join(dir, 'diagram.svg'), winner.svg);
   writeFileSync(
     join(dir, 'diagram-scores.md'),
