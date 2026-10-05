@@ -75,12 +75,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./package.json": "./package.json",
     "./CrmEvents": {
       "source": "./src/types/CrmEvents.ts",
       "types": "./dist/types/src/types/CrmEvents.d.ts",
@@ -95,6 +89,17 @@
       "source": "./src/CrmPlugin.ts",
       "types": "./dist/types/src/CrmPlugin.d.ts",
       "import": "./dist/lib/CrmPlugin.mjs"
+    },
+    "./CrmSkill": {
+      "source": "./src/skills/crm/CrmSkill.ts",
+      "types": "./dist/types/src/skills/crm/CrmSkill.d.ts",
+      "import": "./dist/lib/ns/CrmSkill.mjs"
+    },
+    "./package.json": "./package.json",
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

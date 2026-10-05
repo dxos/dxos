@@ -11,7 +11,7 @@ import { evalite } from 'evalite';
 import { AiService, Model } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as Goal from '@dxos/plugin-agent/Goal';
 import * as InterviewSkill from '@dxos/plugin-agent/InterviewSkill';

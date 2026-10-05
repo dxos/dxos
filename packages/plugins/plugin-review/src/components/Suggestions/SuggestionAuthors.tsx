@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { Icon, Tag, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Tag from '@dxos/react-ui/Tag';
 import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -31,7 +33,7 @@ export type SuggestionAuthorsProps = {
  * (overlay, change bars, cards) for this user only — the branches themselves are untouched.
  */
 export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (authors.length === 0) {
     return null;
   }
@@ -40,7 +42,7 @@ export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps)
     <div role='group' aria-label={t('suggestion-authors.label')} className='flex flex-wrap gap-1 p-2'>
       {authors.map(({ author, label, hue, hidden }) => (
         // The tag is the toggle (a clickable Tag is a button), the eye inside the pill.
-        <Tag
+        <Tag.Tag
           key={author}
           hue={hue}
           classNames={['gap-1', hidden && 'opacity-50']}
@@ -52,8 +54,8 @@ export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps)
           onClick={() => onToggle(author)}
         >
           {label}
-          <Icon icon={hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'} size='xs' />
-        </Tag>
+          <Icon.Icon icon={hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'} size='xs' />
+        </Tag.Tag>
       ))}
     </div>
   );

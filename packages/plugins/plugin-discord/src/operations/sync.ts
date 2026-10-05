@@ -7,7 +7,7 @@ import type { MessageResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
@@ -152,7 +152,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           Effect.gen(function* () {
             const db = Obj.getDatabase(binding);
             if (!db) {
-              return yield* Effect.fail(new SyncDatabaseMissingError());
+              return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
             }
 
             // Resolve the binding's endpoints up front: the source access token

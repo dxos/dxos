@@ -13,7 +13,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import type * as Tracer from 'effect/Tracer';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { log } from '@dxos/log';
 import { markWork } from '@dxos/util';
 

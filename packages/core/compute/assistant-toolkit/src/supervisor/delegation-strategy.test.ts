@@ -24,8 +24,8 @@ import { Text } from '@dxos/schema';
 import { Message, Outline, Task } from '@dxos/types';
 
 import { AgentHandlers } from '../operations/index.ts';
+import * as DelegationSkill from '../skills/delegation/DelegationSkill.ts';
 import { DelegateTask } from '../skills/delegation/operations/definitions.ts';
-import { DelegationSkill, DelegationSkillHandlers } from '../skills/index.ts';
 import { isSubAgentTask, makeDelegationStrategy } from './delegation-strategy.ts';
 
 const { text, toolCall, promptIncludes, scriptedAiService } = ScriptedLanguageModel;
@@ -60,7 +60,7 @@ const TestLayer = AssistantTestLayer({
       ],
     },
   ]),
-  operationHandlers: [DelegationSkillHandlers, AgentHandlers],
+  operationHandlers: [DelegationSkill.Handlers, AgentHandlers],
   skills: [DelegationSkill.make()],
   types: [
     Agent.Agent,
@@ -103,7 +103,7 @@ const FailingTestLayer = AssistantTestLayer({
       ],
     },
   ]),
-  operationHandlers: [DelegationSkillHandlers, AgentHandlers],
+  operationHandlers: [DelegationSkill.Handlers, AgentHandlers],
   skills: [DelegationSkill.make()],
   types: [
     Agent.Agent,
@@ -131,7 +131,7 @@ const TurnFailingTestLayer = AssistantTestLayer({
       }),
     },
   ]),
-  operationHandlers: [DelegationSkillHandlers, AgentHandlers],
+  operationHandlers: [DelegationSkill.Handlers, AgentHandlers],
   skills: [DelegationSkill.make()],
   types: [Agent.Agent, Task.Task, Chat.Chat, AiContext.Binding, Message.Message, Project.Project],
 });

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 
 import { meta } from '#meta';
@@ -16,7 +16,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('DiscordPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), ThreadPlugin.make(), DiscordPlugin()],
     });
 

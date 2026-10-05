@@ -5,15 +5,16 @@
 
 import * as Result from 'effect/Result';
 import { type ComponentType } from 'react';
-import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
+import { type Accessor, For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
 
 import type { Scene } from '@dxos/diagram';
 
 import * as Diagram from '../workspace/Diagram.ts';
 import type * as Fold from '../workspace/Fold.ts';
+import { api } from './client.ts';
 import type { Reply, Request } from './diagram.worker.ts';
 import { ForceGraph } from './ForceGraph.tsx';
-import { DIAGRAM_MIN_SCALE, DiagramIsland } from './react/Diagram.tsx';
+import { DiagramIsland } from './react/Diagram.tsx';
 import { type Island, mount } from './react/Island.ts';
 import { MarkdownIsland } from './react/Markdown.tsx';
 
@@ -23,27 +24,33 @@ import { MarkdownIsland } from './react/Markdown.tsx';
  * than a detail inside it.
  */
 
-/** One worker for the page, started by the first diagram; it keeps its own pool for routing. */
+/** The latest layout of one source: quick first for a large diagram, then final. */
+type Layout = { readonly objects?: Scene.WorldObject[]; readonly final: boolean; readonly error?: string };
+
+/** One worker for the page, started by the first diagram. */
 let worker: Worker | undefined;
 let requestSeq = 0;
-const pending = new Map<number, { resolve: (objects: Scene.WorldObject[]) => void; reject: (error: Error) => void }>();
+const pending = new Map<number, (layout: Layout) => void>();
 
 /**
- * Layouts by source, for the page's lifetime: a layout takes seconds and the same panel is drawn
- * again whenever the canvas re-renders or the project is reopened.
+ * Layouts by source, for the page's lifetime: a layout takes seconds to minutes and the same panel
+ * is drawn again whenever the canvas re-renders or the project is reopened.
  */
-const layouts = new Map<string, Promise<Scene.WorldObject[]>>();
+const layouts = new Map<string, Accessor<Layout>>();
 
 const startWorker = (): Worker => {
   const started = new Worker(new URL('./diagram.worker.ts', import.meta.url), { type: 'module' });
   started.addEventListener('message', (event: MessageEvent<Reply>) => {
     const reply = event.data;
-    const request = pending.get(reply.id);
-    pending.delete(reply.id);
+    const update = pending.get(reply.id);
     if ('error' in reply) {
-      request?.reject(new Error(reply.error));
+      pending.delete(reply.id);
+      update?.({ final: true, error: reply.error });
     } else {
-      request?.resolve(reply.objects);
+      if (reply.final) {
+        pending.delete(reply.id);
+      }
+      update?.({ objects: reply.objects, final: reply.final });
     }
   });
   // The worker failing to load leaves no reply coming, so every waiting panel shows the failure.
@@ -51,28 +58,32 @@ const startWorker = (): Worker => {
     const waiting = [...pending.values()];
     pending.clear();
     worker = undefined;
-    waiting.forEach((request) => request.reject(new Error(event.message || 'The diagram worker failed to start.')));
+    waiting.forEach((update) => update({ final: true, error: event.message || 'The diagram worker failed to start.' }));
   });
   return started;
 };
 
-const layoutInWorker = (source: string, width?: number): Promise<Scene.WorldObject[]> => {
-  const key = `${width ?? ''}\n${source}`;
-  const cached = layouts.get(key);
+const layoutInWorker = (source: string): Accessor<Layout> => {
+  const cached = layouts.get(source);
   if (cached) {
     return cached;
   }
   worker ??= startWorker();
-  const target = worker;
   const id = requestSeq++;
-  const laidOut = new Promise<Scene.WorldObject[]>((resolve, reject) => {
-    pending.set(id, { resolve, reject });
-    target.postMessage({ id, source, width } satisfies Request);
+  const [layout, setLayout] = createSignal<Layout>({ final: false });
+  pending.set(id, (next) => {
+    // A failure keeps the quick layout on screen if there was one, and is not remembered, so a
+    // panel drawn again after a worker crash tries again.
+    if (next.error !== undefined) {
+      layouts.delete(source);
+      setLayout((current) => (current.objects ? { ...current, final: true } : next));
+    } else {
+      setLayout(next);
+    }
   });
-  layouts.set(key, laidOut);
-  // A failure is not remembered, so a panel drawn again after a worker crash tries again.
-  laidOut.catch(() => layouts.delete(key));
-  return laidOut;
+  worker.postMessage({ id, source } satisfies Request);
+  layouts.set(source, layout);
+  return layout;
 };
 
 /** A React component drawn in the Solid canvas; its root lives exactly as long as this element. */
@@ -89,82 +100,46 @@ const ReactIsland = <Props extends object>(props: { component: ComponentType<Pro
   return <div ref={container} />;
 };
 
-/**
- * A `display.diagram` panel, laid out and drawn by plugin-illustrator. Panels logged as 'mermaid'
- * before the rename carry mermaid text rather than the stored graph; `Diagram.read` takes both.
- */
+/** A `display.diagram` panel: its DSL source, laid out and drawn by plugin-illustrator. */
 const DiagramPanel = (props: { content: string }) => {
-  let container: HTMLDivElement | undefined;
-  const [objects, setObjects] = createSignal<Scene.WorldObject[]>();
-  const [error, setError] = createSignal<string>();
-  const graph = createMemo(() => Diagram.read(props.content));
-  const source = createMemo(() => {
-    const current = graph();
-    return Result.isSuccess(current) ? Diagram.toSource(current.success) : undefined;
-  });
-  const refs = createMemo(() => {
-    const current = graph();
-    return Result.isSuccess(current) ? refsOf(current.success) : {};
-  });
-
-  createEffect(() => {
-    const current = source();
-    setObjects(undefined);
-    setError(undefined);
-    if (current === undefined) {
-      return;
-    }
-    layoutInWorker(current, fitWidth(container?.clientWidth)).then(
-      (laidOut) => {
-        // A newer content may have arrived while this one was being laid out.
-        if (source() === current) {
-          setObjects(laidOut);
-        }
-      },
-      (cause: Error) => source() === current && setError(cause.message),
-    );
+  const read = createMemo(() => Diagram.read(props.content));
+  const layout = createMemo(() => {
+    const current = read();
+    return Result.isSuccess(current) ? layoutInWorker(current.success)() : undefined;
   });
 
   // The source stays visible on failure — otherwise the user sees an empty panel and the agent
   // believes it answered.
   const failure = () => {
-    const current = graph();
-    return Result.isFailure(current) ? current.failure.message : error();
+    const current = read();
+    return Result.isFailure(current) ? current.failure.message : layout()?.objects ? undefined : layout()?.error;
   };
 
   return (
-    <div ref={container}>
-      <Show
-        when={failure() === undefined}
-        fallback={
+    <Show
+      when={failure() === undefined}
+      fallback={
+        <div class='p-2'>
+          <p class='text-errorText text-sm'>{failure()}</p>
+          <details class='mt-2'>
+            <summary class='text-description cursor-pointer text-xs'>Source</summary>
+            <pre class='max-h-96 overflow-auto text-xs'>{props.content}</pre>
+          </details>
+        </div>
+      }
+    >
+      <Show when={layout()?.objects} fallback={<p class='text-description p-2 text-sm'>Laying out…</p>}>
+        {(objects) => (
           <div class='p-2'>
-            <p class='text-errorText text-sm'>{failure()}</p>
-            <pre class='mt-2 overflow-x-auto text-xs'>{props.content}</pre>
+            <ReactIsland
+              component={DiagramIsland}
+              props={{ objects: objects(), refining: !layout()?.final, describe: api.describe }}
+            />
           </div>
-        }
-      >
-        <Show when={objects()} fallback={<p class='text-description p-2 text-sm'>Laying out…</p>}>
-          {(laidOut) => (
-            <div class='p-2'>
-              <ReactIsland component={DiagramIsland} props={{ objects: laidOut(), refs: refs() }} />
-            </div>
-          )}
-        </Show>
+        )}
       </Show>
-    </div>
+    </Show>
   );
-};
-
-/**
- * The widest layout, in scene units, that fits a panel this many px wide at the island's legible
- * floor; bucketed so panels of nearly the same width share a cached layout.
- */
-const fitWidth = (px?: number): number | undefined => (px ? Math.floor(px / DIAGRAM_MIN_SCALE / 128) * 128 : undefined);
-
-/** Each box's `ref` by the scene object id the layout gives it. */
-const refsOf = (graph: Diagram.Graph): Record<string, string> => {
-  const ids = Diagram.objectIds(graph);
-  return Object.fromEntries(graph.nodes.flatMap((node) => (node.ref ? [[ids.get(node.id) ?? node.id, node.ref]] : [])));
 };
 
 const Table = (props: { content: string }) => {

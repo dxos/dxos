@@ -8,20 +8,15 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
-import {
-  Block,
-  Card,
-  DX_ANCHOR_ACTIVATE,
-  DxAnchorActivate,
-  Flex,
-  Grid,
-  Icon,
-  Popover,
-  virtualAnchor,
-} from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { File, PullRequest, Task, TaskSet } from '@dxos/types';
+import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
@@ -464,7 +459,7 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
     <Popover.Root
       open={open}
       onOpenChange={({ open }) => setOpen(open)}
-      positioning={virtualAnchor(triggerRef)}
+      positioning={VirtualAnchor.virtualAnchor(triggerRef)}
       autoFocus={false}
     >
       {children}
@@ -476,9 +471,9 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
           <Popover.Body classNames='dx-card-popover-width'>
             <Card.Root border={false} data-testid='artifact-preview'>
               <Card.Header>
-                <Block>
-                  <Icon icon={iconFor(artifact)} />
-                </Block>
+                <Layout.Block>
+                  <Icon.Icon icon={iconFor(artifact)} />
+                </Layout.Block>
                 <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
               </Card.Header>
               {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
@@ -674,19 +669,19 @@ const DefaultStory = ({
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
-      <Grid grow rows={['fill', 'min']}>
+      <Layout.Grid grow rows={['fill', 'min']}>
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <Flex classNames='p-3'>
+        <Layout.Flex classNames='p-3'>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
           {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
-        </Flex>
-      </Grid>
+        </Layout.Flex>
+      </Layout.Grid>
     </TaskList.Root>
   );
 };

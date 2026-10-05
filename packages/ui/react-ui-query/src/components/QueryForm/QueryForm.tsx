@@ -7,8 +7,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Filter, Obj, Query, type QueryAST, type Tag } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -16,7 +16,7 @@ import { translationKey } from '#translations';
 import { Picker } from './Picker.tsx';
 import { extractTag, extractTypename } from './query.ts';
 
-export type QueryFormProps = ThemedClassName<{
+export type QueryFormProps = Util.ThemedClassName<{
   initialQuery?: QueryAST.Query;
   types?: { value: URI.URI; label: string }[];
   tags?: Tag.Tag[];
@@ -25,7 +25,7 @@ export type QueryFormProps = ThemedClassName<{
 
 // TODO(wittjosiah): Support more complex queries and traversals.
 export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: QueryFormProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const initialType = initialQuery ? Option.getOrUndefined(extractTypename(initialQuery)) : undefined;
   const initialTag = initialQuery ? Option.getOrUndefined(extractTag(initialQuery)) : undefined;

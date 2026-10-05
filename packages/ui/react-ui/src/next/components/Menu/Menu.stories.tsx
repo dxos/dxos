@@ -20,7 +20,11 @@ import {
   popupFrame,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Group, Menu, Typography, useVirtualAnchor } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as VirtualAnchor from '../VirtualAnchor/VirtualAnchor.ts';
+import * as Menu from './Menu.tsx';
 
 /** A menu tree three levels deep, rendered recursively as nested `Menu.Sub`s. */
 type MenuNode = { value: string; label: string; icon?: string; children?: MenuNode[] };
@@ -156,7 +160,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       </Menu.Root>
       <Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Menu.ContextTrigger asChild>
-          <Typography data-testid={`context-${size}`}>Right-click here</Typography>
+          <Typography.Text data-testid={`context-${size}`}>Right-click here</Typography.Text>
         </Menu.ContextTrigger>
         <Menu.Content>
           <Menu.Item item={{ value: 'rename', label: 'Rename' }} />
@@ -166,28 +170,28 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Button onClick={() => setAnchored(true)} data-testid={`open-anchored-${size}`}>
           Open at anchor
         </Button>
-        <Typography asChild>
+        <Typography.Text asChild>
           <span ref={anchor} data-testid={`anchor-${size}`}>
             Anchor
           </span>
-        </Typography>
+        </Typography.Text>
       </Group>
       <Menu.Root
         open={anchored}
         onOpenChange={({ open }) => setAnchored(open)}
         onSelect={({ value }) => setSelected(value)}
-        positioning={useVirtualAnchor(anchor)}
+        positioning={VirtualAnchor.useVirtualAnchor(anchor)}
       >
         <Menu.Content arrow data-testid={`anchored-${size}`}>
           <Menu.Item item={{ value: 'pin', label: 'Pin' }} />
         </Menu.Content>
       </Menu.Root>
-      <Typography data-testid={`selected-${size}`}>
+      <Typography.Text data-testid={`selected-${size}`}>
         {selected ? `Selected: ${selected}` : 'Nothing selected'}
-      </Typography>
-      <Typography data-testid={`options-${size}`}>
+      </Typography.Text>
+      <Typography.Text data-testid={`options-${size}`}>
         grid {grid ? 'on' : 'off'}, sort by {sort}
-      </Typography>
+      </Typography.Text>
     </>
   );
 };

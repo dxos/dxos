@@ -4,17 +4,21 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Surface, useProcessManagerRuntime } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import * as ChatSchema from '@dxos/assistant/Chat';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as Surface from '@dxos/app-framework/Surface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Filter } from '@dxos/echo';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as Profile from '@dxos/plugin-agent/Profile';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
-import { Chat } from '@dxos/plugin-assistant/components';
-import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
+import * as Chat from '@dxos/plugin-assistant/Chat';
+import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
-import { Button, Flex, Panel, Popover, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
 import { Person } from '@dxos/types';
 
@@ -31,7 +35,7 @@ export type ChatModuleData = {
 };
 
 export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -56,7 +60,7 @@ const ChatModuleContainer = ({
   hue?: string;
   initialPrompt?: string;
 }) => {
-  const chats = useQuery(space.db, Filter.type(ChatSchema.Chat));
+  const chats = useQuery(space.db, Filter.type(AssistantChat.Chat));
   const people = useQuery(space.db, Filter.type(Person.Person));
   const person = participant
     ? people.find(({ preferredName, fullName }) => preferredName === participant || fullName === participant)
@@ -70,16 +74,16 @@ const ChatModuleContainer = ({
   const chat = chats.find(({ id }) => id === selected) ?? (participant ? participantChat : chats.at(-1));
 
   // The picker edits the chat's own model, so the hook needs the chat it is rendered for.
-  const { preset, ...chatProps } = usePresets({}, chat);
+  const { preset, ...chatProps } = AssistantHooks.usePresets({}, chat);
 
   // Every chat in the space, not the companion chats of one object: the story is a tour of the
   // space, and its chats are the thing worth moving between.
-  const onSelect = useCallback((chat: ChatSchema.Chat) => setSelected(chat.id), []);
+  const onSelect = useCallback((chat: AssistantChat.Chat) => setSelected(chat.id), []);
   const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
 
   const registry = useRegistry();
-  const runtime = useProcessManagerRuntime();
-  const processor = useChatProcessor({ runtime, db: space.db, chat, preset, registry, sender });
+  const runtime = Hooks.useProcessManagerRuntime();
+  const processor = AssistantHooks.useChatProcessor({ runtime, db: space.db, chat, preset, registry, sender });
 
   // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
@@ -111,7 +115,7 @@ const ChatModuleContainer = ({
             </Toolbar.Text>
             <Popover.Root>
               <Popover.Trigger asChild>
-                <Button icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+                <Button.Root icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
               </Popover.Trigger>
               <Popover.Content>
                 <ExecutionGraphModule />
@@ -122,11 +126,11 @@ const ChatModuleContainer = ({
         <Panel.Body asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} userHue={hue} />
-            <Flex column classNames='relative gap-1 p-1'>
+            <div className='flex flex-col gap-1 p-1'>
               <Chat.Queue />
               <Chat.Activity />
-            </Flex>
-            <Chat.Prompt {...chatProps} outline preset={preset?.id} />
+              <Chat.Prompt {...chatProps} outline preset={preset?.id} />
+            </div>
           </Chat.Content>
         </Panel.Body>
       </Panel.Root>

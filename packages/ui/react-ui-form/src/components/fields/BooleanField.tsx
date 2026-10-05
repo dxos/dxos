@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Switch } from '@dxos/react-ui';
+import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -30,7 +30,7 @@ export const BooleanField = ({
   }
 
   return (
-    <Switch
+    <Input.Switch
       label={variant === 'settings' ? undefined : label}
       disabled={!!readonly}
       checked={!!value}

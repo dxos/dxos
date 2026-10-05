@@ -5,18 +5,14 @@
 import React, { type MouseEvent, type PropsWithChildren } from 'react';
 
 import { type Database } from '@dxos/echo';
-import {
-  Button,
-  Container,
-  Flex,
-  Panel,
-  ScrollArea,
-  Timestamp,
-  type TimestampProps,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
 import { AgentChannels } from '#types';
@@ -35,7 +31,7 @@ const AgentActivityRoot = ({ role, children }: AgentActivityRootProps) => (
     <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport asChild>
-          <Container>{children}</Container>
+          <Layout.Container>{children}</Layout.Container>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </Panel.Body>
@@ -60,9 +56,9 @@ type AgentActivityChannelsProps = PropsWithChildren<{
  * (e.g. the Discord bot) below the picker.
  */
 const AgentActivityChannels = ({ db, values, onSave, children }: AgentActivityChannelsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Flex asChild column gap='sm'>
+    <Layout.Flex asChild column gap='sm'>
       <section aria-label={t('channels.label')}>
         <Form.Root<AgentChannels.Properties>
           schema={AgentChannels.Properties}
@@ -81,7 +77,7 @@ const AgentActivityChannels = ({ db, values, onSave, children }: AgentActivityCh
         </Form.Root>
         {children}
       </section>
-    </Flex>
+    </Layout.Flex>
   );
 };
 
@@ -98,22 +94,22 @@ type AgentActivitySkillsProps = PropsWithChildren<{
 
 /** The skills bound to the agent's conversation; children are {@link AgentActivitySkill} rows. */
 const AgentActivitySkills = ({ ids, children }: AgentActivitySkillsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Container asChild>
+    <Layout.Container asChild>
       <section aria-label={t('skills.heading')}>
         <h3 className='px-2 text-sm text-fg-muted'>{t('skills.heading')}</h3>
         {ids.length === 0 ? (
-          <Flex center classNames='p-2 text-fg-muted' role='status'>
+          <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
             {t('skills-empty.message')}
-          </Flex>
+          </Layout.Flex>
         ) : (
           <Listbox.Root items={toOptions(ids)}>
             <Listbox.Content scroll={false}>{children}</Listbox.Content>
           </Listbox.Root>
         )}
       </section>
-    </Container>
+    </Layout.Container>
   );
 };
 
@@ -149,7 +145,7 @@ const AgentActivitySkill = ({
   onCustomize,
   onReset,
 }: AgentActivitySkillProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Listbox.Item id={id} onClick={customized ? () => onOpen?.(id) : undefined}>
       <Listbox.ItemIcon icon='ph--blueprint--regular' />
@@ -157,7 +153,7 @@ const AgentActivitySkill = ({
       <Listbox.ItemDescription>
         {t(customized ? 'skill-customized.label' : 'skill-compiled.label')}
       </Listbox.ItemDescription>
-      <Button
+      <Button.Root
         iconOnly
         variant='ghost'
         disabled={busy}
@@ -186,22 +182,22 @@ type AgentActivityConversationsProps = PropsWithChildren<{
 
 /** The agent's conversations bridged from its channels; children are {@link AgentActivityConversation} rows. */
 const AgentActivityConversations = ({ ids, children }: AgentActivityConversationsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Container asChild>
+    <Layout.Container asChild>
       <section aria-label={t('conversations.heading')}>
         <h3 className='px-2 text-sm text-fg-muted'>{t('conversations.heading')}</h3>
         {ids.length === 0 ? (
-          <Flex center classNames='p-2 text-fg-muted' role='status'>
+          <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
             {t('conversations-empty.message')}
-          </Flex>
+          </Layout.Flex>
         ) : (
           <Listbox.Root items={toOptions(ids)}>
             <Listbox.Content scroll={false}>{children}</Listbox.Content>
           </Listbox.Root>
         )}
       </section>
-    </Container>
+    </Layout.Container>
   );
 };
 
@@ -215,7 +211,7 @@ type AgentActivityConversationProps = {
   id: string;
   title?: string;
   /** When the conversation last had a message; absent before its first. */
-  lastActivity?: TimestampProps['date'];
+  lastActivity?: Typography.TimestampProps['date'];
   /** Fixes the instant timestamps are measured against, so stories and tests do not drift. */
   now?: Date;
   onSelect?: (id: string) => void;
@@ -223,14 +219,14 @@ type AgentActivityConversationProps = {
 
 /** One channel conversation (a channel, thread or DM) the agent converses in. */
 const AgentActivityConversation = ({ id, title, lastActivity, now, onSelect }: AgentActivityConversationProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Listbox.Item id={id} onClick={() => onSelect?.(id)}>
       <Listbox.ItemIcon icon='ph--chat-circle-dots--regular' />
       <Listbox.ItemText>{title || t('conversation-untitled.label')}</Listbox.ItemText>
       {lastActivity !== undefined && (
         <Listbox.ItemDescription>
-          <Timestamp date={lastActivity} now={now} />
+          <Typography.Timestamp date={lastActivity} now={now} />
         </Listbox.ItemDescription>
       )}
     </Listbox.Item>

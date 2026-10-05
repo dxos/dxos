@@ -14,13 +14,17 @@ import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { GEOMETRY, byTestId } from '../../testing.ts';
-import { Button, Container, FloatingPanel, type FloatingPanelRootProps, ScrollArea, Typography } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as FloatingPanel from './FloatingPanel.tsx';
 
 random.seed(7);
 
 const LINES = Array.from({ length: 40 }, () => random.lorem.sentence());
 
-type StoryArgs = Pick<FloatingPanelRootProps, 'resizable' | 'draggable'>;
+type StoryArgs = Pick<FloatingPanel.RootProps, 'resizable' | 'draggable'>;
 
 /** A button opening a log window that folds, maximizes, restores and closes; its body scrolls in a ScrollArea. */
 const DefaultStory = (args: StoryArgs) => (
@@ -51,7 +55,7 @@ const DefaultStory = (args: StoryArgs) => (
           <ScrollArea.Viewport asChild>
             <Container gutter='inset'>
               {LINES.map((line, index) => (
-                <Typography key={index}>{line}</Typography>
+                <Typography.Text key={index}>{line}</Typography.Text>
               ))}
             </Container>
           </ScrollArea.Viewport>

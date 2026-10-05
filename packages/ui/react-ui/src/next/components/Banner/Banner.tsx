@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type ReactNode, useId } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,13 +13,13 @@ import { type MessageValence } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { composable, composableProps, slottable } from '../../../util/index.ts';
+import { composable, composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { Block } from '../Block/index.ts';
-import { Button } from '../Button/index.ts';
-import { DefaultGutterProvider, containerAttributes, useInGrid } from '../Container/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Typography } from '../Typography/index.ts';
+import { Block } from '../Block/Block.tsx';
+import { Button } from '../Button/Button.tsx';
+import { DefaultGutterProvider, containerAttributes, useInGrid } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Typography from '../Typography/Typography.tsx';
 
 const BANNER_ICONS: Record<MessageValence, string> = {
   success: 'ph--check-circle--duotone',
@@ -124,11 +126,11 @@ const BannerTitle = composable<HTMLDivElement, BannerTitleProps>(
         ref={forwardedRef}
       >
         <Block rail='start'>
-          <Icon icon={icon} />
+          <Icon.Icon icon={icon} />
         </Block>
-        <Typography asChild>
+        <Typography.Text asChild>
           <h2 id={titleId}>{children}</h2>
-        </Typography>
+        </Typography.Text>
         {onClose && (
           <Block rail='end'>
             <Button icon='ph--x--regular' label={t('toolbar-close.label')} iconOnly variant='ghost' onClick={onClose} />
@@ -166,11 +168,6 @@ const BannerBody = slottable<HTMLParagraphElement>(({ children, asChild, ...prop
 });
 
 BannerBody.displayName = 'Banner.Body';
+export type { BannerRootProps as RootProps, BannerTitleProps as TitleProps };
 
-export const Banner = {
-  Root: BannerRoot,
-  Title: BannerTitle,
-  Body: BannerBody,
-};
-
-export type { BannerRootProps, BannerTitleProps };
+export { BannerBody as Body, BannerRoot as Root, BannerTitle as Title };

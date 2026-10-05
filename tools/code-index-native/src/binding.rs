@@ -141,6 +141,13 @@ where
     })
 }
 
+/// The hash of the crate sources this addon was built from (see `build.rs`), which the CLI checks
+/// against the sources on disk.
+#[napi]
+pub fn sources_hash() -> String {
+    env!("CODE_INDEX_SOURCES").to_string()
+}
+
 /// Cancels the queries it was passed to; each stops at the next quad it reads.
 #[napi]
 pub struct QueryCancel {
@@ -323,13 +330,17 @@ impl NativeStore {
     #[napi(ts_return_type = "Promise<number>")]
     pub fn quad_count(&self) -> Result<AsyncTask<Blocking<u32>>> {
         let store = Arc::clone(self.inner()?);
-        Ok(blocking(move || store.quad_count().map(count).map_err(error)))
+        Ok(blocking(move || {
+            store.quad_count().map(count).map_err(error)
+        }))
     }
 
     #[napi(ts_return_type = "Promise<number>")]
     pub fn graph_length(&self, graph: String) -> Result<AsyncTask<Blocking<u32>>> {
         let store = Arc::clone(self.inner()?);
-        Ok(blocking(move || store.graph_len(&graph).map(count).map_err(error)))
+        Ok(blocking(move || {
+            store.graph_len(&graph).map(count).map_err(error)
+        }))
     }
 
     /// A counter read, so it stays synchronous.

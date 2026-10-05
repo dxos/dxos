@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN, Obj, Type } from '@dxos/echo';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

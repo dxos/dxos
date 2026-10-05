@@ -366,6 +366,35 @@ export const Status = Schema.TaggedStruct('status', {
 });
 
 export type Status = Schema.Schema.Type<typeof Status>;
+
+/** One choice a {@link Request} offers; `kind` says what choosing it does, whatever its label. */
+export const RequestOption = Schema.Struct({
+  id: Schema.String,
+  label: Schema.String,
+  kind: Schema.Literals(['allow_once', 'allow_always', 'reject_once', 'reject_always']),
+});
+
+export type RequestOption = Schema.Schema.Type<typeof RequestOption>;
+
+/** An agent waiting for a person to allow or refuse a tool call. */
+export const Request = Schema.TaggedStruct('request', {
+  requestId: Schema.String,
+  /** What the agent wants to do, in its own words ("Write note.txt"). */
+  title: Schema.String,
+  toolCallId: Schema.optional(Schema.String),
+  options: Schema.Array(RequestOption),
+  /** Set once answered, or `cancelled` when the turn that asked ended first. */
+  resolution: Schema.optional(
+    Schema.Struct({
+      outcome: Schema.Literals(['selected', 'cancelled']),
+      optionId: Schema.optional(Schema.String),
+    }),
+  ),
+
+  ...Base.fields,
+});
+
+export type Request = Schema.Schema.Type<typeof Request>;
 /**
  * Suggestion for a follow-up prompt for the user.
  */
@@ -489,6 +518,7 @@ export const Any = Schema.Union([
   Proposal,
   Reasoning,
   Reference,
+  Request,
   Select,
   Status,
   Suggestion,

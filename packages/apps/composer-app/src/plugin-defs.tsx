@@ -59,7 +59,7 @@ import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
 import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
-import * as MapPluginSolid from '@dxos/plugin-map-solid/MapPlugin';
+import * as MapSolidMapPlugin from '@dxos/plugin-map-solid/MapPlugin';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
@@ -287,7 +287,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     LibraryPlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
-    isLocal && MapPluginSolid.make(),
+    isLocal && MapSolidMapPlugin.make(),
     MarkdownPlugin.make(),
     MeetingPlugin.make(),
     MermaidPlugin.make(),

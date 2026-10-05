@@ -17,7 +17,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { ThreadOperationHandlerSet } from '@dxos/plugin-thread/operations';
+import * as ThreadOperationHandlerSet from '@dxos/plugin-thread/ThreadOperationHandlerSet';
 import { Text } from '@dxos/schema';
 import { Channel, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
@@ -35,7 +35,7 @@ const CLOSED_DMS = '300';
 const backend = makeTestChannelBackend({ refuse: [CLOSED_DMS] });
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: OperationHandlerSet.merge(AgentOperationHandlerSet, ThreadOperationHandlerSet),
+  operationHandlers: OperationHandlerSet.merge(AgentOperationHandlerSet, ThreadOperationHandlerSet.handlers),
   // plugin-thread's channel operations resolve the backend from the capability registry.
   extraServices: Layer.succeed(Capability.Service, makeChannelCapabilities(backend.provider)),
   types: [

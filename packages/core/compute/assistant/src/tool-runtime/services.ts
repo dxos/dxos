@@ -20,7 +20,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { todo } from '@dxos/debug';
 import { Filter, Ref, Registry } from '@dxos/echo';
 import * as EchoJsonSchema from '@dxos/echo/JsonSchema';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

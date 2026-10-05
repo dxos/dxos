@@ -14,7 +14,11 @@ import React, {
 } from 'react';
 
 import { keySymbols } from '@dxos/react-focus';
-import { Icon, Menu, type MenuOption, toLocalizedString, useTranslation, useVirtualAnchor } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type MenuItemChrome } from '@dxos/ui-types';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -46,12 +50,12 @@ const isCheckable = (item: MenuItem): item is MenuAction =>
 const useItemData = (
   id: string,
   properties: Pick<MenuItemChrome, 'label' | 'icon' | 'disabled' | 'keyBinding'>,
-): MenuOption => {
-  const { t } = useTranslation(translationKey);
+): Menu.Option => {
+  const { t } = Hooks.useTranslation(translationKey);
   const shortcut = resolveKeyBinding(properties.keyBinding);
   return {
     value: id,
-    label: toLocalizedString(properties.label, t),
+    label: Theme.toLocalizedString(properties.label, t),
     icon: properties.icon,
     shortcut: shortcut ? keySymbols(shortcut).join('') : undefined,
     disabled: properties.disabled,
@@ -155,7 +159,7 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
       >
         <ItemIcon menu={menu} action={group} />
         <Menu.ItemText />
-        <Icon icon='ph--caret-right--regular' />
+        <Icon.Icon icon='ph--caret-right--regular' />
       </Menu.TriggerItem>
       <Menu.Content>
         <ActionMenuItems menu={menu} group={group} />
@@ -330,7 +334,7 @@ export const ActionMenu = ({
   // Next's Content portals into a ref.
   const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
 
-  const positioning = useVirtualAnchor(virtualRef);
+  const positioning = VirtualAnchor.useVirtualAnchor(virtualRef);
 
   if (deferred && !built && trigger) {
     return cloneElement(trigger, {

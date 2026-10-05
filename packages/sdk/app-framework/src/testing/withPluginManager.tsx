@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { ErrorFallback } from '@dxos/react-error-boundary';
 import { useAsyncEffect } from '@dxos/react-hooks';

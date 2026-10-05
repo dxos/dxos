@@ -4,8 +4,14 @@
 
 import React, { type PropsWithChildren, type ReactNode, createContext, useContext, useState } from 'react';
 
-import { Container, Flex, Panel, ScrollArea, Tabs, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -28,7 +34,7 @@ type AgentStateRootProps = PropsWithChildren<{
 
 /** The agent's state panel: tabs over its identity, counts and conversations. */
 const AgentStateRoot = ({ role, actions, defaultView = 'identity', children }: AgentStateRootProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [view, setView] = useState<AgentStateView>(defaultView);
   return (
     <Tabs.Root
@@ -53,9 +59,9 @@ const AgentStateRoot = ({ role, actions, defaultView = 'identity', children }: A
         <Panel.Body asChild>
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport asChild>
-              <Container>
+              <Layout.Container>
                 <AgentStateContext.Provider value={view}>{children}</AgentStateContext.Provider>
-              </Container>
+              </Layout.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>
@@ -76,11 +82,11 @@ type AgentStateSectionProps = PropsWithChildren<{ view: AgentStateView; label: s
 const AgentStateSection = ({ view, label, children }: AgentStateSectionProps) => {
   const active = useContext(AgentStateContext) === view;
   return (
-    <Container asChild>
+    <Layout.Container asChild>
       <section aria-label={label} hidden={!active}>
         {children}
       </section>
-    </Container>
+    </Layout.Container>
   );
 };
 
@@ -98,7 +104,7 @@ type AgentStateIdentityProps = {
 
 /** Who the agent is and the base skills it brings to every conversation. */
 const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <AgentStateSection view='identity' label={t('agent-state-identity.heading')}>
       <Listbox.Root
@@ -122,15 +128,15 @@ const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
               {skills.length === 0 ? (
                 t('agent-state-skills-empty.label')
               ) : (
-                <Flex asChild wrap gap='xs'>
+                <Layout.Flex asChild wrap gap='xs'>
                   <span>
                     {skills.map((skill) => (
-                      <Tag key={skill.key} hue='violet'>
+                      <Tag.Tag key={skill.key} hue='violet'>
                         {skill.name}
-                      </Tag>
+                      </Tag.Tag>
                     ))}
                   </span>
-                </Flex>
+                </Layout.Flex>
               )}
             </Listbox.ItemDescription>
           </Listbox.Item>
@@ -162,7 +168,7 @@ type AgentStateSummaryProps = { counts: AgentStateCounts };
 
 /** How much the agent knows and is tracking. */
 const AgentStateSummary = ({ counts }: AgentStateSummaryProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const rows = [
     {
       id: 'memories',
@@ -257,13 +263,13 @@ type AgentStateConversationsProps = { channels: readonly AgentStateChannel[] };
 
 /** Each conversation the agent holds and the mode it is in there. */
 const AgentStateConversations = ({ channels }: AgentStateConversationsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <AgentStateSection view='conversations' label={t('agent-state-conversations.heading')}>
       {channels.length === 0 && (
-        <Flex center classNames='p-2 text-fg-muted' role='status'>
+        <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
           {t('agent-state-conversations-empty.message')}
-        </Flex>
+        </Layout.Flex>
       )}
       <Listbox.Root
         items={channels.map((channel) => ({
@@ -278,18 +284,18 @@ const AgentStateConversations = ({ channels }: AgentStateConversationsProps) => 
               <Listbox.ItemIcon />
               <Listbox.ItemText />
               <Listbox.ItemDescription>
-                <Flex asChild wrap gap='xs'>
+                <Layout.Flex asChild wrap gap='xs'>
                   <span>
-                    <Tag hue='sky' data-testid='agent-state-channel-mode'>
+                    <Tag.Tag hue='sky' data-testid='agent-state-channel-mode'>
                       {t('agent-state-channel-mode.label', { mode: channel.mode })}
-                    </Tag>
+                    </Tag.Tag>
                     {channel.skills.map((skill) => (
-                      <Tag key={skill.key} hue='violet'>
+                      <Tag.Tag key={skill.key} hue='violet'>
                         {skill.name}
-                      </Tag>
+                      </Tag.Tag>
                     ))}
                   </span>
-                </Flex>
+                </Layout.Flex>
               </Listbox.ItemDescription>
             </Listbox.Item>
           ))}

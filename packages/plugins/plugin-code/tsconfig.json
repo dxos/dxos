@@ -40,13 +40,25 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
+      "path": "../../core/compute/assistant"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/compute/link"
     },
     {
+      "path": "../../core/compute/mcp-server"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/echo/echo-doc"
@@ -56,6 +68,9 @@
     },
     {
       "path": "../../core/halo/halo-react"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../reflect/deus"
@@ -79,6 +94,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -97,7 +115,13 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-assistant"
+    },
+    {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-projects"
     },
     {
       "path": "../plugin-space"

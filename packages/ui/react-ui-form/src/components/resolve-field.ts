@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 import { type ReactNode } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 

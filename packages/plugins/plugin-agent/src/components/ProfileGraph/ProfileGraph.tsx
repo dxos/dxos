@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { Flex, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { type Goal, type Memory } from '#types';
@@ -41,19 +42,19 @@ export const MEMORY_ICONS: Record<Memory.Kind, string> = {
 
 /** What an agent knows about a person or team: their goals and the active memories about them. */
 export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (goals.length === 0 && memories.length === 0) {
     return (
-      <Flex center classNames='p-2 text-fg-muted' role='status'>
+      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
         {t('profile-graph-empty.message')}
-      </Flex>
+      </Layout.Flex>
     );
   }
 
   return (
-    <Flex column gap='sm'>
+    <Layout.Flex column gap='sm'>
       {goals.length > 0 && (
-        <Flex asChild column>
+        <Layout.Flex asChild column>
           <section aria-label={t('profile-graph-goals.heading')}>
             <h3 className='px-2 text-sm text-fg-muted'>{t('profile-graph-goals.heading')}</h3>
             <Listbox.Root
@@ -73,10 +74,10 @@ export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
               </Listbox.Content>
             </Listbox.Root>
           </section>
-        </Flex>
+        </Layout.Flex>
       )}
       {memories.length > 0 && (
-        <Flex asChild column>
+        <Layout.Flex asChild column>
           <section aria-label={t('profile-graph-memories.heading')}>
             <h3 className='px-2 text-sm text-fg-muted'>{t('profile-graph-memories.heading')}</h3>
             <Listbox.Root
@@ -98,9 +99,9 @@ export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
               </Listbox.Content>
             </Listbox.Root>
           </section>
-        </Flex>
+        </Layout.Flex>
       )}
-    </Flex>
+    </Layout.Flex>
   );
 };
 

@@ -19,7 +19,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
 import { Appeal, Architecture, Mermaid, MermaidEngine, Rules, type Scene, Score } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
 import { decisionModel, isJudge } from './judges.ts';

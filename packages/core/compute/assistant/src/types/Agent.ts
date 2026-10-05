@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, DXN, type Error as EchoError, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { IdentityDid } from '@dxos/keys';
 
 import type * as Harness from '../session/Harness.ts';

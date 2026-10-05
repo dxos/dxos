@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { createListCollection } from '@ark-ui/react/collection';
 import { Listbox as ListboxPrimitive, type UseListboxContext, useListboxContext } from '@ark-ui/react/listbox';
 import React, {
@@ -22,17 +24,17 @@ import { useComposedRefs } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { type ContainerProps, containerAttributes } from '../Container/index.ts';
-import { Empty } from '../Empty/index.ts';
-import { Icon, type IconProps } from '../Icon/index.ts';
-import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import { type ContainerProps, containerAttributes } from '../Container/Container.tsx';
+import { Empty } from '../Empty/Empty.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import { RowContext, handleGridKeyDown, isFromControl, useRowTabStops } from './grid.ts';
-import { type VirtualMode, VirtualSpacer, useVirtualRows } from './virtual.tsx';
+import { type VirtualMode, VirtualSpacer, isWindowed, useVirtualRows } from './virtual.tsx';
 
-export type ListboxOption = {
+type ListboxOption = {
   value: string;
   label: string;
   disabled?: boolean;
@@ -43,7 +45,7 @@ export type ListboxOption = {
 };
 
 /** `none` keeps zag's focus, keyboard and typeahead with no selection (AUDIT §6 group B: every list runs the machine). */
-export type ListboxSelectionMode = 'single' | 'multiple' | 'none';
+type ListboxSelectionMode = 'single' | 'multiple' | 'none';
 
 type RootContextValue = {
   items: readonly ListboxOption[];
@@ -85,7 +87,7 @@ type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'd
    * order. Without it rows lay out by part (a leading cell, the text over its description, trailing parts).
    */
   columns?: string;
-  /** Long lists: `fixed` windows equal-height rows, `variable` defers off-screen rows (`content-visibility`). */
+  /** Long lists: `fixed` windows equal-height rows, `measured` windows rows of any height, `variable` defers off-screen rows (`content-visibility`). */
   virtual?: VirtualMode;
   size?: Size;
 };
@@ -142,7 +144,7 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
           deselectable={deselectable}
           disabled={disabled}
           loopFocus={loopFocus}
-          scrollToIndexFn={virtual === 'fixed' ? ({ index }) => scrollToIndexRef.current?.(index) : undefined}
+          scrollToIndexFn={isWindowed(virtual) ? ({ index }) => scrollToIndexRef.current?.(index) : undefined}
           data-size={size}
           className={mx(recipes.listbox(), classNames)}
           ref={forwardedRef}
@@ -174,7 +176,7 @@ ListboxLabel.displayName = 'Listbox.Label';
 //
 
 type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
-  Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> &
+  Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'> &
   Pick<ContainerProps, 'gutter' | 'gap'> & {
     /**
      * `false` renders the rows without a ScrollArea of their own, for a host that already scrolls (a ScrollArea
@@ -196,7 +198,7 @@ const ListboxViewport = composable<
   const [element, setElement] = useState<HTMLDivElement | null>(null);
   const rows = Children.toArray(children);
   const windowing = useVirtualRows({ mode: virtual, count: rows.length });
-  scrollToIndexRef.current = virtual === 'fixed' ? windowing.scrollToIndex : null;
+  scrollToIndexRef.current = isWindowed(virtual) ? windowing.scrollToIndex : null;
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, setElement, windowing.listRef);
   useRowTabStops(element);
 
@@ -236,7 +238,7 @@ const ListboxViewport = composable<
           return;
         }
         contentProps.onKeyDown?.(event);
-        if (hostScrolls && virtual !== 'fixed') {
+        if (hostScrolls && !isWindowed(virtual)) {
           // zag scrolls the highlighted row into view only when the listbox itself overflows; here the host scrolls.
           const content = event.currentTarget;
           requestAnimationFrame(() =>
@@ -246,7 +248,7 @@ const ListboxViewport = composable<
       }}
       ref={ref}
     >
-      {virtual === 'fixed' ? (
+      {isWindowed(virtual) ? (
         <>
           <VirtualSpacer height={windowing.before} />
           {rows.slice(windowing.first, windowing.last + 1)}
@@ -406,7 +408,7 @@ ListboxItem.displayName = 'Listbox.Item';
 //
 
 type ListboxItemIconProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
-  Partial<Pick<IconProps, 'icon' | 'hue' | 'valence' | 'label'>>;
+  Partial<Pick<Icon.IconProps, 'icon' | 'hue' | 'valence' | 'label'>>;
 
 /** A block-sized leading cell, so the labels of every row start at the same x; `hue` and the rest reach the Icon. */
 const ListboxItemIcon = forwardRef<HTMLDivElement, ListboxItemIconProps>(
@@ -421,7 +423,7 @@ const ListboxItemIcon = forwardRef<HTMLDivElement, ListboxItemIconProps>(
         className={mx(recipes.block(), recipes.listboxItemIcon(), classNames)}
         ref={forwardedRef}
       >
-        {children ?? (glyph && <Icon icon={glyph} hue={hue} valence={valence} label={label} />)}
+        {children ?? (glyph && <Icon.Icon icon={glyph} hue={hue} valence={valence} label={label} />)}
       </div>
     );
   },
@@ -511,7 +513,7 @@ const ListboxItemIndicator = forwardRef<HTMLDivElement, ListboxItemIndicatorProp
         className={mx(recipes.listboxItemIndicator(), classNames)}
         ref={forwardedRef}
       >
-        {children ?? <Icon icon='ph--check--regular' />}
+        {children ?? <Icon.Icon icon='ph--check--regular' />}
       </div>
     );
   },
@@ -579,33 +581,35 @@ type ListboxContext = UseListboxContext<ListboxOption>;
 
 /** Ark's listbox api (`value`, `selectedItems`, `setValue`, `clearValue`, …) for parts inside the Root, e.g. a detail pane. */
 const useListboxRootContext = (): ListboxContext => useListboxContext();
-
-export const Listbox = {
-  Root: ListboxRoot,
-  Label: ListboxLabel,
-  Content: ListboxContent,
-  Empty: ListboxEmpty,
-  Item: ListboxItem,
-  ItemIcon: ListboxItemIcon,
-  ItemText: ListboxItemText,
-  ItemDescription: ListboxItemDescription,
-  ItemIndicator: ListboxItemIndicator,
-  ItemGroup: ListboxItemGroup,
-  ItemGroupLabel: ListboxItemGroupLabel,
-  useContext: useListboxRootContext,
-};
-
 export type {
-  ListboxContentProps,
-  ListboxContext,
-  ListboxEmptyProps,
-  ListboxItemDescriptionProps,
-  ListboxItemGroupLabelProps,
-  ListboxItemGroupProps,
-  ListboxItemIconProps,
-  ListboxItemIndicatorProps,
-  ListboxItemProps,
-  ListboxItemTextProps,
-  ListboxLabelProps,
-  ListboxRootProps,
+  ListboxContentProps as ContentProps,
+  ListboxContext as Context,
+  ListboxEmptyProps as EmptyProps,
+  ListboxItemDescriptionProps as ItemDescriptionProps,
+  ListboxItemGroupLabelProps as ItemGroupLabelProps,
+  ListboxItemGroupProps as ItemGroupProps,
+  ListboxItemIconProps as ItemIconProps,
+  ListboxItemIndicatorProps as ItemIndicatorProps,
+  ListboxItemProps as ItemProps,
+  ListboxItemTextProps as ItemTextProps,
+  ListboxLabelProps as LabelProps,
+  ListboxRootProps as RootProps,
 };
+
+export {
+  ListboxContent as Content,
+  ListboxEmpty as Empty,
+  ListboxItem as Item,
+  ListboxItemDescription as ItemDescription,
+  ListboxItemGroup as ItemGroup,
+  ListboxItemGroupLabel as ItemGroupLabel,
+  ListboxItemIcon as ItemIcon,
+  ListboxItemIndicator as ItemIndicator,
+  ListboxItemText as ItemText,
+  ListboxLabel as Label,
+  ListboxRoot as Root,
+  useListboxRootContext as useContext,
+};
+export type { ListboxOption as Option, ListboxSelectionMode as SelectionMode };
+export { RowContext, type RowContextValue } from './grid.ts';
+export * from './virtual.tsx';

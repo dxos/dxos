@@ -6,13 +6,13 @@ import { addHours, isSameDay, startOfHour } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useAppGraph, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
@@ -24,13 +24,15 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
 import { Calendar, DraftEvent, SystemTags } from '#types';
 
-import { getCalendarPath, getCalendarRangeSelectionId, getFeedObjectPath } from '../../paths.ts';
+import { getCalendarPath, getFeedObjectPath } from '../../paths.ts';
 import { InitializeCalendar } from './InitializeCalendar.tsx';
 
 const byDate =
@@ -41,8 +43,8 @@ const byDate =
 export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
 
 export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [calendar] = useObject(subject);
   const db = Obj.getDatabase(calendar);
   // The calendar's graph node id: events open as its children and it is their pivot.
@@ -108,14 +110,14 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const handleRangeSelect = useCallback(
     ({ range }: { range: { from: Date; to: Date } }) => {
       void invokePromise(LayoutOperation.Select, {
-        contextId: getCalendarRangeSelectionId(id),
+        contextId: Calendar.getRangeSelectionId(id),
         subject: { mode: 'range', from: range.from.toISOString(), to: range.to.toISOString() },
       });
     },
     [id, invokePromise],
   );
 
-  const handleNavigate = useDetailNavigation({
+  const handleNavigate = ToolkitHooks.useDetailNavigation({
     contextId: id,
     getPath: (eventId) => getFeedObjectPath(id, eventId),
   });
@@ -170,8 +172,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     handleNavigate(event.id);
   }, [db, subject, selectedDate, handleNavigate]);
 
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
   const menuActions = useMenuBuilder(
     (get) => {
       // `MenuBuilder` mutates in place, so conditional actions can be added without reassignment.

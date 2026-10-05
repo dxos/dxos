@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import { describe, expect, test } from 'vitest';
 
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';

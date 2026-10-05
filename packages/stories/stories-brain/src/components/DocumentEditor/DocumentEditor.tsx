@@ -5,8 +5,14 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import { Button, Field, Panel, Switch, type ThemedClassName, Toolbar, useThemeMode } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -15,7 +21,7 @@ import {
   pos,
 } from '@dxos/ui-editor';
 
-export type DocumentEditorProps = ThemedClassName<{
+export type DocumentEditorProps = Util.ThemedClassName<{
   /** Initial markdown content; the component owns subsequent edits. */
   initialValue?: string;
   /** POS tagger wired into the `pos` decoration extension; omit to disable decorations. */
@@ -32,7 +38,7 @@ export type DocumentEditorProps = ThemedClassName<{
  * always receive the latest edits; variants select the pipeline via the parent's `onRun`.
  */
 export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onRun }: DocumentEditorProps) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const [text, setText] = useState(initialValue);
   const [underline, setUnderline] = useState(false);
   const extensions = useMemo(
@@ -54,13 +60,13 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
           {parse && (
             <Field.Root>
               <div className='flex items-center gap-2'>
-                <Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
+                <Input.Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
                 <Field.Label classNames='text-sm text-fg-muted'>POS</Field.Label>
               </div>
             </Field.Root>
           )}
           <div className='grow' />
-          <Button
+          <Button.Root
             icon={busy ? 'ph--spinner-gap--regular' : 'ph--play--regular'}
             iconOnly
             label='Run pipeline'

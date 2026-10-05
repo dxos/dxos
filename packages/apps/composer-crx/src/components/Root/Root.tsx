@@ -8,15 +8,15 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 
 // Next components style through `.dx-*` rules that ship separately from the theme.
 import '@dxos/react-ui/theme.css';
-import { ErrorBoundary, ErrorBoundaryProps, ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import * as Status from '@dxos/react-ui/Status';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { translations } from '../../translations.ts';
 
 /**
  * Wraps children with the app theme, tooltip provider, and a named error boundary.
  */
-export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorBoundaryProps, 'name'>>) => {
+export const Root = ({ children, name }: PropsWithChildren<Pick<Status.ErrorBoundaryProps, 'name'>>) => {
   // Monitor system theme.
   useEffect(() => {
     const setTheme = (darkMode: boolean) => {
@@ -30,8 +30,8 @@ export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorBoundaryPro
   }, []);
 
   return (
-    <ThemeProvider tx={defaultTx} resourceExtensions={translations} themeMode='dark'>
-      <ErrorBoundary name={name}>{children}</ErrorBoundary>
-    </ThemeProvider>
+    <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations} themeMode='dark'>
+      <Status.ErrorBoundary name={name}>{children}</Status.ErrorBoundary>
+    </Theme.Provider>
   );
 };

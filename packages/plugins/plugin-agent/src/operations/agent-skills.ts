@@ -10,7 +10,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 /** Loaded on demand: the context runtime is heavy and only needed when bindings are read or changed. */
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');

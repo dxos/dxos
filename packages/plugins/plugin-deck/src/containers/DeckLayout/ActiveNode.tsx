@@ -4,9 +4,10 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { useNode } from '@dxos/plugin-graph/hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { useAttended } from '@dxos/react-ui-attention';
 
 import { useNodeActionExpander } from '#hooks';
@@ -14,8 +15,8 @@ import { useNodeActionExpander } from '#hooks';
 // TODO(burdon): Factor out to effect in plugin set document title.
 export const ActiveNode = () => {
   const [id] = useAttended();
-  const { graph } = useAppGraph();
-  const activeNode = useNode(graph, id);
+  const { graph } = Hooks.useAppGraph();
+  const activeNode = GraphHooks.useNode(graph, id);
   useNodeActionExpander(activeNode);
 
   return (

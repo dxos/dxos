@@ -8,8 +8,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Block, Card } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
+import * as Card from '@dxos/react-ui/Card';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { type Actor, Person } from '@dxos/types';
@@ -56,9 +57,9 @@ const DefaultStory = ({ actors = [KNOWN_SENDER] }: StoryArgs) => {
     <ContactPreview db={space?.db}>
       <Header.Root>
         <Card.Row>
-          <Block>
+          <Layout.Block>
             <Row.Star starred={starred} onToggle={() => setStarred((value) => !value)} />
-          </Block>
+          </Layout.Block>
           <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
         </Card.Row>
         {actors.map((actor, index) => (

@@ -9,7 +9,8 @@ import { type Mock, expect, fn, userEvent, waitFor, within } from 'storybook/tes
 
 import '@dxos/react-ui/theme.css';
 import { random } from '@dxos/random';
-import { Button, Icon } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
 import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withRegistry, withSizes, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
 
@@ -190,14 +191,14 @@ const renderColumnsRow = (node: TreeNode<TestItem>) => (
   <Tree.Item node={node}>
     <Tree.ItemIndicator />
     <Tree.ItemIcon>
-      <Icon icon='ph--spinner-gap--regular' spin label='Running' />
+      <Icon.Icon icon='ph--spinner-gap--regular' spin label='Running' />
     </Tree.ItemIcon>
     <Tree.ItemText />
     <span className='text-fg-muted tabular-nums' data-testid='tree-figure'>
       {node.depth}
     </span>
     <Tree.ItemActions>
-      <Button icon='ph--x--regular' iconOnly label='Remove' variant='ghost' size='sm' />
+      <Button.Root icon='ph--x--regular' iconOnly label='Remove' variant='ghost' size='sm' />
     </Tree.ItemActions>
   </Tree.Item>
 );
@@ -616,6 +617,44 @@ export const WindowedTest: Story = {
     });
     const pane = within(canvasElement).getByTestId('size-md');
     await expect(thumb.getBoundingClientRect().right).toBeCloseTo(pane.getBoundingClientRect().right, 0);
+  },
+};
+
+/**
+ * `measured` windows rows of differing heights (each leaf has a second line, each branch has none): only the rows in
+ * view mount, and the spacers carry the whole tree's extent, so the last row is reachable by scrolling.
+ */
+export const MeasuredTest: Story = {
+  args: {
+    tree: () => createWideTree(20, 49),
+    open: true,
+    multiline: true,
+    virtual: 'measured',
+    height: '32rem',
+  },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    await waitFor(() => expect(within(tree).getAllByTestId('tree-description').length).toBeGreaterThan(0));
+    await expect(rows(tree).length).toBeLessThan(100);
+
+    // Measured leaves are taller than the nominal pitch, so the extent grows past what estimates alone gave.
+    const leaf = tree.querySelector<HTMLElement>('[data-tree-row]:has([data-testid="tree-description"])');
+    const branch = tree.querySelector<HTMLElement>('[data-tree-row]:not(:has([data-testid="tree-description"]))');
+    await expect(leaf?.getBoundingClientRect().height ?? 0).toBeGreaterThan(
+      branch?.getBoundingClientRect().height ?? 0,
+    );
+
+    tree.scrollTop = tree.scrollHeight;
+    await waitFor(async () => {
+      tree.scrollTop = tree.scrollHeight;
+      await nextFrame();
+      await expect(within(tree).queryByText('Leaf 20.49')).not.toBeNull();
+    });
+    await expect(rows(tree).length).toBeLessThan(100);
+    await expect(within(tree).queryByText('Branch 1')).toBeNull();
+
+    tree.scrollTop = 0;
+    await waitFor(() => expect(within(tree).queryByText('Branch 1')).not.toBeNull());
   },
 };
 

@@ -4,14 +4,15 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { type SpaceId } from '@dxos/keys';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { useInterval } from '@dxos/react-hooks';
-import { Flex, useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type Channel } from '@dxos/types';
 
 import { DiscordBotStatus, DiscordBotToolbar, DiscordChannelForm } from '#components';
@@ -27,7 +28,7 @@ export type DiscordChannelPropertiesProps = AppSurface.ObjectPropertiesProps<Cha
 
 /** The bot settings of a Discord-backed channel, with its EDGE gateway controls and status. */
 export const DiscordChannelProperties = ({ subject: channel, attendableId }: DiscordChannelPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(channel);
   const config = useResolveRef(channel.backend.config);
   const discord = DiscordChannel.instanceOf(config) ? config : undefined;
@@ -53,7 +54,7 @@ export const DiscordChannelProperties = ({ subject: channel, attendableId }: Dis
   }
 
   return (
-    <Flex column>
+    <Layout.Flex column>
       <DiscordBotToolbar
         attendableId={attendableId}
         running={bot.status?.running}
@@ -72,7 +73,7 @@ export const DiscordChannelProperties = ({ subject: channel, attendableId }: Dis
       >
         <DiscordBotStatus status={bot.status} error={bot.error} />
       </DiscordChannelForm>
-    </Flex>
+    </Layout.Flex>
   );
 };
 
@@ -80,7 +81,7 @@ DiscordChannelProperties.displayName = 'DiscordChannelProperties';
 
 /** Start/stop/refresh for the channel's connection, polling its status while mounted. */
 const useConnection = (channel: Channel.Channel, spaceId: SpaceId | undefined) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [status, setStatus] = useState<ThreadOperation.ConnectionStatus>();
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);

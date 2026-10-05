@@ -4,7 +4,7 @@
 
 import * as Predicate from 'effect/Predicate';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import { BaseError } from '@dxos/errors';
 
 /**
@@ -77,7 +77,7 @@ export const formatDiscordSyncFailure = (error: unknown): string => {
     }
     return typeof code === 'number' ? `Discord API error ${code}` : `Discord API error (HTTP ${error.response.status})`;
   }
-  if (SyncDatabaseMissingError.is(error)) {
+  if (ConnectorSync.DatabaseMissingError.is(error)) {
     return error.message;
   }
   if (error instanceof BaseError) {

@@ -84,31 +84,16 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./package.json": "./package.json",
     "./Dictatable": {
       "source": "./src/types/Dictatable.ts",
       "types": "./dist/types/src/types/Dictatable.d.ts",
       "import": "./dist/lib/Dictatable.mjs"
     },
+    "./package.json": "./package.json",
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./TranscriptOperation": {
-      "source": "./src/types/TranscriptOperation.ts",
-      "types": "./dist/types/src/types/TranscriptOperation.d.ts",
-      "import": "./dist/lib/TranscriptOperation.mjs"
     },
     "./TranscriptionCapabilities": {
       "source": "./src/types/TranscriptionCapabilities.ts",
@@ -120,20 +105,30 @@
       "types": "./dist/types/src/types/TranscriptionEvents.d.ts",
       "import": "./dist/lib/TranscriptionEvents.mjs"
     },
-    "./TranscriptionPlugin": {
-      "source": "./src/TranscriptionPlugin.ts",
-      "types": "./dist/types/src/TranscriptionPlugin.d.ts",
-      "import": "./dist/lib/TranscriptionPlugin.mjs"
-    },
     "./TranscriptionOperationHandlerSet": {
       "source": "./src/operations/TranscriptionOperationHandlerSet.ts",
       "types": "./dist/types/src/operations/TranscriptionOperationHandlerSet.d.ts",
       "import": "./dist/lib/TranscriptionOperationHandlerSet.mjs"
     },
+    "./TranscriptionPlugin": {
+      "source": "./src/TranscriptionPlugin.ts",
+      "types": "./dist/types/src/TranscriptionPlugin.d.ts",
+      "import": "./dist/lib/TranscriptionPlugin.mjs"
+    },
     "./TranscriptionSkill": {
       "source": "./src/skills/TranscriptionSkill.ts",
       "types": "./dist/types/src/skills/TranscriptionSkill.d.ts",
       "import": "./dist/lib/TranscriptionSkill.mjs"
+    },
+    "./TranscriptOperation": {
+      "source": "./src/types/TranscriptOperation.ts",
+      "types": "./dist/types/src/types/TranscriptOperation.d.ts",
+      "import": "./dist/lib/TranscriptOperation.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

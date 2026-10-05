@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken } from '@dxos/link';
 
 import { DISCORD_SOURCE } from '../constants.ts';

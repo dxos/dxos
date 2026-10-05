@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 export type TypeInputOptions = TypeOptions.TypeInputOptions;
 export const TypeInputOptionsAnnotation = TypeOptions.TypeInputOptionsAnnotation;

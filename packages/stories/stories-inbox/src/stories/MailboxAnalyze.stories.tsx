@@ -11,14 +11,16 @@ import { Provider } from '@dxos/ai';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
-import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
-import { EffectEx, createKvsStore } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as KvsStore from '@dxos/effect/KvsStore';
 import { DXN, PublicKey } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -50,10 +52,13 @@ import * as Trip from '@dxos/plugin-trip/Trip';
 import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { TagIndex, Text } from '@dxos/schema';
 import {
   ModuleContainer,
@@ -103,7 +108,7 @@ type StoryAction = {
  * Resolves the active space like every module surface (`ModuleContainer` sets the workspace).
  */
 const ProcessModule = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -137,13 +142,13 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   const segments = useQuery(space.db, Filter.type(Segment.Segment));
   const relations = useQuery(space.db, Filter.type(ExtractedFrom.ExtractedFrom));
 
-  const [invoker] = useCapabilities(Capabilities.OperationInvoker);
-  const [factStores] = useCapabilities(BrainCapabilities.FactStoreRegistry);
+  const [invoker] = Hooks.useCapabilities(Capabilities.OperationInvoker);
+  const [factStores] = Hooks.useCapabilities(BrainCapabilities.FactStoreRegistry);
 
-  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
   // Every invoker run is a process emitting `status.update` trace events; the progress sink projects
   // them into the registry, so the meters below mirror the app's statusbar (incl. cancel).
-  const monitors = useProgressMonitors();
+  const monitors = ToolkitHooks.useProgressMonitors();
 
   const [runs, setRuns] = useState(0);
   const [last, setLast] = useState<unknown>();
@@ -464,7 +469,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button
+          <Button.Root
             icon='ph--play--regular'
             iconOnly
             label='Execute'
@@ -533,7 +538,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         ))}
         <Toolbar.Root>
           {resets.map((reset) => (
-            <Button
+            <Button.Root
               key={reset.id}
               icon='ph--trash--regular'
               label={reset.label}
@@ -565,7 +570,11 @@ const StoryProcessPlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.create({ id: 'inbox.process', filter: Surface.makeFilter(ProcessRole), component: ProcessModule }),
+          Surface.create({
+            id: 'inbox.process',
+            filter: Surface.makeFilter(ProcessRole),
+            component: ProcessModule,
+          }),
           ...moduleSurfaces,
         ]),
       ]),
@@ -584,7 +593,7 @@ const StoryProcessPlugin = Plugin.define(
       Effect.succeed([
         Capability.contribute(
           AssistantCapabilities.Settings,
-          createKvsStore({
+          KvsStore.make({
             key: 'org.dxos.plugin.inbox.story.assistant',
             schema: Assistant.Settings,
             defaultValue: () => ({}),

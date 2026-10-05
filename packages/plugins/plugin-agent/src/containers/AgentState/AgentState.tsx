@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -139,7 +139,7 @@ AgentState.displayName = 'AgentState';
  * heavy), so the list is re-read whenever the chat's feed gains a binding entry.
  */
 const useBoundSkills = (agent: Agent.Agent, chat: Chat.Chat | undefined): AgentStateSkill[] => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
   const spaceId = db?.spaceId;
   const [feedRef] = useObject(chat, 'feed');
@@ -178,7 +178,7 @@ const useChannels = (
   chats: readonly Chat.Chat[],
   people: readonly Person.Person[],
 ): AgentStateChannel[] => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const spaceId = Obj.getDatabase(agent)?.spaceId;
 
   // Annotations are object state, so each chat is subscribed to see its mode and participant change.

@@ -33,7 +33,7 @@ import {
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import type { Database, Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';

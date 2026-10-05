@@ -4,13 +4,13 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type CountdownOptions, playCountdown } from './play-countdown.ts';
 
 // No `signal`: unmounting is how a React host stops the countdown.
-export type CountdownProps = ThemedClassName<
+export type CountdownProps = Util.ThemedClassName<
   Omit<CountdownOptions, 'signal'> & {
     /** Called once the count has run out and faded. */
     onComplete?: () => void;

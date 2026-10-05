@@ -11,19 +11,17 @@ import { expect, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import {
-  Block,
-  Button,
-  Checkbox,
-  Collapsible,
-  Container,
-  Field,
-  Fieldset,
-  Group,
-  Icon,
-  Input,
-  Switch,
-} from '../index.ts';
+import { Block } from '../Block/Block.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Checkbox } from '../Checkbox/Checkbox.tsx';
+import * as Collapsible from '../Collapsible/Collapsible.tsx';
+import { Container } from '../Container/Container.tsx';
+import * as Field from '../Field/Field.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { Input } from '../Input/Input.tsx';
+import { Switch } from '../Switch/Switch.tsx';
+import * as Fieldset from './Fieldset.tsx';
 
 /**
  * Valid and enabled sets, then an invalid and a disabled one, and a set whose fields span a two-column row; test ids are
@@ -35,7 +33,7 @@ const DefaultStory = () => (
       <Fieldset.Legend>
         Profile
         <Block data-testid='profile-lock'>
-          <Icon icon='ph--user--regular' />
+          <Icon.Icon icon='ph--user--regular' />
         </Block>
       </Fieldset.Legend>
       <Field.Root data-testid='name'>

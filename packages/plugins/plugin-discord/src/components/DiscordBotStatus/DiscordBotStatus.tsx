@@ -5,7 +5,8 @@
 import React from 'react';
 
 import type * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
-import { Banner, useTranslation } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { meta } from '#meta';
@@ -28,7 +29,7 @@ export type DiscordBotStatusProps = {
 
 /** Reports the EDGE gateway state of a Discord channel's bot. */
 export const DiscordBotStatus = ({ status, error }: DiscordBotStatusProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // The last status read stays visible beside a failed refresh, so a transient EDGE outage does not hide it.
   const unreachable = error && (
     <Banner.Root valence='error'>

@@ -4,7 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { Container, Icon, type ThemedClassName, Timestamp, Typography, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
+import type * as Util from '@dxos/react-ui/Util';
 import { Task } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -37,7 +41,7 @@ const entryText = (entry: Task.HistoryEntry): string =>
 /** Falls back to the unset glyph: an entry written by an older schema still renders as a row. */
 const eventIcon = (event: Task.Event): EventIcon => EVENT_ICONS[event] ?? { icon: UNSET_ICON, hue: 'neutral' };
 
-export type TaskHistoryProps = ThemedClassName<{
+export type TaskHistoryProps = Util.ThemedClassName<{
   entries: readonly Task.HistoryEntry[];
   /** Entries to show, newest first; the rest are left to a surface with room for them. */
   limit?: number;
@@ -103,7 +107,7 @@ const buildItems = (entries: readonly Task.HistoryEntry[], limit: number): Histo
  * one line with its answer under it; an open one is not part of the record yet.
  */
 export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const items = useMemo(() => buildItems(entries, limit), [entries, limit]);
 
   if (items.length === 0) {
@@ -115,7 +119,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
     // gutter with the pane's other glyphs and its text in the content track with the pane's text —
     // rather than in a second set of columns that happens to look similar.
     // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
-    <Container
+    <Layout.Container
       asChild
       gutter='inherit'
       gap='sm'
@@ -126,9 +130,9 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
     >
       <section>
         {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
-        <Typography asChild tone='subtle' classNames='dx-label py-0'>
+        <Typography.Text asChild tone='subtle' classNames='dx-label py-0'>
           <h2>{t('task-history.label')}</h2>
-        </Typography>
+        </Typography.Text>
         {items.map((item) => (
           // The section's geometry, a grid rather than a flex row: the glyph column is a fixed 24px,
           // so a history glyph sits on the same axis as a property's however wide each section's text runs.
@@ -136,7 +140,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
             {/* The hue comes from the event table, through the same palette the status and priority
               glyphs read. */}
             <div className={TASK_GRID_ICON}>
-              <Icon icon={item.icon} classNames={item.hue} size='md' />
+              <Icon.Icon icon={item.icon} classNames={item.hue} size='md' />
             </div>
             {/* The time rides with the description rather than in a column of its own: flush right
               against the content's edge is where the eye reads it, and a third track would make the
@@ -153,12 +157,12 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
               </span>
               {/* Compact and live, because the log is read as "what has been happening" rather than
                 as a record to cite — and the record is a hover away, in the tooltip. */}
-              <Timestamp date={item.date} classNames='shrink-0 text-right' />
+              <Typography.Timestamp date={item.date} classNames='shrink-0 text-right' />
             </div>
           </div>
         ))}
       </section>
-    </Container>
+    </Layout.Container>
   );
 };
 

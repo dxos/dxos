@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Database, type Feed, Filter, Query } from '@dxos/echo';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { BaseError } from '@dxos/errors';
 import { type Channel, Message } from '@dxos/types';
 

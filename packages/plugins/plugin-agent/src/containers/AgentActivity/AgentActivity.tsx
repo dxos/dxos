@@ -4,10 +4,11 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import type * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
@@ -27,7 +28,7 @@ export type AgentActivityProps = {
 
 /** The Agent's main article: the channels it converses in (with each backend's settings), its skills and its conversations. */
 export const AgentActivity = ({ role, agent }: AgentActivityProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
 
   const list = useAgentChannelList(agent);
@@ -137,7 +138,7 @@ type ListedSkill = { key: string; name: string; customized: boolean; skill?: Ref
  * feed and are read through an operation, so the list is re-read after each change rather than subscribed.
  */
 const useAgentSkills = (agent: Agent.Agent) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
   const spaceId = db?.spaceId;
   const [skills, setSkills] = useState<ListedSkill[]>([]);

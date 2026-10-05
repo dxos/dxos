@@ -5,19 +5,15 @@
 import React, { type PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { ForceGraph } from '@dxos/plugin-explorer/components';
-import {
-  Container,
-  Flex,
-  Panel,
-  ScrollArea,
-  Tabs,
-  Timestamp,
-  type TimestampProps,
-  Toolbar,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Typography from '@dxos/react-ui/Typography';
 import { type SpaceGraphEdge, SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -44,7 +40,7 @@ type AgentKnowledgeRootProps = PropsWithChildren<{
 
 /** What the agent knows, one view at a time: its memories, the facts it read, the goals it serves and its knowledge graph. */
 const AgentKnowledgeRoot = ({ role, defaultView = 'memories', children }: AgentKnowledgeRootProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [view, setView] = useState<AgentKnowledgeView>(defaultView);
   return (
     <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>
@@ -87,27 +83,27 @@ type AgentKnowledgeMemoriesProps = {
   /** Newest first. */
   memories: readonly AgentKnowledgeMemory[];
   /** Fixes the instant timestamps are measured against, so stories and tests do not drift. */
-  now?: TimestampProps['now'];
+  now?: Typography.TimestampProps['now'];
 };
 
 /** The agent's active memories, newest first. */
 const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (useContext(AgentKnowledgeContext) !== 'memories') {
     return null;
   }
 
   return memories.length === 0 ? (
     <Panel.Body>
-      <Flex center classNames='p-2 text-fg-muted' role='status'>
+      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
         {t('agent-knowledge-memories-empty.message')}
-      </Flex>
+      </Layout.Flex>
     </Panel.Body>
   ) : (
     <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport asChild>
-          <Container>
+          <Layout.Container>
             <Listbox.Root
               items={memories.map((memory) => ({
                 value: memory.id,
@@ -121,13 +117,14 @@ const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) 
                     <Listbox.ItemIcon />
                     <Listbox.ItemText />
                     <Listbox.ItemDescription>
-                      {t(`memory-kind-${memory.kind}.label`)} · <Timestamp date={memory.observedAt} now={now} />
+                      {t(`memory-kind-${memory.kind}.label`)} ·{' '}
+                      <Typography.Timestamp date={memory.observedAt} now={now} />
                     </Listbox.ItemDescription>
                   </Listbox.Item>
                 ))}
               </Listbox.Content>
             </Listbox.Root>
-          </Container>
+          </Layout.Container>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </Panel.Body>
@@ -155,27 +152,27 @@ type AgentKnowledgeFactsProps = {
   /** Newest first. */
   facts: readonly AgentKnowledgeFact[];
   /** Fixes the instant timestamps are measured against, so stories and tests do not drift. */
-  now?: TimestampProps['now'];
+  now?: Typography.TimestampProps['now'];
 };
 
 /** The facts the agent read from documents, pages and conversations, newest first. */
 const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (useContext(AgentKnowledgeContext) !== 'facts') {
     return null;
   }
 
   return facts.length === 0 ? (
     <Panel.Body>
-      <Flex center classNames='p-2 text-fg-muted' role='status'>
+      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
         {t('agent-knowledge-facts-empty.message')}
-      </Flex>
+      </Layout.Flex>
     </Panel.Body>
   ) : (
     <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport asChild>
-          <Container>
+          <Layout.Container>
             <Listbox.Root
               items={facts.map((fact) => ({ value: fact.id, label: fact.text, icon: 'ph--graph--regular' }))}
             >
@@ -186,13 +183,13 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
                     <Listbox.ItemText />
                     <Listbox.ItemDescription>
                       {[fact.source, fact.speaker].flatMap((part) => (part ? [`${part} · `] : []))}
-                      <Timestamp date={fact.saidAt} now={now} />
+                      <Typography.Timestamp date={fact.saidAt} now={now} />
                     </Listbox.ItemDescription>
                   </Listbox.Item>
                 ))}
               </Listbox.Content>
             </Listbox.Root>
-          </Container>
+          </Layout.Container>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </Panel.Body>
@@ -230,22 +227,22 @@ type AgentKnowledgeGoalsProps = {
 
 /** The goals the agent serves, each followed by the facts it is watching for. */
 const AgentKnowledgeGoals = ({ goals }: AgentKnowledgeGoalsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (useContext(AgentKnowledgeContext) !== 'goals') {
     return null;
   }
 
   return goals.length === 0 ? (
     <Panel.Body>
-      <Flex center classNames='p-2 text-fg-muted' role='status'>
+      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
         {t('agent-knowledge-goals-empty.message')}
-      </Flex>
+      </Layout.Flex>
     </Panel.Body>
   ) : (
     <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport asChild>
-          <Container>
+          <Layout.Container>
             <Listbox.Root
               items={goals.flatMap((goal) => [
                 {
@@ -281,7 +278,7 @@ const AgentKnowledgeGoals = ({ goals }: AgentKnowledgeGoalsProps) => {
                 ])}
               </Listbox.Content>
             </Listbox.Root>
-          </Container>
+          </Layout.Container>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </Panel.Body>
@@ -315,7 +312,7 @@ type AgentKnowledgeGraphProps = {
 
 /** The agent's knowledge as a force-directed graph of people, organizations, goals and memories. */
 const AgentKnowledgeGraph = ({ nodes, edges }: AgentKnowledgeGraphProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const active = useContext(AgentKnowledgeContext) === 'graph';
   // One model for the component's life, so the layout keeps its positions as the knowledge grows.
   const model = useMemo(() => new SpaceGraphModel(), []);
@@ -340,13 +337,13 @@ const AgentKnowledgeGraph = ({ nodes, edges }: AgentKnowledgeGraphProps) => {
 
   return nodes.length === 0 ? (
     <Panel.Body>
-      <Flex center classNames='p-2 text-fg-muted' role='status'>
+      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
         {t('agent-knowledge-graph-empty.message')}
-      </Flex>
+      </Layout.Flex>
     </Panel.Body>
   ) : (
     <Panel.Body>
-      <ForceGraph classNames='h-full' model={model} />
+      <ForceGraph.Root classNames='h-full' model={model} />
     </Panel.Body>
   );
 };

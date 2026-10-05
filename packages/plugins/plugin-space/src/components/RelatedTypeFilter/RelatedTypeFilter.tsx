@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { ToggleGroup, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
 import { type RelatedType } from '#hooks';
@@ -23,7 +24,7 @@ export type RelatedTypeFilterProps = {
  * no toolbar to supply the roving-focus context `Toolbar.ToggleGroup` requires.
  */
 export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFilterProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Filtering by the only type present cannot narrow anything.
   if (types.length < 2) {
     return null;

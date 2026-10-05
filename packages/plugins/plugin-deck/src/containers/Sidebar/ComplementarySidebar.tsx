@@ -4,21 +4,18 @@
 
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import {
-  Button,
-  type Label,
-  Main,
-  Panel,
-  Tabs,
-  Toolbar,
-  toLocalizedString,
-  useMainLandmark,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Main from '@dxos/react-ui/Main';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { iconSize, mx } from '@dxos/ui-theme';
 
 import { PlankLoading } from '#components';
@@ -29,15 +26,15 @@ import { isDeckCompanionMounted, layoutAppliesTopbar } from '../../util/index.ts
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 import { ToggleComplementarySidebarButton } from './SidebarButton.tsx';
 
-const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
+const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Theme.Label;
 
 export type ComplementarySidebarProps = {
   current?: string;
 };
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { state, updateState } = useDeckState();
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
@@ -76,7 +73,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   }, [hasPersistedPanel, invokePromise]);
 
   // R0 follows the R1 panel beside it.
-  const railLandmark = useMainLandmark(2.5);
+  const railLandmark = Main.useMainLandmark(2.5);
 
   return (
     <Main.ComplementarySidebar
@@ -103,7 +100,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 key={Attention.getLinkedVariant(companion.id)}
                 value={Attention.getLinkedVariant(companion.id)}
                 classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-                label={toLocalizedString(companion.properties.label, t)}
+                label={Theme.toLocalizedString(companion.properties.label, t)}
                 icon={companion.properties.icon}
                 iconOnly
                 tooltipSide='left'
@@ -162,7 +159,7 @@ type ComplementarySidebarPanelProps = {
 };
 
 const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const data = useMemo(() => ({ id: companion.id, subject: companion.data }), [companion.id, companion.data]);
 
   if (!mounted) {
@@ -174,16 +171,16 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
       <Panel.Header>
         {/* The rail's height, like a plank's `Pane.Toolbar`, so the toolbars below line up across the deck. */}
         <Toolbar.Root size='lg' style={iconSize(5)} classNames='h-(--dx-rail-content) dx-header-surface'>
-          <Button
+          <Button.Root
             classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-            label={toLocalizedString(companion.properties.label, t)}
+            label={Theme.toLocalizedString(companion.properties.label, t)}
             icon={companion.properties.icon}
             iconOnly
             tooltipSide='left'
             data-value={Attention.getLinkedVariant(companion.id)}
             variant='default'
           />
-          <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
+          <div className='px-1'>{Theme.toLocalizedString(companion.properties.label, t)}</div>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='dx-r1-surface'>
@@ -204,7 +201,7 @@ type ComplementarySidebarContentProps = PropsWithChildren<{ value: string; selec
 
 /** An R1 panel; the selected one is a focus area of the shell (the hidden ones stay mounted beneath it). */
 const ComplementarySidebarContent = ({ value, selected, inert, children }: ComplementarySidebarContentProps) => {
-  const landmark = useMainLandmark(2);
+  const landmark = Main.useMainLandmark(2);
   return (
     <Tabs.Content
       {...(selected && !inert && landmark)}

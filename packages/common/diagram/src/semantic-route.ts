@@ -66,6 +66,8 @@ export type Piece = {
   endSide?: Side;
   /** Drawn by the A* fallback, which ignores sides and waypoints. */
   forced?: boolean;
+  /** Rank of the connector's relation; the highest on a shared side takes its centre. */
+  significance?: number;
 };
 
 export type Context = {
@@ -584,6 +586,7 @@ export type BusRequest = {
   hub: End;
   spokes: { id: string; end: End }[];
   direction: 'in' | 'out';
+  significance?: number;
 };
 
 type Item = { kind: 'piece'; piece: Piece } | { kind: 'bus'; bus: BusRequest; pieces: Piece[] };
@@ -621,10 +624,15 @@ const routeBus = (
   let best: { pieces: Piece[]; cost: number } | undefined;
   for (const junction of junctions(bus, context)) {
     const point: End = { rect: { x: junction.x, y: junction.y, w: 0, h: 0 }, sides: SIDES };
+    const shared = {
+      bus: bus.id,
+      via: [],
+      ...(bus.significance === undefined ? {} : { significance: bus.significance }),
+    };
     const trunkPiece =
       bus.direction === 'out'
-        ? { id: `${bus.id}#trunk`, bus: bus.id, start: bus.hub, end: point, via: [] }
-        : { id: `${bus.id}#trunk`, bus: bus.id, start: point, end: bus.hub, via: [] };
+        ? { id: `${bus.id}#trunk`, ...shared, start: bus.hub, end: point }
+        : { id: `${bus.id}#trunk`, ...shared, start: point, end: bus.hub };
     const trunk = bestRoute(trunkPiece, others, terminals, context);
     if (!trunk || (best && trunk.cost >= best.cost)) {
       continue;
@@ -636,8 +644,8 @@ const routeBus = (
     for (const spoke of bus.spokes) {
       const spokePiece =
         bus.direction === 'out'
-          ? { id: `${bus.id}#${spoke.id}`, bus: bus.id, start: point, end: spoke.end, via: [] }
-          : { id: `${bus.id}#${spoke.id}`, bus: bus.id, start: spoke.end, end: point, via: [] };
+          ? { id: `${bus.id}#${spoke.id}`, ...shared, start: point, end: spoke.end }
+          : { id: `${bus.id}#${spoke.id}`, ...shared, start: spoke.end, end: point };
       // The trunk may continue into a spoke but must not run back over it.
       const trunkSegments = segmentsOf({ id: `${bus.id}#trunk`, bus: bus.id, points: trunk.points });
       const route = bestRoute(spokePiece, [...others, ...trunkSegments], terminals, context);
@@ -774,7 +782,14 @@ export const routeAll = (pieces: readonly Piece[], buses: readonly BusRequest[],
  * keeping straight pieces straight; returns the pieces with fixed sides and ports to re-route.
  */
 export const spreadPorts = (pieces: readonly Piece[]): Piece[] => {
-  type Terminal = { piece: number; end: 'start' | 'end'; key: number; coord: number; far: number };
+  type Terminal = {
+    piece: number;
+    end: 'start' | 'end';
+    key: number;
+    coord: number;
+    far: number;
+    significance: number;
+  };
   const sides = new Map<string, { rect: Rect; side: Side; terminals: Terminal[] }>();
   pieces.forEach((piece, position) => {
     for (const [end, which, side, outward] of [
@@ -793,6 +808,7 @@ export const spreadPorts = (pieces: readonly Piece[]): Piece[] => {
         key: Ports.keyOf(outward, side),
         coord: outward[0][axis],
         far: outward[outward.length - 1][axis],
+        significance: piece.significance ?? 0,
       });
       sides.set(key, entry);
     }
@@ -808,11 +824,17 @@ export const spreadPorts = (pieces: readonly Piece[]): Piece[] => {
     );
     const [low, high] = rangeOf(rect, side);
     const span = high - low;
+    // The most significant terminals straddle the centre; the key order stays, so no stubs cross.
+    const top = Math.max(...sorted.map((terminal) => terminal.significance));
+    const firstTop = sorted.findIndex((terminal) => terminal.significance === top);
+    const lastTop = sorted.findLastIndex((terminal) => terminal.significance === top);
+    const anchor = (firstTop + lastTop) / 2;
+    const reach = Math.max(anchor, sorted.length - 1 - anchor);
     // Wide enough apart for a label between two parallel runs, within the side.
-    const spacing = Math.max(FINE, Math.min(GRID * 1.5, snap(span / (sorted.length - 1), FINE / 2)));
+    const spacing = Math.max(FINE, Math.min(GRID * 1.5, snap(span / 2 / reach, FINE / 2)));
     const centre = (low + high) / 2;
     sorted.forEach((terminal, index) => {
-      const coord = Math.min(high, Math.max(low, snap(centre + (index - (sorted.length - 1) / 2) * spacing)));
+      const coord = Math.min(high, Math.max(low, snap(centre + (index - anchor) * spacing)));
       ports[terminal.piece][terminal.end] = coord;
     });
   }

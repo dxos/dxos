@@ -8,6 +8,7 @@ import {
   FallbackWidget,
   ReasoningWidget,
   ReferenceWidget,
+  RequestWidget,
   SelectWidget,
   StatsWidget,
   StatusWidget,
@@ -127,6 +128,13 @@ export const assistantRegistry: XmlWidgetRegistry = {
     estimatedHeight: () => COLLAPSED_HEIGHT,
     heightMode: 'min',
     Component: SummaryWidget,
+  },
+
+  request: {
+    block: true,
+    estimatedHeight: () => COLLAPSED_HEIGHT,
+    heightMode: 'min',
+    Component: RequestWidget,
   },
 
   // The host overrides this with a widget that can actually dispatch the surface.

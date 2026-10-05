@@ -4,8 +4,8 @@
 import React, { type ComponentType } from 'react';
 
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { translationKey } from '../../translations.ts';
 import { InvitationListItem, type InvitationListItemProps } from './InvitationListItem.tsx';
@@ -19,7 +19,7 @@ export interface InvitationListProps
 }
 
 export const InvitationList = ({ invitations, send, ...invitationProps }: InvitationListProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { className, InvitationListItem: Item = InvitationListItem } = invitationProps;
   return (
     <Listbox.Root

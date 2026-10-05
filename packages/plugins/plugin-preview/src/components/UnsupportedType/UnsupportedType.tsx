@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { Banner, Panel, useTranslation } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 
@@ -20,7 +22,7 @@ export type UnsupportedTypeProps = {
  * objects reach it is `capabilities/react-surface.ts`'s call.
  */
 export const UnsupportedType = ({ role, typename }: UnsupportedTypeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Panel.Root role={role}>
