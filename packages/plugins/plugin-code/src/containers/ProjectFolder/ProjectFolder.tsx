@@ -48,11 +48,7 @@ export const ProjectFolder = ({ project }: ProjectFolderProps) => {
   }, [folder, setFolder]);
 
   return (
-    <Form.FieldSet
-      label={t('project-folder.label')}
-      description={t('project-folder.description')}
-      descriptionPlacement='tooltip'
-    >
+    <Form.FieldSet label={t('project-folder.label')} description={t('project-folder.description')}>
       <div className='flex items-center gap-2' data-testid='codePlugin.projectFolder'>
         <span className='grow min-w-0 truncate font-mono text-sm' title={folder}>
           {folder ?? t('project-folder.empty.label')}
