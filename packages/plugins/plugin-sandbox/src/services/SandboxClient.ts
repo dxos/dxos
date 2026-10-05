@@ -82,6 +82,11 @@ export type ExecRequest = {
   timeout?: number;
   /** Start the command and return at once, for a server that must outlive the request. */
   background?: boolean;
+  /**
+   * Run in this named shell, so `cd` and `export` carry to its next command. A session runs one
+   * command at a time; plain commands, and other sessions, run alongside it.
+   */
+  session?: string;
 };
 
 export type ExposePortOptions = {

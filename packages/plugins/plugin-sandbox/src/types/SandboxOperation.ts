@@ -80,6 +80,10 @@ export const Exec = Operation.make({
       description:
         'Start the command and return at once without its output, leaving it running — for a server. EDGE sandboxes only.',
     }),
+    session: Schema.optional(Schema.String).annotate({
+      description:
+        'Run in this named shell (lowercase letters, digits, - and _), so cd and export carry to the next command in it. Commands in one session run one at a time; omit it to run alongside everything else. EDGE sandboxes only.',
+    }),
   }),
   output: Schema.Struct({
     stdout: Schema.String,
