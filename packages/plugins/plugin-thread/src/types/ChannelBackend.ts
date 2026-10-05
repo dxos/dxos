@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { type Database, type Feed, Filter, Query } from '@dxos/echo';
 import { SchemaAST } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
-import { type Channel } from '@dxos/types';
+import { type Channel, Message } from '@dxos/types';
 
 import * as ThreadCapabilities from './ThreadCapabilities.ts';
 import type * as ThreadOperation from './ThreadOperation.ts';
@@ -63,6 +64,19 @@ export const requireMember = <K extends 'openDirect' | 'threads' | 'connection'>
 /** A provider's send result as a receipt; a backend with nothing to report yields an empty one. */
 export const toReceipt = (result: ThreadCapabilities.SendResult): ThreadOperation.SendReceipt =>
   typeof result === 'object' ? result : {};
+
+/**
+ * Subscribes to the messages appended to a feed, firing immediately; returns the unsubscribe.
+ * Shared by every backend whose messages live in (or are mirrored into) an ECHO feed.
+ */
+export const subscribeFeed = (
+  db: Database.Database,
+  feed: Feed.Feed,
+  onMessages: (messages: readonly Message.Message[]) => void,
+): (() => void) => {
+  const result = db.query(Query.select(Filter.type(Message.Message)).from(feed));
+  return result.subscribe(() => onMessages(result.results), { fire: true });
+};
 
 /** Throws if two providers share a `kind` (which would make resolution order-dependent). */
 export const assertUniqueKinds = (providers: readonly ThreadCapabilities.ChannelBackendProvider[]): void => {

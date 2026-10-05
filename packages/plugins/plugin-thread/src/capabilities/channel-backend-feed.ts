@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Channel, Message } from '@dxos/types';
+import { Channel } from '@dxos/types';
 
-import { ThreadCapabilities } from '#types';
+import { ChannelBackend, ThreadCapabilities } from '#types';
 
 /**
  * Default local ECHO-feed-backed channel provider. Stores messages in a `Feed`
@@ -31,8 +31,7 @@ export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
       return () => {};
     }
 
-    const result = db.query(Query.select(Filter.type(Message.Message)).from(feed));
-    return result.subscribe(() => onMessages(result.results), { fire: true });
+    return ChannelBackend.subscribeFeed(db, feed, onMessages);
   },
   send: (channel, message) =>
     Effect.gen(function* () {
