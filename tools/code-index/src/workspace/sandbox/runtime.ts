@@ -81,7 +81,8 @@ const present = (kind: string, content: string, title?: string) => call('display
 
 const display = {
   markdown: (content: string, title?: string) => present('markdown', content, title),
-  mermaid: (source: string, title?: string) => present('mermaid', source, title),
+  diagram: (diagram: unknown, title?: string) =>
+    present('diagram', typeof diagram === 'string' ? diagram : safeStringify(diagram), title),
   table: (rows: readonly Record<string, unknown>[], title?: string) =>
     present('table', safeStringify(rows), title) as Promise<void>,
   json: (value: unknown, title?: string) => present('json', safeStringify(value), title),

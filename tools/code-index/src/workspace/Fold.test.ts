@@ -98,6 +98,18 @@ describe('Fold', () => {
     expect(state.turns).toHaveLength(1);
   });
 
+  test("a panel logged as 'mermaid' before the rename reads as a diagram, and is re-encoded as one", ({
+    expect,
+  }) => {
+    const decode = Schema.decodeUnknownSync(Events.Event);
+    const presented = decode({ _tag: 'Presented', kind: 'mermaid', title: 'old', content: 'graph TD\n  a --> b' });
+    expect(presented).toMatchObject({ kind: 'diagram', content: 'graph TD\n  a --> b' });
+    expect(Fold.fold(entries([presented])).canvas).toEqual([
+      { seq: 1, kind: 'diagram', title: 'old', content: 'graph TD\n  a --> b' },
+    ]);
+    expect(Schema.encodeUnknownSync(Events.Event)(presented)).toMatchObject({ kind: 'diagram' });
+  });
+
   test('a log written before streaming existed still folds', ({ expect }) => {
     // Decoded from the stored JSON, as `Log.read` does: no ids on messages or calls, no deltas.
     const decode = Schema.decodeUnknownSync(Events.Event);

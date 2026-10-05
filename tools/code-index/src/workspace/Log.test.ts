@@ -93,7 +93,7 @@ describe('Log', () => {
         yield* api.append(project.id, new Events.ToolCall({ callId, code: 'await display.text("x")' }));
         yield* api.append(
           project.id,
-          new Events.Presented({ callId, kind: 'mermaid', content: 'graph TD\n  a --> b' }),
+          new Events.Presented({ callId, kind: 'diagram', content: 'graph TD\n  a --> b' }),
         );
         yield* api.append(project.id, new Events.ToolResult({ callId, ok: true, output: 'done' }));
         yield* api.append(project.id, new Events.AssistantMessage({ text: 'there it is' }));
@@ -105,7 +105,7 @@ describe('Log', () => {
       { role: 'user', text: 'draw something' },
       { role: 'assistant', text: 'there it is' },
     ]);
-    expect(state.canvas).toEqual([{ seq: 3, kind: 'mermaid', title: undefined, content: 'graph TD\n  a --> b' }]);
+    expect(state.canvas).toEqual([{ seq: 3, kind: 'diagram', title: undefined, content: 'graph TD\n  a --> b' }]);
     expect(state.items.filter((item) => item.kind === 'tool')).toEqual([
       { kind: 'tool', id: callId, code: 'await display.text("x")', output: 'done', ok: true },
     ]);
