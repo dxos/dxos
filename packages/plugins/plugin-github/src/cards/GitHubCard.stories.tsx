@@ -9,6 +9,7 @@ import { expect, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ObjectCard } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Block, Button } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createIssue, createPullRequest, createRepo } from '../testing/index.ts';
@@ -84,5 +85,80 @@ export const TestLongTitle: Story = {
     // Under two lines tall (the box has padding, so not exactly one), and its text runs past the end.
     await expect(title.getBoundingClientRect().height).toBeLessThan(2 * Number.parseFloat(lineHeight));
     await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
+  },
+};
+
+const LONG_TITLE =
+  'plugin-interlocutor: agents reachable from Discord threads, with a memory graph and an interview skill';
+
+const LONG_DESCRIPTION = [
+  '## Summary',
+  'Adds `@dxos/plugin-agent`, a plugin that lets agents be reached from Discord threads. It keeps a memory graph per',
+  'thread and ships an interview skill, so the agent can gather requirements before it acts.',
+  'It also adds stories and a fixture for the interview flow.',
+].join('\n\n');
+
+/** The deck popover's host: the regular size, a header menu in the end rail, and the card body under it. */
+const PopoverStory = () => {
+  const subject = useMemo(() => {
+    const pullRequest = createPullRequest();
+    Obj.update(pullRequest, (pullRequest) => {
+      pullRequest.description = LONG_DESCRIPTION;
+    });
+    return pullRequest;
+  }, []);
+
+  return (
+    <div className='dx-scope' data-size='md'>
+      <ObjectCard.Root border={false} classNames='dx-card-popover dx-card-min-width'>
+        <ObjectCard.Header
+          subject={subject}
+          menu={
+            <Block rail='end'>
+              <Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
+            </Block>
+          }
+        >
+          {LONG_TITLE}
+        </ObjectCard.Header>
+        <GitHubCard role='card--content' subject={subject} />
+      </ObjectCard.Root>
+    </div>
+  );
+};
+
+/**
+ * In the popover a long title stays on one line, the description wraps to at most three lines with its icon beside the
+ * first, and the card ends at its last row.
+ */
+export const TestPopover: Story = {
+  args: { kind: 'pr' },
+  render: () => <PopoverStory />,
+  play: async ({ canvasElement }) => {
+    const card = canvasElement.querySelector<HTMLElement>('.dx-card-popover');
+    await expect(card).not.toBeNull();
+    const title = within(canvasElement).getByRole('heading');
+    const lineHeight = Number.parseFloat(getComputedStyle(title).lineHeight);
+    await expect(title.getBoundingClientRect().height).toBeLessThan(2 * lineHeight);
+    await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
+
+    const description = within(canvasElement).getByText(/^## Summary/);
+    const descriptionStyle = getComputedStyle(description);
+    const padding = Number.parseFloat(descriptionStyle.paddingTop) + Number.parseFloat(descriptionStyle.paddingBottom);
+    const lines = Math.round((description.clientHeight - padding) / Number.parseFloat(descriptionStyle.lineHeight));
+    await expect(lines).toBe(3);
+    const row = description.closest<HTMLElement>('.dx-card-row');
+    const icon = row?.querySelector<HTMLElement>('.dx-block, [data-rail="start"]');
+    await expect(
+      Math.abs((icon?.getBoundingClientRect().top ?? Number.NaN) - (row?.getBoundingClientRect().top ?? 0)),
+    ).toBeLessThanOrEqual(1);
+
+    // As far below the last row as the header is below the top: no empty band at the foot.
+    const rows = Array.from(card?.querySelectorAll<HTMLElement>('.dx-card-row') ?? []);
+    const header = card?.querySelector<HTMLElement>('.dx-card-header');
+    const cardRect = card?.getBoundingClientRect();
+    const top = (header?.getBoundingClientRect().top ?? 0) - (cardRect?.top ?? 0);
+    const bottom = (cardRect?.bottom ?? 0) - (rows.at(-1)?.getBoundingClientRect().bottom ?? 0);
+    await expect(Math.abs(bottom - top)).toBeLessThanOrEqual(2);
   },
 };

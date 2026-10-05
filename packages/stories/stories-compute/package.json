@@ -24,6 +24,7 @@
     "@dxos/edge-compute": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-debug": "workspace:*",
@@ -37,6 +38,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
