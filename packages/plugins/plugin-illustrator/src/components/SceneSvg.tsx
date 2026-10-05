@@ -4,16 +4,12 @@
 
 import React, { type MouseEvent, useId, useMemo } from 'react';
 
-import { Scene } from '@dxos/diagram';
+import { Diagnostics, Scene } from '@dxos/diagram';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-/**
- * Text sizes per scene weight for a standard UI font. Proportional to `Layout.FONT_METRICS`
- * (which measures tldraw's chunkier draw font), so text always fits boxes sized by the dialects.
- */
-const FONT_SIZE: Record<Scene.Weight, number> = { s: 13, m: 18, l: 27, xl: 34 };
-const LINE_H: Record<Scene.Weight, number> = { s: 20, m: 26, l: 38, xl: 48 };
+const FONT_SIZE = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].size;
+const LINE_H = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].lineH;
 
 const MARGIN = 40;
 
@@ -28,25 +24,9 @@ const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): R
 
 const center = (rect: Rect): Point => ({ x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 });
 
-/** Point where the segment from a rect's center toward `target` crosses the rect border. */
-const clipToBorder = (rect: Rect, target: Point): Point => {
-  const source = center(rect);
-  const dx = target.x - source.x;
-  const dy = target.y - source.y;
-  let t = 1;
-  if (dx !== 0) {
-    t = Math.min(t, ((dx > 0 ? rect.x + rect.w : rect.x) - source.x) / dx);
-  }
-  if (dy !== 0) {
-    t = Math.min(t, ((dy > 0 ? rect.y + rect.h : rect.y) - source.y) / dy);
-  }
-  return { x: source.x + dx * t, y: source.y + dy * t };
-};
-
 const strokeDash: Partial<Record<Scene.Stroke, string>> = { dashed: '6 4', dotted: '2 4' };
 
-/** Average glyph advance as a fraction of font size, for wrap estimates (UI sans). */
-const CHAR_EM = 0.6;
+const CHAR_EM = Diagnostics.CHAR_EM;
 
 /** Greedy word wrap per input line; SVG text has no native wrapping. */
 const wrapLines = (text: string, maxChars: number): string[] =>
@@ -108,38 +88,16 @@ type Resolved = {
 };
 
 const resolve = (objects: readonly Scene.WorldObject[]): Resolved => {
-  const registry = new Map<string, Rect>();
-  const points: Point[] = [];
+  const registry = Diagnostics.bindTargets(objects);
+  const points: Point[] = [...registry.values()].flatMap((rect) => [rect, { x: rect.x + rect.w, y: rect.y + rect.h }]);
   for (const object of objects) {
     const { x = 0, y = 0 } = object.origin ?? {};
     const scale = object.scale ?? 1;
     for (const element of object.elements) {
-      switch (element.kind) {
-        case 'rect':
-        case 'ellipse':
-        case 'diamond':
-        case 'triangle':
-        case 'portal': {
-          const rect = rectOf(object, element);
-          registry.set(`${object.id}/${element.id}`, rect);
-          points.push(rect, { x: rect.x + rect.w, y: rect.y + rect.h });
-          break;
-        }
-        case 'line':
-        case 'curve': {
-          points.push(...element.points.map((point) => ({ x: x + point.x * scale, y: y + point.y * scale })));
-          break;
-        }
-        case 'arrow': {
-          for (const terminal of [element.start, element.end]) {
-            if (terminal) {
-              points.push({ x: x + terminal.x * scale, y: y + terminal.y * scale });
-            }
-          }
-          break;
-        }
-        default:
-          break;
+      if (element.kind === 'line' || element.kind === 'curve') {
+        points.push(...element.points.map((point) => ({ x: x + point.x * scale, y: y + point.y * scale })));
+      } else if (element.kind === 'arrow') {
+        points.push(...(Diagnostics.arrowPoints(object, element, registry) ?? []));
       }
     }
   }
@@ -163,32 +121,52 @@ type MultilineTextProps = {
   cy: number;
   text: string;
   weight: Scene.Weight;
-  /** Wrap to this width (scene px), as `Diagnostics` assumes a box label does; unbounded when absent. */
-  width?: number;
   className?: string;
 };
 
-/** Inset kept between a box label and the box's sides. */
-const LABEL_INSET = 12;
-
-const MultilineText = ({ cx, cy, text, weight, width, className }: MultilineTextProps) => {
-  const room = width === undefined ? Infinity : width - LABEL_INSET * 2;
-  const lines = wrapLines(text, Math.max(4, Math.floor(room / (FONT_SIZE[weight] * CHAR_EM))));
-  // A word longer than the box cannot wrap (a class name has no spaces), so the font shrinks to fit it.
-  const longest = Math.max(...lines.map((line) => line.length));
-  const fit = Math.min(1, room / (longest * FONT_SIZE[weight] * CHAR_EM));
-  const lineH = LINE_H[weight] * fit;
+/** Free-standing centred text, one line per `\n`. */
+const MultilineText = ({ cx, cy, text, weight, className }: MultilineTextProps) => {
+  const lines = text.split('\n');
   return (
     <text
       x={cx}
-      y={cy - ((lines.length - 1) * lineH) / 2}
+      y={cy - ((lines.length - 1) * LINE_H(weight)) / 2}
       textAnchor='middle'
       dominantBaseline='central'
-      fontSize={FONT_SIZE[weight] * fit}
+      fontSize={FONT_SIZE(weight)}
       className={mx('fill-current', className)}
     >
       {lines.map((line, index) => (
-        <tspan key={index} x={cx} dy={index === 0 ? 0 : lineH}>
+        <tspan key={index} x={cx} dy={index === 0 ? 0 : LINE_H(weight)}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
+};
+
+type BoxLabelProps = {
+  rect: Rect;
+  text: string;
+  weight: Scene.Weight;
+};
+
+/** A box's label, set by `Diagnostics.layoutLabel` so it stays inside the box and the label check agrees. */
+const BoxLabel = ({ rect, text, weight }: BoxLabelProps) => {
+  const { lines, size, lineH, overflow } = Diagnostics.layoutLabel(text, weight, rect);
+  const mid = center(rect);
+  return (
+    <text
+      x={mid.x}
+      y={mid.y - ((lines.length - 1) * lineH) / 2}
+      textAnchor='middle'
+      dominantBaseline='central'
+      fontSize={size}
+      className='fill-current stroke-none'
+    >
+      {overflow && <title>{text}</title>}
+      {lines.map((line, index) => (
+        <tspan key={index} x={mid.x} dy={index === 0 ? 0 : lineH}>
           {line}
         </tspan>
       ))}
@@ -261,16 +239,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
           strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
         >
           {shape}
-          {element.text && (
-            <MultilineText
-              cx={mid.x}
-              cy={mid.y}
-              text={element.text}
-              weight={weight}
-              width={rect.w}
-              className='stroke-none'
-            />
-          )}
+          {element.text && <BoxLabel rect={rect} text={element.text} weight={weight} />}
         </g>
       );
     }
@@ -308,20 +277,20 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
     case 'text': {
       const anchor = map(element);
       const textWeight = element.weight ?? 's';
-      const fontSize = FONT_SIZE[textWeight];
+      const fontSize = FONT_SIZE(textWeight);
       const maxChars = element.w ? Math.max(4, Math.floor((element.w * scale) / (fontSize * CHAR_EM))) : Infinity;
       const lines = wrapLines(element.text, maxChars);
       return (
         <text
           x={anchor.x}
-          y={anchor.y + LINE_H[textWeight] / 2}
+          y={anchor.y + LINE_H(textWeight) / 2}
           fontSize={fontSize}
           // Muted text (group titles) is still text to read: grey strokes stay light, grey type meets 4.5:1.
           fontWeight={element.color === 'grey' ? 500 : undefined}
           className={mx('fill-current', element.color === 'grey' ? MUTED_TEXT : colorClass(element.color))}
         >
           {lines.map((line, index) => (
-            <tspan key={index} x={anchor.x} dy={index === 0 ? 0 : LINE_H[textWeight]}>
+            <tspan key={index} x={anchor.x} dy={index === 0 ? 0 : LINE_H(textWeight)}>
               {line}
             </tspan>
           ))}
@@ -341,7 +310,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
           {element.text && (
             <MultilineText
               cx={center(rect).x}
-              cy={rect.y + LINE_H.s}
+              cy={rect.y + LINE_H('s')}
               text={element.text}
               weight='s'
               className='stroke-none'
@@ -351,46 +320,39 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
       );
     }
     case 'arrow': {
-      // Bound refs resolve via the registry, clipping the center-to-center segment at each border
-      // and dropping the `#port`: the SVG renderer has no ports.
-      const ref = (value: string) => registry.get(Scene.resolveRef(value, object.id));
-      const fromRect = element.from ? ref(element.from) : undefined;
-      const toRect = element.to ? ref(element.to) : undefined;
-      const start = fromRect
-        ? clipToBorder(fromRect, toRect ? center(toRect) : map(element.end ?? { x: 0, y: 0 }))
-        : element.start
-          ? map(element.start)
-          : undefined;
-      const end = toRect
-        ? clipToBorder(toRect, fromRect ? center(fromRect) : map(element.start ?? { x: 0, y: 0 }))
-        : element.end
-          ? map(element.end)
-          : undefined;
-      if (!start || !end) {
+      // Drawn along the geometry `Diagnostics` measures: bound ends clipped at the borders, ports dropped.
+      const points = Diagnostics.arrowPoints(object, element, registry);
+      if (!points) {
         return null;
       }
+      const [start, end] = [points[points.length - 2], points[points.length - 1]];
       const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
       const { start: tail, end: head, dashed } = Scene.markersOf(element);
       // On a routed connector the source marker is drawn by its `-path` polyline instead.
       const routed = object.elements.some(
         (other) => (other.kind === 'line' || other.kind === 'curve') && other.id === `${element.id}-path`,
       );
+      const stroke = {
+        strokeWidth: 1.5,
+        strokeDasharray: element.stroke ? strokeDash[element.stroke] : dashed ? strokeDash.dashed : undefined,
+        markerEnd: head ? `url(#${markers[head]})` : undefined,
+        markerStart: tail && !routed ? `url(#${markers[tail]})` : undefined,
+      };
       return (
         <g className={mx('stroke-current', colorClass(element.color))}>
-          <line
-            x1={start.x}
-            y1={start.y}
-            x2={end.x}
-            y2={end.y}
-            strokeWidth={1.5}
-            strokeDasharray={element.stroke ? strokeDash[element.stroke] : dashed ? strokeDash.dashed : undefined}
-            markerEnd={head ? `url(#${markers[head]})` : undefined}
-            markerStart={tail && !routed ? `url(#${markers[tail]})` : undefined}
-          />
+          {points.length === 2 ? (
+            <line x1={start.x} y1={start.y} x2={end.x} y2={end.y} {...stroke} />
+          ) : (
+            <polyline
+              points={points.map((point) => `${point.x},${point.y}`).join(' ')}
+              className='fill-none'
+              {...stroke}
+            />
+          )}
           {element.text && (
             <MultilineText
               cx={mid.x}
-              cy={mid.y - LINE_H.s / 2}
+              cy={mid.y - LINE_H('s') / 2}
               text={element.text}
               weight='s'
               className='stroke-none'
