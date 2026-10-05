@@ -169,7 +169,8 @@ alignment, groups, spacing, labels), run
 `moon run plugin-illustrator:appeal-diagrams -- /abs/path/to/x.mmd`. Add `--judge clef` to have Clef
 grade the rendered image too; it needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`.
 
-For a PR, publish the PNG with `hosting-artifacts` rather than committing it.
+For a PR, attach the PNG per `hosting-artifacts` (`gh --attach`, R2 as the fallback) rather than
+committing it.
 
 ## Corpus diagrams
 
