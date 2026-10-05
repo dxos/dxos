@@ -1312,7 +1312,8 @@ export const makeProcessInvoker = ({ manager, toProcess, origin, tracer }: Proce
       }
       const handle = yield* manager.spawn(toProcess(op), {
         ...(detached ? { parentProcessId: undefined } : {}),
-        origin,
+        // Spread only when set: an explicit `undefined` would override the origin a parent passes down.
+        ...(origin !== undefined ? { origin } : {}),
         name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
         traceMeta: options?.tracing,
         // Notifications ride the process manager: forward `notify` onto the spawned process's params.
@@ -1412,7 +1413,15 @@ const awaitFirstOutput = <O>(handle: Process.Process<any, O, any>): Effect.Effec
         onNone: () =>
           Option.match(handle.status.exit, {
             onSome: (exit): Effect.Effect<O> =>
-              exit._tag === 'Failure' ? Effect.failCause(exit.cause) : Effect.die('Process produced no output'),
+              exit._tag === 'Failure'
+                ? Effect.failCause(exit.cause)
+                : // A terminated process also exits with success; the state value is compared as a string
+                  // because `Process.State` cannot be imported here.
+                  Effect.die(
+                    String(handle.status.state) === 'TERMINATED'
+                      ? 'Operation was terminated'
+                      : 'Process produced no output',
+                  ),
             // Outputs close on a live process only when its manager suspends it: the wait was cut short.
             onNone: () => Effect.interrupt,
           }),
