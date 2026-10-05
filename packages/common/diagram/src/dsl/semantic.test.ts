@@ -11,6 +11,11 @@ import { formatId } from './print.ts';
 const problemsOf = (text: string) =>
   parse(text).problems.map(({ severity, from, to }) => `${severity}: ${text.slice(from, to)}`);
 
+const messagesOf = (text: string) =>
+  parse(text)
+    .problems.map(({ message }) => message)
+    .join('\n');
+
 describe('semantic statements', () => {
   test('diagram attributes', ({ expect }) => {
     const { diagram, problems } = read('diagram @ 10,20 flow=right grid=384x224 box=160x64\nnode A');
@@ -144,6 +149,17 @@ describe('semantic statements', () => {
     // Relation words and sides stay usable as ids.
     expect(formatId('left')).toBe('left');
     expect(formatId('below')).toBe('below');
+  });
+
+  test('an inherited property name is not a relationship', ({ expect }) => {
+    for (const word of ['constructor', 'toString', '__proto__']) {
+      expect(messagesOf(`node A\nnode B\nedge A ${word} B`)).toMatch(/Unknown relationship/);
+    }
+  });
+
+  test("no node or group may take the connectors object's id", ({ expect }) => {
+    expect(messagesOf('node edges\nnode B')).toMatch(/"edges" names the diagram's connectors object/);
+    expect(messagesOf('group edges { node A }')).toMatch(/"edges" names the diagram's connectors object/);
   });
 
   test('a document of scene statements alone has no diagram', ({ expect }) => {

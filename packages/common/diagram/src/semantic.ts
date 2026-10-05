@@ -84,6 +84,9 @@ export const RELATIONSHIPS: Readonly<Record<string, Scene.Relation>> = {
   'depends-on': 'dependency',
 };
 
+/** The id of the scene object that holds every connector, so no node or group may take it. */
+export const CONNECTORS = 'edges';
+
 /** Relations whose target is the abstraction, which reads best above its subtypes. */
 export const pointsUp = (relation: Scene.Relation | undefined): boolean =>
   relation === 'inheritance' || relation === 'implementation';

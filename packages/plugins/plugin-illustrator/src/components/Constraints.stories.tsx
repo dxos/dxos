@@ -66,11 +66,24 @@ const useCompiled = (source: string, strip: boolean): Compiled | undefined => {
               : Dsl.withLayout(reading);
           })
         : Dsl.compile(source);
-      void EffectEx.runPromise(run).then(({ commands, problems }) => {
-        if (!cancelled) {
-          setCompiled({ objects: objectsOf(commands), problems, ms: Math.round(performance.now() - started) });
-        }
-      });
+      void EffectEx.runPromise(run).then(
+        ({ commands, problems }) => {
+          if (!cancelled) {
+            setCompiled({ objects: objectsOf(commands), problems, ms: Math.round(performance.now() - started) });
+          }
+        },
+        (error: unknown) => {
+          // A failed compile replaces the last result, so the bench never shows stale output as current.
+          if (!cancelled) {
+            const message = error instanceof Error ? error.message : String(error);
+            setCompiled({
+              objects: [],
+              problems: [{ severity: 'error', message, from: 0, to: source.length }],
+              ms: Math.round(performance.now() - started),
+            });
+          }
+        },
+      );
     }, 400);
     return () => {
       cancelled = true;

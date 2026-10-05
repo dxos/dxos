@@ -291,13 +291,16 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
       const arrow = element.id.endsWith('-path')
         ? object.elements.find((other) => other.kind === 'arrow' && other.id === element.id.slice(0, -'-path'.length))
         : undefined;
-      const start = arrow?.kind === 'arrow' ? Scene.markersOf(arrow).start : undefined;
+      const derived = arrow?.kind === 'arrow' ? Scene.markersOf(arrow) : undefined;
+      const start = derived?.start;
+      // The route takes its arrow's relation dash unless the polyline sets its own stroke.
+      const stroke = element.stroke ?? (derived?.dashed ? 'dashed' : undefined);
       return (
         <polyline
           points={points.map((point) => `${point.x},${point.y}`).join(' ')}
           className={mx('stroke-current fill-none', colorClass(element.color))}
           strokeWidth={1.5}
-          strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
+          strokeDasharray={stroke ? strokeDash[stroke] : undefined}
           markerStart={start ? `url(#${markers[start]})` : undefined}
         />
       );
@@ -369,7 +372,9 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
       const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
       const { start: tail, end: head, dashed } = Scene.markersOf(element);
       // On a routed connector the source marker is drawn by its `-path` polyline instead.
-      const routed = object.elements.some((other) => other.kind === 'line' && other.id === `${element.id}-path`);
+      const routed = object.elements.some(
+        (other) => (other.kind === 'line' || other.kind === 'curve') && other.id === `${element.id}-path`,
+      );
       return (
         <g className={mx('stroke-current', colorClass(element.color))}>
           <line

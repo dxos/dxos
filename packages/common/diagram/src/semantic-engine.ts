@@ -434,7 +434,10 @@ const draw = (diagram: Semantic.Diagram, geometry: Geometry): { commands: Scene.
   }
   const paths = routed.map((piece) => piece.points);
   elements.push(...Route.placeLabels(labels, paths, [...rects.values()], context.avoid, geometry.bounds));
-  commands.push({ op: 'upsert-object', object: { id: 'edges', origin: { ...origin }, scale: 1, elements } });
+  commands.push({
+    op: 'upsert-object',
+    object: { id: Semantic.CONNECTORS, origin: { ...origin }, scale: 1, elements },
+  });
   const forced = routed
     .filter((piece) => piece.forced)
     .map((piece) => (piece.bus !== undefined ? piece.id.split('#')[1] : piece.id));
@@ -678,7 +681,7 @@ const restyle = (diagram: Semantic.Diagram, commands: readonly Scene.Command[]):
           ...(node.stroke ? { stroke: node.stroke } : {}),
         };
       }
-      const edge = command.object.id === 'edges' ? edges.get(element.id.replace(/-path$/, '')) : undefined;
+      const edge = command.object.id === Semantic.CONNECTORS ? edges.get(element.id.replace(/-path$/, '')) : undefined;
       if (edge && element.kind === 'arrow') {
         return {
           ...element,

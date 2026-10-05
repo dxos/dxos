@@ -85,6 +85,9 @@ const childrenOf = (node: SyntaxNode): SyntaxNode[] => {
   return children;
 };
 
+/** The message for a semantic id that would replace the connectors object. */
+const CONNECTORS_CLASH = `"${Semantic.CONNECTORS}" names the diagram's connectors object; choose another id.`;
+
 /** A document as read, before any semantic statement is laid out. */
 export type Reading = ParseResult & {
   /** The semantic statements, when the document has any. */
@@ -509,6 +512,10 @@ export const read = (text: string): Reading => {
     if (pins.length > 1) {
       report(pins[1], `node "${id}" has more than one pin.`);
     }
+    if (id === Semantic.CONNECTORS) {
+      report(idNode, CONNECTORS_CLASH);
+      return;
+    }
     if (diagram.nodes.some((node) => node.id === id) || diagram.groups.some((entry) => entry.id === id)) {
       report(idNode, `"${id}" is already declared.`);
       return;
@@ -584,7 +591,7 @@ export const read = (text: string): Reading => {
     const opNode = statement.getChild('EdgeOp');
     const op = opNode ? slice(opNode) : '->';
     const word = opNode?.getChild('RelationWord');
-    const relation = word ? Semantic.RELATIONSHIPS[op] : undefined;
+    const relation = word && Object.hasOwn(Semantic.RELATIONSHIPS, op) ? Semantic.RELATIONSHIPS[op] : undefined;
     if (word && !relation) {
       report(
         word,
@@ -662,6 +669,8 @@ export const read = (text: string): Reading => {
     const id = readId(idNode);
     if (outer !== undefined) {
       report(idNode, `Groups do not nest; the members of "${id}" join "${outer}".`);
+    } else if (id === Semantic.CONNECTORS) {
+      report(idNode, CONNECTORS_CLASH);
     } else if (diagram.groups.some((group) => group.id === id) || diagram.nodes.some((node) => node.id === id)) {
       report(idNode, `"${id}" is already declared.`);
     } else {
