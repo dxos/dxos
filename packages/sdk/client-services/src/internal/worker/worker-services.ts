@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import type * as Scope from 'effect/Scope';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as Reactivity from 'effect/reactivity/Reactivity';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { type LayerStack } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';

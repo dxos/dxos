@@ -3,8 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Rpc from 'effect/unstable/rpc/Rpc';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as Rpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 
 /** Served by {@link EchoWorkerPlugin} through the worker's router. */
 export class EchoRpcs extends RpcGroup.make(
