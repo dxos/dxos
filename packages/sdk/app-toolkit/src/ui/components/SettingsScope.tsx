@@ -4,7 +4,9 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { AlertDialog, ToggleGroup, useTranslation } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useSettingsScope } from '../hooks/index.ts';
@@ -16,7 +18,7 @@ export type SettingsScopeProps = {
 
 /** Whether a settings panel follows the account or stays on this device. */
 export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
-  const { t } = useTranslation(osTranslations);
+  const { t } = Hooks.useTranslation(osTranslations);
   const { available, synced, takeLocal, rejoinAccount, getConflicts } = useSettingsScope(prefix);
   const [conflicts, setConflicts] = useState<readonly string[]>([]);
 

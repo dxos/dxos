@@ -5,10 +5,14 @@
 import React, { type FC, useEffect, useState } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { Button, Icon, type IconProps, Menu, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 
-export type PickerButtonProps = ThemedClassName<{
-  Component: FC<{ value: string; size?: IconProps['size'] }>;
+export type PickerButtonProps = Util.ThemedClassName<{
+  Component: FC<{ value: string; size?: Icon.IconProps['size'] }>;
   label: string;
   icon: string;
   values: readonly string[];
@@ -18,7 +22,7 @@ export type PickerButtonProps = ThemedClassName<{
   onChange?: (value: string) => void;
   onReset?: () => void;
   rootVariant?: 'button' | 'toolbar-button';
-  iconSize?: IconProps['size'];
+  iconSize?: Icon.IconProps['size'];
 }>;
 
 /** Menu value of the reset row; outside every picker's value set. */
@@ -54,7 +58,7 @@ export const PickerButton = ({
           the id it is handed while the menu would lose its own to one set above it. */}
       <Menu.Trigger asChild>
         <Tooltip.Trigger asChild content={label} side='bottom'>
-          <Button
+          <Button.Root
             variant={rootVariant === 'toolbar-button' ? 'ghost' : 'default'}
             iconOnly
             showTooltip={false}
@@ -63,8 +67,8 @@ export const PickerButton = ({
             classNames={classNames}
             disabled={disabled}
           >
-            {(value && <Component value={value} size={iconSize} />) || <Icon icon={icon} size={iconSize} />}
-          </Button>
+            {(value && <Component value={value} size={iconSize} />) || <Icon.Icon icon={icon} size={iconSize} />}
+          </Button.Root>
         </Tooltip.Trigger>
       </Menu.Trigger>
       <Menu.Content columns={6}>
@@ -82,7 +86,7 @@ export const PickerButton = ({
         })}
         {onReset && (
           <Menu.Item item={{ value: RESET, label: 'Reset' }} onClick={() => onReset()}>
-            <Icon icon='ph--x--regular' size={iconSize} />
+            <Icon.Icon icon='ph--x--regular' size={iconSize} />
           </Menu.Item>
         )}
       </Menu.Content>

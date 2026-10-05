@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
 import { SpaceState } from '@dxos/client/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { TestLayer } from '../testing/index.ts';
 import { syncAllToEdge } from './space.ts';

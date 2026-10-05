@@ -6,9 +6,9 @@ import type * as Schema from 'effect/Schema';
 import { type ComponentType, type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import { Entity, Obj, type Ref, Type } from '@dxos/echo';
-import type { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { log } from '@dxos/log';
 import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
 import type { MenuActions } from '@dxos/react-ui-menu';

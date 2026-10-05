@@ -25,11 +25,15 @@ import {
   View,
 } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
-import { Banner, Button, Field, Toggle, Typography, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-query';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Typography from '@dxos/react-ui/Typography';
 import {
   ParentLabelAnnotation,
   ProjectionModel,
@@ -82,7 +86,7 @@ const useProjectionModel = (type: Type.AnyEntity | undefined, view: View.View) =
  */
 export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
   ({ type, view, mode = 'schema', registry, db, readonly, types, tags, onQueryChanged, onDelete }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const schemaReadonly = type == null || Type.getDatabase(type) == null;
     const projectionModel = useProjectionModel(type, view);
     useImperativeHandle<ProjectionModel | null, ProjectionModel | null>(forwardedRef, () => projectionModel, [
@@ -228,7 +232,7 @@ type FieldListProps = {
 
 /** The view's field projections: reorderable rows that hide, show or delete a field and open to its editor. */
 const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }: FieldListProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const schemaReadonly = Type.getDatabase(type) == null;
   // Subscribe to the view, so edits from elsewhere re-render the list.
   const [snapshot] = useObject(view);
@@ -268,9 +272,9 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
   return (
     <>
       <Field.Header>
-        <Typography truncate>{t('fields.label')}</Typography>
+        <Typography.Text truncate>{t('fields.label')}</Typography.Text>
         {!readonly && (
-          <Button
+          <Button.Root
             iconOnly
             variant='ghost'
             icon='ph--plus--regular'
@@ -302,7 +306,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
                 >
                   <OrderedList.DragHandle />
                   <OrderedList.ItemText tone={hidden ? 'muted' : undefined}>{field.path}</OrderedList.ItemText>
-                  <Toggle
+                  <Button.Toggle
                     iconOnly
                     variant='ghost'
                     pressed={hidden}
@@ -324,7 +328,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
                     data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                   />
                   {!readonly && (
-                    <Button
+                    <Button.Root
                       iconOnly
                       variant='ghost'
                       icon='ph--x--regular'

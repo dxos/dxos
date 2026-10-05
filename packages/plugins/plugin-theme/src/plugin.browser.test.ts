@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import { beforeEach, describe, test, vi } from 'vitest';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { createTestApp } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
@@ -44,7 +44,7 @@ describe('ThemePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     // Use createTestApp directly to avoid a circular dep with plugin-testing.
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
     });
 
     // ReactContext activates on Startup; fires SetupTranslations before it activates.
@@ -55,7 +55,7 @@ describe('ThemePlugin', () => {
   test('Translator capability resolves contributed translations', async ({ expect }) => {
     await using harness = await createTestApp({
       plugins: [
-        ProcessManagerPlugin(),
+        ProcessManagerPlugin.make(),
         ThemePlugin({
           resourceExtensions: [{ 'en-US': { 'test-translator': { greeting: 'Hello from test' } } }],
         }),
@@ -69,7 +69,7 @@ describe('ThemePlugin', () => {
   test('TranslatorService Effect layer resolves the translator', async ({ expect }) => {
     await using harness = await createTestApp({
       plugins: [
-        ProcessManagerPlugin(),
+        ProcessManagerPlugin.make(),
         ThemePlugin({
           resourceExtensions: [{ 'en-US': { 'test-translator-effect': { greeting: 'Salut' } } }],
         }),
@@ -89,7 +89,7 @@ describe('ThemePlugin', () => {
 
   test('contributes an appearance setting', async ({ expect }) => {
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
     });
 
     // The plugin-local capability resolves to a writable settings atom, defaulting to 'system'.
@@ -105,7 +105,7 @@ describe('ThemePlugin', () => {
   test('appearance override forces dark independent of system preference', async ({ expect }) => {
     // System preference is light (stubMatchMedia(false)).
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
     });
     const registry = harness.get(Capabilities.AtomRegistry);
     const settingsAtom = harness.get(ThemeCapabilities.Settings);
@@ -125,7 +125,7 @@ describe('ThemePlugin', () => {
 
   test('accent setting rewrites the root accent tokens, and clears them when unset', async ({ expect }) => {
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
     });
     const registry = harness.get(Capabilities.AtomRegistry);
     const settingsAtom = harness.get(ThemeCapabilities.Settings);
@@ -143,7 +143,7 @@ describe('ThemePlugin', () => {
   test("appearance 'system' follows the OS preference", async ({ expect }) => {
     stubMatchMedia(true); // System preference = dark.
     await using _harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
     });
     // Default appearance is 'system'; with a dark system preference the class is set.
     expect(document.documentElement.classList.contains('dark')).toBe(true);
@@ -152,7 +152,7 @@ describe('ThemePlugin', () => {
   test('cross-tab storage event re-applies the theme', async ({ expect }) => {
     // System preference is light; another tab writes 'dark'.
     await using _harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
     });
     window.dispatchEvent(
       new StorageEvent('storage', {

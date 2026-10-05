@@ -11,7 +11,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Breadcrumb } from '../index.ts';
+import * as Breadcrumb from './Breadcrumb.tsx';
 
 const TRAIL = ['Home', 'Projects', 'Composer', 'Design review', 'Breadcrumbs'];
 

@@ -8,12 +8,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Semaphore from 'effect/Semaphore';
 
-import { InvalidOperationInputError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -163,7 +162,7 @@ const validateOperationInput = <const Op extends Operation.Definition.Any>(
   }
 
   const fail = (message: string, cause?: unknown) =>
-    new InvalidOperationInputError({
+    new Operation.InvalidOperationInputError({
       message: `Operation input did not match schema (${op.meta.key}): ${message}`,
       cause,
     });

@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as PipelineSpace from './PipelineSpace.ts';
 

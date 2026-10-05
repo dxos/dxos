@@ -16,7 +16,9 @@ import {
   type QueryExecutorMode,
   runSqliteHealthCheck,
 } from '@dxos/echo-host';
-import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { SqliteKeyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';

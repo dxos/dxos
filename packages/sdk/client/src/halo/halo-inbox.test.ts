@@ -5,7 +5,7 @@
 import * as Stream from 'effect/Stream';
 import { describe, onTestFinished, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import { InboxService } from '@dxos/protocols/rpc';
 

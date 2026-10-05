@@ -96,9 +96,9 @@
       "import": "./dist/lib/GamePlugin.mjs"
     },
     "./GameUtil": {
-      "source": "./src/util/load-game.ts",
-      "types": "./dist/types/src/util/load-game.d.ts",
-      "import": "./dist/lib/GameUtil.mjs"
+      "source": "./src/GameUtil.ts",
+      "types": "./dist/types/src/GameUtil.d.ts",
+      "import": "./dist/lib/ns/GameUtil.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

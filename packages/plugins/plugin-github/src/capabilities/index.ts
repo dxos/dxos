@@ -11,8 +11,8 @@ import * as CrxCapabilities from '@dxos/plugin-crx/CrxCapabilities';
 import * as CrxEvents from '@dxos/plugin-crx/CrxEvents';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 
 import { meta } from '#meta';
 import { translations } from '#translations';

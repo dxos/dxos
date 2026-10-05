@@ -4,7 +4,7 @@
 
 import React, { type ComponentType, type ReactElement } from 'react';
 
-import { Container, type Gutter } from '../components/index.ts';
+import { Container, type Gutter } from '../components/Container/Container.tsx';
 import { type Size, SIZES } from '../sizes.ts';
 
 /**

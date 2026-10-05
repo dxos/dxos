@@ -5,7 +5,9 @@
 import React, { useState } from 'react';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
-import { Field, PinInput, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components/index.ts';
@@ -35,7 +37,7 @@ export const InvitationAuthenticator = ({
   onInvitationCancel,
 }: InvitationAuthenticatorProps) => {
   const disabled = !active || pending;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   const [authCode, setAuthCode] = useState('');
 
@@ -68,7 +70,7 @@ export const InvitationAuthenticator = ({
             </>
           )}
           {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
-            <PinInput
+            <Input.Pin
               {...{
                 // The panel centres its content; the pin input's cell row otherwise starts at the inline start.
                 'classNames': 'justify-center',

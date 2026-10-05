@@ -21,63 +21,56 @@ import { type MessageValence, hues } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import {
-  Accordion,
-  AlertDialog,
-  Avatar,
-  Banner,
-  Breadcrumb,
-  Button,
-  type ButtonVariant,
-  Card,
-  Carousel,
-  Checkbox,
-  Collapsible,
-  Combobox,
-  type ComboboxOption,
-  Container,
-  DateInput,
-  Dialog,
-  DragHandle,
-  Editable,
-  Empty,
-  Field,
-  Group,
-  HoverCard,
-  Icon,
-  Input,
-  Link,
-  Menu,
-  MenuButton,
-  type MenuButtonItem,
-  NumberInput,
-  Panel,
-  PasswordInput,
-  PinInput,
-  Popover,
-  Progress,
-  QrCode,
-  ScrollArea,
-  Select,
-  type SelectOption,
-  Separator,
-  Skeleton,
-  Slider,
-  Splitter,
-  Steps,
-  Switch,
-  SystemButton,
-  Tabs,
-  Tag,
-  Textarea,
-  Timestamp,
-  Toast,
-  Toggle,
-  ToggleGroup,
-  Toolbar,
-  Tooltip,
-  Typography,
-} from '../next/components/index.ts';
+import * as Accordion from '../next/components/Accordion/Accordion.tsx';
+import * as AlertDialog from '../next/components/AlertDialog/AlertDialog.tsx';
+import * as Avatar from '../next/components/Avatar/Avatar.tsx';
+import * as Banner from '../next/components/Banner/Banner.tsx';
+import * as Breadcrumb from '../next/components/Breadcrumb/Breadcrumb.tsx';
+import { Button, type ButtonVariant } from '../next/components/Button/Button.tsx';
+import * as Card from '../next/components/Card/Card.tsx';
+import * as Carousel from '../next/components/Carousel/Carousel.tsx';
+import { Checkbox } from '../next/components/Checkbox/Checkbox.tsx';
+import * as Collapsible from '../next/components/Collapsible/Collapsible.tsx';
+import * as Combobox from '../next/components/Combobox/Combobox.tsx';
+import { Container } from '../next/components/Container/Container.tsx';
+import * as Dialog from '../next/components/Dialog/Dialog.tsx';
+import * as DragHandle from '../next/components/DragHandle/DragHandle.tsx';
+import * as Editable from '../next/components/Editable/Editable.tsx';
+import { Empty } from '../next/components/Empty/Empty.tsx';
+import * as Field from '../next/components/Field/Field.tsx';
+import { Group } from '../next/components/Group/Group.tsx';
+import * as HoverCard from '../next/components/HoverCard/HoverCard.tsx';
+import * as Icon from '../next/components/Icon/Icon.tsx';
+import { Input } from '../next/components/Input/Input.tsx';
+import { Link } from '../next/components/Link/Link.tsx';
+import * as Menu from '../next/components/Menu/Menu.tsx';
+import { MenuButton, type MenuButtonItem } from '../next/components/MenuButton/MenuButton.tsx';
+import { NumberInput } from '../next/components/NumberInput/NumberInput.tsx';
+import * as Panel from '../next/components/Panel/Panel.tsx';
+import { PasswordInput } from '../next/components/PasswordInput/PasswordInput.tsx';
+import { PinInput } from '../next/components/PinInput/PinInput.tsx';
+import * as Popover from '../next/components/Popover/Popover.tsx';
+import { Progress } from '../next/components/Progress/Progress.tsx';
+import * as QrCode from '../next/components/QrCode/QrCode.tsx';
+import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
+import * as Select from '../next/components/Select/Select.tsx';
+import { Separator } from '../next/components/Separator/Separator.tsx';
+import { Skeleton } from '../next/components/Skeleton/Skeleton.tsx';
+import * as Splitter from '../next/components/Splitter/Splitter.tsx';
+import { Steps } from '../next/components/Steps/Steps.tsx';
+import { Switch } from '../next/components/Switch/Switch.tsx';
+import * as SystemButton from '../next/components/SystemButton/SystemButton.tsx';
+import * as Tabs from '../next/components/Tabs/Tabs.tsx';
+import * as Tag from '../next/components/Tag/Tag.tsx';
+import { Textarea } from '../next/components/Textarea/Textarea.tsx';
+import { Timestamp } from '../next/components/Timestamp/Timestamp.tsx';
+import * as Toast from '../next/components/Toast/Toast.tsx';
+import { Toggle } from '../next/components/Toggle/Toggle.tsx';
+import * as ToggleGroup from '../next/components/ToggleGroup/ToggleGroup.tsx';
+import * as Toolbar from '../next/components/Toolbar/Toolbar.tsx';
+import * as Tooltip from '../next/components/Tooltip/Tooltip.tsx';
+import * as Typography from '../next/components/Typography/Typography.tsx';
+import * as UiInput from '../next/namespaces/Input.ts';
 import { type Size, SIZES } from '../next/sizes.ts';
 import { withTheme } from '../testing/index.ts';
 
@@ -97,9 +90,9 @@ const Section = ({ id, title, children }: SectionProps) => {
   const size = useContext(SizeContext);
   return (
     <section id={id} data-section={id} className='flex flex-col gap-2 m-4 py-4 border border-separator rounded-md'>
-      <Typography asChild tone='muted' classNames='px-4 font-medium'>
+      <Typography.Text asChild tone='muted' classNames='px-4 font-medium'>
         <h2>{title}</h2>
-      </Typography>
+      </Typography.Text>
       <Container size={size} gutter='rail' gap='md' level='base'>
         {children}
       </Container>
@@ -111,9 +104,9 @@ const Section = ({ id, title, children }: SectionProps) => {
 const Row = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
   <Group>
     {label && (
-      <Typography tone='muted' classNames='w-24 shrink-0'>
+      <Typography.Text tone='muted' classNames='w-24 shrink-0'>
         {label}
-      </Typography>
+      </Typography.Text>
     )}
     {children}
   </Group>
@@ -135,7 +128,7 @@ const Toc = ({
     aria-label='Contents'
     className='flex flex-col gap-1 w-48 shrink-0 p-4 overflow-y-auto border-s border-separator'
   >
-    <Typography tone='subtle'>Contents</Typography>
+    <Typography.Text tone='subtle'>Contents</Typography.Text>
     {entries.map(({ id, title }) => (
       <Link
         key={id}
@@ -325,9 +318,9 @@ const MenuButtonDemo = () => {
   return (
     <>
       <MenuButton icon='ph--sliders--regular' iconOnly caretDown label='Options' items={items} />
-      <Typography tone='muted'>
+      <Typography.Text tone='muted'>
         {view} · extraction {extraction ? 'on' : 'off'}
-      </Typography>
+      </Typography.Text>
     </>
   );
 };
@@ -341,7 +334,7 @@ const InputSection = () => (
     </Field.Root>
     <Field.Root>
       <Field.Label>Search</Field.Label>
-      <Input start={<Icon icon='ph--magnifying-glass--regular' />} placeholder='Find…' />
+      <Input start={<Icon.Icon icon='ph--magnifying-glass--regular' />} placeholder='Find…' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Workspace</Field.Label>
@@ -398,15 +391,15 @@ const InputSection = () => (
     </Field.Root>
     <Field.Root>
       <Field.Label>Due</Field.Label>
-      <DateInput defaultValue='2026-09-29' />
+      <UiInput.Date defaultValue='2026-09-29' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Starts at</Field.Label>
-      <DateInput type='time' defaultValue='09:30' />
+      <UiInput.Date type='time' defaultValue='09:30' />
     </Field.Root>
     <Field.Root readOnly>
       <Field.Label>Meeting</Field.Label>
-      <DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
+      <UiInput.Date type='datetime-local' defaultValue='2026-09-29T14:00' />
     </Field.Root>
   </Section>
 );
@@ -421,20 +414,20 @@ const CheckboxSection = () => (
   </Section>
 );
 
-const COLORS: SelectOption[] = [
+const COLORS: Select.Option[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
   { value: 'black', label: 'Black', disabled: true },
 ];
 
-const VIEWS: SelectOption[] = [
+const VIEWS: Select.Option[] = [
   { value: 'list', label: 'List', icon: 'ph--list--regular' },
   { value: 'grid', label: 'Grid', icon: 'ph--squares-four--regular' },
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
 ];
 
-const PEOPLE: ComboboxOption[] = [
+const PEOPLE: Combobox.Option[] = [
   { value: 'alice', label: 'Alice Green', icon: 'ph--user--regular' },
   { value: 'bob', label: 'Bob Grey', icon: 'ph--user--regular' },
   { value: 'carol', label: 'Carol Black', icon: 'ph--user--regular' },
@@ -501,9 +494,9 @@ const SliderSection = () => {
   const [value, setValue] = useState([40]);
   return (
     <Section id='slider' title='Slider'>
-      <Slider value={value} onValueChange={setValue} max={100} label='Volume' />
-      <Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
-      <Slider defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
+      <UiInput.Slider value={value} onValueChange={setValue} max={100} label='Volume' />
+      <UiInput.Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
+      <UiInput.Slider defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
     </Section>
   );
 };
@@ -523,9 +516,9 @@ const TagSection = () => (
   <Section id='tag' title='Tag'>
     <Group>
       {[...VALENCES, ...hues].map((hue) => (
-        <Tag key={hue} hue={hue}>
+        <Tag.Tag key={hue} hue={hue}>
           {hue}
-        </Tag>
+        </Tag.Tag>
       ))}
     </Group>
   </Section>
@@ -575,13 +568,13 @@ const NavigationSection = () => (
         </Breadcrumb.Item>
       </Breadcrumb.List>
     </Breadcrumb.Root>
-    <Typography>
+    <Typography.Text>
       Read the <Link href='https://dxos.org'>guide</Link>, or the{' '}
       <Link href='https://github.com/dxos/dxos/releases' variant='neutral'>
         release notes
       </Link>
       .
-    </Typography>
+    </Typography.Text>
     <Separator />
     <Group>
       <Button>Left</Button>
@@ -602,10 +595,10 @@ const TabsSection = () => (
         <Tabs.Trigger value='settings' icon='ph--gear--regular' label='Settings' iconOnly />
       </Tabs.List>
       <Tabs.Content value='overview'>
-        <Typography>A summary of the project.</Typography>
+        <Typography.Text>A summary of the project.</Typography.Text>
       </Tabs.Content>
       <Tabs.Content value='tasks'>
-        <Typography>Three open tasks.</Typography>
+        <Typography.Text>Three open tasks.</Typography.Text>
       </Tabs.Content>
       <Tabs.Content value='settings'>
         <Input aria-label='Name' defaultValue='Apollo' />
@@ -631,7 +624,7 @@ const ToolbarSection = () => (
       <Button variant='primary'>Publish</Button>
     </Toolbar.Root>
     <Toolbar.Root>
-      <DragHandle label='Drag' />
+      <DragHandle.DragHandle label='Drag' />
       <Toolbar.Text>A document title long enough to be truncated by the toolbar</Toolbar.Text>
       <Toolbar.Link href='https://dxos.org'>Docs</Toolbar.Link>
       <Button>Share</Button>
@@ -661,7 +654,7 @@ const CollapsibleSection = () => (
     <Collapsible.Root>
       <Collapsible.Trigger>Advanced settings</Collapsible.Trigger>
       <Collapsible.Content>
-        <Typography>These settings change how your space syncs.</Typography>
+        <Typography.Text>These settings change how your space syncs.</Typography.Text>
         <Switch label='Sync over cellular' />
       </Collapsible.Content>
     </Collapsible.Root>
@@ -670,7 +663,7 @@ const CollapsibleSection = () => (
         <Accordion.Item key={value} value={value}>
           <Accordion.ItemTrigger icon={icon}>{label}</Accordion.ItemTrigger>
           <Accordion.ItemContent>
-            <Typography>{detail}</Typography>
+            <Typography.Text>{detail}</Typography.Text>
           </Accordion.ItemContent>
         </Accordion.Item>
       ))}
@@ -688,7 +681,7 @@ const CardSection = () => (
         </Card.Header>
         <Card.Body>
           <Card.Description>What ships next quarter and why.</Card.Description>
-          <Typography>Three milestones, each with an owner and a date.</Typography>
+          <Typography.Text>Three milestones, each with an owner and a date.</Typography.Text>
         </Card.Body>
         <Card.Footer>
           <Button>Dismiss</Button>
@@ -701,7 +694,7 @@ const CardSection = () => (
           <Card.Action system='close' />
         </Card.Header>
         <Card.Section title='Members'>
-          <Card.Row icon='ph--user--regular' trailing={<Tag hue='emerald'>Owner</Tag>}>
+          <Card.Row icon='ph--user--regular' trailing={<Tag.Tag hue='emerald'>Owner</Tag.Tag>}>
             Ada Lovelace
           </Card.Row>
           <Card.Row icon='ph--user--regular' trailing={<Card.Action icon='ph--x--regular' label='Remove' />}>
@@ -760,15 +753,15 @@ const SplitterSection = () => {
       <div className='flex flex-col h-40 border border-separator'>
         <Splitter.Root orientation='horizontal' resizable minSize={6} size={size} onSizeChange={setSize}>
           <Splitter.Panel position='start'>
-            <Typography tone='muted' classNames='p-2'>
+            <Typography.Text tone='muted' classNames='p-2'>
               Drag the seam.
-            </Typography>
+            </Typography.Text>
           </Splitter.Panel>
           <Splitter.ResizeTrigger aria-label='Resize' />
           <Splitter.Panel position='end'>
-            <Typography tone='muted' classNames='p-2'>
+            <Typography.Text tone='muted' classNames='p-2'>
               {size.toFixed(1)}rem
-            </Typography>
+            </Typography.Text>
           </Splitter.Panel>
         </Splitter.Root>
       </div>
@@ -786,7 +779,7 @@ const ScrollAreaSection = () => (
         <ScrollArea.Viewport asChild>
           <Container gutter='rail'>
             {SCROLL_ROWS.map((row) => (
-              <Typography key={row}>{row}</Typography>
+              <Typography.Text key={row}>{row}</Typography.Text>
             ))}
           </Container>
         </ScrollArea.Viewport>
@@ -796,9 +789,9 @@ const ScrollAreaSection = () => (
       <ScrollArea.Viewport>
         <div className='flex w-max gap-2 py-2'>
           {SCROLL_TAGS.map((tag) => (
-            <Tag key={tag} hue='sky' classNames='snap-start'>
+            <Tag.Tag key={tag} hue='sky' classNames='snap-start'>
               {tag}
-            </Tag>
+            </Tag.Tag>
           ))}
         </div>
       </ScrollArea.Viewport>
@@ -809,8 +802,8 @@ const ScrollAreaSection = () => (
 const QrCodeSection = () => (
   <Section id='qr-code' title='QR code'>
     <div className='grid grid-cols-[repeat(2,8rem)] gap-8 text-fg-muted'>
-      <QrCode value='https://dxos.org' icon='ph--planet--regular' label='DXOS' />
-      <QrCode value='https://composer.space' errorCorrection='H' label='Composer' />
+      <QrCode.QrCode value='https://dxos.org' icon='ph--planet--regular' label='DXOS' />
+      <QrCode.QrCode value='https://composer.space' errorCorrection='H' label='Composer' />
     </div>
   </Section>
 );
@@ -868,8 +861,8 @@ const OverlaysSection = () => {
             <Button>Hover card</Button>
           </HoverCard.Trigger>
           <HoverCard.Content>
-            <Typography>Alice Example</Typography>
-            <Typography tone='muted'>Joined in March · 12 spaces</Typography>
+            <Typography.Text>Alice Example</Typography.Text>
+            <Typography.Text tone='muted'>Joined in March · 12 spaces</Typography.Text>
           </HoverCard.Content>
         </HoverCard.Root>
         <Menu.Root>
@@ -896,9 +889,9 @@ const OverlaysSection = () => {
         </Menu.Root>
         <Menu.Root>
           <Menu.ContextTrigger asChild>
-            <Typography tone='muted' classNames='px-3 border border-dashed border-separator rounded-sm'>
+            <Typography.Text tone='muted' classNames='px-3 border border-dashed border-separator rounded-sm'>
               Right-click here
-            </Typography>
+            </Typography.Text>
           </Menu.ContextTrigger>
           <Menu.Content>
             <Menu.Item item={{ value: 'rename', label: 'Rename' }} />

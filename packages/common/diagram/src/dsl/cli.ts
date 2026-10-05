@@ -11,7 +11,7 @@
 import * as Effect from 'effect/Effect';
 import { readFileSync } from 'node:fs';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { SOURCES, convert } from './convert.ts';
 

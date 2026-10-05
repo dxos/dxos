@@ -5,16 +5,18 @@
 import React, { Fragment } from 'react';
 
 import { keySymbols, useActiveHotkeys } from '@dxos/react-focus';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
 export const ShortcutsList = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // TODO(burdon): Get shortcuts from TextEditor.
   // A command registered without a label is shown by its shortcut rather than dropped.
-  const label = (binding: { label?: string; hotkey: string }) => toLocalizedString(binding.label ?? binding.hotkey, t);
+  const label = (binding: { label?: string; hotkey: string }) =>
+    Theme.toLocalizedString(binding.label ?? binding.hotkey, t);
   const bindings = [...useActiveHotkeys()].sort((a, b) =>
     label(a)?.toLowerCase().localeCompare(label(b)?.toLowerCase()),
   );

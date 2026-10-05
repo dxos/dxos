@@ -17,7 +17,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { makeDiscordLayerFromToken } from '../services/index.ts';
 import { type DiscordChannelFixture, fetchChannelMessages } from './index.ts';

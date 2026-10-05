@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -138,7 +138,7 @@ export const getCorePlugins = ({
     OnboardingPlugin.make({ generateDemoSpace: !isLocal }),
     isTauri && !isMobile && !isPopover && NativePlugin.make(),
     PreviewPlugin.make(),
-    ProcessManagerPlugin(),
+    ProcessManagerPlugin.make(),
     ProgressPlugin.make(),
     !isTauri && isPwa && PwaPlugin.make(),
     RegistryPlugin.make({ externalPlugins }),

@@ -5,15 +5,15 @@
 import React, { useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { FactViewer } from '@dxos/react-ui-rdf';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { EntityList } from '../EntityList/index.ts';
 import { PredicateList } from '../PredicateList/index.ts';
 import { entitiesFromFacts, predicatesFromFacts } from '../types.ts';
 
-export type FactPanelProps = ThemedClassName<{
+export type FactPanelProps = Util.ThemedClassName<{
   facts: RDF.Fact[];
 }>;
 

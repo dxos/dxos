@@ -8,15 +8,19 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { Dialog, ScrollArea, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
@@ -31,13 +35,13 @@ const initialValues: FormValues = { private: false, edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  const { t } = useTranslation(meta.profile.key);
-  const { invoke } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invoke } = Hooks.useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();
   const [error, setError] = useState<string | undefined>(undefined);
-  const manager = usePluginManager();
-  const contributed = useCapabilities(AppCapabilities.SpaceTemplate);
+  const manager = PluginManagerProvider.usePluginManager();
+  const contributed = Hooks.useCapabilities(AppCapabilities.SpaceTemplate);
   const templates = useMemo(
     () =>
       contributed

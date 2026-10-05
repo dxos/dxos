@@ -7,8 +7,9 @@ import React, { useMemo } from 'react';
 import { Format } from '@dxos/echo/Format';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { MasterDetailTable } from '../../../../components/index.ts';
 import { SpaceSelector } from '../../../../containers/index.ts';

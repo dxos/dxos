@@ -4,7 +4,7 @@
 
 import React, { type LabelHTMLAttributes } from 'react';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 
 export type LabelProps = LabelHTMLAttributes<HTMLLabelElement> & {

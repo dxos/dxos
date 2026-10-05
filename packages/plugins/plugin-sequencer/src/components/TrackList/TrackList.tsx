@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { Button, Icon } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
 
 import { Track } from '#types';
@@ -76,7 +77,7 @@ export const TrackList = ({
                   onClick={() => onMute?.(track.id, !track.muted)}
                   aria-label={track.muted ? 'Unmute' : 'Mute'}
                 >
-                  <Icon icon={track.muted ? 'ph--speaker-x--regular' : 'ph--speaker-high--regular'} size='md' />
+                  <Icon.Icon icon={track.muted ? 'ph--speaker-x--regular' : 'ph--speaker-high--regular'} size='md' />
                 </button>
                 {onRemove && (
                   <button
@@ -85,7 +86,7 @@ export const TrackList = ({
                     onClick={() => onRemove(track.id)}
                     aria-label='Remove track'
                   >
-                    <Icon icon='ph--trash--regular' size='md' />
+                    <Icon.Icon icon='ph--trash--regular' size='md' />
                   </button>
                 )}
               </Listbox.Item>
@@ -93,10 +94,10 @@ export const TrackList = ({
           })}
         </Listbox.Content>
         {onAdd && (
-          <Button onClick={onAdd} classNames='mt-1 justify-start gap-2'>
-            <Icon icon='ph--plus--regular' size='md' />
+          <Button.Root onClick={onAdd} classNames='mt-1 justify-start gap-2'>
+            <Icon.Icon icon='ph--plus--regular' size='md' />
             Add track
-          </Button>
+          </Button.Root>
         )}
       </div>
     </Listbox.Root>

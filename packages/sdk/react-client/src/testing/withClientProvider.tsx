@@ -11,7 +11,7 @@ import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ErrorBoundary } from '@dxos/react-ui';
+import * as Status from '@dxos/react-ui/Status';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider, type ClientProviderProps } from '../client/index.ts';
@@ -85,13 +85,13 @@ export const withClientProvider = ({
     };
 
     return (
-      <ErrorBoundary name='client-provider'>
+      <Status.ErrorBoundary name='client-provider'>
         <ClientProvider onInitialized={handleInitialized} {...props}>
           <ClientStory.Provider value={data}>
             <Story />
           </ClientStory.Provider>
         </ClientProvider>
-      </ErrorBoundary>
+      </Status.ErrorBoundary>
     );
   };
 };
@@ -189,7 +189,7 @@ export const withMultiClientProvider = ({
             {...props}
           >
             <ClientStory.Provider value={{ index, spaceId }}>
-              <ErrorBoundary name='client-provider'>
+              <Status.ErrorBoundary name='client-provider'>
                 {Wrapper ? (
                   <Wrapper index={index}>
                     <Story />
@@ -197,7 +197,7 @@ export const withMultiClientProvider = ({
                 ) : (
                   <Story />
                 )}
-              </ErrorBoundary>
+              </Status.ErrorBoundary>
             </ClientStory.Provider>
           </ClientProvider>
         ))}

@@ -23,7 +23,7 @@ import {
   EdgeHttpClientService,
   createStubEdgeIdentity,
 } from '@dxos/edge-client';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import {
   HypercoreFactoryLayer,
   HypercoreFactoryService,

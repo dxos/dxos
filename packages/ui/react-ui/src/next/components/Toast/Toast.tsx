@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // Ark's toast machine is a store plus a `Toaster` host rather than a tree of roots. The declarative API is kept:
 // `Toast.Provider` owns the store, `Toast.Root` registers its content and mirrors `open` into the store, and
 // `Toast.Toaster` renders each registered root inside the machine's actor so the parts find their toast.
@@ -34,9 +36,9 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Progress } from '../Progress/index.ts';
+import { Button } from '../Button/Button.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { Progress } from '../Progress/Progress.tsx';
 import { ToastContextProvider, type ToastEntry, ToastRegistry, useToastContext } from './registry.ts';
 
 const DEFAULT_DURATION = 5_000;
@@ -288,7 +290,7 @@ const ToastHeader = forwardRef<HTMLDivElement, ToastHeaderProps>(
       className={mx(recipes.toastHeader(), classNames)}
       ref={forwardedRef}
     >
-      {icon && <Icon icon={icon} classNames={recipes.toastIcon()} />}
+      {icon && <Icon.Icon icon={icon} classNames={recipes.toastIcon()} />}
       <ToastTitle>{children}</ToastTitle>
       {closable && <ToastCloseTrigger />}
     </div>
@@ -342,27 +344,26 @@ const ToastActionTrigger = forwardRef<HTMLButtonElement, ToastActionTriggerProps
 ));
 
 ToastActionTrigger.displayName = 'Toast.ActionTrigger';
-
-export const Toast = {
-  Provider: ToastProvider,
-  Toaster: ToastToaster,
-  Root: ToastRoot,
-  Header: ToastHeader,
-  Title: ToastTitle,
-  Description: ToastDescription,
-  Footer: ToastFooter,
-  ActionTrigger: ToastActionTrigger,
-  CloseTrigger: ToastCloseTrigger,
+export type {
+  ToastActionTriggerProps as ActionTriggerProps,
+  ToastCloseTriggerProps as CloseTriggerProps,
+  ToastDescriptionProps as DescriptionProps,
+  ToastFooterProps as FooterProps,
+  ToastHeaderProps as HeaderProps,
+  ToastProviderProps as ProviderProps,
+  ToastRootProps as RootProps,
+  ToastTitleProps as TitleProps,
+  ToastToasterProps as ToasterProps,
 };
 
-export type {
-  ToastActionTriggerProps,
-  ToastCloseTriggerProps,
-  ToastDescriptionProps,
-  ToastFooterProps,
-  ToastHeaderProps,
-  ToastProviderProps,
-  ToastRootProps,
-  ToastTitleProps,
-  ToastToasterProps,
+export {
+  ToastActionTrigger as ActionTrigger,
+  ToastCloseTrigger as CloseTrigger,
+  ToastDescription as Description,
+  ToastFooter as Footer,
+  ToastHeader as Header,
+  ToastProvider as Provider,
+  ToastRoot as Root,
+  ToastTitle as Title,
+  ToastToaster as Toaster,
 };

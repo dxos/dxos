@@ -9,14 +9,15 @@ import React, { useMemo } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { type ThreadContentProps } from '@dxos/react-ui-thread';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Util from '@dxos/react-ui/Util';
 import { Message, type Thread } from '@dxos/types';
 
 import { MessageThread } from '#components';
 import { useStatus } from '#hooks';
 
-export type ThreadArticleProps = ThemedClassName<
+export type ThreadArticleProps = Util.ThemedClassName<
   {
     thread: Thread.Thread;
     context?: Obj.Unknown;
@@ -28,7 +29,7 @@ export type ThreadArticleProps = ThemedClassName<
  * Renders an AutoMerge {@link Thread} as a chat: appends new messages by pushing
  * onto `thread.messages`. Used for comment threads and the meeting in-call chat.
  */
-export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
+export const ThreadArticle = Util.composable<HTMLDivElement, ThreadArticleProps>(
   ({ thread, context, autoFocus, current, ...props }, forwardedRef) => {
     // Members and presence are space-scoped; a thread outside a space has nothing to resolve against.
     const space = getSpace(thread);
@@ -75,7 +76,7 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
         <Panel.Header></Panel.Header>
         <Panel.Body asChild>
           <MessageThread
-            {...composableProps(props)}
+            {...Util.composableProps(props)}
             id={id}
             identity={identity}
             members={members}

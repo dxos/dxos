@@ -7,7 +7,7 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { composableProps, slottable } from '../../util/index.ts';
+import { composableProps, slottable } from '../../util/slots.ts';
 import { type Align, type Gap, alignClasses, gapClasses } from '../layout.ts';
 
 /** A fixed track size, passed through as written. */

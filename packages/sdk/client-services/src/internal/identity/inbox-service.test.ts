@@ -17,7 +17,7 @@ import {
   createSpaceInvitationNotice,
   encodeInboxEnvelope,
 } from '@dxos/credentials';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { INBOX_MAX_PAYLOAD_LENGTH, InboxAccountRequiredError, InboxPayloadTooLargeError } from '@dxos/protocols';

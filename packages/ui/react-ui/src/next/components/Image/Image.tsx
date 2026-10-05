@@ -16,8 +16,8 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { clickableProps } from '../../clickable.ts';
 import { recipes } from '../../recipes.ts';
-import { type CSSVariables } from '../Container/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { type CSSVariables } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
 
 type ImageStatus = 'loading' | 'loaded' | 'error';
 
@@ -91,7 +91,7 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
         ref={forwardedRef}
       >
         {status === 'error' ? (
-          <Icon icon='ph--image-broken--regular' label={alt} />
+          <Icon.Icon icon='ph--image-broken--regular' label={alt} />
         ) : (
           <img
             src={src}

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Editable as EditablePrimitive, useEditableContext } from '@ark-ui/react/editable';
 import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useEffect, useRef } from 'react';
 
@@ -10,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 import { type EditableActivationBinding, type UseEditableOptions, useEditable } from './useEditable.ts';
 
 const EDITABLE_NAME = 'Editable.Root';
@@ -25,7 +27,7 @@ const [EditableActivationProvider, useEditableActivation] = createContext<Editab
 // Root
 //
 
-export type EditableRootProps = ThemedClassName<
+type EditableRootProps = ThemedClassName<
   PropsWithChildren<UseEditableOptions & Omit<ComponentPropsWithRef<'div'>, keyof UseEditableOptions | 'children'>>
 >;
 
@@ -79,7 +81,7 @@ EditableRoot.displayName = EDITABLE_NAME;
 // Preview
 //
 
-export type EditablePreviewProps = ThemedClassName<Omit<ComponentPropsWithRef<'span'>, 'children'>>;
+type EditablePreviewProps = ThemedClassName<Omit<ComponentPropsWithRef<'span'>, 'children'>>;
 
 /** The static text and the activation affordance; hidden by the machine while editing. */
 const EditablePreview = forwardRef<HTMLSpanElement, EditablePreviewProps>(({ classNames, ...props }, forwardedRef) => {
@@ -99,7 +101,7 @@ const EditablePreview = forwardRef<HTMLSpanElement, EditablePreviewProps>(({ cla
       ref={forwardedRef}
     >
       <span className={recipes.editablePreviewText()}>{valueText}</span>
-      <Icon icon='ph--pencil-simple--regular' classNames={recipes.editablePreviewIcon()} />
+      <Icon.Icon icon='ph--pencil-simple--regular' classNames={recipes.editablePreviewIcon()} />
     </EditablePrimitive.Preview>
   );
 });
@@ -110,9 +112,7 @@ EditablePreview.displayName = EDITABLE_PREVIEW_NAME;
 // Input
 //
 
-export type EditableInputProps = ThemedClassName<
-  Omit<ComponentPropsWithRef<'input'>, 'value' | 'onChange' | 'placeholder'>
->;
+type EditableInputProps = ThemedClassName<Omit<ComponentPropsWithRef<'input'>, 'value' | 'onChange' | 'placeholder'>>;
 
 /** The field shown while editing; focused with the caret at the end. */
 const EditableInput = forwardRef<HTMLInputElement, EditableInputProps>(({ classNames, ...props }, forwardedRef) => {
@@ -153,8 +153,6 @@ const EditableInput = forwardRef<HTMLInputElement, EditableInputProps>(({ classN
 
 EditableInput.displayName = EDITABLE_INPUT_NAME;
 
-export const Editable = {
-  Root: EditableRoot,
-  Preview: EditablePreview,
-  Input: EditableInput,
-};
+export { EditableInput as Input, EditablePreview as Preview, EditableRoot as Root };
+export type { EditableInputProps as InputProps, EditablePreviewProps as PreviewProps, EditableRootProps as RootProps };
+export * from './useEditable.ts';
