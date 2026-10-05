@@ -49,6 +49,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./DeepSeekEvents": {
+      "source": "./src/DeepSeekEvents.ts",
+      "types": "./dist/types/src/DeepSeekEvents.d.ts",
+      "import": "./dist/lib/ns/DeepSeekEvents.mjs"
+    },
     "./DeepSeekPlugin": {
       "source": "./src/DeepSeekPlugin.ts",
       "types": "./dist/types/src/DeepSeekPlugin.d.ts",

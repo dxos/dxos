@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Field as FieldPrimitive, useFieldContext } from '@ark-ui/react/field';
 import { useFieldsetContext } from '@ark-ui/react/fieldset';
 import React, { Children, type ComponentPropsWithoutRef, forwardRef, isValidElement } from 'react';
@@ -11,7 +13,7 @@ import { type MessageValence, type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { type Level, type Span, spanAttributes } from '../Container/index.ts';
+import { type Level, type Span, spanAttributes } from '../Container/Container.tsx';
 
 //
 // Root
@@ -179,24 +181,23 @@ const FieldErrorText = forwardRef<HTMLSpanElement, FieldErrorTextProps>(({ class
 ));
 
 FieldErrorText.displayName = 'Field.ErrorText';
-
-export const Field = {
-  Root: FieldRoot,
-  Header: FieldHeader,
-  Label: FieldLabel,
-  RequiredIndicator: FieldRequiredIndicator,
-  HelperText: FieldHelperText,
-  ErrorText: FieldErrorText,
-};
-
 export { LABEL_TARGET_ATTRIBUTE };
 
 export type {
-  FieldErrorTextProps,
-  FieldHeaderProps,
-  FieldHelperTextProps,
-  FieldLabelProps,
-  FieldRequiredIndicatorProps,
-  FieldRootProps,
-  FieldValence,
+  FieldErrorTextProps as ErrorTextProps,
+  FieldHeaderProps as HeaderProps,
+  FieldHelperTextProps as HelperTextProps,
+  FieldLabelProps as LabelProps,
+  FieldRequiredIndicatorProps as RequiredIndicatorProps,
+  FieldRootProps as RootProps,
+  FieldValence as Valence,
+};
+
+export {
+  FieldErrorText as ErrorText,
+  FieldHeader as Header,
+  FieldHelperText as HelperText,
+  FieldLabel as Label,
+  FieldRequiredIndicator as RequiredIndicator,
+  FieldRoot as Root,
 };

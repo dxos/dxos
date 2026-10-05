@@ -123,3 +123,5 @@ export const snapshotField = <T extends object, K extends keyof T>(snapshot: T |
  * caller already has the conditional "do I have a snapshot" check.
  */
 export const snapshotOf = <T>(present: boolean, value: T): Snapshot<T> => (present ? { value } : undefined);
+
+export { SyncDatabaseMissingError as DatabaseMissingError } from '../errors.ts';

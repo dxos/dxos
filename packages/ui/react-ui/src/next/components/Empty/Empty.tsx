@@ -7,9 +7,9 @@ import { useTranslation } from 'react-i18next';
 
 import { translationKey } from '#translations';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 
 export type EmptyProps = {
   /** A Phosphor icon above the message; decorative, since the message carries the statement. */
@@ -28,7 +28,7 @@ export const Empty = composable<HTMLDivElement, EmptyProps>(({ children, icon, .
   });
   return (
     <div {...rest} data-scope='empty' data-part='root' className={className} ref={forwardedRef}>
-      {icon && <Icon icon={icon} />}
+      {icon && <Icon.Icon icon={icon} />}
       <p data-scope='empty' data-part='text'>
         {children ?? t('empty.label')}
       </p>

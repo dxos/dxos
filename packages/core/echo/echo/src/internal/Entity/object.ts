@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 import { DXN, type EntityId } from '@dxos/keys';
 

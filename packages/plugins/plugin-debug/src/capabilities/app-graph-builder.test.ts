@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { DebugNodes } from '#types';

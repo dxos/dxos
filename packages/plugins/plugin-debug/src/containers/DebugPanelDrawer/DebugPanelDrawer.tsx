@@ -4,9 +4,11 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -36,9 +38,9 @@ export const DebugPanelDrawer = ({ contextId = DEBUG_PANEL_CONTEXT }: DebugPanel
 DebugPanelDrawer.displayName = 'DebugPanelDrawer';
 
 const DebugPanelDrawerContent = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { mode, setMode } = useDebugPanelContext();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   // Floating asks the drawer to close so the window the status bar opens on the mode change does
   // not stay over it; docking keeps it open.

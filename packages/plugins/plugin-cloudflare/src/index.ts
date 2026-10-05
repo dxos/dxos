@@ -3,5 +3,3 @@
 //
 
 export * as CloudflarePlugin from './CloudflarePlugin.ts';
-export * from './constants.ts';
-export * from '#meta';

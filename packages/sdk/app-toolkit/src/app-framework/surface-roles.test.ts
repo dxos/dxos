@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 
 import { AppSurface } from '../ui/index.ts';
 import * as AppCapabilities from './AppCapabilities.ts';

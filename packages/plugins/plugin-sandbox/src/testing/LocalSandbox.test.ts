@@ -20,7 +20,7 @@ import { Sandbox, SandboxOperation } from '#types';
 
 import { layerLocal } from '../services/layer.ts';
 import { SandboxHandlers } from '../skills/functions/index.ts';
-import SandboxSkill from '../skills/sandbox-skill.ts';
+import * as SandboxSkill from '../skills/SandboxSkill.ts';
 import { canRunLocalSandboxes } from './probe.ts';
 
 const unavailable = !(await canRunLocalSandboxes());

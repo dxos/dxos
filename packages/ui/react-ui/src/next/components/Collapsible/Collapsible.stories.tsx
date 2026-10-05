@@ -11,13 +11,17 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { realHover, realUnhover, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Collapsible, Field, Input, Switch, Typography } from '../index.ts';
+import * as Field from '../Field/Field.tsx';
+import { Input } from '../Input/Input.tsx';
+import { Switch } from '../Switch/Switch.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Collapsible from './Collapsible.tsx';
 
 const DefaultStory = () => (
   <Collapsible.Root>
     <Collapsible.Trigger>Advanced settings</Collapsible.Trigger>
     <Collapsible.Content data-testid='content'>
-      <Typography>These settings change how your space syncs.</Typography>
+      <Typography.Text>These settings change how your space syncs.</Typography.Text>
       <Field.Root>
         <Field.Header>
           <Field.Label>Sync interval</Field.Label>

@@ -14,7 +14,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -56,7 +56,7 @@ const DefaultStory = ({ initialFormValues }: { initialFormValues?: Record<string
 const withRoutinePlugins = () =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>

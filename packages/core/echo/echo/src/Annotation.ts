@@ -45,7 +45,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Types from 'effect/Types';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 import * as Entity from './Entity.ts';
 import * as annotationAtoms from './internal/Annotation/atoms.ts';

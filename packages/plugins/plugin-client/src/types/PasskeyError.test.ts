@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 
 import * as PasskeyError from './PasskeyError.ts';

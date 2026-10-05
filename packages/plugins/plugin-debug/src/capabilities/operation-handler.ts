@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as Devtools from '@dxos/app-framework/Devtools';
 
 import { DebugOperationHandlerSet } from '#operations';
 
@@ -18,7 +19,7 @@ export default Capability.makeModule(
 
 // Console sugar for the snapshot operation (see app-framework/docs/INTROSPECTION.md §3.1).
 const setupDevtools = () => {
-  const composer = (globalThis.composer ??= {});
+  const composer: Devtools.ComposerDevtools = (globalThis.composer ??= {});
   // `input` passes through, so a caller can scope the error window (`{ since }`).
   composer.snapshot = (input: { since?: number } = {}) => composer.invoke?.('org.dxos.operation.debug.snapshot', input);
 };

@@ -3,5 +3,4 @@
 //
 
 export * as ZenPlugin from './ZenPlugin.ts';
-export * from '#meta';
 export * from '#types';

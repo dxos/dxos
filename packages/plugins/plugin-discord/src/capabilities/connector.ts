@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -146,7 +146,9 @@ const userTestConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     Effect.asVoid,
     Effect.mapError(
       () =>
-        new ConnectionTestError({ message: 'Discord rejected the credential. Reauthenticate to continue syncing.' }),
+        new ConnectorError.ConnectionTestError({
+          message: 'Discord rejected the credential. Reauthenticate to continue syncing.',
+        }),
     ),
   );
 

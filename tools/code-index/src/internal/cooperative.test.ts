@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Cooperative from './cooperative.ts';
 

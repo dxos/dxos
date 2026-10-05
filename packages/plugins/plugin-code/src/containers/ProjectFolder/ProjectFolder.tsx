@@ -5,11 +5,13 @@
 import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Project from '@dxos/compute/Project';
 import { log } from '@dxos/log';
-import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { CodeCapabilities } from '#types';
@@ -22,10 +24,10 @@ export type ProjectFolderProps = { project: Project.Project };
  * another device.
  */
 export const ProjectFolder = ({ project }: ProjectFolderProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const registry = useCapability(Capabilities.AtomRegistry);
-  const stateAtom = useCapability(CodeCapabilities.State);
-  const folder = useAtomCapability(CodeCapabilities.State).repositories?.[project.id];
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const stateAtom = Hooks.useCapability(CodeCapabilities.State);
+  const folder = Hooks.useAtomCapability(CodeCapabilities.State).repositories?.[project.id];
 
   const setFolder = useCallback(
     (folder: string | undefined) =>
@@ -49,17 +51,17 @@ export const ProjectFolder = ({ project }: ProjectFolderProps) => {
 
   return (
     <Form.FieldSet label={t('project-folder.label')} description={t('project-folder.description')}>
-      <Flex align='center' gap='sm' data-testid='codePlugin.projectFolder'>
+      <Layout.Flex align='center' gap='sm' data-testid='codePlugin.projectFolder'>
         <span className='grow min-w-0 truncate font-mono text-sm' title={folder}>
           {folder ?? t('project-folder.empty.label')}
         </span>
-        <Button onClick={handleChoose}>{t('project-folder.choose.label')}</Button>
+        <Button.Root onClick={handleChoose}>{t('project-folder.choose.label')}</Button.Root>
         {folder && (
-          <Button variant='ghost' onClick={() => setFolder(undefined)}>
+          <Button.Root variant='ghost' onClick={() => setFolder(undefined)}>
             {t('project-folder.clear.label')}
-          </Button>
+          </Button.Root>
         )}
-      </Flex>
+      </Layout.Flex>
     </Form.FieldSet>
   );
 };

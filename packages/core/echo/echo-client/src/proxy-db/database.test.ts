@@ -15,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { asyncTimeout, sleep } from '@dxos/async';
 import { Database, Error as EchoError, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { RpcClosedError, makeInProcessClient } from '@dxos/protocols';

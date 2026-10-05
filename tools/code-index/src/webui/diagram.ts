@@ -3,7 +3,7 @@
 //
 
 import { Dsl, type Scene, SemanticEngine } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 /** Boxes past which the full search takes long enough to be worth drawing a quick layout first. */
 export const QUICK_FIRST = 16;

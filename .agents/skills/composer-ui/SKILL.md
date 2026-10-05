@@ -120,8 +120,8 @@ Icons are Phosphor sprite references named `ph--<icon>--<weight>` (weights: `reg
 `light`, `duotone`, `thin`). Use the `Icon` primitive or any primitive that takes an `icon` prop:
 
 ```tsx
-import { Icon } from '@dxos/react-ui';
-<Icon icon='ph--plus--regular' size={5} />;
+import * as Icon from '@dxos/react-ui/Icon';
+<Icon.Icon icon='ph--plus--regular' size={5} />;
 ```
 
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.
@@ -316,7 +316,7 @@ Two app-level homes for atom state — don't conflate them (full detail:
 `packages/ui/react-ui-attention/AUDIT.md`):
 
 - **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
-  Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);
+  Built with `KvsStore.make` (`@dxos/effect/KvsStore`) (one schema-validated blob per plugin, keyed by `meta.profile.key`);
   read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
 - **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
   view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with

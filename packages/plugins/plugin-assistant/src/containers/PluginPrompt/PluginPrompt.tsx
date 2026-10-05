@@ -5,9 +5,13 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { RegistryOperation } from '@dxos/plugin-registry/operations';
-import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Operations from '@dxos/plugin-registry/Operations';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -26,10 +30,10 @@ export type PluginPromptProps = {
  * the button here is the only path that turns the plugin on.
  */
 export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const manager = PluginManagerProvider.usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_PROMPT_NAME);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const enabled = useAtomValue(manager.enabled);
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -49,7 +53,7 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
       // `invokePromise` turns a handler failure into `{ error }` rather than rejecting, and the
       // operation itself reports a plugin it could not enable in `rejected` — neither reaches a
       // `catch`, so both are read here.
-      const { data, error } = await invokePromise(RegistryOperation.EnablePlugins, { ids: [pluginId] });
+      const { data, error } = await invokePromise(Operations.RegistryOperation.EnablePlugins, { ids: [pluginId] });
       if (error || data?.rejected.some(({ id }) => id === pluginId)) {
         setFailed(true);
       } else {
@@ -71,10 +75,10 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
   const isEnabled = enabled.includes(pluginId);
 
   return (
-    <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
-      <Flex gap='sm' align='center'>
-        <Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
-        <Flex column classNames='min-w-0'>
+    <Layout.Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
+      <Layout.Flex gap='sm' align='center'>
+        <Icon.Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
+        <Layout.Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-prompt.title', { plugin: label })}</p>
           {/* A plugin's own description runs to paragraphs and would dwarf the chat. */}
           <p className='text-sm text-fg-subtle'>
@@ -84,17 +88,17 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
                 ? t('plugin-prompt.enabled', { plugin: label })
                 : t('plugin-prompt.description', { plugin: label })}
           </p>
-        </Flex>
-      </Flex>
+        </Layout.Flex>
+      </Layout.Flex>
       {failed && <p className='text-sm text-error-text'>{t('plugin-prompt.failed', { plugin: label })}</p>}
       {plugin && !isEnabled && (
-        <Flex justify='end'>
-          <Button variant='primary' disabled={pending} onClick={handleEnable}>
+        <Layout.Flex justify='end'>
+          <Button.Root variant='primary' disabled={pending} onClick={handleEnable}>
             {t('plugin-prompt.button')}
-          </Button>
-        </Flex>
+          </Button.Root>
+        </Layout.Flex>
       )}
-    </Flex>
+    </Layout.Flex>
   );
 };
 

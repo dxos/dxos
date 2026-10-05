@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
 
 import { Diagnostics, Dsl, Mermaid, MermaidEngine, type Scene, SVG_SCHEMA } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { DrawingFile, SvgBuilder } from '#model';
 import { Drawing } from '#types';

@@ -10,7 +10,7 @@ import { getFirstStreamValue } from '@dxos/async';
 import { type ClientServices, makeClientServicesRpcFromRouter, makeServicesFromRpc } from '@dxos/client-protocol';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { createDidFromIdentityKey, credentialsOfType } from '@dxos/credentials';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

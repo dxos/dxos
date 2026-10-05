@@ -19,8 +19,9 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { useCanvasContext } from '@dxos/react-ui-canvas';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks/index.ts';
@@ -180,7 +181,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 };
 
 export type FrameContentProps = PropsWithChildren<
-  ThemedClassName<
+  Util.ThemedClassName<
     {
       anchors: Record<string, Anchor>;
       dragging?: boolean;
@@ -215,7 +216,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
     },
     forwardedRef,
   ) => {
-    const ref = useForwardedRef(forwardedRef);
+    const ref = Hooks.useForwardedRef(forwardedRef);
     const [resize, setResize] = useState(false);
     useEffect(() => {
       if (!selected) {

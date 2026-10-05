@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { createTestApp } from '@dxos/app-framework/testing';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
@@ -55,7 +55,7 @@ describe('SettingsOperation.Open', () => {
   test('closes the companion once the settings are open', async ({ expect }) => {
     const calls: { op: string; input: unknown }[] = [];
     await using harness = await createTestApp({
-      plugins: [GraphPlugin.make(), ProcessManagerPlugin(), SettingsPlugin(), makeRecordingLayout(calls)()],
+      plugins: [GraphPlugin.make(), ProcessManagerPlugin.make(), SettingsPlugin(), makeRecordingLayout(calls)()],
     });
 
     await harness.invoke(SettingsOperation.Open, { plugin: 'org.dxos.plugin.debug' });
@@ -68,7 +68,7 @@ describe('SettingsOperation.Open', () => {
     await using harness = await createTestApp({
       plugins: [
         GraphPlugin.make(),
-        ProcessManagerPlugin(),
+        ProcessManagerPlugin.make(),
         SettingsPlugin(),
         makeRecordingLayout(calls, { companions: false })(),
       ],

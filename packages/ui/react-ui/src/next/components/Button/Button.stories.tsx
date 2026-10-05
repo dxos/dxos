@@ -23,16 +23,11 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import {
-  Button,
-  type ButtonHue,
-  type ButtonValence,
-  type ButtonVariant,
-  Group,
-  Toggle,
-  ToggleGroup,
-  Toolbar,
-} from '../index.ts';
+import { Group } from '../Group/Group.tsx';
+import { Toggle } from '../Toggle/Toggle.tsx';
+import * as ToggleGroup from '../ToggleGroup/ToggleGroup.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import { Button, type ButtonHue, type ButtonValence, type ButtonVariant } from './Button.tsx';
 
 /** Every variant, with the `valence` variant once bare and once per valence. */
 const VARIANTS: { name: string; variant: ButtonVariant; valence?: ButtonValence }[] = [

@@ -60,15 +60,20 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./BlueskyEvents": {
+      "source": "./src/BlueskyEvents.ts",
+      "types": "./dist/types/src/BlueskyEvents.d.ts",
+      "import": "./dist/lib/ns/BlueskyEvents.mjs"
     },
     "./BlueskyPlugin": {
       "source": "./src/BlueskyPlugin.ts",
       "types": "./dist/types/src/BlueskyPlugin.d.ts",
       "import": "./dist/lib/BlueskyPlugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

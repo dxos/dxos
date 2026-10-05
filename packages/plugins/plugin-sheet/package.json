@@ -190,6 +190,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lezer/common": "catalog:",
     "@lezer/highlight": "catalog:",

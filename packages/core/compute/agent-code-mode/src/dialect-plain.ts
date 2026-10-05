@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 

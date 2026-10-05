@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Menu as MenuPrimitive, useMenuContext } from '@ark-ui/react/menu';
 import { Portal } from '@ark-ui/react/portal';
 import React, {
@@ -19,10 +21,10 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Icon, type IconProps } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
@@ -210,7 +212,7 @@ MenuContent.displayName = 'Menu.Content';
 //
 
 /** What a row shows: its default layout renders the icon, label and shortcut. */
-export type MenuItemData = {
+type MenuItemData = {
   label: string;
   /** Leading icon. */
   icon?: string;
@@ -218,7 +220,7 @@ export type MenuItemData = {
   shortcut?: string;
 };
 
-export type MenuOption = MenuItemData & {
+type MenuOption = MenuItemData & {
   value: string;
   disabled?: boolean;
 };
@@ -276,7 +278,7 @@ MenuItem.displayName = 'Menu.Item';
 // ItemIcon
 //
 
-type MenuItemIconProps = Omit<IconProps, 'icon'> & {
+type MenuItemIconProps = Omit<Icon.IconProps, 'icon'> & {
   /** Defaults to the item's `icon`. */
   icon?: string;
 };
@@ -284,7 +286,7 @@ type MenuItemIconProps = Omit<IconProps, 'icon'> & {
 const MenuItemIcon = forwardRef<SVGSVGElement, MenuItemIconProps>(({ icon, ...props }, forwardedRef) => {
   const { data } = useItem('ItemIcon');
   const glyph = icon ?? data.icon;
-  return glyph ? <Icon {...props} icon={glyph} ref={forwardedRef} /> : null;
+  return glyph ? <Icon.Icon {...props} icon={glyph} ref={forwardedRef} /> : null;
 });
 
 MenuItemIcon.displayName = 'Menu.ItemIcon';
@@ -361,7 +363,7 @@ const MenuItemIndicator = forwardRef<HTMLDivElement, MenuItemIndicatorProps>(
       className={mx(recipes.menuIndicator(), classNames)}
       ref={forwardedRef}
     >
-      {children ?? <Icon icon='ph--check--regular' />}
+      {children ?? <Icon.Icon icon='ph--check--regular' />}
     </MenuPrimitive.ItemIndicator>
   ),
 );
@@ -519,7 +521,7 @@ const MenuTriggerItem = forwardRef<HTMLDivElement, MenuTriggerItemProps>(
       <>
         {item.icon && <MenuItemIcon />}
         <MenuItemText />
-        <Icon icon='ph--caret-right--regular' />
+        <Icon.Icon icon='ph--caret-right--regular' />
       </>
     );
 
@@ -601,43 +603,43 @@ const MenuItemGroupLabel = forwardRef<HTMLDivElement, MenuItemGroupLabelProps>(
 );
 
 MenuItemGroupLabel.displayName = 'Menu.ItemGroupLabel';
-
-export const Menu = {
-  Root: MenuRoot,
-  Trigger: MenuTrigger,
-  ContextTrigger: MenuContextTrigger,
-  Content: MenuContent,
-  Item: MenuItem,
-  ItemIcon: MenuItemIcon,
-  ItemText: MenuItemText,
-  ItemShortcut: MenuItemShortcut,
-  ItemIndicator: MenuItemIndicator,
-  CheckboxItem: MenuCheckboxItem,
-  RadioItemGroup: MenuRadioItemGroup,
-  RadioItem: MenuRadioItem,
-  Sub: MenuSub,
-  TriggerItem: MenuTriggerItem,
-  Separator: MenuSeparator,
-  ItemGroup: MenuItemGroup,
-  ItemGroupLabel: MenuItemGroupLabel,
-};
-
 export type {
-  MenuCheckboxItemProps,
-  MenuContentProps,
-  MenuContextTriggerProps,
-  MenuItemGroupLabelProps,
-  MenuItemGroupProps,
-  MenuItemIconProps,
-  MenuItemIndicatorProps,
-  MenuItemProps,
-  MenuItemShortcutProps,
-  MenuItemTextProps,
-  MenuRadioItemGroupProps,
-  MenuRadioItemProps,
-  MenuRootProps,
-  MenuSeparatorProps,
-  MenuSubProps,
-  MenuTriggerItemProps,
-  MenuTriggerProps,
+  MenuCheckboxItemProps as CheckboxItemProps,
+  MenuContentProps as ContentProps,
+  MenuContextTriggerProps as ContextTriggerProps,
+  MenuItemGroupLabelProps as ItemGroupLabelProps,
+  MenuItemGroupProps as ItemGroupProps,
+  MenuItemIconProps as ItemIconProps,
+  MenuItemIndicatorProps as ItemIndicatorProps,
+  MenuItemProps as ItemProps,
+  MenuItemShortcutProps as ItemShortcutProps,
+  MenuItemTextProps as ItemTextProps,
+  MenuRadioItemGroupProps as RadioItemGroupProps,
+  MenuRadioItemProps as RadioItemProps,
+  MenuRootProps as RootProps,
+  MenuSeparatorProps as SeparatorProps,
+  MenuSubProps as SubProps,
+  MenuTriggerItemProps as TriggerItemProps,
+  MenuTriggerProps as TriggerProps,
 };
+
+export {
+  MenuCheckboxItem as CheckboxItem,
+  MenuContent as Content,
+  MenuContextTrigger as ContextTrigger,
+  MenuItem as Item,
+  MenuItemGroup as ItemGroup,
+  MenuItemGroupLabel as ItemGroupLabel,
+  MenuItemIcon as ItemIcon,
+  MenuItemIndicator as ItemIndicator,
+  MenuItemShortcut as ItemShortcut,
+  MenuItemText as ItemText,
+  MenuRadioItem as RadioItem,
+  MenuRadioItemGroup as RadioItemGroup,
+  MenuRoot as Root,
+  MenuSeparator as Separator,
+  MenuSub as Sub,
+  MenuTrigger as Trigger,
+  MenuTriggerItem as TriggerItem,
+};
+export type { MenuItemData as ItemData, MenuOption as Option };

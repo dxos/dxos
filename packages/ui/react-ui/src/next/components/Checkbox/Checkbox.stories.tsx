@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Checkbox } from '../index.ts';
+import { Checkbox } from './Checkbox.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>

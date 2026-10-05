@@ -4,9 +4,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Accordion, Icon, SystemButton, useTranslation } from '@dxos/react-ui';
 import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Accordion from '@dxos/react-ui/Accordion';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { type ContentBlock } from '@dxos/types';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -191,7 +194,7 @@ type ToolPanelProps = {
  * The row's own words. Reasoning names the kind instead of its prose: it runs to paragraphs, and a
  * truncated first line reads as a broken title rather than a summary.
  */
-const entryLabel = (entry: ToolEntry, t: ReturnType<typeof useTranslation>['t']): string =>
+const entryLabel = (entry: ToolEntry, t: ReturnType<typeof Hooks.useTranslation>['t']): string =>
   entry.kind === 'reasoning' ? t('tool-thinking.label') : entry.title;
 
 /** Whether the row carries anything an expansion could show. */
@@ -199,7 +202,7 @@ const hasDetail = (entry: ToolEntry): boolean =>
   entry.text !== undefined || entry.input !== undefined || entry.error !== undefined || entry.result !== undefined;
 
 const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [open, setOpen] = useState(false);
 
   const calls = entries.filter((entry) => entry.kind === 'call');
@@ -240,7 +243,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
         className='flex items-center gap-2 p-1 text-fg-muted min-h-(--dx-control)'
         data-testid={`assistant.tool-${single.kind}`}
       >
-        <Icon icon={icon} size='md' />
+        <Icon.Icon icon={icon} size='md' />
         <span className='truncate'>{header}</span>
       </div>
     );
@@ -273,7 +276,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
         <span className='flex min-w-0 items-center gap-2 text-fg-muted tabular-nums'>
           {/* The same glyph column as the rows the panel opens onto, so the run reads as one list
               whether it is collapsed or not. */}
-          <Icon icon={icon} size='md' />
+          <Icon.Icon icon={icon} size='md' />
           <span className={mx('truncate', single?.error !== undefined && 'text-error-text')}>{header}</span>
           {failed > 0 && (
             <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
@@ -308,7 +311,7 @@ type ToolCallListProps = {
  * feed measures that height as the row mounts.
  */
 const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const label = (entry: ToolEntry) => entryLabel(entry, t);
 
   return (
@@ -343,7 +346,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
 
 /** What a row carries, in the order it happened. */
 const ToolCallDetail = ({ entry, classNames }: { entry: ToolEntry; classNames?: string }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
     // `min-w-0` so a wide payload scrolls inside its own section rather than widening this column
     // and taking the summary row with it.

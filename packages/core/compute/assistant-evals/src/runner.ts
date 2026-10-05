@@ -20,7 +20,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
 import { FeedTraceSink } from '@dxos/compute-runtime';
@@ -32,7 +32,7 @@ import type * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { EDGE_URLS } from '@dxos/config';
 import { Database, Feed, Filter, Obj, Ref, Registry, Tag, type Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, type SpaceId } from '@dxos/keys';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
@@ -43,7 +43,7 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Employer, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -195,7 +195,7 @@ const runInstructions = <I>(
       }
 
       return yield* Operation.invoke(
-        RunInstructions,
+        AgentOperation.RunInstructions,
         {
           instructions: Ref.make(instructions),
           input,
@@ -452,7 +452,7 @@ export function createEvalRunner<I, O>(
     const run = Effect.scoped(
       Effect.gen(function* () {
         const harness = yield* Effect.promise(async () =>
-          createComposerTestApp({
+          Harness.createComposerTestApp({
             plugins: await createDefaultPlugins({ ...options, model, makeTurnProducer, record }),
           }),
         );

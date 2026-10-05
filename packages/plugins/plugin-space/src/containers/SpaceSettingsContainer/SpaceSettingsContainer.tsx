@@ -5,20 +5,25 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, Flex, Input, Menu, Switch, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
 
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
@@ -27,8 +32,8 @@ const SpaceFormSchema = SpaceSchema.SpaceForm;
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const [edgeReplication, setEdgeReplication] = useState(
     space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED,
@@ -96,7 +101,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         );
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Input
+            <Input.Root
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
@@ -131,14 +136,14 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       // Read-only: the membership policy is written into the genesis credential at creation.
       private: ({ label, getValue }) => (
         <Form.Field label={label} description={t('private.description')}>
-          <Switch checked={getValue()} disabled classNames='justify-self-end' />
+          <Input.Switch checked={getValue()} disabled classNames='justify-self-end' />
         </Form.Field>
       ),
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
           <Form.Field label={label} description={t('edge-replication.description')}>
-            <Switch
+            <Input.Switch
               checked={getValue()}
               onCheckedChange={({ checked }) => handleChange(checked)}
               classNames='justify-self-end'
@@ -157,7 +162,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     await invokePromise(SpaceOperation.ExportSpace, { space, format: SpacesService.SpaceArchiveFormat.enums.JSON });
   }, [space, invokePromise]);
 
-  const repairs = useCapabilities(SpaceCapabilities.Repair);
+  const repairs = Hooks.useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
     await Promise.all(repairs.map((repair) => repair({ space, isDefault: isDefaultSpace })));
   }, [space, repairs, isDefaultSpace]);
@@ -205,12 +210,12 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
           <Form.FieldSet label={t('space-controls.title')} description={t('space-controls.description')}>
             <Form.Field standalone label={t('space-id.title')} description={t('space-id.description')}>
-              <Input value={space.id} disabled variant='mono' copyable aria-label={t('space-id.title')} />
+              <Input.Root value={space.id} disabled variant='mono' copyable aria-label={t('space-id.title')} />
             </Form.Field>
             <Form.Field standalone label={t('backup-space.title')} description={t('backup-space.description')}>
               <Menu.Root>
                 <Menu.Trigger asChild>
-                  <Button caretDown>{t('download-backup.label')}</Button>
+                  <Button.Root caretDown>{t('download-backup.label')}</Button.Root>
                 </Menu.Trigger>
                 <Menu.Content>
                   <Menu.Item
@@ -225,10 +230,10 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
               </Menu.Root>
             </Form.Field>
             <Form.Field standalone label={t('repair-space.title')} description={t('repair-space.description')}>
-              <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
+              <Button.Root onClick={handleRepair}>{t('repair-space.label')}</Button.Root>
             </Form.Field>
             <Form.Field standalone label={t('reset-home.title')} description={t('reset-home.description')}>
-              <Button onClick={handleResetHome}>{t('reset-home.label')}</Button>
+              <Button.Root onClick={handleResetHome}>{t('reset-home.label')}</Button.Root>
             </Form.Field>
           </Form.FieldSet>
 
@@ -242,9 +247,9 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             >
               <Dialog.Root open={deleteConfirmOpen} onOpenChange={({ open }) => setDeleteConfirmOpen(open)}>
                 <Dialog.Trigger asChild>
-                  <Button variant='destructive' disabled={isDefaultSpace} data-testid='spaceSettings.deleteSpace'>
+                  <Button.Root variant='destructive' disabled={isDefaultSpace} data-testid='spaceSettings.deleteSpace'>
                     {t('delete-space.label')}
-                  </Button>
+                  </Button.Root>
                 </Dialog.Trigger>
                 <Dialog.Content>
                   <Dialog.Header>
@@ -252,18 +257,18 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                   </Dialog.Header>
                   <Dialog.Body>
                     <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
-                    <Flex gap='sm' justify='end' classNames='mt-4'>
+                    <Layout.Flex gap='sm' justify='end' classNames='mt-4'>
                       <Dialog.CloseTrigger asChild>
-                        <Button>{t('cancel.label')}</Button>
+                        <Button.Root>{t('cancel.label')}</Button.Root>
                       </Dialog.CloseTrigger>
-                      <Button
+                      <Button.Root
                         variant='destructive'
                         onClick={handleDelete}
                         data-testid='spaceSettings.deleteSpaceConfirm'
                       >
                         {t('delete-space.label')}
-                      </Button>
-                    </Flex>
+                      </Button.Root>
+                    </Layout.Flex>
                   </Dialog.Body>
                 </Dialog.Content>
               </Dialog.Root>

@@ -33,7 +33,7 @@ import { type LocalClientServices } from '@dxos/client/local';
 import { TestBuilder } from '@dxos/client/testing';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
