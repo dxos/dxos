@@ -14,6 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { Block, Card, Icon } from '@dxos/react-ui';
 
 import {
+  DEFAULT_FRAME_COUNT,
   DEFAULT_SIZE,
   type MandelbrotInput,
   type MandelbrotOutput,
@@ -90,9 +91,15 @@ const useMandelbrot = (item: ProcessItem, canvas: HTMLCanvasElement | null): num
     if (!context) {
       return;
     }
+    // Never asks past the render's frame count; the process would finish there regardless.
     const grant = (input: MandelbrotInput) => {
-      granted.current += input.frames;
-      void EffectEx.runPromise(handle.submitInput(input));
+      const remaining = (params.frameCount ?? DEFAULT_FRAME_COUNT) - granted.current;
+      const frames = Math.min(input.frames, remaining);
+      if (frames <= 0) {
+        return;
+      }
+      granted.current += frames;
+      void EffectEx.runPromise(handle.submitInput({ ...input, frames }));
     };
 
     const fiber = Effect.runFork(

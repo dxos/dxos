@@ -17,6 +17,9 @@ export const SIZES = [80, 160, 320] as const;
 /** Delay between pushed frames, bounded so a client cannot turn the process into a hot loop. */
 export const DEFAULT_INTERVAL = 1_000;
 const MIN_INTERVAL = 100;
+
+/** Frames a render runs to before the process finishes. */
+export const DEFAULT_FRAME_COUNT = 100;
 const MAX_INTERVAL = 60_000;
 
 /** Most frames a process will owe at once, however many are requested. */
@@ -65,19 +68,26 @@ export const startingPointParams = ({ real, imaginary, viewWidth }: StartingPoin
 /** Form values seeded from a random {@link STARTING_POINTS} entry. */
 export const randomFormValues = (): MandelbrotFormValues => {
   const start = randomStartingPoint();
-  return { preset: start.name, size: DEFAULT_SIZE, interval: DEFAULT_INTERVAL, ...startingPointParams(start) };
+  return {
+    preset: start.name,
+    size: DEFAULT_SIZE,
+    interval: DEFAULT_INTERVAL,
+    frameCount: DEFAULT_FRAME_COUNT,
+    ...startingPointParams(start),
+  };
 };
 
 /** Square resolution in pixels. */
 export const Size = Schema.Literals(SIZES);
 
-/** Preset, then resolution beside the interval, the view width, and the start point's coordinates side by side. */
+/** Preset, then resolution beside interval, frame count beside view width, and the start point's coordinates. */
 const PARAMS_LAYOUT = trim`
   <grid cols="2">
     <field name="preset" span="2"/>
     <field name="size"/>
     <field name="interval"/>
-    <field name="width" span="2"/>
+    <field name="frameCount"/>
+    <field name="width"/>
     <field name="center.x"/>
     <field name="center.y"/>
   </grid>
@@ -96,6 +106,10 @@ export const MandelbrotParams = Schema.Struct({
   ),
   interval: Schema.Number.pipe(
     Schema.annotate({ title: 'Interval (ms)', description: 'Delay between frames.' }),
+    Schema.optional,
+  ),
+  frameCount: Schema.Number.pipe(
+    Schema.annotate({ title: 'Frames', description: 'Frames to render before the process finishes.' }),
     Schema.optional,
   ),
 });
@@ -186,7 +200,7 @@ const computeFrame = (frame: number, size: number, center: Point, width: number)
 /**
  * Renders a Mandelbrot zoom on credit: each input grants `frames` more frames, which the process pushes
  * one per `interval` and then waits. It never computes more than it was granted (capped at
- * {@link MAX_CREDITS}), and exits once no request has arrived for {@link IDLE_TIMEOUT}.
+ * {@link MAX_CREDITS}), and finishes after `frameCount` frames, or once no request has arrived for {@link IDLE_TIMEOUT}.
  */
 export const MandelbrotProcess = Operation.makeDurable(
   { key: MANDELBROT_PROCESS_KEY, input: MandelbrotInput, output: MandelbrotOutput, services: [] },
@@ -199,6 +213,7 @@ export const MandelbrotProcess = Operation.makeDurable(
       let center: Point = { x: start.real, y: start.imaginary };
       let width = start.viewWidth;
       let interval = DEFAULT_INTERVAL;
+      let frameCount = DEFAULT_FRAME_COUNT;
       let lastRequest = Date.now();
       let rendering = false;
 
@@ -225,6 +240,9 @@ export const MandelbrotProcess = Operation.makeDurable(
             if (input.interval !== undefined) {
               interval = Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, input.interval));
             }
+            if (input.frameCount !== undefined) {
+              frameCount = Math.max(1, Math.floor(input.frameCount));
+            }
             if (input.width !== undefined) {
               width = input.width;
               frame = 0;
@@ -239,6 +257,10 @@ export const MandelbrotProcess = Operation.makeDurable(
             if (credits > 0) {
               credits--;
               ctx.submitOutput(computeFrame(frame++, size, center, width));
+              if (frame >= frameCount) {
+                ctx.succeed();
+                return;
+              }
               yield* schedule();
               return;
             }
