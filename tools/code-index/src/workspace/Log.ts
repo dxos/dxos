@@ -49,6 +49,11 @@ export interface Api {
   readonly getProject: (id: string) => Effect.Effect<Project | undefined, LogError>;
   /** The project touched last — what a reload with no id in the URL opens. */
   readonly lastProject: () => Effect.Effect<Project | undefined, LogError>;
+  /**
+   * Deletes a project with its log and stored values; false when there was none. Whoever runs its
+   * turns stops them first, or they append to a project that is gone.
+   */
+  readonly deleteProject: (id: string) => Effect.Effect<boolean, LogError>;
   /** Appends one event and returns the entry it became. */
   readonly append: (projectId: string, event: Events.Event) => Effect.Effect<Events.Entry, LogError>;
   /**
@@ -129,6 +134,12 @@ const make = (): Effect.Effect<Api, LogError, SqlClient.SqlClient | Scope.Scope>
                    VALUES (${projectId}, ${next}, ${event._tag}, ${JSON.stringify(encoded)})`.pipe(
           Effect.mapError(fail('Failed to append event')),
         );
+        // The listing reads the column rather than folding every project's log to find its title.
+        if (event._tag === 'TitleSet') {
+          yield* sql`UPDATE projects SET title = ${event.title} WHERE id = ${projectId}`.pipe(
+            Effect.mapError(fail('Failed to record title')),
+          );
+        }
         const entry: Events.Entry = { projectId, seq: next, event };
         yield* PubSub.publish(hub, entry);
         return entry;
@@ -165,6 +176,20 @@ const make = (): Effect.Effect<Api, LogError, SqlClient.SqlClient | Scope.Scope>
                      LIMIT 1`.pipe(
           Effect.map((rows) => rows[0]),
           Effect.mapError(fail('Failed to read last project')),
+        ),
+
+      deleteProject: (id) =>
+        Effect.gen(function* () {
+          const existing = yield* getProject(id);
+          yield* sql`DELETE FROM events WHERE project_id = ${id}`;
+          yield* sql`DELETE FROM storage WHERE project_id = ${id}`;
+          yield* sql`DELETE FROM projects WHERE id = ${id}`;
+          return existing !== undefined;
+        }).pipe(
+          sql.withTransaction,
+          Effect.mapError(fail('Failed to delete project')),
+          // Under the append gate, so an append cannot read the log head while its rows are deleted.
+          Semaphore.withPermits(gate, 1),
         ),
 
       append,

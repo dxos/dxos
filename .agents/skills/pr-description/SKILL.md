@@ -52,8 +52,9 @@ git diff --stat "$BASE"...HEAD
 - Every claim points at evidence: a test name, a file path, a log line, a measurement, a link.
 - Write it per the `readable-prose` skill. Length is earned by content; a one-line fix gets a short
   body even with five sections.
-- Binaries (screenshots, videos, diagram PNGs) go to the `hosting-artifacts` bucket and are linked,
-  never committed to make them visible.
+- Binaries (screenshots, videos, diagram PNGs) are attached with `gh --attach` so they render inline,
+  falling back to the R2 bucket — both per the `hosting-artifacts` skill. Never commit them to make
+  them visible.
 - Link Linear issues on their own line at the end of the summary: `closes DX-123` or `part of DX-123`.
 - Finish with the attribution footer your harness requires, after the safety section.
 

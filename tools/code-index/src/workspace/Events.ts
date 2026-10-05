@@ -5,6 +5,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 /**
  * The event vocabulary of a project. A project is an append-only log of these; the chat transcript
@@ -16,9 +17,20 @@ import * as Schema from 'effect/Schema';
  */
 
 /** What a presentation carries. Only these reach the user's screen; stdout does not. */
-export const PresentationKind = Schema.Literals(['markdown', 'mermaid', 'table', 'json', 'text', 'graph']);
+export const PresentationKind = Schema.Literals(['markdown', 'diagram', 'table', 'json', 'text', 'graph']);
 
 export type PresentationKind = typeof PresentationKind.Type;
+
+/** Logs written before `display.mermaid` became `display.diagram` say 'mermaid'; they read as diagrams. */
+const StoredPresentationKind = Schema.Union([
+  PresentationKind,
+  Schema.Literal('mermaid').pipe(
+    Schema.decodeTo(
+      Schema.Literal('diagram'),
+      SchemaTransformation.transform({ decode: () => 'diagram' as const, encode: () => 'mermaid' as const }),
+    ),
+  ),
+]);
 
 /**
  * Narrows what the sandbox sent. A snippet is not trusted to name a kind correctly, and a run that
@@ -27,7 +39,7 @@ export type PresentationKind = typeof PresentationKind.Type;
 export const toKind = (value: string): PresentationKind => {
   switch (value) {
     case 'markdown':
-    case 'mermaid':
+    case 'diagram':
     case 'table':
     case 'json':
     case 'graph':
@@ -115,7 +127,7 @@ export class ToolResult extends Schema.TaggedClass<ToolResult>('code-index/ToolR
  */
 export class Presented extends Schema.TaggedClass<Presented>('code-index/Presented')('Presented', {
   callId: Schema.optional(Schema.String),
-  kind: PresentationKind,
+  kind: StoredPresentationKind,
   title: Schema.optional(Schema.String),
   content: Schema.String,
 }) {}

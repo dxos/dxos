@@ -58,12 +58,14 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* Clamped text wraps even where a container (a card row) keeps its content to one line. */
   .dx-typography[data-lines] {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: var(--dx-lines);
     min-width: 0;
     overflow: hidden;
+    white-space: normal;
   }
   .dx-typography[data-tone='muted'] {
     color: var(--color-fg-muted);
@@ -400,8 +402,14 @@
     flex-direction: column;
     min-width: 0;
   }
+  /* A control's own `center` would centre it across a stacked field; it starts under its label instead. */
   .dx-field > .dx-control {
+    align-self: start;
     margin-block: var(--dx-control-inset);
+  }
+  /* An icon-only Button's inset centres it in a block; in a field it starts at the label's edge as an Input does. */
+  .dx-field > .dx-button[data-square] {
+    margin-inline: 0;
   }
 
   /*

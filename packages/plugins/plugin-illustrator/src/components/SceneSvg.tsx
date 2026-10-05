@@ -197,7 +197,7 @@ const MultilineText = ({ cx, cy, text, weight, width, className }: MultilineText
 };
 
 /** Per-instance marker fragment ids (multiple SceneSvgs may share a page). */
-type MarkerIds = Record<Exclude<Scene.ArrowHead, 'none'> | 'circle', string>;
+type MarkerIds = Record<Scene.Marker, string>;
 
 type ElementProps = {
   object: Scene.WorldObject;
@@ -286,12 +286,22 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
     case 'line':
     case 'curve': {
       const points = element.points.map(map);
+      // A routed connector is a `<id>-path` polyline ending where its `<id>` arrow starts; the
+      // arrow's source marker belongs at the polyline's first point, where the route begins.
+      const arrow = element.id.endsWith('-path')
+        ? object.elements.find((other) => other.kind === 'arrow' && other.id === element.id.slice(0, -'-path'.length))
+        : undefined;
+      const derived = arrow?.kind === 'arrow' ? Scene.markersOf(arrow) : undefined;
+      const start = derived?.start;
+      // The route takes its arrow's relation dash unless the polyline sets its own stroke.
+      const stroke = element.stroke ?? (derived?.dashed ? 'dashed' : undefined);
       return (
         <polyline
           points={points.map((point) => `${point.x},${point.y}`).join(' ')}
           className={mx('stroke-current fill-none', colorClass(element.color))}
           strokeWidth={1.5}
-          strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
+          strokeDasharray={stroke ? strokeDash[stroke] : undefined}
+          markerStart={start ? `url(#${markers[start]})` : undefined}
         />
       );
     }
@@ -360,7 +370,11 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
         return null;
       }
       const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
-      const head = element.head ?? 'arrow';
+      const { start: tail, end: head, dashed } = Scene.markersOf(element);
+      // On a routed connector the source marker is drawn by its `-path` polyline instead.
+      const routed = object.elements.some(
+        (other) => (other.kind === 'line' || other.kind === 'curve') && other.id === `${element.id}-path`,
+      );
       return (
         <g className={mx('stroke-current', colorClass(element.color))}>
           <line
@@ -369,9 +383,9 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
             x2={end.x}
             y2={end.y}
             strokeWidth={1.5}
-            strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
-            markerEnd={head === 'none' ? undefined : `url(#${markers[head]})`}
-            markerStart={element.tail === 'circle' ? `url(#${markers.circle})` : undefined}
+            strokeDasharray={element.stroke ? strokeDash[element.stroke] : dashed ? strokeDash.dashed : undefined}
+            markerEnd={head ? `url(#${markers[head]})` : undefined}
+            markerStart={tail && !routed ? `url(#${markers[tail]})` : undefined}
           />
           {element.text && (
             <MultilineText
@@ -414,10 +428,14 @@ export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChan
   // Fragment ids are document-global: derive per-instance ids so co-rendered scenes don't collide.
   const instanceId = useId();
   const markers: MarkerIds = {
-    arrow: `${instanceId}-arrow`,
-    triangle: `${instanceId}-triangle`,
-    crowsfoot: `${instanceId}-crowsfoot`,
-    circle: `${instanceId}-circle`,
+    'arrow': `${instanceId}-arrow`,
+    'open': `${instanceId}-open`,
+    'triangle': `${instanceId}-triangle`,
+    'crowsfoot': `${instanceId}-crowsfoot`,
+    'one': `${instanceId}-one`,
+    'diamond': `${instanceId}-diamond`,
+    'diamond-filled': `${instanceId}-diamond-filled`,
+    'circle': `${instanceId}-circle`,
   };
   const gridId = `${instanceId}-grid`;
   const selected = useMemo(() => new Set(selection), [selection]);
@@ -487,6 +505,65 @@ export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChan
           <path
             d='M 0 6 L 11 1 M 0 6 L 11 6 M 0 6 L 11 11'
             className='fill-none stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers.open}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          <path
+            d='M 1 1 L 11 6 L 1 11'
+            className='fill-none stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        {/* The one bar of ER notation: a stroke across the line just inside the end. */}
+        <marker
+          id={markers.one}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          <path d='M 7 1 L 7 11' className='fill-none stroke-neutral-800 dark:stroke-neutral-200' strokeWidth={1.2} />
+        </marker>
+        {/* Diamonds at the whole's end: hollow for aggregation, filled for composition. */}
+        <marker
+          id={markers.diamond}
+          viewBox='0 0 18 10'
+          refX='17'
+          refY='5'
+          markerWidth='18'
+          markerHeight='10'
+          orient='auto-start-reverse'
+        >
+          <path
+            d='M 1 5 L 9 1 L 17 5 L 9 9 z'
+            fill='var(--surface-bg, transparent)'
+            className='stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers['diamond-filled']}
+          viewBox='0 0 18 10'
+          refX='17'
+          refY='5'
+          markerWidth='18'
+          markerHeight='10'
+          orient='auto-start-reverse'
+        >
+          <path
+            d='M 1 5 L 9 1 L 17 5 L 9 9 z'
+            className='fill-neutral-800 dark:fill-neutral-200 stroke-neutral-800 dark:stroke-neutral-200'
             strokeWidth={1.2}
           />
         </marker>

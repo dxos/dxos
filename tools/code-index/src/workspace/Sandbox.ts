@@ -24,6 +24,7 @@ import * as Server from '../mcp/Server.ts';
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
 import * as Summary from '../Summary.ts';
+import * as Diagram from './Diagram.ts';
 import * as Events from './Events.ts';
 import * as Log from './Log.ts';
 
@@ -150,16 +151,28 @@ const make = Effect.gen(function* () {
         return log
           .listKeys(projectId)
           .pipe(Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })));
-      case 'display':
-        return Effect.sync(() => {
-          presented.push(
-            new Events.Presented({
-              kind: Events.toKind(String(params.kind)),
-              title: typeof params.title === 'string' ? params.title : undefined,
-              content: String(params.content),
-            }),
-          );
-        });
+      case 'display': {
+        const kind = Events.toKind(String(params.kind));
+        // A diagram is checked here so a bad one fails the snippet, which the model reads and can fix,
+        // instead of reaching the user as an error panel.
+        const content =
+          kind === 'diagram'
+            ? Diagram.stored(String(params.content)).pipe(
+                Effect.mapError(({ message }) => new SandboxError({ message })),
+              )
+            : Effect.succeed(String(params.content));
+        return content.pipe(
+          Effect.map((content) => {
+            presented.push(
+              new Events.Presented({
+                kind,
+                title: typeof params.title === 'string' ? params.title : undefined,
+                content,
+              }),
+            );
+          }),
+        );
+      }
       case 'design.subgraph':
         return designCache.pipe(
           Effect.flatMap((cache) =>

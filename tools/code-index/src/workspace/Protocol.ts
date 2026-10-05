@@ -9,12 +9,13 @@ import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 
 import * as Events from './Events.ts';
+import * as IndexState from './IndexState.ts';
 
 /**
  * The contract between the browser and the server. Deliberately thin: `Watch` streams the project's
  * log and `Dispatch` appends to it, so almost everything the UI does is an event in flight rather
- * than a method. The three remaining calls are the ones that are genuinely questions — what
- * projects exist, make me one, what model am I talking to.
+ * than a method. The remaining calls are the ones that are genuinely questions or requests — what
+ * projects exist, make or delete one, what model am I talking to, and what is the indexer doing.
  */
 
 export class ProjectRecord extends Schema.Class<ProjectRecord>('code-index/Project')({
@@ -30,6 +31,8 @@ export class ServerInfo extends Schema.Class<ServerInfo>('code-index/ServerInfo'
   /** Quads in the index; a zero here is why an agent has nothing to say. */
   quads: Schema.Number,
   files: Schema.Number,
+  /** Symbol declarations, as of the last pass; absent until the first count finishes. */
+  declarations: Schema.optional(Schema.Number),
 }) {}
 
 export class RequestFailed extends Schema.TaggedError<RequestFailed>('code-index/RequestFailed')('RequestFailed', {
@@ -45,6 +48,20 @@ export class Rpcs extends RpcGroup.make(
     payload: { title: Schema.optional(Schema.String) },
     success: ProjectRecord,
     error: RequestFailed,
+  }),
+
+  /** Deletes a project and its log, stopping any turn it is running; false when there was none. */
+  Rpc.make('DeleteProject', {
+    payload: { projectId: Schema.String },
+    success: Schema.Boolean,
+    error: RequestFailed,
+  }),
+
+  /** The indexer's status now, then every change — the footer's live line. */
+  Rpc.make('WatchIndex', {
+    success: IndexState.Status,
+    error: RequestFailed,
+    stream: true,
   }),
 
   /**
