@@ -22,7 +22,7 @@ export const ActionLabel = ({ action }: { action: Action }) => {
   return (
     <>
       <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
-      {shortcut && <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>}
+      {shortcut && <span className={mx('shrink-0', 'text-fg-muted')}>{keySymbols(shortcut).join('')}</span>}
     </>
   );
 };

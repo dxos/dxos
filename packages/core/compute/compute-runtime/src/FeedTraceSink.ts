@@ -4,7 +4,9 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
@@ -17,6 +19,13 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export const TRACE_FEED_KIND = 'dxos.org.feed.trace';
+
+/**
+ * How long buffered messages wait before they are appended. Every append is its own SQLite
+ * transaction, and an agent turn writes trace messages in bursts; the feed is only indexed once per
+ * `TRACE_INDEX_DELAY_MS` anyway, and `flush` appends at once for a reader that needs them sooner.
+ */
+const APPEND_DELAY = Duration.millis(500);
 
 // In-rare cases its possible to have multiple trace feeds, natural order ensures that all clients use the same feed.
 export const query = Query.select(Filter.type(Feed.Feed, { kind: TRACE_FEED_KIND })).orderBy(Order.natural());
@@ -52,6 +61,8 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = La
     let buffer: Trace.Message[] = [];
     let flushMore = false;
     let flushFiber: Fiber.Fiber<void> | undefined;
+    // Set while the flush fiber is still collecting, so `flushNow` can cut the wait short.
+    let collecting = false;
 
     const scheduleFlush = () => {
       flushMore = true;
@@ -62,6 +73,9 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = La
 
     const runFlush = () => {
       flushFiber = Effect.gen(function* () {
+        collecting = true;
+        yield* Effect.sleep(APPEND_DELAY);
+        collecting = false;
         while (flushMore) {
           flushMore = false;
           const messages = buffer;
@@ -74,10 +88,15 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = La
       }).pipe(
         // Reset `flushFiber` even if `Feed.append` fails, otherwise
         // `scheduleFlush` would see a stale fiber handle and never re-arm.
-        Effect.tapCause((cause) => Effect.sync(() => log.warn('feed trace flush failed', { cause }))),
+        Effect.tapCause((cause) =>
+          Cause.hasInterruptsOnly(cause)
+            ? Effect.void
+            : Effect.sync(() => log.warn('feed trace flush failed', { cause })),
+        ),
         Effect.ensuring(
           Effect.sync(() => {
             flushFiber = undefined;
+            collecting = false;
           }),
         ),
         Effect.provideContext(context),
@@ -88,7 +107,8 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = La
     const flushNow = () =>
       Effect.gen(function* () {
         if (flushFiber) {
-          yield* Fiber.await(flushFiber);
+          // A fiber still collecting has appended nothing, so its batch is taken over below.
+          yield* collecting ? Fiber.interrupt(flushFiber) : Fiber.await(flushFiber);
         }
         const messages = buffer;
         buffer = [];

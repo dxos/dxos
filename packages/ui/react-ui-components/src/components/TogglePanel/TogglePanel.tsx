@@ -6,8 +6,7 @@ import { Collapsible } from '@ark-ui/react/collapsible';
 import React, { type ComponentPropsWithoutRef, type JSX, type PropsWithChildren } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import { Icon, IconBlock, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Block, Icon, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // Built on `@ark-ui/react`'s Collapsible (zag state machine), so the header is a real button with
@@ -82,7 +81,7 @@ type ContentProps = ThemedClassName<PropsWithChildren>;
 const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }, forwardedRef) => (
   <div
     {...composableProps(props, {
-      classNames: 'w-full border border-subdued-separator rounded-md overflow-hidden!',
+      classNames: 'w-full border border-separator-subtle rounded-md overflow-hidden!',
     })}
     ref={forwardedRef}
   >
@@ -113,15 +112,15 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
   const { duration } = useTogglePanelContext(HEADER_NAME);
 
   const disclosure = (
-    <IconBlock>
+    <Block>
       <Icon
-        size={4}
+        size='md'
         icon={'ph--caret-right--regular'}
         style={{ transitionDuration: `${duration}ms` }}
         // The machine owns the state, so the caret reads it off the trigger rather than a prop.
         classNames={['transition transition-transform ease-in-out', 'group-data-[state=open]:rotate-90']}
       />
-    </IconBlock>
+    </Block>
   );
 
   return (
@@ -138,7 +137,7 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
         {children}
       </div>
       {caret === 'end' && disclosure}
-      {icon && <IconBlock>{icon}</IconBlock>}
+      {icon && <Block>{icon}</Block>}
     </Collapsible.Trigger>
   );
 };

@@ -15,8 +15,7 @@ import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } fr
 import React from 'react';
 
 import { composeRefs } from '@dxos/react-hooks';
-import { type ThemedClassName, type ThemeMode, useThemeContext } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { type ThemedClassName, type ThemeMode, composable, composableProps, useThemeMode } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { Domino } from '@dxos/ui';
 import {
@@ -57,7 +56,7 @@ export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps
     },
     forwardedRef,
   ) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = useThemeMode();
     const { parentRef, focusAttributes } = useTextEditor(
       () => ({
         id,

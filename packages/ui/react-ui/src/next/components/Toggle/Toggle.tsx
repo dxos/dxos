@@ -35,7 +35,7 @@ export const Toggle = composable<HTMLButtonElement, ToggleProps>(
   ),
 );
 
-Toggle.displayName = 'Next.Toggle';
+Toggle.displayName = 'Toggle';
 
 /** Reads the machine's pressed state, which an uncontrolled toggle's caller does not have, to swap the icon. */
 const ToggleButton = composable<HTMLButtonElement, ButtonProps & ToggleIconProps>(

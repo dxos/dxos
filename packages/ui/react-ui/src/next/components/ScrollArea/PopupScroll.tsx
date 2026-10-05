@@ -94,7 +94,7 @@ export type PopupScrollProps = {
 
 /**
  * The frame of a scrolling popup (Menu, Select, Combobox; DESIGN.md follow-up 49): a thin overlay ScrollArea that is
- * also the popup surface, sized and levelled like any `.nx-popup`, with the portalled Content as its viewport.
+ * also the popup surface, sized and levelled like any `.dx-popup`, with the portalled Content as its viewport.
  */
 export const PopupScroll = ({ size, classNames, children, outside }: PopupScrollProps) => (
   <ScrollArea.Root data-surface='popup' size={size} width='thin' classNames={mx(recipes.popup(), classNames)}>

@@ -31,26 +31,14 @@
 @import './css/base/typography.css';
 
 /* @layer dx-components (components) */
-@import './css/components/button.css';
-@import './css/components/card.css';
-@import './css/components/checkbox.css';
-@import './css/components/dialog.css';
-@import './css/components/drawer.css';
 @import './css/components/focus.css';
-@import './css/components/icon.css';
-@import './css/components/input.css';
 @import './css/components/callout.css';
-@import './css/components/link.css';
 @import './css/components/scrollbar.css';
 @import './css/components/state.css';
 @import './css/components/surface.css';
-@import './css/components/tag.css';
 @import './css/components/text.css';
-@import './css/components/toast.css';
-@import './css/components/tour.css';
 
 /* @layer dx-components (layout) */
-@import './css/layout/main.css';
 @import './css/layout/native.css';
 @import './css/layout/positioning.css';
 @import './css/layout/size.css';
@@ -60,7 +48,6 @@
 
 /* Third-party integrations */
 @import './css/integrations/codemirror.css';
-@import './css/integrations/tldraw.css';
 
 /**
  * With `source(none)` on the Tailwind import above, these are the *only*
@@ -87,6 +74,9 @@
  */
 @source '../../../**/*.{ts,tsx,html}';
 @source '../../../../tools/**/*.{ts,tsx,html}';
+
+/* Plain stylesheets outside this build (Next's theme, plugin overrides): scanning them keeps the theme variables they read (`var(--color-*)`) from being tree-shaken once no utility class names them. */
+@source '../../../**/src/**/*.css';
 
 /**
  * Exclude generated/static data files that have no Tailwind classes but are

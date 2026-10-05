@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type ComponentProps,
   type ComponentType,
   type PropsWithChildren,
   type ReactNode,
@@ -15,17 +16,7 @@ import React, {
   useState,
 } from 'react';
 
-import {
-  Column,
-  ColumnRootProps,
-  IconButton,
-  ScrollArea,
-  type ScrollAreaRootProps,
-  composable,
-  composableProps,
-  createContext,
-  setRef,
-} from '@dxos/react-ui';
+import { Button, Container, ScrollArea, composable, composableProps, createContext, setRef } from '@dxos/react-ui';
 import { type WindowController, type WindowState, useFollow, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
@@ -47,6 +38,8 @@ import { useJumpDetector, usePositionLog } from './position-log.ts';
 //
 // Context
 //
+
+type ScrollAreaRootProps = ComponentProps<typeof ScrollArea.Root>;
 
 const MESSAGE_LIST_NAME = 'MessageList';
 
@@ -593,19 +586,17 @@ MessageListRoot.displayName = 'MessageList.Root';
 
 const MESSAGE_LIST_VIEWPORT_NAME = 'MessageList.Viewport';
 
-type MessageListViewportExtra = Pick<
-  ScrollAreaRootProps,
-  'autoHide' | 'centered' | 'native' | 'padding' | 'scrollbars' | 'thin'
-> &
-  Pick<ColumnRootProps, 'gutter'> & {
-    /**
-     * Chrome pinned over the scroller — a scroll-to-bottom pill, a "new messages" badge.
-     *
-     * Mounted inside `ScrollArea.Root` because it is positioned and does not scroll, so nothing has
-     * to enter the flex-height chain the placement measures.
-     */
-    overlay?: ReactNode;
-  };
+type MessageListViewportExtra = Pick<ScrollAreaRootProps, 'autoHide' | 'native' | 'scrollbars'> & {
+  /** Inline gutter of each row, as a page Container's. */
+  gutter?: 'sm' | 'md' | 'lg';
+  /**
+   * Chrome pinned over the scroller — a scroll-to-bottom pill, a "new messages" badge.
+   *
+   * Mounted inside `ScrollArea.Root` because it is positioned and does not scroll, so nothing has
+   * to enter the flex-height chain the placement measures.
+   */
+  overlay?: ReactNode;
+};
 
 /**
  * The scroll container and the mounted window of rows.
@@ -625,7 +616,7 @@ const isEmptyContent = (content: ItemContent, hasCustomRenderer: boolean): boole
   (content.kind === 'custom' && !hasCustomRenderer);
 
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
-  ({ autoHide, centered, native, padding, scrollbars, thin, gutter = 'md', overlay, ...props }, forwardedRef) => {
+  ({ autoHide, native, scrollbars, gutter = 'md', overlay, ...props }, forwardedRef) => {
     const { model, renderer, Chrome, Custom, windowRef, offset, sizerExtent, first, last, setViewport, revisionOf } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
     // The value once, per-row state derived: hooks do not run in loops, and the row loop below is
@@ -674,11 +665,8 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         {...composableProps(props)}
         orientation='vertical'
         autoHide={autoHide}
-        centered={centered}
         native={native}
-        padding={padding}
         scrollbars={scrollbars}
-        thin={thin}
       >
         <ScrollArea.Viewport
           data-testid='feed.viewport'
@@ -718,7 +706,7 @@ type MessageListRowProps = {
   index: number;
   empty: boolean;
   selected: boolean;
-  gutter: ColumnRootProps['gutter'];
+  gutter: MessageListViewportExtra['gutter'];
   Chrome: ComponentType<MessageChromeProps>;
   onSelect: (id: string, additive: boolean) => void;
 };
@@ -733,15 +721,15 @@ const MessageListRow = memo(({ message, index, empty, selected, gutter, Chrome, 
   // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
   <div data-object-id={message.id} {...windowRowProps(index, message.id)}>
     {!empty && (
-      <Column.Root gutter={gutter}>
+      <Container gutter={gutter}>
         {/* The widgets' query container: it must be an element whose width is definite, since
             containment stops a descendant's content sizing it (a prompt's bubble collapses). */}
-        <Column.Center classNames='dx-container-type-inline-size'>
+        <div className='dx-container-type-inline-size'>
           <Chrome message={message} index={index} selected={selected} onSelect={onSelect}>
             <MessageListItem message={message} />
           </Chrome>
-        </Column.Center>
-      </Column.Root>
+        </div>
+      </Container>
     )}
   </div>
 ));
@@ -861,7 +849,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
   return (
     <div role='group' {...composableProps(props)} onKeyDown={onKeyDown} ref={forwardedRef}>
       {ends && (
-        <IconButton
+        <Button
           icon='ph--arrow-line-up--regular'
           iconOnly
           label='First message'
@@ -870,7 +858,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
           onClick={() => navigation.first()}
         />
       )}
-      <IconButton
+      <Button
         icon='ph--caret-up--regular'
         iconOnly
         label='Previous message'
@@ -878,7 +866,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
         data-testid='feed.nav.back'
         onClick={() => navigation.step(-1)}
       />
-      <IconButton
+      <Button
         icon='ph--caret-down--regular'
         iconOnly
         label='Next message'
@@ -887,7 +875,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
         onClick={() => navigation.step(1)}
       />
       {ends && (
-        <IconButton
+        <Button
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Last message'

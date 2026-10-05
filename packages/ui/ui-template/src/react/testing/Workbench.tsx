@@ -11,7 +11,7 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { ReactNode, useRef } from 'react';
 
-import { Banner, Flex, useThemeContext } from '@dxos/react-ui';
+import { Empty, Flex, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Listbox } from '@dxos/react-ui-list';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -67,7 +67,7 @@ export type CellProps = {
 /** One titled pane in a story grid. */
 export const Cell = ({ title, children }: CellProps) => (
   <Flex column classNames='dx-expand'>
-    <div className='px-2 py-1 text-xs uppercase tracking-wide text-description border-be border-separator'>{title}</div>
+    <div className='px-2 py-1 text-xs uppercase tracking-wide text-fg-muted border-be border-separator'>{title}</div>
     <Flex column grow classNames='dx-expand'>
       {children}
     </Flex>
@@ -95,7 +95,7 @@ export type EditorProps = {
 
 /** One CodeMirror pane: monospace, theme-following, syntax highlighting on. */
 export const Editor = ({ value, extensions, onChange }: EditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   // The callback goes through a ref: an inline `onChange` closure changes identity every render,
   // and keying the editor on it would recreate CodeMirror — and drop focus — on each keystroke.
   const onChangeRef = useRef(onChange);
@@ -133,19 +133,17 @@ export type OperationLogProps = {
  * flat rows, keyboard traversal for free, `Empty` when nothing has been dispatched yet.
  */
 export const OperationLog = ({ entries }: OperationLogProps) => (
-  <Listbox.Root>
-    <Listbox.Viewport>
-      <Listbox.Content aria-label='Operation log'>
-        {entries.map((entry) => (
-          <Listbox.Item key={entry.seq} id={String(entry.seq)}>
-            <Listbox.ItemLabel classNames='font-mono text-xs'>
-              {entry.operation}
-              {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
-            </Listbox.ItemLabel>
-          </Listbox.Item>
-        ))}
-        {entries.length === 0 && <Banner.Empty label='No operations dispatched.' />}
-      </Listbox.Content>
-    </Listbox.Viewport>
+  <Listbox.Root items={entries.map((entry) => ({ value: String(entry.seq), label: String(entry.seq) }))}>
+    <Listbox.Content aria-label='Operation log'>
+      {entries.map((entry) => (
+        <Listbox.Item key={entry.seq} id={String(entry.seq)}>
+          <Listbox.ItemText classNames='font-mono text-xs'>
+            {entry.operation}
+            {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
+          </Listbox.ItemText>
+        </Listbox.Item>
+      ))}
+      {entries.length === 0 && <Empty>No operations dispatched.</Empty>}
+    </Listbox.Content>
   </Listbox.Root>
 );

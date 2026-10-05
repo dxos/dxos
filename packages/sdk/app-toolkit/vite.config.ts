@@ -46,5 +46,5 @@ export default defineConfig({
     'ui': 'src/ui/index.ts',
   },
   jsx: 'react',
-  test: { node: true },
+  test: { node: true, storybook: true },
 });

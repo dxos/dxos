@@ -26,14 +26,14 @@ export const SvgArticle = ({ canvas, selection, onSelectionChange, onActivate }:
 
   return (
     <Panel.Root classNames='dx-fill'>
-      <Panel.Content classNames='dx-attention-surface'>
+      <Panel.Body classNames='dx-attention-surface'>
         <SceneSvg
           objects={objects}
           selection={selection}
           onSelectionChange={onSelectionChange}
           onActivate={onActivate}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -14,7 +14,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Dialog, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Dialog, ScrollArea, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -109,17 +109,17 @@ export const CreateSpaceDialog = () => {
       >
         <Dialog.Header>
           <Dialog.Title>{t('create-space-dialog.title')}</Dialog.Title>
-          <Dialog.Close asChild>
-            <Dialog.ActionIconButton action='close' ref={closeRef} />
-          </Dialog.Close>
+          <Dialog.CloseTrigger asChild>
+            <SystemButton.Close ref={closeRef} />
+          </Dialog.CloseTrigger>
         </Dialog.Header>
         <Dialog.Body>
           {/* A ScrollArea rather than Form.Viewport's own scrolling Column, which would nest a second
               gutter inside the one Dialog.Body already propagates and inset the fields twice. */}
-          <ScrollArea.Root orientation='vertical' padding thin>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
               <Form.Content>
-                <Form.Fields />
+                <Form.Fields layoutName={SpaceSchema.SPACE_FORM_CREATE_LAYOUT} />
                 <Form.ErrorText>{error}</Form.ErrorText>
                 {templates.length > 0 && (
                   <Form.FieldSet
@@ -127,12 +127,19 @@ export const CreateSpaceDialog = () => {
                     label={t('create-space-dialog.templates.label')}
                     description={t('create-space-dialog.templates.description')}
                   >
-                    <Listbox.Root value={template} onValueChange={setTemplate}>
+                    <Listbox.Root
+                      value={template}
+                      onValueChange={setTemplate}
+                      items={templates.map(({ id, label, description, glyph }) => ({
+                        value: id,
+                        label,
+                        description,
+                        icon: glyph,
+                      }))}
+                    >
                       <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
-                        {templates.map(({ id, label, description, glyph }) => (
-                          <Listbox.Item key={id} id={id}>
-                            <Listbox.ItemContent icon={glyph} title={label} description={description} />
-                          </Listbox.Item>
+                        {templates.map(({ id }) => (
+                          <Listbox.Item key={id} id={id} />
                         ))}
                       </Listbox.Content>
                     </Listbox.Root>
@@ -142,7 +149,9 @@ export const CreateSpaceDialog = () => {
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Dialog.Body>
-        <Form.Actions submitLabel={t('create-space-dialog.create.label')} />
+        <Dialog.Footer>
+          <Form.Actions submitLabel={t('create-space-dialog.create.label')} />
+        </Dialog.Footer>
       </Form.Root>
     </Dialog.Content>
   );

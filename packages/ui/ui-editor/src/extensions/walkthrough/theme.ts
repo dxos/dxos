@@ -14,7 +14,7 @@ const surfaces = {
   '--cm-diff-surface': 'oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.02) c h)',
   '--cm-diff-chrome': 'oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.04) c h)',
   '--cm-diff-hatch': 'oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.05) c h)',
-  '--cm-diff-gutter-fg': 'var(--color-subdued)',
+  '--cm-diff-gutter-fg': 'var(--color-fg-subtle)',
   // Derived from the gutter colours so the hue has one source, but flatter and weaker: a whole
   // column of changed code is a large area, and the merge view's per-line tint reads as a wash here.
   '--cm-diff-add': 'oklch(from var(--color-cm-diff-add-gutter) l calc(c * 0.7) h / 0.16)',
@@ -66,7 +66,7 @@ export const diffBlockTheme = EditorView.theme({
     border: 'none',
     borderRadius: '0.25rem',
     background: 'transparent',
-    color: 'var(--color-description)',
+    color: 'var(--color-fg-muted)',
     cursor: 'pointer',
   },
   '.cm-diff-toggle:hover': { background: 'var(--color-hover-surface)' },
@@ -82,16 +82,16 @@ export const diffBlockTheme = EditorView.theme({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    color: 'var(--color-subdued)',
+    color: 'var(--color-fg-subtle)',
   },
-  '.cm-diff-name': { flex: '0 0 auto', color: 'var(--color-base-fg)', fontWeight: '500' },
+  '.cm-diff-name': { flex: '0 0 auto', color: 'var(--color-fg)', fontWeight: '500' },
 
   '.cm-diff-stat': { flex: '0 0 auto', fontVariantNumeric: 'tabular-nums' },
   '.cm-diff-stat-added': { color: 'var(--color-cm-diff-add-gutter)' },
   '.cm-diff-stat-removed': { color: 'var(--color-cm-diff-remove-gutter)' },
-  '.cm-diff-lang': { flex: '0 0 auto', color: 'var(--color-subdued)' },
+  '.cm-diff-lang': { flex: '0 0 auto', color: 'var(--color-fg-subtle)' },
   // Pushed to the trailing edge, so the range reads as chrome rather than as part of the path.
-  '.cm-diff-range': { marginInlineStart: 'auto', flex: '0 0 auto', color: 'var(--color-subdued)' },
+  '.cm-diff-range': { marginInlineStart: 'auto', flex: '0 0 auto', color: 'var(--color-fg-subtle)' },
   // At the narrow layout the path and the counts are all the header has room to say.
   '.cm-diff-block[data-layout="inline"] .cm-diff-lang': { display: 'none' },
   '.cm-diff-block[data-layout="inline"] .cm-diff-range': { display: 'none' },
@@ -107,9 +107,9 @@ export const diffBlockTheme = EditorView.theme({
     height: '2.25rem',
     minWidth: '0',
     padding: '0 0.875rem',
-    borderBlock: '1px solid var(--color-subdued-separator)',
+    borderBlock: '1px solid var(--color-separator-subtle)',
     background: 'var(--cm-diff-surface)',
-    color: 'var(--color-description)',
+    color: 'var(--color-fg-muted)',
     fontFamily: 'var(--font-body)',
     fontSize: '0.8125rem',
   },
@@ -119,7 +119,7 @@ export const diffBlockTheme = EditorView.theme({
   // minimum is the whole document's: the prose beside it would be pushed past the pane too.
   '.cm-diff-section': {
     minWidth: '0',
-    color: 'var(--color-subdued)',
+    color: 'var(--color-fg-subtle)',
     fontFamily: 'var(--font-mono)',
     fontVariantLigatures: 'none',
     overflow: 'hidden',
@@ -164,7 +164,7 @@ export const diffBlockTheme = EditorView.theme({
     whiteSpace: 'pre-wrap',
     overflowWrap: 'anywhere',
     tabSize: '2',
-    color: 'var(--color-base-fg)',
+    color: 'var(--color-fg)',
   },
   '.cm-diff-commentable': { position: 'relative' },
   // Hangs into the gutter to the left of the code so it never shifts the text it annotates.
@@ -214,8 +214,8 @@ export const diffBlockTheme = EditorView.theme({
 export const walkthroughTheme = (): Extension =>
   EditorView.theme({
     '&': {
-      '--color-cm-heading': 'var(--color-base-fg)',
-      '--color-cm-heading-number': 'var(--color-subdued)',
-      '--color-cm-code-inline': 'var(--color-base-fg)',
+      '--color-cm-heading': 'var(--color-fg)',
+      '--color-cm-heading-number': 'var(--color-fg-subtle)',
+      '--color-cm-code-inline': 'var(--color-fg)',
     },
   });

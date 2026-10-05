@@ -26,7 +26,7 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
 
   return (
     <Panel.Root role={role} classNames='relative'>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
           <PresenterLayout
             bottomRight={<PageNumber index={slide} count={liveCollection.objects.length} />}
@@ -43,7 +43,7 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
             />
           </PresenterLayout>
         </PresentationShell>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

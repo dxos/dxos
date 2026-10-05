@@ -55,7 +55,7 @@ const DebugPanelBody = () => (
     <Splitter.Panel position='start'>
       <DebugPanelSidebar />
     </Splitter.Panel>
-    <Splitter.Handle />
+    <Splitter.ResizeTrigger />
     <Splitter.Panel position='end'>
       <DebugPanelMain />
     </Splitter.Panel>

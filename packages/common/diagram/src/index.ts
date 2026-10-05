@@ -5,13 +5,18 @@
 export * from './content.ts';
 export * from './dialect.ts';
 export * as Aesthetics from './aesthetics.ts';
+export * as Appeal from './appeal.ts';
 export * as Architecture from './architecture.ts';
 export * as Diagnostics from './diagnostics.ts';
 export * as Dsl from './dsl/index.ts';
+export * as DxSvg from './dx-svg.ts';
 export * as Layout from './layout.ts';
 export * as Mermaid from './mermaid.ts';
 export * as MermaidEngine from './mermaid-engine.ts';
+export * as Nudge from './nudge.ts';
 export * as Objective from './objective.ts';
+export * as Ports from './ports.ts';
+export * as Rules from './rules.ts';
 export * as Scene from './scene.ts';
 export * as Score from './score.ts';
 export * from './svg-handler.ts';

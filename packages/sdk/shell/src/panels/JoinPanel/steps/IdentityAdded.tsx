@@ -7,7 +7,7 @@ import React, { cloneElement } from 'react';
 import { generateName } from '@dxos/display-name';
 import { toPublicKey } from '@dxos/protocols/buf';
 import type { Identity } from '@dxos/react-client/halo';
-import { Avatar, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, toAvatarHue, useId, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { hexToFallback } from '@dxos/util';
 
@@ -46,16 +46,15 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
     <>
       <InputLabel>{t('identity-added.label')}</InputLabel>
       <div className='grow flex flex-col items-center justify-center text-center gap-2'>
-        <Avatar.Root labelId={labelId}>
-          <Avatar.Content
-            status='active'
-            hue={profileString(addedIdentity, 'hue') || fallbackValue.hue}
-            fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
-          />
-          <Avatar.Label classNames={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
-            {displayName}
-          </Avatar.Label>
-        </Avatar.Root>
+        <Avatar.Root
+          aria-labelledby={labelId}
+          status='active'
+          hue={toAvatarHue(profileString(addedIdentity, 'hue') || fallbackValue.hue)}
+          fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
+        />
+        <span id={labelId} className={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
+          {displayName}
+        </span>
       </div>
       <ActionBar>
         {mode === 'halo-only' ? (

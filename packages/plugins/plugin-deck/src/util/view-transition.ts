@@ -27,12 +27,19 @@ const startTransition = (types: string[]) =>
     const settled = new Promise<void>((resolve) => {
       settle = resolve;
     });
-    document.startViewTransition({
+    const transition = document.startViewTransition({
       update: () => {
         signalCaptured();
         return settled;
       },
       types,
+    });
+    // A transition superseded by the next one rejects `ready` with an AbortError; its update still runs, so only the
+    // animation was dropped.
+    transition.ready.catch((error: unknown) => {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        throw error;
+      }
     });
     return { captured, settle } satisfies Handles;
   });

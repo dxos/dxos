@@ -16,9 +16,9 @@ export const QueriesArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         <QueryMetricsTable queries={queries} onReset={reset} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

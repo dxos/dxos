@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { useClient, useConfig } from '@dxos/react-client';
 import { type SpaceSyncState } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, ButtonGroup } from '@dxos/react-ui';
+import { Button, Group } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Expando } from '@dxos/schema';
 
@@ -133,18 +133,18 @@ export const SyncBench = () => {
   return (
     <div className='grid grid-rows-[auto_1fr] gap-2 '>
       <div className='flex flex-col gap-2'>
-        <ButtonGroup>
+        <Group>
           <Button onClick={createSpace}>Create space</Button>
           <Button onClick={() => setShowConfig(!showConfig)}>Show config ({showConfig ? 'on' : 'off'})</Button>
           <Button onClick={refreshSyncState}>Refresh sync state</Button>
           <Button onClick={handleInvite}>Invite</Button>
           <Button onClick={handleLoadAll}>Load all objects</Button>
-        </ButtonGroup>
-        <ButtonGroup>
+        </Group>
+        <Group>
           <Button onClick={() => createObjects(10)}>Create 10</Button>
           <Button onClick={() => createObjects(100)}>Create 100</Button>
           <Button onClick={() => createObjects(1000)}>Create 1000</Button>
-        </ButtonGroup>
+        </Group>
       </div>
       <JsonHighlighter
         data={{

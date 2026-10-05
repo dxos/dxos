@@ -1,37 +1,8 @@
-# Codemods
+# @dxos/codemorph
 
-Scripts for bulk code refactoring.
+Codemods for large refactors.
 
-## Running codemods
+- `src/migrate-to-nested-source.ts` converts packages to the nested `exports.source` condition; usage in its header.
 
-```bash
-# From "tools/codemods" directory:
-./scripts/run.sh -t src/codemod.ts
-
-# Lint changed packages.
-px affected --target=lint --fix
-```
-
-> It is recommended that codemods are executed in clean git state (with no uncommitted changes)
-> so that the changed files are easy to review.
-
-## Updating imports
-
-Command:
-
-```bash
- ./scripts/run.sh -t src/imports.ts --replace=@dxos/async#Event:@dxos/foo
-```
-
-Before:
-
-```typescript
-import { Event, until } from '@dxos/async';
-```
-
-After:
-
-```typescript
-import { until } from '@dxos/async';
-import { Event } from '@dxos/foo';
-```
+The react-ui Next migration codemods ran at the cut-over and were then removed; what they did is recorded in
+`packages/ui/react-ui/docs/archive/MIGRATION-CODEMODS.md`, and the code is in git history.
