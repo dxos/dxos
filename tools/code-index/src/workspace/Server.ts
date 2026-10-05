@@ -5,6 +5,7 @@
 //
 
 import * as NodeHttpServer from '@effect/platform-node/NodeHttpServer';
+import * as Cause from 'effect/Cause';
 import * as Console from 'effect/Console';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
@@ -17,9 +18,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as Crawler from '../Crawler.ts';
-import type * as Reasoner from '../Reasoner.ts';
+import * as IndexThread from '../IndexThread.ts';
 import * as Store from '../Store.ts';
-import * as Watch from '../Watch.ts';
 import * as Agent from './Agent.ts';
 import * as Handlers from './Handlers.ts';
 import * as Log from './Log.ts';
@@ -62,8 +62,11 @@ export type Options = {
   readonly port?: number;
   readonly host?: string;
   readonly model: Models.Selection;
-  /** Keep the index current while serving (`Watch.ts`); none to serve the store as it is. */
-  readonly reasoners?: readonly Reasoner.Reasoner[];
+  /**
+   * Keep the index in `storeDir` current with `rules` while serving, on a worker thread
+   * (`IndexThread.ts`); none to serve the store as it is.
+   */
+  readonly watch?: { readonly storeDir: string; readonly rules: string };
 };
 
 export const run = ({
@@ -71,7 +74,7 @@ export const run = ({
   port = DEFAULT_PORT,
   host = DEFAULT_HOST,
   model,
-  reasoners,
+  watch,
 }: Options): Effect.Effect<void, ServerError | Vite.ViteError, Store.Store | Log.Log | Agent.Agent> =>
   Effect.gen(function* () {
     if (!isLoopback(host)) {
@@ -148,8 +151,13 @@ export const run = ({
       ].join('\n'),
     );
 
-    if (reasoners) {
-      yield* Effect.forkScoped(Watch.run({ root, reasoners }));
+    // A dead indexer thread leaves the index as it is, which is still worth serving.
+    if (watch) {
+      yield* Effect.forkScoped(
+        IndexThread.run({ root, ...watch }).pipe(
+          Effect.catchCause((cause) => Console.error(`code-index · indexing stopped\n${Cause.pretty(cause)}`)),
+        ),
+      );
     }
 
     // The server runs until interrupted; the scope's finalizers close Vite and the listener.

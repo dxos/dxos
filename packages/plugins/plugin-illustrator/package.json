@@ -135,6 +135,11 @@
       "types": "./dist/types/src/IllustratorPlugin.d.ts",
       "import": "./dist/lib/IllustratorPlugin.mjs"
     },
+    "./SceneSvg": {
+      "source": "./src/components/SceneSvg.tsx",
+      "types": "./dist/types/src/components/SceneSvg.d.ts",
+      "import": "./dist/lib/SceneSvg.mjs"
+    },
     "./LegacySketch": {
       "source": "./src/types/LegacySketch.ts",
       "types": "./dist/types/src/types/LegacySketch.d.ts",
@@ -198,6 +203,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@playwright/test": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

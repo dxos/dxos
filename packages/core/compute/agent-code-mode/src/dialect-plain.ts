@@ -143,4 +143,6 @@ const renderPlainOperations = (operations: readonly SandboxOperation[]): string 
     .join('\n')}
 `;
 
-const camelCase = (name: string): string => name.replace(/[-_]([a-z0-9])/g, (_, char: string) => char.toUpperCase());
+/** The identifier form of a kebab-case tool name, which the plain dialect binds alongside it. */
+export const camelCase = (name: string): string =>
+  name.replace(/[-_]([a-z0-9])/g, (_, char: string) => char.toUpperCase());

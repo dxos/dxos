@@ -33,6 +33,8 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
       const store = yield* Store.Store;
       const log = yield* Log.Log;
       const agent = yield* Agent.Agent;
+      // Counted now so the UI's first `Info` skips the native store's one full scan; a failure resurfaces there.
+      yield* store.stats().pipe(Effect.ignore, Effect.forkIn(scope));
 
       /**
        * One turn at a time per project. The log serializes individual appends, not turns, so two
