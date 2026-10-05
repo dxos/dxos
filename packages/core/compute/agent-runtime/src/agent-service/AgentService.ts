@@ -12,7 +12,6 @@ import * as Semaphore from 'effect/Semaphore';
 
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
 import {
   type AgentLocation,
   AgentService,
@@ -47,16 +46,8 @@ type AgentRpcs = ReturnType<typeof AgentProcess> extends Operation.Durable<any, 
  */
 type AgentHandle =
   ReturnType<typeof AgentProcess> extends Operation.Durable<infer Input, infer Output, any, infer Rpcs>
-    ? ProcessManager.Handle<Input, Output, Rpcs>
+    ? Process.Handle<Input, Output, Rpcs>
     : never;
-
-// TERMINATING counts as terminal: the handle is already `#finished`, so adopting one would drop
-// every submitted input and leave the turn waiting for a process that will never run again.
-const isTerminalProcess = (state: Process.State): boolean =>
-  state === Process.State.SUCCEEDED ||
-  state === Process.State.FAILED ||
-  state === Process.State.TERMINATED ||
-  state === Process.State.TERMINATING;
 
 // TODO(burdon): Agent identity?
 export interface CreateSessionOptions {
@@ -140,73 +131,34 @@ export interface Options {
 /**
  * The `AgentService` layer.
  *
- * Requires BOTH process managers: `ProcessManager.Service` runs a session locally, and
- * `RemoteProcessManager.Service` is what a session asking for `location: 'edge'` is spawned on.
- * The remote one is required rather than read optionally — a tag a `LayerSpec` does not require is
- * never in its context, so an optional read always came back empty and edge sessions failed with
- * the manager present in the app. A host without EDGE satisfies it with
- * `RemoteProcessManager.layerNoop`.
+ * Requires {@link Process.ManagerService}, which runs a session locally or, for `location: 'edge'`,
+ * on the remote runtime. A host without EDGE satisfies its remote half with
+ * `RemoteProcessManager.layerNoop`, so an edge session fails at spawn rather than silently running
+ * locally.
  */
-export const layer = (
-  opts?: Options,
-): Layer.Layer<AgentService, never, ProcessManager.Service | RemoteProcessManager.Service> =>
+export const layer = (opts?: Options): Layer.Layer<AgentService, never, Process.ManagerService> =>
   Layer.effect(
     AgentService,
     Effect.gen(function* () {
-      const processManager = yield* ProcessManager.Service;
-      // Required, not read optionally: an optional read is invisible to a `LayerSpec` stack, where a
-      // tag this spec does not require is never in its context -- so every `location: 'edge'` session
-      // failed on a manager that was present in the app all along. A host that runs only local agents
-      // satisfies this with `RemoteProcessManager.layerNoop`, which is explicit about offering no
-      // process control instead of silently disabling edge.
-      const remote = yield* RemoteProcessManager.Service;
+      const processManager = yield* Process.ManagerService;
 
-      // Spaces an edge session has been opened on this run. One remote manager spans them all and
-      // each of its verbs takes the space it addresses, so this is what `hydrate` has to walk.
+      // Spaces an edge session has been opened on this run. One remote runtime spans them all and
+      // cannot enumerate them, so this is what `hydrate` has to walk.
       const remoteSpaces = new Set<SpaceId>();
 
       /**
-       * The two process verbs a session needs, over the location it asked for.
-       *
-       * The choice is made here rather than behind a façade presenting the remote manager as a local
-       * one: a remote process is not a local one (the two manager tags say so), and unifying them for
-       * a caller that wants a single agent surface is this layer's job.
-       *
-       * `edge` needs the space, since one remote manager spans them, and a chat with no space cannot
-       * name where its agent would run.
+       * Where a session's agent runs. `edge` needs the space, since one remote runtime spans them,
+       * and a chat with no space cannot name where its agent would run.
        */
-      const processesFor = (location: AgentLocation | undefined, spaceId: SpaceId | undefined) => {
+      const locationFor = (location: AgentLocation | undefined, spaceId: SpaceId | undefined): Process.Location => {
         if (location !== 'edge') {
-          return {
-            list: (options: ProcessManager.ListOptions) => processManager.list(options),
-            spawn: (definition: ReturnType<typeof makeExecutable>, options: ProcessManager.SpawnOptions) =>
-              processManager.spawn(definition, options),
-          };
+          return { kind: 'local' };
         }
         if (!spaceId) {
           throw new Error('Agent requested on edge, but its conversation has no space.');
         }
-        const withRemote = <A>(use: (manager: RemoteProcessManager.Manager) => Effect.Effect<A>) =>
-          use(remote).pipe(Effect.orDie);
         remoteSpaces.add(spaceId);
-        return {
-          list: (options: ProcessManager.ListOptions) =>
-            withRemote((manager) => {
-              if (!manager.list) {
-                throw new Error('Agent requested on edge, but RemoteProcessManager offers no process control.');
-              }
-              return manager.list({ spaceId, ...options });
-            }),
-          spawn: (definition: ReturnType<typeof makeExecutable>, options: ProcessManager.SpawnOptions) =>
-            withRemote((manager) => {
-              if (!manager.spawn) {
-                throw new Error('Agent requested on edge, but RemoteProcessManager offers no process control.');
-              }
-              // Only the key crosses the wire; the definition stays local, supplying the codecs and
-              // the RPC group the returned handle is typed by.
-              return manager.spawn({ spaceId, key: definition.key, definition, ...options });
-            }),
-        };
+        return { kind: 'edge', space: spaceId };
       };
 
       // The agent's model and steering instructions are bound to its process at spawn time, so the
@@ -259,9 +211,9 @@ export const layer = (
         // does not need the pre-warm: `getSession` reattaches to a process still running for its
         // chat, which is the path opening one takes.
         const agents = [
-          ...(yield* processManager.list({ key: AGENT_PROCESS_KEY })),
-          ...(yield* Effect.forEach([...remoteSpaces], (spaceId) =>
-            processesFor('edge', spaceId).list({ key: AGENT_PROCESS_KEY }),
+          ...(yield* processManager.handles({ key: AGENT_PROCESS_KEY })),
+          ...(yield* Effect.forEach([...remoteSpaces], (space) =>
+            processManager.handles({ key: AGENT_PROCESS_KEY, location: { kind: 'edge', space } }),
           )).flat(),
         ];
         log('agent hydrate', { count: agents.length });
@@ -294,12 +246,12 @@ export const layer = (
                     cached.provider === provider &&
                     cached.instructions === instructions &&
                     cached.location === location &&
-                    !isTerminalProcess(cached.handle.status.state)
+                    !Process.isTerminal(cached.handle.status.state)
                   ) {
                     return cached.session;
                   }
 
-                  if (!isTerminalProcess(cached.handle.status.state)) {
+                  if (!Process.isTerminal(cached.handle.status.state)) {
                     // Model, provider, steering instructions or location changed (e.g. the user
                     // toggled online/offline, or moved the chat to the cloud): terminate the
                     // existing process so the conversation continues on a fresh process bound to the new
@@ -314,14 +266,18 @@ export const layer = (
                 const target = Obj.getURI(chat);
                 const parsedEchoUri = EID.tryParse(target);
                 const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
-                const agentProcesses = processesFor(options?.location, spaceId);
+                const processLocation = locationFor(options?.location, spaceId);
                 const executable = makeExecutable(provider);
 
                 // Reuse a still-running process for this feed only when there was no cached session
                 // (e.g. after the UI remounted). A process adopted this way re-reads the chat when it
                 // hydrates, so it picks up a model selected while this client was away.
-                const processes = yield* agentProcesses.list({ target, key: executable.key });
-                let activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
+                const processes = yield* processManager.handles({
+                  target,
+                  key: executable.key,
+                  location: processLocation,
+                });
+                let activeProcess = processes.find((process) => !Process.isTerminal(process.status.state));
 
                 let handle: AgentHandle;
                 if (activeProcess) {
@@ -329,7 +285,8 @@ export const layer = (
                   // methods die with "Process not hydrated" (see ProcessManager's DormantHandle).
                   handle = yield* activeProcess.hydrate(executable);
                 } else {
-                  handle = yield* agentProcesses.spawn(executable, {
+                  handle = yield* processManager.spawn(executable, {
+                    location: processLocation,
                     name: 'Agent',
                     target,
                     // Stamp the host marker so the harness control surface is discoverable by annotation
@@ -362,12 +319,12 @@ export const layer = (
                 // itself, so its status is authoritative, and the local `list` reads every persisted
                 // process record — a storage round trip per record before every prompt.
                 const isFinished: Effect.Effect<boolean> = Effect.suspend(() =>
-                  isTerminalProcess(handle.status.state) || location !== 'edge'
-                    ? Effect.succeed(isTerminalProcess(handle.status.state))
-                    : agentProcesses.list({ target, key: executable.key }).pipe(
+                  Process.isTerminal(handle.status.state) || location !== 'edge'
+                    ? Effect.succeed(Process.isTerminal(handle.status.state))
+                    : processManager.handles({ target, key: executable.key, location: processLocation }).pipe(
                         Effect.map((live) => {
                           const current = live.find((process) => process.pid === handle.pid);
-                          return current === undefined || isTerminalProcess(current.status.state);
+                          return current === undefined || Process.isTerminal(current.status.state);
                         }),
                         Effect.orElseSucceed(() => false),
                       ),
