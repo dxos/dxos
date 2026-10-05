@@ -8,6 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
+import { type ChildProcess, spawn } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -15,8 +16,16 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
+import * as Native from '../internal/native.ts';
 import * as Store from '../Store.ts';
 import * as Lock from './Lock.ts';
+
+/** Opens the native store, says so on stdout, and holds it until killed. */
+const HOLDER = `
+const store = require(process.env.HOLD_ADDON).NativeStore.open(process.env.HOLD_DIR);
+process.stdout.write('ready\\n');
+setInterval(() => store, 1 << 30);
+`;
 
 describe('Lock', () => {
   let dir: string;
@@ -29,10 +38,33 @@ describe('Lock', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  /** Opens the store in a scope the test closes itself, standing in for another process holding it. */
+  /**
+   * Another process holding the store, until the returned scope closes: within one process the addon
+   * shares an open store instead of failing on its lock. The trailing `code-index index` makes it
+   * read as a holder that finishes on its own, which is the kind `Lock.layer` waits for.
+   */
   const hold = Effect.gen(function* () {
+    // Stamped first: a writer resets an unstamped store, deleting the graph directory out from under the holder.
+    yield* Effect.scoped(Layer.build(Store.layer(dir)));
     const scope = yield* Scope.make();
-    yield* Layer.buildWithScope(Store.layer(dir), scope);
+    yield* Scope.provide(scope)(
+      Effect.acquireRelease(
+        Effect.callback<ChildProcess>((resume) => {
+          const child = spawn(process.execPath, ['-e', HOLDER, 'code-index', 'index'], {
+            env: { ...process.env, HOLD_ADDON: Native.ADDON_PATH, HOLD_DIR: join(dir, Native.DIR) },
+            stdio: ['pipe', 'pipe', 'inherit'],
+          });
+          child.stdout.once('data', () => resume(Effect.succeed(child)));
+          child.once('error', (cause) => resume(Effect.die(cause)));
+          child.once('exit', (code) => resume(Effect.die(new Error(`holder exited with code ${code}`))));
+        }),
+        (child) =>
+          Effect.callback<void>((resume) => {
+            child.once('exit', () => resume(Effect.void));
+            child.kill();
+          }),
+      ),
+    );
     return scope;
   });
 
@@ -79,7 +111,7 @@ describe('Lock', () => {
     );
     expect(Exit.isFailure(exit)).toBe(true);
     const message = Exit.isFailure(exit) ? String(exit.cause) : '';
-    expect(message).toContain(`The store at ${dir} is locked by another process`);
+    expect(message).toContain(`The store at ${dir} is held open by pid`);
     expect(message).toContain('stop that process');
   });
 
