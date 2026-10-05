@@ -34,6 +34,7 @@
       "@dxos/client-services",
       "@dxos/code-index",
       "@dxos/codemorph",
+      "@dxos/collection-sync",
       "@dxos/composer-e2e",
       "@dxos/composer-forensics",
       "@dxos/composer-stream-deck",
