@@ -72,7 +72,7 @@ export const layer: Layer.Layer<
       spawn: <I, O, Rpcs extends Rpc.Any = never>(
         definition: Operation.Durable<I, O, any, Rpcs>,
         { location, ...options }: Process.SpawnOptions & Process.LocationOptions = {},
-      ): Effect.Effect<Process.Handle<I, O, Rpcs>> =>
+      ): Effect.Effect<Process.Process<I, O, Rpcs>> =>
         location?.kind === 'edge'
           ? Effect.suspend(() =>
               remoteControl('spawn')({ ...options, spaceId: location.space, key: definition.key, definition }),
@@ -85,7 +85,7 @@ export const layer: Layer.Layer<
       attach: <I, O, Rpcs extends Rpc.Any = never>(
         pid: Process.ID,
         { location }: Process.LocationOptions = {},
-      ): Effect.Effect<Process.Handle<I, O, Rpcs>> =>
+      ): Effect.Effect<Process.Process<I, O, Rpcs>> =>
         location?.kind === 'edge'
           ? Effect.suspend(() => remoteControl('attach')({ spaceId: location.space, pid }))
           : local.attach<I, O, Rpcs>(pid),

@@ -42,7 +42,7 @@ flowchart TB
 
 - **`Process.ManagerService`** (runtime primitive, no AI): the process's own manager links every child
   it spawns to the process. `Process.spawn` spawns an operation as such a child and returns its
-  `Process.Handle`; `attach(pid)` + `Process.awaitOutput` reads the finished child's result.
+  `Process.Process`; `attach(pid)` + `Process.awaitOutput` reads the finished child's result.
 - **`DelegationStrategy`** (this dir, type-only): the pluggable policy `AgentProcess` calls —
   `reconcile` (what to delegate) and `onComplete` (how to fold a result back). Absent → plain chat.
 - **`makeDelegationStrategy()`** (assistant-toolkit): the concrete, agent/plan-aware implementation,

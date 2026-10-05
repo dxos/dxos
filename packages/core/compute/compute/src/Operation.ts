@@ -1403,7 +1403,7 @@ export const makeProcessInvoker = ({ manager, toProcess, origin, tracer }: Proce
 
 // Mirrors `Process.awaitOutput`, which this module cannot import: `Process` reaches back here through
 // `Trace` at load time.
-const awaitFirstOutput = <O>(handle: Process.Handle<any, O, any>): Effect.Effect<O> =>
+const awaitFirstOutput = <O>(handle: Process.Process<any, O, any>): Effect.Effect<O> =>
   handle.subscribeOutputs().pipe(
     Stream.runHead,
     Effect.flatMap(

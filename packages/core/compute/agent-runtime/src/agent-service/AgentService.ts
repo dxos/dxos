@@ -46,7 +46,7 @@ type AgentRpcs = ReturnType<typeof AgentProcess> extends Operation.Durable<any, 
  */
 type AgentHandle =
   ReturnType<typeof AgentProcess> extends Operation.Durable<infer Input, infer Output, any, infer Rpcs>
-    ? Process.Handle<Input, Output, Rpcs>
+    ? Process.Process<Input, Output, Rpcs>
     : never;
 
 // TODO(burdon): Agent identity?

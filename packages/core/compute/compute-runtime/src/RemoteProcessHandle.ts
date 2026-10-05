@@ -74,7 +74,7 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
 }
 
 /**
- * {@link Process.Handle} for a process hosted by a remote runtime.
+ * {@link Process.Process} for a process hosted by a remote runtime.
  *
  * The remote host owns the process; this is a view plus the control verbs. Outputs and ephemeral
  * trace are read by cursor (see `RemoteProcessManager.Control.readEvents`), so every subscription
@@ -84,7 +84,7 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
  * `runToCompletion` / `runUntilSettled` are derived here from polled state rather than served by the
  * host, so the settle predicates cannot drift from `ProcessHandle`'s definitions.
  */
-export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> implements Process.Handle<
+export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> implements Process.Process<
   _Input,
   _Output,
   _Rpcs
@@ -104,7 +104,12 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
    * more: `Control` answers in domain types, so the transport has already decoded what arrived.
    */
   static make<I, O, R extends Rpc.Any>(options: Options<I, O, R>): Effect.Effect<RemoteProcessHandle<I, O, R>> {
-    return Effect.sync(() => new RemoteProcessHandle(options));
+    return Effect.sync(() => RemoteProcessHandle.makeSync(options));
+  }
+
+  /** Synchronous {@link make}, for a process that resolves its runtime lazily on first use. */
+  static makeSync<I, O, R extends Rpc.Any>(options: Options<I, O, R>): RemoteProcessHandle<I, O, R> {
+    return new RemoteProcessHandle(options);
   }
 
   readonly #options: Options<_Input, _Output, _Rpcs>;
@@ -136,8 +141,28 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     return this.#info.pid;
   }
 
-  get parentId(): Process.ID | null {
+  get parentPid(): Process.ID | null {
     return this.#info.parentPid;
+  }
+
+  get state(): Process.State {
+    return this.#info.state;
+  }
+
+  get error(): Process.Data['error'] {
+    return this.#info.error;
+  }
+
+  get startedAt(): number {
+    return this.#info.startedAt;
+  }
+
+  get completedAt(): Option.Option<number> {
+    return this.#info.completedAt;
+  }
+
+  get metrics(): Process.Data['metrics'] {
+    return this.#info.metrics;
   }
 
   get key(): string {
@@ -314,7 +339,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
 
   hydrate(
     definition: Operation.Durable<_Input, _Output, any, _Rpcs>,
-  ): Effect.Effect<Process.Handle<_Input, _Output, _Rpcs>> {
+  ): Effect.Effect<Process.Process<_Input, _Output, _Rpcs>> {
     // The host revives its own processes from its own storage, so there is no dormant state to
     // restore here. What a caller does need is the definition: a handle from `attach` or `list` has
     // no codecs, and this is the only place it can acquire them.

@@ -87,7 +87,7 @@ const FINISHED_PROCESS_RETENTION = 200;
  */
 const EMPTY_RPC_CLIENT: RpcClient.RpcClient<any> = Effect.runSync(
   // `RpcGroup`/`RpcClient` are invariant in their group; the empty group is widened to the untyped
-  // `any` surface so the resulting client matches `Process.Handle.rpc` (see design spec §4.4).
+  // `any` surface so the resulting client matches `Process.Process.rpc` (see design spec §4.4).
   makeLoopbackRpcClient(
     RpcGroup.make() as unknown as RpcGroup.RpcGroup<any>,
     Context.empty() as Context.Context<any>,
@@ -132,32 +132,32 @@ export interface Manager {
   spawn<I, O, Rpcs extends Rpc.Any = never>(
     definition: Operation.Durable<I, O, any, Rpcs>,
     options?: Process.SpawnOptions,
-  ): Effect.Effect<Process.Handle<I, O, Rpcs>>;
+  ): Effect.Effect<Process.Process<I, O, Rpcs>>;
 
   /**
    * Attach to an existing process.
    */
-  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Handle<I, O, Rpcs>>;
+  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Process<I, O, Rpcs>>;
 
   /**
    * Lists live processes and, when no live match exists, non-terminal processes
-   * persisted in durable storage. Dormant entries expose {@link Process.Handle.pid} and
-   * metadata but require {@link Process.Handle.hydrate} before inputs can be submitted.
+   * persisted in durable storage. Dormant entries expose {@link Process.Process.pid} and
+   * metadata but require {@link Process.Process.hydrate} before inputs can be submitted.
    */
-  list(options?: Process.ListOptions): Effect.Effect<readonly Process.Handle.Any[]>;
+  list(options?: Process.ListOptions): Effect.Effect<readonly Process.Any[]>;
 
   runAllProcessesToCompletion(): Effect.Effect<void>;
 
   /**
    * Suspends all live processes, clears in-memory handle state, and persists durable records to KV.
    * Mimics app teardown. Idempotent — safe to call multiple times before {@link startup}.
-   * Live processes must be rehydrated externally via {@link Process.Handle.hydrate} after {@link startup}.
+   * Live processes must be rehydrated externally via {@link Process.Process.hydrate} after {@link startup}.
    */
   shutdown(): Effect.Effect<void>;
 
   /**
    * Marks the manager as ready after {@link shutdown}, mimicking a fresh boot from KV storage.
-   * Does not rehydrate processes — callers supply definitions via {@link Process.Handle.hydrate}.
+   * Does not rehydrate processes — callers supply definitions via {@link Process.Process.hydrate}.
    */
   startup(): Effect.Effect<void>;
 
@@ -206,9 +206,8 @@ export class Impl implements Manager {
   readonly #runtimeName: Trace.RuntimeName | undefined;
   readonly #store: ProcessStore;
 
+  // Each entry still reaches its handle, so a late {@link attach} can read an exited process's result.
   readonly #finished: Process.Process[] = [];
-  // Exited handles, retained alongside `#finished` so a late {@link attach} can still read a result.
-  readonly #finishedHandles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
   readonly #processTreeAtom: Atom.Writable<readonly Process.Process[]>;
   /**
    * Manager-level ephemeral trace hub (DX-1125). Every process's ephemeral messages are fanned out
@@ -316,7 +315,7 @@ export class Impl implements Manager {
 
   #hasNonTerminalChildren(parentPid: Process.ID): boolean {
     for (const handle of this.#handles.values()) {
-      if (handle.parentId === parentPid && Impl.#isNonTerminal(handle)) {
+      if (handle.parentPid === parentPid && Impl.#isNonTerminal(handle)) {
         return true;
       }
     }
@@ -326,7 +325,7 @@ export class Impl implements Manager {
   #terminateChildren(parentPid: Process.ID): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       const children = [...this.#handles.values()].filter(
-        (handle) => handle.parentId === parentPid && Impl.#isNonTerminal(handle),
+        (handle) => handle.parentPid === parentPid && Impl.#isNonTerminal(handle),
       );
       for (const child of children) {
         log('lifecycle: terminate child', { parentPid, childPid: child.pid });
@@ -351,12 +350,8 @@ export class Impl implements Manager {
     }
     this.#handles.delete(pid);
     this.#finished.push(handle.snapshotProcessInfo());
-    this.#finishedHandles.set(pid, handle);
     if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
-      const evicted = this.#finished.shift();
-      if (evicted !== undefined) {
-        this.#finishedHandles.delete(evicted.pid);
-      }
+      this.#finished.shift();
     }
     this.#refreshProcessTree();
   }
@@ -371,7 +366,7 @@ export class Impl implements Manager {
 
   /**
    * Suspends every live process handle and drops all in-memory manager state.
-   * Durable records remain in KV for external {@link Process.Handle.hydrate} after {@link startup}.
+   * Durable records remain in KV for external {@link Process.Process.hydrate} after {@link startup}.
    */
   shutdown(): Effect.Effect<void> {
     return this.#lifecycleSemaphore.withPermits(1)(
@@ -389,7 +384,6 @@ export class Impl implements Manager {
         }
         this.#handles.clear();
         this.#finished.length = 0;
-        this.#finishedHandles.clear();
         this.#shutDown = true;
         this.#refreshProcessTree();
         log('lifecycle: manager suspended', { suspended: handleCount });
@@ -414,7 +408,7 @@ export class Impl implements Manager {
   spawn<I, O, _Rpcs extends Rpc.Any>(
     definition: Operation.Durable<I, O, any, _Rpcs>,
     options?: Process.SpawnOptions,
-  ): Effect.Effect<Process.Handle<I, O, _Rpcs>> {
+  ): Effect.Effect<Process.Process<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
@@ -533,18 +527,18 @@ export class Impl implements Manager {
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen({ self: this }, function* () {
           log('lifecycle: ended', { pid: handle.pid, state });
-          if (handle.parentId !== null) {
-            const parentHandle = this.#handles.get(handle.parentId);
+          if (handle.parentPid !== null) {
+            const parentHandle = this.#handles.get(handle.parentPid);
             if (parentHandle) {
-              log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
+              log('lifecycle: notify parent', { parentPid: handle.parentPid, childPid: handle.pid });
               yield* parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
               });
-            } else if (!this.#isFinished(handle.parentId)) {
+            } else if (!this.#isFinished(handle.parentPid)) {
               log.warn('lifecycle: parent missing for child exit', {
-                parentPid: handle.parentId,
+                parentPid: handle.parentPid,
                 childPid: handle.pid,
               });
             }
@@ -625,9 +619,9 @@ export class Impl implements Manager {
       log('lifecycle: started', { pid: id, key: definition.key });
 
       // Runtime→public boundary: the live handle stores its RPC client untyped (`RpcClient<any>`),
-      // while the public surface is the precise `Process.Handle<I, O, _Rpcs>`. `RpcClient` is invariant, so
+      // while the public surface is the precise `Process.Process<I, O, _Rpcs>`. `RpcClient` is invariant, so
       // bridging the two requires a cast here (see design spec §4.4).
-      return handle as unknown as Process.Handle<I, O, _Rpcs>;
+      return handle as unknown as Process.Process<I, O, _Rpcs>;
     }).pipe(Effect.withSpan('ProcessManager.spawn', { attributes: { [SpanAttributes.PROCESS.key]: definition.key } }));
   }
 
@@ -735,10 +729,10 @@ export class Impl implements Manager {
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen({ self: this }, function* () {
           log('lifecycle: ended', { pid: handle.pid, state });
-          if (handle.parentId !== null) {
-            const parentHandle = this.#handles.get(handle.parentId);
+          if (handle.parentPid !== null) {
+            const parentHandle = this.#handles.get(handle.parentPid);
             if (parentHandle) {
-              log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
+              log('lifecycle: notify parent', { parentPid: handle.parentPid, childPid: handle.pid });
               yield* parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
@@ -815,12 +809,12 @@ export class Impl implements Manager {
   #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(
     id: Process.ID,
     definition: Operation.Durable<I, O, any, any>,
-  ): Effect.Effect<Process.Handle<I, O, Rpcs>> {
+  ): Effect.Effect<Process.Process<I, O, Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const existing = this.#handles.get(id);
       if (existing) {
         log('lifecycle: hydrate skipped (already live)', { pid: id });
-        return existing as unknown as Process.Handle<I, O, Rpcs>;
+        return existing as unknown as Process.Process<I, O, Rpcs>;
       }
 
       const record = yield* this.#store.getProcess(id);
@@ -841,7 +835,7 @@ export class Impl implements Manager {
 
       log('lifecycle: hydrate', { pid: id, key: record.key });
       const handle = yield* this.#rehydrate(record, definition);
-      return handle as unknown as Process.Handle<I, O, Rpcs>;
+      return handle as unknown as Process.Process<I, O, Rpcs>;
     }).pipe(
       Effect.withSpan('ProcessManager.hydrate', {
         attributes: { [SpanAttributes.PROCESS.id]: id, [SpanAttributes.PROCESS.key]: definition.key },
@@ -883,21 +877,26 @@ export class Impl implements Manager {
     }).pipe(Effect.withSpan('ProcessManager.discardRecord'));
   }
 
-  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Handle<I, O, Rpcs>> {
+  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Process<I, O, Rpcs>> {
     return Effect.gen({ self: this }, function* () {
-      const handle = this.#handles.get(id) ?? this.#finishedHandles.get(id);
-      if (!handle) {
-        log('lifecycle: attach failed (not found)', { pid: id });
-        return yield* Effect.die(new Error(`Process not found: ${id}`));
+      const handle = this.#handles.get(id);
+      if (handle) {
+        log('lifecycle: attached', { key: handle.key, state: handle.snapshotStatus().state });
+        return handle as unknown as Process.Process<I, O, Rpcs>;
       }
-      log('lifecycle: attached', { key: handle.key, state: handle.snapshotStatus().state });
-      return handle as unknown as Process.Handle<I, O, Rpcs>;
+      const finished = this.#finished.find((process) => process.pid === id);
+      if (finished) {
+        log('lifecycle: attached', { key: finished.key, state: finished.state });
+        return finished;
+      }
+      log('lifecycle: attach failed (not found)', { pid: id });
+      return yield* Effect.die(new Error(`Process not found: ${id}`));
     });
   }
 
-  list(options?: Process.ListOptions): Effect.Effect<readonly Process.Handle.Any[]> {
+  list(options?: Process.ListOptions): Effect.Effect<readonly Process.Any[]> {
     return Effect.gen({ self: this }, function* () {
-      const results: Process.Handle.Any[] = [];
+      const results: Process.Any[] = [];
       const seenIds = new Set<Process.ID>();
 
       for (const handle of this.#handles.values()) {
@@ -905,7 +904,7 @@ export class Impl implements Manager {
           !matchesListOptions(
             {
               key: handle.key,
-              parentId: handle.parentId,
+              parentId: handle.parentPid,
               state: handle.snapshotStatus().state,
               annotations: handle.params.annotations,
             },
@@ -966,33 +965,39 @@ export class Impl implements Manager {
 
 /**
  * Read-only handle view of a persisted process that is not currently live.
- * Returned by {@link Impl.list} until {@link Process.Handle.hydrate} is called.
+ * Returned by {@link Impl.list} until {@link Process.Process.hydrate} is called.
  */
-class DormantHandle<I, O> implements Process.Handle<I, O, any> {
+class DormantHandle<I, O> implements Process.Process<I, O, any> {
   readonly pid: Process.ID;
-  readonly parentId: Process.ID | null;
+  readonly parentPid: Process.ID | null;
   readonly key: string;
   readonly params: Process.Params;
   readonly environment: Process.Environment;
+  readonly state: Process.State;
+  readonly error = null;
+  // A dormant record carries no run history; these read as a process that has not run yet.
+  readonly startedAt = 0;
+  readonly completedAt = Option.none<number>();
+  readonly metrics = { wallTime: 0, inputCount: 0, outputCount: 0 };
   readonly status: Process.Status;
   readonly statusAtom: Atom.Atom<Process.Status>;
   /** Carried on the persisted record, so a dormant handle still reports a pending alarm. */
   readonly alarmDueAt: number | null;
   // Dormant handles expose no live RPC surface; the empty client serves no requests. Stored untyped
-  // (`RpcClient<any>`) so the dormant handle is assignable to `Process.Handle.Any` (see design spec §4.4).
+  // (`RpcClient<any>`) so the dormant handle is assignable to `Process.Any` (see design spec §4.4).
   readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
-  readonly #rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Handle<I, O, any>>;
+  readonly #rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Process<I, O, any>>;
   readonly #discard: () => Effect.Effect<void>;
 
   constructor(
     record: PersistedProcess,
-    rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Handle<I, O, any>>,
+    rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Process<I, O, any>>,
     discard: () => Effect.Effect<void>,
   ) {
     this.#rehydrate = rehydrate;
     this.#discard = discard;
     this.pid = record.id;
-    this.parentId = record.parentId;
+    this.parentPid = record.parentId;
     this.key = record.key;
     this.params = {
       name: record.params.name,
@@ -1002,6 +1007,7 @@ class DormantHandle<I, O> implements Process.Handle<I, O, any> {
       space: record.environment.space as SpaceId | undefined,
       conversation: record.environment.conversation as URI.URI | undefined,
     };
+    this.state = record.state;
     this.status = {
       state: record.state,
       exit: Option.none(),
@@ -1012,7 +1018,7 @@ class DormantHandle<I, O> implements Process.Handle<I, O, any> {
     this.alarmDueAt = record.alarmDueAt;
   }
 
-  hydrate = (definition: Operation.Durable<I, O, any, any>): Effect.Effect<Process.Handle<I, O, any>> =>
+  hydrate = (definition: Operation.Durable<I, O, any, any>): Effect.Effect<Process.Process<I, O, any>> =>
     this.#rehydrate(definition);
 
   submitInput = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));

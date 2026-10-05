@@ -189,17 +189,18 @@ const MESSAGE_ID = '01HQ0000000000000000000000';
 const SHIMMER_EFFECT_TAG = 'effect:shimmer';
 
 const makeActiveProcess = (
-  overrides: Partial<Process.Process> & Pick<Process.Process, 'pid' | 'key' | 'state'>,
-): Process.Process => ({
-  parentPid: null,
-  params: { name: null, annotations: {} },
-  environment: {},
-  error: null,
-  startedAt: 0,
-  completedAt: Option.none(),
-  metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
-  ...overrides,
-});
+  overrides: Partial<Process.Data> & Pick<Process.Data, 'pid' | 'key' | 'state'>,
+): Process.Process =>
+  Process.make({
+    parentPid: null,
+    params: { name: null, annotations: {} },
+    environment: {},
+    error: null,
+    startedAt: 0,
+    completedAt: Option.none(),
+    metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
+    ...overrides,
+  });
 
 describe('buildExecutionGraph (span-tree based)', () => {
   test('empty input → no commits', ({ expect }) => {

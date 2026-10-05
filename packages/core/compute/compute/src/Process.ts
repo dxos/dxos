@@ -179,9 +179,10 @@ export const listFromTree =
     Effect.map(processTree, (tree) => tree.filter((info) => matchesFilter(info, filter)));
 
 /**
- * A process: one running (or finished) instance of a durable operation, wherever its runtime runs.
+ * The plain fields of a {@link Process}: what a process tree holds, what crosses the wire, and what
+ * {@link make} turns back into a process.
  */
-export interface Process {
+export interface Data {
   readonly pid: ID;
   readonly parentPid: ID | null;
 
@@ -241,10 +242,6 @@ export interface Process {
   };
 }
 
-//
-// Handles.
-//
-
 export interface Status {
   readonly state: State;
   readonly exit: Option.Option<Exit.Exit<void>>;
@@ -253,25 +250,14 @@ export interface Status {
   readonly completedAt: Option.Option<Date>;
 }
 
-export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
-  readonly pid: ID;
-  readonly parentId: ID | null;
-
-  /**
-   * Process definition key ({@link Operation.Durable.key}) for this process.
-   */
-  readonly key: string;
-
-  /**
-   * Parameters of the process.
-   */
-  readonly params: Params;
-
-  /**
-   * What the process is running on behalf of. See {@link Environment}.
-   */
-  readonly environment: Environment;
-
+/**
+ * A process: one running (or finished) instance of a durable operation, wherever its runtime runs.
+ *
+ * Its {@link Data} fields are plain values; the rest are live members that talk to the runtime.
+ * A process read from a tree or list is a cheap snapshot that reaches its runtime only once a
+ * live member is used (see {@link make}).
+ */
+export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = any> extends Data {
   submitInput(input: _Input): Effect.Effect<void>;
   subscribeOutputs(): Stream.Stream<_Output>;
 
@@ -335,15 +321,111 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
    * Hydrates a dormant persisted process using the supplied definition.
    * No-op when the handle is already live (returns self).
    */
-  hydrate(definition: Operation.Durable<_Input, _Output, any, any>): Effect.Effect<Handle<_Input, _Output, _Rpcs>>;
+  hydrate(definition: Operation.Durable<_Input, _Output, any, any>): Effect.Effect<Process<_Input, _Output, _Rpcs>>;
 
   readonly rpc: RpcClient.RpcClient<_Rpcs>;
 }
 
-export namespace Handle {
-  // Widened to `any` Rpcs so the implemented `rpc: RpcClient<any>` is assignable
-  // regardless of a handle's concrete RPC group (variance, see design spec §4.4).
-  export type Any = Handle<any, any, any>;
+// `any` Rpcs keeps every process assignable regardless of its concrete RPC group (variance, see design spec §4.4).
+export type Any = Process<any, any, any>;
+
+/**
+ * Builds a {@link Process} from its {@link Data}. Live members resolve `live` on first use and
+ * delegate to it; without `live` they throw, which is what a process known only from data (a test
+ * fixture, a decoded record) should do.
+ */
+export const make = <I = any, O = any, Rpcs extends Rpc.Any = any>(
+  data: Data,
+  live?: () => Process<I, O, Rpcs>,
+): Process<I, O, Rpcs> => new Snapshot<I, O, Rpcs>(data, live);
+
+// Data fields are own enumerable properties, so spreading or serializing a snapshot yields its `Data`;
+// the resolver sits in a private field for the same reason.
+class Snapshot<I, O, Rpcs extends Rpc.Any> implements Process<I, O, Rpcs> {
+  readonly pid: ID;
+  readonly parentPid: ID | null;
+  readonly key: string;
+  readonly params: Params;
+  readonly environment: Environment;
+  readonly state: State;
+  readonly error: SerializedError | null;
+  readonly startedAt: number;
+  readonly completedAt: Option.Option<number>;
+  readonly metrics: Data['metrics'];
+  readonly #resolve: (() => Process<I, O, Rpcs>) | undefined;
+  #live: Process<I, O, Rpcs> | undefined;
+
+  constructor(data: Data, resolve: (() => Process<I, O, Rpcs>) | undefined) {
+    this.pid = data.pid;
+    this.parentPid = data.parentPid;
+    this.key = data.key;
+    this.params = data.params;
+    this.environment = data.environment;
+    this.state = data.state;
+    this.error = data.error;
+    this.startedAt = data.startedAt;
+    this.completedAt = data.completedAt;
+    this.metrics = data.metrics;
+    this.#resolve = resolve;
+  }
+
+  get #process(): Process<I, O, Rpcs> {
+    if (this.#live === undefined) {
+      if (this.#resolve === undefined) {
+        throw new Error(`Process ${this.pid} is known only from data and has no live runtime.`);
+      }
+      this.#live = this.#resolve();
+    }
+    return this.#live;
+  }
+
+  get status(): Status {
+    return this.#process.status;
+  }
+
+  get statusAtom(): Atom.Atom<Status> {
+    return this.#process.statusAtom;
+  }
+
+  get alarmDueAt(): number | null {
+    return this.#process.alarmDueAt;
+  }
+
+  get rpc(): RpcClient.RpcClient<Rpcs> {
+    return this.#process.rpc;
+  }
+
+  submitInput(input: I): Effect.Effect<void> {
+    return Effect.suspend(() => this.#process.submitInput(input));
+  }
+
+  subscribeOutputs(): Stream.Stream<O> {
+    return Stream.suspend(() => this.#process.subscribeOutputs());
+  }
+
+  subscribeEphemeral(): Stream.Stream<Trace.Message> {
+    return Stream.suspend(() => this.#process.subscribeEphemeral());
+  }
+
+  terminate(): Effect.Effect<void> {
+    return Effect.suspend(() => this.#process.terminate());
+  }
+
+  runToCompletion(): Effect.Effect<void> {
+    return Effect.suspend(() => this.#process.runToCompletion());
+  }
+
+  runUntilSettled(): Effect.Effect<void> {
+    return Effect.suspend(() => this.#process.runUntilSettled());
+  }
+
+  runAndExit(options: { readonly inputs: readonly I[] }): Stream.Stream<O> {
+    return Stream.suspend(() => this.#process.runAndExit(options));
+  }
+
+  hydrate(definition: Operation.Durable<I, O, any, any>): Effect.Effect<Process<I, O, Rpcs>> {
+    return Effect.suspend(() => this.#process.hydrate(definition));
+  }
 }
 
 /**
@@ -465,31 +547,31 @@ export interface Manager {
   spawn<I, O, Rpcs extends Rpc.Any = never>(
     definition: Operation.Durable<I, O, any, Rpcs>,
     options?: SpawnOptions & LocationOptions,
-  ): Effect.Effect<Handle<I, O, Rpcs>>;
+  ): Effect.Effect<Process<I, O, Rpcs>>;
 
   /**
-   * Handles on the processes at `options.location` matching `options`. Dormant entries require
-   * {@link Handle.hydrate} before inputs can be submitted.
+   * Live processes at `options.location` matching `options`. Dormant entries require
+   * {@link Process.hydrate} before inputs can be submitted.
    *
    * Dies when the location is a remote runtime that offers no process control.
    */
-  handles(options?: ListOptions & LocationOptions): Effect.Effect<readonly Handle.Any[]>;
+  handles(options?: ListOptions & LocationOptions): Effect.Effect<readonly Any[]>;
 
   /**
-   * Handle on the process `pid` at `options.location`. A handle on a process that has already exited
+   * The live process `pid` at `options.location`. A process that has already exited
    * replays its outputs, so its result stays readable after the exit.
    *
    * Dies when no such process is known, or when the location is a remote runtime that offers no
    * process control.
    */
-  attach<I, O, Rpcs extends Rpc.Any = never>(pid: ID, options?: LocationOptions): Effect.Effect<Handle<I, O, Rpcs>>;
+  attach<I, O, Rpcs extends Rpc.Any = never>(pid: ID, options?: LocationOptions): Effect.Effect<Process<I, O, Rpcs>>;
 }
 
 /**
  * The first output of a single-output process (e.g. one running an operation), failing with the
  * process's own cause when it fails without one.
  */
-export const awaitOutput = <O>(handle: Handle<any, O, any>): Effect.Effect<O> =>
+export const awaitOutput = <O>(handle: Process<any, O, any>): Effect.Effect<O> =>
   handle.subscribeOutputs().pipe(
     Stream.runHead,
     Effect.flatMap(
@@ -530,7 +612,7 @@ export const spawn = <I, O>(
   op: Operation.Definition<I, O>,
   input: I,
   options?: SpawnOptions & LocationOptions,
-): Effect.Effect<Handle<I, O, never>, never, ManagerService | OperationHandlerSet.OperationHandlerProvider> =>
+): Effect.Effect<Process<I, O, never>, never, ManagerService | OperationHandlerSet.OperationHandlerProvider> =>
   Effect.gen(function* () {
     const manager = yield* ManagerService;
     const handlers = yield* OperationHandlerSet.OperationHandlerProvider;

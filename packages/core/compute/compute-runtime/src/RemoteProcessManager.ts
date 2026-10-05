@@ -39,10 +39,10 @@ export type CancelTarget = {
 };
 
 /**
- * A process on a remote runtime as this client sees it: {@link Process.Process} plus the one thing a
+ * A process on a remote runtime as this client sees it: its {@link Process.Data} plus the one thing a
  * remote caller cannot otherwise know.
  */
-export interface Snapshot extends Process.Process {
+export interface Snapshot extends Process.Data {
   /**
    * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
    * Distinguishes hybernation waiting on more queued turn work from hybernation waiting only on
@@ -122,7 +122,7 @@ export interface ListRequest {
 
 /**
  * Full control surface for processes hosted by a remote runtime, mirroring the local
- * `ProcessManager.Manager`/`Process.Handle` verbs.
+ * `ProcessManager.Manager`/`Process.Process` verbs.
  *
  * Stated in domain types, not wire types: the `ProcessProtocol` shapes are the transport's business
  * and decoding them is the implementation's job, so a consumer of this interface never sees them.
@@ -203,13 +203,13 @@ export interface Manager {
    */
   readonly spawn?: <_Input, _Output, _Rpcs extends Rpc.Any = never>(
     options: SpawnOptions<_Input, _Output, _Rpcs>,
-  ) => Effect.Effect<Process.Handle<_Input, _Output, _Rpcs>>;
+  ) => Effect.Effect<Process.Process<_Input, _Output, _Rpcs>>;
 
   /** Handles on the host's matching processes; metadata views until `Handle.hydrate` supplies a definition. */
-  readonly list?: (options: ListOptions) => Effect.Effect<readonly Process.Handle.Any[]>;
+  readonly list?: (options: ListOptions) => Effect.Effect<readonly Process.Any[]>;
 
   /** Handle on one process by id. */
-  readonly attach?: (target: ProcessTarget) => Effect.Effect<Process.Handle.Any>;
+  readonly attach?: (target: ProcessTarget) => Effect.Effect<Process.Any>;
 
   /**
    * Re-read the host's processes for a space into {@link processTreeAtom}. Needed at startup: the
@@ -266,25 +266,35 @@ export const makeControlVerbs = (
 ): Required<Pick<Manager, 'spawn' | 'list' | 'attach' | 'refreshProcessTree'>> => {
   const refreshProcessTree = (spaceId: SpaceId): Effect.Effect<readonly Process.Process[]> =>
     control.list({ spaceId }).pipe(
-      // A `Snapshot` IS a `Process.Process` (plus `alarmDueAt`), so the tree needs no projection.
-      Effect.map((processes) => processes as readonly Process.Process[]),
+      // A tree entry builds its remote handle only once a live member is used.
+      Effect.map((processes) =>
+        processes.map((info) =>
+          Process.make(info, () => RemoteProcessHandle.RemoteProcessHandle.makeSync(handleOptions(spaceId, info))),
+        ),
+      ),
       Effect.tap((tree) => Effect.sync(() => registry.update(processTreeAtom, () => tree))),
     );
+
+  const handleOptions = <_Input, _Output, _Rpcs extends Rpc.Any>(
+    spaceId: SpaceId,
+    info: Snapshot,
+    definition?: Operation.Durable<_Input, _Output, any, _Rpcs>,
+  ): RemoteProcessHandle.Options<_Input, _Output, _Rpcs> => ({
+    info,
+    control,
+    spaceId,
+    ...(definition !== undefined ? { definition } : {}),
+    registry,
+    ...(remoteTrace !== undefined ? { remoteTrace } : {}),
+    onLifecycleChange: refreshProcessTree(spaceId).pipe(Effect.ignore, Effect.asVoid),
+  });
 
   const makeHandle = <_Input, _Output, _Rpcs extends Rpc.Any>(
     spaceId: SpaceId,
     info: Snapshot,
     definition?: Operation.Durable<_Input, _Output, any, _Rpcs>,
-  ): Effect.Effect<Process.Handle<_Input, _Output, _Rpcs>> =>
-    RemoteProcessHandle.RemoteProcessHandle.make<_Input, _Output, _Rpcs>({
-      info,
-      control,
-      spaceId,
-      ...(definition !== undefined ? { definition } : {}),
-      registry,
-      ...(remoteTrace !== undefined ? { remoteTrace } : {}),
-      onLifecycleChange: refreshProcessTree(spaceId).pipe(Effect.ignore, Effect.asVoid),
-    });
+  ): Effect.Effect<Process.Process<_Input, _Output, _Rpcs>> =>
+    RemoteProcessHandle.RemoteProcessHandle.make<_Input, _Output, _Rpcs>(handleOptions(spaceId, info, definition));
 
   return {
     refreshProcessTree,
