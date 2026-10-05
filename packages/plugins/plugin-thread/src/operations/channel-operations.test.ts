@@ -12,6 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { BaseError } from '@dxos/errors';
 import { Channel, Message, Person } from '@dxos/types';
 
 import { ChannelBackend, ThreadCapabilities, type ThreadOperation } from '#types';
@@ -25,6 +26,8 @@ import sendToChannel from './send-to-channel.ts';
 
 const FAKE_KIND = 'org.dxos.channel.backend.fake';
 
+class RefusedError extends BaseError.extend('RefusedError', 'The backend refused the post.') {}
+
 /** A backend with every optional member, recording what it was asked to do. */
 const makeFakeBackend = () => {
   const sent: { thread?: string; text: string }[] = [];
@@ -34,7 +37,7 @@ const makeFakeBackend = () => {
     Effect.sync(() => {
       const text = Message.extractText(message);
       if (text === 'refuse') {
-        return Effect.fail(new Error('The backend refused the post.'));
+        return Effect.fail(new RefusedError());
       }
       sent.push({ thread, text });
       return Effect.succeed({ messageIds: [`m${sent.length}`], properties: { fake: { thread } } });

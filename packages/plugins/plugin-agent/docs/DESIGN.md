@@ -266,6 +266,25 @@ Generic operations in plugin-thread dispatch to the provider found by `channel.b
 with `ChannelBackendUnsupportedError`; a backend refusal (closed DMs, no permission) is an outcome —
 `{ delivered: false, reason }` — that the agent relays.
 
+### Discord backend (step 2, built)
+
+plugin-discord contributes `makeDiscordChannelBackend()` (`kind: org.dxos.channel.backend.discord`)
+in every runtime, so EDGE posts through the same provider the app starts the bot with:
+
+- **Config.** `DiscordChannel` (`org.dxos.type.discord.channel`) holds what `DiscordBinding` held
+  minus the agent: `accessToken`, `applicationId`, `guildId?`, `channels`. It is the create-channel
+  form for the Discord backend (`createFields`).
+- **Posting.** `send` posts into the first listed Discord channel, `threads.send` into a thread or DM
+  channel id, both over Discord REST with the pasted token (split past 2000 characters, mentions
+  never echoed). The receipt's `properties.discord.messageId` keeps EDGE's mirror from re-posting.
+- **DMs.** `openDirect` reads the person's `discord` identity and opens the bot's DM channel.
+- **Connection.** `start/stop/status` call `PUT/DELETE/GET /compute/discord/bots/:applicationId`
+  through the app client's EDGE HTTP client. `PUT` sends `{ spaceId, binding: <config URI>,
+channel: <channel URI> }`; until step 4 EDGE still expects a binding with an `agent` field, so a bot
+  started from a channel cannot resolve its agent there yet.
+- **UI.** The Channel's `ObjectProperties` surface (kind = Discord) renders the config form, the bot
+  status and Start/Stop/Refresh; plugin-agent shows it for each of the agent's channels.
+
 ### What moves where
 
 | Today (plugin-agent)                                                     | After                                                                                                                                            |
