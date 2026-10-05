@@ -5,7 +5,9 @@
 import { next as A } from '@automerge/automerge';
 import { create } from '@bufbuild/protobuf';
 import * as Schema from 'effect/Schema';
+import fs from 'node:fs';
 import net from 'node:net';
+import path from 'node:path';
 
 import { Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
@@ -391,6 +393,73 @@ export class ClientReplicant {
     return { spaceId: space.id, admittedMs, spaceReadyMs };
   }
 
+  /**
+   * Import a space archive (`space.internal.export()` output) as a new space owned by this identity,
+   * replicated through EDGE. This is how a plan seeds EDGE with the contents of a real space.
+   */
+  @trace.span()
+  async importSpace({ archivePath }: { archivePath: string }): Promise<{ spaceId: string; importMs: number }> {
+    const began = Date.now();
+    const space = await this.#getClient().spaces.import({
+      filename: path.basename(archivePath),
+      contents: new Uint8Array(fs.readFileSync(archivePath)),
+    });
+    await space.waitUntilReady();
+    await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+    return { spaceId: space.id, importMs: Date.now() - began };
+  }
+
+  /**
+   * Wait until this device and EDGE agree on every document of the space — pushing what EDGE lacks
+   * and pulling what this device lacks — and report how long it took.
+   */
+  @trace.span()
+  async syncToEdge({
+    spaceId,
+    timeoutMs,
+  }: {
+    spaceId: string;
+    timeoutMs: number;
+  }): Promise<{ syncMs: number; localDocumentCount: number; remoteDocumentCount: number }> {
+    const space = await this.#getSpace(spaceId);
+    const began = Date.now();
+    let localDocumentCount = 0;
+    let remoteDocumentCount = 0;
+    await space.internal.syncToEdge({
+      timeout: timeoutMs,
+      onProgress: (state) => {
+        localDocumentCount = state?.localDocumentCount ?? localDocumentCount;
+        remoteDocumentCount = state?.remoteDocumentCount ?? remoteDocumentCount;
+      },
+    });
+    return { syncMs: Date.now() - began, localDocumentCount, remoteDocumentCount };
+  }
+
+  //
+  // Documents.
+  //
+
+  /** Bulk variant of {@link createDocument}: one flush for the whole batch, so a seed of thousands stays quick. */
+  @trace.span()
+  async createDocuments({
+    spaceId,
+    prefix,
+    count,
+    contentBytes,
+  }: {
+    spaceId: string;
+    prefix: string;
+    count: number;
+    contentBytes: number;
+  }): Promise<void> {
+    const db = (await this.#getSpace(spaceId)).db;
+    const content = 'x'.repeat(contentBytes);
+    for (let index = 0; index < count; index++) {
+      db.add(Obj.make(EdgeStressDocument, { docId: `${prefix}${index}`, content, counters: [] }));
+    }
+    await db.flush();
+  }
+
   /** Whether this device currently holds the space — no waiting, so callers can poll. */
   async hasSpace({ spaceId }: { spaceId: string }): Promise<boolean> {
     return this.#getClient()
@@ -405,10 +474,6 @@ export class ClientReplicant {
         .map((space) => space.id),
     };
   }
-
-  //
-  // Documents.
-  //
 
   @trace.span()
   async createDocument({
@@ -569,10 +634,14 @@ export class ClientReplicant {
   /**
    * The observable state of a space, reduced to exactly what the model can predict.
    */
-  async digest({ spaceId }: { spaceId: string }): Promise<SpaceDigest> {
+  /** `docIdPrefix` narrows the digest to the documents a caller tracks, so a large seeded space stays cheap to poll. */
+  async digest({ spaceId, docIdPrefix }: { spaceId: string; docIdPrefix?: string }): Promise<SpaceDigest> {
     const objects = await (await this.#getSpace(spaceId)).db.query(Query.select(Filter.type(EdgeStressDocument))).run();
     const docs: Record<string, DocumentDigest> = {};
     for (const object of objects) {
+      if (docIdPrefix !== undefined && !object.docId.startsWith(docIdPrefix)) {
+        continue;
+      }
       docs[object.docId] = {
         // Every token is one character, so the text splits into them with no parsing to get wrong.
         tokens: [...(object.content ?? '')].sort(),
