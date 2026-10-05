@@ -23,7 +23,10 @@ const IDLE_TIMEOUT = 30_000;
 
 const ZOOM = 0.7;
 
-export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
+export const Point = Schema.Struct({
+  x: Schema.Number.pipe(Schema.annotate({ title: 'X' })),
+  y: Schema.Number.pipe(Schema.annotate({ title: 'Y' })),
+});
 export type Point = Schema.Schema.Type<typeof Point>;
 
 /** Boundary points whose detail persists at every zoom depth; a process without a start picks one at random. */
@@ -35,14 +38,27 @@ export const POINTS: readonly { name: string; point: Point }[] = [
   { name: 'Dendrite', point: { x: -0.1011, y: 0.9563 } },
 ];
 
+/** Square resolution in pixels. */
+export const Size = Schema.Literals(SIZES);
+
+/** What a client can choose about a render; the command panel's form edits exactly this. */
+export const MandelbrotParams = Schema.Struct({
+  size: Size.pipe(Schema.annotate({ title: 'Resolution' }), Schema.optional),
+  center: Point.pipe(
+    Schema.annotate({ title: 'Start', description: 'Zoom target; leave empty for a random one.' }),
+    Schema.optional,
+  ),
+});
+
+export type MandelbrotParams = Schema.Schema.Type<typeof MandelbrotParams>;
+
 /**
- * Grants the process `frames` more frames to push, optionally at a new square resolution. A `center`
- * restarts the zoom at frame 0 on that point.
+ * Grants the process `frames` more frames to push, optionally with new {@link MandelbrotParams}; a
+ * `center` restarts the zoom at frame 0 on that point.
  */
 export const MandelbrotInput = Schema.Struct({
   frames: Schema.Number,
-  size: Schema.optional(Schema.Number),
-  center: Schema.optional(Point),
+  ...MandelbrotParams.fields,
 });
 
 export type MandelbrotInput = Schema.Schema.Type<typeof MandelbrotInput>;
@@ -104,8 +120,6 @@ const computeFrame = (frame: number, size: number, center: Point): MandelbrotOut
   return { frame, size, data: toBase64(bytes) };
 };
 
-const clampSize = (size: number): number => Math.min(SIZES[SIZES.length - 1], Math.max(SIZES[0], Math.round(size)));
-
 /**
  * Renders a Mandelbrot zoom on credit: each input grants `frames` more frames, which the process pushes
  * one per {@link FRAME_INTERVAL} and then waits. It never computes more than it was granted (capped at
@@ -117,7 +131,7 @@ export const MandelbrotProcess = Operation.makeDurable(
     Effect.sync(() => {
       let frame = 0;
       let credits = 0;
-      let size = DEFAULT_SIZE;
+      let size: number = DEFAULT_SIZE;
       let center = POINTS[Math.floor(Math.random() * POINTS.length)].point;
       let lastRequest = Date.now();
       let rendering = false;
@@ -135,7 +149,7 @@ export const MandelbrotProcess = Operation.makeDurable(
             lastRequest = Date.now();
             credits = Math.min(MAX_CREDITS, credits + Math.max(0, input.frames));
             if (input.size !== undefined) {
-              size = clampSize(input.size);
+              size = input.size;
             }
             if (input.center !== undefined) {
               center = input.center;

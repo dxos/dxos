@@ -23,7 +23,7 @@ import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 
 import { type ProcessItem } from '../components/index.ts';
-import { MandelbrotProcess, type Point, type RemoteMode, makeComputeLayer } from '../testing/index.ts';
+import { type MandelbrotParams, MandelbrotProcess, type RemoteMode, makeComputeLayer } from '../testing/index.ts';
 
 export type ComputeContextValue = {
   remote: RemoteMode;
@@ -31,7 +31,7 @@ export type ComputeContextValue = {
   ready: boolean;
   items: ProcessItem[];
   error?: string;
-  create: (location: Process.Location, size: number, center?: Point) => void;
+  create: (location: Process.Location, params: MandelbrotParams) => void;
   /** Drops an ended process's card; the manager itself prunes finished processes. */
   remove: (item: ProcessItem) => void;
 };
@@ -66,7 +66,7 @@ export const ComputeProvider = ({ remote, children }: ComputeProviderProps) => {
   }, [registry, remote, client]);
 
   const create = useCallback(
-    (location: Process.Location, size: number, center?: Point) => {
+    (location: Process.Location, params: MandelbrotParams) => {
       if (!runtime || !space) {
         return;
       }
@@ -84,7 +84,7 @@ export const ComputeProvider = ({ remote, children }: ComputeProviderProps) => {
         )
         .then((exit) =>
           Exit.match(exit, {
-            onSuccess: (handle) => setItems((prev) => [{ id: handle.pid, location, size, center, handle }, ...prev]),
+            onSuccess: (handle) => setItems((prev) => [{ id: handle.pid, location, params, handle }, ...prev]),
             onFailure: (cause) => setError(Cause.pretty(cause)),
           }),
         );

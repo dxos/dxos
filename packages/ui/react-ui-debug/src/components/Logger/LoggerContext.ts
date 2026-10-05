@@ -36,11 +36,6 @@ export const levelColor = (level: LogLevel) =>
         ? 'text-info-text'
         : 'text-success-text';
 
-/** Guard clipboard writes so rejected or unavailable writes surface rather than dangling as unhandled rejections. */
-export const copyToClipboard = (text: string): void => {
-  void navigator.clipboard?.writeText(text)?.catch((err) => console.warn('clipboard write failed', err));
-};
-
 export type LoggerContextValue = {
   rows: LogRow[];
   filter: string;
@@ -60,7 +55,8 @@ export type LoggerContextValue = {
   checked: Set<number>;
   toggleChecked: (id: number) => void;
   clear: () => void;
-  copyAll: () => void;
+  /** Text the toolbar's copy button writes: the checked rows, else the whole buffer. */
+  getCopyText: () => string;
 };
 
 export const [LoggerProvider, useLoggerContext] = createContext<LoggerContextValue>('Logger');

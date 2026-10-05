@@ -13,15 +13,19 @@ import * as Process from '@dxos/compute/Process';
 import { EffectEx } from '@dxos/effect';
 import { Block, Card, Icon } from '@dxos/react-ui';
 
-import { type MandelbrotInput, type MandelbrotOutput, type Point, decodeFrame } from '../testing/index.ts';
+import {
+  DEFAULT_SIZE,
+  type MandelbrotInput,
+  type MandelbrotOutput,
+  type MandelbrotParams,
+  decodeFrame,
+} from '../testing/index.ts';
 
 export type ProcessItem = {
   id: string;
   location: Process.Location;
-  /** Square resolution requested from the process. */
-  size: number;
-  /** Zoom target requested from the process; absent lets it pick one at random. */
-  center?: Point;
+  /** Sent with the first request; an absent `center` lets the process pick one at random. */
+  params: MandelbrotParams;
   handle: Process.Handle<MandelbrotInput, MandelbrotOutput, never>;
 };
 
@@ -77,7 +81,7 @@ const paintFrame = (context: CanvasRenderingContext2D, output: MandelbrotOutput)
  * handle's status polling.
  */
 const useMandelbrot = (item: ProcessItem, canvas: HTMLCanvasElement | null): number | undefined => {
-  const { handle, size, center } = item;
+  const { handle, params } = item;
   const [frame, setFrame] = useState<number>();
   // Survives a StrictMode remount, so credit is granted once however often the effect re-runs.
   const granted = useRef(0);
@@ -107,12 +111,12 @@ const useMandelbrot = (item: ProcessItem, canvas: HTMLCanvasElement | null): num
       ),
     );
     if (granted.current === 0) {
-      grant({ frames: BATCH, size, ...(center ? { center } : {}) });
+      grant({ frames: BATCH, ...params });
     }
     return () => {
       Effect.runFork(Fiber.interrupt(fiber));
     };
-  }, [handle, size, center, canvas]);
+  }, [handle, params, canvas]);
   return frame;
 };
 
@@ -169,8 +173,8 @@ export const ProcessTile = ({ data: item, onRemove }: ProcessTileProps) => {
       <Card.Row span='full'>
         <canvas
           ref={setCanvas}
-          width={item.size}
-          height={item.size}
+          width={item.params.size ?? DEFAULT_SIZE}
+          height={item.params.size ?? DEFAULT_SIZE}
           className='w-full aspect-square rounded-sm bg-black [image-rendering:pixelated]'
         />
       </Card.Row>

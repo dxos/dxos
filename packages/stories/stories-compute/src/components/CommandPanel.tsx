@@ -6,21 +6,14 @@ import React, { useState } from 'react';
 
 import type * as Process from '@dxos/compute/Process';
 import { Button, Panel, Select, Toolbar } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
-import { DEFAULT_SIZE, type Point, POINTS, SIZES } from '../testing/index.ts';
+import { DEFAULT_SIZE, MandelbrotParams } from '../testing/index.ts';
 
 const LOCATIONS: { value: Process.Location; label: string }[] = [
   { value: 'local', label: 'Local' },
   { value: 'edge', label: 'Remote (EDGE)' },
 ];
-
-const RANDOM = 'random';
-const STARTS: { value: string; label: string; point?: Point }[] = [
-  { value: RANDOM, label: 'Random' },
-  ...POINTS.map(({ name, point }) => ({ value: name, label: name, point })),
-];
-
-const RESOLUTIONS = SIZES.map((size) => ({ value: String(size), label: `${size}×${size}`, size }));
 
 export type CommandPanelProps = {
   /** Label for the remote runtime in use. */
@@ -28,14 +21,12 @@ export type CommandPanelProps = {
   /** False until the runtime and space exist. */
   ready?: boolean;
   error?: string;
-  /** `center` is absent for a random start. */
-  onCreate: (location: Process.Location, size: number, center?: Point) => void;
+  onCreate: (location: Process.Location, params: MandelbrotParams) => void;
 };
 
 export const CommandPanel = ({ remote, ready = true, error, onCreate }: CommandPanelProps) => {
   const [location, setLocation] = useState<Process.Location>('local');
-  const [size, setSize] = useState<number>(DEFAULT_SIZE);
-  const [start, setStart] = useState(RANDOM);
+  const [params, setParams] = useState<MandelbrotParams>({ size: DEFAULT_SIZE });
 
   return (
     <Panel.Root>
@@ -58,41 +49,30 @@ export const CommandPanel = ({ remote, ready = true, error, onCreate }: CommandP
               ))}
             </Select.Content>
           </Select.Root>
-          <Select.Root
-            items={RESOLUTIONS}
-            value={[String(size)]}
-            onValueChange={({ value: [value] }) => {
-              const next = RESOLUTIONS.find((item) => item.value === value);
-              if (next) {
-                setSize(next.size);
-              }
-            }}
-          >
-            <Select.Trigger data-testid='process-size-select' />
-            <Select.Content>
-              {RESOLUTIONS.map((item) => (
-                <Select.Item key={item.value} item={item} />
-              ))}
-            </Select.Content>
-          </Select.Root>
-          <Select.Root items={STARTS} value={[start]} onValueChange={({ value: [value] }) => value && setStart(value)}>
-            <Select.Trigger data-testid='process-start-select' />
-            <Select.Content>
-              {STARTS.map((item) => (
-                <Select.Item key={item.value} item={item} />
-              ))}
-            </Select.Content>
-          </Select.Root>
           <Button
             icon='ph--plus--regular'
             label='Create'
             disabled={!ready}
-            onClick={() => onCreate(location, size, STARTS.find((item) => item.value === start)?.point)}
+            onClick={() => onCreate(location, params)}
             data-testid='process-create'
           />
         </Toolbar.Root>
       </Panel.Header>
-      <Panel.Body classNames='p-2 text-sm'>
+      <Panel.Body>
+        <Form.Root
+          schema={MandelbrotParams}
+          values={params}
+          testId='mandelbrot-params'
+          onValuesChanged={(next) => setParams((previous) => ({ ...previous, ...next }))}
+        >
+          <Form.Viewport scroll>
+            <Form.Content>
+              <Form.Fields />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </Panel.Body>
+      <Panel.Footer classNames='p-2 text-sm'>
         <p className='text-fg-muted'>Remote runtime: {remote}</p>
         {!ready && <p className='text-fg-muted'>Initializing…</p>}
         {error && (
@@ -100,7 +80,7 @@ export const CommandPanel = ({ remote, ready = true, error, onCreate }: CommandP
             {error}
           </p>
         )}
-      </Panel.Body>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

@@ -7,6 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { Config } from '@dxos/config';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { ModuleContainer, createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
 
 import { ComputeProvider, StoryRole, moduleSurfaces } from '../modules/index.ts';
@@ -33,11 +34,15 @@ const edgeConfig = new Config({
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-compute/ProcessManager',
   render: ModuleContainer,
-  parameters: { layout: 'fullscreen', controls: { disable: true }, translations: [...debugTranslations] },
+  parameters: {
+    layout: 'fullscreen',
+    controls: { disable: true },
+    translations: [...debugTranslations, ...formTranslations],
+  },
   args: {
     layout: [[StoryRole.Command, StoryRole.Logging], [StoryRole.Processes]],
     columns: '28rem_1fr',
-    rows: ['1fr_2fr'],
+    rows: ['1fr_1fr'],
   },
 };
 

@@ -52,6 +52,9 @@
       "path": "../../ui/react-ui-debug"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/react-ui-masonry"
     },
     {
