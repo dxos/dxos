@@ -18,8 +18,8 @@ import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 
 import { SettingsPlugin } from '#plugin';
 
-/** A layout that records the operations settings asks of it, in order. */
-const makeRecordingLayout = (calls: { op: string; input: unknown }[]) =>
+/** A layout that records the operations settings asks of it, in order; `companions: false` is one with none (Spotlight). */
+const makeRecordingLayout = (calls: { op: string; input: unknown }[], { companions = true } = {}) =>
   Plugin.define({ profile: { key: 'org.dxos.plugin.settings.test.layout', name: 'Layout (test)' } }).pipe(
     Plugin.addModule(
       Capability.inlineModule('operation-handler', { provides: [Capabilities.OperationHandler] }, () =>
@@ -36,9 +36,13 @@ const makeRecordingLayout = (calls: { op: string; input: unknown }[]) =>
                   return input.subject;
                 }),
               ),
-              Operation.withHandler(LayoutOperation.UpdateCompanion, (input) =>
-                Effect.sync(() => void calls.push({ op: 'updateCompanion', input })),
-              ),
+              ...(companions
+                ? [
+                    Operation.withHandler(LayoutOperation.UpdateCompanion, (input) =>
+                      Effect.sync(() => void calls.push({ op: 'updateCompanion', input })),
+                    ),
+                  ]
+                : []),
             ),
           ),
         ]),
@@ -57,5 +61,20 @@ describe('SettingsOperation.Open', () => {
     await harness.invoke(SettingsOperation.Open, { plugin: 'org.dxos.plugin.debug' });
     expect(calls.map(({ op }) => op)).toEqual(['switchWorkspace', 'open', 'updateCompanion']);
     expect(calls.at(-1)?.input).toEqual({ subject: null });
+  });
+
+  test('opens in a layout with no companions', async ({ expect }) => {
+    const calls: { op: string; input: unknown }[] = [];
+    await using harness = await createTestApp({
+      plugins: [
+        GraphPlugin.make(),
+        ProcessManagerPlugin(),
+        SettingsPlugin(),
+        makeRecordingLayout(calls, { companions: false })(),
+      ],
+    });
+
+    await harness.invoke(SettingsOperation.Open, { plugin: 'org.dxos.plugin.debug' });
+    expect(calls.map(({ op }) => op)).toEqual(['switchWorkspace', 'open']);
   });
 });

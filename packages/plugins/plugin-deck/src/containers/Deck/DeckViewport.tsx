@@ -109,10 +109,11 @@ const MIN_PAIR_SIZE = MIN_PLANK_SIZE + MIN_COMPANION_SIZE;
 /**
  * Whether a plank and its companion both fit in `availablePx` at their minimum widths. A companion that does not fit
  * is not shown (its open state is kept for when the deck widens): otherwise the pair overflows under the end sidebar,
- * taking the companion's close control with it. Unmeasured (zero or infinite) widths fit.
+ * taking the companion's close control with it. An unmeasured width (`undefined`) fits; a measured one with nothing
+ * left (other planks' spines take it all) does not.
  */
-const companionFits = (availablePx: number): boolean =>
-  !(availablePx > 0 && Number.isFinite(availablePx)) || availablePx / REM_PX >= MIN_PAIR_SIZE;
+const companionFits = (availablePx: number | undefined): boolean =>
+  availablePx === undefined || availablePx / REM_PX >= MIN_PAIR_SIZE;
 
 // EXPERIMENT (stacked notes): while sliding, planks are sticky and pile on the left as you scroll.
 // Each pinned plank reveals a `SPINE_PX`-wide sliver (owned by `FoldSpine`, which draws it); once a
@@ -127,8 +128,11 @@ type PlankContextValue = RenderedPlanks & {
    * trailing controls never disappear behind the piled spines of the other planks. Infinity until measured.
    */
   maxPlankWidthPx: number;
-  /** The viewport's width (px) in any presentation, for whether a fullbleed pair fits; 0 until measured. */
-  viewportWidthPx: number;
+  /**
+   * The width (px) a plank and its companion share: the sliding cap before it is clamped (so it can be exhausted), or
+   * the viewport when fullbleed. Undefined until measured.
+   */
+  pairWidthPx: number | undefined;
   /** Records the tiles' geometry for the exposé transition; call before toggling it. See {@link useExposeFlip}. */
   captureExposeGeometry: () => void;
   /** Marks the plank a select exit commits to, so the deck leaves the exposé scrolled to it. */
@@ -172,7 +176,7 @@ const PlankContext = createContext<PlankContextValue>({
   planks: [],
   attendedPlankId: undefined,
   maxPlankWidthPx: Number.POSITIVE_INFINITY,
-  viewportWidthPx: 0,
+  pairWidthPx: undefined,
   captureExposeGeometry: () => {},
   markExposeSelect: () => {},
 });
@@ -468,14 +472,13 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const {
     planks: rendered,
     maxPlankWidthPx,
-    viewportWidthPx,
+    pairWidthPx,
     captureExposeGeometry,
     markExposeSelect,
   } = useContext(PlankContext);
   const presentation = useDeckPresentation(rendered.length);
-  const availablePx = presentation === 'fullbleed' ? viewportWidthPx : maxPlankWidthPx;
   const { open, companionId: openCompanionId } = useDeckCompanion(id);
-  const companion = open && companionFits(availablePx);
+  const companion = open && companionFits(pairWidthPx);
   const companionId = companion ? openCompanionId : undefined;
   const isMobile = breakpoint === 'mobile';
   const exposed = !!state.expose;
@@ -533,7 +536,8 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   if (presentation === 'fullbleed') {
     // A fullbleed pair flexes to the viewport rather than taking a stored total, so the companion is capped to leave
     // the plank its minimum; a stored width wider than that would push the pair past the end sidebar.
-    const fitCompanionSize = availablePx > 0 ? availablePx / REM_PX - MIN_PLANK_SIZE : Number.POSITIVE_INFINITY;
+    const fitCompanionSize =
+      pairWidthPx === undefined ? Number.POSITIVE_INFINITY : pairWidthPx / REM_PX - MIN_PLANK_SIZE;
     const soloCompanionSize = Math.max(
       MIN_COMPANION_SIZE,
       Math.min(deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE, fitCompanionSize),
@@ -677,22 +681,31 @@ const useMaxPlankWidth = ({
   stackRef: RefObject<HTMLDivElement | null>;
   isSliding: boolean;
   plankCount: number;
-}): { maxPlankWidthPx: number; viewportWidthPx: number } => {
-  const [measured, setMeasured] = useState({
+}): { maxPlankWidthPx: number; viewportWidthPx: number; pairWidthPx: number | undefined } => {
+  const [measured, setMeasured] = useState<{
+    maxPlankWidthPx: number;
+    viewportWidthPx: number;
+    pairWidthPx: number | undefined;
+  }>({
     maxPlankWidthPx: Number.POSITIVE_INFINITY,
     viewportWidthPx: 0,
+    pairWidthPx: undefined,
   });
 
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) {
-      setMeasured({ maxPlankWidthPx: Number.POSITIVE_INFINITY, viewportWidthPx: 0 });
+      setMeasured({ maxPlankWidthPx: Number.POSITIVE_INFINITY, viewportWidthPx: 0, pairWidthPx: undefined });
       return;
     }
     const measure = () => {
       // Only a sliding deck caps its planks; a fullbleed one still needs the width to know whether its pair fits.
       if (!isSliding) {
-        setMeasured({ maxPlankWidthPx: Number.POSITIVE_INFINITY, viewportWidthPx: viewport.clientWidth });
+        setMeasured({
+          maxPlankWidthPx: Number.POSITIVE_INFINITY,
+          viewportWidthPx: viewport.clientWidth,
+          pairWidthPx: viewport.clientWidth,
+        });
         return;
       }
       const stack = stackRef.current;
@@ -706,6 +719,7 @@ const useMaxPlankWidth = ({
       setMeasured({
         maxPlankWidthPx: max > 0 ? max : Number.POSITIVE_INFINITY,
         viewportWidthPx: viewport.clientWidth,
+        pairWidthPx: max,
       });
     };
     measure();
@@ -1431,7 +1445,7 @@ export const DeckPlanks = () => {
   // same reason as above: it changes per scroll frame and no render depends on it.
 
   const getPlankTiles = usePlankTiles(stackRef);
-  const { maxPlankWidthPx, viewportWidthPx } = useMaxPlankWidth({
+  const { maxPlankWidthPx, viewportWidthPx, pairWidthPx } = useMaxPlankWidth({
     viewportRef,
     stackRef,
     isSliding,
@@ -1729,8 +1743,8 @@ export const DeckPlanks = () => {
   }, []);
 
   const plankContext = useMemo<PlankContextValue>(
-    () => ({ ...rendered, maxPlankWidthPx, viewportWidthPx, captureExposeGeometry, markExposeSelect }),
-    [rendered, maxPlankWidthPx, viewportWidthPx, captureExposeGeometry, markExposeSelect],
+    () => ({ ...rendered, maxPlankWidthPx, pairWidthPx, captureExposeGeometry, markExposeSelect }),
+    [rendered, maxPlankWidthPx, pairWidthPx, captureExposeGeometry, markExposeSelect],
   );
 
   // The last tile's width as actually laid out, so the runway below can wait for the split to size the
@@ -1761,7 +1775,7 @@ export const DeckPlanks = () => {
     if (!overscroll || !isSliding || expose || !lastPlankId || !viewportWidthPx) {
       return 0;
     }
-    const paired = lastPlankCompanion && companionFits(maxPlankWidthPx);
+    const paired = lastPlankCompanion && companionFits(pairWidthPx);
     const { tileSize } = resolveTileSizes(
       deck.plankSizing,
       Navigation.segmentOf(deck.segments, lastPlankId),
@@ -1788,6 +1802,7 @@ export const DeckPlanks = () => {
     deck.plankSizing,
     deck.segments,
     maxPlankWidthPx,
+    pairWidthPx,
     viewportWidthPx,
   ]);
 
