@@ -218,30 +218,6 @@ const undeclaredTopLevelKeys = (typeAst: SchemaAST.AST, input: unknown): string[
 const CONTENTLESS_INPUT_TAGS: ReadonlySet<string> = new Set(['Any', 'Unknown', 'Void', 'Undefined', 'Null', 'Never']);
 
 /**
- * Spawns `op` as a process through the ambient {@link Process.ManagerService} and submits `input`; read its
- * result with {@link Process.awaitOutput}.
- */
-export const spawn = <I, O>(
-  op: Operation.Definition<I, O>,
-  input: I,
-  options?: Process.SpawnOptions & Process.LocationOptions,
-): Effect.Effect<
-  Process.Handle<I, O, never>,
-  never,
-  Process.ManagerService | OperationHandlerSet.OperationHandlerProvider
-> =>
-  Effect.gen(function* () {
-    const manager = yield* Process.ManagerService;
-    const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
-    const handle = yield* manager.spawn(fromOperation(op, handlers), {
-      name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
-      ...options,
-    });
-    yield* handle.submitInput(input);
-    return handle;
-  });
-
-/**
  * The {@link Operation.ProcessInvoker} {@link layer} provides as `Operation.Service`, for a host that reads its
  * invocation events and follow-ups.
  */

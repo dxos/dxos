@@ -62,7 +62,7 @@ Consequences:
 ## 3. Background — execution locality (the root problem)
 
 Operations (e.g. `set-alarm`, a future `tasks-check`) execute as **child processes** via
-`DurableOperation.spawn` through the agent's own `Process.ManagerService`. A child process:
+`Process.spawn` through the agent's own `Process.ManagerService`. A child process:
 
 - CAN derive conversation-scoped state from `context.conversation` (resolve the feed, build
   a `Binder`, read history) — this is why `AiContext.Service` resolves fine in children.

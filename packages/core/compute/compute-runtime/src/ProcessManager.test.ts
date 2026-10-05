@@ -210,7 +210,7 @@ const makeParentAwaitingChild = () =>
             // Detach child invocation so the alarm handler can block on external completion,
             // matching agent-process awaiting an async tool call at shutdown.
             yield* Deferred.succeed(alarmStarted, undefined);
-            yield* Effect.forkChild(DurableOperation.spawn(SlowChild, { value: 1 }).pipe(Effect.asVoid));
+            yield* Effect.forkChild(Process.spawn(SlowChild, { value: 1 }).pipe(Effect.asVoid));
             yield* Deferred.await(alarmResume);
             yield* Deferred.succeed(alarmHandlerFinished, undefined);
             ctx.succeed();
@@ -1233,11 +1233,11 @@ describe('rpcs', () => {
   );
 });
 
-describe('DurableOperation.spawn', () => {
+describe('Process.spawn', () => {
   it.effect(
     'spawns a process and produces output',
     Effect.fn(function* ({ expect }) {
-      const handle = yield* DurableOperation.spawn(Double, { value: 5 });
+      const handle = yield* Process.spawn(Double, { value: 5 });
       expect(yield* Process.awaitOutput(handle)).toEqual(10);
     }, Effect.provide(TestLayer)),
   );
@@ -1246,7 +1246,7 @@ describe('DurableOperation.spawn', () => {
     'attaches to a running process and produces output',
     Effect.fn(function* ({ expect }) {
       const manager = yield* Process.ManagerService;
-      const handle = yield* DurableOperation.spawn(Double, { value: 5 });
+      const handle = yield* Process.spawn(Double, { value: 5 });
 
       const attached = yield* manager.attach<{ value: number }, number>(handle.pid);
       expect(yield* Process.awaitOutput(attached)).toEqual(10);
@@ -1257,7 +1257,7 @@ describe('DurableOperation.spawn', () => {
     'attaches to a completed process and produces output',
     Effect.fn(function* ({ expect }) {
       const manager = yield* Process.ManagerService;
-      const handle = yield* DurableOperation.spawn(Double, { value: 5 });
+      const handle = yield* Process.spawn(Double, { value: 5 });
       yield* Process.awaitOutput(handle);
 
       const attached = yield* manager.attach<{ value: number }, number>(handle.pid);
@@ -1268,7 +1268,7 @@ describe('DurableOperation.spawn', () => {
   it.effect(
     'fails when the operation fails',
     Effect.fn(function* ({ expect }) {
-      const handle = yield* DurableOperation.spawn(Failing, undefined);
+      const handle = yield* Process.spawn(Failing, undefined);
       const output = yield* Process.awaitOutput(handle).pipe(Effect.exit);
       expect(Result.getOrUndefined(Exit.findDefect(output))).toEqual('Test Error');
     }, Effect.provide(TestLayer)),
@@ -1296,7 +1296,7 @@ describe('DurableOperation.spawn', () => {
       const manager = yield* ProcessManager.Service;
       SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
       SlowChildGate.completeDeferred = yield* Deferred.make<void>();
-      const handle = yield* DurableOperation.spawn(SlowChild, { value: 1 });
+      const handle = yield* Process.spawn(SlowChild, { value: 1 });
       const output = yield* Process.awaitOutput(handle).pipe(Effect.exit, Effect.forkChild);
       // The handler is mid-flight when the app goes away.
       yield* Queue.take(SlowChildGate.taskSignal);
@@ -1504,11 +1504,7 @@ describe('Operation.makeProcessInvoker environment inheritance', () => {
     "child operations inherit the parent process's space when no options are supplied",
     Effect.fn(function* ({ expect }) {
       const { db } = yield* Database.Service;
-      const handle = yield* DurableOperation.spawn(
-        ParentOp,
-        { override: undefined },
-        { environment: { space: db.spaceId } },
-      );
+      const handle = yield* Process.spawn(ParentOp, { override: undefined }, { environment: { space: db.spaceId } });
       expect(yield* Process.awaitOutput(handle)).toEqual({ childSpaceId: db.spaceId });
     }, Effect.provide(InheritanceTestLayer)),
   );
@@ -1521,7 +1517,7 @@ describe('Operation.makeProcessInvoker environment inheritance', () => {
       // materialise `Database.Service` for it. A successful trip through the
       // override path therefore surfaces as a child-side resolution failure,
       // which propagates as a die.
-      const handle = yield* DurableOperation.spawn(
+      const handle = yield* Process.spawn(
         ParentOp,
         { override: 'BBOGUS00000000000000000000' },
         { environment: { space: db.spaceId } },
@@ -1544,7 +1540,7 @@ describe('Operation.makeProcessInvoker environment inheritance', () => {
       // awaiting a fiber that never gets created. Confirms the resolver is
       // actually strict and the inheritance tests above aren't passing by
       // accident.
-      const spawnExit = yield* DurableOperation.spawn(ChildOp, undefined).pipe(Effect.exit);
+      const spawnExit = yield* Process.spawn(ChildOp, undefined).pipe(Effect.exit);
       expect(Exit.isFailure(spawnExit)).toBe(true);
       const cause = Exit.isFailure(spawnExit) ? Cause.pretty(spawnExit.cause) : '';
       expect(cause).toContain('Database.Service requires space context');
@@ -1560,7 +1556,7 @@ describe('Operation.makeProcessInvoker environment inheritance', () => {
 
       const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
 
-      const handle = yield* DurableOperation.spawn(
+      const handle = yield* Process.spawn(
         ParentOp,
         { override: undefined },
         { environment: { space: db.spaceId, conversation } },
@@ -2002,7 +1998,7 @@ describe('durability', () => {
             onInput: () => ctx.setAlarm(0),
             onAlarm: () =>
               Effect.gen(function* () {
-                yield* Effect.forkChild(DurableOperation.spawn(SlowChild, { value: 1 }).pipe(Effect.asVoid));
+                yield* Effect.forkChild(Process.spawn(SlowChild, { value: 1 }).pipe(Effect.asVoid));
                 yield* Deferred.succeed(alarmStarted, undefined);
                 yield* Deferred.await(alarmResume);
               }),

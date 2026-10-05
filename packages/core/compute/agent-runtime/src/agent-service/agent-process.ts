@@ -29,7 +29,6 @@ import {
 } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Credential from '@dxos/compute/Credential';
-import * as DurableOperation from '@dxos/compute/DurableOperation';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -267,7 +266,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             phase: 'end-request',
             invoke: (operation, input) =>
               Effect.gen(function* () {
-                const handle = yield* DurableOperation.spawn(operation, input, {
+                const handle = yield* Process.spawn(operation, input, {
                   environment: { conversation: Obj.getURI(feed) },
                   traceMeta: { conversation: Ref.make(feed) },
                 });
@@ -970,7 +969,7 @@ const ToolExecutionService = ({
           Effect.gen(function* () {
             const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
             log('invoking operation', { operationDef, input });
-            const handle = yield* DurableOperation.spawn(operationDef, input, {
+            const handle = yield* Process.spawn(operationDef, input, {
               environment: {
                 conversation: Obj.getURI(feed),
               },

@@ -13,7 +13,7 @@ import { type Database } from '@dxos/echo';
 
 /**
  * A unit of work the supervisor delegates to a linked child process. `spawn` is an existential over
- * the child operation's input/output types: the strategy constructs it (e.g. via `DurableOperation.spawn`)
+ * the child operation's input/output types: the strategy constructs it (e.g. via `Process.spawn`)
  * so {@link AgentProcess} can remain agnostic to the operation type and just track the returned pid.
  */
 export interface Delegation {

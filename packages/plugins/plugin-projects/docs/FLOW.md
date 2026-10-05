@@ -43,7 +43,7 @@ sequenceDiagram
   AS->>ECHO: feed ← assistant Messages (incl. stats block)
   AS->>DS: reconcile(chat, activeIds)
   DS->>ECHO: sweep started/no-process → failed; todo+ready → started
-  DS->>Sub: DurableOperation.spawn(RunInstructions) → pid
+  DS->>Sub: Process.spawn(RunInstructions) → pid
   AS->>TR: DelegationSpawned {taskId, pid} (parallel change)
   Sub->>ECHO: own Feed; CompleteBlock events (parentPid = agent pid)
   Sub-->>AS: onChildEvent(exited)
@@ -105,13 +105,13 @@ The strategy is contributed unconditionally by plugin-assistant
 (`packages/plugins/plugin-assistant/src/capabilities/skill-definition.ts:57`, consumed at
 `capabilities/agent-service.ts:39-46`).
 
-| Step                                  | Line                       | Write                                                                                                                                                                                                                                                                      |
-| ------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sweepOrphanedTasks(chat, activeIds)` | 91-110                     | Every checklist task with `assignee.role === 'assistant' && status === 'started'` whose id is not in `activeIds` → `status = 'failed'` (direct `Obj.update`, no history entry), then flush.                                                                                |
-| `findPendingTasks`                    | 71-85                      | `assignee.role === 'assistant' && (status ?? 'todo') === 'todo' && !activeIds.has(id) && Task.isTaskReady(tasks, task)`.                                                                                                                                                   |
-| inherited skills                      | 131-137                    | Supervisor's bound skills minus `DelegationSkill`, read from the feed's bindings.                                                                                                                                                                                          |
-| per pending task                      | 143-178                    | `Database.add(Instructions { name: task.title, text, skills })`; `task.status = 'started'` (direct `Obj.update`, no history); `Delegation { id: task.id, spawn }`.                                                                                                         |
-| spawn                                 | `agent-process.ts:512-516` | `DurableOperation.spawn(RunInstructions, { instructions: Ref, input: {} })` → child pid; `delegations.push({ pid, id })`; `DelegationsCell.set` (KV under `process/<agentPid>/delegations`, 661-664); `Trace.write(DelegationSpawned, { taskId, pid })` (parallel change). |
+| Step                                  | Line                       | Write                                                                                                                                                                                                                                                             |
+| ------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sweepOrphanedTasks(chat, activeIds)` | 91-110                     | Every checklist task with `assignee.role === 'assistant' && status === 'started'` whose id is not in `activeIds` → `status = 'failed'` (direct `Obj.update`, no history entry), then flush.                                                                       |
+| `findPendingTasks`                    | 71-85                      | `assignee.role === 'assistant' && (status ?? 'todo') === 'todo' && !activeIds.has(id) && Task.isTaskReady(tasks, task)`.                                                                                                                                          |
+| inherited skills                      | 131-137                    | Supervisor's bound skills minus `DelegationSkill`, read from the feed's bindings.                                                                                                                                                                                 |
+| per pending task                      | 143-178                    | `Database.add(Instructions { name: task.title, text, skills })`; `task.status = 'started'` (direct `Obj.update`, no history); `Delegation { id: task.id, spawn }`.                                                                                                |
+| spawn                                 | `agent-process.ts:512-516` | `Process.spawn(RunInstructions, { instructions: Ref, input: {} })` → child pid; `delegations.push({ pid, id })`; `DelegationsCell.set` (KV under `process/<agentPid>/delegations`, 661-664); `Trace.write(DelegationSpawned, { taskId, pid })` (parallel change). |
 
 `activeIds` is the set of task ids in the in-memory `delegations` array, seeded from the KV cell at
 boot (`agent-process.ts:217`). The cell is scoped to the process id, so a fresh process starts empty.
@@ -124,7 +124,7 @@ boot (`agent-process.ts:217`). The cell is scoped to the process id, so a fresh 
 | Property      | Value                                                                                                                                                                                                                                                                                                                           |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | key           | `org.dxos.operation.assistantToolkit.runInstructions` (operation process via `DurableOperation.fromOperation`)                                                                                                                                                                                                                  |
-| `name`        | `Run Instructions (org.dxos.operation.assistantToolkit.runInstructions)` (`DurableOperation.spawn`)                                                                                                                                                                                                                             |
+| `name`        | `Run Instructions (org.dxos.operation.assistantToolkit.runInstructions)` (`Process.spawn`)                                                                                                                                                                                                                                      |
 | `parentPid`   | the agent pid (the `Process.ManagerService` in the agent's context defaults `parentProcessId` to it; `ProcessManager.ts` `#childServices`)                                                                                                                                                                                      |
 | annotations   | none from the strategy; no `TargetAnnotation`                                                                                                                                                                                                                                                                                   |
 | `environment` | inherited from the parent (`ProcessManager.ts:517-520`): `{ space, conversation: <supervisor feed URI> }`                                                                                                                                                                                                                       |
@@ -247,7 +247,7 @@ write is the crash path, not the intended one.
 4. **TracePanel label lookup is stale.** `resolveLabel` matches `TargetAnnotation` against chat
    _feed_ entity ids (`TracePanel.tsx:317-341`), but the annotation has been the _chat_ URI since
    #12904 (`AgentService.ts:318`). Agent processes therefore render unlabelled.
-5. **Sub-agent trace events carry no `conversation`.** The strategy's `DurableOperation.spawn` passes no
+5. **Sub-agent trace events carry no `conversation`.** The strategy's `Process.spawn` passes no
    `traceMeta` (`delegation-strategy.ts:172-175`); only `parentPid` links them.
 6. **Sub-agent transcripts are orphan feeds.** `RunInstructions` creates a fresh `Feed` with no
    parent (`run-instructions.ts:104`); nothing cascades or lists them.

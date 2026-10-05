@@ -19,7 +19,9 @@ import { Annotation, type Database } from '@dxos/echo';
 import { type SpaceId, URI } from '@dxos/keys';
 import type { SerializedError } from '@dxos/protocols';
 
+import * as DurableOperation from './DurableOperation.ts';
 import * as Operation from './Operation.ts';
+import * as OperationHandlerSet from './OperationHandlerSet.ts';
 import * as Trace from './Trace.ts';
 
 //
@@ -519,6 +521,26 @@ export const awaitOutput = <O>(handle: Handle<any, O, any>): Effect.Effect<O> =>
 export class ManagerService extends Context.Service<ManagerService, Manager>()(
   '@dxos/compute/Process.ManagerService',
 ) {}
+
+/**
+ * Spawns `op` as a process through the ambient {@link ManagerService} and submits `input`; read its
+ * result with {@link awaitOutput}.
+ */
+export const spawn = <I, O>(
+  op: Operation.Definition<I, O>,
+  input: I,
+  options?: SpawnOptions & LocationOptions,
+): Effect.Effect<Handle<I, O, never>, never, ManagerService | OperationHandlerSet.OperationHandlerProvider> =>
+  Effect.gen(function* () {
+    const manager = yield* ManagerService;
+    const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
+    const handle = yield* manager.spawn(DurableOperation.fromOperation(op, handlers), {
+      name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
+      ...options,
+    });
+    yield* handle.submitInput(input);
+    return handle;
+  });
 
 /**
  * New process is spawned.

@@ -66,7 +66,7 @@ sequenceDiagram
     UI--)UI: MessageSyncer.update → MarkdownStream.append<br/>(typewriter + xml-tag widgets)
     RQ->>F: Feed.append(complete Message)
     opt tool calls
-      RQ->>T: DurableOperation.spawn(operation)
+      RQ->>T: Process.spawn(operation)
       T-->>AP: exit (onChildEvent) → tool_result
       AP->>RQ: next turn with tool result
     end
@@ -115,7 +115,7 @@ sequenceDiagram
   - complete blocks → a `Message` → `Trace.write(CompleteBlock)` + `onOutput` →
     **`Feed.append`** (durable).
 - Tool calls → `runTools` → `callTool` → `ToolExecutionService` →
-  `DurableOperation.spawn(operation)` — each tool call is a **linked child
+  `Process.spawn(operation)` — each tool call is a **linked child
   process**; its exit re-enters the turn via `onChildEvent` → `tool_result` queue entry.
 - After the turn: the delegation strategy's `reconcile` (see §4), alarm reconcile,
   `maybeComplete` (end-request skill hooks may enqueue continuations).
