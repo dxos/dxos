@@ -101,6 +101,10 @@
   .dx-listbox-item > .dx-listbox-item-text:first-child + .dx-listbox-item-description {
     padding-inline-start: var(--dx-gap-size);
   }
+  /* An avatar fills its block where an icon sits inside one, so the text keeps an icon's distance from it. */
+  .dx-listbox-item > .dx-listbox-item-icon:has(.dx-avatar) ~ :is(.dx-listbox-item-text, .dx-listbox-item-description) {
+    padding-inline-start: var(--dx-gap-size);
+  }
 
   /* Trailing parts are an inset apart, and an icon-only Button pads out to its block like it does in a toolbar. */
   .dx-listbox-item.dx-container

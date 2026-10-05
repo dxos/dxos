@@ -35,5 +35,5 @@ valid answer and still gets written.>
   the changed nodes and edges edited, so layout stays comparable.
 - Highlight the new or changed edges with an edge label (`-->|new|`) so they stand out without a
   legend.
-- Publish the PNGs with `hosting-artifacts` and link them. Commit the `.mmd` only when the diagram
+- Attach the PNGs per `hosting-artifacts` (`gh --attach`, R2 as the fallback). Commit the `.mmd` only when the diagram
   belongs in the package's docs.

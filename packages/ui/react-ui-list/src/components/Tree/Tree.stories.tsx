@@ -619,6 +619,44 @@ export const WindowedTest: Story = {
   },
 };
 
+/**
+ * `measured` windows rows of differing heights (each leaf has a second line, each branch has none): only the rows in
+ * view mount, and the spacers carry the whole tree's extent, so the last row is reachable by scrolling.
+ */
+export const MeasuredTest: Story = {
+  args: {
+    tree: () => createWideTree(20, 49),
+    open: true,
+    multiline: true,
+    virtual: 'measured',
+    height: '32rem',
+  },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    await waitFor(() => expect(within(tree).getAllByTestId('tree-description').length).toBeGreaterThan(0));
+    await expect(rows(tree).length).toBeLessThan(100);
+
+    // Measured leaves are taller than the nominal pitch, so the extent grows past what estimates alone gave.
+    const leaf = tree.querySelector<HTMLElement>('[data-tree-row]:has([data-testid="tree-description"])');
+    const branch = tree.querySelector<HTMLElement>('[data-tree-row]:not(:has([data-testid="tree-description"]))');
+    await expect(leaf?.getBoundingClientRect().height ?? 0).toBeGreaterThan(
+      branch?.getBoundingClientRect().height ?? 0,
+    );
+
+    tree.scrollTop = tree.scrollHeight;
+    await waitFor(async () => {
+      tree.scrollTop = tree.scrollHeight;
+      await nextFrame();
+      await expect(within(tree).queryByText('Leaf 20.49')).not.toBeNull();
+    });
+    await expect(rows(tree).length).toBeLessThan(100);
+    await expect(within(tree).queryByText('Branch 1')).toBeNull();
+
+    tree.scrollTop = 0;
+    await waitFor(() => expect(within(tree).queryByText('Branch 1')).not.toBeNull());
+  },
+};
+
 /** Dispatches a native drag event at a fraction of the element's height, as the browser would mid-drag. */
 const dispatchDrag = (element: HTMLElement, type: string, dataTransfer: DataTransfer, fraction = 0.5) => {
   const { x, y, width, height } = element.getBoundingClientRect();

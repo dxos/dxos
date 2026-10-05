@@ -2,41 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
-import { MermaidEngine, Objective, type Scene } from '@dxos/diagram';
+import { Dsl, type Scene, SemanticEngine } from '@dxos/diagram';
+import { EffectEx } from '@dxos/effect';
 
-/** Scene units of the engine's grid, the unit its cost terms measure in. */
-const GRID = 32;
+/** Boxes past which the full search takes long enough to be worth drawing a quick layout first. */
+export const QUICK_FIRST = 16;
 
-/**
- * Prefers layouts no wider than the panel: the engine's default objective favours a few fewer
- * crossings over any width, and a wide layout in the narrow canvas either scrolls or shrinks to
- * unreadable text. Weighted so ~6 grid units of overflow cost as much as one crossing.
- */
-const fitsWidth = (width: number): Objective.CostTerm => ({
-  id: 'fits-panel',
-  description: `Width beyond ${width} scene units.`,
-  weight: 0.5,
-  measure: ({ report }) => Math.max(0, report.metrics.width - width) / GRID,
-});
+export type Quality = 'quick' | 'full';
 
-export type LayoutOptions = Pick<MermaidEngine.CompileOptions, 'emitCandidate'> & {
-  /** The panel's width in scene units; omitted, the engine's own objective chooses. */
-  readonly width?: number;
-};
+const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
+  commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
+
+/** Boxes in a source; the DSL check has already accepted it, so the reading has a diagram. */
+export const sizeOf = (source: string): number => Dsl.read(source).diagram?.nodes.length ?? 0;
 
 /**
- * Lays a diagram out with plugin-illustrator's ELK engine (`@dxos/diagram`) and returns the world
- * objects `SceneSvg` draws. `source` is `Diagram.toSource` of a stored graph; `emitCandidate` routes
- * the engine's layout candidates elsewhere — nearly all of its time — so they can run in parallel.
+ * Lays a diagram's DSL source out with plugin-illustrator's semantic engine (`@dxos/diagram`) and
+ * returns the world objects `SceneSvg` draws. `full` is the engine's whole search, which also tries
+ * ELK's placements: about two minutes for 40 boxes. `quick` is one grid-search restart without
+ * them, a few seconds, drawn while the full search runs.
  */
-export const layout = async (
-  source: string,
-  { emitCandidate, width }: LayoutOptions = {},
-): Promise<Scene.WorldObject[]> => {
-  const objective =
-    width === undefined
-      ? Objective.DEFAULT
-      : { ...Objective.DEFAULT, costs: [...Objective.DEFAULT.costs, fitsWidth(width)] };
-  const commands = await MermaidEngine.compile(source, { emitCandidate, objective });
-  return commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
+export const layout = async (source: string, quality: Quality = 'full'): Promise<Scene.WorldObject[]> => {
+  if (quality === 'full') {
+    return objectsOf((await EffectEx.runPromise(Dsl.compile(source))).commands);
+  }
+  const reading = Dsl.read(source);
+  return objectsOf(
+    Dsl.withLayout(reading, reading.diagram && SemanticEngine.solve(reading.diagram, { restarts: 1 })).commands,
+  );
 };
