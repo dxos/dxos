@@ -1,14 +1,6 @@
 ---
 '@dxos/client': minor
 '@dxos/plugin-client': minor
-'@dxos/types': minor
-'@dxos/react-ui-card': minor
-'@dxos/app-toolkit': minor
-'@dxos/app-framework': minor
-'@dxos/react-client': minor
-'@dxos/protocols': minor
-'@dxos/client-protocol': minor
-'@dxos/plugin-space': minor
 ---
 
-`client.halo.inbox` now relays signed messages of any type between identities, through `messages`, `sendMessage` and `ack`, and space invitations travel as inbox `Message`s rendered by the `org.dxos.role.spaceInvitation` surface. When EDGE refuses an identity that is not linked to an account, `sendMessage` rejects with the new `InboxAccountRequiredError` (from `@dxos/protocols`) and the new `inbox.status` observable reads `account-required` instead of the inbox silently staying empty. `SpaceOperation.AddMembers` reports admitted members it could not notify in `notNotified` (each with a `reason`), and the members panel shows an "Added, but not notified" toast with a Copy link action. Deck companions can show a count on their rail tab with `AppNode.makeDeckCompanion({ badge })`, and `withMultiClientProvider` takes an `inboxRelay` so story clients can message each other without EDGE. Breaking: `inbox.notices`, `inbox.send` and `useInboxNotices` are removed (use `inbox.messages`, `inbox.sendMessage` and `useInboxMessages`), as are plugin-client's invitation toast, invitations list and account badge. `Message.encodeJson` writes refs to stored objects as absolute `echo://<spaceId>/<objectId>` URIs, so a link survives the trip to another identity. `CardTile.Root` is now a grid card whose leading cells sit in the start rail, `CardTile.Header` takes a `leading` cell in place of the star, and `Row.*` pass their leading cell through `Card.Row`'s `leading` prop. `AppSurface.deckCompanion` data now types the companion's `id`, its attendable id. For stories, `withMultiClientProvider` takes a `wrapper` rendered inside each client's provider, `PluginManagerHost` (from `@dxos/app-framework/testing`) hosts a plugin app as a component, and plugin-client's `ClientPluginManager` combines them so each client runs the real plugins.
+`client.halo.inbox` relays signed messages of any type between identities (`messages`, `sendMessage`, `ack`, and a `status` that reads `account-required` when EDGE refuses an identity with no account), and space invitations now travel as inbox `Message`s rendered by the `org.dxos.role.spaceInvitation` surface. `SpaceOperation.AddMembers` reports members it admitted but could not notify in `notNotified`, deck companions can show a rail-tab count via `AppNode.makeDeckCompanion({ badge })`, and `CardTile`/`Card.Row` place leading cells in the start rail. Breaking: `inbox.notices`, `inbox.send` and `useInboxNotices` are removed (use `inbox.messages`, `inbox.sendMessage` and `useInboxMessages`), as are plugin-client's invitation toast, invitations list and account badge.

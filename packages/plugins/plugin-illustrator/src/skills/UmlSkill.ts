@@ -151,10 +151,12 @@ export const make = () =>
           a preference. The engine keeps related boxes adjacent when it can. X may be in another group.
         - Pins: \`@cell(c,r)\` puts the box in grid column c, row r (from 0); \`@ x,y\` pins its top-left
           exactly. Prefer relations — a pin leaves the engine nothing to optimise.
-        - \`group <id> ["label"] [right-of|left-of|below|above <group>] [gap=N] [color=…] { node… edge… }\`
-          — a dashed frame. Members are laid out first as one compact unit and no other box enters the
-          frame. A group relation places the whole frame beside the other; \`gap\` adds N units of space.
-          Groups do not nest; keep to three or fewer.
+        - \`group <id> ["label"] [right-of|left-of|below|above <group>] [compact] [max-width=N] [gap=N]
+          [color=…] { node… edge… }\` — a dashed frame. Members are laid out first as one compact unit and
+          no other box enters the frame. A group relation places the whole frame beside the other; \`gap\`
+          adds N pixels between the two frames. \`max-width=N\` caps the frame at N columns and \`compact\`
+          keeps it near-square, so a group pulled sideways does not become a long strip. Groups do not
+          nest; keep to three or fewer.
         - \`edge A -> B ["label"]\`: \`<->\` draws two arrows, \`--\` a line with no head. Optional
           \`head=arrow|triangle|crowsfoot|none\`, \`tail=circle\`, \`stroke=dashed|dotted\`, \`color=…\`.
         - Relationships: put a word in place of \`->\` to say what the edge MEANS; the markers follow
@@ -168,22 +170,39 @@ export const make = () =>
           when the meaning is clear; a label can still say more (\`edge PM owns Handle "no cap"\`).
         - Sides: \`A:right -> B:top\`, or a choice \`B:top|left\`. Leave sides off and the router picks the
           pair with the fewest bends (two stacked boxes with a third between them connect left to left
-          down the free gutter, for instance). Name a side only to force a specific look.
+          down the free gutter, for instance). Name a side only to force a specific look. \`A:~left\` (also
+          \`A:~left|top\`) makes it a preference: taken when it costs about a bend or less, dropped when it
+          would force a detour.
         - Fans: \`edge A -> B, C\` is one arrow per target. Add \`bus\` (\`edge A -> B, C "label" bus\`) to
-          draw one trunk that splits, labelled once; \`edge B, C -> A bus\` gathers into one trunk. To keep
-          a label per branch, give separate edges from the same source the same \`bus=<name>\`.
+          draw one trunk that splits, labelled once; \`edge B, C -> A bus\` gathers many sources into one
+          trunk with one arrowhead at A, and lines the sources up across the flow. To keep a label per
+          branch, give separate edges with the same source (or target) the same \`bus=<name>\`. A bus
+          the engine cannot draw as one trunk is drawn as separate edges with a warning.
         - Waypoints: \`via X,_\` makes the route run vertically at x=X, \`via _,Y\` horizontally at y=Y,
           \`via X,Y\` passes the point; several waypoints are visited in order. In grid units,
-          \`via cell(1.5,_)\` is the gutter between columns 1 and 2. Use them sparingly.
-        - \`diagram\` (optional, once): \`flow=\` is the way arrows should read (default down); \`grid=WxH\`
-          (cell pitch) and \`box=WxH\` (box size) override the measured defaults — normally leave them.
+          \`via cell(1.5,_)\` is the gutter between columns 1 and 2 and \`via cell(_,1.5)\` the gutter
+          between rows 1 and 2. Use them sparingly.
+        - \`diagram\` (optional, once): \`flow=\` is the way arrows should read (default down);
+          \`aspect=W:H\` leans the whole drawing toward that shape; \`grid=WxH\` (cell pitch) and
+          \`box=WxH\` (box size) override the measured defaults — normally leave them. Every length
+          (\`gap\`, \`grid\`, \`box\`, \`@ x,y\`, \`via X,_\`) is in pixels; only \`cell(…)\` and
+          \`max-width\` count grid cells.
         - Ids are bare words (\`A-z 0-9 _ -\`) or quoted. Statement and clause words (\`node\`, \`edge\`,
-          \`group\`, \`diagram\`, \`cell\`, \`via\`, \`bus\`, the element kinds) must be quoted as ids.
+          \`group\`, \`diagram\`, \`cell\`, \`via\`, \`bus\`, \`compact\`, the element kinds) must be quoted
+          as ids.
+
+        Precedence: pins, then hard relations, then soft (\`~\`) relations and preferred sides; a hard
+        relation two pins contradict is dropped with a warning. A relation between nodes in different
+        groups also moves their frames: \`below X\` puts the member in X's column, so its frame widens to
+        reach it, leaving empty columns inside (reported as "Group … is stretched"). To place groups,
+        relate the groups (\`group B below A\`), not their members.
 
         How to write one well: declare groups in reading order with their nodes inside; start with no
-        hints at all, then add relations for the arrangement you mean — a chain as each node \`below\` the
-        previous, a hub with one neighbour per side, groups \`below\`/\`right-of\` each other. Label only
-        the edges that say something, in a few words. Add sides or waypoints last, to fix one edge.
+        hints at all and look at the result. Then add the smallest hint that fixes a defect you can see
+        — a chain as each node \`below\` the previous, a hub with one neighbour per side, groups
+        \`below\`/\`right-of\` each other. Every hint narrows the search, so a hint added "just in case"
+        often makes the layout worse; remove one that does not visibly help. Label only the edges that
+        say something, in a few words. Add sides or waypoints last, to fix one edge.
 
         The result has one object per node (id = node id, its shape is element \`box\`), one per group
         (\`frame\`, \`label\`), and an \`edges\` object of connectors named \`<from>-<to>-<n>\`. Scene
