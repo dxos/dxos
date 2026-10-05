@@ -29,8 +29,19 @@ const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
 
 // 127.0.0.1, not localhost: localhost resolves to ::1 first, and Firefox fails ICE outright on a page
-// served over IPv6 loopback, which strands every invitation.
-export const INITIAL_URL = 'http://127.0.0.1:4173';
+// served over IPv6 loopback, which strands every invitation. `DX_E2E_BASE_URL` points the suite at an
+// already-running app instead (a dev server or a deployed preview).
+export const INITIAL_URL = (process.env.DX_E2E_BASE_URL ?? 'http://127.0.0.1:4173').replace(/\/$/, '');
+
+/** Whether the app under test is served locally; a deployed origin gates the EDGE inbox on a hub account. */
+export const isLocalOrigin = (url = INITIAL_URL): boolean =>
+  ['localhost', '127.0.0.1', '[::1]'].includes(new URL(url).hostname);
+
+/** The hub that PR previews are built against (`.github/workflows/env/dev`). */
+const HUB_URL = process.env.DX_HUB_URL ?? 'https://preview.dxos.network/hub/';
+
+/** A toast's testid is its id; this one reports members admitted but not sent an invitation message. */
+const NOT_NOTIFIED_TOAST = 'org.dxos.plugin.space/add-members-not-notified';
 
 // `REGISTRY_ID`, restated so this page-object does not import the registry plugin: its module graph
 // reaches packages that fail to load under playwright's loader.
@@ -44,7 +55,7 @@ const WORKSPACE_KEY = 'w';
 const NAVTREE_OPEN_STORAGE_PREFIX = 'dxos:view-state:navtree-open:';
 
 /** Builds the pair-chain base for a workspace: `/<anchor>/<workspace>`. */
-const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/${WORKSPACE_KEY}/${workspace}`;
+const workspaceUrl = (workspace: string) => `${INITIAL_URL}/${WORKSPACE_KEY}/${workspace}`;
 
 // Only the default space is seeded on every new identity. The exemplar space is skipped on
 // localhost (see OnboardingPlugin `generateDemoSpace`), which is where e2e tests run.
@@ -251,6 +262,42 @@ export class AppManager {
     await this.page.getByTestId('clientPlugin.devices').waitFor({ state: 'visible', timeout });
   }
 
+  /** Sets this identity's display name from the account's Profile panel. */
+  async setDisplayName(displayName: string, timeout = 30_000): Promise<void> {
+    await this.openUserAccount(timeout);
+    await this.page.getByTestId('clientPlugin.profile').click();
+    await this.page.getByTestId('clientPlugin.profile.displayName').fill(displayName);
+    // The panel debounces its write, so the identity, not the field, proves the name was saved.
+    await expect
+      .poll(() => this.page.evaluate(() => globalThis.dxos?.client?.halo.identity.get()?.profile?.displayName), {
+        timeout,
+      })
+      .toBe(displayName);
+  }
+
+  /**
+   * Binds this identity to a fresh hub account, which a deployed origin requires before EDGE serves it
+   * the inbox. `test+…@dxos.org` addresses skip the access-code gate on non-production hubs; the request
+   * is sent from Node so the hub's CORS policy for the app origin does not apply.
+   */
+  async bindHubAccount(label: string): Promise<void> {
+    const identity = await this.page.evaluate(() => {
+      const current = globalThis.dxos?.client?.halo.identity.get();
+      return current && { did: current.did, key: current.identityKey.toHex() };
+    });
+    expect(identity, 'no identity to bind to an account').toBeTruthy();
+    const response = await fetch(new URL('account/invitation-code/redeem', HUB_URL), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: `test+qa-${label}-${Date.now()}@dxos.org`,
+        identityDid: identity?.did,
+        identityKey: identity?.key,
+      }),
+    });
+    expect(response.ok, `hub account binding failed: ${response.status} ${await response.text()}`).toBe(true);
+  }
+
   async openUserDevices(timeout = 30_000): Promise<void> {
     await this.openUserAccount(timeout);
     await this.showUserDevices(timeout);
@@ -383,12 +430,12 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<void> {
+  async createSpace({ name, timeout = 10_000 }: { name?: string; timeout?: number } = {}): Promise<void> {
     // The baseline counts rendered rail rows, so it is taken once one exists.
     await this.getSpaceItems().first().waitFor({ state: 'attached', timeout });
     const initialCount = await this.getSpaceItems().count();
 
-    await this.#submitCreateSpaceForm();
+    await this.#submitCreateSpaceForm(name);
 
     // The new rail item is the first condition pre-existing state cannot satisfy: a closed dialog
     // does not prove a space was created, and `waitForSpaceReady()` is already satisfied by the
@@ -399,7 +446,7 @@ export class AppManager {
   }
 
   /** Opens the add-space dialog, submits it, and waits for it to close. */
-  async #submitCreateSpaceForm(): Promise<void> {
+  async #submitCreateSpaceForm(name?: string): Promise<void> {
     const dialog = this.page.getByTestId('create-space-dialog');
     // Opened once, because `init()` waits out the boot writes that could detach the menu mid-click.
     await this.page.getByTestId('spacePlugin.addSpace').click();
@@ -413,6 +460,9 @@ export class AppManager {
     // Gate on ENABLED, not merely visible: fields arrive through a Surface lookup and can remount the
     // control mid-click, so waiting for `disabled` to clear absorbs that remount.
     await expect(save).toBeEnabled({ timeout: 15_000 });
+    if (name) {
+      await form.getByTestId('name').fill(name);
+    }
     await save.click();
 
     // Closing the dialog waits on the space actually being created, so this is sized to the
@@ -684,6 +734,38 @@ export class AppManager {
       instruction: 'make-child',
       holdUntil: async () => (await collection.getAttribute('data-state')) === 'open',
     });
+  }
+
+  /**
+   * From an open members panel: picks the contact named `displayName` and adds them, failing if the
+   * app reports that they were admitted but not sent the invitation message.
+   */
+  async addContactToSpace(displayName: string): Promise<void> {
+    await this.page.getByTestId('contact-picker.trigger').click();
+    await this.page.getByTestId('contact-picker.item').filter({ hasText: displayName }).click();
+    await this.page.keyboard.press('Escape');
+    await this.page.getByTestId('contactPicker.add').click();
+    // The join URL renders once the add has resolved, after any not-notified toast was raised.
+    await expect(this.page.getByTestId('contactPicker.joinUrl')).toBeVisible({ timeout: 15_000 });
+    await expect(this.page.getByTestId(NOT_NOTIFIED_TOAST)).toHaveCount(0);
+  }
+
+  //
+  // Companions
+  //
+
+  /** A right-rail companion tab, by the companion id its trigger's framework id ends with. */
+  getCompanionTab(companion: string): Locator {
+    return this.page.locator(`[id$="trigger-${companion}"]`);
+  }
+
+  /** The unread count a companion tab shows; 0 when it shows none. */
+  async getCompanionBadge(companion: string): Promise<number> {
+    return Number((await this.getCompanionTab(companion).getAttribute('data-badge')) ?? 0);
+  }
+
+  async openCompanion(companion: string): Promise<void> {
+    await this.getCompanionTab(companion).click();
   }
 
   //

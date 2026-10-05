@@ -95,6 +95,7 @@ export default Capability.makeModule(
               properties: {
                 label: ['profile.label', { ns: meta.profile.key }],
                 icon: 'ph--user--regular',
+                testId: 'clientPlugin.profile',
               },
             }),
           ];

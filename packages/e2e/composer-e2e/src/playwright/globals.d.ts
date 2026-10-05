@@ -41,8 +41,20 @@ declare global {
   /** Set by the suite, not the app: survives only as long as the document it was set on. */
   var e2eDocumentTag: string | undefined;
 
+  /** The HALO identity, narrowed to what the account helpers read. */
+  type DebugIdentity = {
+    did: string;
+    identityKey: { toHex: () => string };
+    profile?: { displayName?: string };
+  };
+
   /** The client/ECHO debug hook, mounted at the end of `client.initialize()`. */
-  var dxos: { spaces?: () => DebugSpace[] } | undefined;
+  var dxos:
+    | {
+        spaces?: () => DebugSpace[];
+        client?: { halo: { identity: { get: () => DebugIdentity | undefined } } };
+      }
+    | undefined;
 
   /**
    * The extension APIs, narrowed to what the extension spec drives from an extension page. Declared

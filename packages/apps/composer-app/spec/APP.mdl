@@ -760,6 +760,8 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
   actors: human
   covers: [org.dxos.plugin.messenger]
   status: unverified        # 2026-10-05, written for PR #13701; the invite half is exercised by testing/bin/two-user-invite.mjs
+  automated:
+    - composer-e2e:messenger-demo.spec.ts#Messenger demo › collaborate, then invite a contact from the notifications inbox
   given:
     - alice: a booted app in one browser profile, with a fresh identity
     - bob: a SECOND browser profile with its own, different identity
