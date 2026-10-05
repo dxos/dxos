@@ -217,6 +217,57 @@ describe('TypeSafe resolver', () => {
     ]);
   });
 
+  test('clef receives images as data URLs and jev refuses them', async ({ expect }) => {
+    const bodies: Record<string, unknown>[] = [];
+    const recording = Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make((request) =>
+        Effect.sync(() => {
+          const body =
+            request.body._tag === 'Uint8Array' ? JSON.parse(new TextDecoder().decode(request.body.body)) : {};
+          bodies.push(body);
+          return HttpClientResponse.fromWeb(
+            request,
+            Response.json({ model: body.model, answers: { urgent: { type: 'noul', noul: 0.9 } } }),
+          );
+        }),
+      ),
+    );
+    const routed = AiModelResolver.buildAiService.pipe(
+      Layer.provide(
+        TypeSafeResolver.make({
+          typesafe: { apiKey: Effect.succeed(undefined), endpoint: () => 'http://typesafe.test/v1/systemone' },
+          workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => 'http://workers-ai.test/v1/systemone' },
+        }),
+      ),
+      Layer.provide(recording),
+    );
+    const images: DecisionModel.Image[] = [
+      { mediaType: 'image/png', data: new Uint8Array([137, 80, 78, 71]) },
+      { mediaType: 'image/webp', data: 'UklGRg==' },
+    ];
+    const ask = (model: Model.Model) =>
+      DecisionModel.decide(Urgency, { input: OUTAGE, images }).pipe(
+        Effect.provide(AiService.decisionModel(model.id).pipe(Layer.provide(routed))),
+      );
+
+    await EffectEx.runPromise(ask(Model.cloudflareClef));
+    expect(bodies[0].images).toEqual(['data:image/png;base64,iVBORw==', 'data:image/webp;base64,UklGRg==']);
+
+    const error = await EffectEx.runPromise(ask(Model.typesafeJev).pipe(Effect.flip));
+    expect(AiError.isAiError(error) && error.reason._tag).toBe('InvalidUserInputError');
+    expect(bodies).toHaveLength(1);
+  });
+
+  test('a remote image URL is refused, since System One does not fetch one', async ({ expect }) => {
+    const error = await EffectEx.runPromise(
+      TypeSafeResolver.toDataUrl({ mediaType: 'image/png', data: new URL('https://example.com/a.png') }).pipe(
+        Effect.flip,
+      ),
+    );
+    expect(error.reason._tag).toBe('InvalidUserInputError');
+  });
+
   test('a model whose provider has no route does not resolve', async ({ expect }) => {
     const exit = await Effect.runPromiseExit(
       Effect.void.pipe(

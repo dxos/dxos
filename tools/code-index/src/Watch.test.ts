@@ -26,7 +26,8 @@ describe('Watch', () => {
   }, 60_000);
 
   afterAll(async () => {
-    await rm(root, { recursive: true, force: true });
+    // Retried: a native call still in flight when the scope closed keeps RocksDB writing until it returns.
+    await rm(root, { recursive: true, force: true, maxRetries: 5 });
   });
 
   test('only source paths count as changes', () => {
