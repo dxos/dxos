@@ -597,14 +597,11 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const target = Obj.getURI(session.chat);
         // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
         // on every call; naming the group restores it.
-        const handles: readonly ProcessManager.Handle<
-          string | readonly ContentBlock.Any[],
-          void,
-          HarnessControlRpcs
-        >[] = yield* processManager.list({
-          target,
-          key: AGENT_PROCESS_KEY,
-        });
+        const handles: readonly Process.Handle<string | readonly ContentBlock.Any[], void, HarnessControlRpcs>[] =
+          yield* processManager.list({
+            target,
+            key: AGENT_PROCESS_KEY,
+          });
         const [handle] = handles;
 
         // The spawn stamped the harness-host annotation so the process is discoverable as the owner.

@@ -10,8 +10,8 @@
     "unit": "ms"
   },
   "wall > scroll-thread": {
-    "target": 2000,
-    "limit": 3000,
+    "target": 1400,
+    "limit": 2100,
     "unit": "ms"
   },
   "cpu > boot": {
@@ -57,8 +57,8 @@
     "unit": "bytes"
   },
   "run > worst tab lag p95": {
-    "target": 510,
-    "limit": 765,
+    "target": 100,
+    "limit": 150,
     "unit": "ms"
   },
   "run > worst worker lag p95": {
@@ -72,8 +72,8 @@
     "unit": "bytes"
   },
   "run > total blocking time": {
-    "target": 1300,
-    "limit": 2000,
+    "target": 1100,
+    "limit": 1650,
     "unit": "ms"
   },
   "busy > wall > boot": {
