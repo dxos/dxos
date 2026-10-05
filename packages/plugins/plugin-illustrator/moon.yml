@@ -16,18 +16,19 @@ tasks:
   # Renders docs/diagrams/*.mmd to .svg through the SVG variant and prints the layout report;
   # `-- --scoreboard` prints the strategy × metric table instead. See docs/diagrams/README.md.
   render-diagrams:
-    # Straight from source (`--conditions=source`), so a render never waits on the plugin's ~150
-    # upstream builds; the script reaches only `@dxos/diagram`, `@dxos/ui-theme` and React. tsx, not
-    # bun: bun's CJS interop cannot construct elkjs's bundled fake worker.
-    # `node --import tsx` rather than the tsx CLI, which spends ~2s starting a second process.
-    command: node
+    # Straight from source (`scripts/vite.render.config.ts` resolves the `source` condition), so a
+    # render never waits on the plugin's ~150 upstream builds. vite-node, not tsx: the ECHO types the
+    # `.dx.svg` payload needs carry legacy decorators, and the diagram rules load as `?raw`. Not bun:
+    # its CJS interop cannot construct elkjs's bundled fake worker.
+    command: vite-node
     args:
-      - '--conditions=source'
-      - '--import'
-      - tsx
+      - '-c'
+      - scripts/vite.render.config.ts
       - scripts/render-diagrams.tsx
     inputs:
       - scripts/render-diagrams.tsx
+      - scripts/raw-loader.mjs
+      - scripts/vite.render.config.ts
       - docs/diagrams/*.mmd
       - src/**/*
     outputs:
