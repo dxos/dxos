@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
+import { Annotation } from '@dxos/echo';
+import { trim } from '@dxos/util';
 
 export const MANDELBROT_PROCESS_KEY = 'org.dxos.stories.compute.mandelbrot';
 
@@ -24,8 +26,8 @@ const IDLE_TIMEOUT = 30_000;
 const ZOOM = 0.7;
 
 export const Point = Schema.Struct({
-  x: Schema.Number.pipe(Schema.annotate({ title: 'X' })),
-  y: Schema.Number.pipe(Schema.annotate({ title: 'Y' })),
+  x: Schema.Number.pipe(Schema.annotate({ title: 'Start X' })),
+  y: Schema.Number.pipe(Schema.annotate({ title: 'Start Y' })),
 });
 export type Point = Schema.Schema.Type<typeof Point>;
 
@@ -41,6 +43,15 @@ export const POINTS: readonly { name: string; point: Point }[] = [
 /** Square resolution in pixels. */
 export const Size = Schema.Literals(SIZES);
 
+/** Resolution on its own row, the start point's coordinates side by side. */
+const PARAMS_LAYOUT = trim`
+  <grid cols="2">
+    <field name="size" span="2"/>
+    <field name="center.x"/>
+    <field name="center.y"/>
+  </grid>
+`;
+
 /** What a client can choose about a render; the command panel's form edits exactly this. */
 export const MandelbrotParams = Schema.Struct({
   size: Size.pipe(Schema.annotate({ title: 'Resolution' }), Schema.optional),
@@ -48,7 +59,7 @@ export const MandelbrotParams = Schema.Struct({
     Schema.annotate({ title: 'Start', description: 'Zoom target; leave empty for a random one.' }),
     Schema.optional,
   ),
-});
+}).pipe(Annotation.FormLayoutAnnotation.set({ default: PARAMS_LAYOUT }));
 
 export type MandelbrotParams = Schema.Schema.Type<typeof MandelbrotParams>;
 

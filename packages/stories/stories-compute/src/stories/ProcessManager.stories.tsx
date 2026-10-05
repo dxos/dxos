@@ -22,14 +22,15 @@ const SimulatedProvider = ({ children }: PropsWithChildren) => (
 /** Remote processes run on the dev EDGE service. */
 const EdgeProvider = ({ children }: PropsWithChildren) => <ComputeProvider remote='edge'>{children}</ComputeProvider>;
 
-/** Client config pointing at the dev EDGE service, for the story that spawns there for real. */
-const edgeConfig = new Config({
-  version: 1,
-  runtime: {
-    client: { edgeFeatures: { signaling: true, agents: true } },
-    services: { edge: { url: 'https://dev.dxos.network' } },
-  },
-});
+/** Client config pointing at an EDGE service, for the stories that spawn there for real. */
+const makeEdgeConfig = (url: string) =>
+  new Config({
+    version: 1,
+    runtime: {
+      client: { edgeFeatures: { signaling: true, agents: true } },
+      services: { edge: { url } },
+    },
+  });
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-compute/ProcessManager',
@@ -54,7 +55,20 @@ export const Default: Story = {
   decorators: createStoryDecorators({ plugins: [surfacesPlugin()], Wrapper: SimulatedProvider }),
 };
 
-/** EDGE must host the Mandelbrot process key for remote spawns to succeed. */
+/** Dev EDGE; it must host the Mandelbrot process key for remote spawns to succeed. */
 export const Edge: Story = {
-  decorators: createStoryDecorators({ plugins: [surfacesPlugin()], Wrapper: EdgeProvider, config: edgeConfig }),
+  decorators: createStoryDecorators({
+    plugins: [surfacesPlugin()],
+    Wrapper: EdgeProvider,
+    config: makeEdgeConfig('https://dev.dxos.network'),
+  }),
+};
+
+/** A local EDGE stack (`pnpm stack:start` in the edge repo), whose edge worker listens on :8787. */
+export const LocalEdge: Story = {
+  decorators: createStoryDecorators({
+    plugins: [surfacesPlugin()],
+    Wrapper: EdgeProvider,
+    config: makeEdgeConfig('http://localhost:8787'),
+  }),
 };
