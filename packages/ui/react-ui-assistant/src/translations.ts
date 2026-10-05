@@ -15,6 +15,8 @@ export const translations = [
         'just-now.label': 'just now',
         'rewind.label': 'Rewind to this prompt',
         'summary.label': 'Summary',
+        'request.answered.label': 'Answered: {{option}}',
+        'request.cancelled.label': 'No longer waiting',
         'stats.label': 'Stats',
         'tool-call.label': 'Calling',
         'tool-input.label': 'Input',

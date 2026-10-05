@@ -418,6 +418,29 @@ export const Summary: Story = {
   },
 };
 
+const permission = {
+  _tag: 'request',
+  requestId: 'tool-2',
+  title: 'Run pnpm test',
+  options: [
+    { id: 'allow', label: 'Yes', kind: 'allow_once' },
+    { id: 'allow-always', label: 'Yes, and allow similar commands', kind: 'allow_always' },
+    { id: 'reject', label: 'No', kind: 'reject_once' },
+  ],
+};
+
+export const Request: Story = {
+  args: {
+    content: `<request message="message-1">${JSON.stringify(permission)}</request>`,
+  },
+};
+
+export const RequestAnswered: Story = {
+  args: {
+    content: `<request message="message-1">${JSON.stringify({ ...permission, resolution: { outcome: 'selected', optionId: 'allow' } })}</request>`,
+  },
+};
+
 // Rendered by the fallback here; the host overrides it with a widget that can dispatch the surface.
 export const Surface: Story = {
   args: {

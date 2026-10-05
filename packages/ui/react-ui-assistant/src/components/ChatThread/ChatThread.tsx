@@ -71,6 +71,8 @@ type ChatThreadRootProps = PropsWithChildren<
     /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
     tailLines?: number;
     debug?: boolean;
+    /** Offers rewind under each prompt; off for an agent that cannot forget a turn. */
+    rewind?: boolean;
     onEvent?: (event: ChatThreadEvent) => void;
     /** The visible index range, as the reader scrolls — what an outline rail tracks. */
     onRangeChange?: (range: MessageRange) => void;
@@ -94,6 +96,7 @@ const ChatThreadRoot = ({
   userHue,
   tailLines,
   debug,
+  rewind = true,
   onEvent,
   onRangeChange,
   controllerRef,
@@ -117,7 +120,7 @@ const ChatThreadRoot = ({
   return (
     <ChatThreadProvider userHue={userHue} onEvent={onEvent}>
       <MessageChromeProvider
-        onRewind={onEvent ? handleRewind : undefined}
+        onRewind={onEvent && rewind ? handleRewind : undefined}
         streaming={streaming}
         showContext={viewType !== 'summary'}
         debug={debug}
@@ -163,12 +166,27 @@ const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThr
 
   const handleClick = useCallback(
     (event: React.MouseEvent) => {
-      const action = (event.target as HTMLElement).closest<HTMLElement>('[data-action="submit"]');
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      const action = target.closest<HTMLElement>('[data-action="submit"]');
       const text = action?.getAttribute('data-value');
       if (text) {
         event.preventDefault();
         event.stopPropagation();
         onEvent?.({ type: 'submit', text });
+        return;
+      }
+
+      const response = target.closest<HTMLElement>('[data-action="respond"]');
+      const messageId = response?.getAttribute('data-message');
+      const requestId = response?.getAttribute('data-request');
+      const optionId = response?.getAttribute('data-option');
+      if (messageId && requestId && optionId) {
+        event.preventDefault();
+        event.stopPropagation();
+        onEvent?.({ type: 'respond', messageId, requestId, optionId });
       }
     },
     [onEvent],

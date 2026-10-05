@@ -74,6 +74,13 @@ export const Settings = Schema.Struct({
         'Run agent turns in code mode: the model writes code against the workspace instead of calling a tool per action. The code runs off the page but can read your workspace data, make network requests, and access browser storage for this origin, so enable it only for trusted content. Applies to agents started after the change.',
     }),
   ),
+  defaultAgent: Schema.optional(
+    Schema.String.annotate({
+      title: 'Default agent',
+      description:
+        'Agent that one-click "Assign to agent" hands tasks to, by id: composer, or another installed agent such as claude-code. Falls back to Composer where that agent is unavailable.',
+    }),
+  ),
   tracePanelDebug: Schema.optional(
     Schema.Boolean.annotate({
       title: 'Trace panel debug',
