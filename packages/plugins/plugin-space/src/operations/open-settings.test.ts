@@ -9,6 +9,7 @@ import { describe, test } from 'vitest';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -39,6 +40,10 @@ describe('SpaceOperation.OpenSettings', () => {
 
     await harness.runPromise(Operation.invoke(SpaceOperation.OpenSettings, { space }));
     expect(calls.map(({ op }) => op)).toEqual(['open', 'updateCompanion']);
+    expect(calls[0]?.input).toEqual({
+      subject: [GraphPath.getSpacePath(space.id, 'settings', 'settings')],
+      workspace: GraphPath.getSpacePath(space.id),
+    });
     expect(calls.at(-1)?.input).toEqual({ subject: null });
   });
 });
