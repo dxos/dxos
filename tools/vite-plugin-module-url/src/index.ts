@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { basename, dirname, extname, posix, relative, resolve } from 'node:path';
+import { dirname, posix, relative, resolve } from 'node:path';
 import { RolldownMagicString } from 'rolldown';
 import { type Plugin } from 'vite';
 
@@ -32,6 +32,9 @@ const placeholderModules: string[] = [];
 
 const PLACEHOLDER_RE = /__DX_MODULE_URL_(\d+)__/g;
 
+/** Where a host worker's entry lists the loaders of the modules built into its build. */
+const HOSTED_GLOBAL = '__dxModuleUrlHosted';
+
 const placeholderFor = (file: string): string => {
   let index = placeholderModules.indexOf(file);
   if (index === -1) {
@@ -59,7 +62,7 @@ const devBasePath = (base: string): string => {
  * source as an asset, and `?worker&url` bundles a worker entry with its exports tree-shaken away.
  *
  * Dev serves the source module through `/@fs/`. In a build, a module listed under a worker in `workers`
- * is an extra entry chunk of that worker's build, so it shares the worker's chunks; Vite copies that
+ * is a dynamically imported chunk of that worker's build, so it shares the worker's chunks; Vite copies that
  * build's files into the importing build, and the URL is resolved once both exist. Any other module
  * goes through Vite's worker bundler (`?worker&url`) with its exports kept: a self-contained bundle,
  * never a chunk of the importing build, whose shared chunks could carry DOM code into a worker or break
@@ -98,19 +101,20 @@ export const ModuleUrlPlugin = ({ workers = {} }: ModuleUrlPluginOptions = {}): 
       workerInput = typeof options.input === 'string' ? options.input : undefined;
       return workerInput && targets.has(workerInput) ? { ...options, preserveEntrySignatures: 'strict' } : undefined;
     },
-    buildStart() {
-      for (const hosted of (workerInput && hosts.get(workerInput)) ?? []) {
-        this.emitFile({
-          type: 'chunk',
-          id: hosted,
-          name: basename(hosted, extname(hosted)),
-          preserveSignature: 'strict',
-        });
+    // A dynamic import from the worker entry, rather than an extra entry chunk: Vite takes a worker
+    // build's first output chunk as the worker, and entries are ordered by name. Recorded on a global so
+    // tree-shaking keeps it; a dynamically imported chunk keeps all of its exports.
+    transform(code, id) {
+      const hosted = id === workerInput ? hosts.get(id) : undefined;
+      if (!hosted?.length) {
+        return;
       }
+      const loaders = hosted.map((file) => `() => import(${JSON.stringify(file)})`).join(', ');
+      return { code: `${code}\n;(globalThis.${HOSTED_GLOBAL} ??= []).push(${loaders});\n`, map: null };
     },
     generateBundle(_, bundle) {
       for (const file of Object.values(bundle)) {
-        if (file.type === 'chunk' && file.isEntry && file.facadeModuleId && hostOf.has(file.facadeModuleId)) {
+        if (file.type === 'chunk' && file.isDynamicEntry && file.facadeModuleId && hostOf.has(file.facadeModuleId)) {
           hostedFiles.set(file.facadeModuleId, file.fileName);
         }
       }

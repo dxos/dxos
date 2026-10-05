@@ -67,7 +67,7 @@ describe('ModuleUrlPlugin', () => {
     expect(length).toEqual({ value: 5, unit: 'px' });
   });
 
-  test('a module hosted by a worker is an entry of the worker build, sharing its chunks', async () => {
+  test('a module hosted by a worker is a chunk of the worker build, sharing its modules', async () => {
     const outDir = await mkdtemp(join(tmpdir(), 'module-url-'));
     onTestFinished(() => rm(outDir, { recursive: true, force: true }));
 
@@ -98,11 +98,11 @@ describe('ModuleUrlPlugin', () => {
     expect(main).toContain(`assets/${host}`);
     expect(main).toContain(`./assets/${plugin}`);
 
-    // `state.ts` is one chunk the worker entry and the hosted module both import, not a copy in each.
+    // `state.ts` is not copied into the hosted module: it imports it from the worker's own chunks.
     const imports = (code: string) => [...code.matchAll(/from\s*["']\.\/([^"']+)["']/g)].map(([, name]) => name);
     const hostImports = imports(await readFile(join(outDir, 'assets', `${host}`), 'utf8'));
     const pluginImports = imports(await readFile(join(outDir, 'assets', `${plugin}`), 'utf8'));
-    expect(pluginImports.filter((name) => hostImports.includes(name))).toHaveLength(1);
+    expect(pluginImports.some((name) => name === host || hostImports.includes(name))).toBe(true);
 
     // One realm loading the worker entry and the module sees one instance of what they share.
     await import(pathToFileURL(join(outDir, 'assets', `${host}`)).href);

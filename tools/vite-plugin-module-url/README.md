@@ -17,7 +17,7 @@ Vite has no built-in for this:
 | Mode  | Result                                                                                        |
 | ----- | --------------------------------------------------------------------------------------------- |
 | serve | The `/@fs/` URL of the source file; the dev server compiles it (and its imports) on request.  |
-| build | A self-contained bundle with its exports kept, or an entry of its host worker's build (below). |
+| build | A self-contained bundle with its exports kept, or a chunk of its host worker's build (below).    |
 
 Types: add `/// <reference types="@dxos/vite-plugin-module-url/client" />` to a `.d.ts` in the consumer.
 
@@ -35,7 +35,9 @@ const options = { workers: { 'src/worker.ts': ['src/plugins/a.ts', 'src/plugins/
 export default defineConfig({ plugins: [ModuleUrlPlugin(options)], worker: { format: 'es', plugins: () => [ModuleUrlPlugin(options)] } });
 ```
 
-Each hosted module becomes an extra entry chunk of the worker's own build (the one Vite runs for
-`new Worker(new URL('./worker.ts', import.meta.url))`), so it imports the chunks the worker entry
-imports. Vite copies that build's files into the importing build, and the module's URL is filled in
+Each hosted module becomes a chunk of the worker's own build (the one Vite runs for
+`new Worker(new URL('./worker.ts', import.meta.url))`): the plugin adds a dynamic `import()` of it to the
+worker entry, recorded on `globalThis.__dxModuleUrlHosted`, so the module keeps all its exports and imports
+whatever it shares from the worker's own chunks. It stays a dynamic import, not an extra entry, because
+Vite takes a worker build's first output chunk as the worker and entries are ordered by name. Vite copies that build's files into the importing build, and the module's URL is filled in
 when the importing chunk renders.

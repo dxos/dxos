@@ -58,8 +58,10 @@ same unit of contribution a tab uses.
   (Supersedes decision 4b's observability plugin, per review.)
 - **D6 — worker plugins are entries of the worker's own build.** Composer's `ModuleUrlPlugin` is told
   `workers: { 'src/workers/dedicated-worker.ts': ['src/workers/client-plugin.ts'] }`: in the dedicated
-  worker's build (the one Vite runs for its `new Worker(new URL(...))`), the plugin emits each listed module
-  as an extra entry chunk with its exports kept. They share chunks with the worker entry, so the worker
+  worker's build (the one Vite runs for its `new Worker(new URL(...))`), the plugin adds a dynamic `import()`
+  of each listed module to the worker entry (on a global, so it survives tree-shaking), making it a chunk of
+  that build with all its exports. Not an extra entry: Vite takes the build's first output chunk as the
+  worker, and Rolldown orders entries by name, so `client-plugin` started as the worker. They share chunks with the worker entry, so the worker
   holds one instance of `effect`, `@dxos/rpc` and every other module they have in common. Vite copies the
   worker build's files into the tab's; the tab's `?module-url` import resolves to a placeholder that the
   plugin rewrites to the chunk's path as the importing chunk renders. Rejected on the way:
@@ -78,5 +80,6 @@ same unit of contribution a tab uses.
   SDKs into the worker graph (the old `worker-runtime.ts` did the same). A `LayerStack` subpath
   export would cut it; tracked in TASKS.
 
-- D6 relies on Vite treating a worker build's first output chunk as the worker entry and copying every
-  other output file into the tab's build; `vite-plugin-module-url`'s test covers both.
+- D6 relies on Vite treating a worker build's first output chunk as the worker entry (true while it has
+  one entry) and copying every other output file into the tab's build; `vite-plugin-module-url`'s test
+  covers both.
