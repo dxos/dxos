@@ -79,19 +79,19 @@ export const toStandard = (source: string): string =>
     })
     .join('\n');
 
-/** Scene arrow markers and line style for a relationship kind; implementation and creation dash, as in UML. */
-export const markers = (kind: RelationKind): Pick<Scene.Arrow, 'head' | 'tail' | 'stroke'> => {
+/** The scene relation a relationship kind draws as, with the dash its line needs; a plain reference stays a plain arrow. */
+export const markers = (kind: RelationKind): Pick<Scene.Arrow, 'relation' | 'stroke'> => {
   switch (kind) {
     case 'inheritance':
-      return { head: 'triangle' };
+      return { relation: 'inheritance' };
     case 'implements':
-      return { head: 'triangle', stroke: 'dashed' };
+      return { relation: 'implementation', stroke: 'dashed' };
     case 'hasMany':
-      return { head: 'crowsfoot' };
+      return { relation: 'one-to-many' };
     case 'contains':
-      return { tail: 'circle' };
+      return { relation: 'aggregation' };
     case 'creates':
-      return { stroke: 'dashed' };
+      return { relation: 'dependency', stroke: 'dashed' };
     default:
       return {};
   }

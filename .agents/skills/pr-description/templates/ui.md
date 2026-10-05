@@ -28,5 +28,6 @@ shows and which flow or `.mdl` test it ran.>
   transition or the sequence. A new feature with both a new look and a new flow gets both.
 - Screenshots: follow "Before/after screenshots" in the `composer-ui` skill (capture both states from
   one build, measure, don't just look).
-- Videos: the `autocue` skill records them; `hosting-artifacts` publishes them.
+- Videos: the `autocue` skill records them; `hosting-artifacts` publishes them — `gh --attach` first,
+  so the video plays inline, R2 only as the fallback.
 - If the change is visible only behind a flag or in a specific space setup, say how to reach it.
