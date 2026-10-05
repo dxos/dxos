@@ -68,7 +68,14 @@ export const TestLayout: Story = {
       // The shared spaces sit under the name, starting where it does.
       if (tags) {
         await expect(Math.abs(tags.left - (name?.left ?? Number.NaN))).toBeLessThanOrEqual(1);
-        await expect(tags.top).toBeGreaterThanOrEqual((name?.bottom ?? Number.NaN) - 1);
+        // A gap apart, so the tags read as the name's detail rather than crowding it.
+        const tagTop = item
+          .querySelector<HTMLElement>('[data-testid="contact-list.space"]')
+          ?.getBoundingClientRect().top;
+        const nameText = item.querySelector<HTMLElement>('[data-part="item-text"]');
+        const range = document.createRange();
+        range.selectNodeContents(nameText ?? item);
+        await expect((tagTop ?? Number.NaN) - range.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(6);
       }
       // The copy button ends the row.
       await expect(row.right - (copy?.right ?? Number.NaN)).toBeLessThan(24);

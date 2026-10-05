@@ -111,7 +111,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
       </Listbox.ItemIcon>
       <Listbox.ItemText id={labelId}>{displayName}</Listbox.ItemText>
       {common.length > 0 && (
-        <Listbox.ItemDescription classNames='flex flex-wrap gap-1'>
+        <Listbox.ItemDescription classNames='flex flex-wrap gap-1 pt-2'>
           {common.map((space) => (
             <Button
               key={space.id}
