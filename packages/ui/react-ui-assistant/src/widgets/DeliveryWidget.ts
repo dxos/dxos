@@ -58,14 +58,12 @@ export class DeliveryWidget extends WidgetType {
     }
 
     root.append(
-      Domino.of('dx-icon')
-        .classNames(getSize(4))
-        .attributes({
-          'icon': ICONS[status],
-          'role': 'img',
-          'aria-label': this.labels[status],
-          'title': this.labels[status],
-        }),
+      Domino.of('dx-icon').classNames(getSize(4)).attributes({
+        'icon': ICONS[status],
+        'role': 'img',
+        'aria-label': this.labels[status],
+        'title': this.labels[status],
+      }),
     );
 
     return root.root;
