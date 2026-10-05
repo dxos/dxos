@@ -18,7 +18,7 @@ import {
 
 const LOCATIONS: { value: Process.Location; label: string }[] = [
   { value: 'local', label: 'Local' },
-  { value: 'edge', label: 'Remote (EDGE)' },
+  { value: 'edge', label: 'EDGE' },
 ];
 
 const fieldMap = {

@@ -202,14 +202,15 @@ export const MandelbrotProcess = Operation.makeDurable(
       let lastRequest = Date.now();
       let rendering = false;
 
-      // One alarm serves both roles: the next frame while credits remain, otherwise the idle check.
+      // One alarm serves both roles: the next frame while credits remain, otherwise the idle check. It is
+      // first armed by a request, not at spawn: a pending alarm keeps the process from settling, and a
+      // host that waits for a spawned process to settle would wait out the whole idle timeout.
       const schedule = () => {
         rendering = credits > 0;
         return ctx.setAlarm(rendering ? interval : IDLE_TIMEOUT);
       };
 
       return {
-        onSpawn: () => ctx.setAlarm(IDLE_TIMEOUT),
         onInput: (input) =>
           Effect.gen(function* () {
             lastRequest = Date.now();
