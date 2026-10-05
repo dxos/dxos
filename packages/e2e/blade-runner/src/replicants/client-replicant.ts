@@ -412,10 +412,11 @@ export class ClientReplicant {
   @trace.span()
   async importSpace({ archivePath }: { archivePath: string }): Promise<{ spaceId: string; importMs: number }> {
     const began = Date.now();
-    const space = await this.#getClient().spaces.import({
-      filename: path.basename(archivePath),
-      contents: new Uint8Array(fs.readFileSync(archivePath)),
-    });
+    // A real space of thousands of documents takes longer than the default import timeout to unpack.
+    const space = await this.#getClient().spaces.import(
+      { filename: path.basename(archivePath), contents: new Uint8Array(fs.readFileSync(archivePath)) },
+      { timeout: 10 * 60_000 },
+    );
     await space.waitUntilReady();
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
     return { spaceId: space.id, importMs: Date.now() - began };
