@@ -1,0 +1,21 @@
+# The five relationships, plus a dependency, each drawn with its own markers.
+diagram flow=down
+
+node Animal "Animal"
+node Dog "Dog" below Animal
+node Cat "Cat" right-of Dog
+node Owner "Owner" left-of Dog
+node Leg "Leg" below Dog
+node Customer "Customer" below Owner
+node Order "Order" below Leg
+node Student "Student" right-of Order
+node Course "Course" right-of Student
+node Logger "Logger" above Cat
+
+edge Dog extends Animal
+edge Cat extends Animal
+edge Dog composes Leg
+edge Owner owns Dog
+edge Customer one-to-many Order "places"
+edge Student many-to-many Course "enrols in"
+edge Cat depends-on Logger

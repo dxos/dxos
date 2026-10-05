@@ -70,3 +70,10 @@ export const autofill =
 
 /** Marks a field whose value is one of the theme's hues; the form renders the hue picker for it. */
 export const HueAnnotation = createAnnotationHelper<boolean>(HueAnnotationId);
+
+/**
+ * Increment for a number field's stepper buttons and arrow keys. Without it an integer field steps by 1 and
+ * any other by 0.1 or 0.01, by the size of its current value.
+ */
+export const StepAnnotationId = '@dxos/schema/annotation/Step';
+export const StepAnnotation = createAnnotationHelper<number>(StepAnnotationId);

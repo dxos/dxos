@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Grid, IconButton, SystemIconButton, Tooltip } from '@dxos/react-ui';
+import { Button, Grid, SystemButton, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -20,7 +20,7 @@ export type SyncCardProps = {
  * differently under the header's label and the data rows' chips and the columns would drift.
  * The chip track takes the slack; the figures are sized for `pending/total`.
  */
-const ROW_TRACKS = ['1fr', '4.5rem', '4rem'];
+const ROW_TRACKS = ['fill', '4.5rem', '4rem'] as const;
 
 const Metric = ({ pending, total }: { pending: number; total: number }) => (
   <span className={mx('font-mono tabular-nums', pending > 0 ? 'text-warning-text' : 'text-success-text')}>
@@ -41,13 +41,13 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
         title='Sync'
         info={pending > 0 ? `${pending} syncing` : `${spaces.length} spaces`}
         action={
-          onCopy && <IconButton iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />
+          onCopy && <Button iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />
         }
       />
       {spaces.length === 0 && <StatCard.Row span label='No spaces.' />}
       {spaces.length > 0 && (
         <StatCard.Row>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>
+          <Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>space</span>
             <span>automerge</span>
             <span>feed</span>
@@ -64,13 +64,14 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
             icon={syncing ? 'ph--arrows-down-up--regular' : 'ph--check-circle--regular'}
             iconClassNames={syncing ? 'text-warning-text' : 'text-success-text'}
           >
-            <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
+            <Grid grow cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
               <Tooltip.Trigger asChild content={row.name}>
-                <SystemIconButton.Clipboard
-                  density='sm'
+                {/* Labelled: presets are icon-only by default, which left the row a bare icon with no space id. */}
+                <SystemButton.Clipboard
+                  iconOnly={false}
+                  size='sm'
                   variant='ghost'
                   compact
-                  iconEnd
                   classNames='justify-self-start font-mono'
                   label={row.spaceId.slice(0, 8)}
                   onCopy={() => row.spaceId}

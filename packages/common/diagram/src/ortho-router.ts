@@ -27,9 +27,96 @@ type Point = Scene.Point;
 const DX = [1, 0, -1, 0];
 const DY = [0, 1, 0, -1];
 
+/** Offsets past this distance turn the same way as at it, so the table clamps to it. */
+const TURN_RADIUS = 4;
+const TURN_SPAN = TURN_RADIUS * 2 + 1;
+
+/**
+ * Fewest turns from a cell heading `dir` to a target `(dx, dy)` away, entered heading `endDir` or
+ * paying the search's one-turn penalty for entering off-axis — on an empty grid, so an admissible
+ * and consistent lower bound for the search, indexed `[endDir][dir][dx][dy]`. It is exact where the
+ * old estimate ignored the arrival heading, which sent every search sweeping the cells behind its
+ * target. Computed once, by one backward search per arrival heading over the moves the search makes.
+ */
+const TURN_TABLE = (() => {
+  const table = new Uint8Array(4 * 4 * TURN_SPAN * TURN_SPAN);
+  // The board leaves room around the radius for the detours an off-axis approach takes.
+  const board = TURN_RADIUS + 4;
+  const side = board * 2 + 1;
+  const stateOf = (x: number, y: number, dir: number) => ((y + board) * side + (x + board)) * 4 + dir;
+  const turns = new Uint8Array(side * side * 4);
+  // Label-correcting relaxation: steps cost 0, 1 or 2 turns, and a state re-enters the queue
+  // whenever it improves, so the queue holds at most a few passes over a small board.
+  const queue = new Int32Array(side * side * 4 * 8);
+  for (let endDir = 0; endDir < 4; endDir++) {
+    turns.fill(255);
+    let head = 0;
+    let tail = 0;
+    // Arriving at the target ends the search whatever the heading.
+    for (let dir = 0; dir < 4; dir++) {
+      turns[stateOf(0, 0, dir)] = 0;
+      queue[tail++] = stateOf(0, 0, dir);
+    }
+    while (head < tail) {
+      const state = queue[head++ % queue.length];
+      const arrivedDir = state % 4;
+      const cell = (state - arrivedDir) / 4;
+      const x = (cell % side) - board;
+      const y = Math.floor(cell / side) - board;
+      // Every state that steps into (x, y) heading `arrivedDir`, and what that step costs.
+      const px = x - DX[arrivedDir];
+      const py = y - DY[arrivedDir];
+      if (Math.abs(px) > board || Math.abs(py) > board || (px === 0 && py === 0)) {
+        continue;
+      }
+      const arrival = x === 0 && y === 0 && arrivedDir !== endDir ? 1 : 0;
+      for (let dir = 0; dir < 4; dir++) {
+        if ((arrivedDir + 2) % 4 === dir) {
+          continue;
+        }
+        const previous = stateOf(px, py, dir);
+        const total = turns[state] + (arrivedDir === dir ? 0 : 1) + arrival;
+        if (total < turns[previous]) {
+          turns[previous] = total;
+          queue[tail++ % queue.length] = previous;
+        }
+      }
+    }
+    for (let dir = 0; dir < 4; dir++) {
+      for (let dx = -TURN_RADIUS; dx <= TURN_RADIUS; dx++) {
+        for (let dy = -TURN_RADIUS; dy <= TURN_RADIUS; dy++) {
+          const at = ((endDir * 4 + dir) * TURN_SPAN + dx + TURN_RADIUS) * TURN_SPAN + dy + TURN_RADIUS;
+          table[at] = dx === 0 && dy === 0 ? 0 : turns[stateOf(-dx, -dy, dir)];
+        }
+      }
+    }
+  }
+  return table;
+})();
+
+const clampTurnOffset = (offset: number) => Math.max(-TURN_RADIUS, Math.min(TURN_RADIUS, offset));
+
+const turnsBetween = (dx: number, dy: number, dir: number, endDir: number): number =>
+  TURN_TABLE[
+    ((endDir * 4 + dir) * TURN_SPAN + clampTurnOffset(dx) + TURN_RADIUS) * TURN_SPAN + clampTurnOffset(dy) + TURN_RADIUS
+  ];
+
 export type AvoidingRouterOptions = {
   /** Search-cell size (scene px): a fraction of the layout grid, so routes can hug node borders. */
   step: number;
+};
+
+/** Paths an avoiding router marked as used, so a later router can replay them; weak, so it holds nothing alive. */
+const marked = new WeakSet<readonly Point[]>();
+
+/** The avoiding router plus a way to replay an earlier route's footprint without searching again. */
+export type AvoidingRouter = Router & {
+  /**
+   * Marks the cells of a path an avoiding router over the same obstacles returned before as used, as
+   * routing it did; a path that marked nothing (a fallback route) marks nothing, so a replayed prefix
+   * leaves the same state.
+   */
+  reserve: (points: readonly Point[]) => void;
 };
 
 /**
@@ -42,7 +129,7 @@ export const makeAvoidingRouter = (
   obstacles: Rect[],
   fallback: Router,
   { step: STEP }: AvoidingRouterOptions,
-): Router => {
+): AvoidingRouter => {
   const xs = obstacles.flatMap((rect) => [rect.x, rect.x + rect.w]);
   const ys = obstacles.flatMap((rect) => [rect.y, rect.y + rect.h]);
   const bounds = {
@@ -84,107 +171,152 @@ export const makeAvoidingRouter = (
   const settledGen = new Int32Array(width * height * 4);
   let generation = 0;
 
-  /** `f` is cost + estimate, the heap's key. */
-  type State = { x: number; y: number; dir: number; cost: number; f: number; prev?: State };
   type Terminal = { point: Point; dir: number };
   type Found = { cost: number; cells: Point[] };
 
+  // Search states live in a pool of parallel typed arrays, addressed by slot, and the heap holds
+  // slots: a search pushes millions of states, and one object per state made GC a third of the run.
+  let capacity = 1 << 16;
+  let stateKey = new Int32Array(capacity);
+  let stateCost = new Float64Array(capacity);
+  let statePrev = new Int32Array(capacity);
+  let heap = new Int32Array(capacity);
+  // Each heap entry's key beside its slot, so sifting compares without chasing the slot into the pool.
+  let heapF = new Float64Array(capacity);
+  let poolSize = 0;
+  let heapSize = 0;
+
+  const grow = () => {
+    capacity *= 2;
+    const widen = <T extends Int32Array | Float64Array>(array: T, make: (size: number) => T): T => {
+      const next = make(capacity);
+      next.set(array);
+      return next;
+    };
+    stateKey = widen(stateKey, (size) => new Int32Array(size));
+    stateCost = widen(stateCost, (size) => new Float64Array(size));
+    statePrev = widen(statePrev, (size) => new Int32Array(size));
+    heap = widen(heap, (size) => new Int32Array(size));
+    heapF = widen(heapF, (size) => new Float64Array(size));
+  };
+
   /** Binary min-heap on cost + estimate, so each pop is O(log n) instead of a frontier scan. */
-  const heapPush = (heap: State[], state: State) => {
-    heap.push(state);
-    let index = heap.length - 1;
+  const heapPush = (key: number, cost: number, f: number, prev: number) => {
+    if (poolSize === capacity) {
+      grow();
+    }
+    const slot = poolSize++;
+    stateKey[slot] = key;
+    stateCost[slot] = cost;
+    statePrev[slot] = prev;
+    let index = heapSize++;
     while (index > 0) {
       const parent = (index - 1) >> 1;
-      if (heap[parent].f <= heap[index].f) {
+      if (heapF[parent] <= f) {
         break;
       }
-      [heap[parent], heap[index]] = [heap[index], heap[parent]];
+      heap[index] = heap[parent];
+      heapF[index] = heapF[parent];
       index = parent;
     }
+    heap[index] = slot;
+    heapF[index] = f;
   };
-  const heapPop = (heap: State[]): State => {
+  const heapPop = (): number => {
     const top = heap[0];
-    const last = heap.pop()!;
-    if (heap.length > 0) {
-      heap[0] = last;
+    const last = heap[--heapSize];
+    if (heapSize > 0) {
+      const lastF = heapF[heapSize];
       let index = 0;
       for (;;) {
         const left = index * 2 + 1;
         const right = left + 1;
         let smallest = index;
-        if (left < heap.length && heap[left].f < heap[smallest].f) {
+        let smallestF = lastF;
+        if (left < heapSize && heapF[left] < smallestF) {
           smallest = left;
+          smallestF = heapF[left];
         }
-        if (right < heap.length && heap[right].f < heap[smallest].f) {
+        if (right < heapSize && heapF[right] < smallestF) {
           smallest = right;
+          smallestF = heapF[right];
         }
         if (smallest === index) {
           break;
         }
-        [heap[smallest], heap[index]] = [heap[index], heap[smallest]];
+        heap[index] = heap[smallest];
+        heapF[index] = smallestF;
         index = smallest;
       }
+      heap[index] = last;
+      heapF[index] = lastF;
     }
     return top;
   };
 
-  /**
-   * Fewest turns any path from (x, y) heading `dir` needs to reach the target: none while aligned
-   * and heading at it, two when heading away along its axis, otherwise one. Admissible, and since
-   * a turn costs as much as a thousand steps it is what makes the search converge on a diagram
-   * hundreds of cells across — distance alone leaves it exploring almost uniformly.
-   */
-  const turnsNeeded = (x: number, y: number, dir: number, target: Point): number => {
+  const estimateFrom = (x: number, y: number, dir: number, target: Point, endDir: number): number => {
     const dx = target.x - x;
     const dy = target.y - y;
-    if (dx !== 0 && dy !== 0) {
-      return 1;
-    }
-    if (dx === 0 && dy === 0) {
-      return 0;
-    }
-    const towards = dx !== 0 ? (dx > 0 ? 0 : 2) : dy > 0 ? 1 : 3;
-    return dir === towards ? 0 : (dir + 2) % 4 === towards ? 2 : 1;
+    return Math.abs(dx) + Math.abs(dy) + turnsBetween(dx, dy, dir, endDir) * TURN_COST;
   };
-
-  const estimateFrom = (x: number, y: number, dir: number, target: Point): number =>
-    Math.abs(target.x - x) + Math.abs(target.y - y) + turnsNeeded(x, y, dir, target) * TURN_COST;
 
   // Every cell in every heading, so a reachable target is never abandoned on a large diagram.
   const budget = Math.max(50_000, (bounds.x1 - bounds.x0) * (bounds.y1 - bounds.y0) * 4);
 
   /**
    * Bounded A* between two stub ends (grid coordinates). Successors already dominated by a
-   * settled state are pruned before pushing; undefined when the target is unreachable.
+   * settled state are pruned before pushing; undefined when the target is unreachable or no path
+   * costs less than `bound`.
    */
-  const search = (source: Point, startDir: number, target: Point, endDir: number): Found | undefined => {
-    const open: State[] = [
-      { x: source.x, y: source.y, dir: startDir, cost: 0, f: estimateFrom(source.x, source.y, startDir, target) },
-    ];
+  const search = (
+    source: Point,
+    startDir: number,
+    target: Point,
+    endDir: number,
+    bound = Infinity,
+  ): Found | undefined => {
+    poolSize = 0;
+    heapSize = 0;
+    heapPush(
+      cellIndex(source.x, source.y) * 4 + startDir,
+      0,
+      estimateFrom(source.x, source.y, startDir, target, endDir),
+      -1,
+    );
     generation++;
     const settledAt = (index: number) => (settledGen[index] === generation ? settledCost[index] : undefined);
-    let found: State | undefined;
+    let found = -1;
 
-    for (let iterations = 0; open.length > 0 && iterations < budget; iterations++) {
-      const current = heapPop(open);
-      if (current.x === target.x && current.y === target.y) {
+    for (let iterations = 0; heapSize > 0 && iterations < budget; iterations++) {
+      // The estimate is admissible, so once the cheapest frontier key reaches the bound no path
+      // can beat it; without this a losing configuration explores every state up to its own optimum.
+      if (heapF[0] >= bound) {
+        break;
+      }
+      const current = heapPop();
+      const stateIndex = stateKey[current];
+      const currentDir = stateIndex & 3;
+      const currentCell = stateIndex >> 2;
+      const currentX = (currentCell % width) + bounds.x0;
+      const currentY = Math.floor(currentCell / width) + bounds.y0;
+      const currentCost = stateCost[current];
+      if (currentX === target.x && currentY === target.y) {
         found = current;
         break;
       }
-      const stateIndex = cellIndex(current.x, current.y) * 4 + current.dir;
       const seen = settledAt(stateIndex);
-      if (seen !== undefined && seen <= current.cost) {
+      if (seen !== undefined && seen <= currentCost) {
         continue;
       }
       settledGen[stateIndex] = generation;
-      settledCost[stateIndex] = current.cost;
+      settledCost[stateIndex] = currentCost;
 
       for (let dir = 0; dir < 4; dir++) {
-        if ((dir + 2) % 4 === current.dir) {
+        if ((dir + 2) % 4 === currentDir) {
           continue;
         }
-        const x = current.x + DX[dir];
-        const y = current.y + DY[dir];
+        const x = currentX + DX[dir];
+        const y = currentY + DY[dir];
         if (!inBounds(x, y)) {
           continue;
         }
@@ -193,9 +325,9 @@ export const makeAvoidingRouter = (
           continue;
         }
         const cost =
-          current.cost +
+          currentCost +
           1 +
-          (dir === current.dir ? 0 : TURN_COST) +
+          (dir === currentDir ? 0 : TURN_COST) +
           (usedGrid[cell] !== 0 ? USED_COST : 0) +
           // Entering the target off-axis forces one more bend at arrival; fold it in.
           (x === target.x && y === target.y && dir !== endDir ? TURN_COST : 0);
@@ -203,21 +335,36 @@ export const makeAvoidingRouter = (
         if (dominated !== undefined && dominated <= cost) {
           continue;
         }
-        heapPush(open, { x, y, dir, cost, f: cost + estimateFrom(x, y, dir, target), prev: current });
+        heapPush(cell * 4 + dir, cost, cost + estimateFrom(x, y, dir, target, endDir), current);
       }
     }
 
-    if (!found) {
+    if (found < 0) {
       return undefined;
     }
     const cells: Point[] = [];
-    for (let state: State | undefined = found; state; state = state.prev) {
-      cells.unshift({ x: state.x, y: state.y });
+    for (let slot = found; slot >= 0; slot = statePrev[slot]) {
+      const cell = stateKey[slot] >> 2;
+      cells.unshift({ x: (cell % width) + bounds.x0, y: Math.floor(cell / width) + bounds.y0 });
     }
-    return { cost: found.cost, cells };
+    return { cost: stateCost[found], cells };
   };
 
-  return (edge: RoutedRelation): Point[] => {
+  const markPath = (path: readonly Point[]) => {
+    for (let index = 0; index < path.length - 1; index++) {
+      const a = path[index];
+      const b = path[index + 1];
+      const ax = Math.round(a.x / STEP);
+      const ay = Math.round(a.y / STEP);
+      const steps = Math.max(Math.abs(Math.round(b.x / STEP) - ax), Math.abs(Math.round(b.y / STEP) - ay));
+      const dx = Math.sign(b.x - a.x);
+      const dy = Math.sign(b.y - a.y);
+      for (let step = 0; step <= steps; step++) {
+        markUsed(ax + dx * step, ay + dy * step);
+      }
+    }
+  };
+  const route = (edge: RoutedRelation): Point[] => {
     const { from, to, horizontal, ports } = edge;
     // Flow-axis faces mirror the Z-router (and the port assignment in `emit`).
     const sameLane = horizontal ? from.x === to.x : from.y === to.y;
@@ -270,6 +417,7 @@ export const makeAvoidingRouter = (
         startTerminal.dir,
         stub(endTerminal.point, endTerminal.dir, false),
         endTerminal.dir,
+        best?.cost,
       );
       if (result && (!best || result.cost < best.cost)) {
         best = result;
@@ -355,18 +503,15 @@ export const makeAvoidingRouter = (
     }
 
     // Mark the final path's cells so later edges route (and center) around it.
-    for (let index = 0; index < simplified.length - 1; index++) {
-      const a = simplified[index];
-      const b = simplified[index + 1];
-      const ax = Math.round(a.x / STEP);
-      const ay = Math.round(a.y / STEP);
-      const steps = Math.max(Math.abs(Math.round(b.x / STEP) - ax), Math.abs(Math.round(b.y / STEP) - ay));
-      const dx = Math.sign(b.x - a.x);
-      const dy = Math.sign(b.y - a.y);
-      for (let step = 0; step <= steps; step++) {
-        markUsed(ax + dx * step, ay + dy * step);
-      }
-    }
+    markPath(simplified);
+    marked.add(simplified);
     return simplified;
   };
+
+  const reserve = (points: readonly Point[]) => {
+    if (marked.has(points)) {
+      markPath(points);
+    }
+  };
+  return Object.assign(route, { reserve });
 };

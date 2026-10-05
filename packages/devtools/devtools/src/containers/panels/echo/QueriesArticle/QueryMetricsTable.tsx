@@ -5,7 +5,7 @@
 import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type QueryMetrics } from '@dxos/echo-client';
-import { Grid, Icon, ScrollArea, Toolbar, Tooltip } from '@dxos/react-ui';
+import { Button, Grid, type GridTrack, Icon, ScrollArea, Toggle, Toolbar, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -40,9 +40,7 @@ const COLUMNS: Column[] = [
     label: 'Live',
     title: 'Reactive queries running now.',
     value: (query) => query.active,
-    render: (query) => (
-      <span className={query.active > 0 ? 'text-success-text' : 'text-description'}>{query.active}</span>
-    ),
+    render: (query) => <span className={query.active > 0 ? 'text-success-text' : 'text-fg-muted'}>{query.active}</span>,
   },
   { id: 'updates', label: 'Updates', title: 'Reactive result recomputations.', value: (query) => query.updates },
   {
@@ -53,7 +51,7 @@ const COLUMNS: Column[] = [
     render: (query) => (
       <span>
         {query.lastCount.toLocaleString()}
-        {query.maxCount > query.lastCount && <span className='text-description'> ({query.maxCount})</span>}
+        {query.maxCount > query.lastCount && <span className='text-fg-muted'> ({query.maxCount})</span>}
       </span>
     ),
   },
@@ -80,7 +78,7 @@ const COLUMNS: Column[] = [
   },
 ];
 
-const TRACKS = ['minmax(12rem,1fr)', ...COLUMNS.slice(1).map(() => '3.75rem')];
+const TRACKS: GridTrack[] = ['minmax(12rem,1fr)', ...COLUMNS.slice(1).map((): GridTrack => '3.75rem')];
 
 type Sort = { column: string; descending: boolean };
 
@@ -125,22 +123,23 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
     <div className='flex flex-col h-full min-h-0'>
       <Toolbar.Root>
         <Searchbar placeholder='Filter queries' value={filter} onChange={setFilter} />
-        <Toolbar.Toggle pressed={liveOnly} onPressedChange={setLiveOnly}>
+        <Toggle pressed={liveOnly} onPressedChange={setLiveOnly}>
           Live only
-        </Toolbar.Toggle>
-        <Toolbar.Text classNames='shrink-0 font-mono text-xs text-description'>
+        </Toggle>
+        <Toolbar.Text classNames='shrink-0 font-mono text-xs text-fg-muted'>
           {live} live · {queries.length} queries
         </Toolbar.Text>
         {onReset && (
-          <Toolbar.IconButton icon='ph--arrow-counter-clockwise--regular' iconOnly label='Reset' onClick={onReset} />
+          <Button
+            variant='ghost'
+            icon='ph--arrow-counter-clockwise--regular'
+            iconOnly
+            label='Reset'
+            onClick={onReset}
+          />
         )}
       </Toolbar.Root>
-      <Grid
-        cols={TRACKS}
-        gap='sm'
-        grow={false}
-        classNames='px-2 py-1 border-b border-subdued-separator text-xs text-description'
-      >
+      <Grid cols={TRACKS} gap='sm' classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted'>
         {COLUMNS.map((column, index) => (
           <Tooltip.Trigger key={column.id} asChild content={column.title}>
             <button
@@ -150,15 +149,15 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
             >
               {column.label}
               {sort.column === column.id && (
-                <Icon size={3} icon={sort.descending ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} />
+                <Icon size='xs' icon={sort.descending ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} />
               )}
             </button>
           </Tooltip.Trigger>
         ))}
       </Grid>
-      <ScrollArea.Root orientation='vertical' thin classNames='dx-grow'>
+      <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
         <ScrollArea.Viewport>
-          {rows.length === 0 && <p className='p-2 text-xs text-description'>No queries.</p>}
+          {rows.length === 0 && <p className='p-2 text-xs text-fg-muted'>No queries.</p>}
           {rows.map((query) => {
             const open = expanded === query.query;
             return (
@@ -168,7 +167,6 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
                   cols={TRACKS}
                   gap='sm'
                   align='center'
-                  grow={false}
                   classNames={[
                     'w-full px-2 py-0.5 font-mono text-xs tabular-nums text-end hover:bg-hover-surface',
                     open && 'bg-hover-surface',
@@ -188,7 +186,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
                   </button>
                 </Grid>
                 {open && (
-                  <div className='px-2 py-1 text-xs border-y border-subdued-separator'>
+                  <div className='px-2 py-1 text-xs border-y border-separator-subtle'>
                     <JsonHighlighter data={{ ...query, avgTime: averageQueryTime(query) }} />
                   </div>
                 )}

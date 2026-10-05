@@ -1,0 +1,245 @@
+/*
+ * Tree (`@dxos/react-ui-list`): rows are flat, one block tall and indented half a block per level; the disclosure cell
+ * is half a block wide at every size, so each level's caret sits under its parent's icon. Row states (hover,
+ * selected, focus, disabled, drag, the drop line) are the shared `dx-row` rules (row.css); this file keeps the tree's
+ * layout, the `inside` ring and the line's indent.
+ */
+
+@layer dx-components {
+  .dx-tree {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    max-height: 100%;
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+    /* Read by Tree.Root to time the commit of a close, so the CSS and the timer share one value. */
+    --dx-tree-disclosure-duration: var(--dx-disclosure-duration);
+  }
+
+  .dx-tree > .dx-scroll-root {
+    flex: 1 1 auto;
+  }
+
+  .dx-tree-content:focus {
+    outline: none;
+  }
+
+  /*
+   * The space an icon has inside its block: with `rowInset` (`data-row-inset`) a row's ends are padded by it, so the
+   * disclosure and a trailing count sit as far from the row's edges as its icon sits from its cell. Declared on the row
+   * so it resolves against the row's size.
+   */
+  .dx-tree-item {
+    --dx-tree-inset: 0px;
+  }
+  [data-row-inset] .dx-tree-item,
+  [data-row-inset] .dx-tree-group {
+    --dx-tree-inset: calc((var(--dx-block-size) - var(--dx-control-icon)) / 2);
+  }
+
+  /* One block tall at every size: the row's auto rows are `minmax(block, auto)` and nothing in it exceeds a block. */
+  .dx-tree-item {
+    position: relative;
+    grid-auto-rows: var(--dx-block-size);
+    padding-inline: calc(var(--dx-tree-inset) + var(--dx-tree-depth) * var(--dx-half-block-size)) var(--dx-tree-inset);
+    outline: none;
+    user-select: none;
+  }
+  /* `multiline`: the first line holds the row's cells at one block; later lines (a description) size to their content. */
+  .dx-tree[data-multiline] .dx-tree-item {
+    grid-template-rows: var(--dx-block-size);
+    grid-auto-rows: auto;
+  }
+  /*
+   * A tree lives in narrow sidebars, where Container's `width < 24rem` query would stack a row's cells; the row keeps
+   * its fixed tracks at every width (the specificity beats the query's `.dx-container[data-layout='row'] > *` rule).
+   */
+  .dx-tree-item.dx-container[data-layout='row'] > :not([data-rail]) {
+    grid-column: auto;
+  }
+
+  /* Drop targets: `top`/`bottom` draw the shared row line at the landing level; `inside` rings the branch. */
+  .dx-tree-item[data-drop-target='inside'] {
+    outline: var(--dx-drop-indicator-width) solid var(--dx-drop-indicator-color);
+    outline-offset: calc(-1 * var(--dx-drop-indicator-width));
+  }
+  .dx-tree-item[data-drop-target='inside'][data-drop-kind='link'] {
+    outline-style: dashed;
+  }
+  .dx-tree-item[data-drop-target]::after {
+    inset-inline-start: calc(var(--dx-tree-inset) + var(--dx-tree-drop-level, 0) * var(--dx-half-block-size));
+  }
+  /* A link adds a reference and leaves the item where it is, so its line is dashed. */
+  .dx-tree-item[data-drop-kind='link']::after {
+    height: 0;
+    background: none;
+    border-block-start: var(--dx-drop-indicator-width) dashed var(--dx-drop-indicator-color);
+  }
+
+  .dx-tree-item[data-virtual='variable'] {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto var(--dx-block-size);
+  }
+
+  /* Half a block wide and a full block tall; the doubled class outranks `.dx-block`'s square. */
+  .dx-block.dx-tree-item-indicator {
+    width: var(--dx-half-block-size);
+  }
+
+  .dx-tree-branch-trigger {
+    display: grid;
+    cursor: pointer;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+  /* An open branch with nothing under it: the caret stays (it still closes the branch) but reads as empty. */
+  .dx-tree-branch-trigger[data-empty] {
+    opacity: 0.4;
+  }
+  .dx-tree-branch-indicator {
+    display: grid;
+    place-items: center;
+    transition: transform var(--dx-tree-disclosure-duration) var(--dx-disclosure-ease-open);
+  }
+  .dx-tree-branch-indicator[data-state='open'] {
+    transform: rotate(90deg);
+  }
+  /* The machine still reports a concealing branch as open (the close has not committed); the caret turns with its rows. */
+  .dx-tree-item[data-concealing] .dx-tree-branch-indicator {
+    transform: none;
+  }
+
+  /*
+   * Disclosure (Tree.Root `animate`). Rows are flat, so each row under the branch animates itself: an entering row
+   * grows and fades in from the commit that mounts it; a concealing row shrinks and fades out while the close waits,
+   * and `forwards` holds it collapsed until the commit removes it. The clip exists only while the height moves, so a
+   * row at rest still paints its focus ring and drop line.
+   */
+  :is(.dx-tree-item, .dx-tree-group)[data-disclosure='enter'] {
+    animation: dx-tree-row-enter var(--dx-tree-disclosure-duration) var(--dx-disclosure-ease-open);
+  }
+  :is(.dx-tree-item, .dx-tree-group)[data-disclosure='conceal'] {
+    animation: dx-tree-row-conceal var(--dx-tree-disclosure-duration) var(--dx-disclosure-ease-close) forwards;
+  }
+
+  /* A multiline row has no single height to grow to, so its disclosure only fades. */
+  .dx-tree[data-multiline] .dx-tree-item[data-disclosure='enter'] {
+    animation-name: dx-tree-row-fade-in;
+  }
+  .dx-tree[data-multiline] .dx-tree-item[data-disclosure='conceal'] {
+    animation-name: dx-tree-row-fade-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dx-tree {
+      --dx-tree-disclosure-duration: 0ms;
+    }
+  }
+
+  /* The row grows while transparent and fades in once it has room, so a half-grown row's clipped text never crowds the
+     row below it; a closing row fades out first, then shrinks. */
+  @keyframes dx-tree-row-enter {
+    from {
+      opacity: 0;
+      block-size: 0;
+      overflow-y: clip;
+    }
+    50% {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+      block-size: var(--dx-block-size);
+      overflow-y: clip;
+    }
+  }
+  @keyframes dx-tree-row-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes dx-tree-row-fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes dx-tree-row-conceal {
+    from {
+      opacity: 1;
+      block-size: var(--dx-block-size);
+      overflow-y: clip;
+    }
+    50% {
+      opacity: 0;
+    }
+    to {
+      opacity: 0;
+      block-size: 0;
+      overflow-y: clip;
+    }
+  }
+
+  .dx-tree-item[data-hide-drag-source] {
+    display: none;
+  }
+  /* A compact chip, one label line tall; the doubled class outranks the Tag's control-derived height and padding. */
+  .dx-tag.dx-tree-item-count {
+    justify-self: end;
+    height: auto;
+    padding-block: 0;
+    padding-inline: 0.25rem;
+    min-inline-size: 1.25rem;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Row controls take the row's tracks; where the pointer can hover they show only on the row in play (hovered,
+     focused within, selected, or holding an open menu), so a list of rows does not read as a wall of buttons. */
+  .dx-tree-item-actions {
+    display: contents;
+  }
+  @media (hover: hover) {
+    .dx-tree-item:not(:hover, :focus-within, [data-selected], :has([aria-expanded='true'])) .dx-tree-item-actions > * {
+      opacity: 0;
+    }
+  }
+
+  /* A section header: one block like every row (so a fixed window holds), its label cleared past the disclosure cell. */
+  .dx-tree-group {
+    display: flex;
+    align-items: flex-end;
+    block-size: var(--dx-block-size);
+    padding-inline-start: calc(
+      var(--dx-tree-inset, 0px) + var(--dx-tree-depth) * var(--dx-half-block-size) + var(--dx-half-block-size)
+    );
+    padding-block-end: 0.125rem;
+    user-select: none;
+  }
+  /* A section heading reads like a field label (`Field.Label`): the size's label step, in the subdued colour. */
+  .dx-tree-group-label {
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
+    color: var(--color-fg-subtle);
+  }
+
+  /* The end strip (`dropAtEnd`): one block below the last row that takes "append at the end". */
+  .dx-tree-end {
+    position: relative;
+    min-block-size: var(--dx-block-size);
+  }
+
+  /* One segment per ancestor, centred under that ancestor's disclosure cell; segments join across rows. */
+  .dx-tree-indent-guide {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      var(--dx-tree-inset, 0px) + (var(--dx-tree-guide-level) + 0.5) * var(--dx-half-block-size)
+    );
+    width: 0;
+    border-inline-start: 1px solid var(--color-separator-subtle);
+    pointer-events: none;
+  }
+}

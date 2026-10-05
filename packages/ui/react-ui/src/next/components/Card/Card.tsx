@@ -7,17 +7,19 @@ import React, { type ComponentPropsWithoutRef, type MouseEvent, type ReactNode, 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { composable, composableProps } from '../../../util/index.ts';
 import { clickableProps } from '../../clickable.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Block } from '../Block/index.ts';
 import { Button, type ButtonProps } from '../Button/index.ts';
 import { Container } from '../Container/index.ts';
-import { Group } from '../Group/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { Group, type GroupProps } from '../Group/index.ts';
+import { Icon, type IconHue } from '../Icon/index.ts';
 import { Image, type ImageProps } from '../Image/index.ts';
 import { Menu } from '../Menu/index.ts';
-import { Typography } from '../Typography/index.ts';
+import { SystemButton } from '../SystemButton/index.ts';
+import { Typography, type TypographyProps } from '../Typography/index.ts';
 
 /** A click inside a clickable card or row (a trailing action, a menu) must not also activate it. */
 const stopPropagation = (event: MouseEvent) => event.stopPropagation();
@@ -37,6 +39,13 @@ type CardRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
    * Off by default: the card is a padded column, and rows lay their icon, text and trailing cells out inline.
    */
   grid?: boolean;
+  /**
+   * The rails' width in a `grid` card: one block (`rail`, the default), or a gutter step for a card whose rows should
+   * sit further in. Rows and their icons follow the rails; a Header lays out by blocks, so wider rails suit row headers.
+   */
+  gutter?: 'rail' | 'md' | 'lg';
+  /** Sizes the card's rows, blocks and controls (its `data-size` scope), whatever its host's size. */
+  size?: Size;
 };
 
 /**
@@ -45,12 +54,17 @@ type CardRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * column that creates no grid. With `onClick` the card is a button (Enter and Space activate it); nested actions and
  * menus stop their clicks reaching it.
  */
-const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
-  ({ classNames, border = true, selected, grid = false, onClick, onKeyDown, ...props }, forwardedRef) => {
+const CardRoot = composable<HTMLDivElement, Omit<CardRootProps, keyof ThemedClassName<{}>>>(
+  ({ border = true, selected, grid = false, gutter = 'rail', size, onClick, onKeyDown, ...props }, forwardedRef) => {
+    // Composable, so the card can be an `asChild` host's child (a Mosaic tile, a Focus item) and take its props.
+    const { className, ...rest } = composableProps<HTMLDivElement>(props, {
+      classNames: [recipes.cardRoot(), onClick && recipes.cardClickable()],
+    });
     const card = (
       <div
         data-surface={grid ? undefined : '+1'}
-        {...props}
+        {...rest}
+        data-size={size}
         {...clickableProps(onClick, onKeyDown)}
         aria-current={selected ? 'true' : undefined}
         data-scope='card'
@@ -58,12 +72,12 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         data-grid={grid ? '' : undefined}
         data-border={border ? undefined : 'false'}
         data-selected={selected ? '' : undefined}
-        className={mx(recipes.cardRoot(), onClick && recipes.cardClickable(), classNames)}
+        className={className}
         ref={forwardedRef}
       />
     );
     return grid ? (
-      <Container asChild gutter='rail' level='+1'>
+      <Container asChild gutter={gutter} level='+1'>
         {card}
       </Container>
     ) : (
@@ -72,7 +86,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   },
 );
 
-CardRoot.displayName = 'Next.Card.Root';
+CardRoot.displayName = 'Card.Root';
 
 //
 // Poster
@@ -85,7 +99,40 @@ const CardPoster = forwardRef<HTMLDivElement, CardPosterProps>(({ classNames, ..
   <Image {...props} data-place='full' classNames={mx(recipes.cardPoster(), classNames)} ref={forwardedRef} />
 ));
 
-CardPoster.displayName = 'Next.Card.Poster';
+CardPoster.displayName = 'Card.Poster';
+
+//
+// Tile
+//
+
+type CardTileProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>> & {
+  icon: string;
+  /** Fills the tile with the hue's surface and colours the icon with its foreground. */
+  hue?: IconHue;
+};
+
+/**
+ * A full-height leading tile of the card's hue holding a large icon; first in the card, it lays the card out as a row,
+ * so the parts after it (a Body) form the column beside it. With `onClick` it is a button (Enter and Space activate it).
+ */
+const CardTile = forwardRef<HTMLDivElement, CardTileProps>(
+  ({ classNames, icon, hue, onClick, onKeyDown, ...props }, forwardedRef) => (
+    <div
+      {...props}
+      {...clickableProps(onClick, onKeyDown)}
+      data-scope='card'
+      data-part='tile'
+      data-hue={hue}
+      className={mx(recipes.cardTile(), onClick && recipes.cardTileClickable(), classNames)}
+      ref={forwardedRef}
+    >
+      {/* No `hue` on the Icon: its own hue rule would paint the hue's text tone over the tile's foreground. */}
+      <Icon icon={icon} />
+    </div>
+  ),
+);
+
+CardTile.displayName = 'Card.Tile';
 
 //
 // Header
@@ -107,25 +154,25 @@ const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(({ classNames, ..
   />
 ));
 
-CardHeader.displayName = 'Next.Card.Header';
+CardHeader.displayName = 'Card.Header';
 
 //
 // Title
 //
 
-type CardTitleProps = ThemedClassName<ComponentPropsWithoutRef<'h3'>>;
+type CardTitleProps = ThemedClassName<ComponentPropsWithoutRef<'h3'>> &
+  Pick<TypographyProps, 'truncate' | 'lines' | 'tone'>;
 
-const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(({ classNames, ...props }, forwardedRef) => (
-  <h3
-    {...props}
-    data-scope='card'
-    data-part='title'
-    className={mx(recipes.cardTitle(), classNames)}
-    ref={forwardedRef}
-  />
-));
+/** An `h3` on Typography, so it clamps (`lines`), truncates and takes a tone like any text. */
+const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
+  ({ classNames, truncate, lines, tone, ...props }, forwardedRef) => (
+    <Typography asChild truncate={truncate} lines={lines} tone={tone} classNames={mx(recipes.cardTitle(), classNames)}>
+      <h3 {...props} data-scope='card' data-part='title' ref={forwardedRef} />
+    </Typography>
+  ),
+);
 
-CardTitle.displayName = 'Next.Card.Title';
+CardTitle.displayName = 'Card.Title';
 
 //
 // Description
@@ -145,7 +192,7 @@ const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
   ),
 );
 
-CardDescription.displayName = 'Next.Card.Description';
+CardDescription.displayName = 'Card.Description';
 
 //
 // Body
@@ -164,22 +211,33 @@ const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(({ classNames, ...pro
   />
 ));
 
-CardBody.displayName = 'Next.Card.Body';
+CardBody.displayName = 'Card.Body';
 
 //
 // Footer
 //
 
-type CardFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+type CardFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  /** `between` splits leading actions (a nested Group) from a trailing control. */
+  justify?: GroupProps['justify'];
+};
 
-/** An end-justified `Next.Group` of actions in the content track. */
-const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(({ classNames, ...props }, forwardedRef) => (
-  <Group asChild justify='end'>
-    <div {...props} data-scope='card' data-part='footer' className={mx(classNames)} ref={forwardedRef} />
-  </Group>
-));
+/** A `Group` of actions in the content track, end-justified unless `justify` says otherwise. */
+const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
+  ({ classNames, justify = 'end', ...props }, forwardedRef) => (
+    <Group asChild justify={justify}>
+      <div
+        {...props}
+        data-scope='card'
+        data-part='footer'
+        className={mx(recipes.cardFooter(), classNames)}
+        ref={forwardedRef}
+      />
+    </Group>
+  ),
+);
 
-CardFooter.displayName = 'Next.Card.Footer';
+CardFooter.displayName = 'Card.Footer';
 
 //
 // Section
@@ -218,7 +276,7 @@ const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
   },
 );
 
-CardSection.displayName = 'Next.Card.Section';
+CardSection.displayName = 'Card.Section';
 
 //
 // Row
@@ -227,13 +285,25 @@ CardSection.displayName = 'Next.Card.Section';
 type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   /** Leading icon, in a Block in the card's start rail, so row text starts at the content edge with or without one. */
   icon?: string;
+  /** Leading content in place of the icon (e.g. a person's avatar), in the same Block. */
+  leading?: ReactNode;
   /**
    * Trailing content (a Tag, a count, an action), kept whole while the text truncates; it ends in the card's end rail,
    * which an icon-only action fills, and a wider one extends back into the content track.
    */
   trailing?: ReactNode;
+  /**
+   * Content centred in the card's end rail (an icon-only action, a unit), mirroring `leading` in the start rail; unlike
+   * `trailing` it never extends back into the content track, so every row's end column lines up.
+   */
+  end?: ReactNode;
   /** The chosen row of a set (`aria-current`). */
   current?: boolean;
+  /**
+   * How far the row's text runs in a `grid` card: `full` across both rails (content with nothing to align beside it,
+   * such as a snippet), `end` on through the end rail when there is no trailing cell. The content track by default.
+   */
+  span?: 'full' | 'end';
 };
 
 /**
@@ -242,7 +312,10 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * it), as the current `Card.Action` row was.
  */
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
-  ({ classNames, icon, trailing, current, onClick, onKeyDown, children, ...props }, forwardedRef) => (
+  (
+    { classNames, icon, leading, trailing, end, current, span, onClick, onKeyDown, children, ...props },
+    forwardedRef,
+  ) => (
     <div
       {...props}
       {...clickableProps(onClick, onKeyDown)}
@@ -250,14 +323,11 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
       data-scope='card'
       data-part='row'
       data-trailing={trailing != null ? '' : undefined}
+      data-span={span}
       className={mx(recipes.cardRow(), onClick && recipes.cardClickable(), classNames)}
       ref={forwardedRef}
     >
-      {icon && (
-        <Block rail='start'>
-          <Icon icon={icon} />
-        </Block>
-      )}
+      {(leading != null || icon) && <Block rail='start'>{leading ?? (icon && <Icon icon={icon} />)}</Block>}
       <div data-scope='card' data-part='row-main' className={recipes.cardRowMain()}>
         <div data-scope='card' data-part='row-content' className={recipes.cardRowContent()}>
           {children}
@@ -268,11 +338,12 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
           </div>
         )}
       </div>
+      {end != null && <Block rail='end'>{end}</Block>}
     </div>
   ),
 );
 
-CardRow.displayName = 'Next.Card.Row';
+CardRow.displayName = 'Card.Row';
 
 //
 // Text
@@ -280,44 +351,73 @@ CardRow.displayName = 'Next.Card.Row';
 
 type CardTextProps = ThemedClassName<ComponentPropsWithoutRef<'p'>> & {
   truncate?: boolean;
+  /** At most this many lines, the last ending in an ellipsis. */
+  lines?: number;
   /** `description` reads as secondary text. */
-  variant?: 'default' | 'description';
+  variant?: 'default' | 'muted';
 };
 
 /** Card text on Typography, with the current `Card.Text` variants. */
 const CardText = forwardRef<HTMLParagraphElement, CardTextProps>(
-  ({ classNames, truncate, variant = 'default', ...props }, forwardedRef) => (
-    <Typography {...props} classNames={classNames} truncate={truncate} tone={variant} ref={forwardedRef} />
+  ({ classNames, truncate, lines, variant = 'default', ...props }, forwardedRef) => (
+    <Typography
+      {...props}
+      classNames={classNames}
+      truncate={truncate}
+      lines={lines}
+      tone={variant}
+      ref={forwardedRef}
+    />
   ),
 );
 
-CardText.displayName = 'Next.Card.Text';
+CardText.displayName = 'Card.Text';
 
 //
 // Action
 //
 
-type CardActionProps = Omit<ButtonProps, 'iconOnly' | 'icon' | 'label' | 'children'> & {
-  icon: string;
-  /** Names the action and shows in its Tooltip. */
-  label: string;
-};
+type CardActionProps = Omit<ButtonProps, 'iconOnly' | 'icon' | 'label' | 'children'> &
+  (
+    | {
+        /** A `SystemButton` preset: its icon, and its translated label unless `label` is given. */
+        system: 'close' | 'delete';
+        icon?: never;
+        label?: string;
+      }
+    | {
+        system?: never;
+        icon: string;
+        /** Names the action and shows in its Tooltip. */
+        label: string;
+      }
+  );
 
-/** A ghost icon-only Button for a Header or Row; its click stays with it, never activating a clickable card. */
-const CardAction = forwardRef<HTMLButtonElement, CardActionProps>(({ onClick, ...props }, forwardedRef) => (
-  <Button
-    variant='ghost'
-    {...props}
-    iconOnly
-    onClick={(event) => {
+const CARD_ACTION_SYSTEM = { close: SystemButton.Close, delete: SystemButton.Delete } as const;
+
+/**
+ * A ghost icon-only Button for a Header or Row; its click stays with it, never activating a clickable card. With
+ * `system` it is that `SystemButton` preset, so it takes the preset's icon and translated label.
+ */
+const CardAction = forwardRef<HTMLButtonElement, CardActionProps>(
+  ({ system, icon, label, onClick, ...props }, forwardedRef) => {
+    const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
       stopPropagation(event);
       onClick?.(event);
-    }}
-    ref={forwardedRef}
-  />
-));
+    };
 
-CardAction.displayName = 'Next.Card.Action';
+    if (system) {
+      const Preset = CARD_ACTION_SYSTEM[system];
+      return <Preset variant='ghost' {...props} label={label} onClick={handleClick} ref={forwardedRef} />;
+    }
+
+    return (
+      <Button variant='ghost' {...props} icon={icon} label={label} iconOnly onClick={handleClick} ref={forwardedRef} />
+    );
+  },
+);
+
+CardAction.displayName = 'Card.Action';
 
 //
 // Link
@@ -360,7 +460,7 @@ const CardLink = forwardRef<HTMLAnchorElement, CardLinkProps>(
   ),
 );
 
-CardLink.displayName = 'Next.Card.Link';
+CardLink.displayName = 'Card.Link';
 
 //
 // Menu
@@ -393,11 +493,12 @@ const CardMenu = ({ label, size, children }: CardMenuProps) => (
   </Menu.Root>
 );
 
-CardMenu.displayName = 'Next.Card.Menu';
+CardMenu.displayName = 'Card.Menu';
 
 export const Card = {
   Root: CardRoot,
   Poster: CardPoster,
+  Tile: CardTile,
   Header: CardHeader,
   Title: CardTitle,
   Description: CardDescription,
@@ -424,5 +525,6 @@ export type {
   CardRowProps,
   CardSectionProps,
   CardTextProps,
+  CardTileProps,
   CardTitleProps,
 };

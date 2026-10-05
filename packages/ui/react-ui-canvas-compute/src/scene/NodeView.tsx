@@ -32,7 +32,7 @@ export const computeNodeView = <S extends ComputeShape>(
     // container (`styles.frameContainer`); the engine's node frame is not, so their `grow` / `w-full`
     // centring collapsed to the top-left corner. The wrapper restores that contract for every shape.
     return (
-      <div className='dx-fullscreen flex'>
+      <div className='dx-cover flex'>
         <Component shape={node} selected={selected} />
       </div>
     );

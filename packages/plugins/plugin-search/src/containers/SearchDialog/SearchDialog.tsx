@@ -11,7 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, useTranslation } from '@dxos/react-ui';
+import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, SystemButton, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { type SearchResult } from '@dxos/react-ui-search';
 
@@ -65,9 +65,9 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('search-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>

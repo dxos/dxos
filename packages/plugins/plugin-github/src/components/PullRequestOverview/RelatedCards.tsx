@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '#meta';
@@ -69,7 +69,7 @@ const RelatedCard = ({ data: item }: { data: RelatedItem }) => {
         <CardHeading icon={item.icon} iconClassNames={item.iconClassNames} title={item.title} href={item.href} />
         {item.detail && (
           <Card.Row>
-            <Card.Text variant='description' truncate>
+            <Card.Text variant='muted' truncate>
               {item.detail}
             </Card.Text>
           </Card.Row>
@@ -87,7 +87,7 @@ const RelatedCard = ({ data: item }: { data: RelatedItem }) => {
         href={artifact.url}
       />
       <Card.Row>
-        <Card.Text variant='description' truncate>
+        <Card.Text variant='muted' truncate>
           {artifact.name}
         </Card.Text>
       </Card.Row>
@@ -115,20 +115,20 @@ const CardHeading = ({
   const { t } = useTranslation(meta.profile.key);
   return (
     <Card.Header>
-      <Card.Block>
+      <Block>
         <Icon icon={icon} classNames={iconClassNames} />
-      </Card.Block>
+      </Block>
       <Card.Title>{title}</Card.Title>
       {href && (
-        <Card.Block end>
-          <IconButton
+        <Block rail='end'>
+          <Button
             iconOnly
             variant='ghost'
             icon='ph--arrow-square-out--regular'
             label={t('open-link.label')}
             onClick={() => window.open(href, '_blank', 'noopener,noreferrer')}
           />
-        </Card.Block>
+        </Block>
       )}
     </Card.Header>
   );

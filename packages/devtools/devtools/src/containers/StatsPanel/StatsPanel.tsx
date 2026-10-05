@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Flex, Icon, IconButton, Panel, ScrollArea, Toggle, Toolbar } from '@dxos/react-ui';
+import { Button, Flex, Icon, Panel, ScrollArea, Toggle, Toolbar } from '@dxos/react-ui';
 
 const LIVE_INTERVAL = 5_000;
 
@@ -28,11 +28,11 @@ export const StatsPanel = ({ children, role, onRefresh }: StatsPanelProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Stats</Toolbar.Text>
           <Toolbar.Separator variant='gap' />
-          <IconButton
+          <Button
             iconOnly
             variant='ghost'
             icon='ph--arrow-clockwise--regular'
@@ -44,16 +44,16 @@ export const StatsPanel = ({ children, role, onRefresh }: StatsPanelProps) => {
             <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
           </Toggle>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root thin>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
           <ScrollArea.Viewport classNames='p-2'>
             <Flex column gap='sm'>
               {children}
             </Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

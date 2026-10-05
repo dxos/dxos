@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 import * as Tone from 'tone';
 
-import { IconButton, Toolbar } from '@dxos/react-ui';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { Sound, createDrum } from './sounds.ts';
@@ -79,19 +79,19 @@ const DefaultStory = () => {
 
   return (
     <Toolbar.Root>
-      <IconButton
+      <Button
         icon='ph--play--regular'
         iconOnly
         variant='ghost'
-        size={16}
+        iconSize='xl'
         label='play'
         onClick={() => setRunning(true)}
       />
-      <IconButton
+      <Button
         icon='ph--stop--regular'
         iconOnly
         variant='ghost'
-        size={16}
+        iconSize='xl'
         label='stop'
         onClick={() => setRunning(false)}
       />

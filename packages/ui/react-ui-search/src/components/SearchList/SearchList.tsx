@@ -29,16 +29,16 @@ import React, {
 } from 'react';
 
 import {
-  type Density,
-  type Elevation,
+  Container,
   Icon,
   ScrollArea,
-  type ScrollAreaRootProps,
   type ThemedClassName,
+  composable,
+  composableProps,
   useControllableState,
+  useInGrid,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { type EscapeBehavior, Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
@@ -179,16 +179,17 @@ type InputVariant = 'default' | 'subdued';
 
 type SearchListInputProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'value'> & {
-    density?: Density;
-    elevation?: Elevation;
     variant?: InputVariant;
     /** What Escape does while the query is non-empty; defaults to `clear`. */
     escapeBehavior?: EscapeBehavior;
+    /** Adornments inside the input's frame, e.g. a trailing search icon. */
+    start?: ReactNode;
+    end?: ReactNode;
   }
 >;
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
-  ({ density, elevation, variant = 'subdued', placeholder, onChange, escapeBehavior, ...props }, forwardedRef) => {
+  ({ variant = 'subdued', placeholder, onChange, escapeBehavior, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { query, onQueryChange } = useSearchListInputContext('SearchList.Input');
     const defaultPlaceholder = t('search.placeholder');
@@ -206,8 +207,6 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     return (
       <Picker.Input
         {...props}
-        density={density}
-        elevation={elevation}
         variant={variant}
         escapeBehavior={escapeBehavior}
         placeholder={placeholder ?? defaultPlaceholder}
@@ -223,33 +222,34 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
 SearchListInput.displayName = 'SearchList.Input';
 
 //
-// Viewport — scroll surface; carries `role='listbox'`. Forwards ScrollArea knobs.
+// Viewport — scroll surface; carries `role='listbox'`.
 //
-// The defaults reserve the scroll strip on both sides, which a menu-style list docked to the
-// popover edge does not want: `padding={false}` makes the rows flush, matching `Listbox`.
+// `padding` insets the rows from the scroll strip; a menu-style list docked to the popover edge
+// passes `padding={false}` so the rows are flush, matching `Listbox`.
 //
 
-type SearchListViewportProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+type SearchListViewportProps = {
+  padding?: boolean;
+};
 
-const SearchListViewport = composable<HTMLDivElement, SearchListViewportProps>((props, forwardedRef) => {
-  const {
-    thin = true,
-    padding = true,
-    centered = true,
-    children,
-    ...rest
-  } = props as PropsWithChildren<SearchListViewportProps & Record<string, unknown>>;
-  return (
-    <ScrollArea.Root
-      {...composableProps<HTMLDivElement>(rest)}
-      {...{ thin, padding, centered }}
-      role='listbox'
-      ref={forwardedRef}
-    >
-      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-    </ScrollArea.Root>
-  );
-});
+const SearchListViewport = composable<HTMLDivElement, SearchListViewportProps>(
+  ({ padding = true, children, ...props }, forwardedRef) => {
+    // Inside a grid (a dialog or panel body) the list joins its host's gutters, so its rows share the content track
+    // and the thumb lands in the host's end gutter; standalone it keeps its own inset.
+    const inGrid = useInGrid();
+    return (
+      <ScrollArea.Root {...composableProps<HTMLDivElement>(props)} role='listbox' ref={forwardedRef}>
+        {inGrid ? (
+          <ScrollArea.Viewport asChild>
+            <Container gutter='inherit'>{children}</Container>
+          </ScrollArea.Viewport>
+        ) : (
+          <ScrollArea.Viewport classNames={padding ? 'px-1' : undefined}>{children}</ScrollArea.Viewport>
+        )}
+      </ScrollArea.Root>
+    );
+  },
+);
 
 SearchListViewport.displayName = 'SearchList.Viewport';
 
@@ -288,7 +288,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
       >
         {icon && <Icon icon={icon} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>
-        {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
+        {suffix && <span className='shrink-0 text-fg-muted'>{suffix}</span>}
         {checked && <Icon icon='ph--check--regular' />}
       </Picker.Item>
     );
@@ -330,7 +330,7 @@ const SearchListGroup = forwardRef<HTMLDivElement, SearchListGroupProps>(
     return (
       <div ref={forwardedRef} role='group' className={mx('flex flex-col', classNames)}>
         {heading && (
-          <div role='presentation' className='px-2 py-1 text-xs font-medium text-description'>
+          <div role='presentation' className='px-2 py-1 text-xs font-medium text-fg-muted'>
             {heading}
           </div>
         )}

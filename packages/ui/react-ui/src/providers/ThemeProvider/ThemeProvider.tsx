@@ -5,12 +5,10 @@
 import React, { type PropsWithChildren, createContext, useEffect, useMemo } from 'react';
 
 import { trackKeyboardModality } from '@dxos/react-focus';
-import { type Density, type Elevation, type ThemeFunction, type ThemeMode } from '@dxos/ui-types';
+import { type ThemeFunction, type ThemeMode } from '@dxos/ui-types';
 
 import { type SafeAreaPadding, useSafeArea } from '../../hooks/index.ts';
 import { hasIosKeyboard } from '../../util/index.ts';
-import { DensityProvider } from '../DensityProvider/index.ts';
-import { ElevationProvider } from '../ElevationProvider/index.ts';
 import { IconRegistryProvider } from './IconRegistry.tsx';
 import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider.tsx';
 
@@ -32,10 +30,7 @@ export type ThemeProviderProps<P extends Record<string, any> = Record<string, an
   'children'
 > &
   Partial<Omit<ThemeContextValue<P>, 'safeAreaPadding'>> &
-  PropsWithChildren<{
-    rootDensity?: Density;
-    rootElevation?: Elevation;
-  }>;
+  PropsWithChildren;
 
 export const ThemeProvider = ({
   children,
@@ -44,7 +39,6 @@ export const ThemeProvider = ({
   appNs,
   tx = (_path, _styleProps, ..._options) => undefined,
   themeMode = 'dark',
-  rootDensity = 'md',
   platform,
 }: ThemeProviderProps) => {
   useEffect(() => {
@@ -68,9 +62,7 @@ export const ThemeProvider = ({
             appNs,
           }}
         >
-          <ElevationProvider elevation='base'>
-            <DensityProvider density={rootDensity}>{children}</DensityProvider>
-          </ElevationProvider>
+          {children}
         </TranslationsProvider>
       </IconRegistryProvider>
     </ThemeContext.Provider>

@@ -34,7 +34,7 @@ export const formatPendingBlockStatus = (block: ContentBlock.Any): string | unde
 
   if (block._tag === 'toolCall') {
     const bytes = new TextEncoder().encode(block.input).length;
-    const name = block.operationName ?? block.name;
+    const name = block.displayName ?? block.operationName ?? block.name;
     return `Calling ${name} (${bytes} bytes)...`;
   }
 

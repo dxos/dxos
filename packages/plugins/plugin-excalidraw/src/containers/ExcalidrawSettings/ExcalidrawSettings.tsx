@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import '@dxos/react-ui/theme.css';
 import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Form } from '@dxos/react-ui-form';

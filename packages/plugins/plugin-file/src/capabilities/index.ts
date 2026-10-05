@@ -74,6 +74,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
     'org.dxos.role.article',
     'org.dxos.role.cardContent',
     'org.dxos.role.formInput',
+    'org.dxos.role.objectProperties',
     'org.dxos.role.section',
     'org.dxos.role.slide',
   ],

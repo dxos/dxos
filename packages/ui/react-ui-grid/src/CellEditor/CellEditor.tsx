@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
+import { useThemeMode } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type ThemeExtensionsOptions,
@@ -29,7 +29,7 @@ export type CellEditorProps = {
   Pick<ThemeExtensionsOptions, 'slots'>;
 
 export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, onBlur }: CellEditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const { parentRef } = useTextEditor(() => {
     return {
       autoFocus,

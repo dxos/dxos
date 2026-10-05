@@ -602,13 +602,15 @@ through steps in a browser. It is **not** a route into a PR.
 
 ## 5b. Attaching a demo to a PR
 
-**Publish the artifact; do not commit it.** [[hosting-artifacts]] puts a `.webm`, a still, or a
-contact sheet in the shared `agent-artifacts` R2 bucket, verifies it over the public URL, and prints the
-link to paste here — one command, no commit, and it works in the cloud sandbox. Prefer it over both of
-the git-based tricks below, which remain documented because the pinned-URL one is still the only way to
-get an image that lives in the repo's own history.
+**Attach the artifact; do not commit it.** With `gh` ≥ 2.99, `gh pr create`/`gh pr edit --attach` uploads
+the `.webm` and stills to GitHub itself, so the stills render inline and the video renders as an inline
+player when it stands alone in its paragraph — see [[hosting-artifacts]] for the flags and limits. Where
+`--attach` is unavailable (older `gh`, no usable token, MCP-only session, a file over the limits),
+[[hosting-artifacts]] puts it in the shared `agent-artifacts` R2 bucket instead and prints a verified
+link. Prefer either over the git-based tricks below, which remain documented because the pinned-URL one
+is still the only way to get an image that lives in the repo's own history.
 
-**A still can be embedded; a video cannot.** Use the SHA-pinned hosting technique from
+**Without `--attach`, a still can be embedded but a video cannot.** Use the SHA-pinned hosting technique from
 [[composer-ui]] ("Hosting"): commit the PNG, take
 `https://raw.githubusercontent.com/dxos/dxos/<full-sha>/<path>` from that commit, embed it, then delete
 the file in the next commit. `refs/pull/<n>/head` keeps serving the blob, so the URL survives both the
@@ -636,17 +638,16 @@ What survives this session's API proxy, measured rather than assumed:
 | `![x](https://raw.githubusercontent.com/…)`                            | **yes** — GitHub-hosted absolute URLs keep the `!`                                     |
 | `![x](relative/path.png)`                                              | no — the `!` is stripped, leaving a link                                               |
 | `<video src>`, `<source>`, `<track>`, `<img src>`                      | no — escaped by the proxy, and stripped by GitHub even when written with `--body-file` |
-| `[x](github.com/user-attachments/assets/…)` alone in its own paragraph | a player — but only a human can create that URL; see [[hosting-artifacts]]             |
+| `[x](github.com/user-attachments/assets/…)` alone in its own paragraph | a player — mint the URL with `gh --attach`; see [[hosting-artifacts]]                  |
 | bare URL, `[text](url)`                                                | yes, verbatim                                                                          |
 
-`<video>` never survives — the proxy escapes it and GitHub's sanitiser strips it besides — and the
-attachment upload that does yield a player is a web-UI endpoint: `POST /upload/policies/assets` needs a
-browser CSRF token and answers `422`/`403` to a PAT. So a player is reachable, but only through a human.
+`<video>` never survives — the proxy escapes it and GitHub's sanitiser strips it besides. The player
+comes from a GitHub attachment, which `gh --attach` mints; do not hand-roll the web-UI upload endpoint
+(`POST /upload/policies/assets` wants a browser CSRF token and answers `422`/`403` to a PAT).
 
-Upload the video per [[hosting-artifacts]] and link it with its **duration and size** in the link text.
-That is the convention — a labelled R2 link for the video, an R2 image embed for the stills. A player
-needs a human drag-and-drop to mint a GitHub attachment; it is deliberately not part of the flow, and the
-measured reasons not to chase it are in [[hosting-artifacts]].
+So the convention is: attach the video and stills with `gh --attach`, the video's reference alone in its
+paragraph. Only where that is unavailable, fall back to a labelled R2 link for the video (with its
+**duration and size** in the link text) and an R2 image embed for the stills, per [[hosting-artifacts]].
 
 ### Before/after, when the demo is a fix
 

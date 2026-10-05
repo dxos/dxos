@@ -10,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#translations": {
@@ -58,12 +59,9 @@
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-markdown": "workspace:*",
-    "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/react-ui-search": "workspace:*",
+    "@dxos/react-ui-query": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
@@ -73,8 +71,6 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
-    "@codemirror/lang-xml": "catalog:",
-    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

@@ -164,10 +164,10 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
 
   return (
     <Panel.Root role='article'>
-      <Panel.Toolbar asChild classNames='dx-expand'>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={STORY_ATTENDABLE_ID} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className='relative grow overflow-hidden'>
           <TerraMap
             objects={objects}
@@ -180,7 +180,7 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
             <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
