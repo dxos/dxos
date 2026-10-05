@@ -67,11 +67,9 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'memories', children }: AgentK
             </Tabs.List>
           </Toolbar.Root>
         </Panel.Header>
-        {/* Views render themselves by hand rather than through `Tabs.Content`, whose content mounts hidden
-            for a frame, where the force graph would measure zero. */}
-        <Panel.Body>
-          <AgentKnowledgeContext.Provider value={view}>{children}</AgentKnowledgeContext.Provider>
-        </Panel.Body>
+        {/* Views render their own Panel.Body (rather than `Tabs.Content`, whose content mounts hidden for a frame,
+            where the force graph would measure zero), so a list's ScrollArea is the body and gets its height. */}
+        <AgentKnowledgeContext.Provider value={view}>{children}</AgentKnowledgeContext.Provider>
       </Panel.Root>
     </Tabs.Root>
   );
@@ -100,35 +98,39 @@ const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) 
   }
 
   return memories.length === 0 ? (
-    <Flex center classNames='p-2 text-fg-muted' role='status'>
-      {t('agent-knowledge-memories-empty.message')}
-    </Flex>
+    <Panel.Body>
+      <Flex center classNames='p-2 text-fg-muted' role='status'>
+        {t('agent-knowledge-memories-empty.message')}
+      </Flex>
+    </Panel.Body>
   ) : (
-    <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport asChild>
-        <Container>
-          <Listbox.Root
-            items={memories.map((memory) => ({
-              value: memory.id,
-              label: memory.content,
-              icon: MEMORY_ICONS[memory.kind],
-            }))}
-          >
-            <Listbox.Content scroll={false}>
-              {memories.map((memory) => (
-                <Listbox.Item key={memory.id} id={memory.id}>
-                  <Listbox.ItemIcon />
-                  <Listbox.ItemText />
-                  <Listbox.ItemDescription>
-                    {t(`memory-kind-${memory.kind}.label`)} · <Timestamp date={memory.observedAt} now={now} />
-                  </Listbox.ItemDescription>
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
-          </Listbox.Root>
-        </Container>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+    <Panel.Body asChild>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport asChild>
+          <Container>
+            <Listbox.Root
+              items={memories.map((memory) => ({
+                value: memory.id,
+                label: memory.content,
+                icon: MEMORY_ICONS[memory.kind],
+              }))}
+            >
+              <Listbox.Content scroll={false}>
+                {memories.map((memory) => (
+                  <Listbox.Item key={memory.id} id={memory.id}>
+                    <Listbox.ItemIcon />
+                    <Listbox.ItemText />
+                    <Listbox.ItemDescription>
+                      {t(`memory-kind-${memory.kind}.label`)} · <Timestamp date={memory.observedAt} now={now} />
+                    </Listbox.ItemDescription>
+                  </Listbox.Item>
+                ))}
+              </Listbox.Content>
+            </Listbox.Root>
+          </Container>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Panel.Body>
   );
 };
 
@@ -164,30 +166,36 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
   }
 
   return facts.length === 0 ? (
-    <Flex center classNames='p-2 text-fg-muted' role='status'>
-      {t('agent-knowledge-facts-empty.message')}
-    </Flex>
+    <Panel.Body>
+      <Flex center classNames='p-2 text-fg-muted' role='status'>
+        {t('agent-knowledge-facts-empty.message')}
+      </Flex>
+    </Panel.Body>
   ) : (
-    <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport asChild>
-        <Container>
-          <Listbox.Root items={facts.map((fact) => ({ value: fact.id, label: fact.text, icon: 'ph--graph--regular' }))}>
-            <Listbox.Content scroll={false}>
-              {facts.map((fact) => (
-                <Listbox.Item key={fact.id} id={fact.id} data-testid='agent-knowledge-fact'>
-                  <Listbox.ItemIcon />
-                  <Listbox.ItemText />
-                  <Listbox.ItemDescription>
-                    {[fact.source, fact.speaker].flatMap((part) => (part ? [`${part} · `] : []))}
-                    <Timestamp date={fact.saidAt} now={now} />
-                  </Listbox.ItemDescription>
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
-          </Listbox.Root>
-        </Container>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+    <Panel.Body asChild>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport asChild>
+          <Container>
+            <Listbox.Root
+              items={facts.map((fact) => ({ value: fact.id, label: fact.text, icon: 'ph--graph--regular' }))}
+            >
+              <Listbox.Content scroll={false}>
+                {facts.map((fact) => (
+                  <Listbox.Item key={fact.id} id={fact.id} data-testid='agent-knowledge-fact'>
+                    <Listbox.ItemIcon />
+                    <Listbox.ItemText />
+                    <Listbox.ItemDescription>
+                      {[fact.source, fact.speaker].flatMap((part) => (part ? [`${part} · `] : []))}
+                      <Timestamp date={fact.saidAt} now={now} />
+                    </Listbox.ItemDescription>
+                  </Listbox.Item>
+                ))}
+              </Listbox.Content>
+            </Listbox.Root>
+          </Container>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Panel.Body>
   );
 };
 
@@ -228,51 +236,55 @@ const AgentKnowledgeGoals = ({ goals }: AgentKnowledgeGoalsProps) => {
   }
 
   return goals.length === 0 ? (
-    <Flex center classNames='p-2 text-fg-muted' role='status'>
-      {t('agent-knowledge-goals-empty.message')}
-    </Flex>
+    <Panel.Body>
+      <Flex center classNames='p-2 text-fg-muted' role='status'>
+        {t('agent-knowledge-goals-empty.message')}
+      </Flex>
+    </Panel.Body>
   ) : (
-    <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport asChild>
-        <Container>
-          <Listbox.Root
-            items={goals.flatMap((goal) => [
-              {
-                value: goal.id,
-                label: goal.title,
-                icon: 'ph--target--regular',
-                description: [t(`goal-status-${goal.status}.label`), goal.owners]
-                  .filter((part) => part !== undefined)
-                  .join(' · '),
-              },
-              ...goal.watches.map((watch) => ({
-                value: watch.id,
-                label: t('agent-knowledge-watch.label', {
-                  recipient: watch.recipient ?? t('agent-knowledge-watch-unnamed.label'),
-                  message: watch.message,
-                }),
-                icon: 'ph--binoculars--regular',
-                description: watch.when,
-              })),
-            ])}
-          >
-            <Listbox.Content scroll={false}>
-              {goals.flatMap((goal) => [
-                <Listbox.Item
-                  key={goal.id}
-                  id={goal.id}
-                  data-testid='agent-knowledge-goal'
-                  data-status={goal.status}
-                />,
-                ...goal.watches.map((watch) => (
-                  <Listbox.Item key={watch.id} id={watch.id} data-testid='agent-knowledge-watch' classNames='ps-6' />
-                )),
+    <Panel.Body asChild>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport asChild>
+          <Container>
+            <Listbox.Root
+              items={goals.flatMap((goal) => [
+                {
+                  value: goal.id,
+                  label: goal.title,
+                  icon: 'ph--target--regular',
+                  description: [t(`goal-status-${goal.status}.label`), goal.owners]
+                    .filter((part) => part !== undefined)
+                    .join(' · '),
+                },
+                ...goal.watches.map((watch) => ({
+                  value: watch.id,
+                  label: t('agent-knowledge-watch.label', {
+                    recipient: watch.recipient ?? t('agent-knowledge-watch-unnamed.label'),
+                    message: watch.message,
+                  }),
+                  icon: 'ph--binoculars--regular',
+                  description: watch.when,
+                })),
               ])}
-            </Listbox.Content>
-          </Listbox.Root>
-        </Container>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+            >
+              <Listbox.Content scroll={false}>
+                {goals.flatMap((goal) => [
+                  <Listbox.Item
+                    key={goal.id}
+                    id={goal.id}
+                    data-testid='agent-knowledge-goal'
+                    data-status={goal.status}
+                  />,
+                  ...goal.watches.map((watch) => (
+                    <Listbox.Item key={watch.id} id={watch.id} data-testid='agent-knowledge-watch' classNames='ps-6' />
+                  )),
+                ])}
+              </Listbox.Content>
+            </Listbox.Root>
+          </Container>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Panel.Body>
   );
 };
 
@@ -327,11 +339,15 @@ const AgentKnowledgeGraph = ({ nodes, edges }: AgentKnowledgeGraphProps) => {
   }
 
   return nodes.length === 0 ? (
-    <Flex center classNames='p-2 text-fg-muted' role='status'>
-      {t('agent-knowledge-graph-empty.message')}
-    </Flex>
+    <Panel.Body>
+      <Flex center classNames='p-2 text-fg-muted' role='status'>
+        {t('agent-knowledge-graph-empty.message')}
+      </Flex>
+    </Panel.Body>
   ) : (
-    <ForceGraph classNames='h-full' model={model} />
+    <Panel.Body>
+      <ForceGraph classNames='h-full' model={model} />
+    </Panel.Body>
   );
 };
 
