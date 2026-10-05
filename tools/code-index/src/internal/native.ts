@@ -8,7 +8,7 @@ import type * as Scope from 'effect/Scope';
 import { type IQueryEngine, createLens } from 'ldkit';
 import { DataFactory, Parser } from 'n3';
 import { EventEmitter } from 'node:events';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
