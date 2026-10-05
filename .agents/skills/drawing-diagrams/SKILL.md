@@ -119,5 +119,5 @@ arrow — then send the PNG and SVG to the user (`SendUserFile`), and state the 
 bends and any visible defects alongside it. To score the drawing against the rule library
 (`@dxos/diagram` `rules/DIAGRAM.mdl`: crossings, flow, alignment, groups, spacing, labels), run
 `moon run plugin-illustrator:appeal-diagrams -- /abs/path/to/x.mmd`; add `--judge clef` to have Clef
-grade the rendered image too (needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`). For a PR, publish the PNG via `hosting-artifacts`
-rather than committing it.
+grade the rendered image too (needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`). For a PR, attach the PNG per `hosting-artifacts`
+(`gh --attach`, R2 as the fallback) rather than committing it.

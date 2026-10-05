@@ -1,20 +1,21 @@
 ---
 name: hosting-artifacts
 description: >-
-  Publish a demo video, screenshot, contact sheet, or log bundle to the shared `agent-artifacts` R2
-  bucket and link it from a PR body, issue, or Linear ticket. Use when an artifact has to leave the
-  machine so a reviewer on GitHub can see it — a `.webm` too large for git, a still you would otherwise
-  commit-and-delete, a bundle to hand to a teammate — and use it INSTEAD of committing a binary to make
-  it visible in a PR. Works in the cloud sandbox: it needs only `R2_ACCESS_KEY_ID` /
-  `R2_SECRET_ACCESS_KEY`, no wrangler and no dependencies. For producing the recording in the first
-  place, see `autocue`.
+  Put a demo video, screenshot, contact sheet, or log bundle where a reviewer can see it — a PR body,
+  issue, or Linear ticket. For images and videos in a PR or issue, prefer `gh --attach` (gh ≥ 2.99),
+  which renders them inline (videos as a player); otherwise publish to the shared `agent-artifacts` R2
+  bucket and link it. Use INSTEAD of committing a binary to make it visible in a PR. The R2 route works
+  in the cloud sandbox: it needs only `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`, no wrangler and no
+  dependencies. For producing the recording in the first place, see `autocue`.
 ---
 
 # Hosting artifacts
 
 `SendUserFile` reaches the human you are talking to. It does not reach a reviewer reading the PR on
-GitHub, and git is the wrong place for a 19 MB `.webm`. This skill is the third route: put the file in
-a bucket that serves it over plain HTTPS, and link that URL.
+GitHub, and git is the wrong place for a 19 MB `.webm`. For an image or video in a PR or issue, attach
+it with `gh --attach` so it renders inline (see "Link it in a PR body"). For everything else — a file
+over the attachment limits, a log bundle, a Linear ticket, a session without a usable `gh` — put the file
+in a bucket that serves it over plain HTTPS, and link that URL.
 
 Reach for it when:
 
@@ -150,62 +151,93 @@ curl -s -r 0-99 "$URL" -o /dev/null -w '%{http_code}\n'   # expect 206
 
 ## Link it in a PR body
 
-**The rule, settled: a video is a labelled R2 link, a still is an R2 image embed.** No attachments, no
-commits, no human in the loop.
+**The rule: attach with `gh --attach` first; R2 is the fallback.** An attachment is uploaded to
+GitHub's own `github.com/user-attachments/assets/<uuid>` store, so an image renders inline and a video
+renders as an **inline player** — expanded in the body, not a link a reviewer has to click. An R2 URL
+can only ever give a video as a link.
 
-```markdown
+### Preferred: `gh --attach` (gh ≥ 2.99.0)
+
+`--attach` is repeatable and exists on `gh pr create`, `gh pr edit` and `gh pr comment` (and the
+`gh issue` equivalents). Reference each file by its local path in the body; gh uploads it and rewrites
+that reference in place. An attached file the body never references is appended to the end.
+
+```bash
+cat > /tmp/body.md <<'MD'
 Some prose about the change.
 
+![Toolbar after the fix](./out/after.png)
+
+./out/demo.webm
+MD
+gh pr create --title "plugin-foo: fix toolbar" --body-file /tmp/body.md \
+  --attach './out/after.png#Toolbar after the fix' --attach ./out/demo.webm
+```
+
+- **Images and videos only:** PNG, JPEG, GIF, WebP, SVG, MP4, MOV, WebM. Anything else — a log bundle,
+  a profile, an `.html` viewer — still goes to R2.
+- **Size limits:** 10 MB per image or GIF; 10 MB per video on a Free plan, 100 MB on a paid one. Over
+  the limit, or unsure of the plan, use R2.
+- **A video becomes a player only when it stands alone in its own paragraph** — the bare reference on
+  its own line, blank lines around it. Inside a sentence or a list item it renders as a link. Give its
+  duration in the prose next to it, since the player shows no size.
+- **Alt text** goes after a `#` in the `--attach` path (`'./after.png#The fixed toolbar'`); without it
+  gh uses the file name. Videos take no alt text.
+- **Requirements:** write access to the repo, and a token from `gh auth login` or a classic PAT. Not
+  supported on GitHub Enterprise Server.
+- **Check before relying on it:** `gh --version` (≥ 2.99.0) and `gh auth status`. The cloud sandbox may
+  ship an older `gh` or no working token, and the `mcp__github__*` PR tools have no attach parameter —
+  in either case fall back to R2 below rather than upgrading or authenticating mid-task.
+
+Read the body back after the push to confirm the references were rewritten (`gh pr view <n> --json body
+-q .body | grep user-attachments`). A surviving `./out/…` path means the attach did not happen.
+
+### Fallback: R2
+
+Use the bucket when `--attach` is unavailable (old `gh`, no usable token, MCP-only session), when a file
+is over the size limit or not an image or video, and always for Linear tickets and teammates. There, a
+video is a labelled R2 link and a still is an R2 image embed:
+
+```markdown
 ![Toolbar after the fix](https://pub-…r2.dev/demos/2026-08-27-plugin-foo/after.png)
 
 [Demo — plugin-foo toolbar (0:43, 19 MB webm)](https://pub-…r2.dev/demos/2026-08-27-plugin-foo/demo.webm)
 ```
 
-Always give a video's **duration and size** in the link text. A reviewer deciding whether to spend 19 MB
-deserves to know what they are clicking; a bare URL tells them nothing.
+Always give a linked video's **duration and size** in the link text. A reviewer deciding whether to
+spend 19 MB deserves to know what they are clicking; a bare URL tells them nothing.
 
-The image embed works from any absolute HTTPS URL and needs nothing special. So when the thing being
-shown is a _state_ rather than a _sequence_, publish a still or a contact sheet and embed it — it renders
-inline for everyone with no click at all. That is the reason [[autocue]] tells you to prefer a
-still in the first place, and it is the closest thing to an inline demo you can actually automate.
-
-### There is no inline player, and it is not worth chasing
+### What renders, and why only an attachment plays
 
 GitHub rewrites exactly one host into a `<video>`: `github.com/user-attachments/assets/<uuid>`, and only
-when that link stands alone in its own paragraph. **An agent cannot mint one.** All of this is measured,
-by reading `.body_html` back off a real PR:
+when that link stands alone in its own paragraph. `gh --attach` is the only non-browser way to mint one;
+the rest of this table was measured by reading `.body_html` back off a real PR:
 
 | in a PR body                                                          | result                                                                                   |
 | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `![x](https://pub-….r2.dev/….png)`                                    | **inline image** — absolute HTTPS keeps the `!`                                          |
-| `[x](https://pub-….r2.dev/….webm)`, or the bare URL                   | plain link. This is the convention                                                       |
-| `[x](github.com/user-attachments/assets/<uuid>)` alone in a paragraph | inline player — but only a human drag-and-drop creates the uuid                          |
+| `[x](github.com/user-attachments/assets/<uuid>)` alone in a paragraph | **inline player** — mint the uuid with `gh --attach`                                     |
 | the same attachment link inside a sentence or list item               | plain link                                                                               |
-| the same URL shape with an **invented** uuid                          | plain link — the rewrite resolves a real asset record, so there is no pattern to imitate |
+| `![x](https://pub-….r2.dev/….png)`                                    | **inline image** — absolute HTTPS keeps the `!`                                          |
+| `[x](https://pub-….r2.dev/….webm)`, or the bare URL                   | plain link                                                                               |
+| the attachment URL shape with an **invented** uuid                    | plain link — the rewrite resolves a real asset record, so there is no pattern to imitate |
 | `github.com/<o>/<r>/releases/download/….webm` (release asset)         | plain link                                                                               |
 | `github.com/<o>/<r>/raw/….webm`, `media.githubusercontent.com/….webm` | plain link                                                                               |
 | `<video src="…">` authored via `--body-file`                          | **stripped** — GitHub's sanitiser drops it, leaving an empty paragraph                   |
-| `![x](relative/path.png)`                                             | the `!` is dropped, leaving a link                                                       |
+| `![x](relative/path.png)` without `--attach`                          | the `!` is dropped, leaving a link                                                       |
 
-`POST github.com/upload/policies/assets` answers `422` to a PAT with or without `repository_id` — it wants
-a browser session's CSRF token — and there is no REST or GraphQL equivalent. Do not spend a cycle on the
-workarounds that circulate for this: **release assets** upload fine but are not rewritten, and an **orphan
-`media` branch** puts blobs in every full clone of the repo permanently, for every contributor, removable
-only by a history rewrite — an unbounded tax for a link R2 already gives you.
+Do not hand-roll the upload: `POST github.com/upload/policies/assets` wants a browser session's CSRF
+token and answers `422` to a PAT. Nor the old workarounds — **release assets** are not rewritten, and an
+**orphan `media` branch** puts blobs in every full clone of the repo permanently.
 
-Write the body with `gh pr create --body-file <file>` / `gh pr edit --body-file <file>`, never an inline
-`--body` string: the string form mangles `!` and escapes tags before GitHub ever sees them. Then read it
-back and check the shape landed:
-
-```bash
-gh api repos/<owner>/<repo>/pulls/<n> -H "Accept: application/vnd.github.html+json" -q .body_html \
-  | grep -o '<img[^>]*r2\.dev[^>]*>' | wc -l
-```
+Write the body with `--body-file <file>`, never an inline `--body` string: the string form mangles `!`
+and escapes tags before GitHub ever sees them.
 
 ## What must never go in
 
 The public URL is unauthenticated and, once fetched, may be cached or indexed anywhere. Deleting the
-object does not take that back. Before every upload, watch the frames you are about to publish:
+object does not take that back, and a `gh --attach` upload is no different — it outlives an edit that
+removes it from the body. Before every upload, by either route, watch the frames you are about to
+publish:
 
 - **no credentials on screen** — space invite codes, HALO device keys, recovery phrases, API tokens in a
   devtools panel or a `.env` open in an editor pane;
