@@ -381,6 +381,21 @@ export const QueueWhileProcessing: Story = {
 };
 
 /**
+ * For people rather than the runner: three prompts submitted while the first turn is still being
+ * answered, so each shows in the thread at once and its ticks move from sent to delivered to read as
+ * the agent takes them up in order. The first reply is held long enough for the queue to be seen.
+ */
+export const QueuedPrompts: Story = {
+  args: {
+    messages: [
+      { prompt: 'Summarize the meeting notes.', reply: 'The meeting agreed three things.', delay: '4 seconds' },
+      { prompt: 'Then draft a follow-up email.', reply: 'Here is a draft of the email.', delay: '2 seconds' },
+      { prompt: 'Copy in the design leads.', reply: 'Added the design leads.' },
+    ],
+  },
+};
+
+/**
  * The desktop baseline for the platform-gated chrome: after two turns the marker rail and the
  * floating status pill are both present. Without this, `MobilePlatform`'s absence assertions would
  * pass against a thread that never rendered them in the first place.
