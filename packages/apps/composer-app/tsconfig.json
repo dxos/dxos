@@ -121,6 +121,9 @@
       "path": "../../e2e/perf-harness"
     },
     {
+      "path": "../../plugins/plugin-agent"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {

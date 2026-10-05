@@ -15,6 +15,7 @@ import { Format } from '@dxos/echo/Format';
  * when a research run covers both a Person and their Organization.
  */
 export class ProfileOf extends Type.makeRelation<ProfileOf>(
+  // The typename keeps the plugin-crm namespace it was first stored under, so existing relations still resolve.
   DXN.make('org.dxos.relation.plugin-crm.profileOf', '0.1.0'),
 )({
   source: Obj.Unknown,

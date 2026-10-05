@@ -240,6 +240,7 @@
     ],
     [
       "@dxos/cli",
+      "@dxos/plugin-agent",
       "@dxos/plugin-assistant",
       "@dxos/plugin-atproto",
       "@dxos/plugin-attention",

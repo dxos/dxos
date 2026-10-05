@@ -533,11 +533,13 @@ type ChatThreadProps = Util.ThemedClassName<{
   viewType?: ChatView;
   /** Blank lines kept below the tail at rest — breathing room above the composer. */
   tailLines?: number;
+  /** Hue of the user's messages; defaults to the identity's hue. */
+  userHue?: string;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
 }>;
 
-const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
+const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { chat, db, debug, event, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const { messages } = useChatThreadContext(CHAT_THREAD_NAME);
@@ -575,9 +577,10 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
 
   const userHue = useMemo(
     () =>
+      userHueProp ||
       identity?.data?.hue ||
       keyToFallback(identity?.identityKey ? PublicKey.fromHex(identity.identityKey) : PublicKey.random()).hue,
-    [identity],
+    [userHueProp, identity],
   );
 
   const controllerRef = useRef<ChatThreadController | null>(null);

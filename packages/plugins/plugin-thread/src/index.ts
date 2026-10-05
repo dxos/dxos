@@ -6,4 +6,5 @@
 //   Either refactor callers to not need them or factor them out to a shared package.
 
 export * as ThreadPlugin from './ThreadPlugin.ts';
+export * from '#operations';
 export * from '#types';

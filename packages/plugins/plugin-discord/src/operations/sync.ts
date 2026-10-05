@@ -21,7 +21,7 @@ import { DiscordOperation } from '#types';
 
 import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants.ts';
 import { DiscordChannelUnresolvedError, DiscordTargetInvalidError, formatDiscordSyncFailure } from '../errors.ts';
-import { makeDiscordLayerFromToken } from '../services/index.ts';
+import { makeDiscordLayerFromToken, resolveDiscordToken } from '../services/index.ts';
 
 /**
  * Hard cap on `maxDays` to keep a misconfigured (or fat-fingered) value
@@ -160,6 +160,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
             // local Channel, and `externalId` is the Discord channel id to pull.
             const accessToken = yield* Database.load(binding.spec.source).pipe(Effect.provide(Database.layer(db)));
             const localRoot = yield* Database.load(binding.spec.target).pipe(Effect.provide(Database.layer(db)));
+            const token = yield* resolveDiscordToken(accessToken);
             const externalId = binding.spec.externalId;
             // Typed rather than an `invariant` defect, so a misconfigured binding records its reason
             // and the account's other channels still sync.
@@ -219,9 +220,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                 newestId = messages[messages.length - 1].id;
 
                 return { pulled: { added: mapped.length } };
-              }).pipe(
-                Effect.provide(Layer.provideMerge(Database.layer(db), makeDiscordLayerFromToken(accessToken.token))),
-              ),
+              }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), makeDiscordLayerFromToken(token)))),
             );
 
             if (outcome._tag === 'Success') {
