@@ -41,6 +41,8 @@ type StoryArgs = {
   calls?: number;
   /** 1-based call that fails. */
   failAt?: number;
+  /** A prompt appended to the scenario's history, answered briefly — e.g. a pasted console log. */
+  lastPrompt?: string;
 };
 
 const DefaultStory = ({
@@ -51,9 +53,28 @@ const DefaultStory = ({
   chunkDelay = 120,
   calls = 1,
   failAt,
+  lastPrompt,
 }: StoryArgs) => {
   const definition = useMemo(() => createScenario({ scenario: 'assistant', count }), [count]);
-  const model = useMemo(() => new FeedModel({ messages: definition.messages, stops: 'prompt' }), [definition]);
+  const model = useMemo(
+    () =>
+      new FeedModel({
+        messages: [
+          ...definition.messages,
+          ...(lastPrompt
+            ? [
+                Message.make({ sender: { role: 'user', name: 'rich' }, blocks: [{ _tag: 'text', text: lastPrompt }] }),
+                Message.make({
+                  sender: { role: 'assistant', name: 'Assistant' },
+                  blocks: [{ _tag: 'text', text: 'The query executor is retrying the same failing query in a loop.' }],
+                }),
+              ]
+            : []),
+        ],
+        stops: 'prompt',
+      }),
+    [definition, lastPrompt],
+  );
 
   const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
@@ -337,6 +358,40 @@ const type = (input: HTMLInputElement, value: string) => {
 
 /** The loop, hands on: type a prompt, or press ▶ and watch. No play — this one is for people. */
 export const Default: Story = {};
+
+const consoleError = [
+  'The agent keeps failing on startup — here is the console:',
+  ...Array.from(
+    { length: 40 },
+    (_, index) =>
+      `Uncaught (in promise) Error: Query execution failed (queryCount=${index + 1}) at query-executor.ts:${120 + index}`,
+  ),
+].join('\n');
+
+/**
+ * A pasted console log as the latest prompt: the bubble is clipped behind a show-more toggle, so
+ * one paste cannot take over the thread, and the toggle expands it in place.
+ */
+export const LongPrompt: Story = {
+  args: { count: 4, lastPrompt: consoleError },
+  play: async ({ canvasElement }) => {
+    await settle(20);
+    const toggles = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="chat.prompt.toggle"]')];
+    const toggle = toggles[toggles.length - 1];
+    const content = toggle?.parentElement?.querySelector<HTMLElement>('[data-testid="chat.prompt.content"]');
+    const collapsedHeight = content?.getBoundingClientRect().height ?? 0;
+    toggle?.click();
+    await settle(10);
+    const expandedHeight = content?.getBoundingClientRect().height ?? 0;
+
+    await expect({
+      toggles: toggles.length,
+      collapsed: collapsedHeight <= 240,
+      expanded: expandedHeight > collapsedHeight,
+      pressed: toggle?.getAttribute('aria-expanded'),
+    }).toEqual({ toggles: 1, collapsed: true, expanded: true, pressed: 'true' });
+  },
+};
 
 /**
  * A turn that calls several tools, one of which fails.
