@@ -24,7 +24,7 @@ const ProcessManagerCapability = Capability.lazyModule(
     provides: [
       Capabilities.ProcessManagerRuntime,
       Capabilities.ServiceResolver,
-      Capabilities.ProcessMonitor,
+      Capabilities.ProcessManager,
       Capabilities.OperationInvoker,
       Capabilities.OperationHandlers,
     ],

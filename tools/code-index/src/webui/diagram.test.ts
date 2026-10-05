@@ -2,47 +2,49 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Result from 'effect/Result';
 import { describe, test } from 'vitest';
 
-import { layout, prepare } from './diagram.ts';
+import * as Diagram from '../workspace/Diagram.ts';
+import { layout } from './diagram.ts';
 
 describe('diagram', () => {
-  test('keeps a flowchart statement per line', ({ expect }) => {
-    expect(prepare('graph LR\n  echo["@dxos/echo"]\n\n  echo --> keys["@dxos/keys"]')).toEqual({
-      kind: 'flowchart',
-      source: 'graph LR\necho["@dxos/echo"]\necho --> keys["@dxos/keys"]',
-    });
-  });
-
-  test('splits semicolon statements and chained edges into one edge per line', ({ expect }) => {
-    expect(prepare('graph TD; A["x; y"] --> B -->|uses| C;\n%% ref A src/a.ts')).toEqual({
-      kind: 'flowchart',
-      source: ['graph TD', 'A["x; y"] --> B', 'B -->|uses| C', '%% ref A src/a.ts'].join('\n'),
-    });
-  });
-
-  test('reports the kinds the illustrator cannot lay out', ({ expect }) => {
-    expect(prepare('%% a comment\nsequenceDiagram\n  A->>B: hi')).toEqual({
-      kind: 'unsupported',
-      type: 'sequenceDiagram',
-    });
-    expect(prepare('  ')).toEqual({ kind: 'unsupported', type: 'empty' });
-  });
-
-  test('lays a flowchart out as one object per node plus the connectors', async ({ expect }) => {
-    const prepared = prepare('graph LR; A[Alpha] --> B[Beta] --> C[Gamma]');
-    if (prepared.kind !== 'flowchart') {
-      throw new Error('expected a flowchart');
-    }
-    const objects = await layout(prepared.source);
-    const labels = objects.flatMap((object) =>
-      object.elements.flatMap((element) => ('text' in element ? [element.text] : [])),
+  test('lays DSL out as one object per node and group, plus the connectors, keeping refs', async ({ expect }) => {
+    const source = Result.getOrThrow(
+      Diagram.fromValue({
+        flow: 'right',
+        groups: [{ id: 'core', label: 'Core' }],
+        nodes: [
+          { id: 'alpha', label: 'Alpha', group: 'core', ref: 'https://dxos.org/deus/package/alpha' },
+          { id: 'beta', label: 'Beta', group: 'core' },
+        ],
+        edges: [
+          { from: 'alpha', to: 'beta', label: 'uses' },
+          { from: 'beta', to: 'gamma', relation: 'depends-on' },
+        ],
+      }),
     );
-    expect(labels).toEqual(expect.arrayContaining(['Alpha', 'Beta', 'Gamma']));
-    expect(objects.find((object) => object.id === 'edges')?.elements).toHaveLength(2);
+    const objects = await layout(source);
+    const labels = objects.flatMap((object) =>
+      object.elements.flatMap((element) => ('text' in element && element.text ? [element.text] : [])),
+    );
+    expect(labels).toEqual(expect.arrayContaining(['Alpha', 'Beta', 'gamma', 'Core', 'uses']));
+    const arrows = objects
+      .find((object) => object.id === 'edges')
+      ?.elements.filter((element) => element.kind === 'arrow');
+    expect(arrows).toHaveLength(2);
+    expect(objects.find((object) => object.id === 'alpha')?.ref).toEqual('https://dxos.org/deus/package/alpha');
   });
 
-  test('rejects a flowchart with no nodes rather than drawing an empty panel', async ({ expect }) => {
-    await expect(layout('graph TD\n  ???')).rejects.toThrow('no nodes');
-  });
+  test('lays out a large graph', async ({ expect }) => {
+    const groups = ['a', 'b', 'c', 'd'];
+    const nodes = groups.flatMap((group) =>
+      Array.from({ length: 8 }, (_, index) => ({ id: `${group}${index}`, group })),
+    );
+    const edges = nodes.slice(1).map((node, index) => ({ from: nodes[Math.floor(index / 2)].id, to: node.id }));
+    const objects = await layout(
+      Result.getOrThrow(Diagram.fromValue({ groups: groups.map((id) => ({ id })), nodes, edges })),
+    );
+    expect(objects.filter((object) => nodes.some((node) => node.id === object.id))).toHaveLength(nodes.length);
+  }, 120_000);
 });

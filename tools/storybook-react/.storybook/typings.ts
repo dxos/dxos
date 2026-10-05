@@ -13,3 +13,6 @@ declare module '*.css';
 declare var __STORY_ERROR_FALLBACK__:
   | typeof import('@dxos/storybook-addon-logger/StorybookErrorFallback').StorybookErrorFallback
   | undefined;
+
+/** Defined by `perfBundlePlugin` (`DX_PERF_BUNDLE`), which resolves automerge to its `slim` entrypoints. */
+declare const __DX_PERF_BUNDLE__: boolean | undefined;

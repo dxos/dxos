@@ -267,7 +267,7 @@ describe('Design.toGraphData', () => {
 });
 
 describe('Compact', () => {
-  test('builds grouped mermaid with refs, labelling only the relations that say something', async () => {
+  test('builds grouped DSL with refs, labelling only the relations that say something', async () => {
     const { scored } = await EffectEx.runPromise(
       Zoom.zoom({
         prompt: candidates.prompt,
@@ -281,9 +281,9 @@ describe('Compact', () => {
     );
     const diagram = Compact.build(scored, { name: 'test', grouping: 'package', nodes: 3, edges: 'all' });
     expect(diagram.groups).toEqual([{ id: 'g0', label: '@dxos/agent' }]);
-    expect(diagram.mermaid).toContain('AgentLayer -->|provides| AgentService');
-    expect(diagram.mermaid).toContain('AgentLayer --> Model');
-    expect(diagram.mermaid).toContain('%% ref Model packages/model/src/Model.ts');
+    expect(diagram.dsl).toContain('edge AgentLayer -> AgentService "provides"');
+    expect(diagram.dsl).toContain('edge AgentLayer -> Model\n');
+    expect(diagram.dsl).toContain('node Model ref="packages/model/src/Model.ts"');
     expect(diagram.nodes).toHaveLength(3);
   });
 

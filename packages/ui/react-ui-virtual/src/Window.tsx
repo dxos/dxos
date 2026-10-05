@@ -105,6 +105,10 @@ export type WindowProps = ThemedClassName<{
   children: (index: number, id: string) => ReactNode;
 }>;
 
+/** Rows mounted per frame while a jump settles: the visible ones first, then the overscan each side. */
+const MOUNT_STEP = 3;
+const OVERSCAN_STEP = 2;
+
 /** Extent of the mounted rows, which is the parent's own size in content space. */
 const windowExtentOf = (placement: Placement, first: number, last: number): number => {
   let extent = 0;
@@ -163,6 +167,8 @@ export const useWindow = ({
   const windowRef = useRef<HTMLDivElement>(null);
   const [, render] = useState(0);
   const invalidate = useCallback(() => render((value) => value + 1), []);
+  // A jump still filling in: whether another step is due, how to cancel the one booked, and the step.
+  const settling = useRef<{ pending: boolean; cancel?: () => void; step?: () => void }>({ pending: false });
 
   const count = model.count;
   const getId = model.getId;
@@ -263,14 +269,44 @@ export const useWindow = ({
     });
 
     observer.observe(scroller);
+
+    // A jump lands where nothing is mounted, and mounting all it reveals is one task the reader waits
+    // on; the window fills a few rows a step instead, visible rows first, then the overscan. Each step
+    // is booked by the commit before it (below), since a scroll event fires ahead of the frame's callbacks.
+    const overscan = placement.overscan;
+    settling.current.step = () => {
+      const { visible } = placement.range();
+      if (placement.budget <= visible.last - visible.first) {
+        placement.setBudget(placement.budget + MOUNT_STEP);
+      } else {
+        placement.setBudget(Infinity);
+        placement.setOverscan(Math.min(overscan, placement.overscan + OVERSCAN_STEP));
+      }
+
+      settling.current.pending = placement.budget < Infinity || placement.overscan < overscan;
+      invalidate();
+    };
+
     const onScroll = () => {
+      const mounted = placement.range();
       placement.scrollTo(axis === 'block' ? scroller.scrollTop : scroller.scrollLeft);
+      const { visible } = placement.range();
+      if (visible.first > mounted.last || visible.last < mounted.first) {
+        placement.setOverscan(0);
+        placement.setBudget(MOUNT_STEP);
+        settling.current.pending = true;
+      }
+
       invalidate();
     };
 
     scroller.addEventListener('scroll', onScroll, { passive: true });
     invalidate();
     return () => {
+      settling.current.cancel?.();
+      settling.current = { pending: false };
+      placement.setOverscan(overscan);
+      placement.setBudget(Infinity);
       observer.disconnect();
       scroller.removeEventListener('scroll', onScroll);
     };
@@ -343,6 +379,23 @@ export const useWindow = ({
 
     if (changed) {
       invalidate();
+    }
+
+    // After the frame paints, and behind any timer already queued: back-to-back frames of mounting
+    // starve the timers the page is waiting on as surely as one long task would.
+    const settle = settling.current;
+    if (settle.pending && !settle.cancel) {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const frame = requestAnimationFrame(() => {
+        timer = setTimeout(() => {
+          settle.cancel = undefined;
+          settle.step?.();
+        });
+      });
+      settle.cancel = () => {
+        cancelAnimationFrame(frame);
+        clearTimeout(timer);
+      };
     }
   });
 

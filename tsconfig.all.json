@@ -898,6 +898,9 @@
       "path": "packages/stories/stories-brain/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-compute/tsconfig.json"
+    },
+    {
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {

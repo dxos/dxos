@@ -233,7 +233,7 @@ provider, or unsatisfiable requirement puts the owning plugin in an error state
 
 `Capabilities` (framework) — `ReactSurface`, `ReactContext`, `ReactRoot`, `OperationHandler`,
 `OperationInvoker`, `UndoMapping`, `Command`, `Layer`, `LayerSpec`, `TraceSink`, `AtomRegistry`,
-`ServiceResolver`, `ProcessManagerRuntime`, `ProcessMonitor`, `PluginManager`.
+`ServiceResolver`, `ProcessManagerRuntime`, `ProcessManager`, `PluginManager`.
 
 `AppCapabilities` (`@dxos/app-toolkit`) — `Translations`, `Schema`, `Settings`, `AppGraph`,
 `AppGraphBuilder`, `SkillDefinition`, `PluginAsset`, `Toolkit`, `NavigationTargetResolver`,
