@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -10,14 +9,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
-import { NoHandlerError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 
 import { SettingsPath } from '#types';
 
 const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOperation.Open.pipe(
-  Operation.withHandler((input) =>
-    Effect.gen(function* () {
+  Operation.withHandler(
+    Effect.fnUntraced(function* (input) {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(SettingsPath.SETTINGS_ID) });
       if (input.plugin) {
@@ -28,18 +26,8 @@ const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOp
           subject: [SettingsPath.getPluginSettingsSectionPath(input.plugin)],
         });
       }
-      // Settings have nothing to accompany, so a companion carried over from the previous workspace would only narrow
-      // them; a layout with no companions (Spotlight) has no handler, which is not a failure to open settings.
-      // The invoker reports a missing handler as a defect, so it is matched on the cause rather than the error channel.
-      yield* invoke(LayoutOperation.UpdateCompanion, { subject: null }).pipe(
-        Effect.catchCause((cause) => {
-          const error = Cause.squash(cause);
-          return error instanceof NoHandlerError &&
-            error.context?.operationKey === LayoutOperation.UpdateCompanion.meta.key
-            ? Effect.void
-            : Effect.failCause(cause);
-        }),
-      );
+      // Settings have nothing to accompany, so a companion carried over from the previous workspace would only narrow them.
+      yield* LayoutOperation.closeCompanion();
     }),
   ),
 );
