@@ -58,12 +58,14 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* Clamped text wraps even where a container (a card row) keeps its content to one line. */
   .dx-typography[data-lines] {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: var(--dx-lines);
     min-width: 0;
     overflow: hidden;
+    white-space: normal;
   }
   .dx-typography[data-tone='muted'] {
     color: var(--color-fg-muted);
