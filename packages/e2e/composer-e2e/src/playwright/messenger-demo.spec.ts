@@ -60,13 +60,22 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 /** The peers whose companion panels each step closes; set once both have booted. */
 let demoPeers: AppManager[] = [];
 
-const step = async (label: string): Promise<void> => {
+const step = async (label: string, { keepCompanions = false } = {}): Promise<void> => {
   if (DEMO) {
     // eslint-disable-next-line no-console
     console.log(`== ${label}`);
     // Navigation can reopen R1; a recording keeps it closed unless a step is about a companion.
-    await Promise.all(demoPeers.map((peer) => peer.closeComplementarySidebar()));
+    if (!keepCompanions) {
+      await Promise.all(demoPeers.map((peer) => peer.closeCompanions()));
+    }
     await delay(DEMO_PAUSE);
+  }
+};
+
+/** Switching spaces reopens companions; a recording closes them as soon as the switch lands (DEMO only). */
+const afterSwitch = async (peer: AppManager): Promise<void> => {
+  if (DEMO) {
+    await peer.closeCompanions();
   }
 };
 
@@ -142,14 +151,17 @@ test.describe('Messenger demo', () => {
 
   test('collaborate, then invite a contact from the notifications inbox', { tag: ['@QA-12'] }, async () => {
     const runId = process.env.DX_E2E_RUN_ID ?? Date.now().toString(36);
-    const sharedName = `QA: Shared ${runId}`;
-    const designName = `QA: Design ${runId}`;
+    // A recording reads better with plain names; test runs keep the `QA:` prefix that marks artifacts.
+    const sharedName = DEMO ? 'Project Phoenix' : `QA: Shared ${runId}`;
+    const designName = DEMO ? 'Design Team' : `QA: Design ${runId}`;
+    // The name is typed visibly and held on screen before saving (DEMO only).
+    const demoSpaceForm = DEMO ? { typingDelay: DEMO_TYPING_DELAY, holdMs: DEMO_MAJOR_PAUSE } : {};
 
     // Setup, not part of the demo: the first-run notice and the companion panel would cover the content.
     await Promise.all(
       [alice, bob].map(async (peer) => {
         await peer.dismissPrivacyNotice();
-        await peer.closeComplementarySidebar();
+        await peer.closeCompanions();
       }),
     );
 
@@ -165,8 +177,10 @@ test.describe('Messenger demo', () => {
     await bob.setDisplayName('Bob');
 
     await step(`3. Alice creates "${sharedName}"`);
-    await alice.createSpace({ name: sharedName });
+    await alice.createSpace({ name: sharedName, ...demoSpaceForm });
+    await expect(alice.page.getByText(sharedName).first()).toBeVisible({ timeout: 15_000 });
     const sharedSpace = alice.workspaceId;
+    await afterSwitch(alice);
     await majorPause();
 
     await step('4. Alice shares the space');
@@ -181,6 +195,7 @@ test.describe('Messenger demo', () => {
     await bob.shell.authenticate(authCode);
     await expect.poll(() => bob.workspaceId, { timeout: 30_000 }).toBe(sharedSpace);
     await bob.waitForSpaceReady(30_000);
+    await afterSwitch(bob);
     await majorPause();
 
     await step('6. Alice creates a document; Bob opens it');
@@ -230,8 +245,10 @@ test.describe('Messenger demo', () => {
     await majorPause();
 
     await step(`10. Bob creates "${designName}"`);
-    await bob.createSpace({ name: designName });
+    await bob.createSpace({ name: designName, ...demoSpaceForm });
+    await expect(bob.page.getByText(designName).first()).toBeVisible({ timeout: 15_000 });
     const designSpace = bob.workspaceId;
+    await afterSwitch(bob);
     const badgeBefore = await alice.getCompanionBadge(MESSENGER);
     await majorPause();
 
@@ -250,11 +267,13 @@ test.describe('Messenger demo', () => {
     await expect(invitation).toBeVisible({ timeout: 15_000 });
     await expect(invitation.getByTestId('space-invitation-card.join')).toBeVisible();
 
-    await step('13. Alice accepts');
+    // Acts on the notifications panel step 12 opened.
+    await step('13. Alice accepts', { keepCompanions: true });
     await invitation.getByTestId('space-invitation-card.join').click();
     await expect.poll(() => alice.workspaceId, { timeout: 60_000 }).toBe(designSpace);
     await expect(invitation.getByTestId('space-invitation-card.open')).toBeVisible({ timeout: 30_000 });
     await expect.poll(() => alice.getCompanionBadge(MESSENGER), { timeout: 15_000 }).toBe(badgeNotified - 1);
+    await afterSwitch(alice);
     await majorPause();
 
     await step('14. Alice sees Bob in her contacts');

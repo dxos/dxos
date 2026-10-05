@@ -460,12 +460,24 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace({ name, timeout = 10_000 }: { name?: string; timeout?: number } = {}): Promise<void> {
+  async createSpace({
+    name,
+    timeout = 10_000,
+    typingDelay,
+    holdMs,
+  }: {
+    name?: string;
+    timeout?: number;
+    /** Types the name a character at a time (ms per key) so a recording shows it; default fills it at once. */
+    typingDelay?: number;
+    /** Holds the filled dialog open this long before saving, so a recording shows the name. */
+    holdMs?: number;
+  } = {}): Promise<void> {
     // The baseline counts rendered rail rows, so it is taken once one exists.
     await this.getSpaceItems().first().waitFor({ state: 'attached', timeout });
     const initialCount = await this.getSpaceItems().count();
 
-    await this.#submitCreateSpaceForm(name);
+    await this.#submitCreateSpaceForm(name, { typingDelay, holdMs });
 
     // The new rail item is the first condition pre-existing state cannot satisfy: a closed dialog
     // does not prove a space was created, and `waitForSpaceReady()` is already satisfied by the
@@ -476,7 +488,10 @@ export class AppManager {
   }
 
   /** Opens the add-space dialog, submits it, and waits for it to close. */
-  async #submitCreateSpaceForm(name?: string): Promise<void> {
+  async #submitCreateSpaceForm(
+    name?: string,
+    { typingDelay, holdMs }: { typingDelay?: number; holdMs?: number } = {},
+  ): Promise<void> {
     const dialog = this.page.getByTestId('create-space-dialog');
     // Opened once, because `init()` waits out the boot writes that could detach the menu mid-click.
     await this.page.getByTestId('spacePlugin.addSpace').click();
@@ -491,7 +506,17 @@ export class AppManager {
     // control mid-click, so waiting for `disabled` to clear absorbs that remount.
     await expect(save).toBeEnabled({ timeout: 15_000 });
     if (name) {
-      await form.getByTestId('name').fill(name);
+      const field = form.getByTestId('name');
+      if (typingDelay) {
+        await field.click();
+        await field.pressSequentially(name, { delay: typingDelay });
+      } else {
+        await field.fill(name);
+      }
+      await expect(field).toHaveValue(name);
+    }
+    if (holdMs) {
+      await this.page.waitForTimeout(holdMs);
     }
     await save.click();
 
@@ -799,6 +824,22 @@ export class AppManager {
   }
 
   /** Collapses the right-hand companion panel (R1) if it is open, leaving its rail of tabs. */
+  /** Closes every plank companion and the R1 complementary sidebar, which switching spaces can reopen. */
+  async closeCompanions(): Promise<void> {
+    // Visible only: a deck too narrow for a companion keeps its plank's control in the DOM but hidden.
+    const closeCompanion = this.page.getByTestId('plankHeading.closeCompanion').filter({ visible: true });
+    // Bounded, and each click short: the control re-renders as the deck settles, so a click that loses
+    // its element is retried against whatever is still open rather than waited out.
+    for (let attempt = 0; attempt < 10 && (await closeCompanion.count()) > 0; attempt++) {
+      await closeCompanion
+        .first()
+        .click({ timeout: 2_000 })
+        .catch(() => {});
+    }
+    await expect(closeCompanion).toHaveCount(0, { timeout: 5_000 });
+    await this.closeComplementarySidebar();
+  }
+
   async closeComplementarySidebar(): Promise<void> {
     const sidebar = this.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
     if ((await sidebar.getAttribute('data-state')) === 'expanded') {
