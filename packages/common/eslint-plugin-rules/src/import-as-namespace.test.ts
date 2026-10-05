@@ -39,4 +39,37 @@ describe('import-as-namespace', () => {
       ],
     });
   });
+
+  // `@dxos/plugin-chess/PlayerReview` is a real namespace module the package can resolve.
+  it('names a package-subpath namespace by its module, prefixing the package only on a clash', () => {
+    const source = '@dxos/plugin-chess/PlayerReview';
+    ruleTester.run('import-as-namespace', rule, {
+      valid: [
+        { filename, code: `import * as PlayerReview from '${source}';` },
+        { filename, code: `import * as ChessPlayerReview from '${source}';\nconst PlayerReview = 1;` },
+        // `./Chess` carries no directive, so it is not a namespace module.
+        { filename, code: "import { Chess } from '@dxos/plugin-chess/Chess';" },
+      ],
+      invalid: [
+        {
+          filename,
+          code: `import * as Review from '${source}';\nReview.make();`,
+          output: `import * as PlayerReview from '${source}';\nPlayerReview.make();`,
+          errors: [{ messageId: 'packageNamespaceAlias' }],
+        },
+        {
+          filename,
+          code: `import * as ChessPlayerReview from '${source}';\nChessPlayerReview.make();`,
+          output: `import * as PlayerReview from '${source}';\nPlayerReview.make();`,
+          errors: [{ messageId: 'packageNamespaceAlias' }],
+        },
+        {
+          filename,
+          code: `import { make as makeReview } from '${source}';\nmakeReview({ makeReview });`,
+          output: `import * as PlayerReview from '${source}';\nPlayerReview.make({ makeReview: PlayerReview.make });`,
+          errors: [{ messageId: 'mustUseNamespaceImport' }],
+        },
+      ],
+    });
+  });
 });
