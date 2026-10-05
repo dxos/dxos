@@ -14,8 +14,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { SettingsPath } from '#types';
 
 const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOperation.Open.pipe(
-  Operation.withHandler((input) =>
-    Effect.gen(function* () {
+  Operation.withHandler(
+    Effect.fnUntraced(function* (input) {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(SettingsPath.SETTINGS_ID) });
       if (input.plugin) {
