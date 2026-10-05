@@ -34,14 +34,20 @@ export const EchoObjectSchema: {
   ): <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ) => EchoObjectSchema<Self, Fields>;
-} = (dxn, options) => {
-  const typename = DXN.getName(dxn);
-  const version = DXN.getVersion(dxn);
-  invariant(version, `Type.makeObject requires a versioned DXN: ${dxn}`);
+} = (dxn, options) => makeStructEntitySchema(EntityKind.Object, dxn, options);
 
-  return <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+/**
+ * Shared by the struct-shaped kinds (objects and events), which differ only in the kind they stamp.
+ */
+export const makeStructEntitySchema =
+  <Kind extends EntityKind.Object | EntityKind.Event>(kind: Kind, dxn: DXN.DXN, options?: EchoTypeOptions) =>
+  <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
-  ): EchoObjectSchema<Self, Fields> => {
+  ): EchoTypeSchema<Self, {}, Kind, Fields> => {
+    const typename = DXN.getName(dxn);
+    const version = DXN.getVersion(dxn);
+    invariant(version, `Type.make${kind === EntityKind.Event ? 'Event' : 'Object'} requires a versioned DXN: ${dxn}`);
+
     // Annotation ids are string keys in Effect 4; this guards against a bundling mishap that
     // leaves the id undefined, which would silently drop the annotation.
     invariant(typeof TypeAnnotationId === 'string', 'Sanity.');
@@ -62,26 +68,25 @@ export const EchoObjectSchema: {
     const ast = SchemaAST.annotate(schemaWithId, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,
-      [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
+      [TypeAnnotationId]: { kind, typename, version } satisfies TypeAnnotation,
       // TODO(dmaretskyi): TypeIdentifierAnnotationId?
       ...makeTypeJsonSchemaAnnotation({
-        kind: EntityKind.Object,
+        kind,
         typename,
         version,
       }),
     });
 
-    return makeEchoTypeSchema<Self, EntityKind.Object, Fields>(
+    return makeEchoTypeSchema<Self, Kind, Fields>(
       fields,
       ast,
       typename,
       version,
-      EntityKind.Object,
+      kind,
       () => toJsonSchema(Schema.make(ast)),
       options?.id,
     );
   };
-};
 
 export const makeObjectType = <Self, _Schema extends Schema.Top>(
   dxn: DXN.DXN,
@@ -89,8 +94,15 @@ export const makeObjectType = <Self, _Schema extends Schema.Top>(
   options?: { id?: EntityId },
 ): Type.ObjClass<Self, Schema.Schema.Type<_Schema>, {}> => {
   const type = EchoObjectSchema(dxn, options)(schema);
-  const constructor = function ObjectType() {};
+  return makeTypeClass<Type.ObjClass<Self, Schema.Schema.Type<_Schema>, {}>>(function ObjectType() {}, type);
+};
+
+/**
+ * Makes `constructor` a class that extends the type entity, so a type can be declared with `class Foo extends ...`.
+ * Shared by the struct-shaped kinds so the one cast it needs lives in one place.
+ */
+export const makeTypeClass = <Class>(constructor: () => void, type: object): Class => {
   Object.setPrototypeOf(constructor, type);
   // Boundary cast: constructor/prototype wiring cannot be expressed in TypeScript's type system.
-  return constructor as unknown as Type.ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+  return constructor as unknown as Class;
 };

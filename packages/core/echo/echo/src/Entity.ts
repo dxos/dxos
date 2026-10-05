@@ -363,6 +363,7 @@ export type Mutable<T> = internal.Mutable<T>;
  * @performance Synchronous; costs the mutations made in the callback plus one batched notification.
  */
 export const update = <T extends Unknown>(entity: T, callback: internal.ChangeCallback<T>): void => {
+  internal.assertNotEvent(entity, 'update');
   internal.change(entity, callback);
 };
 

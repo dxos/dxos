@@ -129,6 +129,10 @@ CROSS JOIN echo_entities t ON t.space_id = ${this._spaceId} AND ${endpoint}
 WHERE ${this.#visible('t', deleted)} GROUP BY t.id`);
       }
 
+      case 'event-traversal':
+        // Events live in feeds, which this store does not hold.
+        throw new UnsupportedQueryError('event traversal');
+
       case 'hierarchy-traversal': {
         const anchor = this.node(query.anchor, deleted);
         if (query.direction === 'to-parent') {

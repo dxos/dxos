@@ -18,6 +18,7 @@ import type * as Blob from './Blob.ts';
 import type * as Change from './Change.ts';
 import type * as Entity from './Entity.ts';
 import * as Error from './Error.ts';
+import type * as Event from './Event.ts';
 import type * as Feed from './Feed.ts';
 import type * as Filter from './Filter.ts';
 import type * as Hypergraph from './Hypergraph.ts';
@@ -82,6 +83,7 @@ export const TraceEvents = {
   objectRemove: 'echo.object.remove',
   typeAdd: 'echo.type.add',
   feedAppend: 'echo.feed.append',
+  eventAppend: 'echo.event.append',
 } as const;
 
 /** Options for writes that only carry attribution. */
@@ -274,6 +276,15 @@ export interface Database extends Queryable {
    * @performance Async; O(n) in entities, deleted by id in one batch.
    */
   deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void>;
+
+  /**
+   * Appends events to an object's event feed — the feed-store feed keyed by the object's id.
+   * Synchronous and optimistic, like `add(obj, { to: feed })`; confirm persistence with {@link flush}.
+   * Callers go through `Obj.appendEvents`, which validates the object and the events first.
+   *
+   * @performance O(n) in events registered on the owner's event feed; the append is sent in the background.
+   */
+  appendEvents(obj: Obj.Unknown, events: Event.Unknown[], opts?: WriteOptions): void;
 
   /**
    * Wait for all pending changes to be saved to disk.

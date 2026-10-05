@@ -119,15 +119,22 @@ export interface UnknownTypeSchema<A, K extends EntityKind> extends Schema.Codec
 }
 
 /**
- * Kinds of entities stored in ECHO: objects, relations, and types.
+ * Kinds of entities stored in ECHO: objects, relations, types, and events.
  */
 export enum EntityKind {
   Object = 'object',
   Relation = 'relation',
   Type = 'type',
+  /** Immutable entry in an object's event feed; never stored in the space database. */
+  Event = 'event',
 }
 
 export const EntityKindSchema = Schema.Enum(EntityKind);
+
+/**
+ * Typename of `Feed.Feed`, for modules that cannot import `Feed.ts` without a cycle.
+ */
+export const FEED_TYPENAME = 'org.dxos.type.feed';
 
 /**
  * Typename for generic object references (Type.Obj / Ref.Ref(Obj.Unknown)).

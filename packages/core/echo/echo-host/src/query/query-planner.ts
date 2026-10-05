@@ -238,6 +238,8 @@ export class QueryPlanner {
         return this._generateReferenceTraversalClause(query, context);
       case 'hierarchy-traversal':
         return this._generateHierarchyTraversalClause(query, context);
+      case 'event-traversal':
+        return this._generateEventTraversalClause(query, context);
       case 'union':
         return this._generateUnionClause(query, context);
       case 'set-difference':
@@ -986,6 +988,17 @@ export class QueryPlanner {
           direction: query.direction,
         },
       },
+      ...this._generateDeletedHandlingSteps(context),
+    ]);
+  }
+
+  private _generateEventTraversalClause(
+    query: QueryAST.QueryEventTraversalClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.anchor, context).steps,
+      { _tag: 'TraverseStep', traversal: { _tag: 'EventTraversal' } },
       ...this._generateDeletedHandlingSteps(context),
     ]);
   }

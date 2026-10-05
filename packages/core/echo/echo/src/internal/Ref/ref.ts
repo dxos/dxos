@@ -21,6 +21,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
 import * as Database from '../../Database.ts';
+import * as Error from '../../Error.ts';
 import type * as Type from '../../Type.ts';
 import {
   ReferenceAnnotationId,
@@ -31,6 +32,8 @@ import {
 import {
   type AnyEntity,
   type AnyProperties,
+  EntityKind,
+  KindId,
   type UnknownTypeSchema,
   getStaticTypeSchema,
 } from '../common/types/index.ts';
@@ -171,7 +174,10 @@ export const Ref: RefFn = (input: any): RefSchema<any> => {
   assertArgument(Schema.isSchema(schema), 'schema', 'Must call with an instance of effect-schema');
   const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
-    throw new Error('Reference target must be an ECHO schema.');
+    throw new globalThis.Error('Reference target must be an ECHO schema.');
+  }
+  if (annotation.kind === EntityKind.Event) {
+    throw new Error.EventNotSupportedError('reference target');
   }
 
   return createEchoReferenceSchema(getTypeIdentifierAnnotation(schema), annotation.typename, annotation.version);
@@ -331,6 +337,10 @@ Ref.isRefSchemaAST = (ast: SchemaAST.AST): boolean => {
 Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   if (typeof obj !== 'object' || obj === null) {
     throw new TypeError('Expected: ECHO object.');
+  }
+
+  if ((obj as any)[KindId] === EntityKind.Event) {
+    throw new Error.EventNotSupportedError('reference target');
   }
 
   // TODO(dmaretskyi): Extract to `getObjectEchoUri` function.
@@ -642,7 +652,7 @@ export class RefImpl<T> implements Ref<T> {
   async load(options?: LoadOptions): Promise<T> {
     const obj = await this.tryLoad(options);
     if (obj == null) {
-      throw new Error('Object not found');
+      throw new globalThis.Error('Object not found');
     }
     return obj;
   }

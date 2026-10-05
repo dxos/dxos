@@ -14,6 +14,7 @@ import type * as Aggregate from './Aggregate.ts';
 import type * as Collection from './Collection.ts';
 import * as Database from './Database.ts';
 import type * as Dataset from './Dataset.ts';
+import type * as Event from './Event.ts';
 import type * as Feed from './Feed.ts';
 import * as Filter from './Filter.ts';
 import * as internal from './internal/index.ts';
@@ -170,6 +171,17 @@ export interface Query<T> {
    * @performance O(1); wraps the current AST in a new immutable node without executing anything.
    */
   children(): Query<any>;
+
+  /**
+   * Get the events of the objects in the current selection (see `Obj.appendEvents`), in the order
+   * they were appended. Only object selections have events.
+   * @param type - Event type to select; every event when omitted.
+   * @returns Query for the events.
+   *
+   * @performance O(1); wraps the current AST in a new immutable node without executing anything.
+   */
+  events<E extends Type$.AnyEvent>(this: Query<Obj.Unknown>, type: E): Query<Type$.InstanceType<E>>;
+  events(this: Query<Obj.Unknown>): Query<Event.Unknown>;
 
   /**
    * Order the query results.
@@ -449,6 +461,13 @@ class QueryClass implements Any {
     });
   }
 
+  events(type?: Type$.AnyEvent): Any {
+    const traversal: QueryAST.Query = { type: 'event-traversal', anchor: this.ast };
+    return new QueryClass(
+      type === undefined ? traversal : { type: 'filter', selection: traversal, filter: Filter.type(type).ast },
+    );
+  }
+
   orderBy(...order: Order.Any[]): Any {
     return new QueryClass({
       type: 'order',
@@ -703,6 +722,27 @@ export const type: {
     type: 'select',
     filter: Filter.type(type, predicates).ast,
   });
+};
+
+/**
+ * Query the events of one object (see `Obj.appendEvents`), in the order they were appended.
+ * Shorthand for: `Query.select(Filter.id(obj.id)).events(type)`, scoped to the object's database
+ * with its feeds included, so an owner that is itself a feed item is found too.
+ *
+ * @example
+ * ```ts
+ * const views = await db.query(Query.events(document, Viewed)).run();
+ * ```
+ *
+ * @performance O(1); builds the query AST without executing anything.
+ */
+export const events: {
+  <E extends Type$.AnyEvent>(obj: Obj.Unknown, type: E): Query<Type$.InstanceType<E>>;
+  (obj: Obj.Unknown): Query<Event.Unknown>;
+} = (obj: Obj.Unknown, type?: Type$.AnyEvent): Any => {
+  const db = Obj.getDatabase(obj);
+  const owner = db ? select(Filter.id(obj.id)).from(db, { includeFeeds: true }) : select(Filter.id(obj.id));
+  return type === undefined ? owner.events() : owner.events(type);
 };
 
 /**

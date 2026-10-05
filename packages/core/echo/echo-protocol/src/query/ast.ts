@@ -413,6 +413,18 @@ export const QueryHierarchyTraversalClause: Schema.Codec<QueryHierarchyTraversal
   QueryHierarchyTraversalClause_;
 
 /**
+ * Traverse from objects to the events in their event feeds.
+ * Filters on the events are applied by a `filter` clause over this one.
+ */
+const QueryEventTraversalClause_ = Schema.Struct({
+  type: Schema.Literal('event-traversal'),
+  anchor: Schema.suspend(() => Query),
+});
+
+export interface QueryEventTraversalClause extends Schema.Schema.Type<typeof QueryEventTraversalClause_> {}
+export const QueryEventTraversalClause: Schema.Codec<QueryEventTraversalClause> = QueryEventTraversalClause_;
+
+/**
  * Union of multiple queries.
  */
 const QueryUnionClause_ = Schema.Struct({
@@ -638,6 +650,7 @@ const Query_ = Schema.Union([
   QueryRelationClause,
   QueryRelationTraversalClause,
   QueryHierarchyTraversalClause,
+  QueryEventTraversalClause,
   QueryUnionClause,
   QuerySetDifferenceClause,
   QueryOrderClause,
@@ -717,6 +730,7 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
     Match.when({ type: 'options' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'relation-traversal' }, ({ anchor }) => visit(anchor, visitor)),
     Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'event-traversal' }, ({ anchor }) => visit(anchor, visitor)),
     Match.when({ type: 'union' }, ({ queries }) => queries.forEach((q) => visit(q, visitor))),
     Match.when({ type: 'set-difference' }, ({ source, exclude }) => {
       visit(source, visitor);
@@ -749,6 +763,7 @@ export const map = (query: Query, mapper: (node: Query) => Query): Query => {
     Match.when({ type: 'relation' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
     Match.when({ type: 'relation-traversal' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
     Match.when({ type: 'hierarchy-traversal' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'event-traversal' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
     Match.when({ type: 'options' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'order' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'limit' }, (node) => ({ ...node, query: map(node.query, mapper) })),
@@ -781,6 +796,7 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     Match.when({ type: 'options' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'relation-traversal' }, ({ anchor }) => fold(anchor, reducer)),
     Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'event-traversal' }, ({ anchor }) => fold(anchor, reducer)),
     Match.when({ type: 'union' }, ({ queries }) => queries.flatMap((q) => fold(q, reducer))),
     Match.when({ type: 'set-difference' }, ({ source, exclude }) =>
       fold(source, reducer).concat(fold(exclude, reducer)),

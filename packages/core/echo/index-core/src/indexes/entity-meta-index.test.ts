@@ -6,7 +6,15 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import {
+  ATTR_DELETED,
+  ATTR_KIND,
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+  EntityKind,
+} from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { ConvergenceKeyIntentStore } from '../convergence-key-intent-store.ts';
@@ -97,6 +105,53 @@ describe('EntityMetaIndex', () => {
         typeDXN: DXN.make('com.example.type.other'),
       });
       expect(otherTypeResults).toEqual([]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // An object's events share its id as their queue id, so the kind is what keeps them out of its children.
+  it.effect('indexes events by owner and keeps them out of children', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const ownerId = EntityId.random();
+      const eventId = EntityId.random();
+      const childId = EntityId.random();
+      const makeItem = (data: IndexerObject['data'], queueId: EntityId | null): IndexerObject => ({
+        spaceId,
+        queueId,
+        queueNamespace: queueId ? 'data' : null,
+        documentId: queueId ? null : 'doc',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data,
+      });
+
+      yield* index.update([
+        makeItem(
+          { id: eventId, [ATTR_TYPE]: TYPE_PERSON, [ATTR_KIND]: EntityKind.Event, [ATTR_DELETED]: false },
+          ownerId,
+        ),
+        makeItem(
+          {
+            id: childId,
+            [ATTR_TYPE]: TYPE_PERSON,
+            [ATTR_PARENT]: EID.make({ entityId: ownerId }),
+            [ATTR_DELETED]: false,
+          },
+          null,
+        ),
+      ]);
+
+      const events = yield* index.queryEvents({ spaceId: [spaceId], ownerIds: [ownerId] });
+      expect(events.map((row) => [row.objectId, row.entityKind])).toEqual([[eventId, 'event']]);
+
+      const children = yield* index.queryChildren({ spaceId: [spaceId], parentIds: [ownerId] });
+      expect(children.map((row) => row.objectId)).toEqual([childId]);
+
+      expect(yield* index.queryEvents({ spaceId: [spaceId], ownerIds: [childId] })).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),
   );
 

@@ -14,6 +14,7 @@ import {
   type Change,
   Database,
   Error as EchoError,
+  type Event as EchoEvent,
   Entity,
   type Feed,
   type Filter,
@@ -520,6 +521,10 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
   async deleteFromFeed(_feed: Feed.Feed, _entities: Entity.Unknown[]): Promise<void> {
     throw new UnsupportedOperationError('deleteFromFeed');
+  }
+
+  appendEvents(_obj: Obj.Unknown, _events: EchoEvent.Unknown[], _opts?: Database.WriteOptions): void {
+    throw new UnsupportedOperationError('appendEvents');
   }
 
   async removeFeedItemsByIds(_feed: Feed.Feed, _ids: string[]): Promise<void> {

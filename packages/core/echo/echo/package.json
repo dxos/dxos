@@ -73,6 +73,11 @@
       "types": "./dist/types/src/Error.d.ts",
       "import": "./dist/lib/Error.mjs"
     },
+    "./Event": {
+      "source": "./src/Event.ts",
+      "types": "./dist/types/src/Event.d.ts",
+      "import": "./dist/lib/Event.mjs"
+    },
     "./Feed": {
       "source": "./src/Feed.ts",
       "types": "./dist/types/src/Feed.d.ts",

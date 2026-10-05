@@ -11,6 +11,7 @@ import type * as Statement from 'effect/sql/Statement';
 
 import {
   ATTR_DELETED,
+  ATTR_KIND,
   ATTR_META,
   ATTR_PARENT,
   ATTR_RELATION_SOURCE,
@@ -616,9 +617,11 @@ export class EntityMetaIndex implements Index {
             // Extract metadata.
             const entityKind = preserveBody
               ? priorRow.entityKind
-              : castData[ATTR_RELATION_SOURCE]
-                ? 'relation'
-                : 'object';
+              : castData[ATTR_KIND] === 'event'
+                ? 'event'
+                : castData[ATTR_RELATION_SOURCE]
+                  ? 'relation'
+                  : 'object';
             // Type identifier as stored on `system.type`: a typename DXN for static schemas,
             // an `echo:` EID for stored (dynamic) schemas. Normalize the EID form so the indexed
             // value matches the normalized value the query path compares against (legacy
@@ -948,8 +951,9 @@ export class EntityMetaIndex implements Index {
         for (const spaceIds of chunkArray(query.spaceId, chunkSize)) {
           for (const parentIds of chunkArray(query.parentIds, chunkSize)) {
             const parentDxns = parentIds.map((id) => EID.make({ entityId: id }));
+            // An object's events share its id as their queue id, but they are not its children.
             const rows =
-              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', parentIds)})`;
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND entityKind != 'event' AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', parentIds)})`;
             for (const row of rows) {
               byRecordId.set(row.recordId, { ...row, deleted: !!row.deleted });
             }
@@ -957,6 +961,31 @@ export class EntityMetaIndex implements Index {
         }
 
         return [...byRecordId.values()];
+      }),
+  );
+
+  /**
+   * The events of the given objects: rows in each owner's event feed, whose queue id is the owner's id.
+   */
+  queryEvents = Effect.fn('EntityMetaIndex.queryEvents')(
+    (query: { spaceId: SpaceId[]; ownerIds: EntityId[] }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        if (query.ownerIds.length === 0) {
+          return [];
+        }
+        const sql = this.#sql;
+        const chunkSize = chunkSizeForBoundVariables(2);
+        const results: EntityMeta[] = [];
+        for (const spaceIds of chunkArray(query.spaceId, chunkSize)) {
+          for (const ownerIds of chunkArray(query.ownerIds, chunkSize)) {
+            const rows =
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND entityKind = 'event' AND ${sql.in('queueId', ownerIds)}`;
+            for (const row of rows) {
+              results.push({ ...row, deleted: !!row.deleted });
+            }
+          }
+        }
+        return results;
       }),
   );
 }

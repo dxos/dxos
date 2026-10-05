@@ -341,6 +341,16 @@ export class IndexEngine {
     return this.#objectMetaIndex.queryChildren(query);
   }
 
+  /**
+   * Query the events of the given owner objects.
+   */
+  queryEvents(query: {
+    spaceId: SpaceId[];
+    ownerIds: EntityId[];
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
+    return this.#objectMetaIndex.queryEvents(query);
+  }
+
   queryTypes(query: {
     spaceIds: readonly SpaceId[];
     typeDxns: readonly EntityMeta['typeDXN'][];

@@ -339,6 +339,80 @@ export const makeRelation: {
     id: opts.id,
   }) as any;
 
+//
+// Event — `Type.Type` value for an ECHO event schema.
+//
+
+/**
+ * TypeScript type for an ECHO event type — a `Type.Type<A>` entity.
+ *
+ * `T` is the instance type produced by `Event.make(Foo, props)`. Events are immutable entries in an
+ * object's event feed (see `Obj.appendEvents`); they have an id and a type but no parent, and
+ * cannot be the target of a reference or a relation.
+ *
+ * **Not a `Schema.Schema`.** See {@link Obj}'s note.
+ *
+ * @example
+ * ```ts
+ * class Viewed extends Type.makeEvent<Viewed>(DXN.make('com.example.type.viewed', '0.1.0'))(
+ *   Schema.Struct({ by: Schema.String }),
+ * ) {}
+ * ```
+ */
+export interface Event<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields> extends BaseTypeEntity<
+  T & EntityModule.OfKind<typeof EntityModule.Kind.Event>
+> {
+  /** Schema-kind brand (event). */
+  readonly [internal.SchemaKindId]: internal.EntityKind.Event;
+
+  /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Codec<any, any>;
+
+  /**
+   * The fields defined in the original struct schema.
+   * Allows accessing field definitions for introspection.
+   */
+  readonly fields: Fields;
+}
+
+/**
+ * Return type for {@link makeEvent}.
+ *
+ * Not to be used directly, but must be exported for typescript to infer the type.
+ */
+export interface EventClass<Self, T, Fields extends Schema.Struct.Fields> extends Event<Self, Fields> {
+  new (_: never): T & EntityModule.OfKind<typeof EntityModule.Kind.Event>;
+}
+
+/**
+ * Type that represents any ECHO event type — a `Type.Type` entity branded
+ * with the event entity kind, i.e. what `Type.makeEvent(dxn)` produces.
+ */
+export type AnyEvent = Event<unknown>;
+
+/**
+ * Factory function to create an ECHO event type.
+ * Mirrors {@link makeObject}; instances are created with `Event.make`.
+ *
+ * @example
+ * ```ts
+ * export class Viewed extends Type.makeEvent<Viewed>(DXN.make('com.example.type.viewed', '0.1.0'))(
+ *   Schema.Struct({ by: Schema.String }),
+ * ) {}
+ * ```
+ *
+ * @performance O(schema size) once at definition time; builds the type entity eagerly, so call it at module scope, not
+ * per use.
+ */
+export const makeEvent: {
+  <Self>(
+    dxn: DXN.DXN,
+    options?: { id?: EntityId },
+  ): <_Schema extends Schema.Top>(schema: _Schema) => EventClass<Self, Schema.Schema.Type<_Schema>, {}>;
+  // Boundary cast: overload implementation bodies cannot access outer generic params (`Self`),
+  // so TypeScript cannot verify that makeEventType's return matches the declared EventClass<Self,…>.
+} = (dxn, options) => (schema) => internal.makeEventType(dxn, schema, options) as any;
+
 /**
  * Type that represents any ECHO type-kind entity — a `Type.Type` meta-schema
  * value (static `Type.Type` or a persisted draft from `db.addType(...)`).
@@ -351,7 +425,7 @@ export type AnyType = Type<unknown>;
  * or type-kind (the meta-schema). APIs that want "any ECHO type" use this union;
  * the underlying Effect Schema is retrieved via `Type.getSchema`.
  */
-export type AnyEntity = AnyObj | AnyRelation | AnyType;
+export type AnyEntity = AnyObj | AnyRelation | AnyType | AnyEvent;
 
 /**
  * Type guard: narrows a `Type.AnyEntity` to an object-kind entity. Checks
@@ -373,6 +447,16 @@ export const isObject = (entity: AnyEntity): entity is AnyObj => {
  */
 export const isRelation = (entity: AnyEntity): entity is AnyRelation => {
   return internal.getSchemaKind(entity) === internal.EntityKind.Relation;
+};
+
+/**
+ * Type guard: narrows a `Type.AnyEntity` to an event-kind entity. Checks
+ * ENTITIES, not instances — use `Event.isEvent` for instances.
+ *
+ * @performance O(1) brand read.
+ */
+export const isEvent = (entity: AnyEntity): entity is AnyEvent => {
+  return internal.getSchemaKind(entity) === internal.EntityKind.Event;
 };
 
 /**
@@ -405,6 +489,16 @@ export const assertObject = (entity: AnyEntity): AnyObj => {
  */
 export const expectRelation = (entity: AnyEntity): AnyRelation => {
   assertArgument(isRelation(entity), 'entity', 'Expected a relation-kind Type entity.');
+  return entity;
+};
+
+/**
+ * Narrow a `Type.AnyEntity` to `AnyEvent`, throwing otherwise.
+ *
+ * @performance O(1) brand read.
+ */
+export const expectEvent = (entity: AnyEntity): AnyEvent => {
+  assertArgument(isEvent(entity), 'entity', 'Expected an event-kind Type entity.');
   return entity;
 };
 
@@ -682,6 +776,7 @@ export interface Type<A = unknown> extends BaseTypeEntity<A & EntityModule.OfKin
  * Dispatches on the entity kind:
  *  - `Relation<Props, S, T>` → `Endpoints<S,T> & Props & OfKind<Relation>`
  *  - `Obj<A>`                → `A & OfKind<Object>`
+ *  - `Event<A>`              → `A & OfKind<Event>`
  *  - `Type<A>`               → `A & OfKind<Type>`
  */
 export type InstanceType<T extends AnyEntity> =
@@ -693,9 +788,13 @@ export type InstanceType<T extends AnyEntity> =
         ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
         : T extends Obj<infer A, any>
           ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
-          : T extends Type<infer A>
-            ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
-            : never;
+          : T extends EventClass<any, infer A, any>
+            ? A & EntityModule.OfKind<typeof EntityModule.Kind.Event>
+            : T extends Event<infer A, any>
+              ? A & EntityModule.OfKind<typeof EntityModule.Kind.Event>
+              : T extends Type<infer A>
+                ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
+                : never;
 
 /**
  * Returns the Effect Schema for a type entity.
@@ -718,6 +817,7 @@ export type InstanceType<T extends AnyEntity> =
  */
 export function getSchema<T extends AnyObj>(type: T): Schema.Codec<InstanceType<T>, unknown>;
 export function getSchema<T extends AnyRelation>(type: T): Schema.Codec<InstanceType<T>, unknown>;
+export function getSchema<T extends AnyEvent>(type: T): Schema.Codec<InstanceType<T>, unknown>;
 export function getSchema(type: AnyEntity): Schema.Codec<any, any>;
 export function getSchema(type: AnyEntity): Schema.Codec<any, any> {
   // Static `Type.Type` entities carry the source Effect Schema on a hidden

@@ -9,7 +9,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, 
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
+import { ATTR_KIND, ATTR_TYPE, EventOwnerId, defineHiddenProperty, makeDecodedEntityLive } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -599,9 +599,12 @@ export class IndexQuerySource implements QuerySource {
         context: { space: result.spaceId, feed: queueEchoUri },
       });
       const database = this._params.graph.getDatabase(result.spaceId);
+      const json = result.documentJson !== undefined ? JSON.parse(result.documentJson) : undefined;
+      // An event's queue id is its owning object's id, which is not its parent.
+      const isEvent = json?.[ATTR_KIND] === Entity.Kind.Event;
       // A feed item's parent is the Feed object (whose id equals the queue id). Setting it here mirrors
       // the client feed-handle read path so `Obj.getParent` resolves for index-hydrated feed items.
-      const parent = database?.getObjectById(result.queueId);
+      const parent = isEvent ? undefined : database?.getObjectById(result.queueId);
       // Route through the feed handle so index-hydrated results share identity (and live `Obj.update`
       // semantics) with the same object read via polling or `db.appendToFeed`. When no handle is
       // available (feed service not connected, or the Feed object isn't loaded) we still return a
@@ -609,7 +612,9 @@ export class IndexQuerySource implements QuerySource {
       // identity and background persistence are unavailable in that degraded state.
       let feedHandle: FeedHandle | undefined;
       if (database instanceof DatabaseImpl) {
-        if (Obj.instanceOf(Feed.Feed)(parent)) {
+        if (isEvent) {
+          feedHandle = database._getEventFeedHandleIfAvailable(result.queueId);
+        } else if (Obj.instanceOf(Feed.Feed)(parent)) {
           feedHandle = database._getFeedHandleIfAvailable(queueEchoUri, parent.namespace);
           feedHandle?.setParentEntity(parent);
         } else {
@@ -634,20 +639,24 @@ export class IndexQuerySource implements QuerySource {
         };
       }
 
-      invariant(result.documentJson !== undefined);
-      const json = JSON.parse(result.documentJson);
+      invariant(json !== undefined);
+      // Without a feed handle the object is decoded on its own; an event still records its owner.
+      const uri = EID.make({ spaceId: result.spaceId, entityId: result.id });
+      const decodeDetached = async () => {
+        const decoded = await Obj.fromJSON(json, {
+          refResolver,
+          uri,
+          database,
+          parent,
+        });
+        if (isEvent) {
+          defineHiddenProperty(decoded, EventOwnerId, queueEchoUri);
+        }
+        return decoded;
+      };
       let object;
       try {
-        object = feedHandle
-          ? await feedHandle.upsertFromJSON(json)
-          : makeDecodedEntityLive(
-              await Obj.fromJSON(json, {
-                refResolver,
-                uri: EID.make({ spaceId: result.spaceId, entityId: result.id }),
-                database,
-                parent,
-              }),
-            );
+        object = feedHandle ? await feedHandle.upsertFromJSON(json) : makeDecodedEntityLive(await decodeDetached());
       } catch (err) {
         const typeDxn = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
         if (!emittedSchemaValidationWarnings.has(typeDxn)) {

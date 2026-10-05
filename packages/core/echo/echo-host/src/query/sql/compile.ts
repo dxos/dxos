@@ -220,7 +220,8 @@ export class SqlPlanCompiler {
     const queues = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
     const includeAllQueues = spaceScopes.some((scope) => scope.includeAllFeeds === true);
     const queueRefs = extractQueueRefs(queues.map((scope) => String(scope.feedUri)));
-    const scope = buildSourceCondition(sql, spaces, includeAllQueues, queueRefs);
+    // Events are reached only through an event traversal, never by selecting their owner's feed.
+    const scope = sql`(${buildSourceCondition(sql, spaces, includeAllQueues, queueRefs)}) AND m.entityKind != 'event'`;
     const window = buildQueueWindow(sql, extractQueueWindow(step));
 
     let base: Fragment;
@@ -277,7 +278,7 @@ export class SqlPlanCompiler {
         // executor filtered them after the lookup.
         const spaceCondition =
           spaces.length > 0 ? sql`m.spaceId IN (SELECT value FROM json_each(${JSON.stringify(spaces)}))` : sql`1 = 1`;
-        base = sql`SELECT DISTINCT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM reverseRef r JOIN objectMeta m ON m.recordId = r.recordId WHERE r.targetDXN = ${target} AND ${pathCondition} AND ${spaceCondition}`;
+        base = sql`SELECT DISTINCT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM reverseRef r JOIN objectMeta m ON m.recordId = r.recordId WHERE r.targetDXN = ${target} AND ${pathCondition} AND ${spaceCondition} AND m.entityKind != 'event'`;
         break;
       }
       case 'TextSelector': {
@@ -769,7 +770,7 @@ export class SqlPlanCompiler {
           sql`${project(sql`t`)} FROM ${wsRef} w
             JOIN reverseRef r ON r.targetDXN = 'echo:///' || w.objectId
             JOIN objectMeta t ON t.recordId = r.recordId
-            WHERE ${pathCondition}
+            WHERE ${pathCondition} AND t.entityKind != 'event'
             GROUP BY t.recordId`,
         );
       }
@@ -813,7 +814,8 @@ export class SqlPlanCompiler {
               GROUP BY t.recordId`,
           );
         }
-        // Children by parent, and a feed's items by queue id (a feed's queue id is its object id).
+        // Children by parent, and a feed's items by queue id (a feed's queue id is its object id);
+        // an object's events share that queue id but are not its children.
         // Two seeks rather than one `OR`, which SQLite answers by scanning the space.
         return this.#define(
           'ws',
@@ -824,8 +826,19 @@ export class SqlPlanCompiler {
             UNION ALL
             ${project(sql`t`)} FROM ${wsRef} w
               JOIN objectMeta t INDEXED BY ${sql.literal(INDEX_SPACE_QUEUE_OBJECT)} ON t.spaceId = w.spaceId AND t.queueId = w.objectId
+              WHERE t.entityKind != 'event'
               GROUP BY t.recordId
           ) GROUP BY recordId`,
+        );
+      }
+      case 'EventTraversal': {
+        // An object's events are the rows of its event feed, whose queue id is the object's id.
+        return this.#define(
+          'ws',
+          sql`${project(sql`t`)} FROM ${wsRef} w
+            JOIN objectMeta t INDEXED BY ${sql.literal(INDEX_SPACE_QUEUE_OBJECT)} ON t.spaceId = w.spaceId AND t.queueId = w.objectId
+            WHERE t.entityKind = 'event'
+            GROUP BY t.recordId`,
         );
       }
     }

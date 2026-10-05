@@ -25,7 +25,7 @@ import {
   setType,
 } from '../common/types/index.ts';
 import { ATTR_META, EntityMetaSchema, SCALAR_META_FIELDS } from '../common/types/meta.ts';
-import { MetaId } from '../common/types/model-symbols.ts';
+import { ATTR_KIND, ATTR_TIMESTAMP, EventTimestampId, MetaId } from '../common/types/model-symbols.ts';
 import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
@@ -141,8 +141,18 @@ export const objectFromJSON = async (
     // `KindId = Type`, not Object, otherwise `Filter.type(Type.Type)` /
     // `Type.isType` skip them and the schema registry never picks them up.
     // Mirrors the kind resolution in `createObject` (the in-memory path).
+    // Events are also marked in the JSON itself, so they keep their kind when the schema is unresolved.
     const annotationKind = schema != null ? getTypeAnnotation(schema)?.kind : undefined;
-    defineHiddenProperty(obj, KindId, annotationKind === EntityKind.Type ? EntityKind.Type : EntityKind.Object);
+    const kind =
+      jsonData[ATTR_KIND] === EntityKind.Event || annotationKind === EntityKind.Event
+        ? EntityKind.Event
+        : annotationKind === EntityKind.Type
+          ? EntityKind.Type
+          : EntityKind.Object;
+    defineHiddenProperty(obj, KindId, kind);
+    if (kind === EntityKind.Event && typeof (jsonData as any)[ATTR_TIMESTAMP] === 'number') {
+      defineHiddenProperty(obj, EventTimestampId, (jsonData as any)[ATTR_TIMESTAMP]);
+    }
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
@@ -181,6 +191,8 @@ export const objectFromJSON = async (
   invariant((obj as any)[ATTR_TYPE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_META] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_DELETED] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_KIND] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_TIMESTAMP] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_SELF_URI] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_SELF_URI_LEGACY] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
@@ -238,6 +250,8 @@ const stripInternalJsonKeys = (jsonData: unknown) => {
     [ATTR_TYPE]: _type,
     [ATTR_META]: _meta,
     [ATTR_DELETED]: _deleted,
+    [ATTR_KIND]: _kind,
+    [ATTR_TIMESTAMP]: _timestamp,
     [ATTR_SELF_URI]: _selfUri,
     [ATTR_SELF_URI_LEGACY]: _legacySelfUri,
     [ATTR_RELATION_SOURCE]: _relationSource,

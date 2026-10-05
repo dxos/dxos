@@ -22,6 +22,7 @@ import type * as Change from './Change.ts';
 import type * as Database from './Database.ts';
 import * as Entity from './Entity.ts';
 import * as Error from './Error.ts';
+import type * as Event from './Event.ts';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils.ts';
 import * as internal from './internal/index.ts';
 import * as objInternal from './internal/Obj/index.ts';
@@ -414,6 +415,7 @@ export type Mutable<T> = internal.Mutable<T>;
  * fields) parent pass.
  */
 export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): T => {
+  internal.assertNotEvent(obj, 'update');
   internal.change(obj, callback);
   internal.propagateParentAnnotations(obj);
   return obj;
@@ -889,9 +891,52 @@ export const Parent: unique symbol = internal.ParentId as any;
  * @performance O(1); reads the parent slot (a working-set lookup for database objects, never a load).
  */
 export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
+  internal.assertNotEvent(entity, 'parent');
   assertArgument(isObject(entity) || isSnapshot(entity), 'Expected an object');
   assumeType<internal.InternalObjectProps>(entity);
   return entity[internal.ParentId] as Unknown | undefined;
+};
+
+/**
+ * Appends events to the object's event feed.
+ *
+ * Every object has its own append-only feed of immutable events (see `Event.make`), stored in the
+ * feed-store under the object's id. The append is synchronous and optimistic: the events are
+ * queryable at once via `Query.events` and persist in the background (`db.flush()` confirms).
+ *
+ * @throws {Error.EventsNotSupportedError} If the object is a `Feed.Feed` (its id already names its
+ *   item feed), is not an object, is not in a database, or is deleted. Nothing is written.
+ * @throws {Error.EventNotSupportedError} If an item is not an event, or an event is already appended.
+ *
+ * @performance O(n) in events, registered on the owner's event feed synchronously; the write is sent in the
+ * background.
+ *
+ * @example
+ * ```ts
+ * Obj.appendEvents(document, [Event.make(Viewed, { by: 'alice' })]);
+ * const views = await db.query(Query.events(document, Viewed)).run();
+ * ```
+ */
+export const appendEvents = (obj: Unknown, events: readonly Event.Unknown[], opts?: Database.WriteOptions): void => {
+  if (!isObject(obj)) {
+    throw new Error.EventsNotSupportedError('not an object');
+  }
+  if (internal.getTypename(obj) === internal.FEED_TYPENAME) {
+    throw new Error.EventsNotSupportedError('feed objects hold feed items, not events');
+  }
+  const db = internal.getDatabase(obj);
+  if (db === undefined) {
+    throw new Error.EventsNotSupportedError('object is not in a database');
+  }
+  if (isDeleted(obj)) {
+    throw new Error.EventsNotSupportedError('object is deleted');
+  }
+  for (const event of events) {
+    if (!internal.isEventEntity(event)) {
+      throw new Error.EventNotSupportedError('appending a non-event to an event feed');
+    }
+  }
+  db.appendEvents(obj, [...events], opts);
 };
 
 /**
@@ -933,6 +978,8 @@ const parentRefsChild = (parent: Any, childId: EntityId): boolean => {
  */
 // TODO(burdon): Promote the ref-less-edge warning to an invariant once call sites are swept.
 export const setParent = (entity: Unknown, parent: Any | undefined) => {
+  internal.assertNotEvent(entity, 'parent');
+  internal.assertNotEvent(parent, 'parent');
   assertArgument(isObject(entity), 'Expected an object');
   assertArgument(parent === undefined || isObject(parent), 'Expected an object');
   if (parent !== undefined && !parentRefsChild(parent, entity.id)) {

@@ -250,4 +250,4 @@ export const makeEchoTypeSchema = <
   return entity as unknown as EchoTypeSchema<Self, {}, K, Fields>;
 };
 
-export { isEntity } from './guard.ts';
+export { assertNotEvent, isEntity, isEventEntity } from './guard.ts';

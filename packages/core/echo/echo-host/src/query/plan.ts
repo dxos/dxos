@@ -267,7 +267,7 @@ export namespace QueryPlan {
   /**
    * Describes a traversal of the object graph.
    */
-  export type Traversal = ReferenceTraversal | RelationTraversal | HierarchyTraversal;
+  export type Traversal = ReferenceTraversal | RelationTraversal | HierarchyTraversal | EventTraversal;
 
   /**
    * Traverse a reference connection.
@@ -312,6 +312,13 @@ export namespace QueryPlan {
      * to-children: traverse from parent to children.
      */
     direction: 'to-parent' | 'to-children';
+  };
+
+  /**
+   * Traverse from objects to the events in their event feeds (queue id = owner object id).
+   */
+  export type EventTraversal = {
+    _tag: 'EventTraversal';
   };
 
   /**
