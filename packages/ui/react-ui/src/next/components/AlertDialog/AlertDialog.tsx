@@ -15,10 +15,10 @@ import * as Dialog from '../Dialog/Dialog.tsx';
 // Root
 //
 
-type AlertDialogRootProps = Omit<Dialog.RootProps, 'role'>;
+type AlertDialogRootProps = Omit<Dialog.RootProps, 'role' | 'closeOnInteractOutside'>;
 
 /**
- * A Dialog with `role=alertdialog`, which zag keeps open on an outside click. It opens with focus on a control marked
+ * A Dialog with `role=alertdialog`, which no outside click or focus closes. It opens with focus on a control marked
  * `DIALOG_AUTOFOCUS_ATTRIBUTE`, else on `Cancel`, the least destructive choice.
  */
 const AlertDialogRoot = ({ ids, initialFocusEl, ...props }: AlertDialogRootProps) => {
@@ -34,6 +34,7 @@ const AlertDialogRoot = ({ ids, initialFocusEl, ...props }: AlertDialogRootProps
   return (
     <Dialog.Root
       {...props}
+      closeOnInteractOutside={false}
       role='alertdialog'
       ids={{ ...ids, content: contentId, closeTrigger: cancelId }}
       initialFocusEl={
