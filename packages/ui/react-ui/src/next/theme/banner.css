@@ -1,0 +1,69 @@
+/*
+ * Banner: a message on its valence's surface; `--dx-valence-*` is what a `valence` Button inside it reads.
+ */
+
+@layer dx-components {
+  .dx-banner {
+    --dx-banner-surface: var(--color-neutral-surface);
+    --dx-banner-fg: var(--color-neutral-fg);
+    --dx-valence-bg: var(--color-neutral-bg);
+    --dx-valence-bg-hover: var(--color-neutral-bg-hover);
+    --dx-valence-text: var(--color-neutral-text);
+    border-radius: var(--radius-sm, 0.25rem);
+    background: var(--dx-banner-surface);
+    color: var(--dx-banner-fg);
+  }
+  .dx-banner[data-inset] {
+    margin: var(--dx-gutter-sm, 0.5rem);
+  }
+  .dx-banner[data-valence='success'] {
+    --dx-banner-surface: var(--color-success-surface);
+    --dx-banner-fg: var(--color-success-fg);
+    --dx-valence-bg: var(--color-success-bg);
+    --dx-valence-bg-hover: var(--color-success-bg-hover);
+    --dx-valence-text: var(--color-success-text);
+  }
+  .dx-banner[data-valence='info'] {
+    --dx-banner-surface: var(--color-info-surface);
+    --dx-banner-fg: var(--color-info-fg);
+    --dx-valence-bg: var(--color-info-bg);
+    --dx-valence-bg-hover: var(--color-info-bg-hover);
+    --dx-valence-text: var(--color-info-text);
+  }
+  .dx-banner[data-valence='warning'] {
+    --dx-banner-surface: var(--color-warning-surface);
+    --dx-banner-fg: var(--color-warning-fg);
+    --dx-valence-bg: var(--color-warning-bg);
+    --dx-valence-bg-hover: var(--color-warning-bg-hover);
+    --dx-valence-text: var(--color-warning-text);
+  }
+  .dx-banner[data-valence='error'] {
+    --dx-banner-surface: var(--color-error-surface);
+    --dx-banner-fg: var(--color-error-fg);
+    --dx-valence-bg: var(--color-error-bg);
+    --dx-valence-bg-hover: var(--color-error-bg-hover);
+    --dx-valence-text: var(--color-error-text);
+  }
+
+  .dx-banner-title > h2 {
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  /* The title's icon takes the banner's text colour, so it reads as part of the title. */
+  .dx-banner-title .dx-icon {
+    color: var(--dx-banner-fg);
+  }
+  /* The body's last line keeps a gap's distance from the banner's edge, as the title row's block gives its first. */
+  .dx-banner-body {
+    margin: 0;
+    padding-block-start: 0;
+    padding-block-end: var(--dx-gap-size);
+  }
+  .dx-banner-body:first-child {
+    padding-block-start: var(--dx-gap-size);
+  }
+}

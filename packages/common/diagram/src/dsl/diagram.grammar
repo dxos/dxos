@@ -4,6 +4,10 @@
 // Lezer grammar for the diagram DSL — the text form of `src/scene.ts`.
 // Generate: lezer-generator --typeScript src/dsl/diagram.grammar -o src/dsl/gen/diagram.ts
 //
+// Two layers share one grammar. The scene statements (`object`, `elements`, `move`, `remove`) place
+// every shape at a coordinate; the semantic statements (`diagram`, `group`, `node`, `edge`) state
+// intent and leave placement and routing to `semantic-engine.ts`. A document may mix them.
+//
 // Brace-delimited and whitespace-insensitive, so an element's positional geometry
 // (`0,0 100x50`) stays on one line without the newline carrying meaning. Attribute names and
 // values are plain `name` tokens rather than keywords: the grammar accepts any `name=value`
@@ -20,7 +24,11 @@ statement {
   ElementsDecl |
   MoveStmt |
   RemoveObjectStmt |
-  RemoveElementsStmt
+  RemoveElementsStmt |
+  DiagramDecl |
+  GroupDecl |
+  NodeDecl |
+  EdgeDecl
 }
 
 // object <id> [@ x,y] [scale=…] [index=…] [ref=…] { … }
@@ -37,6 +45,50 @@ RemoveObjectStmt { kw<"remove"> kw<"object"> Id }
 RemoveElementsStmt { kw<"remove"> kw<"elements"> Id Id+ }
 
 ObjectAttr { Origin | Attribute }
+
+//
+// Semantic statements.
+//
+
+// diagram [@ x,y] [flow=down] [grid=384x224] [box=192x96]
+DiagramDecl { kw<"diagram"> (Origin | Attribute)* }
+
+// group <id> ["label"] [relation <group>]* [gap=…] [color=…] { node … edge … }
+// Groups do not nest; the grammar accepts a nested one so it can be reported rather than mis-parsed.
+GroupDecl { kw<"group"> Id Label? (Relation | Attribute)* GroupBody }
+GroupBody { "{" (NodeDecl | EdgeDecl | GroupDecl)* "}" }
+
+// node <id> ["label"] [@ x,y | @cell(c,r)] [~]<relation> <node> … [ref=…] [color=…] [shape=…]
+NodeDecl { kw<"node"> Id Label? (Pin | Relation | Attribute)* }
+
+// `@ x,y` is exact, in scene units; `@cell(c,r)` names a grid cell.
+Pin { "@" (Point | CellRef) }
+CellRef { kw<"cell"> "(" Coord "," Coord ")" }
+
+// The relation word is a plain name checked by the reader, so `left` or `below` stay usable as ids;
+// LR(1) tells it from an attribute by the `=` that follows an attribute name.
+Relation { Soft? RelationKind Id }
+Soft { "~" }
+RelationKind { name }
+
+// edge A[:sides] (, B…)* (-> | <-> | -- | <relationship>) C[:sides] (, D…)* ["label"] [via …] [bus[=name]] [attr=…]*
+EdgeDecl { kw<"edge"> EndList EdgeOp EndList Label? (Via | Bus | Attribute)* }
+EndList { EdgeEnd ("," EdgeEnd)* }
+EdgeEnd { Id (":" SideList)? }
+SideList { Side ("|" Side)* }
+Side { name }
+// A relationship word in place of the arrow says what the edge means and sets its markers:
+// `Dog extends Animal`, `Order composes LineItem`, `Team owns Member`, `Customer one-to-many Order`.
+EdgeOp { "->" | "<->" | "--" | RelationWord }
+RelationWord { name }
+
+// Each waypoint pins one or both coordinates of the route, in scene units or as `cell(c,r)`, where
+// a half cell (`cell(1.5,_)`) is the channel between two columns or rows.
+Via { kw<"via"> Waypoint+ }
+Waypoint { Coord "," Coord | CellRef }
+Coord { Number | Unbound }
+
+Bus { kw<"bus"> ("=" Id)? }
 Origin { "@" Point }
 
 Body { "{" Element* "}" }
@@ -78,7 +130,7 @@ Ref { name | String }
 // the only case that wanted one.
 Attribute { AttrName "=" AttrValue }
 AttrName  { name }
-AttrValue { Number | String | Word }
+AttrValue { Number | Size | String | Word }
 
 // `head=triangle`, `head=arrow` and `tail=circle` are schema literals that are also element-kind
 // keywords, and a reserved word no longer lexes as a plain name. Listing every reserved word —
@@ -88,7 +140,8 @@ Word {
   kw<"object"> | kw<"elements"> | kw<"move"> | kw<"remove"> |
   kw<"rect"> | kw<"ellipse"> | kw<"diamond"> | kw<"triangle"> |
   kw<"circle"> | kw<"line"> | kw<"curve"> | kw<"arc"> |
-  kw<"text"> | kw<"arrow"> | kw<"portal">
+  kw<"text"> | kw<"arrow"> | kw<"portal"> |
+  kw<"diagram"> | kw<"group"> | kw<"node"> | kw<"edge"> | kw<"cell"> | kw<"via"> | kw<"bus">
 }
 
 Id    { name | String }
@@ -128,7 +181,7 @@ kw<term> { @specialize[@name={term}]<name, term> }
 
   space { $[ \t\r\n]+ }
 
-  "@" "->" ".." "{" "}" "=" ","
+  "@" "->" "<->" "--" ".." "{" "}" "=" "," ":" "|" "~" "(" ")"
 
   @precedence { size, number }
   @precedence { name, Comment }

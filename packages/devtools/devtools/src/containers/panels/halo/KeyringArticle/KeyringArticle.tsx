@@ -39,14 +39,14 @@ export const KeyringArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         <MasterDetailTable
           properties={properties}
           data={data}
           detailsTransform={(d) => d._original}
           detailsPosition='bottom'
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

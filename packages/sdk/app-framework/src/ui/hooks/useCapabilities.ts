@@ -13,7 +13,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { Capabilities } from '../../common/index.ts';
 import { type Capability } from '../../core/index.ts';
-import { usePluginManager } from '../components/index.ts';
+import { usePluginManager } from '../components/PluginManager/PluginManagerProvider.ts';
 
 /** Stable atom yielding `undefined`, used as the fallback for optional atom-capability lookups. */
 const emptyAtomValue = Atom.make(() => undefined);

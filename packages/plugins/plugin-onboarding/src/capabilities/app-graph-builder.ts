@@ -11,9 +11,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { ABOUT_DIALOG } from '@dxos/plugin-support';
 import { Position } from '@dxos/util';
 
-import { ABOUT_DIALOG } from '../constants.ts';
 import { meta } from '../meta.ts';
 
 export default Capability.makeModule(

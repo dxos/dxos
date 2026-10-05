@@ -2,58 +2,74 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
+import { AlertDialog, Dialog as UiDialog } from '@dxos/react-ui';
 
 import { useDeckState } from '#hooks';
 
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 
+const overlayClasses = [
+  'dx-fill max-w-none max-h-none grid place-items-center rounded-none border-0 shadow-none',
+  'py-[env(safe-area-inset-top)] sm:p-[calc(env(safe-area-inset-top)+.6rem)]',
+  'md:p-[calc(env(safe-area-inset-top)+1.2rem)] lg:p-[calc(env(safe-area-inset-top)+2.4rem)]',
+];
+
+/** The surface's suspense placeholder: reports while the dialog's lazily loaded content is still loading. */
+const Pending = ({ onPendingChange }: { onPendingChange: (pending: boolean) => void }) => {
+  useLayoutEffect(() => {
+    onPendingChange(true);
+    return () => onPendingChange(false);
+  }, [onPendingChange]);
+  return <div />;
+};
+
 export const Dialog = () => {
   const { invokePromise } = useOperationInvoker();
   const { state } = useDeckState();
   const { dialogOpen, dialogType, dialogBlockAlign, dialogOverlayClasses, dialogOverlayStyle, dialogContent } = state;
-  const Root = dialogType === 'alert' ? AlertDialog.Root : NaturalDialog.Root;
-  const Overlay = dialogType === 'alert' ? AlertDialog.Overlay : NaturalDialog.Overlay;
+  const Root = dialogType === 'alert' ? AlertDialog.Root : UiDialog.Root;
+  // zag's dismiss layer looks for the content once on open, so the Root opens only after a lazily loaded content mounts.
+  const [pending, setPending] = useState(false);
 
   const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (!nextOpen) {
+    ({ open }: { open: boolean }) => {
+      if (!open) {
         void invokePromise(LayoutOperation.UpdateDialog, { state: false });
       }
     },
     [invokePromise],
   );
 
-  // TODO(thure): End block alignment affecting `modal` and whether the surface renders in an overlay is tailored to the needs of the ambient chat dialog. As the feature matures, consider separating concerns.
+  const hostRendersOverlay = dialogOverlayClasses !== undefined || dialogOverlayStyle !== undefined;
+  const surface = (
+    <Surface.Surface
+      type={AppSurface.Dialog}
+      data={dialogContent ?? undefined}
+      limit={1}
+      fallback={PlankErrorFallback}
+      placeholder={hostRendersOverlay ? <div /> : <Pending onPendingChange={setPending} />}
+    />
+  );
+
+  // TODO(thure): End block alignment affecting `modal` is tailored to the needs of the ambient chat dialog. As the feature matures, consider separating concerns.
   return (
-    <Root modal={dialogBlockAlign !== 'end'} open={dialogOpen} onOpenChange={handleOpenChange}>
-      {dialogBlockAlign === 'end' ? (
-        // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
-        <Surface.Surface
-          type={AppSurface.Dialog}
-          data={dialogContent ?? undefined}
-          limit={1}
-          fallback={PlankErrorFallback}
-          placeholder={<div />}
-        />
+    <Root
+      modal={dialogBlockAlign !== 'end'}
+      placement={dialogBlockAlign}
+      open={dialogOpen && !pending}
+      onOpenChange={handleOpenChange}
+    >
+      {hostRendersOverlay ? (
+        <UiDialog.Content scrim={false} classNames={[overlayClasses, dialogOverlayClasses]} style={dialogOverlayStyle}>
+          {surface}
+        </UiDialog.Content>
       ) : (
-        <Overlay
-          blockAlign={dialogBlockAlign}
-          classNames={['dx-main-dialog', dialogOverlayClasses]}
-          style={dialogOverlayStyle}
-        >
-          <Surface.Surface
-            type={AppSurface.Dialog}
-            data={dialogContent ?? undefined}
-            limit={1}
-            fallback={PlankErrorFallback}
-          />
-        </Overlay>
+        surface
       )}
     </Root>
   );

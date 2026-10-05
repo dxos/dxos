@@ -17,12 +17,12 @@ export const ActiveSpacePanel = ({ spaceName }: ActiveSpacePanelProps) => {
   return (
     <div className='flex flex-col gap-2 p-4'>
       <h3 className='text-sm font-medium'>Sample Panel</h3>
-      <p className='text-sm text-description'>
+      <p className='text-sm text-fg-muted'>
         This is a workspace-wide deck companion. It is always available regardless of which object is focused.
       </p>
       {spaceName && (
         <div className='flex items-center gap-2 text-sm'>
-          <span className='text-description'>Active space:</span>
+          <span className='text-fg-muted'>Active space:</span>
           <Tag hue='neutral'>{spaceName}</Tag>
         </div>
       )}

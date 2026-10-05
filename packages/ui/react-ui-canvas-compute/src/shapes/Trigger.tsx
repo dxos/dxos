@@ -9,7 +9,7 @@ import { VoidInput } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Select, type SelectRootProps } from '@dxos/react-ui';
+import { Select } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { FunctionBody, getHeight } from './common/index.ts';
@@ -52,9 +52,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
   return (
     <FunctionBody
       shape={shape}
-      status={
-        <TriggerKindSelect value={functionTrigger.spec?.kind} onValueChange={(kind) => setKind(kind as Trigger.Kind)} />
-      }
+      status={<TriggerKindSelect value={functionTrigger.spec?.kind} onValueChange={setKind} />}
       inputSchema={VoidInput}
       outputSchema={getOutputSchema(functionTrigger.spec!.kind!)}
     />
@@ -62,21 +60,29 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 };
 
 // TODO(burdon): Factor out.
-const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
+type TriggerKindSelectProps = {
+  value?: Trigger.Kind;
+  onValueChange: (kind: Trigger.Kind) => void;
+};
+
+const TriggerKindSelect = ({ value, onValueChange }: TriggerKindSelectProps) => {
   return (
-    <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton variant='ghost' classNames='w-full px-0!' />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {Trigger.Kinds.map((kind) => (
-              <Select.Option key={kind} value={kind}>
-                {kind}
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+    <Select.Root
+      value={value === undefined ? [] : [value]}
+      onValueChange={({ value: [next] }) => {
+        const kind = Trigger.Kinds.find((kind) => kind === next);
+        if (kind) {
+          onValueChange(kind);
+        }
+      }}
+      items={Trigger.Kinds.map((kind) => ({ value: kind, label: kind }))}
+    >
+      <Select.Trigger classNames='w-full px-0!' />
+      <Select.Content>
+        {Trigger.Kinds.map((kind) => (
+          <Select.Item key={kind} item={{ value: kind, label: kind }} />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

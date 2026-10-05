@@ -29,7 +29,7 @@ const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) =
       corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
     >
       <div className='flex gap-4 items-center justify-center my-4'>
-        <Icon icon='ph--planet--light' size={8} />
+        <Icon icon='ph--planet--light' size='xl' />
         <div className='block text-start font-light text-xl'>{name ?? space.key.truncate()}</div>
       </div>
     </Heading>

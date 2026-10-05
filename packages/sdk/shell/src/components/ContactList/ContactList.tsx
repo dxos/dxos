@@ -8,7 +8,17 @@ import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/react-client/halo';
-import { Avatar, SystemIconButton, Tag, ThemedClassName, Tooltip, useId, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  Button,
+  Flex,
+  SystemButton,
+  ThemedClassName,
+  Tooltip,
+  toAvatarHue,
+  useId,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { getHashStyles } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
@@ -51,11 +61,13 @@ export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelec
   );
 
   if (visible.length === 0) {
-    return <p className='text-description text-center my-2'>{t('empty-contacts.message')}</p>;
+    return <p className='text-fg-muted text-center my-2'>{t('empty-contacts.message')}</p>;
   }
 
   return (
-    <Listbox.Root>
+    <Listbox.Root
+      items={visible.map((contact) => ({ value: contactKeyHex(contact), label: contactDisplayName(contact) }))}
+    >
       <Listbox.Content
         classNames={[classNames, 'flex flex-col gap-2']}
         aria-label={t('contacts.label')}
@@ -76,7 +88,7 @@ export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelec
 
 type ContactListItemProps = Pick<ContactListProps, 'spaces' | 'onSelectSpace'> & { contact: Contact };
 
-/** `Listbox.ItemContent` aligns the key and shared-space tags under the name, beside the avatar rail. */
+/** The avatar in the icon rail, the name over its shared-space tags, and the key with its copy button at the end. */
 const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProps) => {
   const { t } = useTranslation(translationKey);
   const labelId = useId('contactListItem__label');
@@ -89,51 +101,42 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
 
   return (
     <Listbox.Item classNames='p-2 rounded-sm' id={identityKey.toHex()} data-testid='contact-list.item'>
-      <Listbox.ItemContent
-        icon={
-          <Avatar.Root labelId={labelId}>
-            <Avatar.Content
-              size={8}
-              hue={profileString(contact, 'hue') ?? fallback.hue}
-              fallback={profileString(contact, 'emoji') ?? fallback.emoji}
-            />
-          </Avatar.Root>
-        }
-        title={
-          <div className='flex items-center justify-between gap-1'>
-            <span id={labelId} className='truncate'>
-              {displayName}
-            </span>
-            <div className='flex items-center gap-1 text-sm text-description'>
-              <Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
-                <span className='font-mono truncate max-w-48'>{contact.did ?? identityKey.truncate()}</span>
-              </Tooltip.Trigger>
-              <SystemIconButton.Clipboard
-                iconOnly
-                density='sm'
-                variant='ghost'
-                value={contact.did ?? identityKey.toHex()}
-                label={t(contact.did ? 'copy-did.label' : 'copy-key.label')}
-              />
-            </div>
-          </div>
-        }
-        description={
-          <div className='flex flex-col gap-1'>
-            {common.length > 0 && (
-              <div className='flex flex-wrap gap-1'>
-                {common.map((space) => (
-                  <Tag key={space.id} hue={getHashStyles(space.id).hue} asChild>
-                    <button type='button' onClick={() => onSelectSpace?.(space)} data-testid='contact-list.space'>
-                      {space.name ?? t('unnamed-space.label')}
-                    </button>
-                  </Tag>
-                ))}
-              </div>
-            )}
-          </div>
-        }
-      />
+      <Listbox.ItemIcon>
+        <Avatar.Root
+          aria-labelledby={labelId}
+          size='md'
+          hue={toAvatarHue(profileString(contact, 'hue') ?? fallback.hue)}
+          fallback={profileString(contact, 'emoji') ?? fallback.emoji}
+        />
+      </Listbox.ItemIcon>
+      <Listbox.ItemText id={labelId}>{displayName}</Listbox.ItemText>
+      {common.length > 0 && (
+        <Listbox.ItemDescription classNames='flex flex-wrap gap-1 pt-2'>
+          {common.map((space) => (
+            <Button
+              key={space.id}
+              size='sm'
+              hue={getHashStyles(space.id).hue}
+              onClick={() => onSelectSpace?.(space)}
+              data-testid='contact-list.space'
+            >
+              {space.name ?? t('unnamed-space.label')}
+            </Button>
+          ))}
+        </Listbox.ItemDescription>
+      )}
+      <Flex align='center' gap='xs' classNames='text-sm text-fg-muted'>
+        <Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
+          <span className='font-mono truncate max-w-48'>{contact.did ?? identityKey.truncate()}</span>
+        </Tooltip.Trigger>
+        <SystemButton.Clipboard
+          iconOnly
+          size='sm'
+          variant='ghost'
+          value={contact.did ?? identityKey.toHex()}
+          label={t(contact.did ? 'copy-did.label' : 'copy-key.label')}
+        />
+      </Flex>
     </Listbox.Item>
   );
 };

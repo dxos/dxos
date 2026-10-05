@@ -906,7 +906,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   return (
     <Mosaic.Tile
       asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      classNames='dx-hover dx-current dx-selected border-b border-separator-subtle'
       id={segment.id}
       data={data}
       location={location}
@@ -917,17 +917,17 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
             <Card.Row icon={icon}>
               <Card.Text classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Text>
               {isTentative && (
-                <span className='ml-2 text-xs text-description px-1 rounded bg-attentionSurface'>tentative</span>
+                <span className='ml-2 text-xs text-fg-muted px-1 rounded bg-attentionSurface'>tentative</span>
               )}
             </Card.Row>
             {route && (
               <Card.Row icon='ph--arrow-right--regular'>
-                <span className='text-description text-sm'>{route}</span>
+                <span className='text-fg-muted text-sm'>{route}</span>
               </Card.Row>
             )}
             {date && (
               <Card.Row icon='ph--calendar--regular'>
-                <span className='text-description text-sm'>{format(date, 'PPp')}</span>
+                <span className='text-fg-muted text-sm'>{format(date, 'PPp')}</span>
               </Card.Row>
             )}
           </Card.Content>

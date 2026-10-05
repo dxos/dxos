@@ -134,7 +134,12 @@ export const formatElement = (element: Scene.Element): string => {
         '->',
         formatEndpoint(element.to, element.end),
         ...(element.text === undefined ? [] : [formatString(element.text)]),
-        ...formatAttrs('arrow', { head: element.head, tail: element.tail, ...style(element) }),
+        ...formatAttrs('arrow', {
+          head: element.head,
+          tail: element.tail,
+          relation: element.relation,
+          ...style(element),
+        }),
       ].join(' ');
 
     case 'portal':

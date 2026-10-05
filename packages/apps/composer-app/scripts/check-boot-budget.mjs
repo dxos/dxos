@@ -39,7 +39,7 @@ import path from 'node:path';
 const MAX_PRELOAD_ENTRIES = 25;
 
 /**
- * Total on-disk size of those chunks. 4.45 MB today.
+ * Total on-disk size of those chunks. 3.79 MB today.
  *
  * Re-baselined 2026-08-13 (was 6.00 MB) after two independent cuts: the Effect 3 -> 4 migration
  * (5.73 -> 4.97 MB) and the `./plugin` -> `XPlugin` namespace split, which evicted the operation
@@ -88,12 +88,19 @@ const MAX_PRELOAD_ENTRIES = 25;
  * ceiling banks half the win: the remaining ~48 KB is under the ~98 KB that leak cost, so a
  * regression of it trips this.
  *
+ * Re-baselined 2026-10-02 (was 4.50 MB) after two cuts that leave every module where its importers
+ * need it and only stop code that never runs at boot from being preloaded. The `react` chunk group
+ * matched every react-dom file in the graph, and the import map's wrappers put react-dom's
+ * `server`, `static`, `profiling` and `test-utils` subpaths there, so ~580 KB that never runs rode
+ * the eager `react` chunk; the group now matches what the page renders with. The boot partition's
+ * new `exclude` list keeps Zag/Ark components no startup path executes (accordion, carousel,
+ * floating-panel, hover-card, qr-code, slider, toc) out of the boot chunks: ~114 KB. Measured at
+ * 3,976,474 bytes; the ceiling keeps the ~200 KB margin.
+ *
  * This constant is code-owned: raising it needs a strong, written motivation for the growth being
  * accepted, not a passing build.
- *
- * TODO(wittjosiah): Bring this back to at least 4.25 MB, the lowest ceiling this budget has held.
  */
-const MAX_PRELOAD_BYTES = 4.5 * 1024 * 1024;
+const MAX_PRELOAD_BYTES = 4 * 1024 * 1024;
 
 const buildDir = path.join(process.cwd(), 'out');
 const outDir = path.join(buildDir, 'composer');

@@ -13,7 +13,7 @@ const TEMPLATE_URL = storybookUrl('ui-react-ui-canvas-compute-scene--template', 
 
 /** The die a `random` shape draws; its icon name changes as it spins, so match the family. */
 const DICE = 'svg:has(use[href*="dice"])';
-const SWITCH = 'input.dx-checkbox--switch';
+const SWITCH = '[data-scope="switch"][data-part="root"]';
 const BEACON = 'svg:has(use[href*="sun"])';
 const RUN = 'button:has(use[href*="play"])';
 /** The Text output's icon; the engine's note draws none at all. Shared with the template shape. */
@@ -138,10 +138,10 @@ test.describe('compute scene template', () => {
     await expect(text).toBeVisible();
     // `text` was claimed by both the compute output and the engine's free-text node, and one registry
     // holds one def per name: the engine's won, so the output rendered as an empty `NoteNodeView` —
-    // no icon, no title, no run control, and a `data-part` the compute chrome never emits.
+    // no icon, no title, no run control, and the note view's `data-part="text"`, which the compute chrome never emits.
     await expect(text.locator(ARTICLE)).not.toHaveCount(0);
     await expect(text.locator(RUN)).toHaveCount(1);
-    await expect(text.locator('[data-part]')).toHaveCount(0);
+    await expect(text.locator('[data-part="text"]')).toHaveCount(0);
   });
 });
 

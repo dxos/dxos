@@ -109,7 +109,9 @@ const TIKTOKEN_ALIAS = { 'tiktoken/lite': TIKTOKEN_STUB };
 // Default Workers runtime compatibility for the opt-in `workerd` vitest project. `nodejs_compat`
 // exposes the Node.js built-ins (`node:crypto`, `node:buffer`, …) that @dxos packages resolve to,
 // mirroring what production DXOS functions run against on Cloudflare. Overridable per package.
-const WORKERD_COMPATIBILITY_DATE = '2024-11-01';
+// Pinned to the EDGE operation-service's date: before native `node:os` the pool falls back to a
+// polyfill that crashes workerd on load, and `@dxos/log` (via chalk) imports it.
+const WORKERD_COMPATIBILITY_DATE = '2026-03-17';
 const WORKERD_COMPATIBILITY_FLAGS = ['nodejs_compat'];
 
 // ---------------------------------------------------------------------------
@@ -741,6 +743,24 @@ const createBrowserProject = ({
     },
   });
 
+/**
+ * The vendored hypercore crypto compiles its wasm at module init, which workerd forbids; each module
+ * has a pure-JS fallback that activates when its wasm factory returns null.
+ */
+const WorkerdHypercoreWasmPlugin = (): Plugin => ({
+  name: 'workerd-hypercore-wasm',
+  enforce: 'pre',
+  transform(code, id) {
+    if (!/\/vendor(-|\/)hypercore\/.*\.mjs$/.test(id)) {
+      return;
+    }
+    return code.replaceAll(
+      'var compiled = new WebAssembly.Module(bytes);',
+      'var compiled; try { compiled = new WebAssembly.Module(bytes); } catch { module.exports = () => null; return; }',
+    );
+  },
+});
+
 // Runs tests inside the Cloudflare Workers runtime (`workerd`) via
 // `@cloudflare/vitest-pool-workers`. Opt-in (like `browser`/`storybook`) — only
 // `*.workerd.test.{ts,tsx}` files run here, so packages can exercise the same source
@@ -761,6 +781,7 @@ const createWorkerdProject = ({
       // Resolve `@dxos/*` to their `source` export (src/*.ts) so tests exercise source
       // instead of stale `dist/` build artifacts (mirrors the node/browser projects).
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
+      WorkerdHypercoreWasmPlugin(),
       // Log-meta injection only — no file sink (workerd has no filesystem).
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
       // Configures the vitest pool to execute tests in workerd. `@cloudflare/vitest-pool-workers`
@@ -770,13 +791,21 @@ const createWorkerdProject = ({
       import('@cloudflare/vitest-pool-workers').then(({ cloudflareTest }) =>
         cloudflareTest({
           ...(main !== undefined ? { main } : {}),
-          miniflare: { ...miniflare, compatibilityDate, compatibilityFlags },
+          miniflare: {
+            // Lets the pool hand a dependency's `.wasm` import to workerd as a compiled module;
+            // without a rule vite inlines it as JS glue, which workerd cannot instantiate.
+            modulesRules: [{ type: 'CompiledWasm', include: ['**/*.wasm'] }],
+            ...miniflare,
+            compatibilityDate,
+            compatibilityFlags,
+          },
         }),
       ),
     ],
     test: {
       name: 'workerd',
-      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 5000),
+      // Matches the node project: a cold plugin activation in workerd alone can take several seconds.
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 15_000),
       include: ['**/src/**/*.workerd.test.{ts,tsx}', '**/test/**/*.workerd.test.{ts,tsx}'],
       setupFiles,
     },

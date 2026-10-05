@@ -84,7 +84,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
       <header>
         <h2 className='text-lg font-semibold'>{tool.title}</h2>
         {tool.description && (
-          <p className='text-sm text-description mt-1'>{tool.description.replace(/\n/g, ' ').trim()}</p>
+          <p className='text-sm text-fg-muted mt-1'>{tool.description.replace(/\n/g, ' ').trim()}</p>
         )}
       </header>
       <Form.Root

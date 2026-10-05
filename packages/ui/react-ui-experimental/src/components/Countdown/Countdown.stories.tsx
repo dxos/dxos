@@ -17,7 +17,7 @@ const DefaultStory = (props: CountdownProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Button
             onClick={() => {
@@ -28,11 +28,11 @@ const DefaultStory = (props: CountdownProps) => {
             Replay
           </Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex items-center justify-center'>
+      </Panel.Header>
+      <Panel.Body classNames='flex items-center justify-center'>
         {done ? 'Rolling.' : null}
         <Countdown key={take} {...props} onComplete={() => setDone(true)} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

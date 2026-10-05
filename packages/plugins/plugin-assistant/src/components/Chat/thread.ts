@@ -58,10 +58,21 @@ export const projectThread = ({
   rewindFrom?: string;
 }): ThreadProjection => {
   const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
+  // A turn's messages that the feed has not caught up with yet continue from the thread's head, so
+  // they follow the lineage rather than join it: with no parent of their own, lineage would chain them
+  // to whatever sorts before them, which after a rewind is the abandoned reply.
+  const feedIds = new Set(feedMessages.map((message) => message.id));
+  const unrecorded = Array.sort(
+    Array.dedupeWith(
+      pendingMessages.filter((message) => !feedIds.has(message.id) && !isQueued(message)),
+      ({ id: a }, { id: b }) => a === b,
+    ),
+    byAppendOrder,
+  );
   // A queue entry is not a turn: the turn the agent runs from one appends its own user message, so an
   // entry never joins the thread. While it waits it belongs to the queue stack instead.
   const sorted = Array.sort(
-    all.filter((message) => !isQueued(message)),
+    feedMessages.filter((message) => !isQueued(message)),
     byAppendOrder,
   );
   // An in-flight entry is already speaking through the thread's user message, and its ack does not
@@ -75,16 +86,41 @@ export const projectThread = ({
     const index = sorted.findIndex((message) => message.id === rewindFrom);
     if (index === 0) {
       // Rewound to the first turn: nothing precedes it.
-      return { messages: [], queued };
+      return { messages: collapseToolRuns(unrecorded), queued };
     }
-    if (index > 0) {
-      return { messages: collapseToolRuns(Feed.history(sorted, { head: sorted[index - 1].id }).items), queued };
+    // Once a recorded message continues from the rewind head the fork is lineage, whether or not the
+    // pointer has been cleared yet.
+    if (index > 0 && !sorted.slice(index + 1).some((message) => Feed.getParent(message) === sorted[index - 1].id)) {
+      return {
+        messages: collapseToolRuns([...Feed.history(sorted, { head: sorted[index - 1].id }).items, ...unrecorded]),
+        queued,
+      };
     }
-    // Not present — a stale pointer (e.g. the message never replicated); fall through to the feed's
-    // own lineage rather than blanking the thread.
+    // Not present — a stale pointer (e.g. the message never replicated) — or already continued; fall
+    // through to the feed's own lineage rather than blanking the thread.
   }
 
-  return { messages: collapseToolRuns(Feed.history(sorted).items), queued };
+  return { messages: collapseToolRuns([...Feed.history(sorted).items, ...unrecorded]), queued };
+};
+
+/**
+ * Alarms that have woken the agent since the last prompt the user typed: the count the runtime caps at
+ * `Alarm.MAX_SELF_WAKES`, read from the feed so the status can show it.
+ */
+export const projectSelfWakes = ({
+  feedAlarms,
+  messages,
+}: {
+  feedAlarms: readonly Alarm.Alarm[];
+  messages: readonly Message.Message[];
+}): number => {
+  const lastPrompt = messages.findLast(
+    (message) =>
+      message.sender.role === 'user' &&
+      message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic'),
+  );
+  const since = lastPrompt?.created ?? '';
+  return feedAlarms.filter((alarm) => isConsumed(alarm) && alarm.created >= since).length;
 };
 
 /**
@@ -115,6 +151,26 @@ const isMachinery = (block: Message.Message['blocks'][number]): boolean =>
 const isToolOnly = (message: Message.Message): boolean =>
   message.blocks.length > 0 && message.blocks.every(isMachinery);
 
+/** A folded run and the messages it was folded from, keyed by the run's first message. */
+const foldedRuns = new WeakMap<Message.Message, { run: readonly Message.Message[]; folded: Message.Message }>();
+
+/**
+ * The run folded into one message, reusing the previous fold while the run holds the same messages:
+ * the thread re-projects on every streamed block, and a fresh object per pass made every tool panel
+ * in the thread look changed, re-rendering all of them for each block of the current turn.
+ */
+const foldRun = (run: readonly Message.Message[]): Message.Message => {
+  const [first] = run;
+  const cached = foldedRuns.get(first);
+  if (cached && cached.run.length === run.length && cached.run.every((message, index) => message === run[index])) {
+    return cached.folded;
+  }
+
+  const folded = { ...first, blocks: run.flatMap((entry) => entry.blocks) } as Message.Message;
+  foldedRuns.set(first, { run, folded });
+  return folded;
+};
+
 /**
  * Folds each run of tool-only messages into one, so a multi-step turn renders as a single panel.
  *
@@ -124,10 +180,13 @@ const isToolOnly = (message: Message.Message): boolean =>
  */
 export const collapseToolRuns = (messages: readonly Message.Message[]): Message.Message[] => {
   const collapsed: Message.Message[] = [];
+  // The messages each entry was folded from, so a later result can join the fold that holds its call.
+  const sources: (readonly Message.Message[])[] = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
     if (!isToolOnly(message)) {
       collapsed.push(message);
+      sources.push([message]);
       continue;
     }
 
@@ -135,15 +194,25 @@ export const collapseToolRuns = (messages: readonly Message.Message[]): Message.
     while (end + 1 < messages.length && isToolOnly(messages[end + 1])) {
       end++;
     }
-
-    if (end === index) {
-      collapsed.push(message);
-    } else {
-      const run = messages.slice(index, end + 1);
-      collapsed.push({ ...message, blocks: run.flatMap((entry) => entry.blocks) } as Message.Message);
-    }
-
+    const run = messages.slice(index, end + 1);
     index = end;
+
+    // A result held apart from its call by the request card that asked about it joins the call's panel; on its
+    // own it renders as an empty row.
+    const results = run.flatMap((entry) => entry.blocks);
+    const callIds = new Set(results.map((block) => (block._tag === 'toolResult' ? block.toolCallId : undefined)));
+    const caller = results.every((block) => block._tag === 'toolResult')
+      ? collapsed.findLastIndex((earlier) =>
+          earlier.blocks.some((block) => block._tag === 'toolCall' && callIds.has(block.toolCallId)),
+        )
+      : -1;
+    if (caller >= 0) {
+      sources[caller] = [...sources[caller], ...run];
+      collapsed[caller] = foldRun(sources[caller]);
+    } else {
+      collapsed.push(run.length === 1 ? message : foldRun(run));
+      sources.push(run);
+    }
   }
 
   return collapsed;

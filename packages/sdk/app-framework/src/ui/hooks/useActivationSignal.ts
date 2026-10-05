@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { EffectEx } from '@dxos/effect';
 
 import { type ActivationEvent } from '../../core/index.ts';
-import { useOptionalPluginManager } from '../components/index.ts';
+import { useOptionalPluginManager } from '../components/PluginManager/PluginManagerProvider.ts';
 
 /**
  * Fires an activation event on mount — the UI-side half of demand-driven activation. A container

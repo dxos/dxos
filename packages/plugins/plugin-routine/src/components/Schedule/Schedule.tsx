@@ -6,10 +6,12 @@ import React, { type PropsWithChildren, createContext, forwardRef, useCallback, 
 
 import { invariant } from '@dxos/invariant';
 import {
+  Checkbox,
+  DateInput,
   Field,
+  Input,
   ThemedClassName,
   ToggleGroup,
-  ToggleGroupItem,
   composable,
   composableProps,
   useTranslation,
@@ -242,7 +244,7 @@ export type ScheduleHeaderProps = { classNames?: string };
 const ScheduleHeader = forwardRef<HTMLDivElement, ScheduleHeaderProps>(({ classNames }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
   const { value, timezone } = useScheduleContext('Schedule.Header');
-  return <p className={mx('grow truncate text-description', classNames)}>{describeSchedule(value, timezone)}</p>;
+  return <p className={mx('grow truncate text-fg-muted', classNames)}>{describeSchedule(value, timezone)}</p>;
 });
 
 ScheduleHeader.displayName = 'Schedule.Header';
@@ -267,18 +269,18 @@ const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNa
   );
 
   return (
-    <ToggleGroup
+    <ToggleGroup.Root
       classNames='overflow-x-auto scrollbar-none'
       type='single'
       value={value.kind}
       onValueChange={handleKindChange}
     >
       {kinds.map((kind) => (
-        <ToggleGroupItem key={kind} value={kind}>
+        <ToggleGroup.Item key={kind} value={kind}>
           {t(KIND_LABEL_KEYS[kind])}
-        </ToggleGroupItem>
+        </ToggleGroup.Item>
       ))}
-    </ToggleGroup>
+    </ToggleGroup.Root>
   );
 });
 
@@ -346,8 +348,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.minute.label')}>
           <Field.Root>
-            <Field.Input
-              type='number'
+            <Input
               min={0}
               max={59}
               step={1}
@@ -357,6 +358,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 const minute = Math.min(59, Math.max(0, Math.round(Number(event.target.value) || 0)));
                 onChange({ kind: 'hourly', minute });
               }}
+              type='number'
             />
           </Field.Root>
         </LabelledRow>
@@ -366,7 +368,12 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.at.label')}>
           <Field.Root>
-            <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ kind: 'daily', time })} />
+            <DateInput
+              type='time'
+              hourCycle={12}
+              value={value.time}
+              onValueChange={(time: string) => onChange({ kind: 'daily', time })}
+            />
           </Field.Root>
         </LabelledRow>
       );
@@ -376,7 +383,12 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <div className='@container dx-container-type-inline-size flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
           <LabelledRow label={t('schedule.at.label')}>
             <Field.Root>
-              <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
+              <DateInput
+                type='time'
+                hourCycle={12}
+                value={value.time}
+                onValueChange={(time: string) => onChange({ ...value, time })}
+              />
             </Field.Root>
           </LabelledRow>
           <div className='flex shrink-0 items-center gap-2'>
@@ -387,9 +399,9 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 return (
                   <div key={day} className='flex shrink-0 items-center gap-1'>
                     <Field.Root>
-                      <Field.Checkbox
+                      <Checkbox
                         checked={checked}
-                        onCheckedChange={(next) => {
+                        onCheckedChange={({ checked: next }) => {
                           // Preserve the canonical `Days` order so the summary reads naturally.
                           const nextDays = next
                             ? Days.map((d) => d.value).filter((d) => d === day || value.days.includes(d))
@@ -415,8 +427,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <div className='flex items-center gap-3'>
           <LabelledRow label={t('schedule.day.label')}>
             <Field.Root>
-              <Field.Input
-                type='number'
+              <Input
                 min={1}
                 max={31}
                 step={1}
@@ -426,12 +437,18 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                   const day = Math.min(31, Math.max(1, Math.round(Number(event.target.value) || 1)));
                   onChange({ ...value, day });
                 }}
+                type='number'
               />
             </Field.Root>
           </LabelledRow>
           <LabelledRow label={t('schedule.at.label')}>
             <Field.Root>
-              <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
+              <DateInput
+                type='time'
+                hourCycle={12}
+                value={value.time}
+                onValueChange={(time: string) => onChange({ ...value, time })}
+              />
             </Field.Root>
           </LabelledRow>
         </div>
@@ -441,7 +458,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.cron.label')}>
           <Field.Root>
-            <Field.Input
+            <Input
               classNames='w-50 tabular-nums'
               placeholder='0 9 * * MON-FRI'
               value={value.cron}

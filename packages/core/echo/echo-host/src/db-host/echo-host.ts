@@ -35,6 +35,7 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
+import { countWork } from '@dxos/util';
 
 import {
   AutomergeHost,
@@ -1290,6 +1291,8 @@ export class EchoHost extends Resource {
         });
       }
 
+      countWork('echo.indexPasses');
+      countWork('echo.indexedObjects', combinedResult.updated);
       if (combinedResult.updated > 0) {
         this.#scheduleFtsFlush();
       }

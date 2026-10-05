@@ -31,7 +31,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
+import { Deferred, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -439,12 +439,10 @@ export const MailboxArticle = ({
 
   return (
     <Panel.Root data-testid='inbox.mailbox'>
-      <ElevationProvider elevation='positioned'>
-        <Panel.Toolbar asChild>
-          <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-        </Panel.Toolbar>
-      </ElevationProvider>
-      <Panel.Content>
+      <Panel.Header>
+        <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+      </Panel.Header>
+      <Panel.Body>
         <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
@@ -462,14 +460,14 @@ export const MailboxArticle = ({
             onAction={handleAction}
           />
         </Deferred>
-      </Panel.Content>
-      <Panel.Statusbar asChild>
+      </Panel.Body>
+      <Panel.Footer>
         <ProgressMeter
-          classNames='border-t border-subdued-separator'
+          classNames='border-t border-separator-subtle'
           state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
           onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
         />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

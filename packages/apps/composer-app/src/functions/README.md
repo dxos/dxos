@@ -21,7 +21,8 @@ wrangler dev
 ## Domain verification
 
 `WELL_KNOWN_DOCUMENTS` in `_worker.ts` serves what verifies this domain: `apple-app-site-association`
-(universal links and passkey `webcredentials` for `org.dxos.composer`) and `webauthn` (Related Origin
+(universal links for `org.dxos.composer`, passkey `webcredentials` for it and the dev and preview
+channels) and `webauthn` (Related Origin
 Requests). Both are Worker routes rather than static assets, because they must be served as
 `application/json` and their paths carry no extension for the asset server to infer that from.
 

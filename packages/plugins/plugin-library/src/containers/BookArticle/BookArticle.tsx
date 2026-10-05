@@ -5,7 +5,7 @@
 import React, { useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, ToggleGroup, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Book } from '#types';
@@ -29,18 +29,18 @@ export const BookArticle = ({ subject, role }: BookArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {/* Paging controls for the reader — shown only in reading mode; no-op for PDF/no content. */}
           {viewMode === 'read' && (
             <>
-              <Toolbar.IconButton
+              <Button
                 icon='ph--caret-left--regular'
                 iconOnly
                 label={t('previous-page.label')}
                 onClick={() => readerRef.current?.goLeft()}
               />
-              <Toolbar.IconButton
+              <Button
                 icon='ph--caret-right--regular'
                 iconOnly
                 label={t('next-page.label')}
@@ -58,22 +58,17 @@ export const BookArticle = ({ subject, role }: BookArticleProps) => {
               }
             }}
           >
-            <Toolbar.ToggleGroupIconItem value='info' icon='ph--info--regular' iconOnly label={t('view-info.label')} />
-            <Toolbar.ToggleGroupIconItem
-              value='read'
-              icon='ph--book-open--regular'
-              iconOnly
-              label={t('view-read.label')}
-            />
+            <ToggleGroup.Item value='info' icon='ph--info--regular' iconOnly label={t('view-info.label')} />
+            <ToggleGroup.Item value='read' icon='ph--book-open--regular' iconOnly label={t('view-read.label')} />
           </Toolbar.ToggleGroup>
         </Toolbar.Root>
-      </Panel.Toolbar>
+      </Panel.Header>
       {/* A single full-height grid track sizes the child by the track rather than a percentage: a plain
           grid item does not resolve a child's `block-size: 100%`, collapsing full-bleed content (the
           EPUB/PDF reader) to zero height. */}
-      <Panel.Content classNames='grid grid-rows-[minmax(0,1fr)]'>
+      <Panel.Body classNames='grid grid-rows-[minmax(0,1fr)]'>
         {viewMode === 'read' ? <BookReader ref={readerRef} book={subject} /> : <BookInfo book={subject} />}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

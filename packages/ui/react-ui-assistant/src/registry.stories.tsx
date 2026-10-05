@@ -339,6 +339,35 @@ export const ToolkitOperations: Story = {
   },
 };
 
+/** A code-mode `eval` call: named after the operation its code invokes, not after the `eval` tool. */
+export const ToolkitCodeModeNamed: Story = {
+  args: {
+    content: toolkit([
+      {
+        ...call('tc-1', 'eval', { code: "await ops.createTask({ title: 'Ship the release notes' })" }),
+        displayName: 'Create task',
+        displayIcon: 'ph--check-square--regular',
+      },
+      result('tc-1', 'eval', { output: 'Created task 01J9…', ok: true }),
+    ]),
+  },
+};
+
+/** A code-mode `eval` call spanning several operations: listed by name, in the order the code calls them. */
+export const ToolkitCodeModeNamedMultiple: Story = {
+  args: {
+    content: toolkit([
+      {
+        ...call('tc-1', 'eval', {
+          code: "const [task] = await query('com.example.type.task');\nawait ops.updateTask({ task, status: 'done' });\nawait ops.createTask({ title: 'Follow up' });",
+        }),
+        displayName: 'Update task, Create task',
+      },
+      result('tc-1', 'eval', { output: 'ok', ok: true }),
+    ]),
+  },
+};
+
 /** Status and reasoning narrate the run from inside its panel; settled, the summary counts. */
 export const ToolkitNarrated: Story = {
   args: {
@@ -386,6 +415,29 @@ export const ToolkitStatus: Story = {
 export const Summary: Story = {
   args: {
     content: '<summary>The thread settled on min-h-0 for every flex ancestor of the scroll viewport.</summary>',
+  },
+};
+
+const permission = {
+  _tag: 'request',
+  requestId: 'tool-2',
+  title: 'Run pnpm test',
+  options: [
+    { id: 'allow', label: 'Yes', kind: 'allow_once' },
+    { id: 'allow-always', label: 'Yes, and allow similar commands', kind: 'allow_always' },
+    { id: 'reject', label: 'No', kind: 'reject_once' },
+  ],
+};
+
+export const Request: Story = {
+  args: {
+    content: `<request message="message-1">${JSON.stringify(permission)}</request>`,
+  },
+};
+
+export const RequestAnswered: Story = {
+  args: {
+    content: `<request message="message-1">${JSON.stringify({ ...permission, resolution: { outcome: 'selected', optionId: 'allow' } })}</request>`,
   },
 };
 
