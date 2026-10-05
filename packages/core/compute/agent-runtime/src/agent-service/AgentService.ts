@@ -52,6 +52,7 @@ type AgentHandle =
 
 // TERMINATING counts as terminal: the handle is already `#finished`, so adopting one would drop
 // every submitted input and leave the turn waiting for a process that will never run again.
+// TODO(dmaretskyi): Process.isTerminal
 const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED ||
   state === Process.State.FAILED ||
@@ -153,6 +154,7 @@ export const layer = (
   Layer.effect(
     AgentService,
     Effect.gen(function* () {
+      // TODO(dmaretskyi): Combine them into single abstraction Process.Manager (def in @dxos/compute, implemented here that dispatches accross both -- make this replace existing Process.Monitor)
       const processManager = yield* ProcessManager.Service;
       // Required, not read optionally: an optional read is invisible to a `LayerSpec` stack, where a
       // tag this spec does not require is never in its context -- so every `location: 'edge'` session
