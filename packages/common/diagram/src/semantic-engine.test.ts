@@ -7,11 +7,11 @@ import { describe, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 
 import { analyze, errors } from './diagnostics.ts';
-import { compile, parse, toScene } from './dsl/index.ts';
+import { compile, parse, read, toScene } from './dsl/index.ts';
 import * as MermaidEngine from './mermaid-engine.ts';
 import type * as Scene from './scene.ts';
-import { measureBox, pitchFor } from './semantic-engine.ts';
-import { onBorder } from './semantic-route.ts';
+import { measureBox, pitchFor, stretchIssues } from './semantic-engine.ts';
+import * as Route from './semantic-route.ts';
 import * as Semantic from './semantic.ts';
 
 type Rect = { x: number; y: number; w: number; h: number };
@@ -465,7 +465,7 @@ describe('semantic engine', { timeout: 120_000 }, () => {
         expect(route.length, label).toBeGreaterThan(1);
         expect(gapTo(rect, route), label).toBeLessThanOrEqual(16);
         expect(
-          frames.some((frame) => onBorder(rect, frame, 0)),
+          frames.some((frame) => Route.onBorder(rect, frame, 0)),
           label,
         ).toBe(false);
       }
@@ -477,7 +477,7 @@ describe('semantic engine', { timeout: 120_000 }, () => {
       for (const { text: label, rect, route } of labelsOf(objects)) {
         expect(gapTo(rect, route), label).toBeLessThanOrEqual(16);
         expect(
-          frames.some((frame) => onBorder(rect, frame, 0)),
+          frames.some((frame) => Route.onBorder(rect, frame, 0)),
           label,
         ).toBe(false);
       }
@@ -545,6 +545,25 @@ describe('semantic engine', { timeout: 120_000 }, () => {
         /warning: Group "lower" is stretched/,
       );
     });
+
+    test('a stretched frame blames only hard relations, since soft is the suggested remedy', ({ expect }) => {
+      const cells = new Map([
+        ['X', { col: 0, row: 0 }],
+        ['Y', { col: 1, row: 0 }],
+        ['Z', { col: 2, row: 0 }],
+        ['A', { col: 0, row: 1 }],
+        ['B', { col: 2, row: 1 }],
+      ]);
+      const stretchedBy = (relation: string) => {
+        const { diagram } = read(`
+          group upper { node X  node Y right-of X  node Z right-of Y }
+          group lower below upper { node A ${relation} X  node B ${relation} Z }
+        `);
+        return diagram ? stretchIssues(diagram, cells).map(({ message }) => message) : [];
+      };
+      expect(stretchedBy('below')).toEqual([expect.stringMatching(/Group "lower" is stretched/)]);
+      expect(stretchedBy('~below')).toEqual([]);
+    });
   });
 
   test('a fan-in bus gathers its sources into one trunk with one arrowhead', ({ expect }) => {
@@ -569,6 +588,44 @@ describe('semantic engine', { timeout: 120_000 }, () => {
       expect(pathOf(objects, id).at(-1)).toEqual(junction);
     }
     expect(elements.some((element) => element.kind === 'text' && element.text === 'spawns')).toBe(true);
+  });
+
+  test('a bus no junction serves falls back to separate edges that do not run along each other', ({ expect }) => {
+    const sides = ['top', 'bottom', 'left', 'right'] as const;
+    const [hub, a, b] = [
+      { x: 0, y: 0, w: 64, h: 64 },
+      { x: 192, y: 384, w: 64, h: 64 },
+      { x: 192, y: 192, w: 64, h: 64 },
+    ];
+    // No channels, and every spoke-aligned junction lies inside a spoke, so the bus cannot form.
+    const pieces = Route.routeAll(
+      [],
+      [
+        {
+          id: 'bus',
+          hub: { rect: hub, node: 'H', sides },
+          spokes: [
+            { id: 'H-A', end: { rect: a, node: 'A', sides } },
+            { id: 'H-B', end: { rect: b, node: 'B', sides } },
+          ],
+          direction: 'out',
+        },
+      ],
+      { obstacles: [hub, a, b], avoid: [], channels: { xs: [], ys: [] } },
+    );
+    expect(pieces.map(({ id, bus }) => ({ id, bus }))).toEqual([
+      { id: 'H-A', bus: undefined },
+      { id: 'H-B', bus: undefined },
+    ]);
+    const runsOf = (points: readonly Scene.Point[]) => points.slice(1).map((point, index) => [points[index], point]);
+    const sharedRun = ([a1, a2]: Scene.Point[], [b1, b2]: Scene.Point[]) =>
+      a1.x === a2.x && b1.x === b2.x && a1.x === b1.x
+        ? Math.min(Math.max(a1.y, a2.y), Math.max(b1.y, b2.y)) - Math.max(Math.min(a1.y, a2.y), Math.min(b1.y, b2.y))
+        : a1.y === a2.y && b1.y === b2.y && a1.y === b1.y
+          ? Math.min(Math.max(a1.x, a2.x), Math.max(b1.x, b2.x)) - Math.max(Math.min(a1.x, a2.x), Math.min(b1.x, b2.x))
+          : 0;
+    const [first, second] = pieces.map(({ points }) => runsOf(points));
+    expect(first.some((run) => second.some((other) => sharedRun(run, other) > 0))).toBe(false);
   });
 
   test('scene statements in the same document pass through after the layout', ({ expect }) => {

@@ -71,6 +71,8 @@ export type SolveOptions = {
   alternatives?: readonly Scene.Command[][];
   /** Independent placement searches (default 6). */
   restarts?: number;
+  /** Routes the mermaid engine's candidates off the thread; see `MermaidEngine.CompileOptions`. */
+  emitCandidate?: MermaidEngine.CompileOptions['emitCandidate'];
 };
 
 export type Solution = {
@@ -742,7 +744,8 @@ export const stretchIssues = (diagram: Semantic.Diagram, cells: Map<string, Plac
     };
     const outside = diagram.nodes.flatMap((node) =>
       node.relations
-        .filter((relation) => members.has(node.id) !== members.has(relation.target))
+        // A soft relation is already the remedy the warning prescribes, so only hard ones are blamed.
+        .filter((relation) => !relation.soft && members.has(node.id) !== members.has(relation.target))
         .map((relation) => ({ owner: node.id, relation })),
     );
     return (['col', 'row'] as const).flatMap((axis): Semantic.Issue[] => {
@@ -868,7 +871,10 @@ export const compile = async (source: Semantic.Diagram, options: SolveOptions = 
   if (!mermaid) {
     return solve(source, options);
   }
-  const result = await MermaidEngine.layout(mermaid, { origin: source.origin }).catch(() => undefined);
+  const result = await MermaidEngine.layout(mermaid, {
+    origin: source.origin,
+    ...(options.emitCandidate ? { emitCandidate: options.emitCandidate } : {}),
+  }).catch(() => undefined);
   if (!result) {
     return solve(source, options);
   }

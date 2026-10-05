@@ -312,6 +312,19 @@ describe('connector geometry', () => {
     expect(metrics).toMatchObject({ connectors: 2, crossings: 0, routesThroughNodes: 0, bends: 3 });
     expect(diagnostics).toEqual([]);
   });
+
+  test('a connector with an empty path is skipped rather than bused', ({ expect }) => {
+    const objects: Scene.WorldObject[] = [
+      box('a', 0, 0),
+      box('b', 0, 200),
+      {
+        id: 'edges',
+        elements: [{ kind: 'line', id: 'stray-path', points: [] }, arrow('a-b', { x: 32, y: 64 }, { x: 32, y: 200 })],
+      },
+    ];
+    expect(analyze(objects).metrics).toMatchObject({ connectors: 1, crossings: 0 });
+    expect(routes(objects).map(({ ref }) => ref)).toEqual(['edges/a-b']);
+  });
 });
 
 describe('box labels', () => {

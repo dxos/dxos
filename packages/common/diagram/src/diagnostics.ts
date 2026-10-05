@@ -269,7 +269,8 @@ const connectors = (objects: readonly Scene.WorldObject[], targets: ReadonlyMap<
       }
     }
   }
-  return [...paths.values()];
+  // An empty path has no ends to bus or trace, and every reader of a connector assumes it has some.
+  return [...paths.values()].filter(({ points }) => points.length > 0);
 };
 
 const segmentsOf = ({ points }: { points: readonly Point[] }): Segment[] =>

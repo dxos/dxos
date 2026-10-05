@@ -146,7 +146,7 @@ const compileSource = async ({
   source,
 }: (typeof sources)[number]): Promise<{ commands: readonly Scene.Command[]; problems: readonly Dsl.Problem[] }> =>
   language === 'dsl'
-    ? EffectEx.runPromise(Dsl.compile(source))
+    ? EffectEx.runPromise(Dsl.compile(source, { emitCandidate }))
     : {
         commands: await MermaidEngine.compile(source, { emitCandidate, ...(LAYERING ? { layering: LAYERING } : {}) }),
         problems: [],

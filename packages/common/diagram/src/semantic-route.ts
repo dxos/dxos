@@ -783,7 +783,9 @@ export const routeAll = (pieces: readonly Piece[], buses: readonly BusRequest[],
       continue;
     }
     const { bus } = item;
-    item.pieces = bus.spokes.map((spoke) => {
+    // Spokes route one after another against those already drawn, so the separate edges avoid each other.
+    const drawnPieces: Piece[] = [];
+    for (const spoke of bus.spokes) {
       const [start, end] = bus.direction === 'out' ? [bus.hub, spoke.end] : [spoke.end, bus.hub];
       const piece: Piece = {
         id: spoke.id,
@@ -793,17 +795,18 @@ export const routeAll = (pieces: readonly Piece[], buses: readonly BusRequest[],
         points: [],
         ...(bus.significance === undefined ? {} : { significance: bus.significance }),
       };
-      const segments = others(item);
-      const route = bestRoute(piece, segments, terminalsOf(piecesOf(items)), context);
+      const segments = [...others(item), ...drawnPieces.flatMap((drawnPiece) => segmentsOf(drawnPiece))];
+      const route = bestRoute(piece, segments, terminalsOf([...piecesOf(items), ...drawnPieces]), context);
       const drawn = route ?? fallback(piece, context);
-      return {
+      drawnPieces.push({
         ...piece,
         points: drawn.points,
         startSide: drawn.startSide,
         endSide: drawn.endSide,
         ...(route ? {} : { forced: true }),
-      };
-    });
+      });
+    }
+    item.pieces = drawnPieces;
   }
   return piecesOf(items);
 };

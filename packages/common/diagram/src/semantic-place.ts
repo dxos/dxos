@@ -100,9 +100,14 @@ type Index = {
   edges: {
     from: number;
     to: number;
-    start?: readonly Semantic.Side[];
-    end?: readonly Semantic.Side[];
     upward?: boolean;
+    /**
+     * The best template per displacement, which depends only on the signs of dx and dy: its bends
+     * and the indices into `ALL_SIDES` of its sides, indexed by `(sign dx + 1) * 3 + sign dy + 1`.
+     */
+    bends: Float64Array;
+    starts: Uint8Array;
+    ends: Uint8Array;
   }[];
   relations: { from: number; kind: Semantic.RelationKind; target: number; soft: boolean; weight?: number }[];
   groupRelations: { from: number; kind: Semantic.RelationKind; target: number; soft: boolean }[];
@@ -122,6 +127,9 @@ type Index = {
   /** Shape of the whole placement, for a group laid out on its own. */
   whole?: GroupShape;
   aspect?: number;
+  /** Every node index, for the bounds of the whole placement. */
+  all: number[];
+  scratch: Scratch;
 };
 
 const indexOf = (input: PlaceInput): Index => {
@@ -151,7 +159,7 @@ const indexOf = (input: PlaceInput): Index => {
     const to = byId.get(edge.to);
     return from === undefined || to === undefined || from === to
       ? []
-      : [{ from, to, start: edge.sides?.start, end: edge.sides?.end, upward: edge.upward }];
+      : [{ from, to, upward: edge.upward, ...templatesOf(edge.sides?.start, edge.sides?.end) }];
   });
   const neighbours: Set<number>[] = ids.map(() => new Set());
   const inDegree = new Int32Array(count);
@@ -203,6 +211,8 @@ const indexOf = (input: PlaceInput): Index => {
     flow: input.flow,
     box: input.box ?? { x: 0.25, y: 0.22 },
     shapes: input.groups.map((group) => input.shapes?.get(group)),
+    all: ids.map((_, node) => node),
+    scratch: scratchFor(edges.length, input.groups.length),
     ...(input.aspect === undefined ? {} : { aspect: input.aspect }),
   };
 };
@@ -263,6 +273,36 @@ export const templateBends = (dx: number, dy: number, start: Semantic.Side, end:
   return along > 0 && ahead > 0 ? 1 : 3;
 };
 
+/** The best template for each sign of displacement, first in side order among equals. */
+const templatesOf = (
+  start: readonly Semantic.Side[] | undefined,
+  end: readonly Semantic.Side[] | undefined,
+): { bends: Float64Array; starts: Uint8Array; ends: Uint8Array } => {
+  const bends = new Float64Array(9);
+  const starts = new Uint8Array(9);
+  const ends = new Uint8Array(9);
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      const template = (dx + 1) * 3 + dy + 1;
+      let best = Infinity;
+      let pair: [Semantic.Side, Semantic.Side] = ['bottom', 'top'];
+      for (const startSide of start ?? ALL_SIDES) {
+        for (const endSide of end ?? ALL_SIDES) {
+          const value = templateBends(dx, dy, startSide, endSide);
+          if (value < best) {
+            best = value;
+            pair = [startSide, endSide];
+          }
+        }
+      }
+      bends[template] = best;
+      starts[template] = ALL_SIDES.indexOf(pair[0]);
+      ends[template] = ALL_SIDES.indexOf(pair[1]);
+    }
+  }
+  return { bends, starts, ends };
+};
+
 /** A random source reproducible from a seed, so a document always lays out the same way. */
 const random = (seed: number) => {
   let state = (seed * 2654435761) >>> 0 || 1;
@@ -279,30 +319,38 @@ const random = (seed: number) => {
 /** Cell coordinates per node index; NaN marks a node not yet placed. */
 type State = { col: Float64Array; row: Float64Array };
 
-const keyOf = (col: number, row: number) => `${col}:${row}`;
+// Cells are whole numbers; near the origin one packs into a small integer, which a Map hashes fastest,
+// and anything farther into a disjoint range of exact larger numbers.
+const NEAR = 2 ** 14;
+const FAR_OFFSET = 2 ** 20;
+const keyOf = (col: number, row: number) =>
+  col > -NEAR && col < NEAR && row > -NEAR && row < NEAR
+    ? (col + NEAR) * 2 * NEAR + (row + NEAR)
+    : 2 ** 31 + (col + FAR_OFFSET) * 2 * FAR_OFFSET + (row + FAR_OFFSET);
 
 const clone = (state: State): State => ({ col: Float64Array.from(state.col), row: Float64Array.from(state.row) });
 
 type Bounds = { minCol: number; maxCol: number; minRow: number; maxRow: number };
 
 const boundsOf = (state: State, nodes: readonly number[]): Bounds | undefined => {
-  let bounds: Bounds | undefined;
+  let minCol = Infinity;
+  let maxCol = -Infinity;
+  let minRow = Infinity;
+  let maxRow = -Infinity;
+  let any = false;
   for (const node of nodes) {
     const col = state.col[node];
-    const row = state.row[node];
     if (Number.isNaN(col)) {
       continue;
     }
-    bounds = bounds
-      ? {
-          minCol: Math.min(bounds.minCol, col),
-          maxCol: Math.max(bounds.maxCol, col),
-          minRow: Math.min(bounds.minRow, row),
-          maxRow: Math.max(bounds.maxRow, row),
-        }
-      : { minCol: col, maxCol: col, minRow: row, maxRow: row };
+    const row = state.row[node];
+    any = true;
+    minCol = Math.min(minCol, col);
+    maxCol = Math.max(maxCol, col);
+    minRow = Math.min(minRow, row);
+    maxRow = Math.max(maxRow, row);
   }
-  return bounds;
+  return any ? { minCol, maxCol, minRow, maxRow } : undefined;
 };
 
 const holds = (kind: Semantic.RelationKind, from: Cell, target: Cell): boolean => {
@@ -339,37 +387,46 @@ const holdsBetween = (kind: Semantic.RelationKind, from: Bounds, target: Bounds)
   }
 };
 
-/** Cells between the two of a satisfied relation, beyond adjacency; a relation reads best between neighbours. */
-const slackOf = (kind: Semantic.RelationKind, from: Cell, target: Cell): number =>
-  kind === 'right-of' || kind === 'left-of'
-    ? Math.abs(from.col - target.col) - 1
-    : kind === 'above' || kind === 'below'
-      ? Math.abs(from.row - target.row) - 1
-      : 0;
-
-const cross = (origin: Vector, a: Vector, b: Vector) =>
-  (a.x - origin.x) * (b.y - origin.y) - (a.y - origin.y) * (b.x - origin.x);
-
-const segmentsCross = (a1: Vector, a2: Vector, b1: Vector, b2: Vector): boolean => {
-  const d1 = cross(a1, a2, b1);
-  const d2 = cross(a1, a2, b2);
-  const d3 = cross(b1, b2, a1);
-  const d4 = cross(b1, b2, a2);
-  return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+/** Whether the segments (a1x, a1y)–(a2x, a2y) and (b1x, b1y)–(b2x, b2y) cross at a point interior to both. */
+const segmentsCross = (
+  a1x: number,
+  a1y: number,
+  a2x: number,
+  a2y: number,
+  b1x: number,
+  b1y: number,
+  b2x: number,
+  b2y: number,
+): boolean => {
+  const d1 = (a2x - a1x) * (b1y - a1y) - (a2y - a1y) * (b1x - a1x);
+  const d2 = (a2x - a1x) * (b2y - a1y) - (a2y - a1y) * (b2x - a1x);
+  if (!((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0))) {
+    return false;
+  }
+  const d3 = (b2x - b1x) * (a1y - b1y) - (b2y - b1y) * (a1x - b1x);
+  const d4 = (b2x - b1x) * (a2y - b1y) - (b2y - b1y) * (a2x - b1x);
+  return (d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0);
 };
 
-/** Whether the segment passes through the box centred at `centre` with half-extents `half`. */
-const segmentHitsBox = (a: Vector, b: Vector, centre: Vector, half: Vector): boolean => {
+/** Whether the segment (ax, ay)–(bx, by) passes through the box centred at (cx, cy) with half-extents (hx, hy). */
+const segmentHitsBox = (
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  cx: number,
+  cy: number,
+  hx: number,
+  hy: number,
+): boolean => {
   let enter = 0;
   let exit = 1;
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  for (const [p, q] of [
-    [-dx, a.x - (centre.x - half.x)],
-    [dx, centre.x + half.x - a.x],
-    [-dy, a.y - (centre.y - half.y)],
-    [dy, centre.y + half.y - a.y],
-  ]) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  // Liang–Barsky clipping against the four slabs, in the order left, right, top, bottom.
+  for (let slab = 0; slab < 4; slab++) {
+    const p = slab === 0 ? -dx : slab === 1 ? dx : slab === 2 ? -dy : dy;
+    const q = slab === 0 ? ax - (cx - hx) : slab === 1 ? cx + hx - ax : slab === 2 ? ay - (cy - hy) : cy + hy - ay;
     if (p === 0) {
       if (q < 0) {
         return false;
@@ -386,14 +443,33 @@ const segmentHitsBox = (a: Vector, b: Vector, centre: Vector, half: Vector): boo
   return enter < exit;
 };
 
-/** The route a template draws, in cell space: straight, L by its start side, Z through the middle, or U beyond both. */
-const shapeOf = (from: Vector, to: Vector, bends: number, [start, end]: [Semantic.Side, Semantic.Side]): Vector[] => {
+/** Floats per template polyline: at most four points. */
+const LINE_STRIDE = 8;
+
+/**
+ * Writes the route a template draws, in cell space, into `points` at `offset` and returns its point
+ * count: straight, L by its start side, Z through the middle, or U beyond both.
+ */
+const shapeInto = (
+  points: Float64Array,
+  offset: number,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  bends: number,
+  start: Semantic.Side,
+  end: Semantic.Side,
+): number => {
   const alongX = start === 'left' || start === 'right';
-  if (bends === 0) {
-    return [from, to];
-  }
+  points[offset] = fromX;
+  points[offset + 1] = fromY;
   if (bends === 1) {
-    return [from, alongX ? { x: to.x, y: from.y } : { x: from.x, y: to.y }, to];
+    points[offset + 2] = alongX ? toX : fromX;
+    points[offset + 3] = alongX ? fromY : toY;
+    points[offset + 4] = toX;
+    points[offset + 5] = toY;
+    return 3;
   }
   if (bends === 2) {
     const out = OUT[start];
@@ -401,117 +477,275 @@ const shapeOf = (from: Vector, to: Vector, bends: number, [start, end]: [Semanti
     const opposed = out.x === -into.x && out.y === -into.y;
     const middle = alongX
       ? opposed
-        ? (out.x > 0 ? Math.max(from.x, to.x) : Math.min(from.x, to.x)) + out.x * 0.5
-        : (from.x + to.x) / 2
+        ? (out.x > 0 ? Math.max(fromX, toX) : Math.min(fromX, toX)) + out.x * 0.5
+        : (fromX + toX) / 2
       : opposed
-        ? (out.y > 0 ? Math.max(from.y, to.y) : Math.min(from.y, to.y)) + out.y * 0.5
-        : (from.y + to.y) / 2;
-    return alongX
-      ? [from, { x: middle, y: from.y }, { x: middle, y: to.y }, to]
-      : [from, { x: from.x, y: middle }, { x: to.x, y: middle }, to];
+        ? (out.y > 0 ? Math.max(fromY, toY) : Math.min(fromY, toY)) + out.y * 0.5
+        : (fromY + toY) / 2;
+    points[offset + 2] = alongX ? middle : fromX;
+    points[offset + 3] = alongX ? fromY : middle;
+    points[offset + 4] = alongX ? middle : toX;
+    points[offset + 5] = alongX ? toY : middle;
+    points[offset + 6] = toX;
+    points[offset + 7] = toY;
+    return 4;
   }
-  return [from, to];
+  points[offset + 2] = toX;
+  points[offset + 3] = toY;
+  return 2;
 };
 
-const polylinesCross = (left: readonly Vector[], right: readonly Vector[]): boolean =>
-  left
-    .slice(1)
-    .some((a2, first) => right.slice(1).some((b2, second) => segmentsCross(left[first], a2, right[second], b2)));
+/** Whether two template polylines, as written by {@link shapeInto}, cross. */
+const polylinesCross = (points: Float64Array, left: number, leftCount: number, right: number, rightCount: number) => {
+  for (let first = 1; first < leftCount; first++) {
+    const a = left + first * 2;
+    for (let second = 1; second < rightCount; second++) {
+      const b = right + second * 2;
+      if (
+        segmentsCross(
+          points[a - 2],
+          points[a - 1],
+          points[a],
+          points[a + 1],
+          points[b - 2],
+          points[b - 1],
+          points[b],
+          points[b + 1],
+        )
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+/** Per-call working memory for {@link score}, sized to an index so scoring allocates nothing. */
+type Scratch = {
+  /** Per drawn line: its edge's endpoints, point count, whether it bends, and its bounding box. */
+  lineFrom: Int32Array;
+  lineTo: Int32Array;
+  lineCount: Uint8Array;
+  lineBent: Uint8Array;
+  lineBox: Float64Array;
+  points: Float64Array;
+  sides: Int32Array;
+  /** Per group: its bounds as min col, max col, min row, max row, and whether it has any placed member. */
+  bounds: Float64Array;
+  hasBounds: Uint8Array;
+};
+
+const scratchFor = (edges: number, groups: number): Scratch => ({
+  lineFrom: new Int32Array(edges),
+  lineTo: new Int32Array(edges),
+  lineCount: new Uint8Array(edges),
+  lineBent: new Uint8Array(edges),
+  lineBox: new Float64Array(edges * 4),
+  points: new Float64Array(edges * LINE_STRIDE),
+  sides: new Int32Array(4),
+  bounds: new Float64Array(groups * 4),
+  hasBounds: new Uint8Array(groups),
+});
+
+/** Whether a relation of `kind` holds between two cells, given as coordinates. */
+const holdsAt = (kind: Semantic.RelationKind, fromCol: number, fromRow: number, toCol: number, toRow: number) => {
+  switch (kind) {
+    case 'right-of':
+      return fromRow === toRow && fromCol > toCol;
+    case 'left-of':
+      return fromRow === toRow && fromCol < toCol;
+    case 'below':
+      return fromCol === toCol && fromRow > toRow;
+    case 'above':
+      return fromCol === toCol && fromRow < toRow;
+    case 'same-row':
+      return fromRow === toRow;
+    case 'same-col':
+      return fromCol === toCol;
+  }
+};
+
+/** Cost of a shape against its limits, for bounds given as coordinates. */
+const shapeCostOf = (
+  shape: GroupShape | undefined,
+  minCol: number,
+  maxCol: number,
+  minRow: number,
+  maxRow: number,
+  hard: number,
+): number => (shape ? shapeCost(shape, { minCol, maxCol, minRow, maxRow }, hard) : 0);
 
 /**
  * The placement score: lower is better. Terms involving a node not yet placed are skipped, so the
- * greedy seating can score a partial state.
+ * greedy seating can score a partial state. It runs for every state the search tries, so it works
+ * in the index's scratch arrays and sums its terms in a fixed order, which keeps a placement
+ * reproducible to the last bit.
  */
-const score = (index: Index, state: State, occupied: Map<string, number>, strictness = 1): number => {
+const score = (index: Index, state: State, occupied: Map<number, number>, strictness = 1): number => {
   // Annealing starts with relations and group bounds as strong preferences and tightens them into
   // rules, so an early state that breaks one is not a wall the search can never climb over.
   const hard = WEIGHT.soft * 3 + (WEIGHT.hard - WEIGHT.soft * 3) * strictness;
   const infeasible = WEIGHT.soft * 30 + (WEIGHT.infeasible - WEIGHT.soft * 30) * strictness;
   const { col, row } = state;
-  const placed = (node: number) => !Number.isNaN(col[node]);
+  const { scratch } = index;
+  const { lineFrom, lineTo, lineCount, lineBent, lineBox, points } = scratch;
   let total = 0;
 
   // Edges: the bends of the best template, blocked straight runs, length and flow.
   // Each edge as the polyline of its best template, in cell space, for the crossing and through-box terms.
-  const lines: { from: number; to: number; points: Vector[]; bent: boolean }[] = [];
+  let lines = 0;
   for (const edge of index.edges) {
-    if (!placed(edge.from) || !placed(edge.to)) {
+    const fromCol = col[edge.from];
+    const toCol = col[edge.to];
+    if (Number.isNaN(fromCol) || Number.isNaN(toCol)) {
       continue;
     }
-    const dx = col[edge.to] - col[edge.from];
-    const dy = row[edge.to] - row[edge.from];
-    let bends = Infinity;
-    let pair: [Semantic.Side, Semantic.Side] = ['bottom', 'top'];
-    for (const start of edge.start ?? ALL_SIDES) {
-      for (const end of edge.end ?? ALL_SIDES) {
-        const value = templateBends(dx, dy, start, end);
-        if (value < bends) {
-          bends = value;
-          pair = [start, end];
-        }
-      }
-    }
+    const fromRow = row[edge.from];
+    const toRow = row[edge.to];
+    const dx = toCol - fromCol;
+    const dy = toRow - fromRow;
+    const template = (Math.sign(dx) + 1) * 3 + Math.sign(dy) + 1;
+    const bends = edge.bends[template];
     const blocked =
-      (bends === 0 && blockedStraight(col[edge.from], row[edge.from], dx, dy, occupied)) ||
-      (bends === 1 && blockedCorners(col[edge.from], row[edge.from], dx, dy, occupied));
+      (bends === 0 && blockedStraight(fromCol, fromRow, dx, dy, occupied)) ||
+      (bends === 1 && blockedCorners(fromCol, fromRow, dx, dy, occupied));
     total += WEIGHT.bend * (blocked ? 2 : bends) + WEIGHT.length * (Math.abs(dx) + Math.abs(dy));
     const along = index.flow === 'down' ? dy : index.flow === 'up' ? -dy : index.flow === 'right' ? dx : -dx;
     const forward = edge.upward ? -along : along;
     total += forward < 0 ? WEIGHT.backward : forward === 0 ? WEIGHT.sideways : 0;
-    const from = { x: col[edge.from], y: row[edge.from] };
-    lines.push({
-      from: edge.from,
-      to: edge.to,
-      points: blocked ? [] : shapeOf(from, { x: col[edge.to], y: row[edge.to] }, bends, pair),
-      bent: bends > 0,
-    });
+    lineFrom[lines] = edge.from;
+    lineTo[lines] = edge.to;
+    lineBent[lines] = bends > 0 ? 1 : 0;
+    const count = blocked
+      ? 0
+      : shapeInto(
+          points,
+          lines * LINE_STRIDE,
+          fromCol,
+          fromRow,
+          toCol,
+          toRow,
+          bends,
+          ALL_SIDES[edge.starts[template]],
+          ALL_SIDES[edge.ends[template]],
+        );
+    lineCount[lines] = count;
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (let point = 0; point < count; point++) {
+      const x = points[lines * LINE_STRIDE + point * 2];
+      const y = points[lines * LINE_STRIDE + point * 2 + 1];
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
+    }
+    lineBox[lines * 4] = minX;
+    lineBox[lines * 4 + 1] = maxX;
+    lineBox[lines * 4 + 2] = minY;
+    lineBox[lines * 4 + 3] = maxY;
+    lines++;
   }
 
-  for (let first = 0; first < lines.length; first++) {
-    const left = lines[first];
-    for (let second = first + 1; second < lines.length; second++) {
-      const right = lines[second];
-      if (left.from === right.from || left.from === right.to || left.to === right.from || left.to === right.to) {
+  const half = index.box;
+  for (let first = 0; first < lines; first++) {
+    const leftFrom = lineFrom[first];
+    const leftTo = lineTo[first];
+    const leftCount = lineCount[first];
+    const leftMinX = lineBox[first * 4];
+    const leftMaxX = lineBox[first * 4 + 1];
+    const leftMinY = lineBox[first * 4 + 2];
+    const leftMaxY = lineBox[first * 4 + 3];
+    for (let second = first + 1; second < lines; second++) {
+      const rightFrom = lineFrom[second];
+      const rightTo = lineTo[second];
+      if (leftFrom === rightFrom || leftFrom === rightTo || leftTo === rightFrom || leftTo === rightTo) {
         continue;
       }
-      if (polylinesCross(left.points, right.points)) {
+      // A proper crossing lies inside both bounding boxes, so disjoint boxes cannot cross.
+      if (
+        lineBox[second * 4] > leftMaxX ||
+        lineBox[second * 4 + 1] < leftMinX ||
+        lineBox[second * 4 + 2] > leftMaxY ||
+        lineBox[second * 4 + 3] < leftMinY
+      ) {
+        continue;
+      }
+      if (polylinesCross(points, first * LINE_STRIDE, leftCount, second * LINE_STRIDE, lineCount[second])) {
         total += WEIGHT.crossing;
       }
     }
     // A straight run is already charged when blocked; a bent one may still cut a box.
-    if (left.bent) {
+    if (lineBent[first] === 1) {
       for (let node = 0; node < index.count; node++) {
-        if (node === left.from || node === left.to || !placed(node)) {
+        const centreX = col[node];
+        if (node === leftFrom || node === leftTo || Number.isNaN(centreX)) {
           continue;
         }
-        const centre = { x: col[node], y: row[node] };
-        if (left.points.slice(1).some((to, position) => segmentHitsBox(left.points[position], to, centre, index.box))) {
-          total += WEIGHT.through;
+        const centreY = row[node];
+        // A box clear of the line's bounding box cannot be cut by it.
+        if (
+          centreX + half.x < leftMinX ||
+          centreX - half.x > leftMaxX ||
+          centreY + half.y < leftMinY ||
+          centreY - half.y > leftMaxY
+        ) {
+          continue;
+        }
+        const base = first * LINE_STRIDE;
+        for (let point = 1; point < leftCount; point++) {
+          const at = base + point * 2;
+          if (
+            segmentHitsBox(points[at - 2], points[at - 1], points[at], points[at + 1], centreX, centreY, half.x, half.y)
+          ) {
+            total += WEIGHT.through;
+            break;
+          }
         }
       }
     }
   }
 
   // Hubs: one neighbour per side reads best; chains: keep a pass-through node in line.
+  const sides = scratch.sides;
   for (let node = 0; node < index.count; node++) {
-    if (!placed(node)) {
+    const nodeCol = col[node];
+    if (Number.isNaN(nodeCol)) {
       continue;
     }
-    const around = index.neighbours[node].filter(placed);
-    if (around.length >= 3) {
-      const sides = [0, 0, 0, 0];
-      for (const other of around) {
-        const dx = col[other] - col[node];
-        const dy = row[other] - row[node];
-        sides[Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 0 : 1) : dy > 0 ? 2 : 3]++;
+    const nodeRow = row[node];
+    const neighbours = index.neighbours[node];
+    let around = 0;
+    let firstAround = -1;
+    let secondAround = -1;
+    sides.fill(0);
+    for (const other of neighbours) {
+      if (Number.isNaN(col[other])) {
+        continue;
       }
-      total += WEIGHT.hub * sides.reduce((sum, count) => sum + (count * (count - 1)) / 2, 0);
+      if (around === 0) {
+        firstAround = other;
+      } else if (around === 1) {
+        secondAround = other;
+      }
+      around++;
+      const dx = col[other] - nodeCol;
+      const dy = row[other] - nodeRow;
+      sides[Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 0 : 1) : dy > 0 ? 2 : 3]++;
     }
-    if (around.length === 2 && index.inDegree[node] === 1 && index.outDegree[node] === 1) {
-      const [first, second] = around;
+    if (around >= 3) {
+      let pairs = 0;
+      for (let side = 0; side < 4; side++) {
+        pairs += (sides[side] * (sides[side] - 1)) / 2;
+      }
+      total += WEIGHT.hub * pairs;
+    }
+    if (around === 2 && index.inDegree[node] === 1 && index.outDegree[node] === 1) {
       const inLine =
-        (col[first] === col[node] && col[second] === col[node]) ||
-        (row[first] === row[node] && row[second] === row[node]);
+        (col[firstAround] === nodeCol && col[secondAround] === nodeCol) ||
+        (row[firstAround] === nodeRow && row[secondAround] === nodeRow);
       if (!inLine) {
         total += WEIGHT.chain;
       }
@@ -520,54 +754,106 @@ const score = (index: Index, state: State, occupied: Map<string, number>, strict
 
   // Relations.
   for (const relation of index.relations) {
-    if (!placed(relation.from) || !placed(relation.target)) {
+    const fromCol = col[relation.from];
+    const targetCol = col[relation.target];
+    if (Number.isNaN(fromCol) || Number.isNaN(targetCol)) {
       continue;
     }
-    const from = { col: col[relation.from], row: row[relation.from] };
-    const target = { col: col[relation.target], row: row[relation.target] };
-    if (holds(relation.kind, from, target)) {
-      total += WEIGHT.near * slackOf(relation.kind, from, target);
+    const fromRow = row[relation.from];
+    const targetRow = row[relation.target];
+    if (holdsAt(relation.kind, fromCol, fromRow, targetCol, targetRow)) {
+      total +=
+        WEIGHT.near *
+        (relation.kind === 'right-of' || relation.kind === 'left-of'
+          ? Math.abs(fromCol - targetCol) - 1
+          : relation.kind === 'above' || relation.kind === 'below'
+            ? Math.abs(fromRow - targetRow) - 1
+            : 0);
     } else {
       total += relation.soft ? (relation.weight ?? WEIGHT.soft) : hard;
     }
   }
 
   // Groups: exclusive, disjoint, compact, and related as stated.
-  const bounds = index.members.map((members) => boundsOf(state, members));
-  bounds.forEach((box, group) => {
-    if (!box) {
-      return;
+  const { bounds, hasBounds } = scratch;
+  const groups = index.members.length;
+  for (let group = 0; group < groups; group++) {
+    let minCol = Infinity;
+    let maxCol = -Infinity;
+    let minRow = Infinity;
+    let maxRow = -Infinity;
+    let placedMembers = 0;
+    for (const member of index.members[group]) {
+      const memberCol = col[member];
+      if (Number.isNaN(memberCol)) {
+        continue;
+      }
+      const memberRow = row[member];
+      placedMembers++;
+      minCol = Math.min(minCol, memberCol);
+      maxCol = Math.max(maxCol, memberCol);
+      minRow = Math.min(minRow, memberRow);
+      maxRow = Math.max(maxRow, memberRow);
     }
-    total += shapeCost(index.shapes[group], box, hard);
-    for (let row = box.minRow; row <= box.maxRow; row++) {
-      for (let col = box.minCol; col <= box.maxCol; col++) {
-        const node = occupied.get(keyOf(col, row));
+    hasBounds[group] = placedMembers > 0 ? 1 : 0;
+    bounds[group * 4] = minCol;
+    bounds[group * 4 + 1] = maxCol;
+    bounds[group * 4 + 2] = minRow;
+    bounds[group * 4 + 3] = maxRow;
+  }
+  for (let group = 0; group < groups; group++) {
+    if (hasBounds[group] === 0) {
+      continue;
+    }
+    const minCol = bounds[group * 4];
+    const maxCol = bounds[group * 4 + 1];
+    const minRow = bounds[group * 4 + 2];
+    const maxRow = bounds[group * 4 + 3];
+    total += shapeCostOf(index.shapes[group], minCol, maxCol, minRow, maxRow, hard);
+    for (let cellRow = minRow; cellRow <= maxRow; cellRow++) {
+      for (let cellCol = minCol; cellCol <= maxCol; cellCol++) {
+        const node = occupied.get(keyOf(cellCol, cellRow));
         if (node !== undefined && index.group[node] !== group) {
           total += infeasible;
         }
       }
     }
-    const area = (box.maxCol - box.minCol + 1) * (box.maxRow - box.minRow + 1);
-    total += WEIGHT.slack * (area - index.members[group].filter(placed).length);
-    for (let other = group + 1; other < bounds.length; other++) {
-      const peer = bounds[other];
+    let placedMembers = 0;
+    for (const member of index.members[group]) {
+      if (!Number.isNaN(col[member])) {
+        placedMembers++;
+      }
+    }
+    const area = (maxCol - minCol + 1) * (maxRow - minRow + 1);
+    total += WEIGHT.slack * (area - placedMembers);
+    for (let other = group + 1; other < groups; other++) {
       if (
-        peer &&
-        box.minCol <= peer.maxCol &&
-        peer.minCol <= box.maxCol &&
-        box.minRow <= peer.maxRow &&
-        peer.minRow <= box.maxRow
+        hasBounds[other] === 1 &&
+        minCol <= bounds[other * 4 + 1] &&
+        bounds[other * 4] <= maxCol &&
+        minRow <= bounds[other * 4 + 3] &&
+        bounds[other * 4 + 2] <= maxRow
       ) {
         total += infeasible;
       }
     }
-  });
+  }
   for (const relation of index.groupRelations) {
-    const from = bounds[relation.from];
-    const target = bounds[relation.target];
-    if (!from || !target) {
+    if (hasBounds[relation.from] === 0 || hasBounds[relation.target] === 0) {
       continue;
     }
+    const from = {
+      minCol: bounds[relation.from * 4],
+      maxCol: bounds[relation.from * 4 + 1],
+      minRow: bounds[relation.from * 4 + 2],
+      maxRow: bounds[relation.from * 4 + 3],
+    };
+    const target = {
+      minCol: bounds[relation.target * 4],
+      maxCol: bounds[relation.target * 4 + 1],
+      minRow: bounds[relation.target * 4 + 2],
+      maxRow: bounds[relation.target * 4 + 3],
+    };
     if (!holdsBetween(relation.kind, from, target)) {
       total += relation.soft ? WEIGHT.soft : hard;
       continue;
@@ -595,10 +881,7 @@ const score = (index: Index, state: State, occupied: Map<string, number>, strict
   }
 
   // Pins hold by construction; compactness breaks the remaining ties.
-  const all = boundsOf(
-    state,
-    Array.from({ length: index.count }, (_, node) => node),
-  );
+  const all = boundsOf(state, index.all);
   if (all) {
     total += WEIGHT.extent * (all.maxCol - all.minCol + 1 + (all.maxRow - all.minRow + 1));
     total += shapeCost(index.whole, all, hard);
@@ -611,7 +894,7 @@ const score = (index: Index, state: State, occupied: Map<string, number>, strict
   return total;
 };
 
-const blockedStraight = (col: number, row: number, dx: number, dy: number, occupied: Map<string, number>): boolean => {
+const blockedStraight = (col: number, row: number, dx: number, dy: number, occupied: Map<number, number>): boolean => {
   const steps = Math.abs(dx) + Math.abs(dy);
   for (let step = 1; step < steps; step++) {
     if (occupied.has(keyOf(col + Math.sign(dx) * step, row + Math.sign(dy) * step))) {
@@ -622,7 +905,7 @@ const blockedStraight = (col: number, row: number, dx: number, dy: number, occup
 };
 
 /** Whether both L-shaped routes run into a box: along the source row then the target column, or the reverse. */
-const blockedCorners = (col: number, row: number, dx: number, dy: number, occupied: Map<string, number>): boolean => {
+const blockedCorners = (col: number, row: number, dx: number, dy: number, occupied: Map<number, number>): boolean => {
   const clear = (horizontalFirst: boolean) => {
     const cornerCol = horizontalFirst ? col + dx : col;
     const cornerRow = horizontalFirst ? row : row + dy;
@@ -642,7 +925,7 @@ class Search {
   readonly #index: Index;
   readonly #random: () => number;
   #state: State;
-  readonly #occupied = new Map<string, number>();
+  readonly #occupied = new Map<number, number>();
   #strictness = 1;
 
   constructor(index: Index, seed: number, start?: State) {
@@ -680,17 +963,22 @@ class Search {
 
   /** Moves several nodes at once; returns an undo, or undefined when two would share a cell. */
   #moveAll(moves: readonly { node: number; col: number; row: number }[]): (() => void) | undefined {
-    const previous = moves.map(({ node }) => ({ node, col: this.#state.col[node], row: this.#state.row[node] }));
-    const moving = new Set(moves.map(({ node }) => node));
-    const targets = new Set<string>();
-    for (const move of moves) {
+    // Moves are a handful of nodes, so linear scans beat building sets for every proposal.
+    for (let position = 0; position < moves.length; position++) {
+      const move = moves[position];
       const key = keyOf(move.col, move.row);
       const holder = this.#occupied.get(key);
-      if (targets.has(key) || (holder !== undefined && !moving.has(holder))) {
+      if (holder !== undefined && !moves.some((other) => other.node === holder)) {
         return undefined;
       }
-      targets.add(key);
+      for (let earlier = 0; earlier < position; earlier++) {
+        // `Object.is` so two unplaced targets collide, as equal set keys would.
+        if (Object.is(keyOf(moves[earlier].col, moves[earlier].row), key)) {
+          return undefined;
+        }
+      }
     }
+    const previous = moves.map(({ node }) => ({ node, col: this.#state.col[node], row: this.#state.row[node] }));
     for (const { node } of moves) {
       this.#set(node, NaN, NaN);
     }
@@ -937,10 +1225,7 @@ class Search {
   }
 
   #window(): Bounds {
-    const all = boundsOf(
-      this.#state,
-      Array.from({ length: this.#index.count }, (_, node) => node),
-    ) ?? { minCol: 0, maxCol: 0, minRow: 0, maxRow: 0 };
+    const all = boundsOf(this.#state, this.#index.all) ?? { minCol: 0, maxCol: 0, minRow: 0, maxRow: 0 };
     return { minCol: all.minCol - 1, maxCol: all.maxCol + 1, minRow: all.minRow - 1, maxRow: all.maxRow + 1 };
   }
 
