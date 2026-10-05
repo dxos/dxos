@@ -23,14 +23,15 @@ if (process.env.DX_PWA !== 'false') {
 const DEMO = process.env.DEMO === '1';
 const DEMO_TRIGGER = path.resolve(import.meta.dirname, '../../../../../temp/demo-start');
 const DEMO_PAUSE = Number(process.env.DEMO_PAUSE_MS) || 1_500;
-// Half of a 1728pt-wide display each; override with DEMO_WINDOW_WIDTH / DEMO_WINDOW_HEIGHT.
+// Composer's desktop layout (navtree sidebar open) starts at `lg` = 1024 CSS px, so each window is that
+// wide; on a display narrower than two of them they overlap, Bob behind on the left and Alice in front
+// on the right so her notifications panel is never covered. Fractional `--force-device-scale-factor`
+// is avoided: macOS draws such windows blank.
+const DEMO_SCREEN_WIDTH = Number(process.env.DEMO_SCREEN_WIDTH) || 1728;
 const DEMO_WINDOW = {
-  width: Number(process.env.DEMO_WINDOW_WIDTH) || 864,
+  width: Number(process.env.DEMO_WINDOW_WIDTH) || 1024,
   height: Number(process.env.DEMO_WINDOW_HEIGHT) || 1080,
 };
-// Composer's desktop layout (navtree sidebar open) starts at `lg` = 1024 CSS px; scaling each window
-// down lets two side-by-side windows both lay out past it.
-const DEMO_SCALE = Math.min(1, DEMO_WINDOW.width / 1080);
 
 /** The rail companion that holds the notifications panel. */
 const MESSENGER = 'messenger';
@@ -66,32 +67,25 @@ test.describe('Messenger demo', () => {
     test.setTimeout(DEMO ? 3_600_000 : 240_000);
 
     // Each peer gets its own context: a separate profile, so a separate identity.
-    const peer = async (index: number): Promise<Browser | BrowserContext> => {
+    const peer = async (left: number): Promise<Browser | BrowserContext> => {
       if (!DEMO) {
         return browser;
       }
-      // Separate windows placed side by side.
       const demoBrowser = await playwright.chromium.launch({
         headless: false,
-        args: [
-          `--window-position=${index * DEMO_WINDOW.width},0`,
-          `--window-size=${DEMO_WINDOW.width},${DEMO_WINDOW.height}`,
-          `--force-device-scale-factor=${DEMO_SCALE}`,
-        ],
+        args: [`--window-position=${left},0`, `--window-size=${DEMO_WINDOW.width},${DEMO_WINDOW.height}`],
       });
       demoBrowsers.push(demoBrowser);
-      // What the scaled window shows, in CSS px (the window less ~100pt of browser chrome); the runner's
-      // project `deviceScaleFactor` rules out a window-sized (`null`) viewport.
+      // The window less ~100pt of browser chrome; the runner's project `deviceScaleFactor` rules out a
+      // window-sized (`null`) viewport.
       return demoBrowser.newContext({
-        viewport: {
-          width: Math.floor(DEMO_WINDOW.width / DEMO_SCALE),
-          height: Math.floor((DEMO_WINDOW.height - 100) / DEMO_SCALE),
-        },
+        viewport: { width: DEMO_WINDOW.width, height: DEMO_WINDOW.height - 100 },
       });
     };
 
-    alice = new AppManager(await peer(0), false);
-    bob = new AppManager(await peer(1), false);
+    // Bob opens first so Alice's window lands in front of it.
+    bob = new AppManager(await peer(0), false);
+    alice = new AppManager(await peer(Math.max(0, DEMO_SCREEN_WIDTH - DEMO_WINDOW.width)), false);
     await Promise.all([alice.init(), bob.init()]);
 
     if (!isLocalOrigin()) {
