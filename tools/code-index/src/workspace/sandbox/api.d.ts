@@ -60,9 +60,12 @@ declare const storage: {
  * the canvas, which opens as a split screen beside the chat.
  */
 declare const display: {
-  /** Markdown. Fenced ```mermaid blocks inside it render as diagrams. */
+  /** Markdown (GFM), rendered without raw HTML; a diagram goes in its own `mermaid` call. */
   markdown(content: string, title?: string): Promise<void>;
-  /** A Mermaid diagram source (`graph TD`, `sequenceDiagram`, `classDiagram`, …). */
+  /**
+   * A Mermaid flowchart (`graph TD` / `flowchart LR`): `Id[Label]` nodes, flat `subgraph id [Label] … end`
+   * groups, `A --> B` and `A -->|label| B` edges. Other diagram kinds are shown as source, not drawn.
+   */
   mermaid(source: string, title?: string): Promise<void>;
   /** An array of uniform objects, rendered as a table. */
   table(rows: readonly Record<string, unknown>[], title?: string): Promise<void>;

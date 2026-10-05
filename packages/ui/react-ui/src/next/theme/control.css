@@ -400,8 +400,14 @@
     flex-direction: column;
     min-width: 0;
   }
+  /* A control's own `center` would centre it across a stacked field; it starts under its label instead. */
   .dx-field > .dx-control {
+    align-self: start;
     margin-block: var(--dx-control-inset);
+  }
+  /* An icon-only Button's inset centres it in a block; in a field it starts at the label's edge as an Input does. */
+  .dx-field > .dx-button[data-square] {
+    margin-inline: 0;
   }
 
   /*
