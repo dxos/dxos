@@ -8,6 +8,7 @@ import { type ChildProcess, spawn as spawnChild } from 'node:child_process';
 import { type Readable } from 'node:stream';
 
 import * as Subprocess from '@dxos/compute/Subprocess';
+import { log } from '@dxos/log';
 
 /** How long a child has to exit after SIGTERM before it is sent SIGKILL. */
 const KILL_GRACE = '5 seconds';
@@ -46,6 +47,8 @@ const start = (options: Subprocess.SpawnOptions): Effect.Effect<Subprocess.Child
   });
 
 const wrap = (child: ChildProcess): Subprocess.Child => {
+  // EPIPE from a child that exited mid-write already rejects that write; unlistened, it would crash the host.
+  child.stdin?.on('error', (error) => log('subprocess stdin closed', { pid: child.pid, error: error.message }));
   const exit = new Promise<number | null>((resolve) => {
     if (child.exitCode !== null || child.signalCode !== null) {
       resolve(child.exitCode);
