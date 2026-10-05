@@ -95,6 +95,7 @@ export const ToggleComplementarySidebarButton = ({
       label={label}
       tooltipSide={inR0 ? 'left' : undefined}
       onClick={handleClick}
+      data-testid='deck.toggleComplementarySidebar'
     />
   );
 };

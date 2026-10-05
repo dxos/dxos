@@ -43,6 +43,9 @@ const HUB_URL = process.env.DX_HUB_URL ?? 'https://preview.dxos.network/hub/';
 /** A toast's testid is its id; this one reports members admitted but not sent an invitation message. */
 const NOT_NOTIFIED_TOAST = 'org.dxos.plugin.space/add-members-not-notified';
 
+/** The observability plugin's first-run privacy notice, which stays until closed. */
+const PRIVACY_NOTICE_TOAST = 'org.dxos.plugin.observability.notice';
+
 // `REGISTRY_ID`, restated so this page-object does not import the registry plugin: its module graph
 // reaches packages that fail to load under playwright's loader.
 const REGISTRY_WORKSPACE = 'dxos:registry';
@@ -298,6 +301,17 @@ export class AppManager {
     expect(response.ok, `hub account binding failed: ${response.status} ${await response.text()}`).toBe(true);
   }
 
+  /** Opens the account's Contacts panel. */
+  async openUserContacts(timeout = 30_000): Promise<void> {
+    await this.openUserAccount(timeout);
+    await this.page.getByTestId('clientPlugin.contacts').click();
+  }
+
+  /** A contact's row in the open Contacts panel, by display name. */
+  getContact(displayName: string): Locator {
+    return this.page.getByTestId('contact-list.item').filter({ hasText: displayName });
+  }
+
   async openUserDevices(timeout = 30_000): Promise<void> {
     await this.openUserAccount(timeout);
     await this.showUserDevices(timeout);
@@ -424,6 +438,22 @@ export class AppManager {
 
   async closeToast(nth = 0): Promise<void> {
     await this.page.getByTestId('toast.close').nth(nth).click();
+  }
+
+  /**
+   * Closes the first-run privacy notice if it shows within `timeout`. It is optional: the notice is
+   * only raised for a new identity on an origin whose environment is not CI or local.
+   */
+  async dismissPrivacyNotice(timeout = 5_000): Promise<void> {
+    const notice = this.page.getByTestId(PRIVACY_NOTICE_TOAST);
+    const shown = await notice
+      .waitFor({ state: 'visible', timeout })
+      .then(() => true)
+      .catch(() => false);
+    if (shown) {
+      await notice.getByTestId('toast.close').click();
+      await expect(notice).toBeHidden();
+    }
   }
 
   //
@@ -766,6 +796,15 @@ export class AppManager {
 
   async openCompanion(companion: string): Promise<void> {
     await this.getCompanionTab(companion).click();
+  }
+
+  /** Collapses the right-hand companion panel (R1) if it is open, leaving its rail of tabs. */
+  async closeComplementarySidebar(): Promise<void> {
+    const sidebar = this.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+    if ((await sidebar.getAttribute('data-state')) === 'expanded') {
+      await sidebar.getByTestId('deck.toggleComplementarySidebar').click();
+    }
+    await expect(sidebar).not.toHaveAttribute('data-state', 'expanded');
   }
 
   //

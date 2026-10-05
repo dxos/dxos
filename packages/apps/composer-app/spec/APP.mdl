@@ -767,6 +767,13 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
     - bob: a SECOND browser profile with its own, different identity
     - on a deployed origin, both identities are bound to a hub account (two-user-invite.mjs --account does this with test+…@dxos.org); EDGE serves the inbox only to such identities
     - no space whose name starts with "QA:" exists on either profile
+  before:
+    - name: Dismiss the privacy notice
+      do: "On both: if the \"Privacy Notice\" toast shows, close it."
+      expect: no privacy toast remains; it is raised only for a new identity on a non-local, non-CI origin
+    - name: Close the companion panel
+      do: "On both: if the right-hand companion panel (R1) is open, close it with the rail's sidebar toggle."
+      expect: the main content takes the width; the rail of companion tabs stays
   steps:
     - name: Alice names herself
       do: "On Alice: open the account menu, set the display name to \"Alice\" and save."
@@ -787,17 +794,27 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
       note: The standard (interactive, shared-secret) invitation; the code exchange is a human step with no single operation, as in QA-8.
     - name: Bob joins with the invitation
       do: "On Bob: open the invitation link and enter Alice's auth code."
-      expect: Bob's navtree lists "QA: Shared $runId"; each is now in the other's contacts, and Alice's members panel lists Bob
-    - name: Alice creates a document
-      do: "On Alice: in \"QA: Shared $runId\", create a document named \"QA: Plan $runId\" and type \"Agenda\" on its first line."
-      expect: the document appears in the space on BOTH peers
-      invoke: org.dxos.operation.markdown.create { name: "QA: Plan $runId", content: "Agenda" }
-      space: $sharedSpace
-    - name: Both edit the document
-      do: "Open the document on both peers. On Alice type \"- from Alice\" on a new line; on Bob type \"- from Bob\" on another."
       expect: |
-        each peer shows BOTH lines without a reload, and neither lost the other's text — convergence is the
-        criterion, as in QA-8
+        the code's six cells sit centred in the Joining space dialog; Bob's navtree lists "QA: Shared $runId";
+        each is now in the other's contacts, and Alice's members panel lists Bob
+    - name: Alice creates a document and Bob opens it
+      do: "On Alice: in \"QA: Shared $runId\", create a document. On Bob: open it from the space's collection."
+      expect: the document appears in the space on BOTH peers and is open on both
+      invoke: org.dxos.operation.markdown.create { name: "QA: Plan $runId", content: "" }
+      space: $sharedSpace
+    - name: Alice writes a title and a paragraph
+      do: |
+        On Alice: type the heading "# Q3 Planning", a blank line, then the paragraph "We will finalise the roadmap
+        and assing owners this week." (the misspelling is deliberate)
+      expect: Bob's open document shows the title and Alice's paragraph, misspelling included, without a reload
+    - name: Bob adds a paragraph
+      do: "On Bob: at the end of the document, add a blank line and the paragraph \"I will draft the launch checklist and share it on Friday.\""
+      expect: Alice's document shows Bob's paragraph beneath hers
+    - name: Bob corrects Alice's misspelling
+      do: "On Bob: select \"assing\" in Alice's paragraph and type \"assign\" over it."
+      expect: |
+        BOTH peers show the title, Alice's paragraph reading "assign owners", and Bob's paragraph; "assing"
+        appears on neither — convergence is the criterion, as in QA-8
     - name: Bob creates a space
       do: "On Bob: create a space named \"QA: Design $runId\"."
       expect: the space opens on Bob
@@ -819,6 +836,9 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
       expect: |
         Alice switches to "QA: Design $runId"; the tile now reads Open space and the unread count drops by one
       invoke: org.dxos.operation.appToolkit.joinBySpaceKey { spaceKey: $designSpace.key }
+    - name: Alice finds Bob in her contacts
+      do: "On Alice: open the account menu and choose Contacts."
+      expect: the Contacts panel lists Bob
   after:
     - name: Delete the test spaces
       do: Delete "QA: Design $runId" on Bob and "QA: Shared $runId" on Alice from their settings.

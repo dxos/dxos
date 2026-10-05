@@ -70,8 +70,9 @@ export const InvitationAuthenticator = ({
           {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
             <PinInput
               {...{
+                // The panel centres its content; the pin input's cell row otherwise starts at the inline start.
+                'classNames': 'justify-center',
                 disabled,
-                'density': 'lg',
                 'length': pinLength,
                 'inputMode': 'numeric',
                 'autoComplete': 'off',
