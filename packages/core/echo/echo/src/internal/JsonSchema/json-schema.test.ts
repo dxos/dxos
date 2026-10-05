@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import { describe, expect, test } from 'vitest';
@@ -14,6 +15,7 @@ import { TestSchema, prepareAstForCompare } from '../../testing/index.ts';
 import * as Type from '../../Type.ts';
 import {
   FieldLookupAnnotationId,
+  FormInlineAnnotation,
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMeta,
@@ -52,6 +54,24 @@ describe('effect-to-json', () => {
     );
     const jsonSchema = toJsonSchema(Test);
     expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)!.meta![EXAMPLE_NAMESPACE]).to.deep.eq(meta);
+  });
+
+  test('form inline annotation survives a round trip', () => {
+    const Nested = Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0'))(
+      Schema.Struct({ name: Schema.String }),
+    );
+    const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        nested: Ref(Nested).pipe(FormInlineAnnotation.set(true), Schema.annotate({ title: 'Nested' })),
+      }),
+    );
+    const jsonSchema = toJsonSchema(Test);
+    expect(getNormalizedEchoAnnotations(jsonSchema.properties!.nested!)?.formInline).toBe(true);
+
+    const property = SchemaAST.getPropertySignatures(toEffectSchema(jsonSchema).ast).find(
+      ({ name }) => name === 'nested',
+    );
+    expect(FormInlineAnnotation.getFromAst(property!.type).pipe(Option.getOrUndefined)).toBe(true);
   });
 
   test('reference annotation', () => {

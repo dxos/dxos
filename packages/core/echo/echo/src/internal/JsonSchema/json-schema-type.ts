@@ -57,6 +57,12 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
   meta: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 
   /**
+   * Render a referenced object's fields inline in forms.
+   * Mapped from {@link FormInlineAnnotationId}.
+   */
+  formInline: Schema.optional(Schema.Boolean),
+
+  /**
    * @deprecated
    */
   // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe.

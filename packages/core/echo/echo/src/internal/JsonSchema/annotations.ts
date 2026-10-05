@@ -4,7 +4,12 @@
 
 import { SchemaAST } from '@dxos/effect';
 
-import { GeneratorAnnotationId, LabelAnnotationId, PropertyMetaAnnotationId } from '../Annotation/annotations.ts';
+import {
+  FormInlineAnnotationId,
+  GeneratorAnnotationId,
+  LabelAnnotationId,
+  PropertyMetaAnnotationId,
+} from '../Annotation/annotations.ts';
 import { CurrencyAnnotationId, FormatAnnotationId } from '../Format/index.ts';
 import { type JsonSchemaEchoAnnotations, type JsonSchemaType } from '../JsonSchema/index.ts';
 
@@ -45,6 +50,8 @@ export const DecodedAnnotations: Partial<Record<RootJsonSchemaProperty, string>>
 export const EchoAnnotations: Partial<Record<NamespacedJsonSchemaProperty, string>> = {
   // TODO(dmaretskyi): `FieldLookupAnnotationId` might go here, but lets remove it entirely and use LabelAnnotation instead.
   meta: PropertyMetaAnnotationId,
+  // A schema persisted in a space must keep it, or the form shows a picker in place of the object's fields.
+  formInline: FormInlineAnnotationId,
   generator: GeneratorAnnotationId,
   labelProp: LabelAnnotationId,
 };
