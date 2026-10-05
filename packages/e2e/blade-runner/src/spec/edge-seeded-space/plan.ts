@@ -32,6 +32,12 @@ export type EdgeSeededSpaceSpec = {
   identities: number;
   agents: boolean;
   /**
+   * Bind each identity to a Hub account through the test-email hatch on dev-like targets — required
+   * there for agents and for the self-serve cleanup. Off only for a stack without the hatch (the
+   * in-process test harness), where agents are hosted without an account.
+   */
+  bindAccounts: boolean;
+  /**
    * Space archive (`space.internal.export()` output) to seed EDGE with — a real space's contents.
    * Without one, the seeder writes {@link syntheticDocuments} documents of {@link syntheticContentBytes}.
    */
@@ -60,6 +66,7 @@ export const DEFAULT_SPEC: EdgeSeededSpaceSpec = {
   edge: 'local',
   identities: 5,
   agents: true,
+  bindAccounts: true,
   syntheticDocuments: 2_000,
   syntheticContentBytes: 2_000,
   rounds: 10,
@@ -335,7 +342,7 @@ export class EdgeSeededSpace implements TestPlan<EdgeSeededSpaceSpec, EdgeSeeded
     identityDids.push(identityDid);
     // One fixed alias per slot rebinds rather than accumulating account rows; required for the
     // self-serve cleanup routes and for EDGE to host an agent.
-    if (isDevLikeTarget(spec.edge)) {
+    if (spec.bindAccounts && isDevLikeTarget(spec.edge)) {
       await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-seeded-${index}@dxos.org` });
     }
     if (spec.agents) {
