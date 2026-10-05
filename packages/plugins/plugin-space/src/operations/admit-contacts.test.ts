@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { SpaceMember_Role } from '@dxos/client/echo';
 import { type Contact } from '@dxos/client/halo';
 import { PublicKey } from '@dxos/keys';
+import { InboxAccountRequiredError } from '@dxos/protocols';
 import { createBuf, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import { ContactSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -64,7 +65,9 @@ describe('admitContacts', () => {
 describe('sendInvitationMessages', () => {
   test('sends one invitation message per admitted key and reports failures without throwing', async () => {
     const spaceKey = PublicKey.random();
-    const [ok, bad] = [PublicKey.random(), PublicKey.random()].map((key) => key.toHex());
+    const [ok, bad, accountless] = [PublicKey.random(), PublicKey.random(), PublicKey.random()].map((key) =>
+      key.toHex(),
+    );
     const requests: InboxService.SendMessageRequest[] = [];
     const inbox = {
       sendMessage: async (request: InboxService.SendMessageRequest) => {
@@ -72,17 +75,26 @@ describe('sendInvitationMessages', () => {
         if (request.recipientIdentityKey.toHex() === bad) {
           throw new Error('offline');
         }
+        if (request.recipientIdentityKey.toHex() === accountless) {
+          throw new InboxAccountRequiredError();
+        }
       },
     };
     const result = await sendInvitationMessages(inbox, {
       sender: { identityDid: 'did:halo:alice' },
       spaceKey,
       spaceName: 'Plans',
-      identityKeys: [ok, bad],
+      identityKeys: [ok, bad, accountless],
       role: SpaceMember_Role.EDITOR,
     });
-    expect(result).toEqual({ sent: [ok], failed: [bad] });
-    expect(requests.map((request) => request.recipientIdentityKey.toHex())).toEqual([ok, bad]);
+    expect(result).toEqual({
+      sent: [ok],
+      failed: [
+        { key: bad, reason: 'send-failed' },
+        { key: accountless, reason: 'account-required' },
+      ],
+    });
+    expect(requests.map((request) => request.recipientIdentityKey.toHex())).toEqual([ok, bad, accountless]);
     expect(requests.every((request) => request.type === InboxService.INBOX_MESSAGE_TYPE)).toBe(true);
 
     const message = Option.getOrThrow(Message.decodeJson(requests[0].payload));

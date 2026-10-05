@@ -6,10 +6,13 @@ import { type HaloInbox } from '@dxos/client-protocol';
 import { type Space, type SpaceMember_Role } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { InboxAccountRequiredError } from '@dxos/protocols';
 import { createBuf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact, ContactSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { InboxService } from '@dxos/protocols/rpc';
 import { type Actor, Message, SpaceInvitationMessage } from '@dxos/types';
+
+import { type SpaceOperation } from '#types';
 
 export type AdmitContactsResult = { admitted: string[]; failed: { key: string; error: string }[] };
 
@@ -48,14 +51,19 @@ export type SendInvitationMessagesProps = {
   role: SpaceMember_Role;
 };
 
+export type SendInvitationMessagesResult = {
+  sent: string[];
+  failed: { key: string; reason: SpaceOperation.NoticeFailureReason }[];
+};
+
 /**
  * Tells each admitted identity it can join, so it need not be sent the link by hand.
- * A message is a convenience on top of the admission: a failed send is logged, never thrown.
+ * A message is a convenience on top of the admission: a failed send is reported, never thrown.
  */
 export const sendInvitationMessages = async (
   inbox: Pick<HaloInbox, 'sendMessage'>,
   { sender, spaceKey, spaceName, identityKeys, role }: SendInvitationMessagesProps,
-): Promise<{ sent: string[]; failed: string[] }> => {
+): Promise<SendInvitationMessagesResult> => {
   const payload = Message.encodeJson(
     SpaceInvitationMessage.make({ sender, spaceKey: spaceKey.toHex(), role, spaceName }),
   );
@@ -68,15 +76,17 @@ export const sendInvitationMessages = async (
       }),
     ),
   );
-  const sent: string[] = [];
-  const failed: string[] = [];
+  const outcome: SendInvitationMessagesResult = { sent: [], failed: [] };
   results.forEach((result, index) => {
+    const key = identityKeys[index];
     if (result.status === 'fulfilled') {
-      sent.push(identityKeys[index]);
+      outcome.sent.push(key);
+    } else if (InboxAccountRequiredError.is(result.reason)) {
+      outcome.failed.push({ key, reason: 'account-required' });
     } else {
-      failed.push(identityKeys[index]);
-      log.warn('failed to send space invitation message', { identityKey: identityKeys[index], error: result.reason });
+      outcome.failed.push({ key, reason: 'send-failed' });
+      log.warn('failed to send space invitation message', { identityKey: key, error: result.reason });
     }
   });
-  return { sent, failed };
+  return outcome;
 };

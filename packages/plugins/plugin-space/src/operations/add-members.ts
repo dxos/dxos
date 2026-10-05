@@ -21,20 +21,25 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddMembers> = SpaceOp
         admitContacts(space, [...identityKeys], role, client.halo.contacts.get()),
       );
       const identity = client.halo.identity.get();
-      if (identity && result.admitted.length > 0) {
-        yield* Effect.promise(() =>
-          sendInvitationMessages(client.halo.inbox, {
-            sender: { identityDid: identity.did, name: identity.profile?.displayName },
-            spaceKey: space.key,
-            spaceName: space.properties.name,
-            identityKeys: result.admitted,
-            role,
-          }),
-        );
-      }
+      const notices =
+        identity && result.admitted.length > 0
+          ? yield* Effect.promise(() =>
+              sendInvitationMessages(client.halo.inbox, {
+                sender: { identityDid: identity.did, name: identity.profile?.displayName },
+                spaceKey: space.key,
+                spaceName: space.properties.name,
+                identityKeys: result.admitted,
+                role,
+              }),
+            )
+          : undefined;
       const { createJoinUrl } = yield* Capability.get(SpaceOperationConfig);
       // A link only helps someone who was admitted.
-      return { joinUrl: result.admitted.length > 0 ? createJoinUrl(space.key) : '', ...result };
+      return {
+        joinUrl: result.admitted.length > 0 ? createJoinUrl(space.key) : '',
+        ...result,
+        notNotified: notices?.failed ?? [],
+      };
     }),
   ),
 );
