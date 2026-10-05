@@ -122,6 +122,8 @@ export type Bus = {
   edges: readonly Edge[];
   /** Text on the trunk, from a multi-target statement's label. */
   label?: string;
+  /** Gathered by relation rather than by a `bus` statement, so the router may still split it. */
+  implicit?: boolean;
 };
 
 export type Size = { w: number; h: number };
@@ -155,21 +157,37 @@ export const empty = (): Diagram => ({
 /** The key edges share a trunk under. */
 export const busKey = (hub: string, name: string, direction: Bus['direction']): string => `${hub}|${name}|${direction}`;
 
+/**
+ * The implicit bus key of an inheritance edge: subtypes of one abstraction share a trunk into it,
+ * unless the author routed the edge by hand.
+ */
+export const inheritanceKey = (edge: Edge): string | undefined =>
+  edge.bus === undefined &&
+  pointsUp(edge.relation) &&
+  edge.via.length === 0 &&
+  edge.from.sides === undefined &&
+  edge.to.sides === undefined &&
+  edge.from.node !== edge.to.node
+    ? `${edge.to.node}|${edge.relation}|in`
+    : undefined;
+
 /** The edges grouped into buses (two or more edges with one key) and the rest. */
 export const buses = (diagram: Diagram): { buses: Bus[]; single: Edge[] } => {
-  const byKey = new Map<string, { hub: End; direction: Bus['direction']; edges: Edge[] }>();
+  const byKey = new Map<string, { hub: End; direction: Bus['direction']; edges: Edge[]; implicit: boolean }>();
   for (const edge of diagram.edges) {
-    if (edge.bus === undefined) {
+    const implicit = inheritanceKey(edge);
+    const key = edge.bus ?? (implicit === undefined ? undefined : `~${implicit}`);
+    if (key === undefined) {
       continue;
     }
-    const [hub, direction] = edge.bus.endsWith('|in') ? [edge.to, 'in' as const] : [edge.from, 'out' as const];
-    const entry = byKey.get(edge.bus) ?? { hub, direction, edges: [] };
+    const [hub, direction] = key.endsWith('|in') ? [edge.to, 'in' as const] : [edge.from, 'out' as const];
+    const entry = byKey.get(key) ?? { hub, direction, edges: [], implicit: edge.bus === undefined };
     entry.edges.push(edge);
-    byKey.set(edge.bus, entry);
+    byKey.set(key, entry);
   }
   const result: Bus[] = [];
   const merged = new Set<Edge>();
-  for (const [key, { hub, direction, edges }] of byKey) {
+  for (const [key, { hub, direction, edges, implicit }] of byKey) {
     if (edges.length < 2) {
       continue;
     }
@@ -180,6 +198,7 @@ export const buses = (diagram: Diagram): { buses: Bus[]; single: Edge[] } => {
       direction,
       edges,
       ...(diagram.busLabels.has(key) ? { label: diagram.busLabels.get(key) } : {}),
+      ...(implicit ? { implicit } : {}),
     });
   }
   return { buses: result, single: diagram.edges.filter((edge) => !merged.has(edge)) };

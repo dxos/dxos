@@ -445,6 +445,14 @@ const touches = (left: Segment, right: Segment): boolean => {
   return !(first.docked[firstEnd] && second.docked[secondEnd]);
 };
 
+/** Whether two runs leave one port together, which spreading the ports along the side pulls apart. */
+const fanned = (left: Segment, right: Segment): boolean =>
+  [left.from, left.to].some(
+    (point, end) =>
+      left.docked[end] &&
+      [right.from, right.to].some((other, otherEnd) => right.docked[otherEnd] && same(point, other)),
+  );
+
 /** Ports already taken, per box side, by role: an exit beside an entry reads as a crossing. */
 type Terminals = Map<string, { owner: string; role: 'exit' | 'entry' }[]>;
 
@@ -492,7 +500,7 @@ const costOf = (
       } else if ((pair === undefined || other.pair !== pair) && touches(segment, other)) {
         // A route that ends on another, or continues it end to end, reads as joining it.
         total += COST.crossing;
-      } else if (overlaps(segment, other) && (pair === undefined || other.pair !== pair)) {
+      } else if (overlaps(segment, other) && (pair === undefined || other.pair !== pair) && !fanned(segment, other)) {
         total += COST.overlap;
       }
     }

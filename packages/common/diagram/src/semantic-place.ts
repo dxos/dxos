@@ -18,7 +18,14 @@ export type Cell = { col: number; row: number };
 
 export type PlaceNode = { id: string; group?: string; pin?: Cell };
 
-export type PlaceRelation = { from: string; kind: Semantic.RelationKind; target: string; soft: boolean };
+export type PlaceRelation = {
+  from: string;
+  kind: Semantic.RelationKind;
+  target: string;
+  soft: boolean;
+  /** Cost of breaking a soft relation, in place of the default. */
+  weight?: number;
+};
 
 export type PlaceEdge = {
   from: string;
@@ -86,7 +93,7 @@ type Index = {
     end?: readonly Semantic.Side[];
     upward?: boolean;
   }[];
-  relations: { from: number; kind: Semantic.RelationKind; target: number; soft: boolean }[];
+  relations: { from: number; kind: Semantic.RelationKind; target: number; soft: boolean; weight?: number }[];
   groupRelations: { from: number; kind: Semantic.RelationKind; target: number; soft: boolean }[];
   /** Neighbour lists without duplicates, for the hub and chain terms. */
   neighbours: number[][];
@@ -145,7 +152,7 @@ const indexOf = (input: PlaceInput): Index => {
       const target = lookup.get(relation.target);
       return from === undefined || target === undefined || from === target
         ? []
-        : [{ from, kind: relation.kind, target, soft: relation.soft }];
+        : [{ from, kind: relation.kind, target, soft: relation.soft, weight: relation.weight }];
     });
   const relations = resolve(input.relations, byId);
   const followers = Array.from({ length: count }, (_, node) => {
@@ -490,7 +497,7 @@ const score = (index: Index, state: State, occupied: Map<string, number>, strict
     if (holds(relation.kind, from, target)) {
       total += WEIGHT.near * slackOf(relation.kind, from, target);
     } else {
-      total += relation.soft ? WEIGHT.soft : hard;
+      total += relation.soft ? (relation.weight ?? WEIGHT.soft) : hard;
     }
   }
 

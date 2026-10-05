@@ -199,6 +199,80 @@ describe('semantic engine', { timeout: 120_000 }, () => {
     expect(elements.some((element) => element.kind === 'text' && element.text === 'fan')).toBe(true);
   });
 
+  describe('inheritance', () => {
+    const connectorsOf = (objects: readonly Scene.WorldObject[]) =>
+      objects.find((entry) => entry.id === 'edges')?.elements ?? [];
+
+    test('subtypes of one abstraction share a row under it', ({ expect }) => {
+      const { objects } = sceneOf(`
+        diagram flow=down
+        node Animal
+        node Dog
+        node Cat
+        node Fish
+        edge Dog extends Animal
+        edge Cat extends Animal
+        edge Fish extends Animal
+      `);
+      const [animal, dog, cat, fish] = ['Animal', 'Dog', 'Cat', 'Fish'].map((id) => rectOf(objects, id));
+      expect(cat.y).toBe(dog.y);
+      expect(fish.y).toBe(dog.y);
+      expect(dog.y).toBeGreaterThan(animal.y + animal.h);
+    });
+
+    test('subtypes gather into one trunk with one triangle at the abstraction', ({ expect }) => {
+      const { objects } = sceneOf(`
+        node Animal @cell(1,0)
+        node Dog @cell(0,1)
+        node Cat @cell(2,1)
+        edge Dog extends Animal
+        edge Cat extends Animal
+      `);
+      const [animal, dog, cat] = ['Animal', 'Dog', 'Cat'].map((id) => rectOf(objects, id));
+      const elements = connectorsOf(objects);
+      const arrows = elements.filter((element) => element.kind === 'arrow');
+      expect(arrows).toHaveLength(1);
+      const [arrow] = arrows;
+      expect(arrow.kind === 'arrow' && arrow.relation).toBe('inheritance');
+      expect(arrow.kind === 'arrow' && arrow.end).toEqual({ x: animal.x + animal.w / 2, y: animal.y + animal.h });
+      const trunk = pathOf(objects, arrow.id);
+      const junction = trunk[0];
+      for (const [id, rect] of [
+        ['Dog-Animal-0', dog],
+        ['Cat-Animal-1', cat],
+      ] as const) {
+        const spoke = pathOf(objects, id);
+        expect(spoke[0].y).toBe(rect.y);
+        expect(spoke[spoke.length - 1]).toEqual(junction);
+      }
+    });
+
+    test('a single subtype keeps its own straight edge', ({ expect }) => {
+      const { objects } = sceneOf('node Animal @cell(0,0)\nnode Dog @cell(0,1)\nedge Dog extends Animal');
+      const elements = connectorsOf(objects);
+      expect(elements.some((element) => element.id.endsWith('-trunk'))).toBe(false);
+      expect(bendsOf(pathOf(objects, 'Dog-Animal-0'))).toBe(0);
+    });
+
+    test('explicit hints win over the shared row and the trunk', ({ expect }) => {
+      const { objects } = sceneOf(`
+        diagram flow=down
+        node Animal
+        node Dog below Animal
+        node Cat right-of Animal
+        edge Dog extends Animal
+        edge Cat:left extends Animal:right
+      `);
+      const [animal, dog, cat] = ['Animal', 'Dog', 'Cat'].map((id) => rectOf(objects, id));
+      expect(cat.y).toBe(animal.y);
+      expect(dog.y).toBeGreaterThan(animal.y);
+      expect(connectorsOf(objects).filter((element) => element.kind === 'arrow')).toHaveLength(2);
+      const route = pathOf(objects, 'Cat-Animal-1');
+      expect(route[0].x).toBe(cat.x);
+      expect(route[route.length - 1].x).toBe(animal.x + animal.w);
+    });
+  });
+
   test('stacked boxes connect side to side down the free channel instead of snaking', ({ expect }) => {
     const stack = 'node A @cell(0,0)\nnode X @cell(0,1)\nnode B @cell(0,2)\nedge A -> X\nedge X -> B\n';
     const free = sceneOf(`${stack}edge A -> B`).objects;

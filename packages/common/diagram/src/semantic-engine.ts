@@ -110,6 +110,28 @@ const relationsOf = (diagram: Semantic.Diagram) => ({
   ),
 });
 
+/** Outweighs the bends a trunk costs each subtype in the placer, which routes edges one by one. */
+const SIBLING_WEIGHT = 40;
+
+/** Soft relations that line up the subtypes of one abstraction across the flow, so they can share a trunk. */
+const siblingRelations = (diagram: Semantic.Diagram): Place.PlaceRelation[] => {
+  const kind = diagram.flow === 'down' || diagram.flow === 'up' ? 'same-row' : 'same-col';
+  const families = new Map<string, string[]>();
+  for (const edge of diagram.edges) {
+    const key = Semantic.inheritanceKey(edge);
+    if (key === undefined) {
+      continue;
+    }
+    const family = families.get(key) ?? [];
+    if (!family.includes(edge.from.node)) {
+      families.set(key, [...family, edge.from.node]);
+    }
+  }
+  return [...families.values()].flatMap(([first, ...rest]) =>
+    rest.map((from) => ({ from, kind, target: first, soft: true, weight: SIBLING_WEIGHT })),
+  );
+};
+
 /** Grid coordinates to scene rects, frames and routing channels. */
 const geometry = (
   diagram: Semantic.Diagram,
@@ -275,13 +297,47 @@ const geometry = (
   };
 };
 
+const OPPOSITE: Record<Semantic.Side, Semantic.Side> = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
+
+/** The side of the hub every spoke lies wholly beyond, if there is one. */
+const facingSide = (hub: Rect | undefined, spokes: readonly (Rect | undefined)[]): Semantic.Side | undefined => {
+  if (!hub) {
+    return undefined;
+  }
+  const placed = spokes.flatMap((rect) => (rect ? [rect] : []));
+  const beyond: Record<Semantic.Side, (rect: Rect) => boolean> = {
+    bottom: (rect) => rect.y >= hub.y + hub.h,
+    top: (rect) => rect.y + rect.h <= hub.y,
+    right: (rect) => rect.x >= hub.x + hub.w,
+    left: (rect) => rect.x + rect.w <= hub.x,
+  };
+  return placed.length < 2 ? undefined : Semantic.SIDES.find((side) => placed.every(beyond[side]));
+};
+
 /** Routes every edge and bus over a placement and emits the scene. */
 const draw = (diagram: Semantic.Diagram, geometry: Geometry): { commands: Scene.Command[]; forced: string[] } => {
   const { rects, frames, context } = geometry;
-  const { buses, single } = Semantic.buses(diagram);
-  const endOf = (end: Semantic.End): Route.End | undefined => {
+  const grouped = Semantic.buses(diagram);
+  const facing = new Map(
+    grouped.buses.flatMap((bus) => {
+      const side = bus.implicit
+        ? facingSide(
+            rects.get(bus.hub.node),
+            bus.edges.map((edge) => rects.get(edge.from.node)),
+          )
+        : undefined;
+      return side ? [[bus, side] as const] : [];
+    }),
+  );
+  // An implicit trunk only reads as one when every subtype sits on the same side of the abstraction.
+  const buses = grouped.buses.filter((bus) => !bus.implicit || facing.has(bus));
+  const single = [
+    ...grouped.single,
+    ...grouped.buses.filter((bus) => !buses.includes(bus)).flatMap((bus) => bus.edges),
+  ];
+  const endOf = (end: Semantic.End, sides?: readonly Semantic.Side[]): Route.End | undefined => {
     const rect = rects.get(end.node);
-    return rect ? { rect, node: end.node, sides: end.sides ?? Semantic.SIDES } : undefined;
+    return rect ? { rect, node: end.node, sides: sides ?? end.sides ?? Semantic.SIDES } : undefined;
   };
   const waypoint = (point: Semantic.Waypoint): Route.Waypoint => ({
     ...(point.x === undefined ? {} : { x: point.unit === 'cell' ? geometry.cellX(point.x) : point.x }),
@@ -293,9 +349,10 @@ const draw = (diagram: Semantic.Diagram, geometry: Geometry): { commands: Scene.
     return start && end ? [{ id: edge.id, start, end, via: edge.via.map(waypoint), points: [] }] : [];
   });
   const requests = buses.flatMap((bus): Route.BusRequest[] => {
-    const hub = endOf(bus.hub);
+    const side = facing.get(bus);
+    const hub = endOf(bus.hub, side && [side]);
     const spokes = bus.edges.flatMap((edge) => {
-      const end = endOf(bus.direction === 'out' ? edge.to : edge.from);
+      const end = endOf(bus.direction === 'out' ? edge.to : edge.from, side && [OPPOSITE[side]]);
       return end ? [{ id: edge.id, end }] : [];
     });
     return hub && spokes.length > 0 ? [{ id: bus.id, hub, spokes, direction: bus.direction }] : [];
@@ -555,7 +612,8 @@ const prepare = (source: Semantic.Diagram): Prepared => {
   const input: Place.PlaceInput = {
     nodes: diagram.nodes.map((node) => ({ id: node.id, group: node.group, pin: pins.get(node.id) })),
     groups: diagram.groups.map((group) => group.id),
-    relations,
+    // Appended after the stated relations, whose positions `unmetIssues` maps back to their source.
+    relations: [...relations, ...siblingRelations(diagram)],
     groupRelations,
     edges: diagram.edges.map((edge) => ({
       from: edge.from.node,
