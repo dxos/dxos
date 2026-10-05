@@ -23,9 +23,14 @@ if (process.env.DX_PWA !== 'false') {
 const DEMO = process.env.DEMO === '1';
 const DEMO_TRIGGER = path.resolve(import.meta.dirname, '../../../../../temp/demo-start');
 const DEMO_PAUSE = Number(process.env.DEMO_PAUSE_MS) || 1_500;
-const DEMO_WINDOW = { width: 864, height: 1080 };
-// The window less its toolbar: the project's device scale factor rules out a window-sized (`null`) viewport.
-const DEMO_VIEWPORT = { width: DEMO_WINDOW.width, height: DEMO_WINDOW.height - 90 };
+// Half of a 1728pt-wide display each; override with DEMO_WINDOW_WIDTH / DEMO_WINDOW_HEIGHT.
+const DEMO_WINDOW = {
+  width: Number(process.env.DEMO_WINDOW_WIDTH) || 864,
+  height: Number(process.env.DEMO_WINDOW_HEIGHT) || 1080,
+};
+// Composer's desktop layout (navtree sidebar open) starts at `lg` = 1024 CSS px; scaling each window
+// down lets two side-by-side windows both lay out past it.
+const DEMO_SCALE = Math.min(1, DEMO_WINDOW.width / 1080);
 
 /** The rail companion that holds the notifications panel. */
 const MESSENGER = 'messenger';
@@ -71,10 +76,18 @@ test.describe('Messenger demo', () => {
         args: [
           `--window-position=${index * DEMO_WINDOW.width},0`,
           `--window-size=${DEMO_WINDOW.width},${DEMO_WINDOW.height}`,
+          `--force-device-scale-factor=${DEMO_SCALE}`,
         ],
       });
       demoBrowsers.push(demoBrowser);
-      return demoBrowser.newContext({ viewport: DEMO_VIEWPORT });
+      // What the scaled window shows, in CSS px (the window less ~100pt of browser chrome); the runner's
+      // project `deviceScaleFactor` rules out a window-sized (`null`) viewport.
+      return demoBrowser.newContext({
+        viewport: {
+          width: Math.floor(DEMO_WINDOW.width / DEMO_SCALE),
+          height: Math.floor((DEMO_WINDOW.height - 100) / DEMO_SCALE),
+        },
+      });
     };
 
     alice = new AppManager(await peer(0), false);
