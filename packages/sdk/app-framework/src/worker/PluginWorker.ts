@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
+// A standalone subpath, kept off the root barrel so the worker host's rpc and layer-stack graph stays out of the tab's boot.
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
