@@ -14,6 +14,9 @@ import { ComputeProvider, StoryRole, moduleSurfaces } from '../modules/index.ts'
 
 const surfacesPlugin = () => makeModuleSurfacesPlugin('org.dxos.stories.compute.modules', moduleSurfaces);
 
+/** Processes run only in this runtime. */
+const LocalProvider = ({ children }: PropsWithChildren) => <ComputeProvider>{children}</ComputeProvider>;
+
 /** Remote processes run on a second in-memory runtime behind the EDGE control surface. */
 const SimulatedProvider = ({ children }: PropsWithChildren) => (
   <ComputeProvider remote='simulated'>{children}</ComputeProvider>
@@ -52,6 +55,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  decorators: createStoryDecorators({ plugins: [surfacesPlugin()], Wrapper: LocalProvider }),
+};
+
+/** Remote processes run on an in-memory EDGE stand-in, exercising the remote wire path offline. */
+export const Simulated: Story = {
   decorators: createStoryDecorators({ plugins: [surfacesPlugin()], Wrapper: SimulatedProvider }),
 };
 

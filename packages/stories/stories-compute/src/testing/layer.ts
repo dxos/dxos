@@ -56,7 +56,8 @@ const simulatedRemoteLayer = Layer.effect(
 export type ComputeLayerOptions = {
   /** Shared with React so handle status atoms render from the registry that updates them. */
   registry: Registry.AtomRegistry;
-  remote: RemoteMode;
+  /** Absent for a local-only runtime, whose `edge` requests die. */
+  remote?: RemoteMode;
   client: Client;
 };
 
@@ -73,7 +74,9 @@ export const makeComputeLayer = ({
     Layer.provide(
       remote === 'edge'
         ? EdgeProcessManager.fromClient(client).pipe(Layer.provide(RemoteTraceMonitor.layerNoop))
-        : simulatedRemoteLayer,
+        : remote === 'simulated'
+          ? simulatedRemoteLayer
+          : RemoteProcessManager.layerNoop,
     ),
     Layer.provide(ServiceResolver.layerRequirements()),
     Layer.provide(OperationHandlerSet.provide(OperationHandlerSet.empty)),

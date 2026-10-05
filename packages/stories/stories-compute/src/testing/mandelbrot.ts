@@ -14,8 +14,10 @@ export const MANDELBROT_PROCESS_KEY = 'org.dxos.stories.compute.mandelbrot';
 export const DEFAULT_SIZE = 160;
 export const SIZES = [80, 160, 320] as const;
 
-/** Delay between pushed frames. */
-const FRAME_INTERVAL = 1_000;
+/** Delay between pushed frames, bounded so a client cannot turn the process into a hot loop. */
+export const DEFAULT_INTERVAL = 1_000;
+const MIN_INTERVAL = 100;
+const MAX_INTERVAL = 60_000;
 
 /** Most frames a process will owe at once, however many are requested. */
 const MAX_CREDITS = 10;
@@ -25,28 +27,50 @@ const IDLE_TIMEOUT = 30_000;
 
 const ZOOM = 0.7;
 
+/** View width of the whole set, where iterations start. */
+const FULL_WIDTH = 3;
+
 export const Point = Schema.Struct({
   x: Schema.Number.pipe(Schema.annotate({ title: 'Start X' })),
   y: Schema.Number.pipe(Schema.annotate({ title: 'Start Y' })),
 });
 export type Point = Schema.Schema.Type<typeof Point>;
 
-/** Boundary points whose detail persists at every zoom depth; a process without a start picks one at random. */
-export const POINTS: readonly { name: string; point: Point }[] = [
-  { name: 'Seahorse valley', point: { x: -0.743643887037151, y: 0.13182590420533 } },
-  { name: 'Elephant valley', point: { x: 0.2850000000000001, y: 0.0100000000000001 } },
-  { name: 'Triple spiral', point: { x: -0.088, y: 0.654 } },
-  { name: 'Mini Mandelbrot', point: { x: -1.7686, y: 0.0017 } },
-  { name: 'Dendrite', point: { x: -0.1011, y: 0.9563 } },
+/** A well-known region of the set: its center on the complex plane and a view width that frames it. */
+export type StartingPoint = {
+  readonly name: string;
+  readonly real: number;
+  readonly imaginary: number;
+  readonly viewWidth: number;
+};
+
+/** Regions whose detail persists as the zoom deepens; a render without a start picks one at random. */
+export const STARTING_POINTS: readonly StartingPoint[] = [
+  { name: 'Elephant Valley', real: 0.275, imaginary: 0.0075, viewWidth: 0.05 },
+  { name: 'Deep Seahorse Valley', real: -0.743643887, imaginary: 0.1318259042, viewWidth: 0.0015 },
+  { name: 'Triple Spiral Valley', real: -0.0894, imaginary: 0.6543, viewWidth: 0.001 },
+  { name: 'Mini-Mandelbrot', real: -1.7497, imaginary: 0, viewWidth: 0.0007 },
+  { name: 'Misiurewicz Point', real: -0.10109636384562, imaginary: 0.95628651080914, viewWidth: 0.02 },
 ];
+
+export const randomStartingPoint = (): StartingPoint =>
+  STARTING_POINTS[Math.floor(Math.random() * STARTING_POINTS.length)];
+
+/** Form params seeded from a random {@link STARTING_POINTS} entry. */
+export const randomParams = (): MandelbrotParams => {
+  const { real, imaginary, viewWidth } = randomStartingPoint();
+  return { size: DEFAULT_SIZE, interval: DEFAULT_INTERVAL, center: { x: real, y: imaginary }, width: viewWidth };
+};
 
 /** Square resolution in pixels. */
 export const Size = Schema.Literals(SIZES);
 
-/** Resolution on its own row, the start point's coordinates side by side. */
+/** Resolution beside the interval, the view width, and the start point's coordinates side by side. */
 const PARAMS_LAYOUT = trim`
   <grid cols="2">
-    <field name="size" span="2"/>
+    <field name="size"/>
+    <field name="interval"/>
+    <field name="width" span="2"/>
     <field name="center.x"/>
     <field name="center.y"/>
   </grid>
@@ -59,13 +83,21 @@ export const MandelbrotParams = Schema.Struct({
     Schema.annotate({ title: 'Start', description: 'Zoom target; leave empty for a random one.' }),
     Schema.optional,
   ),
+  width: Schema.Number.pipe(
+    Schema.annotate({ title: 'View width', description: 'Width of the first frame on the complex plane.' }),
+    Schema.optional,
+  ),
+  interval: Schema.Number.pipe(
+    Schema.annotate({ title: 'Interval (ms)', description: 'Delay between frames.' }),
+    Schema.optional,
+  ),
 }).pipe(Annotation.FormLayoutAnnotation.set({ default: PARAMS_LAYOUT }));
 
 export type MandelbrotParams = Schema.Schema.Type<typeof MandelbrotParams>;
 
 /**
  * Grants the process `frames` more frames to push, optionally with new {@link MandelbrotParams}; a
- * `center` restarts the zoom at frame 0 on that point.
+ * `center` or `width` restarts the zoom at frame 0.
  */
 export const MandelbrotInput = Schema.Struct({
   frames: Schema.Number,
@@ -112,10 +144,12 @@ const toBase64 = (bytes: Uint8Array): string => {
 /** Decodes {@link MandelbrotOutput.data} to one intensity byte per pixel. */
 export const decodeFrame = (data: string): Uint8Array => Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
 
-const computeFrame = (frame: number, size: number, center: Point): MandelbrotOutput => {
-  const scale = (3 / size) * Math.pow(ZOOM, frame);
-  // Deeper frames need more iterations to resolve the boundary.
-  const maxIterations = Math.round(64 + frame * 24);
+const computeFrame = (frame: number, size: number, center: Point, width: number): MandelbrotOutput => {
+  const viewWidth = width * Math.pow(ZOOM, frame);
+  const scale = viewWidth / size;
+  // Deeper views need more iterations to resolve the boundary, wherever the zoom started.
+  const depth = Math.log(FULL_WIDTH / viewWidth) / Math.log(1 / ZOOM);
+  const maxIterations = Math.round(64 + Math.max(0, depth) * 24);
   const bytes = new Uint8Array(size * size);
   for (let row = 0; row < size; row++) {
     for (let column = 0; column < size; column++) {
@@ -133,7 +167,7 @@ const computeFrame = (frame: number, size: number, center: Point): MandelbrotOut
 
 /**
  * Renders a Mandelbrot zoom on credit: each input grants `frames` more frames, which the process pushes
- * one per {@link FRAME_INTERVAL} and then waits. It never computes more than it was granted (capped at
+ * one per `interval` and then waits. It never computes more than it was granted (capped at
  * {@link MAX_CREDITS}), and exits once no request has arrived for {@link IDLE_TIMEOUT}.
  */
 export const MandelbrotProcess = Operation.makeDurable(
@@ -143,14 +177,17 @@ export const MandelbrotProcess = Operation.makeDurable(
       let frame = 0;
       let credits = 0;
       let size: number = DEFAULT_SIZE;
-      let center = POINTS[Math.floor(Math.random() * POINTS.length)].point;
+      const start = randomStartingPoint();
+      let center: Point = { x: start.real, y: start.imaginary };
+      let width = start.viewWidth;
+      let interval = DEFAULT_INTERVAL;
       let lastRequest = Date.now();
       let rendering = false;
 
       // One alarm serves both roles: the next frame while credits remain, otherwise the idle check.
       const schedule = () => {
         rendering = credits > 0;
-        return ctx.setAlarm(rendering ? FRAME_INTERVAL : IDLE_TIMEOUT);
+        return ctx.setAlarm(rendering ? interval : IDLE_TIMEOUT);
       };
 
       return {
@@ -166,6 +203,13 @@ export const MandelbrotProcess = Operation.makeDurable(
               center = input.center;
               frame = 0;
             }
+            if (input.interval !== undefined) {
+              interval = Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, input.interval));
+            }
+            if (input.width !== undefined) {
+              width = input.width;
+              frame = 0;
+            }
             if (!rendering && credits > 0) {
               rendering = true;
               yield* ctx.setAlarm(0);
@@ -175,7 +219,7 @@ export const MandelbrotProcess = Operation.makeDurable(
           Effect.gen(function* () {
             if (credits > 0) {
               credits--;
-              ctx.submitOutput(computeFrame(frame++, size, center));
+              ctx.submitOutput(computeFrame(frame++, size, center, width));
               yield* schedule();
               return;
             }

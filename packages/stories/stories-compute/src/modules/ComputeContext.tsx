@@ -26,7 +26,7 @@ import { type ProcessItem } from '../components/index.ts';
 import { type MandelbrotParams, MandelbrotProcess, type RemoteMode, makeComputeLayer } from '../testing/index.ts';
 
 export type ComputeContextValue = {
-  remote: RemoteMode;
+  remote?: RemoteMode;
   /** False until the runtime and space exist. */
   ready: boolean;
   items: ProcessItem[];
@@ -41,7 +41,7 @@ const ComputeContext = createContext<ComputeContextValue | undefined>(undefined)
 export const useCompute = (): ComputeContextValue =>
   useContext(ComputeContext) ?? raise(new Error('Missing ComputeProvider'));
 
-export type ComputeProviderProps = PropsWithChildren<{ remote: RemoteMode }>;
+export type ComputeProviderProps = PropsWithChildren<{ remote?: RemoteMode }>;
 
 /**
  * Shares one process runtime and the spawned processes between the story's modules, which render
