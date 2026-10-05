@@ -25,6 +25,12 @@ export type DiagramIslandProps = {
 const MAX_SCALE = 0.75;
 const MIN_SCALE = 0.45;
 
+/** The colour the page is painted with: the body's when it has one, else the root element's. */
+const pageBackground = (): string =>
+  [document.body, document.documentElement]
+    .map((element) => getComputedStyle(element).backgroundColor)
+    .find((color) => color !== 'transparent' && !/rgba\(.*,\s*0\)$/.test(color)) ?? 'Canvas';
+
 /** Facts shown per box: enough to say what it is without turning the panel into a dump. */
 const FACTS = 12;
 
@@ -103,7 +109,7 @@ export const DiagramIsland = ({ objects, refining, describe }: DiagramIslandProp
       className={expanded ? 'fixed inset-0 z-50 flex flex-col gap-2 p-4' : ''}
       // The theme's surface classes resolve inside the canvas but not on a node portalled to the
       // body, so the overlay takes the page's own computed background to stay opaque.
-      style={expanded ? { backgroundColor: getComputedStyle(document.body).backgroundColor } : undefined}
+      style={expanded ? { backgroundColor: pageBackground() } : undefined}
       {...(expanded ? { 'role': 'dialog', 'aria-modal': true, 'aria-label': 'Diagram' } : {})}
     >
       <div className='text-description flex justify-end gap-3 text-xs'>
