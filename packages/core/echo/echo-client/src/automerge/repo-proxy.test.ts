@@ -762,8 +762,8 @@ describe('RepoProxy', () => {
       doc.text = 'retried';
     });
     await expect.poll(() => service.failures, { timeout: 2_000 }).toBeGreaterThan(0);
-    // Lets a failure that escapes the proxy surface inside this test rather than a later one.
-    await sleep(10);
+    // A turn of the event loop lets a failure that escapes the proxy settle before the proxy is checked.
+    await yieldToEventLoop();
 
     // The proxy still serves the database: the next object is created rather than refused.
     expect(clientRepo.isOpen).toBe(true);
