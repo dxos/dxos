@@ -15,6 +15,7 @@ import {
   countersLabel,
   installProbes,
   installReactProbe,
+  latencySummary,
   launchInstrumentedBrowser,
   listTargets,
   parseCounters,
@@ -220,6 +221,10 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     }
     for (const row of rows) {
       log.info('stage', summarize(row));
+      if (row.latency) {
+        log.info('submit path', { stage: row.stage, steps: row.latency.submitPath });
+        log.info('turn path', { stage: row.stage, steps: row.latency.turnPath });
+      }
     }
     runner.dispose();
 
@@ -252,4 +257,10 @@ const summarize = (row: StageRow) => ({
   heapMB: Math.round(row.heapUsedTotalBytes / MB),
   domNodes: row.domNodes,
   lagMaxMs: row.responsiveness.lagMaxMs,
+  ...(row.latency
+    ? {
+        submitToRequestMs: row.latency.submitToRequestMs,
+        turnToRequest: latencySummary(row.latency.turnToRequestMs),
+      }
+    : {}),
 });

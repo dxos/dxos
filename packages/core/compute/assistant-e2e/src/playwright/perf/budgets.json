@@ -76,6 +76,28 @@
     "limit": 1650,
     "unit": "ms"
   },
+  "run > submit to request p50": {
+    "target": 300,
+    "limit": 450,
+    "unit": "ms"
+  },
+  "run > submit to request max": {
+    "target": 300,
+    "limit": 450,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "run > turn to request p50": {
+    "target": 110,
+    "limit": 165,
+    "unit": "ms"
+  },
+  "run > turn to request max": {
+    "target": 170,
+    "limit": 255,
+    "unit": "ms",
+    "weight": 0.5
+  },
   "busy > wall > boot": {
     "target": 3600,
     "limit": 5400,
@@ -152,5 +174,27 @@
     "target": 1500,
     "limit": 2300,
     "unit": "ms"
+  },
+  "busy > run > submit to request p50": {
+    "target": 255,
+    "limit": 382,
+    "unit": "ms"
+  },
+  "busy > run > submit to request max": {
+    "target": 255,
+    "limit": 382,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "busy > run > turn to request p50": {
+    "target": 100,
+    "limit": 150,
+    "unit": "ms"
+  },
+  "busy > run > turn to request max": {
+    "target": 180,
+    "limit": 270,
+    "unit": "ms",
+    "weight": 0.5
   }
 }

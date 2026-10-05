@@ -27,6 +27,7 @@ import { EffectEx, SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
+import { markWork } from '@dxos/util';
 
 import * as DurableOperation from './DurableOperation.ts';
 import type { ProcessNotFoundError } from './errors.ts';
@@ -196,6 +197,7 @@ export const make = (opts: {
       // TTL).
       fiberCache.set(handle.pid, fiber);
       yield* handle.submitInput(input);
+      markWork('process.input-submitted');
       log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
       return fiber;
     }).pipe(

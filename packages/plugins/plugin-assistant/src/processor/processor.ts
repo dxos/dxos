@@ -36,6 +36,7 @@ import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
+import { markWork } from '@dxos/util';
 
 import { AssistantOperation } from '#types';
 
@@ -350,10 +351,12 @@ export class AiChatProcessor {
           provider: this._options.provider,
         });
         const session = yield* this.#getSession();
+        markWork('chat.session-ready');
         yield* this.#forkEphemeralCollector(session);
 
         log('chat processor submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(createPromptContent(requestProp));
+        markWork('chat.prompt-submitted');
         log('chat processor submitPrompt returned, waiting for agent', {});
 
         // On the first message (no name yet), schedule rename immediately so it
@@ -414,6 +417,7 @@ export class AiChatProcessor {
         Effect.gen({ self: this }, function* () {
           const session = yield* this.#getSession();
           yield* session.submitPrompt(createPromptContent(requestProp));
+          markWork('chat.prompt-submitted');
         }).pipe(Effect.provide(this._spaceLayer)),
       );
     } catch (err) {

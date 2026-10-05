@@ -41,7 +41,7 @@ import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
-import { trim } from '@dxos/util';
+import { markWork, trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
 import { loadSpaceMcpServers } from './mcp-servers.ts';
@@ -395,6 +395,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             const content = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
             const message = Message.make({ sender: { role: 'user' }, blocks: content });
             yield* sessionStore.enqueueMessage(feed, message);
+            markWork('agent.prompt-queued');
             unseenWriteIds.add(message.id);
             yield* ctx.setAlarm(0);
             log('agent onInput enqueued to feed');
@@ -402,6 +403,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           onAlarm: Effect.fnUntraced(
             function* () {
               log('agent onAlarm fired', { backlog: toolResults.length });
+              markWork('agent.wake');
 
               // Earliest point the agent can report to a reader who is already waiting: draining the
               // queue below reads the feed, which is itself part of the wait. An empty wake emits it
@@ -421,6 +423,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 prompt = toolResultPrompt(toolResult);
               } else {
                 const state = yield* sessionStore.loadPending(feed);
+                markWork('agent.pending-loaded');
                 // An id still in the pending set has not caught up yet; one that has left it is
                 // durably acked and no longer needs remembering.
                 const stillPending = new Set([
@@ -489,6 +492,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   // the queue is drained. Bounded, so a write that never materialises degrades to the
                   // idle path instead of waking forever.
                   unseenWriteWakes++;
+                  markWork('agent.unseen-write-retry');
                   log('agent onAlarm empty queue with an unread write, waking again', {
                     unseenWrites: unseenWriteIds.size,
                     attempt: unseenWriteWakes,
@@ -514,23 +518,33 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 }
               }
 
-              // The turn appends its own user message built from `prompt`, so the queue entry that
-              // supplied it must leave the queue view now or the same content shows in both places
-              // until the late ack below.
-              if (dequeued !== undefined) {
-                yield* sessionStore.markInFlight(feed, dequeued);
-              }
-
-              log('begin request', { prompt });
-              log('trace agent request begin');
-              yield* Trace.write(Trace.AgentRequestBegin, {});
+              // The MCP servers are read concurrently with the writes below: neither depends on the
+              // other, and each is a round trip to the database that the turn would otherwise wait on in series.
+              const [mcpServers] = yield* Effect.all(
+                [
+                  loadSpaceMcpServers(),
+                  Effect.gen(function* () {
+                    // The turn appends its own user message built from `prompt`, so the queue entry that
+                    // supplied it must leave the queue view now or the same content shows in both places
+                    // until the late ack below.
+                    if (dequeued !== undefined) {
+                      yield* sessionStore.markInFlight(feed, dequeued);
+                    }
+                    log('begin request', { prompt });
+                    log('trace agent request begin');
+                    yield* Trace.write(Trace.AgentRequestBegin, {});
+                  }),
+                ],
+                { concurrency: 'unbounded' },
+              );
+              markWork('agent.turn-begin');
               yield* session
                 .runTurn({
                   prompt,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
-                  mcpServers: yield* loadSpaceMcpServers(),
+                  mcpServers,
                 })
                 .pipe(
                   Effect.onExit((exit) =>
@@ -976,7 +990,9 @@ const ToolExecutionService = ({
                 conversation: Ref.make(feed),
               },
             });
+            markWork('tool.spawned');
             yield* toolCallManager.beginCall(fiber.pid);
+            markWork('tool.call-recorded');
             log('invoked operation', { operationDef, input, fiber });
 
             const awaitWithReport = fiber.await.pipe(Effect.tap(() => toolCallManager.markAsReported(fiber.pid)));
@@ -988,6 +1004,7 @@ const ToolExecutionService = ({
                   ),
                 )
               : yield* awaitWithReport;
+            markWork('tool.settled');
             log('result', { result });
             return yield* result;
           }),
