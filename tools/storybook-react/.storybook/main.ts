@@ -318,6 +318,9 @@ export const createConfig = ({
   features: {
     sidebarOnboardingChecklist: false,
     menuOnboardingChecklist: false,
+    // Nothing here highlights, yet once armed (every story load resets it) the addon re-runs
+    // `getComputedStyle` over every element in the preview on each DOM mutation of the story root.
+    highlight: false,
   },
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
