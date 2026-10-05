@@ -136,7 +136,7 @@ feat F-1: OAuth Connection
     token is the bot token and posts come from the bot.
 
   req F-1.4: A connection made before chat:write was requested keeps syncing;
-    its channels stay read-only until it is reconnected to grant the new scopes.
+    its posts fail with missing_scope until it is reconnected to grant the new scopes.
 
   req F-1.2:
     when: OAuth flow completes and an AccessToken is created
@@ -253,8 +253,8 @@ feat F-6: Slack Channel Backend
   req F-6.5: Slack refusals (missing_scope, not_in_channel, …) MUST fail with a
     reason a person can act on, which sendToChannel reports as delivered: false.
 
-  req F-6.6: readOnly is true until the token loads, and when the token's recorded
-    scopes lack chat:write.
+  req F-6.6: readOnly is always true: the channel article never posts as the bot;
+    only agents post, through sendToChannel.
 
   req F-6.7: Sync MUST skip messages whose ts the mirror feed already holds.
 

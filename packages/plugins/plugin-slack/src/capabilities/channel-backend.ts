@@ -18,7 +18,7 @@ import { type Channel, Message } from '@dxos/types';
 
 import { SlackChannel } from '#types';
 
-import { SLACK_SOURCE, SLACK_WRITE_SCOPE } from '../constants.ts';
+import { SLACK_SOURCE } from '../constants.ts';
 import { SlackChannelError, slackFailureReason } from '../errors.ts';
 import { appendToMirror, tsToIso } from '../mirror.ts';
 import { SlackApi } from '../services/index.ts';
@@ -47,8 +47,6 @@ export const slackChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
       Effect.gen(function* () {
         const { config } = yield* loadConfig(channel);
         const feed = yield* load(config.feed, 'Slack mirror feed');
-        // Loaded here so `readOnly` can read the token's scopes when the article re-renders.
-        yield* load(config.accessToken, 'Slack token');
         const db = Obj.getDatabase(channel);
         if (!db) {
           return yield* Effect.fail(new SlackChannelError({ message: 'The channel is not in a space.' }));
@@ -66,12 +64,8 @@ export const slackChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
       const { config } = yield* loadConfig(channel);
       return yield* post(channel, config, config.conversationId, message);
     }),
-  readOnly: (channel) => {
-    const config = channel.backend.config.target;
-    const token = SlackChannel.instanceOf(config) ? config.accessToken.target : undefined;
-    // Until the token loads there is nothing to post with; a token without recorded scopes was pasted, not granted.
-    return token === undefined || (token.scopes !== undefined && !token.scopes.includes(SLACK_WRITE_SCOPE));
-  },
+  // Posting from the article would bypass the agent and post as its bot, so the composer stays hidden.
+  readOnly: () => true,
   openDirect: (channel, person) =>
     Effect.gen(function* () {
       const userId = person.identities?.find((identity) => identity.label === 'slack')?.value;

@@ -125,7 +125,8 @@ describe('Slack channel backend', () => {
         { method: 'chat.postMessage', params: { token: 'xoxb-secret', channel: 'C1', text: 'hello' } },
       ]);
       expect(yield* mirrored(feed)).toEqual([{ ts: '1700000000.000001', text: 'hello', thread: undefined }]);
-      expect(slackChannelBackend.readOnly?.(channel)).toBe(false);
+      // The article never posts as the bot, even with chat:write.
+      expect(slackChannelBackend.readOnly?.(channel)).toBe(true);
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -173,7 +174,7 @@ describe('Slack channel backend', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('fails with an actionable reason on missing_scope and is read-only without chat:write', () =>
+  it.effect('fails with an actionable reason on missing_scope', () =>
     Effect.gen(function* () {
       const slack = fakeSlack({ error: 'missing_scope' });
       const { channel, feed } = yield* makeChannel(['channels:read', 'channels:history']);

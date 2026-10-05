@@ -20,8 +20,8 @@ export const SLACK_API_BASE = 'https://slack.com/api';
  * person (`conversations.open`) for the channel backend's `openDirect`. DM history (`im:history`)
  * is not requested because DMs are posted to, never synced.
  *
- * A connection made before the write scopes were added keeps its old grant: it syncs, but its
- * channels stay read-only until it is reconnected to consent to the new scopes.
+ * A connection made before the write scopes were added keeps its old grant: it syncs, but posts
+ * fail with `missing_scope` until it is reconnected to consent to the new scopes.
  */
 export const SLACK_SCOPES = [
   'channels:read',
@@ -32,6 +32,3 @@ export const SLACK_SCOPES = [
   'chat:write',
   'im:write',
 ] as const;
-
-/** Scope a token needs before a Slack channel accepts posts. */
-export const SLACK_WRITE_SCOPE = 'chat:write';

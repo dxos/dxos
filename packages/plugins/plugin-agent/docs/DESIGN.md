@@ -302,8 +302,9 @@ runtime and `dependsOn` plugin-thread:
   Materializing a Slack target creates channels on this backend with the connection's token.
 - **Token.** EDGE requests the connector's scopes as Slack's bot `scope`, so the connection's token
   is the bot token (`xoxb-…`) and posts come from the bot. The scopes add `chat:write` and
-  `im:write`; connections made before must reconnect to grant them, and until then `readOnly` (no
-  `chat:write` in the token's recorded scopes) keeps their channels read-only.
+  `im:write`; connections made before must reconnect to grant them (until then posts fail with
+  `missing_scope`). Like Discord, `readOnly` is always true: the channel article never posts as the
+  bot; only agents post, through `sendToChannel`.
 - **Posting.** `send` and `threads.send` call `chat.postMessage`; a thread id that is a Slack `ts`
   replies in the channel's conversation (`thread_ts`), any other is a conversation id (a DM). A post
   into the channel's own conversation is appended to the mirror feed at once, keyed by its `ts`, and
