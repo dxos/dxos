@@ -63,7 +63,7 @@ cheapest way to exercise a turn without a browser. Anthropic needs `DX_ANTHROPIC
 
 **One tool.** The agent's only action is `exec`, which runs TypeScript in a Bun child process whose
 sole capabilities are namespaces bridged over stdio: `rdf` (SPARQL over this index), `storage`
-(per-project memory), `display` (the only channel to the screen — Mermaid, tables, markdown, force
+(per-project memory), `display` (the only channel to the screen — illustrator diagrams, tables, markdown, force
 graphs), `design` (scored subgraphs for design questions) and `print` (the model's own return channel). The tool's documentation *is*
 [`src/workspace/sandbox/api.d.ts`](./src/workspace/sandbox/api.d.ts), so the surface cannot drift
 from what the model is told. The isolation is process-level — fresh interpreter, scrubbed
@@ -75,12 +75,19 @@ snippet.
 live session saw and there is no second copy to keep in step. The project id is in the URL
 (`/p/<id>`); a bare load adopts the last one that browser opened.
 
+**Replies stream.** The agent drives the model with `streamText` and appends each text delta as it
+arrives, so the thread types the answer out and a reload mid-turn picks up the partial text. Once a
+message settles, its deltas are deleted and one `AssistantMessage` takes their place, so the log keeps
+a row per message rather than per token. Each `exec` run renders inline, at its point in the reply,
+through the assistant thread's collapsible tool panel.
+
 **The index stays current.** The server holds the store, so it indexes on its own: an incremental
 pass at startup, then one after every burst of changes to a directory the index covers
-(`src/Watch.ts`). `--no-watch` serves the store as it is.
+(`src/Watch.ts`). The passes run on a worker thread (`src/IndexThread.ts`) that shares the store
+with the server, so a reindex never stalls the web UI. `--no-watch` serves the store as it is.
 
 **No build step.** Vite runs inside the server process in middleware mode and resolves `@dxos/*`
-through the `source` condition, so the UI — Solid, with `@dxos/react-ui-thread` mounted as a React
+through the `source` condition, so the UI — Solid, with `@dxos/react-ui-assistant` mounted as a React
 island — is transformed from the working tree with nothing to rebuild first.
 
 ## Querying it from an MCP client

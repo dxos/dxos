@@ -59,10 +59,16 @@ const stubOllama = (mode: 'answer' | 'stall'): Server =>
       response.writeHead(200, { 'content-type': 'application/json' }).end('{"version":"0.0.0"}');
     } else if (request.url === '/api/chat' && mode === 'answer') {
       request.resume();
+      // A turn streams, so the reply is Ollama's NDJSON: one line per chunk, each newline-terminated.
       request.on('end', () =>
-        response
-          .writeHead(200, { 'content-type': 'application/json' })
-          .end(JSON.stringify({ message: { role: 'assistant', content: 'Answered.' }, done: true })),
+        response.writeHead(200, { 'content-type': 'application/x-ndjson' }).end(
+          [
+            { message: { role: 'assistant', content: 'Answ' }, done: false },
+            { message: { role: 'assistant', content: 'ered.' }, done: true },
+          ]
+            .map((chunk) => `${JSON.stringify(chunk)}\n`)
+            .join(''),
+        ),
       );
     } else if (request.url !== '/api/chat') {
       response.writeHead(404).end();
@@ -147,6 +153,24 @@ const attach = (port: number, scope: Scope.Scope, until: Events.Event['_tag']) =
     Scope.provide(scope),
   );
 
+/** A tab left open on a project with nothing new to show: its `Watch` stream has yet to send anything. */
+const idle = (port: number, scope: Scope.Scope) =>
+  Effect.gen(function* () {
+    const client = yield* RpcClient.make(Protocol.Rpcs);
+    const project = yield* client.CreateProject({ title: 'idle' });
+    yield* client.Watch({ projectId: project.id }).pipe(Stream.runDrain, Effect.exit, Effect.forkIn(scope));
+    // `Info` rides its own request, so its answer means serve has also taken the `Watch` request.
+    yield* client.Info();
+  }).pipe(
+    Effect.provide(
+      RpcClient.layerProtocolHttp({ url: `http://127.0.0.1:${port}${Protocol.PATH}` }).pipe(
+        Layer.provide(RpcSerialization.layerNdjson),
+        Layer.provide(FetchHttpClient.layer),
+      ),
+    ),
+    Scope.provide(scope),
+  );
+
 /** Opens the store and reads the project's log, which succeeds only once serve has released the lock. */
 const reopen = (storeDir: string) =>
   Effect.gen(function* () {
@@ -214,6 +238,28 @@ describe.skipIf(bun === undefined)('code-index serve shutdown', () => {
       'AssistantMessage',
       'TurnEnded',
     ]);
+  }, 60_000);
+
+  test('SIGINT with a tab watching a quiet project exits promptly', async () => {
+    ollama = stubOllama('answer');
+    const endpoint = `http://127.0.0.1:${await listen(ollama)}`;
+    const port = await freePort();
+    serve = startServe(bun ?? 'bun', { root, port, endpoint });
+    await serve.listening;
+    const browser = await EffectEx.runPromise(Scope.make());
+    try {
+      await EffectEx.runPromise(idle(port, browser));
+      const started = performance.now();
+      serve.child.kill('SIGINT');
+      const exited = await Promise.race([
+        serve.exited.then(() => true),
+        new Promise<boolean>((resolve) => setTimeout(() => resolve(false), DEADLINE_MS)),
+      ]);
+      expect(exited, serve.output()).toBe(true);
+      expect(performance.now() - started).toBeLessThan(5_000);
+    } finally {
+      await EffectEx.runPromise(Scope.close(browser, Exit.void));
+    }
   }, 60_000);
 
   test('SIGINT mid-turn interrupts the turn, records it and releases the store', async () => {

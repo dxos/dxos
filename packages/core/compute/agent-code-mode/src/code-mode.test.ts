@@ -459,6 +459,14 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
           expect(priorities.get('Write the docs')).toEqual('Write the docs'.length);
           expect(priorities.get('Fix the build')).toEqual('Fix the build'.length);
           expect(yield* feedText(session.feed)).toContain('Write the docs');
+
+          // The call reaches the feed labelled after the operation its code invoked, still an eval.
+          const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+          const calls = messages.flatMap((message) =>
+            message.blocks.filter((block) => block._tag === 'toolCall' && block.name === EVAL_TOOL_NAME),
+          );
+          expect(calls).toContainEqual(expect.objectContaining({ displayName: 'Score' }));
+          expect(calls.every((call) => !('operationName' in call))).toBe(true);
         },
         Effect.provide(agentTestLayer(dialect)),
         TestHelpers.provideTestContext,

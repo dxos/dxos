@@ -8,7 +8,7 @@
 /** One SPARQL SELECT row: variable name to its term's lexical value. */
 declare type Row = Record<string, string>;
 
-declare type Kind = 'markdown' | 'mermaid' | 'table' | 'json' | 'text' | 'graph';
+declare type Kind = 'markdown' | 'diagram' | 'table' | 'json' | 'text' | 'graph';
 
 /** One node of a `display.graph` presentation. */
 declare type GraphNode = {
@@ -25,6 +25,43 @@ declare type GraphNode = {
 };
 
 declare type GraphEdge = { from: string; to: string; kind?: string };
+
+/** One box of a `display.diagram`. */
+declare type DiagramNode = {
+  /** Any string — a package name, a path; edges and `group` refer to boxes by it. */
+  id: string;
+  /** What the box says (default: the id). At most ~17 characters reads on one line. */
+  label?: string;
+  /** The id of the group the box sits in. */
+  group?: string;
+  /** The repository-relative path the box depicts; the user sees it when they click the box. */
+  ref?: string;
+};
+
+/**
+ * `from` depends on, calls or owns `to`. `kind` changes the arrow: `creates` is dashed, `inheritance`
+ * and `implements` point from the subtype at its base (hollow triangle), and `hasMany` and `contains`
+ * point from the owner. An edge naming an undeclared id declares that box.
+ */
+declare type DiagramEdge = {
+  from: string;
+  to: string;
+  /** Label only the edges that say something; unlabelled edges route more cleanly. */
+  label?: string;
+  kind?: 'reference' | 'creates' | 'inheritance' | 'implements' | 'hasMany' | 'contains';
+};
+
+/** A framed, tinted cluster of boxes. Groups do not nest. */
+declare type DiagramGroup = { id: string; label?: string };
+
+/** A diagram as data: the illustrator lays it out (ELK, routed connectors) and draws exactly this. */
+declare type DiagramSpec = {
+  /** Flow direction (default `TB`). */
+  direction?: 'TB' | 'LR';
+  nodes: DiagramNode[];
+  edges?: DiagramEdge[];
+  groups?: DiagramGroup[];
+};
 
 declare type GraphData = { nodes: GraphNode[]; edges: GraphEdge[] };
 
@@ -60,10 +97,15 @@ declare const storage: {
  * the canvas, which opens as a split screen beside the chat.
  */
 declare const display: {
-  /** Markdown. Fenced ```mermaid blocks inside it render as diagrams. */
+  /** Markdown (GFM), rendered without raw HTML; a diagram goes in its own `diagram` call. */
   markdown(content: string, title?: string): Promise<void>;
-  /** A Mermaid diagram source (`graph TD`, `sequenceDiagram`, `classDiagram`, …). */
-  mermaid(source: string, title?: string): Promise<void>;
+  /**
+   * A boxes-and-arrows diagram, laid out and drawn by the illustrator. Build the spec from query rows —
+   * ids can be any string, so no escaping. Keep it to ≲ 14 boxes and ≤ 3 groups; past that, split it.
+   * A Mermaid flowchart string (`flowchart LR`, `Id[Label]`, flat `subgraph`, `-->`, `-->|label|`) is
+   * accepted too and reduced to the same spec. Rejects (the call throws) anything with no boxes.
+   */
+  diagram(diagram: DiagramSpec | string, title?: string): Promise<void>;
   /** An array of uniform objects, rendered as a table. */
   table(rows: readonly Record<string, unknown>[], title?: string): Promise<void>;
   /** Any value, rendered as pretty JSON. */
@@ -72,7 +114,7 @@ declare const display: {
   text(content: string, title?: string): Promise<void>;
   /**
    * An interactive force-directed graph: for exploring a structure too big for one diagram. Prefer
-   * `mermaid` for a final answer of a dozen boxes.
+   * `diagram` for a final answer of a dozen boxes.
    */
   graph(graph: GraphData, title?: string): Promise<void>;
   /** Empties the canvas. */
