@@ -9,16 +9,19 @@ export const SLACK_SOURCE = 'slack.com';
 export const SLACK_API_BASE = 'https://slack.com/api';
 
 /**
- * OAuth scopes required for read-only sync of public and private channels.
+ * OAuth scopes requested for the Slack connection.
  *
- * Splits cleanly along Slack's conversation-type axis: `<type>:read` to enumerate
- * the conversation list (drives discovery), `<type>:history` to read messages
- * inside it (drives sync). `users:read` resolves user IDs to display names so
- * we can render `Message.sender` without an extra lookup per render.
+ * EDGE requests these as Slack's bot `scope` (not `user_scope`), so the stored token is the bot
+ * token (`xoxb-…`) and agents post as the bot, never as the person who connected.
  *
- * `im:*` and `mpim:*` scopes are intentionally omitted — direct messages and
- * group DMs are out of scope for sync; only channel-shaped conversations are
- * synced as Channels.
+ * Reading splits along Slack's conversation-type axis: `<type>:read` enumerates conversations
+ * (discovery) and `<type>:history` reads messages (sync); `users:read` resolves user ids to names.
+ * Writing: `chat:write` posts into conversations the bot is in, and `im:write` opens a DM with a
+ * person (`conversations.open`) for the channel backend's `openDirect`. DM history (`im:history`)
+ * is not requested because DMs are posted to, never synced.
+ *
+ * A connection made before the write scopes were added keeps its old grant: it syncs, but its
+ * channels stay read-only until it is reconnected to consent to the new scopes.
  */
 export const SLACK_SCOPES = [
   'channels:read',
@@ -26,4 +29,9 @@ export const SLACK_SCOPES = [
   'groups:read',
   'groups:history',
   'users:read',
+  'chat:write',
+  'im:write',
 ] as const;
+
+/** Scope a token needs before a Slack channel accepts posts. */
+export const SLACK_WRITE_SCOPE = 'chat:write';

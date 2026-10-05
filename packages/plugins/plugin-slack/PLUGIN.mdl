@@ -7,7 +7,8 @@ version: 0.1.0
 SlackPlugin connects a Slack workspace to DXOS Composer via OAuth, discovers
 conversations (public channels, private channels), and incrementally syncs
 messages into ECHO as `Channel` and `Message` objects so they appear alongside
-everything else in a space.
+everything else in a space. Each synced Channel is on the Slack channel backend
+(plugin-thread's `ChannelBackend`), so agents post to it as the connection's bot.
 
 ## Extensions
 
@@ -59,6 +60,19 @@ type SlackCredentials
     never stored in plain ECHO fields.
   fields:
     token: string                   # xoxp-… or xoxb-… OAuth token
+```
+
+```mdl
+type SlackChannel
+  desc: |
+    Config of a Slack-backed Channel (Channel.backend.config, kind
+    org.dxos.channel.backend.slack). Owns the feed the sync mirrors the
+    conversation into.
+  fields:
+    accessToken: Ref<AccessToken>   # the connection's bot token (xoxb-…), or a pasted one
+    conversationId: string          # C…/G…/D…
+    teamId?: string
+    feed: Ref<Feed>                 # mirror of the conversation; owned (SetParent)
 ```
 
 ## Operations
@@ -117,7 +131,12 @@ feat F-1: OAuth Connection
 
   req F-1.1: Plugin MUST contribute an IntegrationProvider for source 'slack.com'
     that initiates Slack OAuth with scopes:
-    channels:read, channels:history, groups:read, groups:history, users:read.
+    channels:read, channels:history, groups:read, groups:history, users:read,
+    chat:write, im:write. EDGE requests them as the bot `scope`, so the stored
+    token is the bot token and posts come from the bot.
+
+  req F-1.4: A connection made before chat:write was requested keeps syncing;
+    its channels stay read-only until it is reconnected to grant the new scopes.
 
   req F-1.2:
     when: OAuth flow completes and an AccessToken is created
@@ -214,6 +233,38 @@ feat F-5: Error Handling and Retries
     then: a success toast MUST be shown via LayoutOperation.AddToast.
 ```
 
+```mdl
+feat F-6: Slack Channel Backend
+
+  req F-6.1: Plugin MUST contribute a ThreadCapabilities.ChannelBackend of kind
+    org.dxos.channel.backend.slack whose subscribe reads the config's mirror feed.
+
+  req F-6.2: send MUST post with chat.postMessage into config.conversationId and
+    append the post to the mirror feed keyed by its ts; the receipt carries
+    messageIds [ts] and properties.slack { channel, ts, threadTs }.
+
+  req F-6.3: threads.send MUST reply with thread_ts when the thread id is a Slack
+    ts, and post top-level into the thread id as a conversation id (a DM) otherwise;
+    only posts into config.conversationId are mirrored.
+
+  req F-6.4: openDirect MUST read the person's identity labelled 'slack' and
+    return the conversations.open DM id; undefined without one.
+
+  req F-6.5: Slack refusals (missing_scope, not_in_channel, …) MUST fail with a
+    reason a person can act on, which sendToChannel reports as delivered: false.
+
+  req F-6.6: readOnly is true until the token loads, and when the token's recorded
+    scopes lack chat:write.
+
+  req F-6.7: Sync MUST skip messages whose ts the mirror feed already holds.
+
+  req F-6.8: Materialize and sync MUST move a feed-backed Slack channel onto the
+    Slack backend, adopting its feed as the mirror; idempotently.
+
+  req F-6.9: Real-time receiving (Events API / Socket Mode on EDGE) is deferred;
+    the backend has no connection.
+```
+
 ## Acceptance
 
 ```mdl
@@ -240,6 +291,7 @@ scenario T-3: First sync materializes Channel
   when: op:SyncSlackChannel is invoked
   then:
     - a Channel is created in ECHO with key { source: 'slack.com', id: conversationId }
+      on the Slack backend, its SlackChannel config holding the connection's token
     - Channel.name matches the conversation label
     - messages are appended to the channel's feed
     - target.cursor is set to the newest ts
@@ -290,6 +342,14 @@ scenario T-8: Idempotent re-sync
   then:
     - no duplicate Message is appended (foreign key deduplication)
     - pulled.added reflects only net-new messages
+```
+
+```mdl
+scenario T-9: A posted message is not synced twice
+  given: a Slack channel whose backend posted a message with ts T
+  when: op:SyncSlackChannel fetches a history that includes ts T
+  then:
+    - the mirror feed holds exactly one message keyed T
 ```
 
 ---

@@ -35,9 +35,12 @@ const handler: Operation.WithHandler<typeof SlackOperation.MaterializeSlackTarge
         }
 
         return yield* Effect.gen(function* () {
+          // The connection's token becomes the channel's, so the Slack backend posts as the connected bot.
+          const { accessToken } = yield* Database.load(connection);
           const channel = yield* findOrCreateChannelForTarget({
             externalId: remoteTarget.id,
             name: remoteTarget.name,
+            accessToken,
           });
           return { target: Ref.make(channel) };
         }).pipe(Effect.provide(Database.layer(db)));

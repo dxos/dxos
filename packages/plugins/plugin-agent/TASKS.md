@@ -29,7 +29,7 @@ across them, relays messages between people and watches facts for the people who
 ## Phase 2: channel-agnostic agents
 
 plugin-agent loses every Discord-specific operation; agents use plugin-thread's `ChannelBackend`,
-implemented by plugin-discord, plugin-freeq, plugin-bluesky. Design: DESIGN.md "Channel-agnostic
+implemented by plugin-discord, plugin-slack, plugin-freeq, plugin-bluesky. Design: DESIGN.md "Channel-agnostic
 agents".
 
 ### Tasks
@@ -38,6 +38,8 @@ agents".
 - [x] **Extend `ChannelBackendProvider`** — optional `openDirect`, `threads`, `connection`; generic `sendToChannel`, `openDirect`, `connectChannel`/`disconnectChannel`/`getChannelStatus` operations in plugin-thread.
 - [x] **Discord `ChannelBackend`** — plugin-discord implements it (`send`, `threads`, `openDirect`, `connection` over the EDGE bot routes) on a `DiscordChannel` config and `dependsOn` plugin-thread; takes over the binding form and bot status as the Discord channel's ObjectProperties surface.
 - [x] **plugin-agent on channels** — `AgentChannels`, `ensureChannelChat`, `Relay.replyChannel` (Relay 0.2.0, no migration), channel-based `sendMessage`; deleted `sendDiscordMessage`, `start/stop/getDiscordBotStatus`, `ensureThreadChat`, `DiscordBinding`.
+- [x] **Slack `ChannelBackend`** — plugin-slack implements it (`send`/`threads.send` via `chat.postMessage` as the connection's bot token, `openDirect` from a `slack` identity via `conversations.open`) on a `SlackChannel` config that owns the sync's mirror feed; posts are mirrored by `ts` and the sync de-dups them; existing feed-backed Slack channels are upgraded on sync/materialize; `chat:write` + `im:write` scopes (existing connections must reconnect to post).
+- [ ] **Slack real-time receiving on EDGE** — Events API or Socket Mode worker that turns Slack messages into agent turns (`ensureChannelChat`); until then Slack messages arrive only through the connector's sync and reach no agent.
 - [ ] **EDGE bot passes `Channel` refs** — reads the `DiscordChannel` config named by `PUT { binding, channel }`, resolves the agent through `AgentChannels`, calls `ensureChannelChat` (edge PR). Discord messages do not reach the agent until this lands.
 - [ ] **Stories on a feed channel** — the playground exercises the agent through the same capability.
 

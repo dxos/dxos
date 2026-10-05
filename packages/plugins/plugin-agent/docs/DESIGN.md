@@ -220,7 +220,7 @@ What the shared app changes:
 ## Channel-agnostic agents (steps 1–3 built)
 
 **Goal:** plugin-agent knows nothing about Discord. An agent talks in any conversation a channel
-backend provides — Discord, freeq, Bluesky, the local feed — through plugin-thread's
+backend provides — Discord, Slack, freeq, Bluesky, the local feed — through plugin-thread's
 `ThreadCapabilities.ChannelBackend`, implemented by each backend plugin. plugin-discord owns
 everything Discord-specific (token, gateway, binding form, bot status).
 
@@ -291,6 +291,32 @@ channel: <channel URI> }`; until step 4 EDGE still expects a binding with an `ag
   started from a channel cannot resolve its agent there yet.
 - **UI.** The Channel's `ObjectProperties` surface (kind = Discord) renders the config form, the bot
   status and Start/Stop/Refresh; plugin-agent shows it for each of the agent's channels.
+
+### Slack backend (built)
+
+plugin-slack contributes `slackChannelBackend` (`kind: org.dxos.channel.backend.slack`) in every
+runtime and `dependsOn` plugin-thread:
+
+- **Config.** `SlackChannel` (`org.dxos.type.slack.channel`): `accessToken`, `conversationId`,
+  `teamId?`, and the `feed` the connector's sync mirrors the conversation into (owned by the config).
+  Materializing a Slack target creates channels on this backend with the connection's token.
+- **Token.** EDGE requests the connector's scopes as Slack's bot `scope`, so the connection's token
+  is the bot token (`xoxb-…`) and posts come from the bot. The scopes add `chat:write` and
+  `im:write`; connections made before must reconnect to grant them, and until then `readOnly` (no
+  `chat:write` in the token's recorded scopes) keeps their channels read-only.
+- **Posting.** `send` and `threads.send` call `chat.postMessage`; a thread id that is a Slack `ts`
+  replies in the channel's conversation (`thread_ts`), any other is a conversation id (a DM). A post
+  into the channel's own conversation is appended to the mirror feed at once, keyed by its `ts`, and
+  the sync skips messages whose `ts` the feed already holds. The receipt carries
+  `properties.slack: { channel, ts, threadTs }`. Slack refusals (`missing_scope`, `not_in_channel`)
+  become reasons, so `sendToChannel` answers `{ delivered: false, reason }`.
+- **DMs.** `openDirect` reads the person's `slack` identity (a Slack user id) and returns the DM
+  conversation id from `conversations.open`.
+- **Migration.** Slack channels created before the backend (feed-backed, keyed by the
+  conversation) are moved onto it on the next sync or materialize, adopting their feed as the
+  mirror; the upgrade is idempotent.
+- **No connection.** Receiving is the connector's polling sync; real-time receiving (Events API or
+  Socket Mode on EDGE, driving agent turns) is deferred.
 
 ### plugin-agent on channels (step 3, built)
 
