@@ -11,7 +11,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Progress, type ProgressProps } from '../index.ts';
+import { Progress, type ProgressProps } from './Progress.tsx';
 
 type StoryArgs = SizeArgs & Pick<ProgressProps, 'value' | 'indeterminate' | 'error' | 'countdown' | 'paused'>;
 

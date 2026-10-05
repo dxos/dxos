@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { RpcTiming } from '@dxos/worker-framework';
 import * as Worker from '@dxos/worker-framework/Worker';
 

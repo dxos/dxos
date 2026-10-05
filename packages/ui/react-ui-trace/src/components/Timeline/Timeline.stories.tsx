@@ -8,16 +8,13 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { LogLevel } from '@dxos/log';
 import { random } from '@dxos/random';
-import {
-  Button,
-  Panel,
-  ScrollArea,
-  ScrollContainer,
-  type ScrollController,
-  Toolbar,
-  useInterval,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { defaultOptions } from './timeline-options.ts';
 import { type Commit, Timeline, TimelineProps } from './Timeline.tsx';
@@ -355,7 +352,7 @@ export const Streaming: Story = {
     const closedBranches = useRef<Set<string>>(new Set());
 
     const [running, setRunning] = useState(true);
-    useInterval(
+    Hooks.useInterval(
       () => {
         if (!running) {
           return;
@@ -384,17 +381,17 @@ export const Streaming: Story = {
       [running],
     );
 
-    const scrollerRef = useRef<ScrollController>(null);
+    const scrollerRef = useRef<ScrollContainer.ScrollController>(null);
     const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
     return (
       <Panel.Root>
         <Panel.Header>
           <Toolbar.Root>
-            <Button onClick={() => setRunning(true)}>Start</Button>
-            <Button onClick={() => setRunning(false)}>Stop</Button>
-            <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
-            <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
+            <Button.Root onClick={() => setRunning(true)}>Start</Button.Root>
+            <Button.Root onClick={() => setRunning(false)}>Stop</Button.Root>
+            <Button.Root onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button.Root>
+            <Button.Root onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button.Root>
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body>

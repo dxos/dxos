@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import { Ref, URI } from '@dxos/echo';
 
 import { isRunInstructions, runInstructionsRef } from './run-instructions.ts';
@@ -12,7 +12,7 @@ import { isRunInstructions, runInstructionsRef } from './run-instructions.ts';
 describe('RunInstructions registry reference', () => {
   test('runInstructionsRef targets the RunInstructions registry DXN', ({ expect }) => {
     const ref = runInstructionsRef();
-    expect(ref.uri).toBe(RunInstructions.meta.key);
+    expect(ref.uri).toBe(AgentOperation.RunInstructions.meta.key);
     expect(isRunInstructions(ref)).toBe(true);
   });
 

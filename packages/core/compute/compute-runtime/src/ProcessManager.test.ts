@@ -23,7 +23,6 @@ import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/testing/TestClock';
 import * as Tracer from 'effect/Tracer';
 
-import { RUN_AGAIN_ERROR_CODE, RunAgainError, ServiceNotAvailableError } from '@dxos/compute';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -32,7 +31,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, DXN, Key } from '@dxos/echo';
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
@@ -1152,7 +1151,7 @@ describe('ManagerImpl', () => {
       const defect = Cause.squash(cause);
       expect(typeof defect).not.toBe('string');
       expect(Cause.isCause(defect)).toBe(false);
-      expect(RunAgainError.is(defect)).toBe(true);
+      expect(Process.RunAgainError.is(defect)).toBe(true);
 
       const processCause = handle.status.exit.pipe(Option.flatMap(Exit.getCause), Option.getOrUndefined);
       expect(processCause).toEqual(cause);
@@ -1173,7 +1172,7 @@ describe('ManagerImpl', () => {
         .flatMap((event) => (Trace.isOfType(Trace.OperationEnd, event) ? [event.data] : []));
       expect(ends).toHaveLength(1);
       expect(ends[0].outcome).toBe('failure');
-      expect(ends[0].errorCode).toBe(RUN_AGAIN_ERROR_CODE);
+      expect(ends[0].errorCode).toBe(Process.RUN_AGAIN_ERROR_CODE);
     }, Effect.provide(CapturingTraceTestLayer)),
   );
 
@@ -1487,7 +1486,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
         Effect.gen(function* () {
           if (context.space !== dbService.db.spaceId) {
             return yield* Effect.fail(
-              new ServiceNotAvailableError(
+              new ServiceResolver.ServiceNotAvailableError(
                 `Database.Service requires space context (got ${context.space ?? 'none'}, want ${dbService.db.spaceId})`,
               ),
             );

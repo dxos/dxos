@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import type * as Observability from '@dxos/observability/Observability';
 
 import * as SupportService from './SupportService.ts';

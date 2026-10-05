@@ -12,14 +12,17 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Group, Separator, Typography } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import { Separator } from './Separator.tsx';
 
 /** A horizontal rule between two paragraphs, then a vertical rule and a decorative one between buttons. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Typography data-testid={`above-${size}`}>Above</Typography>
+    <Typography.Text data-testid={`above-${size}`}>Above</Typography.Text>
     <Separator data-testid={`horizontal-${size}`} />
-    <Typography>Below</Typography>
+    <Typography.Text>Below</Typography.Text>
     <Group data-testid={`group-${size}`}>
       <Button data-testid={`left-${size}`}>Left</Button>
       <Separator orientation='vertical' data-testid={`vertical-${size}`} />

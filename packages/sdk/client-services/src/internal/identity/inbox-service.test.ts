@@ -12,7 +12,7 @@ import { Event } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
 import { type MessageListener, type ReconnectListener } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { EdgeService, type InboxNotice } from '@dxos/protocols';

@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { toServiceError } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';

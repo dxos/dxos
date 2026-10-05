@@ -16,7 +16,8 @@ import type * as Operation from '@dxos/compute/Operation';
 import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
-import { type ComplexMap, type Position } from '@dxos/util';
+import { type ComplexMap } from '@dxos/util';
+import type * as Position from '@dxos/util/Position';
 
 import { type SpaceDashboard } from '#dashboard';
 import { meta } from '#meta';

@@ -12,8 +12,14 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { type CSSVariables } from '../Container/index.ts';
-import { Block, Button, Container, Icon, Panel, ScrollArea, Toolbar, Typography } from '../index.ts';
+import { Block } from '../Block/Block.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Container, type CSSVariables } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Panel from './Panel.tsx';
 
 /** A narrow reading width, so the story's pane is wider than the document. */
 const READING_WIDTH: CSSVariables = { '--spacing-document-max-width': '20rem' };
@@ -45,9 +51,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
               {ROWS.map((label, index) => (
                 <Container key={label} layout='row' data-testid={index === 0 ? `row-${size}` : undefined}>
                   <Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
-                    <Icon icon='ph--envelope--regular' />
+                    <Icon.Icon icon='ph--envelope--regular' />
                   </Block>
-                  <Typography data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Typography>
+                  <Typography.Text data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Typography.Text>
                 </Container>
               ))}
             </Container>
@@ -75,7 +81,7 @@ const TestStory = (args: SizeArgs) => (
       <Panel.Root size={args.size}>
         <Panel.Header data-testid={`empty-header-${args.size}`} />
         <Panel.Body data-testid={`bare-body-${args.size}`}>
-          <Typography>Body</Typography>
+          <Typography.Text>Body</Typography.Text>
         </Panel.Body>
       </Panel.Root>
     </div>
@@ -85,7 +91,7 @@ const TestStory = (args: SizeArgs) => (
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
               <Container>
-                <Typography data-testid={`reading-text-${args.size}`}>Reading width</Typography>
+                <Typography.Text data-testid={`reading-text-${args.size}`}>Reading width</Typography.Text>
               </Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -99,7 +105,7 @@ const TestStory = (args: SizeArgs) => (
             <ScrollArea.Viewport asChild>
               <Container data-testid={`default-gutter-body-${args.size}`}>
                 <Container data-testid={`default-gutter-nested-${args.size}`}>
-                  <Typography data-testid={`default-gutter-text-${args.size}`}>Default gutter</Typography>
+                  <Typography.Text data-testid={`default-gutter-text-${args.size}`}>Default gutter</Typography.Text>
                 </Container>
               </Container>
             </ScrollArea.Viewport>
@@ -111,7 +117,7 @@ const TestStory = (args: SizeArgs) => (
       <Panel.Root size={args.size} gutter='md' data-testid={`md-gutter-${args.size}`}>
         <Panel.Body>
           <Container>
-            <Typography data-testid={`md-gutter-text-${args.size}`}>Panel gutter</Typography>
+            <Typography.Text data-testid={`md-gutter-text-${args.size}`}>Panel gutter</Typography.Text>
           </Container>
         </Panel.Body>
       </Panel.Root>

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 // #plugin resolves to ClientPlugin.node.ts under the source condition used by vitest.
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 
@@ -14,7 +14,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ClientPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({})],
     });
 

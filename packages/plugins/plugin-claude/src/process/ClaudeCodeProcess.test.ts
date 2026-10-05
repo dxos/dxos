@@ -14,7 +14,7 @@ import { type AgentProcessDefinition } from '@dxos/agent-runtime';
 import { AssistantTestLayer, waitForMessage } from '@dxos/agent-runtime/testing';
 import * as Chat from '@dxos/assistant/Chat';
 import * as NodeSubprocess from '@dxos/compute-runtime/node-subprocess';
-import * as ComputeAgentService from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
@@ -72,13 +72,14 @@ describe('ClaudeCodeProcess', () => {
     Effect.fnUntraced(
       function* (_) {
         const { chat, workspace } = yield* setup({ command: process.execPath, args: [FAKE_AGENT] });
-        const session = yield* ComputeAgentService.getSession(chat);
+        const session = yield* AgentService.getSession(chat);
         yield* session.submitPrompt('first');
         const [first] = yield* replies(session.feed, 1);
         yield* session.submitPrompt('second');
         const [, second] = yield* replies(session.feed, 2);
 
-        expect(first).toMatch(new RegExp(`^first pid=\\d+ cwd=${workspace}$`));
+        expect(first).toMatch(/^first pid=\d+ /);
+        expect(first.endsWith(` cwd=${workspace}`)).toBe(true);
         expect(second).toMatch(/^second pid=\d+/);
         // One agent served both turns: the follow-up did not start it again.
         expect(second.match(/pid=(\d+)/)?.[1]).toBe(first.match(/pid=(\d+)/)?.[1]);
@@ -97,7 +98,7 @@ describe('ClaudeCodeProcess', () => {
     Effect.fnUntraced(
       function* (_) {
         const { chat } = yield* setup({ command: 'no-such-claude-code-anywhere' });
-        const session = yield* ComputeAgentService.getSession(chat);
+        const session = yield* AgentService.getSession(chat);
         yield* session.submitPrompt('hello');
         const exit = yield* session.waitForCompletion().pipe(Effect.exit);
         expect(exit._tag).toBe('Failure');
@@ -119,7 +120,7 @@ describe('ClaudeCodeProcess', () => {
           { command: 'npx', args: ['-y', '@agentclientprotocol/claude-agent-acp@0.85.0'] },
           { ANTHROPIC_API_KEY: process.env.DX_ANTHROPIC_API_KEY ?? '' },
         );
-        const session = yield* ComputeAgentService.getSession(chat);
+        const session = yield* AgentService.getSession(chat);
         yield* session.submitPrompt('Reply with exactly the single word "pong" and nothing else. Do not use tools.');
         const [reply] = yield* replies(session.feed, 1);
         expect(reply.toLowerCase()).toContain('pong');

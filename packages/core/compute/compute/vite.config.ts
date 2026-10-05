@@ -6,6 +6,7 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'FunctionsAiError': 'src/FunctionsAiError.ts',
     'index': 'src/index.ts',
     'AgentIdentity': 'src/AgentIdentity.ts',
     'AgentService': 'src/AgentService.ts',

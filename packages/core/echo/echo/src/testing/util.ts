@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 

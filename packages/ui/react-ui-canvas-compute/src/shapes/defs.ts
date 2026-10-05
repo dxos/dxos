@@ -7,7 +7,7 @@ import * as Struct from 'effect/Struct';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Polygon } from '@dxos/react-ui-canvas-editor';
 import { type MakeOptional } from '@dxos/util';
 

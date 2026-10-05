@@ -9,6 +9,9 @@ import { type Readable } from 'node:stream';
 
 import * as Subprocess from '@dxos/compute/Subprocess';
 
+/** How long a child has to exit after SIGTERM before it is sent SIGKILL. */
+const KILL_GRACE = '5 seconds';
+
 /** {@link Subprocess.Subprocess} on Node.js, over `node:child_process`. */
 export const layer: Layer.Layer<Subprocess.Subprocess> = Layer.succeed(Subprocess.Subprocess, {
   spawn: (options) =>
@@ -72,7 +75,12 @@ const wrap = (child: ChildProcess): Subprocess.Child => {
         return Effect.void;
       }
       child.kill();
-      return Effect.promise(() => exit).pipe(Effect.asVoid);
+      // A child that ignores SIGTERM would otherwise hold the closing scope open indefinitely.
+      return Effect.promise(() => exit).pipe(
+        Effect.timeout(KILL_GRACE),
+        Effect.catch(() => Effect.sync(() => child.kill('SIGKILL')).pipe(Effect.andThen(Effect.promise(() => exit)))),
+        Effect.asVoid,
+      );
     }),
   };
 };

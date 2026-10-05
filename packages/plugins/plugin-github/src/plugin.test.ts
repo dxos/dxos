@@ -8,7 +8,7 @@ import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { GitHubPlugin } from '#plugin';
@@ -18,7 +18,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('GitHubPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), GitHubPlugin()],
     });
 
@@ -29,7 +29,7 @@ describe('GitHubPlugin', () => {
   }, 30_000);
 
   test('contributes the GitHub skill when the assistant starts', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), GitHubPlugin()],
     });
 

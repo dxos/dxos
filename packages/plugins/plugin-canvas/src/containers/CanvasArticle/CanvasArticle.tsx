@@ -5,13 +5,13 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useEffect, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Panel } from '@dxos/react-ui';
 import { SceneView, useRegistry } from '@dxos/react-ui-canvas/scene';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { type BoundCanvasStore, bindCanvasStore } from '#model';
 import { CanvasCapabilities } from '#types';
@@ -22,7 +22,7 @@ export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfacePr
 export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const registry = useRegistry();
-  const settings = useAtomValue(useCapability(CanvasCapabilities.Settings));
+  const settings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
   // Bound for the canvas's lifetime in this view; a new canvas rebinds.
   const [bound, setBound] = useState<BoundCanvasStore>();
   useEffect(() => {

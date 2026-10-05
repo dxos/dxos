@@ -8,20 +8,26 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as PluginRegistryButton from '@dxos/app-toolkit/PluginRegistryButton';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
-import { PluginRegistryButton, usePluginRegistryAvailable } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Dialog, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useSubmitOnEnter } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Theme from '@dxos/react-ui/Theme';
 import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
@@ -76,12 +82,12 @@ const ObjectFormDialogBody = ({
   shouldNavigate: _shouldNavigate,
   targetNodeId,
 }: ObjectFormDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const manager = PluginManagerProvider.usePluginManager();
   // Demand signal: load policy-parked CreateObjectEntry providers; the picker below reads them
   // reactively, so entries pop in as their chunks arrive.
-  useActivationSignal(SpaceEvents.CreateObjectRequested);
-  const operationInvoker = useOperationInvoker();
+  Hooks.useActivationSignal(SpaceEvents.CreateObjectRequested);
+  const operationInvoker = Hooks.useOperationInvoker();
   const { invoke } = operationInvoker;
   const [target, setTarget] = useState<Database.Database | Obj.Unknown | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
@@ -92,7 +98,7 @@ const ObjectFormDialogBody = ({
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   const allTypes = useQuery(db, TypeOptions.allTypesQuery);
   const space = useMemo(() => spaces.find((s) => s.db === db), [spaces, db]);
-  const spaceLabel = useMemo(() => space && toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
+  const spaceLabel = useMemo(() => space && Theme.toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
 
   // Index all types by typename for label/icon lookups.
   const typeByTypename = useMemo(() => {
@@ -143,7 +149,7 @@ const ObjectFormDialogBody = ({
   const showTypeSelector = !typename;
   // Gated here as well as in the button: `Dialog.Close asChild` needs an element child, so the
   // action bar cannot wrap a button that renders nothing.
-  const registryAvailable = usePluginRegistryAvailable();
+  const registryAvailable = ToolkitHooks.usePluginRegistryAvailable();
 
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
@@ -382,18 +388,18 @@ const ObjectFormDialogBody = ({
       {object ? (
         <Dialog.Footer>
           <Dialog.CloseTrigger asChild>
-            <Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button>
+            <Button.Root data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button.Root>
           </Dialog.CloseTrigger>
-          <Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
+          <Button.Root variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
             {t('object-form-confirm.label')}
-          </Button>
+          </Button.Root>
         </Dialog.Footer>
       ) : (
         showTypeSelector &&
         registryAvailable && (
           <Dialog.Footer>
             <Dialog.CloseTrigger asChild>
-              <PluginRegistryButton />
+              <PluginRegistryButton.Root />
             </Dialog.CloseTrigger>
           </Dialog.Footer>
         )

@@ -12,7 +12,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, type SpaceId, SpaceId as SpaceId$ } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';

@@ -13,7 +13,7 @@ import * as PubSub from 'effect/PubSub';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 
-import { Performance } from '@dxos/effect';
+import * as Performance from '@dxos/effect/Performance';
 import { log } from '@dxos/log';
 
 import { Capabilities } from '../../common/index.ts';

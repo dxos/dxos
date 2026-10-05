@@ -8,9 +8,9 @@ import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useCallba
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { Board, useBoard } from '@dxos/react-ui-mosaic';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import type { ProjectionModel } from '@dxos/schema';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
@@ -59,7 +59,7 @@ export const KanbanBoardRoot = ({
   onCardRemove,
 }: KanbanBoardRootProps) => {
   const registry = useContext(RegistryContext);
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
   const columns = model?.getColumns?.() ?? [];
   const [view] = useObject(kanban?.spec.kind === 'view' ? kanban.spec.view : undefined);
@@ -125,7 +125,7 @@ const KANBAN_BOARD_CONTENT = 'KanbanBoard.Content';
 
 type KanbanBoardContentProps = {};
 
-export const KanbanBoardContent = composable<HTMLDivElement, KanbanBoardContentProps>((props, forwardedRef) => {
+export const KanbanBoardContent = Util.composable<HTMLDivElement, KanbanBoardContentProps>((props, forwardedRef) => {
   const { model } = useBoard(KANBAN_BOARD_CONTENT);
   const { kanbanId, projection, pivotFieldId, change } = useKanbanBoard(KANBAN_BOARD_CONTENT);
 
@@ -139,7 +139,7 @@ export const KanbanBoardContent = composable<HTMLDivElement, KanbanBoardContentP
 
   return (
     <Board.Content
-      {...composableProps(props)}
+      {...Util.composableProps(props)}
       ref={forwardedRef}
       eventHandler={columnEventHandler}
       Tile={KanbanColumn}

@@ -16,9 +16,9 @@ import React, {
   useState,
 } from 'react';
 
-import { SelectionModel } from '@dxos/graph';
-import { type ThemedClassName } from '@dxos/react-ui';
+import * as SelectionModel from '@dxos/graph/SelectionModel';
 import { testId } from '@dxos/react-ui-canvas';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type ActionHandler } from '../../actions/index.ts';
@@ -36,7 +36,7 @@ interface EditorController {
   update(): void;
 }
 
-type EditorRootProps<S extends CanvasBoard.Shape = CanvasBoard.Shape> = ThemedClassName<
+type EditorRootProps<S extends CanvasBoard.Shape = CanvasBoard.Shape> = Util.ThemedClassName<
   PropsWithChildren<
     Pick<EditorContextType<S>, 'id'> &
       Partial<
@@ -81,7 +81,7 @@ const RootInner = <S extends CanvasBoard.Shape = CanvasBoard.Shape>(
   // External state.
   const graph = useMemo<CanvasGraphModel<S>>(() => graphProp ?? CanvasGraphModel.create(), [graphProp]);
   const clipboard = useMemo(() => CanvasGraphModel.create(), []);
-  const selection = useMemo(() => selectionProp ?? new SelectionModel(), [selectionProp]);
+  const selection = useMemo(() => selectionProp ?? new SelectionModel.SelectionModel(), [selectionProp]);
   const registry = useMemo(() => registryProp ?? new ShapeRegistry(defaultShapes), [registryProp]);
   const layout = useMemo(() => layoutProp ?? new ShapeLayout(registry), [layoutProp, registry]);
 

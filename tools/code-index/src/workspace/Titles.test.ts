@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Events from './Events.ts';
 import * as Titles from './Titles.ts';

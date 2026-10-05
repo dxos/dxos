@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { toSvgFile } from './SceneSvgFile.tsx';
 
@@ -14,6 +14,25 @@ const markerRefs = (svg: string, element: string, attribute: 'marker-start' | 'm
   [...svg.matchAll(new RegExp(`<${element}[^>]*${attribute}="url\\(#[^)]*?-([a-z-]+)\\)"`, 'g'))].map(
     (match) => match[1],
   );
+
+describe('box labels', () => {
+  test('a label wider than its box wraps inside it, centred, at the full size', ({ expect }) => {
+    const svg = toSvgFile([
+      {
+        id: 'node',
+        elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: 192, h: 160, text: 'RemoteProcessHandleWithLongName' }],
+      },
+    ]);
+    const label = /<text[^>]*font-size="18"[^>]*>(.*?)<\/text>/.exec(svg)?.[1] ?? '';
+    expect([...label.matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map((match) => match[1])).toEqual([
+      'RemoteProcess',
+      'HandleWithLong',
+      'Name',
+    ]);
+    // Three lines of 26 centred on the box's middle at 80.
+    expect(svg).toMatch(/<text x="96" y="54"/);
+  });
+});
 
 describe('relation markers', () => {
   test('a laid-out diagram draws each relation with its markers, the source marker at the route start', async ({

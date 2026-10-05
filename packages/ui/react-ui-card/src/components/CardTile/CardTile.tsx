@@ -4,8 +4,13 @@
 
 import React, { type MouseEvent, PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { Block, Card, Focus, Menu, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
+import type * as Util from '@dxos/react-ui/Util';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { Row } from '../Row/index.ts';
@@ -14,7 +19,7 @@ import { Row } from '../Row/index.ts';
 // Root
 //
 
-type CardTileRootProps = ThemedClassName<
+type CardTileRootProps = Util.ThemedClassName<
   PropsWithChildren<
     Pick<MosaicTileProps<unknown>, 'data' | 'location' | 'current'> & {
       'id': string;
@@ -81,12 +86,12 @@ type CardTileHeaderProps = {
  * tiles (with menu) and event tiles (star + title only).
  */
 const CardTileHeader = ({ title, starred, menu = false, menuItems, onToggleStar }: CardTileHeaderProps) => {
-  const { t } = useTranslation(osTranslations);
+  const { t } = Hooks.useTranslation(osTranslations);
   return (
     <Card.Header>
-      <Block>
+      <Layout.Block>
         <Row.Star starred={starred} onToggle={onToggleStar} />
-      </Block>
+      </Layout.Block>
       <Card.Title classNames='flex items-center gap-3'>{title}</Card.Title>
       {menu && (
         <Card.Menu label={t('toolbar-menu.label')}>

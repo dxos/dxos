@@ -8,8 +8,8 @@ import React, { Fragment, useCallback, useEffect, useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapability } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationRegistry from '@dxos/compute/OperationRegistry';
@@ -17,7 +17,6 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
   Bullets,
   ComputeContext,
@@ -36,6 +35,7 @@ import {
   useRegistry,
   useSceneProjection,
 } from '@dxos/react-ui-canvas/scene';
+import * as Layout from '@dxos/react-ui/Layout';
 
 export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
 
@@ -111,11 +111,13 @@ const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
   );
 };
 
-const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />;
+const Container = (props: Layout.FlexProps) => (
+  <Layout.Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />
+);
 
 const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const db = Obj.getDatabase(canvas);
-  const processManagerRuntime = useCapability(Capabilities.ProcessManagerRuntime);
+  const processManagerRuntime = Hooks.useCapability(Capabilities.ProcessManagerRuntime);
   const [computeGraph] = useObject(canvas.computeGraph);
   const controller = useMemo(() => {
     if (!canvas.computeGraph?.target || !db) {

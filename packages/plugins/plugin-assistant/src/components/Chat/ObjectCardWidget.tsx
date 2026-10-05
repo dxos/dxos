@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, ObjectCard as ObjectCardPrimitive } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
@@ -36,12 +37,12 @@ export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
 
   const title = Obj.getLabel(subject)?.trim() || label || '';
   return (
-    <ObjectCardPrimitive.Root>
-      <ObjectCardPrimitive.Header subject={subject} lines={1}>
+    <ToolkitObjectCard.Root>
+      <ToolkitObjectCard.Header subject={subject} lines={1}>
         {title}
-      </ObjectCardPrimitive.Header>
+      </ToolkitObjectCard.Header>
       <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
-    </ObjectCardPrimitive.Root>
+    </ToolkitObjectCard.Root>
   );
 };
 

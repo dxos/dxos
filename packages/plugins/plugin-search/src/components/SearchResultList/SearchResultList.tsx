@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -24,7 +24,7 @@ export type SearchResultListProps = {
  * title and best-match snippet, and its type as trailing metadata. Built on `Listbox` with no selection.
  */
 export const SearchResultList = ({ results, query, onSelect }: SearchResultListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Listbox.Root items={results.map((result) => ({ value: result.id, label: result.label ?? '' }))}>
       <Listbox.Content aria-label={t('search-result-list.label')}>

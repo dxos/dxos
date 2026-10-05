@@ -10,7 +10,7 @@ import { LayerStack } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { type Config, ConfigService } from '@dxos/config';
 import { type QueryExecutorMode } from '@dxos/echo-host';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import { type SignalManager } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
 import { Runtime_Client_QueryExecutor } from '@dxos/protocols/buf/dxos/config_pb';

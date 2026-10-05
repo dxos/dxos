@@ -4,12 +4,14 @@
 
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useProgressMonitors } from '@dxos/app-toolkit/ui';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { Button, Popover, useTranslation } from '@dxos/react-ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { ProgressMeter } from '@dxos/react-ui-components';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
 
 import { meta } from '#meta';
 
@@ -19,16 +21,16 @@ import { meta } from '#meta';
  * provider is active, so the rail stays clean when idle.
  */
 export const ProgressStatusIndicator = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const registry = useCapability(AppCapabilities.ProgressRegistry);
-  const monitors = useProgressMonitors();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const registry = Hooks.useCapability(AppCapabilities.ProgressRegistry);
+  const monitors = ToolkitHooks.useProgressMonitors();
   const active = monitors.filter((monitor) => monitor.status === 'running' || monitor.status === 'pending');
 
   return (
     <StatusBar.Item>
       <Popover.Root positioning={{ placement: 'left' }}>
         <Popover.Trigger asChild>
-          <Button
+          <Button.Root
             variant='ghost'
             icon='ph--circle-notch--regular'
             iconOnly

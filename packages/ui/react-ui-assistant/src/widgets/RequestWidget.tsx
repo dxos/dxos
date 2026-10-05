@@ -5,7 +5,11 @@
 import * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { Block, Button, Card, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { ContentBlock } from '@dxos/types';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { safeParseJson } from '@dxos/util';
@@ -22,7 +26,7 @@ export type RequestWidgetProps = WidgetProps<{ message?: unknown }>;
  * Once answered (or abandoned) the card shows the outcome instead of the buttons.
  */
 export const RequestWidget = ({ children, message }: RequestWidgetProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const request = useMemo(() => decodeRequest(safeParseJson(getXmlTextChild(children ?? []) ?? '')), [children]);
   if (request._tag === 'None' || typeof message !== 'string') {
     return null;
@@ -33,9 +37,9 @@ export const RequestWidget = ({ children, message }: RequestWidgetProps) => {
   return (
     <Card.Root data-testid='assistant.request'>
       <Card.Header>
-        <Block>
-          <Icon icon='ph--shield-warning--regular' />
-        </Block>
+        <Layout.Block>
+          <Icon.Icon icon='ph--shield-warning--regular' />
+        </Layout.Block>
         <Card.Title>{title}</Card.Title>
       </Card.Header>
       <Card.Body>
@@ -44,9 +48,9 @@ export const RequestWidget = ({ children, message }: RequestWidgetProps) => {
             {chosen ? t('request.answered.label', { option: chosen.label }) : t('request.cancelled.label')}
           </Card.Description>
         ) : (
-          <Flex role='group' wrap gap='sm'>
+          <Layout.Flex role='group' wrap gap='sm'>
             {options.map((option) => (
-              <Button
+              <Button.Root
                 key={option.id}
                 variant={option.kind.startsWith('allow') ? 'primary' : 'default'}
                 data-action='respond'
@@ -55,9 +59,9 @@ export const RequestWidget = ({ children, message }: RequestWidgetProps) => {
                 data-option={option.id}
               >
                 {option.label}
-              </Button>
+              </Button.Root>
             ))}
-          </Flex>
+          </Layout.Flex>
         )}
       </Card.Body>
     </Card.Root>

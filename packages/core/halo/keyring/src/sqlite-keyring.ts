@@ -11,7 +11,7 @@ import type * as SqlError from 'effect/sql/SqlError';
 
 import { Event, synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type KeyRecord, KeyRecordSchema } from '@dxos/protocols/buf/dxos/halo/keyring_pb';

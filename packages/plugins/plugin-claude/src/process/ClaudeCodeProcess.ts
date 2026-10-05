@@ -19,6 +19,7 @@ import { Alarm, HarnessControl, type PendingState, SessionStore } from '@dxos/as
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
+import * as StorageService from '@dxos/compute/StorageService';
 import * as Subprocess from '@dxos/compute/Subprocess';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed } from '@dxos/echo';
@@ -165,13 +166,24 @@ export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
               const [message] = pendingOf(state);
               const due = state.pendingAlarms.find((alarm) => alarm.wakeAt <= clock.currentTimeMillisUnsafe());
               if (message) {
+                // A person speaking again renews the budget for wake-ups the agent schedules itself.
+                if (message.sender.role === 'user') {
+                  yield* SelfWakesCell.set(0);
+                }
                 // The turn appends its own user message, so the queue entry leaves the queue view now.
                 yield* store.markInFlight(feed, message);
                 yield* runTurn(message.blocks);
                 unseen.delete(message.id);
                 yield* store.ack(feed, message);
               } else if (due) {
-                yield* runTurn([ContentBlock.Text.make({ text: due.message ?? 'Continue.' })]);
+                const selfWakes = yield* SelfWakesCell.get;
+                if (selfWakes >= Alarm.MAX_SELF_WAKES) {
+                  // Acked without a turn, so an agent that keeps rescheduling itself stops until prompted.
+                  log.warn('claude code self-wake budget spent, dropping alarm', { wakes: selfWakes });
+                } else {
+                  yield* SelfWakesCell.set(selfWakes + 1);
+                  yield* runTurn([ContentBlock.Text.make({ text: due.message ?? 'Continue.' })]);
+                }
                 yield* store.ack(feed, due);
               }
               yield* rearm;
@@ -182,6 +194,11 @@ export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
         };
       }),
   );
+
+/** Wake-ups the agent scheduled for itself since a person last prompted it; bounded by {@link Alarm.MAX_SELF_WAKES}. */
+const SelfWakesCell = StorageService.cell(Schema.fromJsonString(Schema.Number), 'selfWakes').pipe(
+  StorageService.withDefault(() => 0),
+);
 
 /** Logs what the agent writes to stderr, which is where it reports what it cannot say over ACP. */
 const drainStderr = (stderr: ReadableStream<Uint8Array>): Effect.Effect<void> =>

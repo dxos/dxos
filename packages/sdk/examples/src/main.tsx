@@ -14,7 +14,11 @@ import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
-import { Icon, Progress, Switch, ThemeProvider, Tooltip, defaultTx } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Status from '@dxos/react-ui/Status';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { Text } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
@@ -79,11 +83,11 @@ const main = async () => {
     const [batching, setBatching] = useState(false);
 
     return (
-      <ThemeProvider tx={defaultTx} themeMode='light'>
+      <Theme.Provider tx={Theme.defaultTx} themeMode='light'>
         <div className='demo'>
           <div className='buttons'>
             <Tooltip.Trigger content='Offline mode' className='flex'>
-              <Switch
+              <Input.Switch
                 data-testid='airplane-mode'
                 classNames='mr-2'
                 onCheckedChange={({ checked: e }) => {
@@ -92,10 +96,10 @@ const main = async () => {
                 }}
                 label='Offline mode'
               />
-              <Icon icon='ph--airplane--regular' size='xl' classNames={mx(offline && 'active')} />
+              <Icon.Icon icon='ph--airplane--regular' size='xl' classNames={mx(offline && 'active')} />
             </Tooltip.Trigger>
             <Tooltip.Trigger content='Write batching' className='flex'>
-              <Switch
+              <Input.Switch
                 data-testid='batching'
                 classNames='mr-2'
                 onCheckedChange={({ checked: e }) => {
@@ -104,7 +108,7 @@ const main = async () => {
                 }}
                 label='Write batching'
               />
-              <Icon icon='ph--stack--regular' size='xl' classNames={mx(batching && 'active')} />
+              <Icon.Icon icon='ph--stack--regular' size='xl' classNames={mx(batching && 'active')} />
             </Tooltip.Trigger>
           </div>
           {clients.map((client, index) => (
@@ -113,7 +117,7 @@ const main = async () => {
             </ClientProvider>
           ))}
         </div>
-      </ThemeProvider>
+      </Theme.Provider>
     );
   };
 
@@ -122,11 +126,11 @@ const main = async () => {
 
 const fallback = () => {
   root.render(
-    <ThemeProvider tx={defaultTx}>
+    <Theme.Provider tx={Theme.defaultTx}>
       <div className='flex h-[100dvh] justify-center items-center'>
-        <Progress indeterminate label='Initializing' />
+        <Status.Progress indeterminate label='Initializing' />
       </div>
-    </ThemeProvider>,
+    </Theme.Provider>,
   );
 };
 

@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 
 import { Provider } from '@dxos/ai';
 import { type AiServicePreset, AiServiceTestingPreset } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { Pipeline } from '@dxos/pipeline';
 import { captureSink, instrument, renderBenchmark, runBenchmark } from '@dxos/pipeline/testing';

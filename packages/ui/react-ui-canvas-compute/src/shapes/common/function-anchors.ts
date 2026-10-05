@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { type Polygon } from '@dxos/react-ui-canvas-editor';
 import { createAnchors, rowHeight } from '@dxos/react-ui-canvas-editor';
 import { DEFAULT_GRID } from '@dxos/react-ui-canvas/scene';

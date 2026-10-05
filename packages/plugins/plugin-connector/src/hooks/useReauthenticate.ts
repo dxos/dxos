@@ -4,9 +4,9 @@
 
 import { useCallback, useState } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection } from '@dxos/link';
 
 import { useConnector } from '#hooks';
@@ -30,7 +30,7 @@ export type UseReauthenticateResult = {
  * false and the caller hides the action.
  */
 export const useReauthenticate = (connection: Connection.Connection | undefined): UseReauthenticateResult => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const connector = useConnector(connection?.connectorId);
   const [reauthenticating, setReauthenticating] = useState(false);
 

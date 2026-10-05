@@ -11,7 +11,7 @@ import { expect } from 'vitest';
 
 import { HarnessControl } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import * as ComputeAgentService from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -79,7 +79,7 @@ describe('AgentService process selection', () => {
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat(ECHO_PROCESS_KEY);
-        const session = yield* ComputeAgentService.getSession(chat);
+        const session = yield* AgentService.getSession(chat);
         yield* session.submitPrompt('hello');
         const reply = yield* waitForMessage(session.feed, (message) => message.sender.role === 'assistant', {
           timeout: 5_000,
@@ -96,8 +96,8 @@ describe('AgentService process selection', () => {
     "runs a chat that names no process, or one nothing contributed, on the assistant's",
     Effect.fnUntraced(
       function* (_) {
-        yield* ComputeAgentService.getSession(yield* makeChat());
-        yield* ComputeAgentService.getSession(yield* makeChat('com.example.process.uninstalled'));
+        yield* AgentService.getSession(yield* makeChat());
+        yield* AgentService.getSession(yield* makeChat('com.example.process.uninstalled'));
         expect(yield* runningKeys).toEqual([AGENT_PROCESS_KEY, AGENT_PROCESS_KEY]);
       },
       Effect.provide(TestLayer),
@@ -110,11 +110,11 @@ describe('AgentService process selection', () => {
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat();
-        yield* ComputeAgentService.getSession(chat);
+        yield* AgentService.getSession(chat);
         Obj.update(chat, (chat) => {
           chat.session = { ...chat.session, process: ECHO_PROCESS_KEY };
         });
-        yield* ComputeAgentService.getSession(chat);
+        yield* AgentService.getSession(chat);
         const manager = yield* Process.ManagerService;
         const live = (yield* manager.handles()).filter((process) => process.status.state !== Process.State.TERMINATED);
         expect(live.map((process) => process.key)).toEqual([ECHO_PROCESS_KEY]);
@@ -129,7 +129,7 @@ describe('AgentService process selection', () => {
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat(ECHO_PROCESS_KEY);
-        const exit = yield* ComputeAgentService.getSession(chat, { location: 'edge' }).pipe(Effect.exit);
+        const exit = yield* AgentService.getSession(chat, { location: 'edge' }).pipe(Effect.exit);
         expect(Exit.isFailure(exit)).toBe(true);
         expect(yield* runningKeys).toEqual([]);
       },

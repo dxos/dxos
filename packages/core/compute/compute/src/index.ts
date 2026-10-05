@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './errors.ts';
 export * from './types/index.ts';
 
 export * as AgentIdentity from './AgentIdentity.ts';
 export * as AgentService from './AgentService.ts';
 export * as Cancellation from './Cancellation.ts';
 export * as Credential from './Credential.ts';
+export * as FunctionsAiError from './FunctionsAiError.ts';
 export * as Header from './Header.ts';
 export * as LayerSpec from './LayerSpec.ts';
 export * as McpServer from './McpServer.ts';

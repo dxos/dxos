@@ -13,7 +13,7 @@ import path, { join } from 'node:path';
 import { promisify } from 'node:util';
 import pkgUp from 'pkg-up';
 // Vite 8 ships rolldown as its bundler by default (no `rolldown-vite` shim needed).
-import { defineConfig as viteDefineConfig, type Plugin, type UserConfig } from 'vite';
+import { type Plugin, type UserConfig, defineConfig as viteDefineConfig } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
