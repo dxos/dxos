@@ -10,9 +10,13 @@ import * as NamePopover from '@dxos/app-toolkit/NamePopover';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Button, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-trace';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Branch, type History, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
@@ -28,7 +32,7 @@ export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.Versioned
  * Gated per-type by a `ReviewCapabilities.HistoryProvider` contribution.
  */
 export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role, subject }, forwardedRef) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const providers = Hooks.useCapabilities(ReviewCapabilities.HistoryProvider);
   const provider = providers.find(({ id }) => id === Obj.getTypename(subject));
   const [naming, setNaming] = useState<'checkpoint' | 'branch' | undefined>(undefined);
@@ -188,7 +192,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
             onSubmit={handleCreate}
             onCancel={() => setNaming(undefined)}
           >
-            <Button
+            <Button.Root
               icon='ph--bookmark-simple--regular'
               label={t('create-checkpoint.label')}
               // A revision records the tip; disable while viewing a historical checkpoint or a fork
@@ -204,7 +208,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
             onSubmit={handleCreate}
             onCancel={() => setNaming(undefined)}
           >
-            <Button
+            <Button.Root
               icon='ph--git-branch--regular'
               label={t('create-branch.label')}
               // Forking a sub-branch off a branch (its tip or one of its revisions) is not yet
@@ -218,8 +222,8 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
           </NamePopover.Root>
           {activeBranch && (
             <>
-              <Button icon='ph--git-merge--regular' label={t('merge.label')} onClick={handleMerge} />
-              <Button icon='ph--trash--regular' label={t('discard-branch.label')} onClick={handleDiscard} />
+              <Button.Root icon='ph--git-merge--regular' label={t('merge.label')} onClick={handleMerge} />
+              <Button.Root icon='ph--trash--regular' label={t('discard-branch.label')} onClick={handleDiscard} />
             </>
           )}
         </Toolbar.Root>

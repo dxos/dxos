@@ -16,9 +16,9 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
-import { Button } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
@@ -99,7 +99,7 @@ const BreadcrumbStory = () => {
         node={node}
         classNames={[PLANK_CLASSNAMES, 'w-[40rem]']}
         breadcrumbs={[{ id: 'parent', label: 'Parent' }]}
-        controls={<Button icon='ph--x--regular' iconOnly label='Close' data-testid='plank.close' />}
+        controls={<Button.Root icon='ph--x--regular' iconOnly label='Close' data-testid='plank.close' />}
       />
     </div>
   );

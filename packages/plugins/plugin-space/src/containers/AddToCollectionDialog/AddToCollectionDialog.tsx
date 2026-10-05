@@ -14,8 +14,11 @@ import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useSpace } from '@dxos/react-client/echo';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
@@ -38,7 +41,7 @@ type CollectionItem = {
 
 /** Picks a collection in the object's space to list the object in. */
 export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(object);
   const space = useSpace(db?.spaceId);
@@ -53,9 +56,9 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
     const excluded = Collection.isCollection(object) ? getSubtree(object, collections) : new Set<string>();
     const getLabel = (collection: Collection.Collection) =>
       collection.id === rootId
-        ? toLocalizedString(['collections-section.label', { ns: meta.profile.key }], t)
+        ? Theme.toLocalizedString(['collections-section.label', { ns: meta.profile.key }], t)
         : (Obj.getLabel(collection) ??
-          toLocalizedString(
+          Theme.toLocalizedString(
             ['object-name.placeholder', { ns: Type.getTypename(Collection.Collection), defaultValue: collection.id }],
             t,
           ));
@@ -115,7 +118,7 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
             autoFocus
             escapeBehavior='dismiss'
             placeholder={t('add-to-collection-dialog.placeholder')}
-            {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+            {...{ [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
           />
           <SearchList.Viewport classNames='max-h-[24rem]'>
             {results.length === 0 && <SearchList.Empty />}

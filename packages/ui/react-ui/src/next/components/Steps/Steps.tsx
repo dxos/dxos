@@ -12,7 +12,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
-import { type CSSVariables } from '../Container/index.ts';
+import { type CSSVariables } from '../Container/Container.tsx';
 
 /** One stage of a plan that has identity: a stage the caller can address and select. */
 export type Step = {

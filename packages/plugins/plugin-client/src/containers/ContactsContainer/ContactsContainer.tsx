@@ -9,14 +9,16 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
-import { Field, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import { ContactList, type ContactSpace } from '@dxos/shell/react';
 
 import { meta } from '#meta';
 
 export const ContactsContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const contacts = useContacts();
   const spaces = useSpaces();
@@ -36,7 +38,7 @@ export const ContactsContainer = () => {
           <Form.FieldSet label={t('contacts.label')} description={t('contacts.description')}>
             {(contacts.length > 1 || filter !== '') && (
               <Field.Root>
-                <Input
+                <Input.Root
                   placeholder={t('contacts-search.placeholder')}
                   value={filter}
                   onChange={(event) => setFilter(event.target.value)}

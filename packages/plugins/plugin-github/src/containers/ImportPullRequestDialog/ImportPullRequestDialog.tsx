@@ -9,8 +9,10 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
-import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
@@ -72,7 +74,7 @@ const importFailureKey = (error: unknown): string => {
  * user already is, and a picker would ask a question they have already answered.
  */
 export const ImportPullRequestDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const openObject = useOpenObject();
   const space = ToolkitHooks.useActiveSpace();

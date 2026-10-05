@@ -18,19 +18,17 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import {
-  AlertDialog,
-  Card,
-  Dialog,
-  DragHandle,
-  Main,
-  Popover,
-  Toast,
-  toLocalizedString,
-  useTranslation,
-  virtualAnchor,
-} from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Card from '@dxos/react-ui/Card';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Main from '@dxos/react-ui/Main';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Toast from '@dxos/react-ui/Toast';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -41,7 +39,7 @@ const debounce_delay = 100;
 type FocusOutsideEvent = Parameters<NonNullable<ComponentProps<typeof Popover.Root>['onFocusOutside']>>[0];
 
 const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDismiss: (id: string) => void }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   return (
     <Toast.Root
       data-testid={toast.id}
@@ -54,13 +52,13 @@ const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDism
       }}
     >
       <Toast.Header icon={toast.icon} closable={!!toast.closeLabel}>
-        {toast.title && toLocalizedString(toast.title, t)}
+        {toast.title && Theme.toLocalizedString(toast.title, t)}
       </Toast.Header>
-      {toast.description && <Toast.Description>{toLocalizedString(toast.description, t)}</Toast.Description>}
+      {toast.description && <Toast.Description>{Theme.toLocalizedString(toast.description, t)}</Toast.Description>}
       {toast.onAction && toast.actionAlt && toast.actionLabel && (
         <Toast.Footer>
           <Toast.ActionTrigger variant='primary' onClick={() => toast.onAction?.()}>
-            {toLocalizedString(toast.actionLabel, t)}
+            {Theme.toLocalizedString(toast.actionLabel, t)}
           </Toast.ActionTrigger>
         </Toast.Footer>
       )}
@@ -69,7 +67,7 @@ const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDism
 };
 
 export const Layout = ({ children }: PropsWithChildren<{}>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const registry = useContext(RegistryContext);
   const stateAtom = Hooks.useCapability(StorybookCapabilities.LayoutState);
@@ -141,7 +139,11 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
         <Dnd.Root>
           <Popover.Root
             open={open}
-            positioning={{ ...virtualAnchor(trigger), placement: layout.popoverSide, hideWhenDetached: true }}
+            positioning={{
+              ...VirtualAnchor.virtualAnchor(trigger),
+              placement: layout.popoverSide,
+              hideWhenDetached: true,
+            }}
             autoFocus={false}
             onFocusOutside={handleFocusOutside}
             onPointerDownOutside={handleClose}
@@ -179,9 +181,9 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                   <Card.Root grid border={false} classNames='dx-card-popover rounded-md'>
                     <Card.Header>
                       {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
-                      <DragHandle />
+                      <DragHandle.DragHandle />
                       {layout.popoverTitle ? (
-                        <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
+                        <Card.Title>{Theme.toLocalizedString(layout.popoverTitle, t)}</Card.Title>
                       ) : (
                         <span />
                       )}
@@ -216,7 +218,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const ErrorFallback = ({ error }: { error?: Error }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const errorString = error?.toString() ?? '';
   return (
     <div

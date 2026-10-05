@@ -19,7 +19,7 @@ import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { Assistant } from '#types';
 
@@ -52,7 +52,7 @@ export const useChatProcessor = ({
   const feed = Obj.getReactiveOrUndefined(feedSnapshot);
 
   const [session, setSession] = useState<AiSession.Session>();
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (!db || !chat || !feed) {
       return;
     }

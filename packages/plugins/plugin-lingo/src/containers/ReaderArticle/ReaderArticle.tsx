@@ -10,8 +10,9 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { sourceHash } from '@dxos/nlp';
-import { Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 import { HasSubject } from '@dxos/types';
 
 import { ReaderPane } from '#components';
@@ -38,7 +39,7 @@ export type ReaderArticleProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
  * revealed, so the document keeps whatever editor its own plugin gives it.
  */
 export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Attention sits on the article this companion accompanies, not on the companion itself, so the
   // subject's URI is what `ActionToolbar`'s `useAttention` has to match — otherwise the toolbar is

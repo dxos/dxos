@@ -17,7 +17,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { RelatedItemsList } from '#components';
 import { SampleItem, SampleItem as SampleItemSchema } from '#types';

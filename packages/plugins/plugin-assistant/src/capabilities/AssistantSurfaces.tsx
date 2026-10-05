@@ -17,7 +17,7 @@ import { Feed, Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { AssistantSettings, SpaceHomeSuggestions, TracePanel, TriggerStatus } from '#containers';
 import { Assistant } from '#types';

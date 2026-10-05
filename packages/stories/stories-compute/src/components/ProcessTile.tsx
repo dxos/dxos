@@ -12,7 +12,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as Process from '@dxos/compute/Process';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { Block, Card, Icon } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import {
   DEFAULT_FRAME_COUNT,
@@ -154,9 +156,9 @@ export const ProcessTile = ({ data: item, onRemove }: ProcessTileProps) => {
   return (
     <Card.Root grid data-testid='process-tile'>
       <Card.Header>
-        <Block>
-          <Icon icon='ph--cpu--regular' />
-        </Block>
+        <Layout.Block>
+          <Icon.Icon icon='ph--cpu--regular' />
+        </Layout.Block>
         <Card.Title truncate classNames='font-mono'>
           {handle.pid}
         </Card.Title>

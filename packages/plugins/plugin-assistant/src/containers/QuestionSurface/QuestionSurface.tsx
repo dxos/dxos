@@ -5,12 +5,16 @@
 import React, { useMemo } from 'react';
 
 import * as CardSlot from '@dxos/app-toolkit/CardSlot';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EntityId } from '@dxos/keys';
-import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -36,8 +40,8 @@ export type QuestionSurfaceProps = {
  * history: an answer given here and one given from the task's row have to be the same answer.
  */
 export const QuestionSurface = ({ task: taskId, question: questionId }: QuestionSurfaceProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const space = Hooks.useActiveSpace();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const space = ToolkitHooks.useActiveSpace();
   // Validated before it reaches `Filter.id`, which asserts on its arguments: this id is written by
   // a model, so a truncated or hallucinated one is the expected case, and an unguarded filter
   // would throw during render inside the transcript rather than render nothing.
@@ -45,7 +49,7 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
   const filter = useMemo(() => (valid ? Filter.id(valid) : Filter.nothing()), [valid]);
   const [object] = useQuery(valid ? space?.db : undefined, filter);
   // Before the guard below, so the hook count is stable; it answers `[]` for a missing subject.
-  const menuItems = Hooks.useObjectMenuItems(object);
+  const menuItems = ToolkitHooks.useObjectMenuItems(object);
   if (!object || !Obj.instanceOf(Task.Task, object) || !questionId) {
     return null;
   }
@@ -55,25 +59,25 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
     // beside each other and wrong in a message, where the thread's column is the width to fill.
     <Card.Root classNames='my-2' size='sm'>
       <Card.Header>
-        <Block>
+        <Layout.Block>
           <CardSlot.IconSlot subject={object}>
-            <Icon icon='ph--question--regular' />
+            <Icon.Icon icon='ph--question--regular' />
           </CardSlot.IconSlot>
-        </Block>
+        </Layout.Block>
         {/* The task, not the question: a `Card.Title` truncates to one line by design, and the
             question is a sentence the reader has to read in full — so the body carries it. */}
         <Card.Title>{object.title}</Card.Title>
         {/* The task's actions, as a task card anywhere else offers them. */}
-        <Block rail='end'>
+        <Layout.Block rail='end'>
           <ActionMenu disabled={!menuItems.length} actions={menuItems}>
-            <Button
+            <Button.Root
               variant='ghost'
               icon='ph--dots-three-vertical--regular'
               iconOnly
               label={t('question-actions.label')}
             />
           </ActionMenu>
-        </Block>
+        </Layout.Block>
       </Card.Header>
       <QuestionCard task={object} questionId={questionId} />
     </Card.Root>

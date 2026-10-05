@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Toast, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toast from '@dxos/react-ui/Toast';
 
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
@@ -29,7 +30,7 @@ type FailureToastProps = {
  * class. The toast is held open (controlled) so it can be reviewed; production auto-dismisses after 20s.
  */
 const FailureToast = ({ rawError }: FailureToastProps) => {
-  const { t } = useTranslation(pluginMeta.profile.key);
+  const { t } = Hooks.useTranslation(pluginMeta.profile.key);
   const [open, setOpen] = useState(true);
   const error = parseError(rawError);
   const action = error instanceof AiUsageQuotaError ? error.action : undefined;

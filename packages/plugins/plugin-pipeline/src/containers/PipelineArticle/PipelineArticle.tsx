@@ -10,10 +10,9 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Panel } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
-import { useAttention } from '@dxos/react-ui-attention';
+import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { useMenuContribution } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { type Pipeline } from '@dxos/types';
 
 import { type ItemProps, PipelineComponent } from '#components';

@@ -10,8 +10,10 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, type Key, type Obj, type Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
@@ -43,7 +45,7 @@ export const CustomTokenDialog = ({
   connectorLabel,
   existingTarget,
 }: CustomTokenDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invoke } = Hooks.useOperationInvoker();
   const coordinator = Hooks.useCapability(ConnectorCoordination.ConnectorCoordinator);
   const connectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();

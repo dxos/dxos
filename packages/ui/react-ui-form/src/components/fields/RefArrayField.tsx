@@ -8,8 +8,13 @@ import React, { type KeyboardEvent, type MouseEvent, useMemo } from 'react';
 import { Annotation, Entity, Obj, Ref, Type } from '@dxos/echo';
 import type * as SchemaAST from '@dxos/effect/SchemaAST';
 import { URI } from '@dxos/keys';
-import { Field, Group, SystemButton, Tag, Typography, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Typography from '@dxos/react-ui/Typography';
 import { DxAnchorActivate, hues } from '@dxos/ui-types';
 import { arrayMove } from '@dxos/util';
 
@@ -63,7 +68,7 @@ export const RefArrayField = ({
   createOptionIcon,
   ...props
 }: RefArrayFieldProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { typename, entity, options, createSchema, createLabel, create } = useRefCandidates({
     ...props,
     refType: elementType,
@@ -136,15 +141,15 @@ export const RefArrayField = ({
   if (isStatic) {
     const selected = ids.flatMap((id) => options.find((option) => option.id === id) ?? []);
     return selected.length === 0 ? (
-      <Typography tone='muted'>{t('empty-readonly-ref-field.label')}</Typography>
+      <Typography.Text tone='muted'>{t('empty-readonly-ref-field.label')}</Typography.Text>
     ) : (
-      <Group>
+      <Button.Group>
         {selected.map((option) => (
-          <Tag key={option.id} hue={hues.find((hue) => hue === option.hue)}>
+          <Tag.Tag key={option.id} hue={hues.find((hue) => hue === option.hue)}>
             {option.label}
-          </Tag>
+          </Tag.Tag>
         ))}
-      </Group>
+      </Button.Group>
     );
   }
 
@@ -240,7 +245,7 @@ const TitleRows = ({
   return (
     <>
       <Field.Header>
-        <Typography truncate>{label}</Typography>
+        <Typography.Text truncate>{label}</Typography.Text>
       </Field.Header>
       {rows.length > 0 && (
         <OrderedList.Root

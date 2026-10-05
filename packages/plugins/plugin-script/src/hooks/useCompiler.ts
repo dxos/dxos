@@ -5,7 +5,7 @@
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { ScriptCapabilities, ScriptEvents } from '#types';
 
@@ -17,7 +17,7 @@ import type { Compiler } from '../compiler/index.ts';
  */
 export const useCompiler = (): Compiler | undefined => {
   const manager = PluginManagerProvider.usePluginManager();
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     await manager.activate(ScriptEvents.SetupCompiler).pipe(EffectEx.runAndForwardErrors);
   }, [manager]);
   const [compiler] = Hooks.useCapabilities(ScriptCapabilities.Compiler);

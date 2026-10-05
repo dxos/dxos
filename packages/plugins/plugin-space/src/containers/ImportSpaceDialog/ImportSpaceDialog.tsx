@@ -9,13 +9,18 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
-import { Button, Dialog, Flex, Icon, SystemButton, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
 export const ImportSpaceDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   const [importing, setImporting] = useState<string>();
@@ -67,7 +72,7 @@ export const ImportSpaceDialog = () => {
       <Dialog.Body>
         <p className='my-4'>{t('import-space-dialog.description')}</p>
         {importing ? (
-          <Flex
+          <Layout.Flex
             align='center'
             justify='center'
             gap='sm'
@@ -76,10 +81,10 @@ export const ImportSpaceDialog = () => {
             classNames='my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm'
           >
             <div>
-              <Icon icon='ph--spinner-gap--regular' size='xl' spin />
+              <Icon.Icon icon='ph--spinner-gap--regular' size='xl' spin />
               <span>{t('import-space-dialog.importing.label', { filename: importing })}</span>
             </div>
-          </Flex>
+          </Layout.Flex>
         ) : (
           <FileUploader
             types={['json', 'tar']}
@@ -89,14 +94,14 @@ export const ImportSpaceDialog = () => {
               void handleFile(file);
             }}
           >
-            <Icon icon='ph--file-plus--duotone' size='xl' />
+            <Icon.Icon icon='ph--file-plus--duotone' size='xl' />
             <span>{t('import-space-dialog.upload.label')}</span>
           </FileUploader>
         )}
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.CloseTrigger asChild>
-          <Button variant='primary'>{t('cancel.label')}</Button>
+          <Button.Root variant='primary'>{t('cancel.label')}</Button.Root>
         </Dialog.CloseTrigger>
       </Dialog.Footer>
     </Dialog.Content>

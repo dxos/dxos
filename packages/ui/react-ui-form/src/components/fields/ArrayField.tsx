@@ -9,8 +9,12 @@ import { Annotation, Ref } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { log } from '@dxos/log';
-import { Button, Container, Field, Typography, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -34,7 +38,7 @@ export type ArrayFieldProps = {
  * control and a remove Button; a `FormOrderedAnnotation` array adds a DragHandle (pointer drag and keyboard moves).
  */
 export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ...props }: ArrayFieldProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const elementType = SchemaEx.getArrayElementType(type);
   const { onValueChange } = fieldProps;
   const values = useFormValues<unknown[]>('Form.ArrayField', path, () => []);
@@ -97,9 +101,9 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
   return (
     <>
       <Field.Header>
-        <Typography truncate>{label}</Typography>
+        <Typography.Text truncate>{label}</Typography.Text>
         {editable && (
-          <Button
+          <Button.Root
             iconOnly
             variant='ghost'
             icon='ph--plus--regular'
@@ -123,7 +127,7 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
               <OrderedList.Item key={item.id} id={item.id} canDrag={ordered && editable}>
                 {ordered && editable && <OrderedList.DragHandle />}
                 {/* A cell holding a nested group must be a template root, so the group's subgrid finds `content`. */}
-                <Container gutter='none'>
+                <Layout.Container gutter='none'>
                   <FormFieldDispatch
                     {...props}
                     type={elementType}
@@ -133,9 +137,9 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
                     readonly={!editable}
                     layout={asObject ? layout : 'inline'}
                   />
-                </Container>
+                </Layout.Container>
                 {editable && (
-                  <Button
+                  <Button.Root
                     iconOnly
                     variant='ghost'
                     icon='ph--x--regular'

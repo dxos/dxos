@@ -4,11 +4,9 @@
 
 import React, { type ComponentPropsWithoutRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
+import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
-
-import { recipes } from '../../recipes.ts';
-import { Icon } from '../Icon/index.ts';
 
 export type AttentionGlyphPresence = 'none' | 'one' | 'many';
 
@@ -30,7 +28,7 @@ const PresenceOne = () => (
     aria-hidden
     data-scope='attention-glyph'
     data-part='mark'
-    className={recipes.attentionGlyphMark()}
+    className={'dx-attention-glyph-mark'}
   >
     <circle cx='6' cy='6' r='2.5' fill='currentColor' />
   </svg>
@@ -43,7 +41,7 @@ const PresenceMany = () => (
     aria-hidden
     data-scope='attention-glyph'
     data-part='mark'
-    className={recipes.attentionGlyphMark()}
+    className={'dx-attention-glyph-mark'}
   >
     <path
       d='M6.75 8.27311C7.38815 7.72296 7.79212 6.90866 7.79212 6C7.79212 5.09134 7.38815 4.27704 6.75 3.72689C7.06722 3.58122 7.42019 3.5 7.79212 3.5C9.17283 3.5 10.2921 4.61929 10.2921 6C10.2921 7.38071 9.17283 8.5 7.79212 8.5C7.42019 8.5 7.06723 8.41878 6.75 8.27311Z'
@@ -56,7 +54,7 @@ const PresenceMany = () => (
 /** Every spinner on the page shares one phase, so a list of syncing items turns together rather than flickering. */
 const Syncing = () => {
   const style = useMemo<CSSProperties>(() => ({ animationDelay: `-${Date.now() % 2_000}ms` }), []);
-  return <Icon icon='ph--circle-notch--bold' data-spin='' style={style} />;
+  return <Icon.Icon icon='ph--circle-notch--bold' data-spin='' style={style} />;
 };
 
 /**
@@ -73,7 +71,7 @@ export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
       data-contains-attended={containsAttended ? '' : undefined}
       data-syncing={syncing ? '' : undefined}
       data-presence={presence}
-      className={mx(recipes.attentionGlyph(), classNames)}
+      className={mx('dx-attention-glyph', classNames)}
       ref={forwardedRef}
     >
       {syncing ? <Syncing /> : presence === 'many' ? <PresenceMany /> : presence === 'one' ? <PresenceOne /> : null}

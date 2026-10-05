@@ -15,13 +15,16 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
-import { Button, Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
@@ -138,8 +141,8 @@ const DefaultStory = ({ Tile }: StoryArgs) => {
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Button icon='ph--caret-left--regular' iconOnly label='Back' onClick={handlePrev} />
-              <Button icon='ph--caret-right--regular' iconOnly label='Forward' onClick={handleNext} />
+              <Button.Root icon='ph--caret-left--regular' iconOnly label='Back' onClick={handlePrev} />
+              <Button.Root icon='ph--caret-right--regular' iconOnly label='Forward' onClick={handleNext} />
               <Toolbar.Text>
                 {currentIndex + 1} / {items.length}
               </Toolbar.Text>

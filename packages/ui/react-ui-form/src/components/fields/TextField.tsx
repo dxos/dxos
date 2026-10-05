@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Format } from '@dxos/echo';
-import { Input } from '@dxos/react-ui';
+import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -31,7 +31,7 @@ export const TextField = ({
   // An opaque identifier is not prose: no spellcheck squiggles, no autocorrect, no capitalisation.
   const key = format === Format.TypeFormat.Key;
   return (
-    <Input
+    <Input.Root
       noAutoFill
       autoFocus={autoFocus}
       disabled={!!readonly}

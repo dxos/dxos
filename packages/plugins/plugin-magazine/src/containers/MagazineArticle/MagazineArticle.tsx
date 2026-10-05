@@ -12,11 +12,13 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
@@ -28,7 +30,7 @@ import { useToolbar } from './useToolbar.tsx';
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const invoker = Hooks.useOperationInvoker();
   const [magazine] = useObject(subject);
   const curateProgress = ToolkitHooks.useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
@@ -99,9 +101,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       <Panel.Body>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
-          <Flex center classNames='h-full text-fg-subtle text-sm'>
+          <Layout.Flex center classNames='h-full text-fg-subtle text-sm'>
             {t('empty-magazine.message')}
-          </Flex>
+          </Layout.Flex>
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
             <Masonry.Content padding>

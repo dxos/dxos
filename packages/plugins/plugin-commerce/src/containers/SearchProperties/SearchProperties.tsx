@@ -8,8 +8,10 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Button, Container, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
@@ -27,7 +29,7 @@ export type SearchPropertiesProps = {
  * selector is duplicated here. The masonry results live in the article.
  */
 export const SearchProperties = ({ search }: SearchPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const database = Obj.getDatabase(search);
 
@@ -76,7 +78,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   }, [invokePromise, search, database]);
 
   return (
-    <Container gutter='none'>
+    <Layout.Container gutter='none'>
       {/* TODO(burdon): Fix indentation; is this the right way to extend properties? */}
       {selectedProviders.length > 0 && (
         // Re-key the form on the set of selected providers so the merged schema
@@ -94,13 +96,13 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
         </Form.Root>
       )}
 
-      <Button
+      <Button.Root
         icon='ph--shopping-cart--regular'
         label={running ? t('running.label') : t('run.label')}
         disabled={selectedProviders.length === 0 || running}
         onClick={handleRun}
       />
-    </Container>
+    </Layout.Container>
   );
 };
 

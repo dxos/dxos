@@ -4,13 +4,15 @@
 
 import React from 'react';
 
-import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { ShortcutsList } from '#components';
 import { meta } from '#meta';
 
 export const ShortcutsDialogContent = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Dialog.Content>

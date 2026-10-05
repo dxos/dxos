@@ -13,8 +13,12 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Block, Card, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -34,7 +38,7 @@ type SpaceScopedProps = {
  * contributor (plugin-assistant) fills the empty state instead.
  */
 export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   const schemas = Hooks.useCapabilities(AppCapabilities.Schema);
   const filter = useMemo(() => {
@@ -74,9 +78,9 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
 
 const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const { invokePromise } = Hooks.useOperationInvoker();
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
-  const label = toLocalizedString(
+  const label = Theme.toLocalizedString(
     Obj.getLabel(data) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
     t,
   );
@@ -91,9 +95,9 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   return (
     <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Block>
-          <Icon icon={icon} classNames={iconStyles?.text} />
-        </Block>
+        <Layout.Block>
+          <Icon.Icon icon={icon} classNames={iconStyles?.text} />
+        </Layout.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
     </Card.Root>

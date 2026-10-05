@@ -12,7 +12,6 @@ import React, {
   useState,
 } from 'react';
 
-import { Button, createContext, useTranslation } from '@dxos/react-ui';
 import {
   type FeedModel,
   MessageList,
@@ -20,6 +19,8 @@ import {
   type MessageRange,
   useMessageList,
 } from '@dxos/react-ui-feed';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry.tsx';
@@ -39,7 +40,7 @@ type ChatThreadContextValue = {
   onEvent?: (event: ChatThreadEvent) => void;
 };
 
-const [ChatThreadProvider, useChatThreadContext] = createContext<ChatThreadContextValue>(CHAT_THREAD_NAME);
+const [ChatThreadProvider, useChatThreadContext] = Hooks.createContext<ChatThreadContextValue>(CHAT_THREAD_NAME);
 
 //
 // Controller
@@ -227,14 +228,14 @@ const CHAT_THREAD_SCROLL_TO_BOTTOM_NAME = 'ChatThread.ScrollToBottom';
  * invisible button out of the focus order and off the accessibility tree.
  */
 const ScrollToBottom = () => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { atEnd, following, scrollToBottom } = useMessageList(CHAT_THREAD_SCROLL_TO_BOTTOM_NAME);
   // Hidden while the list follows the tail itself: a streaming turn outruns the glide a frame at a
   // time, and `atEnd` alone would blink the button through every response.
   const hidden = atEnd || following;
 
   return (
-    <Button
+    <Button.Root
       variant='primary'
       icon='ph--arrow-line-down--regular'
       iconOnly

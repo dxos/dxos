@@ -7,7 +7,9 @@ import React from 'react';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Entity, Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing/schema.ts';

@@ -10,8 +10,9 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Empty, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 import { Frame, MediaArtifact, type Storyboard } from '#types';
@@ -34,7 +35,7 @@ export type FrameCompanionProps = {
  * picked — so the companion follows the stack without either holding state of its own.
  */
 export const FrameCompanion = ({ companionTo: storyboard, attendableId }: FrameCompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const selectedId = useSelection(attendableId, 'single');
   const [refs] = useObject(storyboard, 'frames');
@@ -76,7 +77,7 @@ export const FrameCompanion = ({ companionTo: storyboard, attendableId }: FrameC
   );
 
   if (!frame) {
-    return <Empty classNames='h-full'>{t('storyboard-empty.message')}</Empty>;
+    return <Status.Empty classNames='h-full'>{t('storyboard-empty.message')}</Status.Empty>;
   }
 
   return <FrameDetail key={frame.id} frame={frame} attendableId={attendableId} onAddArtifact={handleAddArtifact} />;

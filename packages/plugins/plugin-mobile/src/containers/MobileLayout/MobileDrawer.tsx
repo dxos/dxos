@@ -6,11 +6,13 @@ import React, { useMemo } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as DeckHooks from '@dxos/plugin-deck/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { Empty, ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 
 import { Loading } from '#components';
 import { useMobileDrawerActions, useMobileStack } from '#hooks';
@@ -22,8 +24,8 @@ const DRAWER_NAME = 'MobileDeckLayout.Drawer';
  * Companion drawer for the visible panel of the mobile stack.
  */
 export const MobileDrawer = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const { graph } = Hooks.useAppGraph();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { graph } = ToolkitHooks.useAppGraph();
   const { state } = DeckHooks.useDeckState();
   const { topId } = useMobileStack();
 
@@ -65,11 +67,11 @@ export const MobileDrawer = () => {
             type={AppSurface.Article}
             data={data}
             limit={1}
-            fallback={ErrorFallback}
+            fallback={Status.Error}
             placeholder={placeholder}
           />
         ) : (
-          <Empty>{t('empty-drawer.message')}</Empty>
+          <Status.Empty>{t('empty-drawer.message')}</Status.Empty>
         )}
       </Panel.Body>
     </Panel.Root>

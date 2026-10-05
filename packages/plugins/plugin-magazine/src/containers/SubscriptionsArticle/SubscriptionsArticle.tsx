@@ -12,8 +12,11 @@ import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';
@@ -22,7 +25,7 @@ import { FeedOperation, Subscription } from '#types';
 export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps;
 
 export const SubscriptionsArticle = ({ role, space, attendableId }: SubscriptionsArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const layout = ToolkitHooks.useLayout();
 
@@ -88,7 +91,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root>
-          <Button label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
+          <Button.Root label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>

@@ -17,8 +17,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -31,8 +30,8 @@ import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
 import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -86,7 +85,7 @@ const DefaultStory = () => {
   const data = useMemo(() => ({ subject: doc, attendableId: id ?? 'story' }), [doc, id]);
   const attentionAttrs = useAttentionAttributes(id);
 
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (space) {
       await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
     }

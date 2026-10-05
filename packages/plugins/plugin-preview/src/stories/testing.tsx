@@ -6,8 +6,9 @@ import React, { type FC, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { Card, DragHandle } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
+import * as Card from '@dxos/react-ui/Card';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
 
 import { JsonCard } from '../cards/index.ts';
 import { omitImage } from './fixtures.ts';
@@ -39,7 +40,7 @@ export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
             <CardContainer role={role}>
               <Card.Root border={false}>
                 <Card.Header>
-                  <DragHandle />
+                  <DragHandle.DragHandle />
                   <Card.Title>{Obj.getLabel(object)}</Card.Title>
                 </Card.Header>
                 <Component

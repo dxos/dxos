@@ -12,7 +12,10 @@ import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
-import { Button, Panel, Popover, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
 
 export const ChatModule = () => {
@@ -59,7 +62,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
             <Toolbar.Text classNames='text-fg-subtle'>{chat?.name}</Toolbar.Text>
             <Popover.Root>
               <Popover.Trigger asChild>
-                <Button icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+                <Button.Root icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
               </Popover.Trigger>
               <Popover.Content>
                 <ExecutionGraphModule />

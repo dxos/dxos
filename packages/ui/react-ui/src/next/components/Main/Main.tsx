@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Drawer as DrawerPrimitive, useDrawer } from '@ark-ui/react/drawer';
 import { ark } from '@ark-ui/react/factory';
 import React, {
@@ -22,10 +24,11 @@ import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
 import { useComposedRefs, useControllableState, useMediaQuery } from '@dxos/react-hooks';
 import { mx, osTranslations } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
+import { type Label, toLocalizedString } from '@dxos/ui-types/translations';
 
 import { translationKey } from '#translations';
 
-import { type Label, toLocalizedString, useTranslation } from '../../../providers/index.ts';
+import { useTranslation } from '../../../providers/ThemeProvider/TranslationsContext.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import {
@@ -590,16 +593,6 @@ MainDrawer.displayName = MAIN_DRAWER_NAME;
 //
 // Main
 //
-
-export const Main = {
-  Root: MainRoot,
-  Overlay: MainOverlay,
-  Content: MainContent,
-  NavigationSidebar: MainNavigationSidebar,
-  ComplementarySidebar: MainComplementarySidebar,
-  Drawer: MainDrawer,
-};
-
 export {
   DRAWER_DEFAULT_HEIGHT as MAIN_DRAWER_DEFAULT_HEIGHT,
   DRAWER_MAX_HEIGHT as MAIN_DRAWER_MAX_HEIGHT,
@@ -609,11 +602,20 @@ export {
 };
 
 export type {
-  MainContentProps,
-  MainDrawerProps,
-  DrawerState as MainDrawerState,
-  MainNavigationSidebarProps,
-  MainOverlayProps,
-  MainRootProps,
-  SidebarState as MainSidebarState,
+  MainContentProps as ContentProps,
+  MainDrawerProps as DrawerProps,
+  DrawerState as DrawerState,
+  MainNavigationSidebarProps as NavigationSidebarProps,
+  MainOverlayProps as OverlayProps,
+  MainRootProps as RootProps,
+  SidebarState as SidebarState,
+};
+
+export {
+  MainComplementarySidebar as ComplementarySidebar,
+  MainContent as Content,
+  MainDrawer as Drawer,
+  MainNavigationSidebar as NavigationSidebar,
+  MainOverlay as Overlay,
+  MainRoot as Root,
 };

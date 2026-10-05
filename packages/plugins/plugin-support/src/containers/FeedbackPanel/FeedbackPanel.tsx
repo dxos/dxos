@@ -6,8 +6,8 @@ import React, { useMemo } from 'react';
 
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { useConfig } from '@dxos/react-client';
-import { Panel } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { FeedbackForm, type FeedbackPluginOption } from '#components';
 

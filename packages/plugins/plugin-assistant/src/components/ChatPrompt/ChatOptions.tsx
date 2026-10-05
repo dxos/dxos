@@ -13,23 +13,19 @@ import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos
 import { useObject, useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import {
-  Button,
-  Field,
-  Flex,
-  Input,
-  PasswordInput,
-  Popover,
-  Select,
-  Switch,
-  SystemButton,
-  Tabs,
-  Toolbar,
-  useTranslation,
-} from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Select from '@dxos/react-ui/Select';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import {
@@ -62,13 +58,13 @@ export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
  * Manages the runtime context for the chat.
  */
 export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   return (
-    <Flex>
+    <Layout.Flex>
       <Popover.Root positioning={{ placement: 'top' }}>
         <Popover.Trigger asChild>
-          <Button
+          <Button.Root
             variant='ghost'
             icon='ph--plus--regular'
             iconOnly
@@ -84,7 +80,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
 
       <Popover.Root positioning={{ placement: 'top' }}>
         <Popover.Trigger asChild>
-          <Button
+          <Button.Root
             variant='ghost'
             icon='ph--sliders-horizontal--regular'
             iconOnly
@@ -130,12 +126,12 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
           </Tabs.Root>
         </Popover.Content>
       </Popover.Root>
-    </Flex>
+    </Layout.Flex>
   );
 };
 
 const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   const skills = useSkills({ registry, db });
   const activeSkills = useActiveSkills({ context });
@@ -175,7 +171,7 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
 };
 
 const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [view, setView] = useObject(chat, 'viewType');
   const value = (view as ChatView | undefined) ?? 'normal';
 
@@ -209,7 +205,7 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
  * respawns it on the other host.
  */
 const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [remote, setRemote] = useObject(chat, 'remote');
   const client = Hooks.useOptionalCapability(ClientCapabilities.Client);
   // Offered only where an edge service is configured, which is the same condition that decides
@@ -253,10 +249,10 @@ const ModelsPanel = ({
   preset,
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   return (
-    <Flex column classNames='dx-expand'>
+    <Layout.Flex column classNames='dx-expand'>
       <Listbox.Root
         value={preset}
         onValueChange={onPresetChange}
@@ -275,7 +271,7 @@ const ModelsPanel = ({
       <Toolbar.Root>
         <OnlineSwitch />
       </Toolbar.Root>
-    </Flex>
+    </Layout.Flex>
   );
 };
 
@@ -288,7 +284,7 @@ const ModelsPanel = ({
  * Ollama elsewhere — which is the same reconciliation `usePresets` does when it reads the setting.
  */
 const OnlineSwitch = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [settings, setSettings] = Hooks.useAtomCapabilityState(AssistantCapabilities.Settings);
   const hasBuiltIn = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager) !== undefined;
   const online = resolveProvider(settings.modelProvider, hasBuiltIn) === Provider.edge.id;
@@ -302,7 +298,7 @@ const OnlineSwitch = () => {
   );
 
   return (
-    <Switch
+    <Input.Switch
       checked={online}
       onCheckedChange={({ checked }) => handleChange(checked)}
       data-testid='assistant.online'
@@ -323,7 +319,7 @@ type McpServersPanelProps = {
 };
 
 const McpServersPanel = ({ db }: McpServersPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const servers = useQuery(db, Filter.type(McpServer.McpServer));
   const [adding, setAdding] = useState(false);
 
@@ -360,7 +356,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   return (
-    <Flex column data-testid='assistant.mcp-servers'>
+    <Layout.Flex column data-testid='assistant.mcp-servers'>
       <Listbox.Root items={servers.map((server) => ({ value: server.id, label: server.name ?? server.id }))}>
         <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
           {servers.map((server) => (
@@ -371,17 +367,17 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
       {adding ? (
         <McpForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <Flex classNames='p-1'>
-          <Button
+        <Layout.Flex classNames='p-1'>
+          <Button.Root
             variant='ghost'
             icon='ph--plus--regular'
             label={t('mcp-server-add.label')}
             onClick={() => setAdding(true)}
             data-testid='assistant.mcp-server.add'
           />
-        </Flex>
+        </Layout.Flex>
       )}
-    </Flex>
+    </Layout.Flex>
   );
 };
 
@@ -396,7 +392,7 @@ type McpServerRowProps = {
  * to keep the row in sync with mutations made through the returned setters (or elsewhere).
  */
 const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [enabled, setEnabled] = useObject(server, 'enabled');
   // Subscribed so the status re-checks once a sign-in stores tokens.
   useObject(server, 'oauth');
@@ -418,17 +414,17 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
 
   return (
     <Listbox.Item id={server.id} classNames='flex-col items-stretch px-form-chrome' data-testid='assistant.mcp-server'>
-      <Flex align='center' gap='sm'>
+      <Layout.Flex align='center' gap='sm'>
         <Field.Root>
           <Field.Label srOnly>{name}</Field.Label>
-          <Switch checked={enabled !== false} onCheckedChange={({ checked }) => setEnabled(!!checked)} />
+          <Input.Switch checked={enabled !== false} onCheckedChange={({ checked }) => setEnabled(!!checked)} />
         </Field.Root>
-        <Flex column grow classNames='min-w-0'>
+        <Layout.Flex column grow classNames='min-w-0'>
           <span className='truncate text-sm'>{name}</span>
           <span className='truncate text-xs text-fg-muted'>{url}</span>
-        </Flex>
+        </Layout.Flex>
         {status.state === 'unauthorized' && (
-          <Button
+          <Button.Root
             variant='primary'
             icon='ph--sign-in--regular'
             label={t('mcp-server-sign-in.label')}
@@ -438,7 +434,7 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
           />
         )}
         {(status.state === 'error' || status.state === 'unauthorized') && (
-          <Button
+          <Button.Root
             variant='ghost'
             icon='ph--arrow-clockwise--regular'
             iconOnly
@@ -446,14 +442,14 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
             onClick={() => setRevision((revision) => revision + 1)}
           />
         )}
-        <Button
+        <Button.Root
           variant='ghost'
           icon='ph--x--regular'
           iconOnly
           label={t('mcp-server-remove.label')}
           onClick={() => onRemove(server)}
         />
-      </Flex>
+      </Layout.Flex>
       <span
         className={mx(
           'text-xs truncate',
@@ -476,7 +472,7 @@ type McpFormProps = {
 };
 
 const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   // Streamable HTTP is the current transport; the client falls back to SSE when a server answers 405.
@@ -501,7 +497,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
     >
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-name.label')}</Field.Label>
-        <Input
+        <Input.Root
           placeholder={t('mcp-server-name.placeholder')}
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -511,7 +507,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
       </Field.Root>
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-url.label')}</Field.Label>
-        <Input
+        <Input.Root
           type='url'
           placeholder={t('mcp-server-url.placeholder')}
           value={url}
@@ -535,7 +531,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
       </Select.Root>
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-api-key.label')}</Field.Label>
-        <PasswordInput
+        <Input.Password
           ignorePasswordManagers
           placeholder={t('mcp-server-api-key.placeholder')}
           value={apiKey}
@@ -543,7 +539,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
           data-testid='assistant.mcp-server.api-key'
         />
       </Field.Root>
-      <Flex justify='end'>
+      <Layout.Flex justify='end'>
         <SystemButton.Save
           type='submit'
           variant='ghost'
@@ -551,7 +547,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
           data-testid='assistant.mcp-server.save'
         />
         <SystemButton.Cancel type='button' variant='ghost' onClick={onCancel} />
-      </Flex>
+      </Layout.Flex>
     </form>
   );
 };
@@ -560,7 +556,7 @@ const ANY = '__any__' as const;
 
 /** @private */
 export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>): JSX.Element => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   // Item types sorted by label.
   const types = useFilteredTypes(db);
@@ -598,7 +594,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
   });
 
   return (
-    <Flex column classNames='min-h-0 divide-y divide-separator'>
+    <Layout.Flex column classNames='min-h-0 divide-y divide-separator'>
       {/* Shrinks to the popover's height, so the list scrolls rather than pushing the filter out of it. */}
       <SearchList.Root onSearch={handleSearch}>
         {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
@@ -647,6 +643,6 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
           </Select.Root>
         </Toolbar.Root>
       </SearchList.Root>
-    </Flex>
+    </Layout.Flex>
   );
 };

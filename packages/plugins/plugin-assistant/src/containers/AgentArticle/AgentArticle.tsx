@@ -11,7 +11,10 @@ import * as Agent from '@dxos/assistant/Agent';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
-import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -23,7 +26,7 @@ export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
  * Project; automation (subscriptions/schedule) is edited in the properties panel.
  */
 export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(agent);
   // Resolve reactively: a sync `.target` read never resolves on a cold/deep-link load.
   const [instructionsSnapshot] = useObject(agent.instructions);
@@ -52,7 +55,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
       <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
           <Toolbar.Separator />
-          <Button icon='ph--trash--regular' label={t('reset-history.button')} onClick={handleResetHistory} />
+          <Button.Root icon='ph--trash--regular' label={t('reset-history.button')} onClick={handleResetHistory} />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='dx-document'>

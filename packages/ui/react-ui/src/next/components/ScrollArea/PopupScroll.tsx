@@ -10,7 +10,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { recipes } from '../../recipes.ts';
 import { type Size, SIZES } from '../../sizes.ts';
-import { ScrollArea } from './ScrollArea.tsx';
+import * as ScrollArea from './ScrollArea.tsx';
 
 type Positioning = NonNullable<PopoverPrimitive.RootProps['positioning']>;
 

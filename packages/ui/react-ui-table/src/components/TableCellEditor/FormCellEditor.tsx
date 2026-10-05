@@ -8,9 +8,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Entity, Ref, Type } from '@dxos/echo';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
-import { type Label, Popover, virtualAnchor } from '@dxos/react-ui';
 import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
+import * as Popover from '@dxos/react-ui/Popover';
+import type * as Theme from '@dxos/react-ui/Theme';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
@@ -19,7 +21,7 @@ import { translationKey } from '#translations';
 import { type ModalController, type TableModel, type TableRow } from '../../model/index.ts';
 import { narrowSchema } from '../../util/index.ts';
 
-const createOptionLabel: Label = ['create-new-object.label', { ns: translationKey }];
+const createOptionLabel: Theme.Label = ['create-new-object.label', { ns: translationKey }];
 
 export type OnCreateHandler = (schema: Type.AnyEntity, values: any) => Parameters<typeof Ref.make>[0];
 
@@ -165,7 +167,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
     <Popover.Root
       open={editing}
       onOpenChange={({ open }) => handleOpenChange(open)}
-      positioning={virtualAnchor(anchorRef)}
+      positioning={VirtualAnchor.virtualAnchor(anchorRef)}
     >
       <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-md'>
         <Popover.Body>

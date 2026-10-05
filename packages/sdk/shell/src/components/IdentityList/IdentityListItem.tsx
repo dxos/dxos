@@ -8,8 +8,10 @@ import { generateName } from '@dxos/display-name';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { Avatar, type ThemedClassName, toAvatarHue, useId } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { keyToFallback } from '@dxos/util';
 
 import { profileString } from '../../util/index.ts';
@@ -22,11 +24,11 @@ type IdentityListItemProps = {
 
 export const IdentityListItem = forwardRef<
   HTMLDivElement,
-  ThemedClassName<ComponentPropsWithoutRef<'div'>> & IdentityListItemProps
+  Util.ThemedClassName<ComponentPropsWithoutRef<'div'>> & IdentityListItemProps
 >(({ identity, presence, onClick, classNames, ...props }, forwardedRef) => {
   const identityKey = requirePublicKey(identity.identityKey);
   const fallbackValue = keyToFallback(identityKey);
-  const labelId = useId('identityListItem__label');
+  const labelId = Hooks.useId('identityListItem__label');
   const displayName = identity.profile?.displayName ?? generateName(identityKey.toHex());
   return (
     <Listbox.Item
@@ -40,7 +42,7 @@ export const IdentityListItem = forwardRef<
       <Avatar.Root
         aria-labelledby={labelId}
         status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inactive'}
-        hue={toAvatarHue(profileString(identity, 'hue') ?? fallbackValue.hue)}
+        hue={Avatar.toAvatarHue(profileString(identity, 'hue') ?? fallbackValue.hue)}
         fallback={profileString(identity, 'emoji') ?? fallbackValue.emoji}
         classNames='place-self-center'
       />

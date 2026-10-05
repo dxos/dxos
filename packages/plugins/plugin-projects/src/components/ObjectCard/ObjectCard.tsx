@@ -9,8 +9,11 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Hooks from '@dxos/plugin-space/Hooks';
-import { Card, Menu, Tag, useTranslation } from '@dxos/react-ui';
+import * as SpaceHooks from '@dxos/plugin-space/Hooks';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
 
@@ -27,10 +30,10 @@ export type ObjectCardProps = {
  * Reactive via {@link useObject} so a rename shows without navigating away and back.
  */
 export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [object] = useObject(objectProp);
   const label = Obj.getLabel(object)?.trim() || t('object-card.untitled.label');
-  const { archived, item: archiveItem } = Hooks.useArchiveMenuItem(objectProp);
+  const { archived, item: archiveItem } = SpaceHooks.useArchiveMenuItem(objectProp);
   const menuItems = [
     ...(onDelete ? [{ label: t('object-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }] : []),
     ...(archiveItem ? [archiveItem] : []),
@@ -82,7 +85,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
       </ToolkitObjectCard.Header>
       {archived && (
         <Card.Row>
-          <Tag classNames='justify-self-start'>{t('object-card.archived.label')}</Tag>
+          <Tag.Tag classNames='justify-self-start'>{t('object-card.archived.label')}</Tag.Tag>
         </Card.Row>
       )}
       {/* The surface emits its own `Card.Body` (see BookmarkCard/RoutineCard), so this must not wrap it —

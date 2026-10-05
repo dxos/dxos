@@ -8,11 +8,17 @@ import React, { memo, useCallback, useMemo } from 'react';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { Button, Empty, Icon, Tabs, toLocalizedString, useMainLandmark, useTranslation } from '@dxos/react-ui';
 import { Tree, type TreeNode } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Main from '@dxos/react-ui/Main';
+import * as Status from '@dxos/react-ui/Status';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Theme from '@dxos/react-ui/Theme';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
@@ -52,13 +58,13 @@ export type L1PanelProps = {
  * unavailable-workspace message, so the sidebar is never blank.
  */
 const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: L1PanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const pending = item?.properties.pending === true;
-  const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
+  const title = item ? Theme.toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
   // The panel is a focus area of its own, after the rail.
-  const landmark = useMainLandmark(0.5);
+  const landmark = Main.useMainLandmark(0.5);
 
   return (
     <Tabs.Content
@@ -93,19 +99,19 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
             className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
             style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
           >
-            <Icon icon='ph--spinner-gap--regular' size='xl' spin />
+            <Icon.Icon icon='ph--spinner-gap--regular' size='xl' spin />
           </div>
         ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
           unavailable && (
-            <Empty
+            <Status.Empty
               key={id}
               classNames='row-start-2 self-start animate-fade-in'
               style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
             >
               {t('workspace-unavailable.description')}
-            </Empty>
+            </Status.Empty>
           )
         ))}
     </Tabs.Content>
@@ -114,7 +120,7 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
 
 /** Determines whether a workspace tab has been populated with real child content (i.e. expanded at least once). */
 const useIsActivatedWorkspace = (id: string): boolean => {
-  const { graph } = Hooks.useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const edges = GraphHooks.useEdges(graph, id);
 
   return useMemo(() => {
@@ -180,9 +186,9 @@ const renderRow = (node: TreeNode<NavTreeNode.NavTreeItemGraphNode>) => (
  * Header row.
  */
 const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBack'> & { item: AppGraphNode.Node }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
-  const title = toLocalizedString(item.properties.label, t);
+  const title = Theme.toLocalizedString(item.properties.label, t);
   const backCapableWorkspace = AppNode.isPinnedWorkspace(item);
 
   const { menuActions, onAction } = useL1MenuActions({ item, path });
@@ -196,7 +202,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
       style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
-        <Button
+        <Button.Root
           classNames={[hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--caret-left--regular'
@@ -235,7 +241,7 @@ const MenuActions = ({
 }: {
   item: AppGraphNode.Node;
 } & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   if (menuActions.length === 0) {
     return null;
@@ -243,13 +249,13 @@ const MenuActions = ({
 
   if (menuActions.length === 1) {
     return (
-      <Button
+      <Button.Root
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
         iconOnly
         iconSize='md'
-        label={toLocalizedString(menuActions[0].properties?.label, t)}
+        label={Theme.toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}
         onClick={() => onAction(menuActions[0] as AppGraphNode.Action)}
       />
@@ -258,7 +264,7 @@ const MenuActions = ({
 
   return (
     <ActionMenu caller={NAV_TREE_ITEM} onAction={onAction} group={item} actions={menuActions as MenuItem[]}>
-      <Button
+      <Button.Root
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon='ph--dots-three-vertical--regular'

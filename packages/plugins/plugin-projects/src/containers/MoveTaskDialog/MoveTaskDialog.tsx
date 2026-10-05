@@ -11,7 +11,10 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
-import { Banner, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { Task } from '@dxos/types';
 
 import { MoveTaskPanel } from '#components';
@@ -23,7 +26,7 @@ export type MoveTaskDialogProps = {
 
 /** Picks the project a task (with its sub-tasks) moves into, then runs `MoveTaskToSet`. */
 export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(task);
   const [error, setError] = useState<string>();

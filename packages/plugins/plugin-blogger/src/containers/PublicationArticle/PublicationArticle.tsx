@@ -16,10 +16,12 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { AlertDialog, Panel, useTranslation } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { PostCard } from '#components';
 import { meta } from '#meta';
@@ -44,7 +46,7 @@ export type PublicationArticleProps = AppSurface.ObjectArticleProps<Blog.Publica
  * `plugin-markdown`'s `surface.document`).
  */
 export const PublicationArticle = ({ role, attendableId, subject }: PublicationArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [publication] = useObject(subject);
   const { invokePromise } = Hooks.useOperationInvoker();
   const { graph } = ToolkitHooks.useAppGraph();

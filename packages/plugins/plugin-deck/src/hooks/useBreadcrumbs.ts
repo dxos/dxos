@@ -6,9 +6,10 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Option from 'effect/Option';
 import { useContext, useEffect, useState } from 'react';
 
-import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -20,9 +21,9 @@ export type Breadcrumb = { id: string; label: string };
  * matching {@link useCompanions}.
  */
 export const useBreadcrumbs = (ids: string[]): Breadcrumb[] => {
-  const { graph } = Hooks.useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const registry = useContext(RegistryContext);
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [crumbs, setCrumbs] = useState<Breadcrumb[]>([]);
   // A stable dependency for the id list; NUL cannot appear in a node id.
   const key = ids.join('\0');
@@ -39,7 +40,7 @@ export const useBreadcrumbs = (ids: string[]): Breadcrumb[] => {
       setCrumbs(
         idList.map((id, index) => {
           const node = Option.getOrUndefined(registry.get(atoms[index]));
-          const label = toLocalizedString(node?.properties?.label ?? '', t) || id;
+          const label = Theme.toLocalizedString(node?.properties?.label ?? '', t) || id;
           return { id, label };
         }),
       );
@@ -65,7 +66,7 @@ export const ancestorPaths = (id: string): string[] => {
  * navtree's section and type groups above that object are left out, since every node under them shares them.
  */
 export const useAncestorBreadcrumbs = (id: string | undefined): Breadcrumb[] => {
-  const { graph } = Hooks.useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const registry = useContext(RegistryContext);
   const [ids, setIds] = useState<string[]>([]);
 

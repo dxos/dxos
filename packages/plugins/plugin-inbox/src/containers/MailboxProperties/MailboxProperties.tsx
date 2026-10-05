@@ -11,8 +11,12 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
-import { Button, Field, Flex, Switch, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
@@ -21,7 +25,7 @@ import { Mailbox } from '#types';
 export type MailboxPropertiesProps = AppSurface.ObjectPropertiesProps<Mailbox.Mailbox>;
 
 export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const connectors = Hooks.useCapabilities(ConnectorSpec.Connector);
@@ -43,9 +47,9 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
     <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('mailbox-sync.label')}</Field.Label>
-        <Flex align='center'>
+        <Layout.Flex align='center'>
           {/* TODO(burdon): Pad Switch like button/icon (square with padding). */}
-          <Switch
+          <Input.Switch
             checked={syncEnabled ?? false}
             disabled={pending}
             onCheckedChange={() => {
@@ -53,9 +57,14 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
             }}
           />
           {syncTrigger && (
-            <Button iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
+            <Button.Root
+              iconOnly
+              icon='ph--gear--regular'
+              label={t('view-trigger.label')}
+              onClick={handleViewTrigger}
+            />
           )}
-        </Flex>
+        </Layout.Flex>
       </Field.Root>
     </Form.FieldSet>
   );

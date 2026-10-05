@@ -7,7 +7,8 @@ import React from 'react';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 export const InvocationsModule = () => {
   const space = Hooks.useActiveSpace();

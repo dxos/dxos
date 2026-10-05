@@ -9,7 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { osTranslations } from '@dxos/ui-theme';
 import { openExternalUrl } from '@dxos/util';
 
@@ -105,7 +105,7 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
 };
 
 export const SupportSubmitAction = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const config = useConfig();
   const endpoint = SupportService.supportEndpoint(config);
   const discordPresence = useDiscordPresence(endpoint);

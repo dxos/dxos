@@ -9,7 +9,7 @@ import { beforeEach, describe, test, vi } from 'vitest';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { createTestApp } from '@dxos/app-framework/testing';
 import { render } from '@dxos/app-framework/testing/react';
-import { Toast } from '@dxos/react-ui';
+import * as Toast from '@dxos/react-ui/Toast';
 
 import { ThemePlugin } from '#plugin';
 

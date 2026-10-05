@@ -7,7 +7,8 @@ import React from 'react';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as TracePanel from '@dxos/plugin-assistant/TracePanel';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /**
  * Renders the assistant `TracePanel` (process tree + execution-graph timeline) for the story space.

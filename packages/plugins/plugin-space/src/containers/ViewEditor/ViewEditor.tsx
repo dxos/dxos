@@ -10,8 +10,8 @@ import * as ToolkitQuery from '@dxos/app-toolkit/Query';
 import { EID, Filter, Obj, Query, type QueryAST, Ref, Scope, Tag, Type, type View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { ViewModel } from '@dxos/schema';
 
 import { SpaceOperation } from '#types';
@@ -32,7 +32,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
     },
   });
 
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (!view?.query || !db) {
       return;
     }

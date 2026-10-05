@@ -6,23 +6,26 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
-import type * as Tour from '@dxos/app-toolkit/Tour';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import type * as ToolkitTour from '@dxos/app-toolkit/Tour';
 import { log } from '@dxos/log';
-import { Button, Icon, type TourStepDetails, Tour as UiTour, useTour, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Tour from '@dxos/react-ui/Tour';
 
 import { meta } from '#meta';
 
 import { TourContext } from './TourContext.ts';
 
-const resolveTarget = (target: Tour.Step['target']) =>
+const resolveTarget = (target: ToolkitTour.Step['target']) =>
   typeof target === 'string' ? () => document.querySelector<HTMLElement>(target) : target;
 
 const toStep = (
-  step: Tour.Step,
+  step: ToolkitTour.Step,
   index: number,
   capabilities: CapabilityManager.CapabilityManager,
-): TourStepDetails => ({
+): Tour.StepDetails => ({
   id: step.id ?? String(index + 1),
   type: 'tooltip',
   target: resolveTarget(step.target),
@@ -41,19 +44,19 @@ const toStep = (
 });
 
 export type GuidedTourProps = {
-  steps: readonly Tour.Step[];
+  steps: readonly ToolkitTour.Step[];
   running?: boolean;
   onRunningChanged?: (state: boolean) => any;
 };
 
 export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: GuidedTourProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const manager = PluginManagerProvider.usePluginManager();
-  const layout = Hooks.useLayout();
+  const layout = ToolkitHooks.useLayout();
   const paused = layout.dialogOpen;
-  const [override, setOverride] = useState<{ base: readonly Tour.Step[]; steps: readonly Tour.Step[] }>();
+  const [override, setOverride] = useState<{ base: readonly ToolkitTour.Step[]; steps: readonly ToolkitTour.Step[] }>();
   const steps = override?.base === initialSteps ? override.steps : initialSteps;
-  const setSteps = (next: readonly Tour.Step[]) => setOverride({ base: initialSteps, steps: next });
+  const setSteps = (next: readonly ToolkitTour.Step[]) => setOverride({ base: initialSteps, steps: next });
   const tourSteps = useMemo(
     () => steps.map((step, index) => toStep(step, index, manager.capabilities)),
     [steps, manager],
@@ -72,7 +75,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
   const resumeAt = useRef<string | undefined>(undefined);
   const pausing = useRef(false);
   const lastStepId = useRef<string | undefined>(undefined);
-  const tour = useTour({
+  const tour = Tour.useTour({
     steps: tourSteps,
     closeOnInteractOutside: false,
     onStepChange: ({ stepId }) => {
@@ -137,15 +140,15 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
         stop: () => setRunning(false),
       }}
     >
-      <UiTour.Root tour={tour}>
-        <UiTour.Content
+      <Tour.Root tour={tour}>
+        <Tour.Content
           classNames='w-60 min-h-40 gap-0 p-2 border-accent-bg bg-accent-bg text-accent-fg'
           data-testid='helpPlugin.tooltip'
         >
           <div className='flex items-start'>
-            <UiTour.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
-            <UiTour.CloseTrigger asChild ref={closeRef}>
-              <Button
+            <Tour.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
+            <Tour.CloseTrigger asChild ref={closeRef}>
+              <Button.Root
                 size='md'
                 icon='ph--x--bold'
                 iconOnly
@@ -154,11 +157,11 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                 variant='primary'
                 data-testid='helpPlugin.tooltip.close'
               />
-            </UiTour.CloseTrigger>
+            </Tour.CloseTrigger>
           </div>
-          <UiTour.Description classNames='grow px-4 my-2 text-accent-fg' />
-          <UiTour.Control>
-            <Button
+          <Tour.Description classNames='grow px-4 my-2 text-accent-fg' />
+          <Tour.Control>
+            <Button.Root
               classNames={[!tour.hasPrevStep && 'invisible']}
               icon='ph--caret-left--regular'
               iconOnly
@@ -169,7 +172,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
             />
             <div className='flex grow justify-center'>
               {Array.from({ length: tour.totalSteps }).map((_, index) => (
-                <Icon
+                <Icon.Icon
                   key={index}
                   icon={stepIndex === index ? 'ph--circle--fill' : 'ph--circle--regular'}
                   size='xs'
@@ -178,13 +181,13 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
               ))}
             </div>
             {last ? (
-              <UiTour.CloseTrigger asChild>
-                <Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
+              <Tour.CloseTrigger asChild>
+                <Button.Root variant='primary' data-testid='helpPlugin.tooltip.finish'>
                   {t('tour-done.label')}
-                </Button>
-              </UiTour.CloseTrigger>
+                </Button.Root>
+              </Tour.CloseTrigger>
             ) : (
-              <Button
+              <Button.Root
                 icon='ph--caret-right--regular'
                 iconOnly
                 label={t('tour-next.label')}
@@ -194,9 +197,9 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                 data-testid='helpPlugin.tooltip.next'
               />
             )}
-          </UiTour.Control>
-        </UiTour.Content>
-      </UiTour.Root>
+          </Tour.Control>
+        </Tour.Content>
+      </Tour.Root>
     </TourContext.Provider>
   );
 };

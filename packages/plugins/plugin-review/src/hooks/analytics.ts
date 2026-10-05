@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { useOnTransition } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 export const useOnEditAnalytics = (
@@ -37,5 +37,5 @@ export const useOnEditAnalytics = (
     });
   }, [invokePromise, message, textBlock]);
 
-  useOnTransition(editing, true, false, onEdit);
+  UiHooks.useOnTransition(editing, true, false, onEdit);
 };

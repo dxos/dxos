@@ -11,8 +11,11 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { Avatar, Block, Card, Icon } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention/types';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
@@ -59,9 +62,9 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
       )}
       {emails.length > 0 && (
         <Card.Row>
-          <Block>
-            <Icon icon='ph--at--regular' />
-          </Block>
+          <Layout.Block>
+            <Icon.Icon icon='ph--at--regular' />
+          </Layout.Block>
           <Card.Text truncate classNames='text-sky-text text-sm'>
             {emails.map(({ value }) => (
               <div key={value}>{value}</div>

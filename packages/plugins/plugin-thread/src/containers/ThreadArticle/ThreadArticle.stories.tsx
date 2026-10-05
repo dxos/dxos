@@ -16,9 +16,9 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
@@ -34,7 +34,7 @@ const DefaultStory = () => {
   const [space, setSpace] = useState<Space>();
   const [thread, setThread] = useState<Thread.Thread | null>();
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (identity) {
       const space = await client.spaces.create();
       const thread = space.db.add(Thread.make({ status: 'active' }));

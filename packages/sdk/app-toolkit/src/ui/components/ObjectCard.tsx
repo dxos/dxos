@@ -5,7 +5,10 @@
 import React, { type ReactNode, forwardRef } from 'react';
 
 import { Entity } from '@dxos/echo';
-import { Block, Card, type CardRootProps, type CardTitleProps, Icon, composable } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Util from '@dxos/react-ui/Util';
 import { getStyles } from '@dxos/ui-theme';
 
 import { CardIconSlot } from './CardIconSlot.tsx';
@@ -16,10 +19,10 @@ const DEFAULT_ICON = 'ph--circle-dashed--regular';
 // Root
 //
 
-type ObjectCardRootProps = Omit<CardRootProps, 'classNames' | 'grid'>;
+type ObjectCardRootProps = Omit<Card.RootProps, 'classNames' | 'grid'>;
 
 /** A grid `Card.Root`, so an object card's header and rows share the card's rails. */
-export const ObjectCardRoot = composable<HTMLDivElement, ObjectCardRootProps>((props, forwardedRef) => (
+export const ObjectCardRoot = Util.composable<HTMLDivElement, ObjectCardRootProps>((props, forwardedRef) => (
   <Card.Root {...props} grid ref={forwardedRef} />
 ));
 
@@ -37,7 +40,7 @@ type ObjectCardHeaderProps = {
   /** Overrides the object's label. */
   children?: ReactNode;
   /** Clamps the title to this many lines; without it the title is one line, truncated. */
-  lines?: CardTitleProps['lines'];
+  lines?: Card.TitleProps['lines'];
   /** Rendered after the title, in the end rail (e.g., a `Card.Menu` or a `Block rail='end'`). */
   menu?: ReactNode;
 };
@@ -52,11 +55,11 @@ export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps
 
     return (
       <Card.Header ref={forwardedRef}>
-        <Block>
+        <Layout.Block>
           <CardIconSlot subject={subject}>
-            <Icon icon={icon} classNames={iconStyles?.text} />
+            <Icon.Icon icon={icon} classNames={iconStyles?.text} />
           </CardIconSlot>
-        </Block>
+        </Layout.Block>
         <Card.Title truncate={lines === undefined} lines={lines}>
           {children ?? (entity && Entity.getLabel(entity, { fallback: 'typename' }))}
         </Card.Title>

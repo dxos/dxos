@@ -60,8 +60,8 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { type StoryDecoratorsProps, createStoryDecorators } from '@dxos/storybook-testing';
 import { Outline, Task, TaskSet } from '@dxos/types';
@@ -153,7 +153,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   // would never re-run, leaving the chat without its story-declared skills.
   const chats = useQuery(space?.db, Filter.type(Chat.Chat));
 
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (!space) {
       return;
     }

@@ -13,7 +13,7 @@ import { translations } from '#translations';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { ErrorFallback, type ErrorFallbackProps, ErrorStack, type ErrorStackFrame } from '../index.ts';
+import { ErrorFallback, type ErrorFallbackProps, ErrorStack, type ErrorStackFrame } from './ErrorFallback.tsx';
 
 type StoryArgs = SizeArgs & Pick<ErrorFallbackProps, 'title'> & { message: string };
 

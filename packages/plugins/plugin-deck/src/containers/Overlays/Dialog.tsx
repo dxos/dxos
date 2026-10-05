@@ -8,7 +8,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AlertDialog, Dialog as UiDialog } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as UiDialog from '@dxos/react-ui/Dialog';
 
 import { useDeckState } from '#hooks';
 

@@ -5,7 +5,9 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Card, Icon, SystemButton } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { RemoteSession } from '@dxos/types';
 
 export type RemoteSessionCardProps = AppSurface.ObjectCardProps<RemoteSession.RemoteSession>;
@@ -56,7 +58,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
       <Card.Row>
         <div className='flex justify-between items-center gap-2 text-sm'>
           <span className='flex items-center gap-1 text-fg-muted'>
-            {harnessIcon && <Icon icon={harnessIcon} size='md' />}
+            {harnessIcon && <Icon.Icon icon={harnessIcon} size='md' />}
             {harness ?? 'Session'}
           </span>
           {option && (

@@ -20,8 +20,12 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Graph from '@dxos/plugin-explorer/Graph';
-import { Button, Menu, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -38,7 +42,7 @@ const INCLUDE_SKILLS = ['org.dxos.skill.assistant', 'org.dxos.skill.database', '
 export type NotebookArticleProps = AppSurface.ObjectArticleProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
 
 export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: NotebookArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
   const db = notebook ? Obj.getDatabase(notebook) : undefined;
   const { hasAttention } = useAttention(attendableId);
@@ -179,11 +183,11 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
         <Toolbar.Root inactive={!hasAttention}>
           <Menu.Root>
             <Menu.Trigger asChild>
-              <Button icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
+              <Button.Root icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
             </Menu.Trigger>
             <NotebookMenu onCellInsert={handleCellInsert} />
           </Menu.Root>
-          <Button
+          <Button.Root
             icon='ph--play--fill'
             iconOnly
             label={t('compute.label')}

@@ -11,7 +11,7 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { log } from '@dxos/log';
-import { useDefaultValue } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
@@ -133,7 +133,7 @@ export const useFormHandler = <T extends AnyProperties>({
   const [touched, setTouched] = useState<Record<SchemaEx.JsonPath, boolean>>({});
   const [errors, setErrors] = useState<Record<SchemaEx.JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
-  const seed = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
+  const seed = Hooks.useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
   // A root discriminated union renders nothing but its select until the discriminator has a value, so
   // the form opens on the first member unless the caller seeded one of its own.
   const defaultValues = useMemo(

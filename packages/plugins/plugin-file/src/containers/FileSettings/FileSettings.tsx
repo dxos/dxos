@@ -8,8 +8,9 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { useClient } from '@dxos/react-client';
-import { Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
 
 import { meta } from '#meta';
 import { FileCapabilities, Settings } from '#types';
@@ -17,7 +18,7 @@ import { FileCapabilities, Settings } from '#types';
 export type FileSettingsProps = AppSurface.SettingsData;
 
 export const FileSettings = ({ subject }: FileSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const client = useClient();
   const contributed = Hooks.useCapabilities(FileCapabilities.Backend);

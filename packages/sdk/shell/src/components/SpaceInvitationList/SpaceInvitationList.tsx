@@ -9,8 +9,11 @@ import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Contact } from '@dxos/react-client/halo';
-import { Avatar, Button, type ThemedClassName, toAvatarHue, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -28,7 +31,7 @@ export type SpaceInvitationEntry = {
   sentAt: Date;
 };
 
-export type SpaceInvitationListProps = ThemedClassName<{
+export type SpaceInvitationListProps = Util.ThemedClassName<{
   invitations: SpaceInvitationEntry[];
   /** Ids of invitations with an action in flight; their buttons are disabled. */
   pending?: string[];
@@ -59,7 +62,7 @@ export const SpaceInvitationList = ({
   onJoin,
   onDismiss,
 }: SpaceInvitationListProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   if (invitations.length === 0) {
     return <p className='text-fg-muted text-center my-2'>{t('empty-space-invitations.message')}</p>;
   }
@@ -94,8 +97,8 @@ type SpaceInvitationListItemProps = Pick<SpaceInvitationListProps, 'onJoin' | 'o
 };
 
 const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: SpaceInvitationListItemProps) => {
-  const { t } = useTranslation(translationKey);
-  const labelId = useId('spaceInvitationListItem__label');
+  const { t } = Hooks.useTranslation(translationKey);
+  const labelId = Hooks.useId('spaceInvitationListItem__label');
   const fallback = keyToFallback(requirePublicKey(invitation.sender.identityKey));
   const space = invitation.spaceName ?? invitation.spaceKey.truncate();
 
@@ -105,7 +108,7 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
         <Avatar.Root
           aria-labelledby={labelId}
           size='md'
-          hue={toAvatarHue(profileString(invitation.sender, 'hue') ?? fallback.hue)}
+          hue={Avatar.toAvatarHue(profileString(invitation.sender, 'hue') ?? fallback.hue)}
           fallback={profileString(invitation.sender, 'emoji') ?? fallback.emoji}
         />
       </Listbox.ItemIcon>
@@ -116,7 +119,7 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
             {contactDisplayName(invitation.sender)}
           </span>
           <div className='flex items-center gap-1'>
-            <Button
+            <Button.Root
               size='sm'
               variant='primary'
               disabled={disabled}
@@ -124,8 +127,8 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
               data-testid='space-invitation-list.join'
             >
               {t('join-space-invitation.label')}
-            </Button>
-            <Button
+            </Button.Root>
+            <Button.Root
               iconOnly
               size='sm'
               variant='ghost'

@@ -13,7 +13,6 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board as BoardComponent,
@@ -24,6 +23,10 @@ import {
 } from '@dxos/react-ui-board';
 import { translationKey } from '@dxos/react-ui-board/translations';
 import { ObjectPicker, type ObjectPickerProps } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { isNonNullable } from '@dxos/util';
 
 import { Board } from '#types';
@@ -49,7 +52,7 @@ const normalizeCells = (cells: Board.Board['layout']['cells']): Layout['items'] 
 export type BoardArticleProps = AppSurface.ObjectArticleProps<Board.Board>;
 
 export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticleProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { hasAttention } = useAttention(attendableId);
   const db = Obj.getDatabase(board);
   const [boardItems] = useObject(board, 'items');
@@ -166,14 +169,14 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
         {/* TODO(burdon): Migrate to Menu.Root + useMenuActions (threading attendableId). */}
         <Panel.Header>
           <Toolbar.Root>
-            <Button
+            <Button.Root
               icon='ph--crosshair--regular'
               iconOnly
               label={t('move-to-center.button')}
               disabled={!hasAttention}
               onClick={() => controller.current?.center()}
             />
-            <Button
+            <Button.Root
               icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
               iconOnly
               label={t('toggle-zoom.button')}
@@ -184,7 +187,12 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
               options={options}
               onSelect={handleSelect}
               trigger={
-                <Button icon='ph--plus--regular' iconOnly label={t('add-object.button')} disabled={!hasAttention} />
+                <Button.Root
+                  icon='ph--plus--regular'
+                  iconOnly
+                  label={t('add-object.button')}
+                  disabled={!hasAttention}
+                />
               }
             />
           </Toolbar.Root>

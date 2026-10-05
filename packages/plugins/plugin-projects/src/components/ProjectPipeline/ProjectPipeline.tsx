@@ -6,9 +6,8 @@ import React, { useCallback } from 'react';
 
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as Project from '@dxos/compute/Project';
-import * as Hooks from '@dxos/plugin-assistant/Hooks';
+import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space } from '@dxos/react-client/echo';
-import { Empty, useTranslation } from '@dxos/react-ui';
 import {
   Gantt,
   type GanttAxis,
@@ -16,6 +15,8 @@ import {
   type GanttLegendMode,
   sessionTimelineToGantt,
 } from '@dxos/react-ui-trace';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -57,9 +58,9 @@ export const ProjectPipeline = ({
   onSelectTask,
   onSelectChat,
 }: ProjectPipelineProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const chats = useProjectChats(space, project);
-  const timeline = Hooks.useSessionTimeline(space, { chats, tasks });
+  const timeline = AssistantHooks.useSessionTimeline(space, { chats, tasks });
 
   // The chart hands back its own lane shape, which carries no chat; the timeline's lane of the same
   // id does, so the pick is resolved through it.
@@ -79,7 +80,7 @@ export const ProjectPipeline = ({
   );
 
   if (timeline.lanes.length === 0) {
-    return <Empty>{t('no-sessions.message')}</Empty>;
+    return <Status.Empty>{t('no-sessions.message')}</Status.Empty>;
   }
 
   // The timeline speaks of sessions and tasks; the chart speaks of groups and lanes. One mapping at

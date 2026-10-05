@@ -18,8 +18,8 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { Dialog } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

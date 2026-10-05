@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Game, GameCapabilities } from '#types';
@@ -16,7 +16,7 @@ import { Game, GameCapabilities } from '#types';
 export type GameArticleProps = AppSurface.ObjectArticleProps<Game.Game>;
 
 export const GameArticle = ({ role, attendableId, subject: game }: GameArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const variants = Hooks.useCapabilities(GameCapabilities.VariantProvider);
   // Resolved live rather than as a snapshot: variants mutate their state, and a snapshot is frozen.
   const variant = useResolveRef(game.variant);

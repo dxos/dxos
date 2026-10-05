@@ -14,9 +14,10 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import { useRegistry } from '@dxos/react-client/echo';
-import { Flex, Grid, Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
@@ -117,7 +118,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           </Panel.Header>
           <Panel.Body asChild>
             <ChatComponent.Content>
-              <Flex classNames='dx-expand relative'>
+              <Layout.Flex classNames='dx-expand relative'>
                 {/* Thread outline (Table of Contents). */}
                 {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
 
@@ -126,28 +127,28 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
 
                 {/** Floating info. */}
                 {!mobile && (
-                  <Grid
+                  <Layout.Grid
                     cols={['fill', 'auto']}
                     gap='sm'
                     classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-3'
                     data-testid='assistant.chat-status'
                   >
                     {/* A column, so the queue's listbox spans the row: a row shrinks it and wraps each bubble to nothing. */}
-                    <Flex column classNames='col-span-2'>
+                    <Layout.Flex column classNames='col-span-2'>
                       <ChatComponent.Queue />
-                    </Flex>
+                    </Layout.Flex>
                     {/* Pinned to their columns: either renders nothing while idle, which would move the other over. */}
                     <ChatComponent.Activity classNames='col-start-1 self-center' />
                     <ChatComponent.Status classNames='col-start-2 justify-self-end bg-input-surface rounded-sm' />
-                  </Grid>
+                  </Layout.Grid>
                 )}
-              </Flex>
+              </Layout.Flex>
 
-              <Flex column classNames='dx-document px-2 pb-2'>
+              <Layout.Flex column classNames='dx-document px-2 pb-2'>
                 {mobile && (
-                  <Grid cols={2}>
+                  <Layout.Grid cols={2}>
                     <ChatComponent.Activity />
-                  </Grid>
+                  </Layout.Grid>
                 )}
 
                 {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
@@ -161,7 +162,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   nodeId={actionNodeId}
                   preset={preset?.id}
                 />
-              </Flex>
+              </Layout.Flex>
             </ChatComponent.Content>
           </Panel.Body>
         </Panel.Root>

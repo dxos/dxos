@@ -6,8 +6,8 @@ import React, { useLayoutEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/plugin-deck/Hooks';
 import * as Overlays from '@dxos/plugin-deck/Overlays';
-import { Splitter, type SplitterMode } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
+import * as Splitter from '@dxos/react-ui/Splitter';
 
 import { DebugOverlay, MobileLayout } from '#components';
 
@@ -25,7 +25,7 @@ export const MobileDeckLayout = ({ onDismissToast }: MobileDeckLayoutProps) => {
   const { state } = Hooks.useDeckState();
   const { toasts } = state;
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const [splitterMode, setSplitterMode] = useState<SplitterMode>('start');
+  const [splitterMode, setSplitterMode] = useState<Splitter.Mode>('start');
 
   // The keyboard owns the splitter mode while it is open (the drawer yields the screen to it), so the
   // drawer state is only projected onto the splitter once the keyboard is closed again.

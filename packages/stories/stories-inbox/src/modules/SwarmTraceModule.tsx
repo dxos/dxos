@@ -12,8 +12,10 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /** Cap on retained events so a long-running story does not grow the list unbounded. */
 const MAX_EVENTS = 200;
@@ -89,9 +91,9 @@ const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
           <Toolbar.Separator />
           <Toolbar.Text>{events.length} events</Toolbar.Text>
           <Toolbar.Separator />
-          <Button onClick={() => setEvents([])} disabled={events.length === 0}>
+          <Button.Root onClick={() => setEvents([])} disabled={events.length === 0}>
             Clear
-          </Button>
+          </Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='overflow-hidden'>

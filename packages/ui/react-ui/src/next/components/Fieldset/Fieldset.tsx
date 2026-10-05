@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Fieldset as FieldsetPrimitive, useFieldsetContext } from '@ark-ui/react/fieldset';
 import React, { forwardRef } from 'react';
 
@@ -16,7 +18,7 @@ import {
   type Span,
   containerAttributes,
   spanAttributes,
-} from '../Container/index.ts';
+} from '../Container/Container.tsx';
 
 //
 // Root
@@ -134,12 +136,16 @@ export const useFieldsetDisabled = (disabled?: boolean): boolean | undefined => 
   const fieldset = useFieldsetContext();
   return disabled ?? (fieldset?.disabled || undefined);
 };
-
-export const Fieldset = {
-  Root: FieldsetRoot,
-  Legend: FieldsetLegend,
-  HelperText: FieldsetHelperText,
-  ErrorText: FieldsetErrorText,
+export type {
+  FieldsetErrorTextProps as ErrorTextProps,
+  FieldsetHelperTextProps as HelperTextProps,
+  FieldsetLegendProps as LegendProps,
+  FieldsetRootProps as RootProps,
 };
 
-export type { FieldsetErrorTextProps, FieldsetHelperTextProps, FieldsetLegendProps, FieldsetRootProps };
+export {
+  FieldsetErrorText as ErrorText,
+  FieldsetHelperText as HelperText,
+  FieldsetLegend as Legend,
+  FieldsetRoot as Root,
+};

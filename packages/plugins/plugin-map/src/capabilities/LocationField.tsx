@@ -9,8 +9,8 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Database, JsonSchema, Obj, URI } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
-import { Field } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope; `type` comes from the field AST. */
 export type LocationFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &

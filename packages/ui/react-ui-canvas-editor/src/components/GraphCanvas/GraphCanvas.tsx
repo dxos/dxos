@@ -23,7 +23,8 @@ import {
 import React, { type PropsWithChildren, useCallback, useContext, useEffect } from 'react';
 
 import { log } from '@dxos/log';
-import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { EditorContext } from '../../hooks/index.ts';
@@ -34,14 +35,14 @@ const nodeTypes: NodeTypes = {
   custom: GraphNode,
 };
 
-export type GraphCanvasProps = ThemedClassName<PropsWithChildren> & {
+export type GraphCanvasProps = Util.ThemedClassName<PropsWithChildren> & {
   graph?: CanvasGraphModel;
   grid?: 'grid' | 'dots';
   map?: boolean;
 };
 
 const GraphCanvasInner = ({ classNames, children, graph: graphProp, grid, map }: GraphCanvasProps) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const context = useContext(EditorContext);
   const graph = graphProp ?? context?.graph;
 

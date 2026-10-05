@@ -15,17 +15,23 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Field, Flex, Input, Panel, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 import { type MediaArtifact, StudioCapabilities, StudioOperation, Variant } from '#types';
 
 import { providerFieldMap } from './ProviderOptionsField.tsx';
 
-export type MediaArtifactFormProps = ThemedClassName<{
+export type MediaArtifactFormProps = Util.ThemedClassName<{
   artifact: MediaArtifact.MediaArtifact;
   /** The plank the form is attended through; Generate is live only while it has attention. */
   attendableId?: string;
@@ -51,7 +57,7 @@ export const MediaArtifactForm = ({
   attendableId,
   nodeId = attendableId,
 }: MediaArtifactFormProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(artifact);
@@ -301,15 +307,15 @@ export const MediaArtifactForm = ({
       </Panel.Header>
       <Panel.Body classNames='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
         {/* MediaArtifact-level name (independent of any variant). */}
-        <Flex column gap='xs' classNames='pt-3 px-2'>
+        <Layout.Flex column gap='xs' classNames='pt-3 px-2'>
           <Field.Root>
-            <Input
+            <Input.Root
               placeholder={t('name.placeholder')}
               value={artifactSnapshot?.name ?? ''}
               onChange={handleNameChange}
             />
           </Field.Root>
-        </Flex>
+        </Layout.Flex>
         {/* Schema-driven request form (prompt + kind-specific knobs, from the generator's
             requestSchema); read-only while a generation is in flight. */}
         {provider && (

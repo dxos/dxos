@@ -22,8 +22,12 @@ import { useQuery } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Dialog, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useSubmitOnEnter } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Theme from '@dxos/react-ui/Theme';
 import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
@@ -78,7 +82,7 @@ const ObjectFormDialogBody = ({
   shouldNavigate: _shouldNavigate,
   targetNodeId,
 }: ObjectFormDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const manager = PluginManagerProvider.usePluginManager();
   // Demand signal: load policy-parked CreateObjectEntry providers; the picker below reads them
   // reactively, so entries pop in as their chunks arrive.
@@ -94,7 +98,7 @@ const ObjectFormDialogBody = ({
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   const allTypes = useQuery(db, TypeOptions.allTypesQuery);
   const space = useMemo(() => spaces.find((s) => s.db === db), [spaces, db]);
-  const spaceLabel = useMemo(() => space && toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
+  const spaceLabel = useMemo(() => space && Theme.toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
 
   // Index all types by typename for label/icon lookups.
   const typeByTypename = useMemo(() => {
@@ -384,11 +388,11 @@ const ObjectFormDialogBody = ({
       {object ? (
         <Dialog.Footer>
           <Dialog.CloseTrigger asChild>
-            <Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button>
+            <Button.Root data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button.Root>
           </Dialog.CloseTrigger>
-          <Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
+          <Button.Root variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
             {t('object-form-confirm.label')}
-          </Button>
+          </Button.Root>
         </Dialog.Footer>
       ) : (
         showTypeSelector &&

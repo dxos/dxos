@@ -2,16 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import '../../theme/index.css';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '../../../testing/index.ts';
-import { sizeRow } from '../../testing.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { AttentionGlyph, type AttentionGlyphPresence, type AttentionGlyphProps } from '../index.ts';
+import '@dxos/react-ui/theme.css';
+import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withSizes, withTheme } from '@dxos/react-ui/testing';
+
+import { AttentionGlyph, type AttentionGlyphPresence, type AttentionGlyphProps } from './AttentionGlyph.tsx';
+
+/** The `withSizes` row holding the story rendered at `size`. */
+const sizeRow = (root: HTMLElement, size: string) => {
+  const element = root.querySelector<HTMLElement>(`[data-testid="size-${size}"]`);
+  if (!element) {
+    throw new Error(`missing size-${size}`);
+  }
+  return element;
+};
 
 type StoryArgs = SizeArgs & Pick<AttentionGlyphProps, 'attended' | 'containsAttended' | 'syncing'>;
 
@@ -33,14 +40,14 @@ const DefaultStory = ({ attended, containsAttended, syncing }: StoryArgs) => (
   </div>
 );
 
-const meta = {
+const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-core/components/AttentionGlyph',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[24rem]' }), withTheme()],
   args: { size: 'md', attended: false, containsAttended: false, syncing: false },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
-} satisfies Meta<StoryArgs>;
+};
 
 export default meta;
 

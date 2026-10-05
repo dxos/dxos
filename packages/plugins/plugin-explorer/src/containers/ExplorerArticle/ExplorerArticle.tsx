@@ -7,9 +7,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Filter, Obj, type View } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { DxAnchorActivate, Panel, ToggleGroup, Toolbar } from '@dxos/react-ui';
 import { type TreeNode } from '@dxos/react-ui-graph';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-query';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { DxAnchorActivate } from '@dxos/ui-types';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type ExplorerArticleVariant, VARIANTS, Visualization, isVariant } from '#components';

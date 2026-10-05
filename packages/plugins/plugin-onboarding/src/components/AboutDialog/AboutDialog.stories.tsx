@@ -9,7 +9,7 @@ import React from 'react';
 
 import { Config } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations.ts';

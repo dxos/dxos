@@ -16,24 +16,21 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size } from '../../sizes.ts';
 import { byTestId, expectPopupSize, expectTooltip } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import {
-  Button,
-  Checkbox,
-  Dialog,
-  Field,
-  Group,
-  Input,
-  Select,
-  type SelectOption,
-  SystemButton,
-  Typography,
-} from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Checkbox } from '../Checkbox/Checkbox.tsx';
+import * as Field from '../Field/Field.tsx';
+import { Group } from '../Group/Group.tsx';
+import { Input } from '../Input/Input.tsx';
+import * as Select from '../Select/Select.tsx';
+import * as SystemButton from '../SystemButton/SystemButton.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Dialog from './Dialog.tsx';
 
 random.seed(123);
 
 const PARAGRAPHS = Array.from({ length: 40 }, () => random.lorem.paragraph());
 
-const ROLES: SelectOption[] = [
+const ROLES: Select.Option[] = [
   { value: 'owner', label: 'Owner' },
   { value: 'editor', label: 'Editor' },
   { value: 'viewer', label: 'Viewer' },
@@ -96,7 +93,7 @@ const ProfileDialog = ({ contentSize, title, testId, paragraphs }: ProfileDialog
       <Dialog.Body data-testid='body'>
         <Dialog.Description>{DESCRIPTION}</Dialog.Description>
         {paragraphs ? (
-          PARAGRAPHS.slice(0, paragraphs).map((text, index) => <Typography key={index}>{text}</Typography>)
+          PARAGRAPHS.slice(0, paragraphs).map((text, index) => <Typography.Text key={index}>{text}</Typography.Text>)
         ) : (
           <ProfileForm />
         )}
@@ -212,7 +209,7 @@ export const RootPlacement: Story = {
           <Dialog.Title>Move to</Dialog.Title>
         </Dialog.Header>
         <Dialog.Body>
-          <Typography>{DESCRIPTION}</Typography>
+          <Typography.Text>{DESCRIPTION}</Typography.Text>
         </Dialog.Body>
       </Dialog.Content>
     </Dialog.Root>
@@ -235,7 +232,7 @@ export const Docked: Story = {
           <Dialog.Title>Chat</Dialog.Title>
         </Dialog.Header>
         <Dialog.Body>
-          <Typography>{DESCRIPTION}</Typography>
+          <Typography.Text>{DESCRIPTION}</Typography.Text>
         </Dialog.Body>
       </Dialog.Content>
     </Dialog.Root>

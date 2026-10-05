@@ -11,9 +11,9 @@ import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as TemplateEditor from '@dxos/plugin-routine/TemplateEditor';
-import { useThemeMode, useTranslation } from '@dxos/react-ui';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-query';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,
@@ -45,7 +45,7 @@ export type NotebookCellProps = {
 
 // TODO(burdon): Show evaluation errors.
 export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const source = useResolveRef(cell.source);
   const prompt = useResolveRef(cell.prompt);
@@ -195,8 +195,8 @@ const NotebookTextEditor = ({
   readOnly,
   ...props
 }: EditorViewProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
-  const { t } = useTranslation(meta.profile.key);
-  const themeMode = useThemeMode();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(() => {
     return [
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),

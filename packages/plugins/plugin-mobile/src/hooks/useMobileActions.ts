@@ -18,7 +18,6 @@ import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import * as DeckHooks from '@dxos/plugin-deck/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import {
   type ActionExecutor,
@@ -28,6 +27,7 @@ import {
   createMenuItemGroup,
   graphActions,
 } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Position from '@dxos/util/Position';
 
 import { useMobileLayout } from '#components';
@@ -162,7 +162,7 @@ const createMobileAccountMenuSection = (
  * Builds the mobile navbar actions including companion tabs, separator, and main menu dropdown.
  */
 export const useMobileNavbarActions = (): MobileNavbarActions => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
   const stateAtom = Hooks.useCapability(DeckCapabilities.State);
@@ -216,7 +216,7 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
  * Builds the mobile drawer actions including companion tabs and toolbar buttons.
  */
 export const useMobileDrawerActions = (consumerName: string): MobileDrawerActions => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const stateAtom = Hooks.useCapability(DeckCapabilities.State);
   const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
   const { graph } = ToolkitHooks.useAppGraph();
