@@ -7,6 +7,7 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import type * as RpcClientError from 'effect/rpc/RpcClientError';
+import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 import type * as WorkerError from 'effect/workers/WorkerError';
 import { readFile, realpath, stat } from 'node:fs/promises';
@@ -49,19 +50,30 @@ export type Options = {
   readonly onProgress?: Reporter;
 };
 
+/** What one reasoner concluded; a schema so `serve`'s indexer thread can post it to the main thread. */
+const Outcome = Schema.Struct({
+  name: Schema.String,
+  derived: Schema.Number,
+  durationMs: Schema.Number,
+  incremental: Schema.Boolean,
+});
+
 /**
  * One completed phase, in the order a pass reaches them: `scan`, `parse`, `commit`, then a
  * `reasoner` per pass and rule file, then `reason` (or `reason-skipped`), then `summary` unless
  * `summarize` is off.
  */
-export type Progress =
-  | { readonly phase: 'scan'; readonly ms: number; readonly scanned: number; readonly changed: number }
-  | { readonly phase: 'parse'; readonly ms: number; readonly files: number }
-  | { readonly phase: 'commit'; readonly ms: number }
-  | { readonly phase: 'reasoner'; readonly outcome: Reasoner.Outcome }
-  | { readonly phase: 'reason'; readonly ms: number }
-  | { readonly phase: 'reason-skipped' }
-  | { readonly phase: 'summary'; readonly ms: number };
+export const Progress = Schema.Union([
+  Schema.Struct({ phase: Schema.Literal('scan'), ms: Schema.Number, scanned: Schema.Number, changed: Schema.Number }),
+  Schema.Struct({ phase: Schema.Literal('parse'), ms: Schema.Number, files: Schema.Number }),
+  Schema.Struct({ phase: Schema.Literal('commit'), ms: Schema.Number }),
+  Schema.Struct({ phase: Schema.Literal('reasoner'), outcome: Outcome }),
+  Schema.Struct({ phase: Schema.Literal('reason'), ms: Schema.Number }),
+  Schema.Struct({ phase: Schema.Literal('reason-skipped') }),
+  Schema.Struct({ phase: Schema.Literal('summary'), ms: Schema.Number }),
+]);
+
+export type Progress = typeof Progress.Type;
 
 export type Reporter = (progress: Progress) => Effect.Effect<void>;
 

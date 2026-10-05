@@ -51,6 +51,12 @@ export interface Api {
   readonly lastProject: () => Effect.Effect<Project | undefined, LogError>;
   /** Appends one event and returns the entry it became. */
   readonly append: (projectId: string, event: Events.Event) => Effect.Effect<Events.Entry, LogError>;
+  /**
+   * Deletes the deltas that streamed `messageId`, once the `AssistantMessage` superseding them is
+   * appended. The one exception to append-only: deltas are scaffolding for a live reader, and a
+   * message settled in the log needs none of them to replay.
+   */
+  readonly compact: (projectId: string, messageId: string) => Effect.Effect<void, LogError>;
   /** The whole log from `after` (exclusive), in sequence order. */
   readonly read: (projectId: string, after?: number) => Effect.Effect<Events.Entry[], LogError>;
   /**
@@ -163,6 +169,15 @@ const make = (): Effect.Effect<Api, LogError, SqlClient.SqlClient | Scope.Scope>
 
       append,
       read,
+
+      compact: (projectId, messageId) =>
+        sql`DELETE FROM events WHERE project_id = ${projectId} AND type = 'AssistantDelta'
+            AND json_extract(data, '$.messageId') = ${messageId}`.pipe(
+          Effect.asVoid,
+          Effect.mapError(fail('Failed to compact message deltas')),
+          // Under the append gate, so a concurrent append's `MAX(seq)` cannot read a row mid-delete.
+          Semaphore.withPermits(gate, 1),
+        ),
 
       getValue: (projectId, key) =>
         sql<{ value: string }>`SELECT value FROM storage WHERE project_id = ${projectId} AND key = ${key}`.pipe(
