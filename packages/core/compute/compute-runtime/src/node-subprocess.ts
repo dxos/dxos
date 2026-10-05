@@ -39,10 +39,17 @@ const start = (options: Subprocess.SpawnOptions): Effect.Effect<Subprocess.Child
           }),
         ),
       );
-    child.once('error', onError);
-    child.once('spawn', () => {
+    const onSpawn = () => {
       child.off('error', onError);
       resume(Effect.succeed(wrap(child)));
+    };
+    child.once('error', onError);
+    child.once('spawn', onSpawn);
+    // Interrupted before `spawn` fired, the release below was never registered, so the child is killed here.
+    return Effect.sync(() => {
+      child.off('error', onError);
+      child.off('spawn', onSpawn);
+      child.kill();
     });
   });
 
