@@ -225,50 +225,46 @@ both of the latter now `dependsOn: ['org.dxos.plugin.thread']`. **plugin-discord
 plugin-agent talks to Discord itself (`sendDiscordMessage`, the Discord branches of `sendMessage`,
 `ensureThreadChat`, `start/stop/getDiscordBotStatus`, `DiscordBinding`).
 
-### Extending `ChannelBackendProvider`
+### Extending `ChannelBackendProvider` (step 1, built)
 
-All additions are **optional**, so freeq, Bluesky and the feed backend keep compiling unchanged:
+All additions are **optional**, so freeq, Bluesky and the feed backend keep compiling unchanged
+(`plugin-thread/src/types/ThreadCapabilities.ts`):
 
 ```ts
 interface ChannelBackendProvider {
-  // …existing members…
+  // …existing members; `send` may now return a `SendReceipt` (`void` still allowed)…
+  send: (channel, message) => Effect<SendReceipt | void, Error, Capability.Service>;
 
-  /** A direct channel to a person, for backends that have one (Discord DM, IRC private message). */
-  openDirect?: (
-    person: Person.Person,
-    context: { db: Database.Database },
-  ) => Effect.Effect<Channel.Channel | undefined, Error, Capability.Service>;
+  /** A DM with a person through the channel's account; the thread id, or undefined without a handle. */
+  openDirect?: (channel: Channel, person: Person) => Effect<string | undefined, Error, Capability.Service>;
 
-  /** Threads inside a channel, for backends that have them (Discord threads). */
-  threads?: {
-    /** Opens (or returns) the thread for a message; its id is backend-scoped. */
-    open: (
-      channel: Channel.Channel,
-      options: { messageId?: string; title?: string },
-    ) => Effect.Effect<ThreadRef, Error, Capability.Service>;
-    send: (
-      channel: Channel.Channel,
-      thread: ThreadRef,
-      message: Message.Message,
-    ) => Effect.Effect<void, Error, Capability.Service>;
-  };
+  /** Threads inside the channel (Discord threads and DM channels); thread ids are backend-scoped. */
+  threads?: { send: (channel: Channel, thread: string, message: Message) => Effect<SendReceipt | void, …> };
 
   /** A connection that must be started (a bot gateway, an IRC socket); absent means always available. */
-  connection?: {
-    start: (channel: Channel.Channel) => Effect.Effect<ConnectionStatus, Error, Capability.Service>;
-    stop: (channel: Channel.Channel) => Effect.Effect<ConnectionStatus, Error, Capability.Service>;
-    status: (channel: Channel.Channel) => Effect.Effect<ConnectionStatus, Error, Capability.Service>;
-  };
+  connection?: { start; stop; status }; // each (channel) => Effect<ConnectionStatus, Error, Capability.Service>
 }
 
-type ThreadRef = { channel: Ref.Ref<Channel.Channel>; id: string };
-type ConnectionStatus = { running: boolean; detail?: string; error?: string };
+type SendReceipt = { messageIds?: string[]; properties?: Record<string, unknown> };
+type ConnectionStatus = { running: boolean; state?: string; detail?: string; error?: string };
 ```
 
-`openDirect` replaces `discordUserId` (a person's handle is the backend's business, read from
-`Person.identities` by the backend that understands it). `threads` covers Discord threads without
-making every backend model them. `connection` gives the agent a backend-neutral Start/Stop/status; freeq
-can implement it over its existing `ConnectionManager`.
+Differences from the first sketch, and why:
+
+- **A thread is `(channel, threadId)`, not a `ThreadRef` object.** The channel is always in hand
+  where a thread id is, so a second reference type added nothing.
+- **`openDirect` takes the channel.** The DM is sent by the channel's account (a Discord bot token),
+  so the person alone does not say which account reaches them; it returns a thread id on that channel.
+- **No `threads.open` yet.** EDGE opens Discord threads itself; nothing in Composer needs to.
+- **`send` returns a receipt.** The caller records what it sent in the agent's chat, and EDGE's
+  mirror must not post that record a second time, so the backend's ids travel back as `properties`.
+
+Generic operations in plugin-thread dispatch to the provider found by `channel.backend.kind`
+(`Capability.getAll(ThreadCapabilities.ChannelBackend)`): `sendToChannel { channel, thread?, text }`,
+`openDirect { channel, person }`, `connectChannel` / `disconnectChannel` / `getChannelStatus
+{ channel }`. A missing provider fails with `ChannelBackendNotFoundError`, a missing optional member
+with `ChannelBackendUnsupportedError`; a backend refusal (closed DMs, no permission) is an outcome —
+`{ delivered: false, reason }` — that the agent relays.
 
 ### What moves where
 
