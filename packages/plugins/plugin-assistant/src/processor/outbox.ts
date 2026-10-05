@@ -47,7 +47,9 @@ export class PromptCancelledError extends Error {
  * order their round trips landed. A failure does not hold up the prompts behind it.
  */
 export class Outbox<T> {
-  readonly entries = Atom.make<readonly OutboxEntry[]>([]);
+  // Kept alive: the outbox is the only record of a prompt still being dispatched, and an atom nothing
+  // subscribes to is reset by the registry — between two submits with the thread unmounted, say.
+  readonly entries = Atom.make<readonly OutboxEntry[]>([]).pipe(Atom.keepAlive);
 
   readonly #payloads = new Map<string, T>();
   #tail: Promise<void> = Promise.resolve();
@@ -86,10 +88,8 @@ export class Outbox<T> {
       return;
     }
 
-    this._registry.update(this.entries, (entries) => [
-      ...entries.filter((candidate) => candidate.id !== id),
-      { ...entry, state: 'sending', error: undefined },
-    ]);
+    const resent: OutboxEntry = { ...entry, state: 'sending', error: undefined };
+    this._registry.update(this.entries, (entries) => [...entries.filter((candidate) => candidate.id !== id), resent]);
     this.#schedule(id);
   }
 

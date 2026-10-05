@@ -14,7 +14,7 @@ describe('diffRange', () => {
     const before = 'hello\n\n<delivery status="sent" />';
     const after = 'hello\n\n<delivery status="read" />';
     const change = diffRange(before, after);
-    expect(change).toEqual({ from: 24, to: 28, insert: 'read' });
+    expect(change).toEqual({ from: 25, to: 29, insert: 'read' });
     expect(apply(before, change)).toBe(after);
   });
 

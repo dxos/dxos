@@ -4,12 +4,25 @@
 
 import { describe, test } from 'vitest';
 
+import { Annotation, Obj } from '@dxos/echo';
 import { type ItemContent } from '@dxos/react-ui-feed';
 import { ContentBlock, Message } from '@dxos/types';
 
+import { DeliveryAnnotation } from './delivery.ts';
 import { createRenderer, linkBareObjectUris } from './renderer.ts';
 
 describe('createRenderer', () => {
+  test('a prompt row with a delivery status ends with its tag; a plain prompt carries none', ({ expect }) => {
+    const render = createRenderer(undefined);
+    const prompt = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'hello' }] });
+    expect(markdown(render(prompt))).not.toContain('<delivery');
+
+    Obj.update(prompt, (prompt) => Annotation.set(prompt, DeliveryAnnotation, 'delivered'));
+    expect(markdown(render(prompt))).toBe(
+      `<prompt>hello</prompt>\n\n<delivery status="delivered" id="${prompt.id}" />`,
+    );
+  });
+
   test('a run of tool calls is one panel', ({ expect }) => {
     const render = createRenderer(undefined);
     const rendered = render(
