@@ -24,6 +24,8 @@ const DEMO = process.env.DEMO === '1';
 const DEMO_TRIGGER = path.resolve(import.meta.dirname, '../../../../../temp/demo-start');
 const DEMO_PAUSE = Number(process.env.DEMO_PAUSE_MS) || 1_500;
 const DEMO_WINDOW = { width: 864, height: 1080 };
+// The window less its toolbar: the project's device scale factor rules out a window-sized (`null`) viewport.
+const DEMO_VIEWPORT = { width: DEMO_WINDOW.width, height: DEMO_WINDOW.height - 90 };
 
 /** The rail companion that holds the notifications panel. */
 const MESSENGER = 'messenger';
@@ -63,7 +65,7 @@ test.describe('Messenger demo', () => {
       if (!DEMO) {
         return browser;
       }
-      // Separate windows placed side by side, sized by the window rather than a fixed viewport.
+      // Separate windows placed side by side.
       const demoBrowser = await playwright.chromium.launch({
         headless: false,
         args: [
@@ -72,7 +74,7 @@ test.describe('Messenger demo', () => {
         ],
       });
       demoBrowsers.push(demoBrowser);
-      return demoBrowser.newContext({ viewport: null });
+      return demoBrowser.newContext({ viewport: DEMO_VIEWPORT });
     };
 
     alice = new AppManager(await peer(0), false);
