@@ -18,7 +18,7 @@ export type DiagramIslandProps = {
  * below the floor they stop being legible, so a wider diagram scrolls instead of shrinking further.
  */
 const MAX_SCALE = 0.75;
-const MIN_SCALE = 0.45;
+export const DIAGRAM_MIN_SCALE = 0.45;
 
 /**
  * plugin-illustrator's SVG renderer, drawn inside the Solid canvas. The SVG fills its parent by
@@ -37,14 +37,27 @@ export const DiagramIsland = ({ objects, refs }: DiagramIslandProps) => {
     }
     const fit = () => {
       const { width, height } = svg.viewBox.baseVal;
-      const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, container.clientWidth / width));
+      const scale = Math.min(MAX_SCALE, Math.max(DIAGRAM_MIN_SCALE, container.clientWidth / width));
       svg.style.width = `${width * scale}px`;
       svg.style.height = `${height * scale}px`;
     };
     fit();
-    const observer = new ResizeObserver(fit);
+    let frame = 0;
+    let width = container.clientWidth;
+    // Refitting resizes the panel, which can toggle the canvas scrollbar and resize it again; applying
+    // the fit next frame, and only for a new width, keeps that from looping inside one observation.
+    const observer = new ResizeObserver(() => {
+      if (container.clientWidth !== width) {
+        width = container.clientWidth;
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(fit);
+      }
+    });
     observer.observe(container);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, [objects]);
 
   const selectedRef = selection.length === 1 ? refs[selection[0]] : undefined;

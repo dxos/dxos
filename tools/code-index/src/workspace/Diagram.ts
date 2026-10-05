@@ -77,7 +77,8 @@ const problem = (message: string): Result.Result<never, Problem> => Result.fail(
  */
 export const normalize = (spec: Spec): Result.Result<Graph, Problem> => {
   const nodes = new Map<string, { id: string; label: string; group?: string; ref?: string }>();
-  const declare = (id: string, label?: string, group?: string, ref?: string) => {
+  // Not `declare`: Bun strips a statement opening with `declare(` as an ambient declaration.
+  const add = (id: string, label?: string, group?: string, ref?: string) => {
     const existing = nodes.get(id);
     if (existing) {
       existing.label = label ?? existing.label;
@@ -88,11 +89,11 @@ export const normalize = (spec: Spec): Result.Result<Graph, Problem> => {
     }
   };
   for (const node of spec.nodes) {
-    declare(node.id, node.label, node.group, node.ref);
+    add(node.id, node.label, node.group, node.ref);
   }
   const edges = (spec.edges ?? []).map((edge): Edge => {
-    declare(edge.from);
-    declare(edge.to);
+    add(edge.from);
+    add(edge.to);
     return {
       from: edge.from,
       to: edge.to,
@@ -285,15 +286,15 @@ export const objectIds = (graph: Graph): ReadonlyMap<string, string> => mintIds(
  */
 export const toSource = (graph: Graph): string => {
   const { nodes: nodeIds, groups: groupIds } = mintIds(graph);
-  const declare = (node: Node) => `  ${nodeIds.get(node.id)}["${oneLine(node.label)}"]`;
+  const line = (node: Node) => `  ${nodeIds.get(node.id)}["${oneLine(node.label)}"]`;
 
   const lines = [`flowchart ${graph.direction}`];
   for (const group of graph.groups) {
     lines.push(`  subgraph ${groupIds.get(group.id)} ["${oneLine(group.label)}"]`);
-    lines.push(...graph.nodes.filter((node) => node.group === group.id).map(declare));
+    lines.push(...graph.nodes.filter((node) => node.group === group.id).map(line));
     lines.push('  end');
   }
-  lines.push(...graph.nodes.filter((node) => !node.group || !groupIds.has(node.group)).map(declare));
+  lines.push(...graph.nodes.filter((node) => !node.group || !groupIds.has(node.group)).map(line));
   for (const edge of graph.edges) {
     // A `|` would close the label early, and the parser keeps whatever follows as the target.
     const label = edge.label ? `|${oneLine(edge.label).replaceAll('|', '/')}|` : '';

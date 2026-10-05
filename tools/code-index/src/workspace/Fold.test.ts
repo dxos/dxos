@@ -98,9 +98,7 @@ describe('Fold', () => {
     expect(state.turns).toHaveLength(1);
   });
 
-  test("a panel logged as 'mermaid' before the rename reads as a diagram, and is re-encoded as one", ({
-    expect,
-  }) => {
+  test("a panel logged as 'mermaid' before the rename reads as a diagram, and is re-encoded as one", ({ expect }) => {
     const decode = Schema.decodeUnknownSync(Events.Event);
     const presented = decode({ _tag: 'Presented', kind: 'mermaid', title: 'old', content: 'graph TD\n  a --> b' });
     expect(presented).toMatchObject({ kind: 'diagram', content: 'graph TD\n  a --> b' });

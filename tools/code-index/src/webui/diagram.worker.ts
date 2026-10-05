@@ -12,7 +12,7 @@ import type { RouteReply, RouteRequest } from './route.worker.ts';
  * route workers routes them, which is nearly all of the seconds a grouped diagram takes.
  */
 
-export type Request = { readonly id: number; readonly source: string };
+export type Request = { readonly id: number; readonly source: string; readonly width?: number };
 
 export type Reply =
   | { readonly id: number; readonly objects: Awaited<ReturnType<typeof Diagram.layout>> }
@@ -85,10 +85,10 @@ const emitCandidate = (job: MermaidEngine.EmitJob): Promise<Scene.Command[]> =>
  * when it sees `self` without `document`; it is first required inside `new ELK()`, which runs in
  * the synchronous prefix of `layout`, so a stub held across that call makes it export.
  */
-const layoutWithStub = (diagram: typeof Diagram, source: string) => {
+const layoutWithStub = (diagram: typeof Diagram, { source, width }: Request) => {
   Object.assign(globalThis, { document: {} });
   try {
-    return diagram.layout(source, { emitCandidate });
+    return diagram.layout(source, { emitCandidate, width });
   } finally {
     Reflect.deleteProperty(globalThis, 'document');
   }
@@ -97,10 +97,10 @@ const layoutWithStub = (diagram: typeof Diagram, source: string) => {
 let diagram: Promise<typeof Diagram> | undefined;
 
 self.addEventListener('message', (event: MessageEvent<Request>) => {
-  const { id, source } = event.data;
+  const { id } = event.data;
   diagram ??= import('./diagram.ts');
   void diagram
-    .then((loaded) => layoutWithStub(loaded, source))
+    .then((loaded) => layoutWithStub(loaded, event.data))
     .then(
       (objects) => self.postMessage({ id, objects } satisfies Reply),
       (cause) =>

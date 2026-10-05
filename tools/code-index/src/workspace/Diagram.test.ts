@@ -7,6 +7,7 @@ import * as Result from 'effect/Result';
 import { describe, test } from 'vitest';
 
 import { Mermaid } from '@dxos/diagram';
+import { EffectEx } from '@dxos/effect';
 
 import * as Diagram from './Diagram.ts';
 
@@ -50,11 +51,7 @@ describe('Diagram', () => {
       expect(
         Result.getOrThrow(
           Diagram.fromValue({
-            groups: [
-              { id: 'empty', label: 'Nobody' },
-              { id: 'b', label: 'Second' },
-              { id: 'a' },
-            ],
+            groups: [{ id: 'empty', label: 'Nobody' }, { id: 'b', label: 'Second' }, { id: 'a' }],
             nodes: [
               { id: 'x', group: 'a' },
               { id: 'y', group: 'b', label: 'Why' },
@@ -86,20 +83,17 @@ describe('Diagram', () => {
       });
     });
 
-    test('rejects what is not a spec, and a spec with no boxes, with a message the model can act on', ({
-      expect,
-    }) => {
+    test('rejects what is not a spec, and a spec with no boxes, with a message the model can act on', ({ expect }) => {
       expect(failure(Diagram.fromValue({ edges: [] }))).toContain('not a valid { nodes, edges, groups } spec');
-      expect(failure(Diagram.fromValue({ nodes: [{ id: 'a' }], edges: [{ from: 'a', to: 'b', kind: 'calls' }] })))
-        .toBeDefined();
+      expect(
+        failure(Diagram.fromValue({ nodes: [{ id: 'a' }], edges: [{ from: 'a', to: 'b', kind: 'calls' }] })),
+      ).toBeDefined();
       expect(failure(Diagram.fromValue({ nodes: [] }))).toEqual('The diagram has no nodes.');
     });
   });
 
   describe('read', () => {
-    test('reads mermaid through the illustrator parser, keeping groups, edge kinds, labels and refs', ({
-      expect,
-    }) => {
+    test('reads mermaid through the illustrator parser, keeping groups, edge kinds, labels and refs', ({ expect }) => {
       const source = [
         'flowchart LR',
         '  subgraph core [Core]',
@@ -136,13 +130,11 @@ describe('Diagram', () => {
     });
 
     test('`stored` is the normalized graph as JSON, or the problem', async ({ expect }) => {
-      expect(JSON.parse(await Effect.runPromise(Diagram.stored('graph LR; a --> b')))).toMatchObject({
+      expect(JSON.parse(await EffectEx.runPromise(Diagram.stored('graph LR; a --> b')))).toMatchObject({
         direction: 'LR',
         nodes: [{ id: 'a' }, { id: 'b' }],
       });
-      await expect(Effect.runPromise(Diagram.stored('pie'))).rejects.toMatchObject({
-        message: expect.stringContaining('flowcharts only'),
-      });
+      expect((await EffectEx.runPromise(Effect.flip(Diagram.stored('pie')))).message).toContain('flowcharts only');
     });
   });
 
