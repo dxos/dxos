@@ -449,6 +449,20 @@ export const read = (text: string): Reading => {
     return { w: width, h: height };
   };
 
+  /** `W:H` as the ratio W/H. */
+  const ratioAttr = (attrs: Map<string, Attr>, name: string): number | undefined => {
+    const attr = attrs.get(name);
+    if (!attr) {
+      return undefined;
+    }
+    const [width, height] = slice(attr.valueNode).split(':').map(Number.parseFloat);
+    if (attr.valueNode.getChild('Ratio') === null || !(width > 0) || !(height > 0)) {
+      report(attr.node, `"${name}" takes a ratio like 4:3.`);
+      return undefined;
+    }
+    return width / height;
+  };
+
   const attributesOf = (statement: SyntaxNode) => childrenOf(statement).filter((child) => child.name === 'Attribute');
 
   const readRelations = (statement: SyntaxNode): Semantic.Relation[] =>
@@ -557,7 +571,13 @@ export const read = (text: string): Reading => {
             return side ? [side] : [];
           })
       : undefined;
-    return { node: readId(idNode), range: rangeOf(node), ...optional('sides', sides?.length ? sides : undefined) };
+    const soft = sides?.length && node.getChild('Soft') !== null ? true : undefined;
+    return {
+      node: readId(idNode),
+      range: rangeOf(node),
+      ...optional('sides', sides?.length ? sides : undefined),
+      ...optional('soft', soft),
+    };
   };
 
   const readWaypoints = (via: SyntaxNode): Semantic.Waypoint[] =>
@@ -678,13 +698,21 @@ export const read = (text: string): Reading => {
       const attrs = readAttrs(attributesOf(statement), GROUP_ATTRS, `group "${id}"`);
       const relations = readRelations(statement);
       const gap = numberAttr(attrs, 'gap');
-      diagram.hinted ||= relations.length > 0 || gap !== undefined;
+      const width = numberAttr(attrs, 'max-width');
+      const maxWidth = width !== undefined && Number.isInteger(width) && width >= 1 ? width : undefined;
+      if (width !== undefined && maxWidth === undefined) {
+        report(attrs.get('max-width')?.node ?? statement, '"max-width" takes a whole number of columns, at least 1.');
+      }
+      const compact = statement.getChild('Compact') !== null ? true : undefined;
+      diagram.hinted ||= relations.length > 0 || gap !== undefined || maxWidth !== undefined || compact === true;
       diagram.groups.push({
         id,
         label: label ? unquote(slice(label)) : id,
         relations,
         range: rangeOf(statement),
         ...optional('gap', gap),
+        ...optional('maxWidth', maxWidth),
+        ...optional('compact', compact),
         ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
       });
       ranges.set(id, rangeOf(statement));
@@ -708,6 +736,10 @@ export const read = (text: string): Reading => {
     const flow = enumAttr(attrs, 'flow', Semantic.FLOWS);
     const grid = sizeAttr(attrs, 'grid');
     const box = sizeAttr(attrs, 'box');
+    const aspect = ratioAttr(attrs, 'aspect');
+    if (aspect) {
+      diagram.aspect = aspect;
+    }
     if (origin) {
       diagram.origin = origin;
     }
@@ -720,7 +752,7 @@ export const read = (text: string): Reading => {
     if (box) {
       diagram.box = box;
     }
-    diagram.hinted ||= grid !== undefined || box !== undefined;
+    diagram.hinted ||= grid !== undefined || box !== undefined || aspect !== undefined;
   };
 
   /** Drops what names nothing, then forms the buses; run once every statement is read. */
@@ -762,6 +794,15 @@ export const read = (text: string): Reading => {
     for (const [name, entries] of byName) {
       const edges = entries.flatMap((entry) => entry.edges).filter((edge) => live.has(edge));
       if (edges.length < 2) {
+        if (edges.length === 1) {
+          problems.push({
+            severity: 'warning',
+            message: entries[0].named
+              ? `Bus "${name}" has only one edge, so it has no trunk to share.`
+              : 'A bus needs several edges from or to one node: `edge A -> B, C bus` or `edge B, C -> A bus`.',
+            ...rangeOf(entries[0].node),
+          });
+        }
         continue;
       }
       const hubOut = edges.every((edge) => edge.from.node === edges[0].from.node);
@@ -782,6 +823,14 @@ export const read = (text: string): Reading => {
       }
       for (const edge of edges) {
         edge.bus = key;
+      }
+      const routed = edges.find((edge) => edge.via.length > 0);
+      if (routed) {
+        problems.push({
+          severity: 'warning',
+          message: 'Waypoints on a bus edge are ignored: the trunk and its spokes are routed together.',
+          ...routed.via[0].range,
+        });
       }
     }
   };

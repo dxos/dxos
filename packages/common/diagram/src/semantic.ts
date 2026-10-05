@@ -61,6 +61,10 @@ export type Group = {
   relations: Relation[];
   /** Extra clear space, in scene units, between this group and the groups it is placed relative to. */
   gap?: number;
+  /** Most columns the group may span. */
+  maxWidth?: number;
+  /** Keep the group near-square rather than a strip. */
+  compact?: boolean;
   color?: Scene.Color;
   range: Range;
 };
@@ -68,7 +72,8 @@ export type Group = {
 /** One coordinate or both; `cell` units are grid cells, where `n.5` is the channel after cell `n`. */
 export type Waypoint = { x?: number; y?: number; unit: 'scene' | 'cell'; range: Range };
 
-export type End = { node: string; sides?: readonly Side[]; range: Range };
+/** One end of an edge; `soft` makes its sides a preference the router weighs instead of a rule. */
+export type End = { node: string; sides?: readonly Side[]; soft?: boolean; range: Range };
 
 /**
  * Relationship words an edge may use in place of `->`, each naming the scene relation it draws.
@@ -154,6 +159,8 @@ export type Diagram = {
   grid?: Size;
   /** Box size; measured from the longest label when absent. */
   box?: Size;
+  /** Preferred width over height of the whole drawing. */
+  aspect?: number;
   nodes: Node[];
   groups: Group[];
   edges: Edge[];

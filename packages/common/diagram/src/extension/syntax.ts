@@ -20,7 +20,7 @@ export const diagramLanguage = LRLanguage.define({
     props: [
       styleTags({
         'object elements move remove diagram group node edge': tags.definitionKeyword,
-        'cell via bus': tags.keyword,
+        'cell via bus compact': tags.keyword,
         // Relation words and sides are plain names the reader checks, so they are tagged by position.
         'RelationKind Side': tags.keyword,
         'Soft': tags.modifier,
@@ -33,6 +33,7 @@ export const diagramLanguage = LRLanguage.define({
         'String': tags.string,
         'Number': tags.number,
         'Size': tags.number,
+        'Ratio': tags.number,
         'AttrName': tags.attributeName,
         // On the leaf, not on `AttrValue`/`Unbound`: a named child with no tag of its own does not
         // inherit its parent's, so tagging the wrapper colours nothing. A numeric or quoted value
@@ -42,11 +43,11 @@ export const diagramLanguage = LRLanguage.define({
         // keywords, so without the path they would colour as keywords while every other enum value
         // colours as a value. Listed in full, like the grammar's own `Word` alternation, so a
         // literal that starts colliding later is already covered.
-        'Word/object Word/elements Word/move Word/remove Word/rect Word/ellipse Word/diamond Word/triangle Word/circle Word/line Word/curve Word/arc Word/text Word/arrow Word/portal Word/diagram Word/group Word/node Word/edge Word/cell Word/via Word/bus':
+        'Word/object Word/elements Word/move Word/remove Word/rect Word/ellipse Word/diamond Word/triangle Word/circle Word/line Word/curve Word/arc Word/text Word/arrow Word/portal Word/diagram Word/group Word/node Word/edge Word/cell Word/via Word/bus Word/compact':
           tags.attributeValue,
         '_': tags.null,
         'Comment': tags.lineComment,
-        '-> <-> -- @ .. : |': tags.operator,
+        '-> <-> -- @ .. : | ~': tags.operator,
         '( )': tags.paren,
         '=': tags.definitionOperator,
         ',': tags.separator,

@@ -71,6 +71,8 @@ export type SolveOptions = {
   alternatives?: readonly Scene.Command[][];
   /** Independent placement searches (default 6). */
   restarts?: number;
+  /** Routes the mermaid engine's candidates off the thread; see `MermaidEngine.CompileOptions`. */
+  emitCandidate?: MermaidEngine.CompileOptions['emitCandidate'];
 };
 
 export type Solution = {
@@ -113,18 +115,22 @@ const relationsOf = (diagram: Semantic.Diagram) => ({
 /** Outweighs the bends a trunk costs each subtype in the placer, which routes edges one by one. */
 const SIBLING_WEIGHT = 40;
 
-/** Soft relations that line up the subtypes of one abstraction across the flow, so they can share a trunk. */
+/**
+ * Soft relations that line up the spokes of one trunk across the flow — the subtypes of one
+ * abstraction, or the far ends of a `bus` — so the trunk can gather them from one side.
+ */
 const siblingRelations = (diagram: Semantic.Diagram): Place.PlaceRelation[] => {
   const kind = diagram.flow === 'down' || diagram.flow === 'up' ? 'same-row' : 'same-col';
   const families = new Map<string, string[]>();
   for (const edge of diagram.edges) {
-    const key = Semantic.inheritanceKey(edge);
+    const key = edge.bus ?? Semantic.inheritanceKey(edge);
     if (key === undefined) {
       continue;
     }
+    const spoke = key.endsWith('|in') ? edge.from.node : edge.to.node;
     const family = families.get(key) ?? [];
-    if (!family.includes(edge.from.node)) {
-      families.set(key, [...family, edge.from.node]);
+    if (!family.includes(spoke)) {
+      families.set(key, [...family, spoke]);
     }
   }
   return [...families.values()].flatMap(([first, ...rest]) =>
@@ -315,7 +321,10 @@ const facingSide = (hub: Rect | undefined, spokes: readonly (Rect | undefined)[]
 };
 
 /** Routes every edge and bus over a placement and emits the scene. */
-const draw = (diagram: Semantic.Diagram, geometry: Geometry): { commands: Scene.Command[]; forced: string[] } => {
+const draw = (
+  diagram: Semantic.Diagram,
+  geometry: Geometry,
+): { commands: Scene.Command[]; forced: string[]; unbused: Semantic.Bus[] } => {
   const { rects, frames, context } = geometry;
   const grouped = Semantic.buses(diagram);
   const facing = new Map(
@@ -337,7 +346,15 @@ const draw = (diagram: Semantic.Diagram, geometry: Geometry): { commands: Scene.
   ];
   const endOf = (end: Semantic.End, sides?: readonly Semantic.Side[]): Route.End | undefined => {
     const rect = rects.get(end.node);
-    return rect ? { rect, node: end.node, sides: sides ?? end.sides ?? Semantic.SIDES } : undefined;
+    if (!rect) {
+      return undefined;
+    }
+    if (sides) {
+      return { rect, node: end.node, sides };
+    }
+    return end.soft && end.sides
+      ? { rect, node: end.node, sides: Semantic.SIDES, preferred: end.sides }
+      : { rect, node: end.node, sides: end.sides ?? Semantic.SIDES };
   };
   const waypoint = (point: Semantic.Waypoint): Route.Waypoint => ({
     ...(point.x === undefined ? {} : { x: point.unit === 'cell' ? geometry.cellX(point.x) : point.x }),
@@ -447,11 +464,16 @@ const draw = (diagram: Semantic.Diagram, geometry: Geometry): { commands: Scene.
       },
     });
   }
+  const unbused = buses.filter((bus) => !bus.implicit && !routed.some((piece) => piece.id === `${bus.id}#trunk`));
   if (routed.length === 0) {
-    return { commands, forced: [] };
+    return { commands, forced: [], unbused };
   }
 
   const edges = new Map(diagram.edges.map((edge) => [edge.id, edge]));
+  // A trunk label whose bus was drawn as separate edges goes on the first of them.
+  const orphaned = new Map(
+    unbused.flatMap((bus) => (bus.label === undefined ? [] : [[bus.edges[0].id, bus.label] as const])),
+  );
   const elements: Scene.Element[] = [];
   const labels: Route.LabelRequest[] = [];
   const relative = (point: Scene.Point): Scene.Point => ({ x: point.x, y: point.y });
@@ -489,20 +511,24 @@ const draw = (diagram: Semantic.Diagram, geometry: Geometry): { commands: Scene.
         ...color,
       });
     }
-    const text = bus ? (part === 'trunk' ? bus.label : edge?.label) : edge?.label;
+    const text = bus ? (part === 'trunk' ? bus.label : edge?.label) : (edge?.label ?? orphaned.get(part));
     if (text) {
-      // A spoke's label may also sit on the trunk it shares, read as the trunk's fork toward it.
+      // A spoke's label falls back to the trunk it shares only when its own runs have no room.
       const trunk =
         bus && part !== 'trunk' ? routed.find((other) => other.id === `${bus.id}#trunk`)?.points : undefined;
-      labels.push({
-        id,
-        text,
-        points: trunk ? (bus?.direction === 'out' ? [...trunk, ...points] : [...points, ...trunk]) : points,
-      });
+      labels.push({ id, text, points, ...(trunk ? { shared: trunk } : {}) });
     }
   }
   const paths = routed.map((piece) => piece.points);
-  elements.push(...Route.placeLabels(labels, paths, [...rects.values()], context.avoid, geometry.bounds));
+  elements.push(
+    ...Route.placeLabels(labels, {
+      paths,
+      boxes: [...rects.values()],
+      avoid: context.avoid,
+      frames: [...frames.values()],
+      bounds: geometry.bounds,
+    }),
+  );
   commands.push({
     op: 'upsert-object',
     object: { id: Semantic.CONNECTORS, origin: { ...origin }, scale: 1, elements },
@@ -510,7 +536,7 @@ const draw = (diagram: Semantic.Diagram, geometry: Geometry): { commands: Scene.
   const forced = routed
     .filter((piece) => piece.forced)
     .map((piece) => (piece.bus !== undefined ? piece.id.split('#')[1] : piece.id));
-  return { commands, forced };
+  return { commands, forced, unbused };
 };
 
 const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
@@ -631,10 +657,14 @@ const prepare = (source: Semantic.Diagram): Prepared => {
       from: edge.from.node,
       to: edge.to.node,
       upward: Semantic.pointsUp(edge.relation),
-      sides: { start: edge.from.sides, end: edge.to.sides },
+      // Preferred sides are the router's to weigh; the placement keeps every side open.
+      sides: { start: edge.from.soft ? undefined : edge.from.sides, end: edge.to.soft ? undefined : edge.to.sides },
     })),
     flow: diagram.flow,
     box: { x: box.w / pitch.w / 2, y: box.h / pitch.h / 2 },
+    shapes: new Map(diagram.groups.map((group) => [group.id, { maxWidth: group.maxWidth, compact: group.compact }])),
+    // The placement counts cells, which are wider than tall, so the drawing's ratio is converted to theirs.
+    ...(diagram.aspect === undefined ? {} : { aspect: (diagram.aspect * pitch.h) / pitch.w }),
   };
   return { diagram, input, box, pitch, issues };
 };
@@ -671,6 +701,8 @@ type Candidate = {
   cells?: Map<string, Place.Cell>;
   /** Edges the router could not draw as asked. */
   forced: readonly string[];
+  /** Buses drawn as separate edges because no junction served them. */
+  unbused: readonly Semantic.Bus[];
   layout: Objective.Layout;
 };
 
@@ -678,10 +710,59 @@ const candidateOf = (
   commands: Scene.Command[],
   cells?: Map<string, Place.Cell>,
   forced: readonly string[] = [],
+  unbused: readonly Semantic.Bus[] = [],
 ): Candidate => {
   const objects = objectsOf(commands);
-  return { commands, cells, forced, layout: { objects, report: Diagnostics.analyze(objects) } };
+  return { commands, cells, forced, unbused, layout: { objects, report: Diagnostics.analyze(objects) } };
 };
+
+/** Relations that line a member up with a node outside its group, by the axis they align on. */
+const ALIGNS: Record<Semantic.RelationKind, 'col' | 'row'> = {
+  'same-col': 'col',
+  'above': 'col',
+  'below': 'col',
+  'same-row': 'row',
+  'right-of': 'row',
+  'left-of': 'row',
+};
+
+/**
+ * Groups whose frame spans a whole column or row with none of their members in it, each blamed on
+ * a relation tying a member to a node outside the group, which is what pulls the members apart.
+ */
+export const stretchIssues = (diagram: Semantic.Diagram, cells: Map<string, Place.Cell>): Semantic.Issue[] =>
+  diagram.groups.flatMap((group): Semantic.Issue[] => {
+    const members = new Set(diagram.nodes.filter((node) => node.group === group.id).map((node) => node.id));
+    const placed = [...members].flatMap((id) => cells.get(id) ?? []);
+    if (placed.length < 2) {
+      return [];
+    }
+    const empty = (axis: 'col' | 'row') => {
+      const values = new Set(placed.map((cell) => cell[axis]));
+      const [low, high] = [Math.min(...values), Math.max(...values)];
+      return Array.from({ length: high - low + 1 }, (_, index) => low + index).filter((value) => !values.has(value));
+    };
+    const outside = diagram.nodes.flatMap((node) =>
+      node.relations
+        // A soft relation is already the remedy the warning prescribes, so only hard ones are blamed.
+        .filter((relation) => !relation.soft && members.has(node.id) !== members.has(relation.target))
+        .map((relation) => ({ owner: node.id, relation })),
+    );
+    return (['col', 'row'] as const).flatMap((axis): Semantic.Issue[] => {
+      const gaps = empty(axis);
+      const blame = outside.find(({ relation }) => ALIGNS[relation.kind] === axis);
+      if (gaps.length === 0 || !blame) {
+        return [];
+      }
+      return [
+        {
+          severity: 'warning',
+          message: `Group "${group.id}" is stretched: ${gaps.length === 1 ? `a ${axis === 'col' ? 'column' : 'row'}` : `${gaps.length} ${axis === 'col' ? 'columns' : 'rows'}`} inside its frame ${gaps.length === 1 ? 'holds' : 'hold'} none of its members, because "${blame.owner}" is ${DESCRIBE[blame.relation.kind]} "${blame.relation.target}" outside it. Relate the groups instead, or make it soft with \`~\`.`,
+          ...blame.relation.range,
+        },
+      ];
+    });
+  });
 
 /** Lays out a semantic diagram synchronously with the grid search alone. */
 export const solve = (source: Semantic.Diagram, options: SolveOptions = {}): Solution => {
@@ -694,7 +775,7 @@ export const solve = (source: Semantic.Diagram, options: SolveOptions = {}): Sol
   const candidates = [
     ...placed.map(({ cells }) => {
       const drawn = draw(diagram, geometry(diagram, cells, box, pitch));
-      return candidateOf(drawn.commands, cells, drawn.forced);
+      return candidateOf(drawn.commands, cells, drawn.forced, drawn.unbused);
     }),
     ...(options.alternatives ?? []).map((commands) => candidateOf(commands)),
   ];
@@ -705,6 +786,12 @@ export const solve = (source: Semantic.Diagram, options: SolveOptions = {}): Sol
     issues: [
       ...issues,
       ...(cells ? unmetIssues(prepared, cells) : []),
+      ...(cells ? stretchIssues(diagram, cells) : []),
+      ...chosen.candidate.unbused.map((bus) => ({
+        severity: 'warning' as const,
+        message: `No junction lets the edges ${bus.direction === 'in' ? 'into' : 'out of'} "${bus.hub.node}" share one trunk here, so the bus is drawn as separate edges.`,
+        ...bus.edges[0].range,
+      })),
       ...chosen.candidate.forced.flatMap((id) => {
         const edge = diagram.edges.find((entry) => entry.id === id);
         return edge
@@ -784,7 +871,10 @@ export const compile = async (source: Semantic.Diagram, options: SolveOptions = 
   if (!mermaid) {
     return solve(source, options);
   }
-  const result = await MermaidEngine.layout(mermaid, { origin: source.origin }).catch(() => undefined);
+  const result = await MermaidEngine.layout(mermaid, {
+    origin: source.origin,
+    ...(options.emitCandidate ? { emitCandidate: options.emitCandidate } : {}),
+  }).catch(() => undefined);
   if (!result) {
     return solve(source, options);
   }
