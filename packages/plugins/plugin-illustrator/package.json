@@ -84,22 +84,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./DrawingSkill": {
-      "source": "./src/skills/DrawingSkill.ts",
-      "types": "./dist/types/src/skills/DrawingSkill.d.ts",
-      "import": "./dist/lib/DrawingSkill.mjs"
-    },
-    "./UmlSkill": {
-      "source": "./src/skills/UmlSkill.ts",
-      "types": "./dist/types/src/skills/UmlSkill.d.ts",
-      "import": "./dist/lib/UmlSkill.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./package.json": "./package.json",
     "./Drawing": {
       "source": "./src/types/Drawing.ts",
       "types": "./dist/types/src/types/Drawing.d.ts",
@@ -109,6 +93,11 @@
       "source": "./src/types/DrawingOperation.ts",
       "types": "./dist/types/src/types/DrawingOperation.d.ts",
       "import": "./dist/lib/DrawingOperation.mjs"
+    },
+    "./DrawingSkill": {
+      "source": "./src/skills/DrawingSkill.ts",
+      "types": "./dist/types/src/skills/DrawingSkill.d.ts",
+      "import": "./dist/lib/DrawingSkill.mjs"
     },
     "./IllustratorCapabilities": {
       "source": "./src/types/IllustratorCapabilities.ts",
@@ -130,6 +119,11 @@
       "types": "./dist/types/src/IllustratorModel.d.ts",
       "import": "./dist/lib/ns/IllustratorModel.mjs"
     },
+    "./IllustratorOperationHandlerSet": {
+      "source": "./src/IllustratorOperationHandlerSet.ts",
+      "types": "./dist/types/src/IllustratorOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ns/IllustratorOperationHandlerSet.mjs"
+    },
     "./IllustratorPlugin": {
       "source": "./src/IllustratorPlugin.ts",
       "types": "./dist/types/src/IllustratorPlugin.d.ts",
@@ -140,10 +134,16 @@
       "types": "./dist/types/src/types/LegacySketch.d.ts",
       "import": "./dist/lib/LegacySketch.mjs"
     },
-    "./IllustratorOperationHandlerSet": {
-      "source": "./src/IllustratorOperationHandlerSet.ts",
-      "types": "./dist/types/src/IllustratorOperationHandlerSet.d.ts",
-      "import": "./dist/lib/ns/IllustratorOperationHandlerSet.mjs"
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./UmlSkill": {
+      "source": "./src/skills/UmlSkill.ts",
+      "types": "./dist/types/src/skills/UmlSkill.d.ts",
+      "import": "./dist/lib/UmlSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

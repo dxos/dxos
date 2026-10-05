@@ -82,16 +82,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Account": {
       "source": "./src/types/Account.ts",
       "types": "./dist/types/src/types/Account.d.ts",
@@ -101,11 +91,6 @@
       "source": "./src/types/AccountCache.ts",
       "types": "./dist/types/src/types/AccountCache.d.ts",
       "import": "./dist/lib/AccountCache.mjs"
-    },
-    "./CliLogin": {
-      "source": "./src/types/CliLogin.ts",
-      "types": "./dist/types/src/types/CliLogin.d.ts",
-      "import": "./dist/lib/CliLogin.mjs"
     },
     "./ClientAction": {
       "source": "./src/types/ClientAction.ts",
@@ -137,15 +122,30 @@
       "types": "./dist/types/src/ClientPlugin.d.ts",
       "import": "./dist/lib/ClientPlugin.mjs"
     },
-    "./PasskeyError": {
-      "source": "./src/types/PasskeyError.ts",
-      "types": "./dist/types/src/types/PasskeyError.d.ts",
-      "import": "./dist/lib/PasskeyError.mjs"
+    "./CliLogin": {
+      "source": "./src/types/CliLogin.ts",
+      "types": "./dist/types/src/types/CliLogin.d.ts",
+      "import": "./dist/lib/CliLogin.mjs"
     },
     "./HaloServices": {
       "source": "./src/HaloServices.ts",
       "types": "./dist/types/src/HaloServices.d.ts",
       "import": "./dist/lib/ns/HaloServices.mjs"
+    },
+    "./PasskeyError": {
+      "source": "./src/types/PasskeyError.ts",
+      "types": "./dist/types/src/types/PasskeyError.d.ts",
+      "import": "./dist/lib/PasskeyError.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

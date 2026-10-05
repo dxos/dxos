@@ -8,7 +8,7 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Client } from '@dxos/agent-claude/client';
-import * as ChatSchema from '@dxos/assistant/Chat';
+import * as Chat from '@dxos/assistant/Chat';
 import { Database, Feed, Filter } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Space } from '@dxos/react-client/echo';
@@ -71,10 +71,10 @@ const waitForSpace = async (key: string, timeout = 30_000): Promise<Space> => {
 };
 
 /** Waits for the chat the story plugin creates asynchronously on SpacesAvailable. */
-const waitForChat = async (space: Space, timeout = 30_000): Promise<ChatSchema.Chat> => {
+const waitForChat = async (space: Space, timeout = 30_000): Promise<Chat.Chat> => {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
-    const [chat] = await space.db.query(Filter.type(ChatSchema.Chat)).run();
+    const [chat] = await space.db.query(Filter.type(Chat.Chat)).run();
     if (chat) {
       return chat;
     }

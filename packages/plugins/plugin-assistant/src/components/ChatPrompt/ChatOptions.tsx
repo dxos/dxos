@@ -7,7 +7,7 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 import { Provider } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { type AiContext } from '@dxos/assistant';
-import type * as ChatModule from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
 import * as McpServer from '@dxos/compute/McpServer';
 import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -49,7 +49,7 @@ const styles = {
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
   db: Database.Database;
-  chat?: ChatModule.Chat;
+  chat?: Chat.Chat;
   context?: AiContext.Binder;
   registry?: Registry.Registry;
 };

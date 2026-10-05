@@ -18,16 +18,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./Memory": {
-      "source": "./src/types/Memory.ts",
-      "types": "./dist/types/src/types/Memory.d.ts",
-      "import": "./dist/lib/Memory.mjs"
-    },
     "./AgentOperation": {
       "source": "./src/AgentOperation.ts",
       "types": "./dist/types/src/AgentOperation.d.ts",
@@ -68,6 +58,16 @@
       "types": "./dist/types/src/skills/delegation/DelegationSkill.d.ts",
       "import": "./dist/lib/ns/DelegationSkill.mjs"
     },
+    "./DelegationStrategy": {
+      "source": "./src/DelegationStrategy.ts",
+      "types": "./dist/types/src/DelegationStrategy.d.ts",
+      "import": "./dist/lib/ns/DelegationStrategy.mjs"
+    },
+    "./Memory": {
+      "source": "./src/types/Memory.ts",
+      "types": "./dist/types/src/types/Memory.d.ts",
+      "import": "./dist/lib/Memory.mjs"
+    },
     "./MemorySkill": {
       "source": "./src/skills/memory/MemorySkill.ts",
       "types": "./dist/types/src/skills/memory/MemorySkill.d.ts",
@@ -88,15 +88,15 @@
       "types": "./dist/types/src/SlashCommand.d.ts",
       "import": "./dist/lib/ns/SlashCommand.mjs"
     },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
     "./WebSearchSkill": {
       "source": "./src/skills/websearch/WebSearchSkill.ts",
       "types": "./dist/types/src/skills/websearch/WebSearchSkill.d.ts",
       "import": "./dist/lib/ns/WebSearchSkill.mjs"
-    },
-    "./DelegationStrategy": {
-      "source": "./src/DelegationStrategy.ts",
-      "types": "./dist/types/src/DelegationStrategy.d.ts",
-      "import": "./dist/lib/ns/DelegationStrategy.mjs"
     }
   },
   "files": [

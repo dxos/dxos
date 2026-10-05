@@ -3,6 +3,6 @@
 //
 
 export * as TranscriptionPlugin from './TranscriptionPlugin.ts';
-export * from '#types';
 export * from '#operations';
 export * from '#skills';
+export * from '#types';

@@ -3,7 +3,7 @@
 //
 
 import { Ref } from '@dxos/echo';
-import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
+import * as Annotation from '@dxos/echo/Annotation';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 
@@ -19,9 +19,9 @@ export const getRefProps = (ast: SchemaAST.AST): RefProps | undefined => {
     const elementType = SchemaEx.getArrayElementType(ast);
     if (elementType) {
       if (Ref.isRefType(elementType)) {
-        const typename = SchemaEx.findAnnotation<ReferenceAnnotationValue>(
+        const typename = SchemaEx.findAnnotation<Annotation.ReferenceAnnotationValue>(
           elementType,
-          ReferenceAnnotationId,
+          Annotation.ReferenceAnnotationId,
         )?.typename;
         return { ast: elementType, isArray: true, typename };
       }
@@ -30,7 +30,10 @@ export const getRefProps = (ast: SchemaAST.AST): RefProps | undefined => {
 
   // Direct reference.
   if (Ref.isRefType(ast)) {
-    const typename = SchemaEx.findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId)?.typename;
+    const typename = SchemaEx.findAnnotation<Annotation.ReferenceAnnotationValue>(
+      ast,
+      Annotation.ReferenceAnnotationId,
+    )?.typename;
     return { ast, isArray: false, typename };
   }
 

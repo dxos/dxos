@@ -6,7 +6,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
@@ -14,7 +14,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as DragHandle from '@dxos/react-ui/DragHandle';
 import * as Focus from '@dxos/react-ui/Focus';
-import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
@@ -31,15 +31,15 @@ const KANBAN_CARD_TILE_NAME = 'KanbanBoard.Card';
  */
 export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug, draggable }, forwardedRef) => {
-    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const { model } = useBoard(KANBAN_CARD_TILE_NAME);
     const { projection, columnFieldPath, onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
     const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
 
     // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
-    const [cardRef, pivotId] = Hooks.useCardPivot();
-    const objectMenuItems = Hooks.useObjectMenuItems(data, pivotId);
+    const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
+    const objectMenuItems = ToolkitHooks.useObjectMenuItems(data, pivotId);
 
     const menuItems = useMemo(
       () => [

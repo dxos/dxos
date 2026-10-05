@@ -5,12 +5,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
-import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -48,8 +48,8 @@ export const MediaArtifactVariants = ({
   attendableId,
   actionsNodeId,
 }: MediaArtifactVariantsProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  const { graph } = Hooks.useAppGraph();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { graph } = ToolkitHooks.useAppGraph();
   const db = Obj.getDatabase(artifact);
   const [artifactSnapshot] = useObject(artifact);
   const variantRefs = artifactSnapshot?.variants ?? [];

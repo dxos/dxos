@@ -69,27 +69,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./Graph": {
-      "source": "./src/types/Graph.ts",
-      "types": "./dist/types/src/types/Graph.d.ts",
-      "import": "./dist/lib/Graph.mjs"
-    },
-    "./Hooks": {
-      "source": "./src/Hooks.ts",
-      "types": "./dist/types/src/Hooks.d.ts",
-      "import": "./dist/lib/ns/Hooks.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./package.json": "./package.json",
     "./ExplorerAction": {
       "source": "./src/types/ExplorerAction.ts",
       "types": "./dist/types/src/types/ExplorerAction.d.ts",
@@ -109,6 +88,27 @@
       "source": "./src/ForceGraph.ts",
       "types": "./dist/types/src/ForceGraph.d.ts",
       "import": "./dist/lib/ns/ForceGraph.mjs"
+    },
+    "./Graph": {
+      "source": "./src/types/Graph.ts",
+      "types": "./dist/types/src/types/Graph.d.ts",
+      "import": "./dist/lib/Graph.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
+    },
+    "./package.json": "./package.json",
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

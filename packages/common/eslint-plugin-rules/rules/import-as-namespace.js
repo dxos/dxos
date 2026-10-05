@@ -10,7 +10,7 @@ const DIRECTIVE_LINE_REGEX = /^\s*\/\/\s*@import-as-namespace\s*$/m;
 const PASCAL_CASE_REGEX = /^[A-Z][a-zA-Z0-9]*$/;
 
 /**
- * An import may also prefix the name with a PascalCase qualifier (`AppHooks` for `Hooks`), so two
+ * An import may also prefix the name with a PascalCase qualifier (`ToolkitHooks` for `Hooks`), so two
  * packages' namespaces of the same name can meet in one file.
  */
 const isAllowedImportName = (actual, expected) =>
@@ -28,7 +28,7 @@ const TS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
  * - The module filename is PascalCase (e.g. `LanguageModel.ts`).
  * - All imports of the module use namespace form: `import * as LanguageModel from './LanguageModel'`.
  * - The namespace name matches the filename (without extension), has a `Module` suffix, or (on
- *   imports) a PascalCase prefix: `import * as AppHooks from '@dxos/app-framework/Hooks'`.
+ *   imports) a PascalCase prefix: `import * as ToolkitHooks from '@dxos/app-toolkit/Hooks'`.
  * - Re-exports use namespace form: `export * as LanguageModel from './LanguageModel'`.
  *
  * The `Module` suffix is allowed as an escape hatch when the expected namespace name conflicts

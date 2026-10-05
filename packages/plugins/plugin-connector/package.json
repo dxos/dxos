@@ -102,11 +102,6 @@
       "types": "./dist/types/src/Binding.d.ts",
       "import": "./dist/lib/Binding.mjs"
     },
-    "./ConnectorsSkill": {
-      "source": "./src/skills/ConnectorsSkill.ts",
-      "types": "./dist/types/src/skills/ConnectorsSkill.d.ts",
-      "import": "./dist/lib/ConnectorsSkill.mjs"
-    },
     "./ConnectorAnnotations": {
       "source": "./src/types/ConnectorAnnotations.ts",
       "types": "./dist/types/src/types/ConnectorAnnotations.d.ts",
@@ -121,6 +116,11 @@
       "source": "./src/types/ConnectorCoordination.ts",
       "types": "./dist/types/src/types/ConnectorCoordination.d.ts",
       "import": "./dist/lib/ConnectorCoordination.mjs"
+    },
+    "./ConnectorError": {
+      "source": "./src/ConnectorError.ts",
+      "types": "./dist/types/src/ConnectorError.d.ts",
+      "import": "./dist/lib/ns/ConnectorError.mjs"
     },
     "./ConnectorEvents": {
       "source": "./src/types/ConnectorEvents.ts",
@@ -142,6 +142,11 @@
       "types": "./dist/types/src/types/ConnectorSpec.d.ts",
       "import": "./dist/lib/ConnectorSpec.mjs"
     },
+    "./ConnectorsSkill": {
+      "source": "./src/skills/ConnectorsSkill.ts",
+      "types": "./dist/types/src/skills/ConnectorsSkill.d.ts",
+      "import": "./dist/lib/ConnectorsSkill.mjs"
+    },
     "./package.json": "./package.json",
     "./SyncTemplate": {
       "source": "./src/SyncTemplate.ts",
@@ -152,11 +157,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./ConnectorError": {
-      "source": "./src/ConnectorError.ts",
-      "types": "./dist/types/src/ConnectorError.d.ts",
-      "import": "./dist/lib/ns/ConnectorError.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

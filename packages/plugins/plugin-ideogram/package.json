@@ -41,15 +41,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./IdeogramPlugin": {
-      "source": "./src/IdeogramPlugin.ts",
-      "types": "./dist/types/src/IdeogramPlugin.d.ts",
-      "import": "./dist/lib/IdeogramPlugin.mjs"
-    },
     "./IdeogramEvents": {
       "source": "./src/IdeogramEvents.ts",
       "types": "./dist/types/src/IdeogramEvents.d.ts",
       "import": "./dist/lib/ns/IdeogramEvents.mjs"
+    },
+    "./IdeogramPlugin": {
+      "source": "./src/IdeogramPlugin.ts",
+      "types": "./dist/types/src/IdeogramPlugin.d.ts",
+      "import": "./dist/lib/IdeogramPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

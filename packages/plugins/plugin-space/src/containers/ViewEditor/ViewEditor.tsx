@@ -6,10 +6,9 @@ import React, { useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
+import * as ToolkitQuery from '@dxos/app-toolkit/Query';
 import { EID, Filter, Obj, Query, type QueryAST, Ref, Scope, Tag, Type, type View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { type Mutable } from '@dxos/echo/Obj';
 import { useClient } from '@dxos/react-client';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -38,7 +37,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       return;
     }
 
-    const foundType = await resolveSchemaWithRegistry(db, view.query.ast);
+    const foundType = await ToolkitQuery.resolveSchemaWithRegistry(db, view.query.ast);
     if (foundType && foundType !== type) {
       setType(() => foundType);
     }
@@ -53,9 +52,9 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       const queue = target;
       const query = queue ? Query.fromAst(newQuery).from([Scope.feed(queue)]) : Query.fromAst(newQuery);
       Obj.update(view, (view) => {
-        view.query.ast = query.ast as Mutable<typeof query.ast>;
+        view.query.ast = query.ast as Obj.Mutable<typeof query.ast>;
       });
-      const newType = await resolveSchemaWithRegistry(db, query.ast);
+      const newType = await ToolkitQuery.resolveSchemaWithRegistry(db, query.ast);
       if (!newType) {
         return;
       }
@@ -65,7 +64,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
         jsonSchema: newType.jsonSchema,
       });
       Obj.update(view, (view) => {
-        view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
+        view.projection = Obj.getSnapshot(newView).projection as Obj.Mutable<typeof view.projection>;
       });
 
       setType(() => newType);

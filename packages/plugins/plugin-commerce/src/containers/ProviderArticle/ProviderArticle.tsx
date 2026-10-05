@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import {
@@ -18,7 +18,7 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
@@ -33,7 +33,7 @@ export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provid
  * Provider node's graph actions (e.g. Regenerate, which runs the skill agent) in the toolbar.
  */
 export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [provider] = useObject(subject);
   const { actions, onAction } = useMenuActions(attendableId);
 
@@ -102,7 +102,7 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
 const useMenuActions = (
   attendableId: string | undefined,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = Hooks.useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
 
   const menuActions = useMenuBuilder(

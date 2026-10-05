@@ -13,7 +13,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Alarm, SessionStore } from '@dxos/assistant';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import * as ChatType from '@dxos/assistant/Chat';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -49,7 +49,7 @@ type StoryArgs = {
 
 const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs) => {
   const [space] = useSpaces();
-  const [chat] = useQuery(space?.db, Filter.type(ChatType.Chat));
+  const [chat] = useQuery(space?.db, Filter.type(AssistantChat.Chat));
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const registry = useRegistry();
   const { preset, ...chatProps } = usePresets(settings, chat);
@@ -99,7 +99,7 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [ChatType.Chat, Feed.Feed, Message.Message, Task.Task, Alarm.Alarm],
+          types: [AssistantChat.Chat, Feed.Feed, Message.Message, Task.Task, Alarm.Alarm],
           config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -107,9 +107,9 @@ const meta = {
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
               const feed = space.db.add(Feed.make());
-              const chat = space.db.add(ChatType.make({ name: 'Test', feed: Ref.make(feed) }));
+              const chat = space.db.add(AssistantChat.make({ name: 'Test', feed: Ref.make(feed) }));
               for (const { title, status } of tasks) {
-                ChatType.addTask(space.db, chat, title, { status });
+                AssistantChat.addTask(space.db, chat, title, { status });
               }
               // Queued input is feed state, so seeding it is exactly what a submit-while-busy does.
               const store = new SessionStore();

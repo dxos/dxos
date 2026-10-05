@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import type * as ChatType from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -41,7 +41,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
 
   // In-memory backing chat (not yet added to the space). `nonce` forces a fresh chat after submit.
-  const [chat, setChat] = useState<ChatType.Chat>();
+  const [chat, setChat] = useState<Chat.Chat>();
   const [nonce, setNonce] = useState(0);
   const { preset, ...presetProps } = usePresets(settings, chat);
   useEffect(() => {

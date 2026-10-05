@@ -6,11 +6,11 @@ import React, { useMemo } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as DeckHooks from '@dxos/plugin-deck/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
-import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 
@@ -24,8 +24,8 @@ const DRAWER_NAME = 'MobileDeckLayout.Drawer';
  * Companion drawer for the visible panel of the mobile stack.
  */
 export const MobileDrawer = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  const { graph } = Hooks.useAppGraph();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { graph } = ToolkitHooks.useAppGraph();
   const { state } = DeckHooks.useDeckState();
   const { topId } = useMobileStack();
 

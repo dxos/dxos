@@ -50,20 +50,20 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./FreeqEvents": {
+      "source": "./src/FreeqEvents.ts",
+      "types": "./dist/types/src/FreeqEvents.d.ts",
+      "import": "./dist/lib/ns/FreeqEvents.mjs"
     },
     "./FreeqPlugin": {
       "source": "./src/FreeqPlugin.ts",
       "types": "./dist/types/src/FreeqPlugin.d.ts",
       "import": "./dist/lib/FreeqPlugin.mjs"
     },
-    "./FreeqEvents": {
-      "source": "./src/FreeqEvents.ts",
-      "types": "./dist/types/src/FreeqEvents.d.ts",
-      "import": "./dist/lib/ns/FreeqEvents.mjs"
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

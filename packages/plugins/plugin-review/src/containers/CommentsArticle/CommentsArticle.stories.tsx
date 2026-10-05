@@ -24,7 +24,6 @@ import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
-import { qualifyId } from '@dxos/graph/GraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
@@ -192,7 +191,7 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   const { graph } = ToolkitHooks.useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const attendableId = doc && qualifyId(GraphNode.RootId, doc.id);
+  const attendableId = doc && GraphNode.qualifyId(GraphNode.RootId, doc.id);
 
   // Story renders surfaces directly (no deck), so expand graph actions for the doc node.
   useEffect(() => {

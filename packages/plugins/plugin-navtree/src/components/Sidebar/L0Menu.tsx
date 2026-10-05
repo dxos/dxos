@@ -26,11 +26,11 @@ import React, {
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import * as Hooks from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as DragHandle from '@dxos/react-ui/DragHandle';
-import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Main from '@dxos/react-ui/Main';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
@@ -85,8 +85,8 @@ type L0ItemProps = L0ItemRootProps & {
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
   const { onSelect, onTabChange } = useNavTreeContext();
   const { getItem } = useNavTreeState();
-  const [isLg] = UiHooks.useMediaQuery('lg');
-  const runAction = Hooks.useActionRunner();
+  const [isLg] = Hooks.useMediaQuery('lg');
+  const runAction = GraphHooks.useActionRunner();
 
   return useCallback(
     (event: MouseEvent) => {
@@ -119,7 +119,7 @@ const l0Breakpoints: Record<string, string> = {
 const L0ItemRoot = memo(
   forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
     ({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
-      const { t } = UiHooks.useTranslation(meta.profile.key);
+      const { t } = Hooks.useTranslation(meta.profile.key);
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
       const { id, testId } = useAtomValue(model.itemProps(itemPath));
@@ -167,7 +167,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: Util.ThemedClassName<{}
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
 const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L0ItemProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const localizedString = Theme.toLocalizedString(item.properties.label, t);
@@ -256,7 +256,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
 });
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   if (item.properties.pending === true) {
     return <L0PendingAvatar />;
@@ -302,8 +302,8 @@ export const L0Menu = ({
   path,
   onItemHover,
 }: L0MenuProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  const runAction = Hooks.useActionRunner();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const runAction = GraphHooks.useActionRunner();
   const handleAction = useCallback(
     (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps) => {
       void runAction(action, params);

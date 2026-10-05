@@ -79,16 +79,7 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./StreamDeckPlugin": {
-      "source": "./src/StreamDeckPlugin.ts",
-      "types": "./dist/types/src/StreamDeckPlugin.d.ts",
-      "import": "./dist/lib/StreamDeckPlugin.mjs"
-    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
     "./Protocol": {
       "source": "./src/protocol/Protocol.ts",
@@ -100,7 +91,16 @@
       "types": "./dist/types/src/types/StreamDeckCapabilities.d.ts",
       "import": "./dist/lib/StreamDeckCapabilities.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl"
+    "./StreamDeckPlugin": {
+      "source": "./src/StreamDeckPlugin.ts",
+      "types": "./dist/types/src/StreamDeckPlugin.d.ts",
+      "import": "./dist/lib/StreamDeckPlugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

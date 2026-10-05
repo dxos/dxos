@@ -7,15 +7,14 @@ import * as Struct from 'effect/Struct';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
-import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitQuery from '@dxos/app-toolkit/Query';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { type Mutable } from '@dxos/echo/Obj';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
-import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
@@ -33,7 +32,7 @@ export type PipelinePropertiesProps = AppSurface.ObjectPropertiesProps<Pipeline.
  * Supports editing the pipeline view.
  */
 export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(pipeline);
   const [expandedId, setExpandedId] = useState<string>();
   const [columns, updateColumns] = useObject(pipeline, 'columns');
@@ -42,7 +41,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
   const [type, setType] = useState<Type.AnyEntity>();
   const projectionRef = useRef<ProjectionModel>(null);
   const tags = useQuery(db, Filter.type(Tag.Tag));
-  const types = Hooks.useTypeOptions({
+  const types = ToolkitHooks.useTypeOptions({
     db,
     annotation: {
       location: ['database', 'runtime'],
@@ -50,12 +49,12 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
     },
   });
 
-  UiHooks.useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!view?.query || !db) {
       return;
     }
 
-    const foundType = await resolveSchemaWithRegistry(db, view.query.ast);
+    const foundType = await ToolkitQuery.resolveSchemaWithRegistry(db, view.query.ast);
     if (foundType && foundType !== type) {
       setType(() => foundType);
     }
@@ -78,9 +77,9 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
       const queue = target;
       const query = queue ? Query.fromAst(newQuery).from([Scope.feed(String(queue))]) : Query.fromAst(newQuery);
       updateView((view) => {
-        view.query.ast = query.ast as Mutable<typeof query.ast>;
+        view.query.ast = query.ast as Obj.Mutable<typeof query.ast>;
       });
-      const newType = await resolveSchemaWithRegistry(db, query.ast);
+      const newType = await ToolkitQuery.resolveSchemaWithRegistry(db, query.ast);
       if (!newType) {
         return;
       }
@@ -90,7 +89,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
         jsonSchema: newType.jsonSchema,
       });
       updateView((view) => {
-        view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
+        view.projection = Obj.getSnapshot(newView).projection as Obj.Mutable<typeof view.projection>;
       });
 
       setType(() => newType);

@@ -9,7 +9,7 @@ import type * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
 import type * as Trace from '@dxos/compute/Trace';
 import { type Database, Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
+import type * as EchoError from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
 import { type Connection } from '@dxos/link';
 import * as Binding from '@dxos/plugin-connector/Binding';
@@ -31,7 +31,7 @@ export const runJmapSync = ({
   ...options
 }: { connection: Ref.Ref<Connection.Connection> } & Omit<MailSync.RunMailSyncOptions, 'binding'>): Effect.Effect<
   { newMessages: number },
-  MailSync.MailSyncError | EntityNotFoundError | ConnectorError.ConnectionAuthExpiredError,
+  MailSync.MailSyncError | EchoError.EntityNotFoundError | ConnectorError.ConnectionAuthExpiredError,
   Database.Service | Capability.Service | Operation.Service | Trace.TraceService | JmapMailApi | Resolver
 > =>
   Binding.syncAll({

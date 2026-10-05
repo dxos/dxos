@@ -11,7 +11,7 @@ import { AiContext } from '@dxos/assistant';
 import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Trace from '@dxos/compute/Trace';
@@ -56,7 +56,7 @@ const captureSpace = async ({ space }: { space: Space }) => {
 };
 
 // Read directly rather than through the index, which lags objects seeded during activation.
-let storyChat: AssistantChat.Chat | undefined;
+let storyChat: Chat.Chat | undefined;
 
 /**
  * The URI of the checklist task titled `title`, resolved when the scripted turn is emitted:
@@ -65,7 +65,7 @@ let storyChat: AssistantChat.Chat | undefined;
  * as the string the model is shown, and the envelope form fails its decoding.
  */
 const checklistRef = (title: string): string => {
-  const task = storyChat && AssistantChat.resolveTasks(storyChat).find((task) => task.title === title);
+  const task = storyChat && Chat.resolveTasks(storyChat).find((task) => task.title === title);
   if (!task) {
     throw new Error(`No checklist task titled "${title}".`);
   }
@@ -73,7 +73,7 @@ const checklistRef = (title: string): string => {
 };
 
 /** Captures the chat the decorator created, so {@link checklistRef} can read its checklist. */
-const captureChat = async ({ chat }: { chat: AssistantChat.Chat }) => {
+const captureChat = async ({ chat }: { chat: Chat.Chat }) => {
   storyChat = chat;
 };
 
@@ -84,7 +84,7 @@ const readChecklist = async (): Promise<Outline.ChecklistItem[]> => {
     if (!storySpace) {
       return [];
     }
-    [chat] = await storySpace.db.query(Filter.type(AssistantChat.Chat)).run();
+    [chat] = await storySpace.db.query(Filter.type(Chat.Chat)).run();
   }
   if (!chat) {
     return [];
@@ -104,7 +104,7 @@ const seedProjectTask = async ({
   binder,
 }: {
   db: Database.Database;
-  chat: AssistantChat.Chat;
+  chat: Chat.Chat;
   binder: AiContext.Binder;
 }) => {
   storyChat = chat;
@@ -115,7 +115,7 @@ const seedProjectTask = async ({
   });
 
   // A named reviewer is what sends the finished task to `review` rather than `done`.
-  const task = AssistantChat.addTask(db, chat, POEM_TASK_TITLE, {
+  const task = Chat.addTask(db, chat, POEM_TASK_TITLE, {
     status: 'todo',
     reviewers: [{ name: 'Rich', role: 'user' }],
   });
@@ -225,7 +225,7 @@ const EXECUTABLE_TASKS = [
   },
 ];
 
-const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: AssistantChat.Chat }) => {
+const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: Chat.Chat }) => {
   storyChat = chat;
   // `dependencies` are 1-based ordinals (the numbering the checklist and UI speak), so they can
   // only point at earlier entries.
@@ -235,7 +235,7 @@ const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: 
       .map((ordinal) => tasks[ordinal - 1])
       .filter((dep) => dep !== undefined)
       .map((dep) => Ref.make(dep));
-    tasks.push(AssistantChat.addTask(db, chat, title, dependsOn.length > 0 ? { dependsOn } : {}));
+    tasks.push(Chat.addTask(db, chat, title, dependsOn.length > 0 ? { dependsOn } : {}));
   }
 
   await db.flush();
@@ -347,7 +347,7 @@ export const WithTasks: Story = {
         { title: 'Update the price list', status: 'todo' },
       ];
       for (const { title, status } of seed) {
-        AssistantChat.addTask(db, chat, title, { status });
+        Chat.addTask(db, chat, title, { status });
       }
       await db.flush();
     },

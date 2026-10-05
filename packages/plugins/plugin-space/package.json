@@ -89,10 +89,25 @@
       "types": "./dist/types/src/CardMasonry.d.ts",
       "import": "./dist/lib/ns/CardMasonry.mjs"
     },
+    "./CollectionOperation": {
+      "source": "./src/types/CollectionOperation.ts",
+      "types": "./dist/types/src/types/CollectionOperation.d.ts",
+      "import": "./dist/lib/CollectionOperation.mjs"
+    },
     "./Containers": {
       "source": "./src/Containers.ts",
       "types": "./dist/types/src/Containers.d.ts",
       "import": "./dist/lib/ns/Containers.mjs"
+    },
+    "./Dashboard": {
+      "source": "./src/Dashboard.ts",
+      "types": "./dist/types/src/Dashboard.d.ts",
+      "import": "./dist/lib/ns/Dashboard.mjs"
+    },
+    "./DatabaseSkill": {
+      "source": "./src/skills/DatabaseSkill.ts",
+      "types": "./dist/types/src/skills/DatabaseSkill.d.ts",
+      "import": "./dist/lib/DatabaseSkill.mjs"
     },
     "./Hooks": {
       "source": "./src/Hooks.ts",
@@ -100,26 +115,6 @@
       "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./package.json": "./package.json",
-    "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./DatabaseSkill": {
-      "source": "./src/skills/DatabaseSkill.ts",
-      "types": "./dist/types/src/skills/DatabaseSkill.d.ts",
-      "import": "./dist/lib/DatabaseSkill.mjs"
-    },
-    "./CollectionOperation": {
-      "source": "./src/types/CollectionOperation.ts",
-      "types": "./dist/types/src/types/CollectionOperation.d.ts",
-      "import": "./dist/lib/CollectionOperation.mjs"
-    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
@@ -145,15 +140,15 @@
       "types": "./dist/types/src/types/SpaceForm.d.ts",
       "import": "./dist/lib/SpaceForm.mjs"
     },
-    "./SpaceOperationHandlerSet": {
-      "source": "./src/operations/SpaceOperationHandlerSet.ts",
-      "types": "./dist/types/src/operations/SpaceOperationHandlerSet.d.ts",
-      "import": "./dist/lib/SpaceOperationHandlerSet.mjs"
-    },
     "./SpaceOperation": {
       "source": "./src/types/SpaceOperation.ts",
       "types": "./dist/types/src/types/SpaceOperation.d.ts",
       "import": "./dist/lib/SpaceOperation.mjs"
+    },
+    "./SpaceOperationHandlerSet": {
+      "source": "./src/operations/SpaceOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/SpaceOperationHandlerSet.d.ts",
+      "import": "./dist/lib/SpaceOperationHandlerSet.mjs"
     },
     "./SpacePlugin": {
       "source": "./src/SpacePlugin.ts",
@@ -170,10 +165,15 @@
       "types": "./dist/types/src/types/SpaceSurface.d.ts",
       "import": "./dist/lib/SpaceSurface.mjs"
     },
-    "./Dashboard": {
-      "source": "./src/Dashboard.ts",
-      "types": "./dist/types/src/Dashboard.d.ts",
-      "import": "./dist/lib/ns/Dashboard.mjs"
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

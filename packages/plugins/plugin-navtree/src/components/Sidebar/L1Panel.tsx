@@ -8,12 +8,12 @@ import React, { memo, useCallback, useMemo } from 'react';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Tree, type TreeNode } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
-import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Main from '@dxos/react-ui/Main';
 import * as Status from '@dxos/react-ui/Status';
@@ -58,7 +58,7 @@ export type L1PanelProps = {
  * unavailable-workspace message, so the sidebar is never blank.
  */
 const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: L1PanelProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const pending = item?.properties.pending === true;
   const title = item ? Theme.toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
@@ -120,7 +120,7 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
 
 /** Determines whether a workspace tab has been populated with real child content (i.e. expanded at least once). */
 const useIsActivatedWorkspace = (id: string): boolean => {
-  const { graph } = Hooks.useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const edges = GraphHooks.useEdges(graph, id);
 
   return useMemo(() => {
@@ -186,7 +186,7 @@ const renderRow = (node: TreeNode<NavTreeNode.NavTreeItemGraphNode>) => (
  * Header row.
  */
 const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBack'> & { item: AppGraphNode.Node }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = Theme.toLocalizedString(item.properties.label, t);
   const backCapableWorkspace = AppNode.isPinnedWorkspace(item);
@@ -241,7 +241,7 @@ const MenuActions = ({
 }: {
   item: AppGraphNode.Node;
 } & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   if (menuActions.length === 0) {
     return null;

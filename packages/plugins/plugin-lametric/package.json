@@ -74,10 +74,16 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./LaMetric": {
+      "source": "./src/protocol/LaMetric.ts",
+      "types": "./dist/types/src/protocol/LaMetric.d.ts",
+      "import": "./dist/lib/LaMetric.mjs"
+    },
+    "./LaMetricCapabilities": {
+      "source": "./src/types/LaMetricCapabilities.ts",
+      "types": "./dist/types/src/types/LaMetricCapabilities.d.ts",
+      "import": "./dist/lib/LaMetricCapabilities.mjs"
     },
     "./LaMetricPlugin": {
       "source": "./src/LaMetricPlugin.ts",
@@ -85,22 +91,16 @@
       "import": "./dist/lib/LaMetricPlugin.mjs"
     },
     "./package.json": "./package.json",
-    "./LaMetricCapabilities": {
-      "source": "./src/types/LaMetricCapabilities.ts",
-      "types": "./dist/types/src/types/LaMetricCapabilities.d.ts",
-      "import": "./dist/lib/LaMetricCapabilities.mjs"
-    },
-    "./LaMetric": {
-      "source": "./src/protocol/LaMetric.ts",
-      "types": "./dist/types/src/protocol/LaMetric.d.ts",
-      "import": "./dist/lib/LaMetric.mjs"
-    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/types/Settings.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl"
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

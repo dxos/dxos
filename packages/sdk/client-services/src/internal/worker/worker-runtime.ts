@@ -70,7 +70,7 @@ export type WorkerRuntimeOptions = {
 
   /**
    * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
-   * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
+   * For testing in Node.js, use `layerMemory` from `@dxos/sql-sqlite/Platform`.
    */
   sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 

@@ -74,17 +74,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
+    },
     "./package.json": "./package.json",
-    "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./SearchEvents": {
       "source": "./src/types/SearchEvents.ts",
       "types": "./dist/types/src/types/SearchEvents.d.ts",
@@ -100,10 +95,15 @@
       "types": "./dist/types/src/SearchPlugin.d.ts",
       "import": "./dist/lib/SearchPlugin.mjs"
     },
-    "./Hooks": {
-      "source": "./src/Hooks.ts",
-      "types": "./dist/types/src/Hooks.d.ts",
-      "import": "./dist/lib/ns/Hooks.mjs"
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

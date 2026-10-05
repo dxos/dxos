@@ -8,7 +8,7 @@
 import React from 'react';
 
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import { parentId } from '@dxos/graph/GraphNode';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { type Event, type Message } from '@dxos/types';
 
@@ -30,7 +30,7 @@ export const MessageArticleSurface = ({
   nodeId = attendableId,
 }: MessageArticleSurfaceProps) => {
   const { graph } = Hooks.useAppGraph();
-  const parent = GraphHooks.useNode(graph, parentId(nodeId));
+  const parent = GraphHooks.useNode(graph, GraphNode.parentId(nodeId));
   // A message lives under its mailbox view; every mailbox view carries the mailbox as its node
   // `data`, so use that (not `properties.mailbox`, which only some views set) to scope the
   // conversation lookup in MessageArticle.
@@ -54,7 +54,7 @@ export const EventArticleSurface = ({
   nodeId = attendableId,
 }: EventArticleSurfaceProps) => {
   const { graph } = Hooks.useAppGraph();
-  const parentNode = GraphHooks.useNode(graph, parentId(nodeId));
+  const parentNode = GraphHooks.useNode(graph, GraphNode.parentId(nodeId));
   const calendar = Calendar.instanceOf(parentNode?.data) ? parentNode.data : undefined;
   if (!calendar) {
     return null;

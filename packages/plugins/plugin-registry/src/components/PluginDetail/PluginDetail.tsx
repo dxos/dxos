@@ -6,12 +6,12 @@ import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import * as Button from '@dxos/react-ui/Button';
 import * as Carousel from '@dxos/react-ui/Carousel';
 import * as Field from '@dxos/react-ui/Field';
-import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -133,9 +133,9 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = UiHooks.useTranslation(meta.profile.key);
-    const themeMode = UiHooks.useThemeMode();
-    const layout = Hooks.useLayout();
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const themeMode = Hooks.useThemeMode();
+    const layout = ToolkitHooks.useLayout();
     // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
     // 4rem floor on both left it with less width for the center content than the gutters themselves.
     const isMobile = layout.mode === 'mobile';

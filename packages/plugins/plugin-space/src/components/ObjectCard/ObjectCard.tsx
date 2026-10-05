@@ -7,14 +7,14 @@ import React, { type ComponentType, type KeyboardEvent, type SyntheticEvent, use
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CardSlot from '@dxos/app-toolkit/CardSlot';
-import * as Hooks from '@dxos/app-toolkit/Hooks';
-import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
-import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
@@ -38,14 +38,14 @@ export type ObjectCardProps = {
  * renders a related object, a record's reference or a tile in a `CardMasonry`.
  */
 export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: ObjectCardProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   useObject(Obj.isObject(subject) ? subject : undefined);
 
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
-  const [cardRef, pivotId] = Hooks.useCardPivot();
-  const objectMenuItems = Hooks.useObjectMenuItems(subject, pivotId);
-  const handleOpen = Hooks.useObjectNavigate(subject, detailOf);
+  const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
+  const objectMenuItems = ToolkitHooks.useObjectMenuItems(subject, pivotId);
+  const handleOpen = ToolkitHooks.useObjectNavigate(subject, detailOf);
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (handleOpen && event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
@@ -61,7 +61,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
 
   return (
-    <ObjectCardPrimitive.Root
+    <ToolkitObjectCard.Root
       ref={cardRef}
       classNames={[classNames, handleOpen && 'dx-hover']}
       onClick={handleOpen}
@@ -69,7 +69,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
       role={handleOpen ? 'button' : undefined}
       tabIndex={handleOpen ? 0 : undefined}
     >
-      <ObjectCardPrimitive.Header
+      <ToolkitObjectCard.Header
         subject={subject}
         menu={
           <Layout.Block rail='end'>
@@ -92,7 +92,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
       <Card.Body>
         <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
       </Card.Body>
-    </ObjectCardPrimitive.Root>
+    </ToolkitObjectCard.Root>
   );
 };
 

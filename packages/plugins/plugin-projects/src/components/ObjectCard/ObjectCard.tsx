@@ -6,7 +6,7 @@ import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
+import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceHooks from '@dxos/plugin-space/Hooks';
@@ -57,14 +57,14 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
   );
 
   return (
-    <ObjectCardPrimitive.Root
+    <ToolkitObjectCard.Root
       classNames={onClick && 'dx-hover'}
       onClick={onClick}
       onKeyDown={onClick ? handleKeyDown : undefined}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <ObjectCardPrimitive.Header
+      <ToolkitObjectCard.Header
         subject={object}
         lines={2}
         menu={
@@ -82,7 +82,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
         }
       >
         {label}
-      </ObjectCardPrimitive.Header>
+      </ToolkitObjectCard.Header>
       {archived && (
         <Card.Row>
           <Tag.Tag classNames='justify-self-start'>{t('object-card.archived.label')}</Tag.Tag>
@@ -92,6 +92,6 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
           a second body would double the card's padding. Nothing renders for a type with no registered
           card surface; the header still identifies it. */}
       <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
-    </ObjectCardPrimitive.Root>
+    </ToolkitObjectCard.Root>
   );
 };

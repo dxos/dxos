@@ -46,25 +46,10 @@
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
       "import": "./dist/lib/app-framework/AppCapability.mjs"
     },
-    "./ObjectAction": {
-      "source": "./src/app-framework/ObjectAction.ts",
-      "types": "./dist/types/src/app-framework/ObjectAction.d.ts",
-      "import": "./dist/lib/app-framework/ObjectAction.mjs"
-    },
     "./AppMigrations": {
       "source": "./src/echo/AppMigrations.ts",
       "types": "./dist/types/src/echo/AppMigrations.d.ts",
       "import": "./dist/lib/echo/AppMigrations.mjs"
-    },
-    "./ObservabilityMapping": {
-      "source": "./src/app-framework/ObservabilityMapping.ts",
-      "types": "./dist/types/src/app-framework/ObservabilityMapping.d.ts",
-      "import": "./dist/lib/app-framework/ObservabilityMapping.mjs"
-    },
-    "./Progress": {
-      "source": "./src/app-framework/Progress.ts",
-      "types": "./dist/types/src/app-framework/Progress.d.ts",
-      "import": "./dist/lib/app-framework/Progress.mjs"
     },
     "./AppNode": {
       "source": "./src/app-graph/AppNode.ts",
@@ -85,6 +70,26 @@
       "source": "./src/echo/AppSpace.ts",
       "types": "./dist/types/src/echo/AppSpace.d.ts",
       "import": "./dist/lib/echo/AppSpace.mjs"
+    },
+    "./AppSurface": {
+      "source": "./src/AppSurface.ts",
+      "types": "./dist/types/src/AppSurface.d.ts",
+      "import": "./dist/lib/ns/AppSurface.mjs"
+    },
+    "./AppUpdate": {
+      "source": "./src/app/AppUpdate.ts",
+      "types": "./dist/types/src/app/AppUpdate.d.ts",
+      "import": "./dist/lib/app/AppUpdate.mjs"
+    },
+    "./AttentionSigil": {
+      "source": "./src/AttentionSigil.ts",
+      "types": "./dist/types/src/AttentionSigil.d.ts",
+      "import": "./dist/lib/ns/AttentionSigil.mjs"
+    },
+    "./CardSlot": {
+      "source": "./src/CardSlot.ts",
+      "types": "./dist/types/src/CardSlot.d.ts",
+      "import": "./dist/lib/ns/CardSlot.mjs"
     },
     "./CollaborationOperation": {
       "source": "./src/operations/CollaborationOperation.ts",
@@ -116,10 +121,25 @@
       "types": "./dist/types/src/app/GraphPath.d.ts",
       "import": "./dist/lib/app/GraphPath.mjs"
     },
+    "./HomeSection": {
+      "source": "./src/HomeSection.ts",
+      "types": "./dist/types/src/HomeSection.d.ts",
+      "import": "./dist/lib/ns/HomeSection.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
+    },
     "./LayoutOperation": {
       "source": "./src/operations/LayoutOperation.ts",
       "types": "./dist/types/src/operations/LayoutOperation.d.ts",
       "import": "./dist/lib/operations/LayoutOperation.mjs"
+    },
+    "./NamePopover": {
+      "source": "./src/NamePopover.ts",
+      "types": "./dist/types/src/NamePopover.d.ts",
+      "import": "./dist/lib/ns/NamePopover.mjs"
     },
     "./NativeOAuth": {
       "source": "./src/app/NativeOAuth.ts",
@@ -131,20 +151,51 @@
       "types": "./dist/types/src/app/NativePasskey.d.ts",
       "import": "./dist/lib/app/NativePasskey.mjs"
     },
-    "./NavigationResolver": {
-      "source": "./src/app/NavigationResolver.ts",
-      "types": "./dist/types/src/app/NavigationResolver.d.ts",
-      "import": "./dist/lib/app/NavigationResolver.mjs"
-    },
     "./NavigationOperation": {
       "source": "./src/operations/NavigationOperation.ts",
       "types": "./dist/types/src/operations/NavigationOperation.d.ts",
       "import": "./dist/lib/operations/NavigationOperation.mjs"
     },
+    "./NavigationResolver": {
+      "source": "./src/app/NavigationResolver.ts",
+      "types": "./dist/types/src/app/NavigationResolver.d.ts",
+      "import": "./dist/lib/app/NavigationResolver.mjs"
+    },
     "./NotFound": {
       "source": "./src/app/NotFound.ts",
       "types": "./dist/types/src/app/NotFound.d.ts",
       "import": "./dist/lib/app/NotFound.mjs"
+    },
+    "./NotFoundArticle": {
+      "source": "./src/NotFoundArticle.ts",
+      "types": "./dist/types/src/NotFoundArticle.d.ts",
+      "import": "./dist/lib/ns/NotFoundArticle.mjs"
+    },
+    "./ObjectAction": {
+      "source": "./src/app-framework/ObjectAction.ts",
+      "types": "./dist/types/src/app-framework/ObjectAction.d.ts",
+      "import": "./dist/lib/app-framework/ObjectAction.mjs"
+    },
+    "./ObjectCard": {
+      "source": "./src/ObjectCard.ts",
+      "types": "./dist/types/src/ObjectCard.d.ts",
+      "import": "./dist/lib/ns/ObjectCard.mjs"
+    },
+    "./ObservabilityMapping": {
+      "source": "./src/app-framework/ObservabilityMapping.ts",
+      "types": "./dist/types/src/app-framework/ObservabilityMapping.d.ts",
+      "import": "./dist/lib/app-framework/ObservabilityMapping.mjs"
+    },
+    "./package.json": "./package.json",
+    "./PluginRegistryButton": {
+      "source": "./src/PluginRegistryButton.ts",
+      "types": "./dist/types/src/PluginRegistryButton.d.ts",
+      "import": "./dist/lib/ns/PluginRegistryButton.mjs"
+    },
+    "./Progress": {
+      "source": "./src/app-framework/Progress.ts",
+      "types": "./dist/types/src/app-framework/Progress.d.ts",
+      "import": "./dist/lib/app-framework/Progress.mjs"
     },
     "./Query": {
       "source": "./src/echo/Query.ts",
@@ -161,10 +212,25 @@
       "types": "./dist/types/src/operations/SettingsOperation.d.ts",
       "import": "./dist/lib/operations/SettingsOperation.mjs"
     },
+    "./SettingsScope": {
+      "source": "./src/SettingsScope.ts",
+      "types": "./dist/types/src/SettingsScope.d.ts",
+      "import": "./dist/lib/ns/SettingsScope.mjs"
+    },
     "./SpaceInvitationOperation": {
       "source": "./src/operations/SpaceInvitationOperation.ts",
       "types": "./dist/types/src/operations/SpaceInvitationOperation.d.ts",
       "import": "./dist/lib/operations/SpaceInvitationOperation.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./Tour": {
+      "source": "./src/app-framework/Tour.ts",
+      "types": "./dist/types/src/app-framework/Tour.d.ts",
+      "import": "./dist/lib/app-framework/Tour.mjs"
     },
     "./Translations": {
       "source": "./src/app/Translations.ts",
@@ -190,72 +256,6 @@
       "source": "./src/app/UrlResolution.ts",
       "types": "./dist/types/src/app/UrlResolution.d.ts",
       "import": "./dist/lib/app/UrlResolution.mjs"
-    },
-    "./package.json": "./package.json",
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./AppUpdate": {
-      "source": "./src/app/AppUpdate.ts",
-      "types": "./dist/types/src/app/AppUpdate.d.ts",
-      "import": "./dist/lib/app/AppUpdate.mjs"
-    },
-    "./Tour": {
-      "source": "./src/app-framework/Tour.ts",
-      "types": "./dist/types/src/app-framework/Tour.d.ts",
-      "import": "./dist/lib/app-framework/Tour.mjs"
-    },
-    "./AppSurface": {
-      "source": "./src/AppSurface.ts",
-      "types": "./dist/types/src/AppSurface.d.ts",
-      "import": "./dist/lib/ns/AppSurface.mjs"
-    },
-    "./AttentionSigil": {
-      "source": "./src/AttentionSigil.ts",
-      "types": "./dist/types/src/AttentionSigil.d.ts",
-      "import": "./dist/lib/ns/AttentionSigil.mjs"
-    },
-    "./CardSlot": {
-      "source": "./src/CardSlot.ts",
-      "types": "./dist/types/src/CardSlot.d.ts",
-      "import": "./dist/lib/ns/CardSlot.mjs"
-    },
-    "./Hooks": {
-      "source": "./src/Hooks.ts",
-      "types": "./dist/types/src/Hooks.d.ts",
-      "import": "./dist/lib/ns/Hooks.mjs"
-    },
-    "./HomeSection": {
-      "source": "./src/HomeSection.ts",
-      "types": "./dist/types/src/HomeSection.d.ts",
-      "import": "./dist/lib/ns/HomeSection.mjs"
-    },
-    "./NamePopover": {
-      "source": "./src/NamePopover.ts",
-      "types": "./dist/types/src/NamePopover.d.ts",
-      "import": "./dist/lib/ns/NamePopover.mjs"
-    },
-    "./NotFoundArticle": {
-      "source": "./src/NotFoundArticle.ts",
-      "types": "./dist/types/src/NotFoundArticle.d.ts",
-      "import": "./dist/lib/ns/NotFoundArticle.mjs"
-    },
-    "./ObjectCard": {
-      "source": "./src/ObjectCard.ts",
-      "types": "./dist/types/src/ObjectCard.d.ts",
-      "import": "./dist/lib/ns/ObjectCard.mjs"
-    },
-    "./PluginRegistryButton": {
-      "source": "./src/PluginRegistryButton.ts",
-      "types": "./dist/types/src/PluginRegistryButton.d.ts",
-      "import": "./dist/lib/ns/PluginRegistryButton.mjs"
-    },
-    "./SettingsScope": {
-      "source": "./src/SettingsScope.ts",
-      "types": "./dist/types/src/SettingsScope.d.ts",
-      "import": "./dist/lib/ns/SettingsScope.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
