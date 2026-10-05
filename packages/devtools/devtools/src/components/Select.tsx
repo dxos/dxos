@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { type SelectOption, Select as UiSelect } from '@dxos/react-ui';
+import * as UiSelect from '@dxos/react-ui/Select';
 
 export type SelectProps = {
-  items?: SelectOption[];
+  items?: UiSelect.Option[];
   value?: string;
   onValueChange?: (value: string) => void;
   disabled?: boolean;

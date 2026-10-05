@@ -15,7 +15,7 @@ import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { type Position } from '@dxos/util';
+import type * as Position from '@dxos/util/Position';
 
 import { NotFound } from '../app/index.ts';
 import { Translations } from '../app/index.ts';

@@ -5,12 +5,14 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
@@ -72,10 +74,10 @@ const importFailureKey = (error: unknown): string => {
  * user already is, and a picker would ask a question they have already answered.
  */
 export const ImportPullRequestDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const openObject = useOpenObject();
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
 
   const handleCancel = useCallback(async () => {
     await invokePromise(LayoutOperation.UpdateDialog, { state: false });

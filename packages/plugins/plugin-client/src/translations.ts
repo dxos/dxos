@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { translations as shellTranslations } from '@dxos/shell/translations';
 
 import { meta } from '#meta';
@@ -185,6 +185,6 @@ const pluginTranslations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];
 
-export const translations: Resource[] = [...pluginTranslations, ...shellTranslations];
+export const translations: Theme.Resource[] = [...pluginTranslations, ...shellTranslations];

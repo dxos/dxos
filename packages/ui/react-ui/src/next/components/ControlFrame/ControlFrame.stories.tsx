@@ -12,13 +12,15 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, ControlFrame, Icon } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { ControlFrame } from './ControlFrame.tsx';
 
 /** An editor stand-in (a one-line `contenteditable`) in a frame with adornments, a mono frame, and a disabled one. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <ControlFrame
-      start={<Icon icon='ph--code--regular' />}
+      start={<Icon.Icon icon='ph--code--regular' />}
       end={<Button icon='ph--x--regular' label='Clear' iconOnly variant='ghost' />}
       data-testid={`frame-${size}`}
     >
@@ -37,7 +39,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
       </div>
     </ControlFrame>
     {/* The editable is nested, as an editor's content element is under its own root. */}
-    <ControlFrame rows={3} start={<Icon icon='ph--text-aa--regular' />} data-testid={`rows-${size}`}>
+    <ControlFrame rows={3} start={<Icon.Icon icon='ph--text-aa--regular' />} data-testid={`rows-${size}`}>
       <div>
         <div
           role='textbox'

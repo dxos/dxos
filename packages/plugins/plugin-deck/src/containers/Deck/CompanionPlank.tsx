@@ -4,19 +4,19 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { useNode } from '@dxos/plugin-graph/hooks';
-import { type ThemedClassName } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Attention } from '@dxos/react-ui-attention';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { Companion } from '#components';
 import { useCompanions } from '#hooks';
 
 import { PlankCompanionControls } from './PlankControls.tsx';
 
-export type CompanionPlankProps = ThemedClassName<{
+export type CompanionPlankProps = Util.ThemedClassName<{
   /**
    * The companion to show (`<plank>/~<variant>`), or the plank itself when it has no companions — the
    * pane belongs to the plank either way, and a linked segment names its plank as its parent.
@@ -35,12 +35,12 @@ export type CompanionPlankProps = ThemedClassName<{
  * the tab strip is empty and {@link Companion} says so rather than the pane collapsing.
  */
 export const CompanionPlank = ({ id, fullscreen, classNames }: CompanionPlankProps) => {
-  const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const companion = Attention.isLinkedSegment(id);
   const contextId = (companion ? Attention.getParentId(id) : undefined) ?? id;
-  const contextNode = useNode(graph, contextId);
+  const contextNode = GraphHooks.useNode(graph, contextId);
   const companions = useCompanions(contextId);
 
   const onValueChange = useCallback(

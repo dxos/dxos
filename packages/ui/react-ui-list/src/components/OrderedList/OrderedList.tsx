@@ -16,7 +16,9 @@ import React, {
   useRef,
 } from 'react';
 
-import { Collapsible, DragHandle, type DragMoveDirection, DragPreview, Listbox } from '@dxos/react-ui';
+import * as Collapsible from '@dxos/react-ui/Collapsible';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as Listbox from '@dxos/react-ui/Listbox';
 
 import { useReorderAutoScroll, useReorderItem, useReorderList } from '../../hooks/index.ts';
 import {
@@ -107,9 +109,9 @@ const OrderedListRoot = <T,>({
       return 'clone' as const;
     }
     return ({ item }: Entry<T>, source: HTMLElement) => (
-      <DragPreview source={source}>
+      <DragHandle.DragPreview source={source}>
         {dragPreview ? dragPreview(item) : (getLabel?.(item) ?? itemText(source))}
-      </DragPreview>
+      </DragHandle.DragPreview>
     );
   }, [dragPreview, getLabel]);
 
@@ -126,7 +128,7 @@ const OrderedListRoot = <T,>({
   entriesRef.current = entries;
   const onMoveRef = useRef(onMove);
   onMoveRef.current = onMove;
-  const move = useCallback((id: string, direction: DragMoveDirection) => {
+  const move = useCallback((id: string, direction: DragHandle.DragMoveDirection) => {
     const from = entriesRef.current.findIndex((entry) => entry.id === id);
     const to = direction === 'up' ? from - 1 : from + 1;
     if (from < 0 || to < 0 || to >= entriesRef.current.length) {
@@ -302,7 +304,7 @@ const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHandleProps
     );
   }
 
-  return <DragHandle disabled={disabled} onMove={(direction) => move(id, direction)} ref={handleRef} />;
+  return <DragHandle.DragHandle disabled={disabled} onMove={(direction) => move(id, direction)} ref={handleRef} />;
 };
 
 OrderedListDragHandle.displayName = 'OrderedList.DragHandle';

@@ -8,8 +8,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { JsonView, Placeholder, Searchbar } from '@dxos/devtools';
 import { Entity, Format, Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 type RegistryRow = {

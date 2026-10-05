@@ -12,7 +12,9 @@ import React, {
   useState,
 } from 'react';
 
-import { Flex, Popover, type ThemedClassName } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 // Rest tick width (px) and the wave radius (in rows) over which the hover extension falls off. The
@@ -39,7 +41,7 @@ export type OutlineMarker = {
   range: { from: number; to: number };
 };
 
-export type OutlineProps = ThemedClassName<{
+export type OutlineProps = Util.ThemedClassName<{
   markers: OutlineMarker[];
   /** Currently-visible document range; markers intersecting it render brighter ("active"). */
   visibleRange?: { from: number; to: number };
@@ -370,12 +372,12 @@ export const Outline = ({
           classNames='w-[32rem] max-w-(--available-width)'
         >
           {/* A plain column rather than `Popover.Body`: a hover card neither scrolls nor needs the body's gutter grid. */}
-          <Flex column classNames='gap-1 px-2 py-1'>
+          <Layout.Flex column classNames='gap-1 px-2 py-1'>
             <p className='font-medium line-clamp-2'>{hoveredMarker.title}</p>
             {hoveredMarker.description && (
               <p className='text-sm text-fg-muted line-clamp-4'>{hoveredMarker.description}</p>
             )}
-          </Flex>
+          </Layout.Flex>
         </Popover.Content>
       )}
     </Popover.Root>

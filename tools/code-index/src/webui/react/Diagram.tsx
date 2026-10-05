@@ -3,14 +3,17 @@
 //
 
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { type Scene } from '@dxos/diagram';
-import { SceneSvg } from '@dxos/plugin-illustrator/SceneSvg';
+import * as SceneSvg from '@dxos/plugin-illustrator/SceneSvg';
 
 import type * as Protocol from '../../workspace/Protocol.ts';
 
 export type DiagramIslandProps = {
   readonly objects: readonly Scene.WorldObject[];
+  /** True while the engine's full search is still running and a better layout may replace this one. */
+  readonly refining: boolean;
   /** Resolves a box's `ref` — an index IRI, or a path or name — to the resource it depicts. */
   readonly describe: (target: string) => Promise<Protocol.Entity>;
 };
@@ -21,6 +24,12 @@ export type DiagramIslandProps = {
  */
 const MAX_SCALE = 0.75;
 const MIN_SCALE = 0.45;
+
+/** The colour the page is painted with: the body's when it has one, else the root element's. */
+const pageBackground = (): string =>
+  [document.body, document.documentElement]
+    .map((element) => getComputedStyle(element).backgroundColor)
+    .find((color) => color !== 'transparent' && !/rgba\(.*,\s*0\)$/.test(color)) ?? 'Canvas';
 
 /** Facts shown per box: enough to say what it is without turning the panel into a dump. */
 const FACTS = 12;
@@ -34,11 +43,30 @@ const localName = (iri: string): string => decodeURIComponent(iri.split('#').pop
  * between a legible floor and its natural size, and refitted as the split pane is resized. A box
  * whose `ref` names an index resource is selectable, and selecting it shows that resource's facts.
  */
-export const DiagramIsland = ({ objects, describe }: DiagramIslandProps) => {
+export const DiagramIsland = ({ objects, refining, describe }: DiagramIslandProps) => {
   const wrapper = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<readonly string[]>([]);
   // A large diagram is legible only at its natural size, which the split pane rarely has room for.
   const [expanded, setExpanded] = useState(false);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const toggled = useRef(false);
+
+  // The toggle is a new element on each side of the portal, so focus follows it in and back out.
+  useEffect(() => {
+    if (toggled.current) {
+      toggle.current?.focus();
+    }
+    if (!expanded) {
+      return;
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setExpanded(false);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [expanded]);
   const refs = useMemo(
     () => Object.fromEntries(objects.flatMap((object) => (object.ref ? [[object.id, object.ref]] : []))),
     [objects],
@@ -76,16 +104,29 @@ export const DiagramIsland = ({ objects, describe }: DiagramIslandProps) => {
   }, [objects, expanded]);
 
   const selectedRef = selection.length === 1 ? refs[selection[0]] : undefined;
-  return (
-    <div className={expanded ? 'bg-baseSurface fixed inset-0 z-50 flex flex-col p-4' : 'relative'}>
-      <button
-        className='text-description hover:text-baseText absolute right-1 top-1 z-10 text-xs'
-        onClick={() => setExpanded((value) => !value)}
-      >
-        {expanded ? 'close' : 'expand'}
-      </button>
+  const body = (
+    <div
+      className={expanded ? 'fixed inset-0 z-50 flex flex-col gap-2 p-4' : ''}
+      // The theme's surface classes resolve inside the canvas but not on a node portalled to the
+      // body, so the overlay takes the page's own computed background to stay opaque.
+      style={expanded ? { backgroundColor: pageBackground() } : undefined}
+      {...(expanded ? { 'role': 'dialog', 'aria-modal': true, 'aria-label': 'Diagram' } : {})}
+    >
+      <div className='text-description flex justify-end gap-3 text-xs'>
+        {refining && <span>Refining layout…</span>}
+        <button
+          ref={toggle}
+          className='hover:text-baseText'
+          onClick={() => {
+            toggled.current = true;
+            setExpanded((value) => !value);
+          }}
+        >
+          {expanded ? 'close' : 'expand'}
+        </button>
+      </div>
       <div ref={wrapper} className={expanded ? 'flex-1 overflow-auto' : 'overflow-x-auto'}>
-        <SceneSvg
+        <SceneSvg.SceneSvg
           objects={objects}
           classNames='mx-auto block max-w-none'
           selection={selection}
@@ -98,6 +139,8 @@ export const DiagramIsland = ({ objects, describe }: DiagramIslandProps) => {
       {selectedRef && <EntityCard target={selectedRef} describe={describe} />}
     </div>
   );
+  // Fixed positioning would be relative to the canvas pane, which scrolls and clips; the body is the viewport.
+  return expanded ? createPortal(body, document.body) : body;
 };
 
 /** What a selected box depicts: the resolved IRI, a few of its facts, and what points at it. */

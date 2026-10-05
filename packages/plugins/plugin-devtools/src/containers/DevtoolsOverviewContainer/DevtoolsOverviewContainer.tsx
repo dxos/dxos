@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { StatsPanel, type SurfaceProfilerStats, useStats } from '@dxos/devtools';
 
 import { type DevtoolsCardData, isDebugSurface } from '../../capabilities/DevtoolsCards.tsx';

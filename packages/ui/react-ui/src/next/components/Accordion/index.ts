@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Accordion.tsx';
+export * as Accordion from './Accordion.tsx';

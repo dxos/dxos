@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Empty } from '../index.ts';
+import { Empty } from './Empty.tsx';
 
 /** The translated default, then an icon with the caller's own text. */
 const DefaultStory = ({ size }: SizeArgs) => (

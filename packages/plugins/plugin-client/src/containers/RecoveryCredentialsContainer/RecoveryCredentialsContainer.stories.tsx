@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
@@ -50,7 +50,7 @@ const decorators = (credentials: SeedCredential[] = []) => [
             yield* seedCredentials(client, credentials);
           }),
       }),
-      ProcessManagerPlugin(),
+      ProcessManagerPlugin.make(),
     ],
   }),
 ];

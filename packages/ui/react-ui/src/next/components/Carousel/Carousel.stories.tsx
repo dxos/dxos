@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Carousel } from '../index.ts';
+import * as Carousel from './Carousel.tsx';
 
 const HUES = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 

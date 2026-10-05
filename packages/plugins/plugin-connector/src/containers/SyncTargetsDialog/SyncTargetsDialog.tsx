@@ -4,14 +4,22 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Button, Dialog, Empty, Flex, Listbox, ScrollArea, SystemButton, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Listbox from '@dxos/react-ui/Listbox';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -32,9 +40,9 @@ export type SyncTargetsDialogProps = {
  * the {@link ConnectorCoordination.ConnectorCoordinator}.
  */
 export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  const manager = usePluginManager();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const manager = PluginManagerProvider.usePluginManager();
 
   const db = Obj.getDatabase(connection);
   const allCursors = useQuery(db, Filter.type(Cursor.Cursor));
@@ -106,18 +114,18 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
-          <Flex gap='sm' classNames='py-form-gap'>
-            <Button onClick={handleSelectAll} disabled={submitting}>
+          <Layout.Flex gap='sm' classNames='py-form-gap'>
+            <Button.Root onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
-            </Button>
-            <Button onClick={handleSelectNone} disabled={submitting}>
+            </Button.Root>
+            <Button.Root onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
-            </Button>
-          </Flex>
+            </Button.Root>
+          </Layout.Flex>
         )}
 
         {availableTargets.length === 0 ? (
-          <Empty>{t('no-available-targets.message')}</Empty>
+          <Status.Empty>{t('no-available-targets.message')}</Status.Empty>
         ) : (
           <ScrollArea.Root>
             <ScrollArea.Viewport>
@@ -147,11 +155,11 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.CloseTrigger asChild>
-          <Button disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button>
+          <Button.Root disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button.Root>
         </Dialog.CloseTrigger>
-        <Button variant='primary' onClick={handleSubmit} disabled={submitting}>
+        <Button.Root variant='primary' onClick={handleSubmit} disabled={submitting}>
           {submitting ? t('saving.label', { ns: osTranslations }) : t('save.label', { ns: osTranslations })}
-        </Button>
+        </Button.Root>
       </Dialog.Footer>
     </Dialog.Content>
   );

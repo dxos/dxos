@@ -6,7 +6,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import type * as TourModule from '@dxos/app-toolkit/Tour';
+import type * as ToolkitTour from '@dxos/app-toolkit/Tour';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
@@ -45,7 +45,7 @@ export const Tour = Capability.lazyModule(
   {
     provides: [AppCapabilities.Tour],
     environments: ['browser', 'tauri'],
-    props: (options: { helpSteps?: () => Promise<TourModule.Step[]> }) => options.helpSteps,
+    props: (options: { helpSteps?: () => Promise<ToolkitTour.Step[]> }) => options.helpSteps,
   },
   () => import('./tour.ts'),
 );

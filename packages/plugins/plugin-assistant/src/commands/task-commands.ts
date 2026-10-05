@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type OperationInvoke, type SlashCommand, parseTaskSelectors } from '@dxos/assistant-toolkit';
+import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
@@ -12,7 +12,7 @@ import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 /** Membership writes go through the `Chat` primitives because the chat, not a `TaskSet`, is the container. */
-export const TaskSlashCommands: SlashCommand[] = [
+export const TaskSlashCommands: SlashCommand.SlashCommand[] = [
   {
     command: '/task:create',
     description: 'Create a task',
@@ -111,7 +111,7 @@ export const TaskSlashCommands: SlashCommand[] = [
  * unexamined call reads as success and the command would claim an effect it never had.
  */
 const run = async <I, O>(
-  invoke: OperationInvoke,
+  invoke: SlashCommand.OperationInvoke,
   operation: Operation.Definition<I, O>,
   input: I,
   spaceId: SpaceId | undefined,
@@ -133,7 +133,7 @@ const hydrate = async (chat: Chat.Chat): Promise<Task.Task[]> => {
 
 /** Resolves selectors against `tasks`, in the order the user named them. */
 const resolveSelectors = (args: string, tasks: readonly Task.Task[]) => {
-  const selectors = parseTaskSelectors(args);
+  const selectors = SlashCommand.parseTaskSelectors(args);
   if (selectors.length === 0) {
     return [];
   }

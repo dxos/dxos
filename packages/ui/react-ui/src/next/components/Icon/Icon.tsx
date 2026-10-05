@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type SVGProps, forwardRef, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -65,3 +67,5 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
 );
 
 Icon.displayName = 'Icon';
+
+export * from '../../../hooks/useIconHref.ts';

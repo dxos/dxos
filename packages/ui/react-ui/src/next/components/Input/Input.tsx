@@ -7,12 +7,12 @@ import React, { type InputHTMLAttributes, type ReactNode, useRef } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { ControlFrame, type ControlFrameVariant } from '../ControlFrame/index.ts';
-import { useFieldsetDisabled } from '../Fieldset/index.ts';
-import { SystemButton } from '../SystemButton/index.ts';
-import { useToolbarItem } from '../Toolbar/index.ts';
+import { ControlFrame, type ControlFrameVariant } from '../ControlFrame/ControlFrame.tsx';
+import * as Fieldset from '../Fieldset/Fieldset.tsx';
+import * as SystemButton from '../SystemButton/SystemButton.tsx';
+import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   'data-testid'?: string;
@@ -57,7 +57,7 @@ export const Input = composable<HTMLInputElement, InputProps>(
     ) : (
       endProp
     );
-    const fieldsetDisabled = useFieldsetDisabled(disabled);
+    const fieldsetDisabled = Fieldset.useFieldsetDisabled(disabled);
     const toolbarItem = useToolbarItem(fieldsetDisabled);
     const adorned = start != null || end != null;
     const { className, style, ...rest } = composableProps<HTMLInputElement>(props, {

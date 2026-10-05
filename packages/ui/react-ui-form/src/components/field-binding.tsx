@@ -8,8 +8,9 @@ import * as Str from 'effect/String';
 import React, { Component, type PropsWithChildren, useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { Banner } from '@dxos/react-ui';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import * as Banner from '@dxos/react-ui/Banner';
 
 import { type FormPresentation } from '#types';
 

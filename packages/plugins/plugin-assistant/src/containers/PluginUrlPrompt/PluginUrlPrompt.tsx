@@ -5,10 +5,14 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
-import { RegistryOperation, describeLoadError } from '@dxos/plugin-registry/operations';
-import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import * as Operations from '@dxos/plugin-registry/Operations';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -29,10 +33,10 @@ export type PluginUrlPromptProps = {
  * button here is the only path that loads it.
  */
 export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const manager = PluginManagerProvider.usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_URL_PROMPT_NAME);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -50,10 +54,10 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
     setError(undefined);
     // Loaded but not enabled: turning it on is a second, deliberate step in Plugins, where the reader
     // sees what the plugin is before it runs. `invokePromise` reports a failure as `{ error }`.
-    const { data, error } = await invokePromise(RegistryOperation.LoadPlugin, { url, enable: false });
+    const { data, error } = await invokePromise(Operations.RegistryOperation.LoadPlugin, { url, enable: false });
     setPending(false);
     if (error || !data) {
-      setError(describeLoadError(error));
+      setError(Operations.describeLoadError(error));
     } else {
       // The agent is waiting on a click it cannot observe, so the outcome is reported as a turn.
       submit(`Loaded the plugin \`${data.id}\` from ${url}; I will enable it in Plugins. Continue.`);
@@ -67,7 +71,7 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
   const label = name ?? t('plugin-url-prompt.default.name');
 
   return (
-    <Flex
+    <Layout.Flex
       role='group'
       column
       gap='sm'
@@ -76,32 +80,32 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
       classNames='my-2 p-3 border border-separator-subtle rounded-sm [contain:inline-size]'
       data-testid='assistant.pluginUrlPrompt'
     >
-      <Flex gap='sm' align='center'>
-        <Icon icon='ph--cloud-arrow-down--regular' size='lg' tone='subtle' />
-        <Flex column classNames='min-w-0'>
+      <Layout.Flex gap='sm' align='center'>
+        <Icon.Icon icon='ph--cloud-arrow-down--regular' size='lg' tone='subtle' />
+        <Layout.Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-url-prompt.title', { plugin: label })}</p>
           <p className='text-sm text-fg-subtle'>
             {isLoaded
               ? t('plugin-url-prompt.loaded', { plugin: label })
               : t('plugin-url-prompt.description', { plugin: label })}
           </p>
-        </Flex>
-      </Flex>
+        </Layout.Flex>
+      </Layout.Flex>
       <code className='text-xs text-fg-subtle break-all'>{url}</code>
       {error && <p className='text-sm text-error-text'>{t('plugin-url-prompt.failed', { error })}</p>}
       {!isLoaded && (
-        <Flex justify='end'>
-          <Button
+        <Layout.Flex justify='end'>
+          <Button.Root
             variant='primary'
             disabled={pending}
             onClick={() => void handleLoad()}
             data-testid='assistant.pluginUrlPrompt.load'
           >
             {t('plugin-url-prompt.button')}
-          </Button>
-        </Flex>
+          </Button.Root>
+        </Layout.Flex>
       )}
-    </Flex>
+    </Layout.Flex>
   );
 };
 

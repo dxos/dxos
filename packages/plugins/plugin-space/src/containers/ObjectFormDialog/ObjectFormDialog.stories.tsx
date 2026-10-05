@@ -16,10 +16,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { Annotation, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 
@@ -124,7 +124,7 @@ const meta = {
         }),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [Bookmark, Visits],

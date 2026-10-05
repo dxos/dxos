@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 import * as Runnable from '../Runnable.ts';
 import type * as TriggerEvent from './TriggerEvent.ts';
@@ -313,3 +313,5 @@ export interface Monitor {
 export class TriggerMonitorService extends Context.Service<TriggerMonitorService, Monitor>()(
   '@dxos/functions/TriggerMonitorService',
 ) {}
+
+export { TriggerStateNotFoundError } from '../errors.ts';

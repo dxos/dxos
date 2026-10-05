@@ -5,7 +5,7 @@
 import { type Attributes, type Context, SpanStatusCode } from '@opentelemetry/api';
 import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 
 /**
  * Tail sampling for spans arriving at the observability worker.

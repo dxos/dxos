@@ -15,10 +15,9 @@ import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Tracer from 'effect/Tracer';
 
-import { ServiceNotAvailableError } from '@dxos/compute/errors';
 import type * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -134,7 +133,9 @@ export class LayerStack {
    * A stack whose point is its side effects — rpc registrations, lifecycle subscriptions — has
    * nothing to resolve, so this is how an embedder starts it.
    */
-  init(context: LayerSpec.LayerContext = {}): Effect.Effect<void, ServiceNotAvailableError, Scope.Scope> {
+  init(
+    context: LayerSpec.LayerContext = {},
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError, Scope.Scope> {
     return this.#getOrInitSlice('application', contextForAffinity('application', context)).pipe(
       Effect.catchTag('LayerDependencyCycleError', (err) => Effect.die(err)),
       Effect.asVoid,
@@ -165,7 +166,7 @@ export class LayerStack {
   #resolveService(
     tag: Context.Key<any, any>,
     context: LayerSpec.LayerContext,
-  ): Effect.Effect<unknown, ServiceNotAvailableError, Scope.Scope> {
+  ): Effect.Effect<unknown, ServiceResolver.ServiceNotAvailableError, Scope.Scope> {
     // Cycle errors from slice initialisation are a configuration bug, not a
     // recoverable resolver failure; surface them as defects so the typed error
     // channel stays narrowed to `ServiceNotAvailableError`.
@@ -177,7 +178,7 @@ export class LayerStack {
   #resolveServiceInner(
     tag: Context.Key<any, any>,
     context: LayerSpec.LayerContext,
-  ): Effect.Effect<unknown, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+  ): Effect.Effect<unknown, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return Effect.gen({ self: this }, function* () {
       // Initialise slices top-down (dependencies first) so that higher-affinity slices
       // can use the services provided by lower-affinity ones.
@@ -202,7 +203,7 @@ export class LayerStack {
       );
       if (Option.isNone(service)) {
         return yield* Effect.fail(
-          new ServiceNotAvailableError(tag.key, {
+          new ServiceResolver.ServiceNotAvailableError(tag.key, {
             message: this.#formatMissingServiceMessage(tag.key, topAffinity, context),
           }),
         );
@@ -214,7 +215,7 @@ export class LayerStack {
   #getOrInitSlice(
     affinity: LayerSpec.Affinity,
     context: LayerSpec.LayerContext,
-  ): Effect.Effect<Slice, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+  ): Effect.Effect<Slice, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return Effect.gen({ self: this }, function* () {
       const target = this.#findOrRegisterSlice(affinity, context);
       target.incrementRefCount();
@@ -311,7 +312,7 @@ export class LayerStack {
     tag: Context.Key<any, any>,
     context: LayerSpec.LayerContext,
     topAffinity: LayerSpec.Affinity,
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return this.#materializeTags(topAffinity, context, [tag]);
   }
 
@@ -319,7 +320,7 @@ export class LayerStack {
     affinity: LayerSpec.Affinity,
     context: LayerSpec.LayerContext,
     tags: Context.Key<any, any>[],
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return Effect.gen({ self: this }, function* () {
       let currentAffinity: LayerSpec.Affinity | undefined = affinity;
       while (currentAffinity) {
@@ -613,7 +614,7 @@ class Slice {
 
   init(
     requirements: Context.Context<unknown>,
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     if (this.#sortError) {
       return Effect.fail(this.#sortError);
     }
@@ -633,7 +634,7 @@ class Slice {
    */
   #extend(
     requirements: Context.Context<unknown>,
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     if (this.#sortError) {
       return Effect.fail(this.#sortError);
     }
@@ -733,7 +734,7 @@ class Slice {
   initOnce(
     requirements: Context.Context<unknown>,
     revision: number,
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     return this.#buildLock.withPermits(1)(
       Effect.suspend(() => {
         if (this.#initialized && this.#appliedRevision >= revision) {
@@ -758,7 +759,7 @@ class Slice {
    */
   materialize(
     tags: Context.Key<any, any>[],
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     return Effect.suspend(() =>
       this.#hasBuilt(tags)
         ? Effect.void
@@ -770,7 +771,7 @@ class Slice {
    * Builds every {@link LayerSpec.LayerSpec.eager} spec that survived pruning, with whatever
    * provides its requirements.
    */
-  materializeEager(): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  materializeEager(): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     return Effect.suspend(() => {
       const pending = this.#layers.filter((layer) => layer.eager && !this.#materializedLayers.includes(layer));
       return pending.length === 0
@@ -785,7 +786,7 @@ class Slice {
 
   #materializePending(
     tags: Context.Key<any, any>[],
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     if (this.#sortError) {
       return Effect.fail(this.#sortError);
     }
@@ -801,7 +802,7 @@ class Slice {
   /** Builds `specs` and their dependency providers, skipping whatever is already materialized. */
   #materializeSpecs(
     specs: LayerSpec.LayerSpec[],
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     if (this.#sortError) {
       return Effect.fail(this.#sortError);
     }
@@ -875,7 +876,7 @@ class Slice {
     return keys;
   }
 
-  #materializeLayers(newLayers: LayerSpec.LayerSpec[]): Effect.Effect<void, ServiceNotAvailableError> {
+  #materializeLayers(newLayers: LayerSpec.LayerSpec[]): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError> {
     return Effect.gen({ self: this }, function* () {
       // `ManagedRuntime.make` starts from an empty context, so the slice would otherwise trace to
       // Effect's default, which exports nothing.
@@ -905,15 +906,15 @@ class Slice {
       if (Exit.isFailure(exit)) {
         yield* Effect.tryPromise(() => runtime.dispose()).pipe(Effect.orDie);
         const failure = Cause.findErrorOption(exit.cause);
-        if (Option.isSome(failure) && failure.value instanceof ServiceNotAvailableError) {
+        if (Option.isSome(failure) && failure.value instanceof ServiceResolver.ServiceNotAvailableError) {
           return yield* Effect.fail(failure.value);
         }
         const defect = Option.fromNullishOr(exit.cause.reasons.find(Cause.isDieReason)?.defect);
-        if (Option.isSome(defect) && defect.value instanceof ServiceNotAvailableError) {
+        if (Option.isSome(defect) && defect.value instanceof ServiceResolver.ServiceNotAvailableError) {
           return yield* Effect.fail(defect.value);
         }
         return yield* Effect.fail(
-          new ServiceNotAvailableError('layer materialization failed', {
+          new ServiceResolver.ServiceNotAvailableError('layer materialization failed', {
             message: `Layer materialization failed: ${Cause.pretty(exit.cause)}`,
           }),
         );

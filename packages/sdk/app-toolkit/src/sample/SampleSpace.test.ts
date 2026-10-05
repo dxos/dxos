@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { buildArchive, histogram } from '../testing/index.ts';

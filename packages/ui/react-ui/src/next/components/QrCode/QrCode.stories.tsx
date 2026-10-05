@@ -9,15 +9,15 @@ import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { QrCode, type QrCodeProps } from '../index.ts';
+import * as QrCode from './QrCode.tsx';
 
-type StoryArgs = Pick<QrCodeProps, 'value' | 'errorCorrection' | 'icon'>;
+type StoryArgs = Pick<QrCode.QrCodeProps, 'value' | 'errorCorrection' | 'icon'>;
 
 const DefaultStory = ({ value, errorCorrection, icon }: StoryArgs) => (
   <div className='grid grid-cols-2 gap-8 text-fg-muted'>
-    <QrCode value={value} errorCorrection={errorCorrection} icon={icon} label='Invitation' data-testid='code' />
+    <QrCode.QrCode value={value} errorCorrection={errorCorrection} icon={icon} label='Invitation' data-testid='code' />
     <div>
-      <QrCode value={value} errorCorrection='L' aria-labelledby='qr-label' data-testid='labelled' />
+      <QrCode.QrCode value={value} errorCorrection='L' aria-labelledby='qr-label' data-testid='labelled' />
       <span id='qr-label'>Scan to join</span>
     </div>
   </div>

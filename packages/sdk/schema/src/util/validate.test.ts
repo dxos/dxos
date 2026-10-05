@@ -13,7 +13,7 @@ import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
 import { type PropertyKey } from '@dxos/echo/internal';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 const formatIssue = SchemaIssue.makeFormatterStandardSchemaV1();
 

@@ -24,6 +24,11 @@ describe('Diagram', () => {
     test('rejects a document with no boxes', ({ expect }) => {
       expect(failure(Diagram.check('# nothing here'))).toContain('has no nodes');
     });
+
+    test('rejects a diagram too big to lay out', ({ expect }) => {
+      const nodes = Array.from({ length: Diagram.MAX_NODES + 1 }, (_, index) => ({ id: `n${index}` }));
+      expect(failure(Diagram.check(Diagram.print({ nodes })))).toContain('Split it');
+    });
   });
 
   describe('print', () => {
@@ -68,6 +73,13 @@ describe('Diagram', () => {
         'edge b -> c',
         'edge a -> c "direct"',
       ]);
+    });
+
+    test('drops repeated edges', ({ expect }) => {
+      const edge = { from: 'a', to: 'b' };
+      expect(Diagram.print({ nodes: [{ id: 'a' }, { id: 'b' }], edges: [edge, edge, edge] })).toEqual(
+        'node a\nnode b\nedge a -> b',
+      );
     });
 
     test('renames a group that shares an id with a box', ({ expect }) => {

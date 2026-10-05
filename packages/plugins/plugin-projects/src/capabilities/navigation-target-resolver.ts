@@ -11,7 +11,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { getProjectArtifactPath, getProjectChatPath } from '../paths.ts';
 import { artifacts } from './app-graph-builder.ts';

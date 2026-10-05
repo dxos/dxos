@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Splitter.tsx';
+export * as Splitter from './Splitter.tsx';

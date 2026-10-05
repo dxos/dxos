@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
@@ -261,7 +261,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
         Effect.gen(function* () {
           const db = Obj.getDatabase(binding);
           if (!db) {
-            return yield* Effect.fail(new SyncDatabaseMissingError());
+            return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
           }
 
           // The binding's `spec.source` is the AccessToken that authenticates the sync directly.

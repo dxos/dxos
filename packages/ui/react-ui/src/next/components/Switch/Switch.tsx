@@ -9,8 +9,8 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { useFieldsetDisabled } from '../Fieldset/index.ts';
-import { useToolbarItem } from '../Toolbar/index.ts';
+import * as Fieldset from '../Fieldset/Fieldset.tsx';
+import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
 
 export type SwitchProps = ThemedClassName<Omit<SwitchPrimitive.RootProps, 'children'>> & {
   /** Visible label beside the track; without one pass `aria-label`. */
@@ -24,7 +24,7 @@ export type SwitchProps = ThemedClassName<Omit<SwitchPrimitive.RootProps, 'child
  */
 export const Switch = forwardRef<HTMLLabelElement, SwitchProps>(
   ({ classNames, label, 'aria-label': ariaLabel, disabled: disabledProp, ...props }, forwardedRef) => {
-    const disabled = useFieldsetDisabled(disabledProp);
+    const disabled = Fieldset.useFieldsetDisabled(disabledProp);
     const toolbarItem = useToolbarItem(disabled);
     return (
       <SwitchPrimitive.Root

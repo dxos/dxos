@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/MailSync': 'src/MailSync.ts',
+    'ns/Containers': 'src/Containers.ts',
     'InboxSendSkill': 'src/skills/InboxSendSkill.ts',
     'InboxSkill': 'src/skills/InboxSkill.ts',
     'CalendarSkill': 'src/skills/CalendarSkill.ts',

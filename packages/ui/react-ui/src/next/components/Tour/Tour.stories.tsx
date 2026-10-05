@@ -12,11 +12,13 @@ import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { byTestId } from '../../testing.ts';
-import { Button, Group, Tour, type TourStepDetails, useTour } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Tour from './Tour.tsx';
 
 const target = (testId: string) => () => document.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
 
-const STEPS: TourStepDetails[] = [
+const STEPS: Tour.StepDetails[] = [
   {
     id: 'welcome',
     type: 'dialog',
@@ -56,7 +58,7 @@ const STEPS: TourStepDetails[] = [
 
 /** Three targets and a button that starts the tour; the last step ends with a Done button of its own. */
 const DefaultStory = () => {
-  const tour = useTour({ steps: useMemo(() => STEPS, []) });
+  const tour = Tour.useTour({ steps: useMemo(() => STEPS, []) });
   return (
     <>
       <Group>

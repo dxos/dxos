@@ -47,6 +47,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "date-fns": "catalog:"
   },

@@ -4,7 +4,12 @@
 
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
 
-import { Button, Field, Icon, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import type * as Util from '@dxos/react-ui/Util';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -18,7 +23,7 @@ import { TASK_GRID, TASK_GRID_CONTENT, TASK_GRID_ICON } from '../task-grid.ts';
  */
 const stop = (event: SyntheticEvent) => event.stopPropagation();
 
-export type TaskQuestionProps = ThemedClassName<{
+export type TaskQuestionProps = Util.ThemedClassName<{
   thread: Task.QuestionThread;
   /** An answer is in flight; the controls are disabled until it settles. */
   busy?: boolean;
@@ -52,7 +57,7 @@ export const TaskQuestion = ({
   compact,
   onAnswer,
 }: TaskQuestionProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [text, setText] = useState('');
 
   const handleSubmit = useCallback<NonNullable<TaskQuestionProps['onAnswer']>>(
@@ -86,14 +91,14 @@ export const TaskQuestion = ({
         data-testid='task-question'
       >
         <div className='flex items-center gap-2 min-w-0'>
-          <Icon icon='ph--question--regular' valence='warning' />
+          <Icon.Icon icon='ph--question--regular' valence='warning' />
           <span className='font-medium truncate' title={question.text}>
             {question.text}
           </span>
         </div>
         {answer && (
           <div className='flex items-center gap-2 min-w-0' data-testid='task-question.answer'>
-            <Icon icon='ph--check-circle--regular' valence='success' />
+            <Icon.Icon icon='ph--check-circle--regular' valence='success' />
             <span className='truncate' title={answer.answer}>
               {answer.answer}
             </span>
@@ -124,7 +129,7 @@ export const TaskQuestion = ({
           below — the context, the options, the answer field — is that same second column, so the
           question reads as one block hanging off one glyph rather than as four indented things. */}
       <div className={TASK_GRID_ICON}>
-        <Icon icon='ph--question--regular' valence='warning' />
+        <Icon.Icon icon='ph--question--regular' valence='warning' />
       </div>
       <span className='font-medium wrap-break-word min-w-0'>{question.text}</span>
 
@@ -137,7 +142,7 @@ export const TaskQuestion = ({
       {answer ? (
         <>
           <div className={TASK_GRID_ICON}>
-            <Icon icon='ph--check-circle--regular' valence='success' />
+            <Icon.Icon icon='ph--check-circle--regular' valence='success' />
           </div>
           <span className='wrap-break-word min-w-0' data-testid='task-question.answer'>
             {answer.answer}
@@ -152,7 +157,7 @@ export const TaskQuestion = ({
               <div role='list' aria-label={question.text} className='flex flex-col gap-1 min-w-0'>
                 {question.options.map((option, index) => (
                   <div key={option.title} role='listitem' className='min-w-0'>
-                    <Button
+                    <Button.Root
                       variant='default'
                       disabled={busy}
                       // `h-auto` and wrapping: an option is a sentence, not a label, so the button
@@ -172,7 +177,7 @@ export const TaskQuestion = ({
                           <div className='text-xs text-fg-muted wrap-break-word leading-snug'>{option.description}</div>
                         )}
                       </div>
-                    </Button>
+                    </Button.Root>
                   </div>
                 ))}
               </div>
@@ -183,7 +188,7 @@ export const TaskQuestion = ({
               <div className='flex-[1_1_10rem] min-w-0'>
                 <Field.Root>
                   <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
-                  <Input
+                  <Input.Root
                     value={text}
                     disabled={busy}
                     placeholder={t('question-answer.placeholder')}
@@ -193,14 +198,14 @@ export const TaskQuestion = ({
                   />
                 </Field.Root>
               </div>
-              <Button
+              <Button.Root
                 variant='primary'
                 disabled={busy || text.trim() === ''}
                 data-testid='task-question.submit'
                 onClick={() => handleSubmit(text)}
               >
                 {t('question-submit.label')}
-              </Button>
+              </Button.Root>
             </div>
           </div>
         )

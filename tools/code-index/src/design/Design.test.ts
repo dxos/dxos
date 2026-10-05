@@ -6,7 +6,7 @@ import type * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Cache from './Cache.ts';
 import * as Compact from './Compact.ts';

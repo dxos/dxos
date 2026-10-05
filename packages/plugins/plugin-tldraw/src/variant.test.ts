@@ -15,10 +15,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { IllustratorOperationHandlerSet } from '@dxos/plugin-illustrator';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import * as IllustratorOperationHandlerSet from '@dxos/plugin-illustrator/IllustratorOperationHandlerSet';
 
 import { TldrawBuilder } from '#model';
 import { Tldraw } from '#types';
@@ -26,7 +26,7 @@ import { Tldraw } from '#types';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: IllustratorOperationHandlerSet,
+  operationHandlers: IllustratorOperationHandlerSet.handlers,
   extraServices: Layer.sync(Capability.Service, () => capabilityService()),
   types: [Drawing.Drawing, Drawing.Canvas],
   disableLlmMemoization: true,

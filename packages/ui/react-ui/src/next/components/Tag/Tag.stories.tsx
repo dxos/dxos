@@ -16,12 +16,15 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size, SIZES } from '../../sizes.ts';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Container, Group, Tag, type TagHue } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Tag from './Tag.tsx';
 
 /** Label text (one step below the body) per size, in px. */
 const LABEL_FONT: Record<Size, number> = { xs: 12, sm: 12, md: 14, lg: 16, xl: 18 };
 
-const VALENCES: TagHue[] = ['neutral', 'info', 'success', 'warning', 'error'];
+const VALENCES: Tag.TagHue[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
 /** Clickable, deletable, and clickable and deletable tags, counting their clicks and restoring deleted ones. */
 const InteractiveTags = ({ size }: { size?: Size }) => {
@@ -32,23 +35,23 @@ const InteractiveTags = ({ size }: { size?: Size }) => {
   return (
     <Container layout='row' data-testid={`interactive-${size}`}>
       <Group>
-        <Tag hue='sky' onClick={() => setClicks((count) => count + 1)} data-testid={`clickable-${size}`}>
+        <Tag.Tag hue='sky' onClick={() => setClicks((count) => count + 1)} data-testid={`clickable-${size}`}>
           Filter
-        </Tag>
+        </Tag.Tag>
         {shown('design') && (
-          <Tag hue='violet' onDelete={remove('design')} data-testid={`deletable-${size}`}>
+          <Tag.Tag hue='violet' onDelete={remove('design')} data-testid={`deletable-${size}`}>
             Design
-          </Tag>
+          </Tag.Tag>
         )}
         {shown('bug') && (
-          <Tag
+          <Tag.Tag
             hue='rose'
             onClick={() => setClicks((count) => count + 1)}
             onDelete={remove('bug')}
             data-testid={`both-${size}`}
           >
             Bug
-          </Tag>
+          </Tag.Tag>
         )}
         <Button compact onClick={() => setDeleted([])} data-testid={`reset-${size}`}>
           Reset
@@ -64,18 +67,18 @@ const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <Container layout='row' data-testid={`row-${size}`}>
       <Group>
-        <Tag hue='blue' data-testid={`tag-${size}`}>
+        <Tag.Tag hue='blue' data-testid={`tag-${size}`}>
           Release
-        </Tag>
-        <Tag hue='amber'>Draft</Tag>
+        </Tag.Tag>
+        <Tag.Tag hue='amber'>Draft</Tag.Tag>
       </Group>
     </Container>
     <InteractiveTags size={size} />
     <Group>
       {[...VALENCES, ...hues].map((hue) => (
-        <Tag key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
+        <Tag.Tag key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
           {hue}
-        </Tag>
+        </Tag.Tag>
       ))}
     </Group>
   </>

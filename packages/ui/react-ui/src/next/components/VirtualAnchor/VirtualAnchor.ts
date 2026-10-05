@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { type RefObject, useMemo } from 'react';
 
 export type VirtualAnchorPositioning = {

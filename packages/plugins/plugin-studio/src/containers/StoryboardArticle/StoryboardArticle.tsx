@@ -6,14 +6,19 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Empty, Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import * as Status from '@dxos/react-ui/Status';
 
 import { FrameStack, StoryboardPlayer } from '#components';
 import { meta } from '#meta';
@@ -40,8 +45,8 @@ export type StoryboardArticleProps = AppSurface.ObjectArticleProps<Storyboard.St
  * the storyboard. The same shape a slide deck takes; see the plugin design doc.
  */
 export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: StoryboardArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Live frame objects (not snapshots): the rows mutate them and the drag controller keys on them.
   const [refs] = useObject(storyboard, 'frames');
   const framesAtom = useMemo(
@@ -72,7 +77,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
   // falls back to the first frame so a deleted or not-yet-loaded selection shows the opening frame.
   const selectedId = useSelection(attendableId, 'single');
   const selectedFrame = frames.find((frame) => frame.id === selectedId) ?? frames[0];
-  const showItem = useShowItem();
+  const showItem = ToolkitHooks.useShowItem();
   const handleSelect = useCallback(
     (id: string) => {
       if (!attendableId) {
@@ -163,7 +168,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
             <ScrollArea.Root>
               <ScrollArea.Viewport>
                 {frames.length === 0 ? (
-                  <Empty classNames='h-full'>{t('storyboard-empty.message')}</Empty>
+                  <Status.Empty classNames='h-full'>{t('storyboard-empty.message')}</Status.Empty>
                 ) : (
                   <FrameStack<Frame.Frame>
                     items={frames}

@@ -10,8 +10,8 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability } from '@dxos/app-framework/ui';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
@@ -19,7 +19,7 @@ import { organizationIdentitySpec, personIdentitySpec } from '@dxos/extractor-li
 import { PublicKey } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -139,7 +139,7 @@ const DefaultStory = ({ type }: StoryArgs) => {
  * merge preview has nowhere to render and the review cannot be walked end to end in a story.
  */
 const StoryCompanion = ({ space, type }: { space: Space; type: Type.AnyObj }) => {
-  const { mergePreview } = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const { mergePreview } = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   if (mergePreview?.typeUri === Type.getURI(type)) {
     return <MergePreview type={type} preview={mergePreview} />;
   }
@@ -175,7 +175,7 @@ const meta = {
         Capability.contributeAll(SpaceCapabilities.IdentitySpec, [personIdentitySpec, organizationIdentitySpec]),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),
         ClientPlugin.make({

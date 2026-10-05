@@ -8,13 +8,14 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface, usePluginManager } from '@dxos/app-framework/ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { PlaygroundRoles } from '../roles.ts';
 
 export const Debug = () => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const core = useAtomValue(manager.core);
   const enabled = useAtomValue(manager.enabled);
   const active = useAtomValue(manager.active);

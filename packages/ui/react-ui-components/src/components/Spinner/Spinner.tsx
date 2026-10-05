@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { type Size } from '@dxos/ui-types';
 
 /**
@@ -12,7 +12,7 @@ import { type Size } from '@dxos/ui-types';
 export type ActivityState = 'ready' | 'thinking' | 'alert' | 'error';
 
 /** The interface every spinner implements, so a host can swap one for another. */
-export type SpinnerProps = ThemedClassName<{
+export type SpinnerProps = Util.ThemedClassName<{
   state?: ActivityState;
   /** The spinner's square, on the theme's size scale. */
   size?: Size;

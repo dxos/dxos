@@ -14,7 +14,8 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, TextCrawl, type TextCrawlProps } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { TextCrawl, type TextCrawlProps } from './TextCrawl.tsx';
 
 random.seed(1234);
 

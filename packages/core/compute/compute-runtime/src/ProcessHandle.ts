@@ -26,7 +26,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
 import type * as Trace from '@dxos/compute/Trace';
-import { Performance, SpanAttributes } from '@dxos/effect';
+import * as Performance from '@dxos/effect/Performance';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { isCancellation } from '@dxos/errors';
 import { log } from '@dxos/log';
 

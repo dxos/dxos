@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { ContentBlock, Message } from '@dxos/types';
 
 import * as Host from './Host.ts';

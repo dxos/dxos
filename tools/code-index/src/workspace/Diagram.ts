@@ -22,6 +22,10 @@ export type Problem = { readonly message: string };
 
 const problem = (message: string): Result.Result<never, Problem> => Result.fail({ message });
 
+/** Past these the layout search runs for many minutes and the drawing is a wall of lines anyway. */
+export const MAX_NODES = 80;
+export const MAX_EDGES = 160;
+
 /** `line:column` of an offset, 1-based, as an editor shows it. */
 const position = (text: string, offset: number): string => {
   const before = text.slice(0, offset).split('\n');
@@ -43,6 +47,12 @@ export const check = (source: string): Result.Result<string, Problem> => {
   }
   if (!diagram || diagram.nodes.length === 0) {
     return problem('The diagram has no nodes: declare each box with `node <id> "Label"`.');
+  }
+  if (diagram.nodes.length > MAX_NODES || diagram.edges.length > MAX_EDGES) {
+    return problem(
+      `The diagram has ${diagram.nodes.length} boxes and ${diagram.edges.length} edges; at most ${MAX_NODES} and ` +
+        `${MAX_EDGES} lay out. Split it, or drop transitive edges (\`reduce: true\` on a graph value).`,
+    );
   }
   return Result.succeed(source);
 };
@@ -130,7 +140,11 @@ export const print = ({
   nodes: declared,
   edges: all = [],
 }: Graph): string => {
-  const edges = reduce ? transitiveReduction(all) : all;
+  // A join that repeats rows repeats edges; one of each is the same drawing.
+  const unique = [
+    ...new Map(all.map((edge) => [JSON.stringify([edge.from, edge.to, edge.relation, edge.label]), edge])).values(),
+  ];
+  const edges = reduce ? transitiveReduction(unique) : unique;
   // The DSL rejects an edge to an undeclared box; a graph built from rows names some only in edges.
   const ids = new Set(declared.map((entry) => entry.id));
   const implied = [...new Set(edges.flatMap((edge) => [edge.from, edge.to]))].filter((id) => !ids.has(id));

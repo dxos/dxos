@@ -6,8 +6,8 @@ import { renderHook } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { ThemeProvider } from '../providers/index.ts';
-import { defaultTx } from '../theme/index.ts';
+import * as Theme from '../providers/ThemeProvider/Theme.tsx';
+import { defaultTx } from '../theme/defaultTheme.ts';
 import { useIosKeyboard, usePlatform, useThemeMode } from './hooks.ts';
 
 const useValues = () => ({ themeMode: useThemeMode(), platform: usePlatform(), iosKeyboard: useIosKeyboard() });
@@ -15,9 +15,9 @@ const useValues = () => ({ themeMode: useThemeMode(), platform: usePlatform(), i
 describe('Next theme hooks', () => {
   test('read the ThemeProvider values', () => {
     const wrapper = ({ children }: PropsWithChildren) => (
-      <ThemeProvider tx={defaultTx} themeMode='light' platform='mobile'>
+      <Theme.Provider tx={defaultTx} themeMode='light' platform='mobile'>
         {children}
-      </ThemeProvider>
+      </Theme.Provider>
     );
     const { result } = renderHook(useValues, { wrapper });
     expect(result.current).toEqual({ themeMode: 'light', platform: 'mobile', iosKeyboard: false });
