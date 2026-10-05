@@ -12,13 +12,12 @@ import { type ParseResult, read, withLayout } from './parse.ts';
  * mermaid engine's placements when nothing was hinted. Asynchronous only because that engine's ELK
  * is; a document of scene statements alone reads exactly as {@link parse} reads it.
  */
-export const compile = (text: string): Effect.Effect<ParseResult> =>
-  Effect.gen(function* () {
-    const reading = read(text);
-    const { diagram } = reading;
-    if (!diagram) {
-      return withLayout(reading);
-    }
-    const solution = yield* Effect.promise(() => SemanticEngine.compile(diagram));
-    return withLayout(reading, solution);
-  });
+export const compile: (text: string) => Effect.Effect<ParseResult> = Effect.fn('Dsl.compile')(function* (text: string) {
+  const reading = read(text);
+  const { diagram } = reading;
+  if (!diagram) {
+    return withLayout(reading);
+  }
+  const solution = yield* Effect.promise(() => SemanticEngine.compile(diagram));
+  return withLayout(reading, solution);
+});
