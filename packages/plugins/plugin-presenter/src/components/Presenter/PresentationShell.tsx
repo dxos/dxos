@@ -4,6 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
+import { useComposedRefs } from '@dxos/react-hooks';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -28,6 +29,8 @@ export const PresentationShell = Util.composable<HTMLDivElement, PresentationShe
     const [visible, setVisible] = useState(false);
     const [exiting, setExiting] = useState(false);
     const [showHint, setShowHint] = useState(true);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const ref = useComposedRefs<HTMLDivElement>(forwardedRef, rootRef);
     const exitTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
     // Guards against exiting twice; a state updater can't gate this since React double-invokes
     // updaters in dev, which would schedule the exit (and its side effects) more than once.
@@ -38,6 +41,14 @@ export const PresentationShell = Util.composable<HTMLDivElement, PresentationShe
       const frame = requestAnimationFrame(() => setVisible(true));
       return () => cancelAnimationFrame(frame);
     }, []);
+
+    // Arrow keys reach the slides only while focus is inside the shell; on the enclosing pane, the
+    // deck's plank navigation and the landmark mover claim them first.
+    useEffect(() => {
+      if (fullscreen) {
+        rootRef.current?.focus({ preventScroll: true });
+      }
+    }, [fullscreen]);
 
     // Hide the hint after the configured duration.
     useEffect(() => {
@@ -80,12 +91,13 @@ export const PresentationShell = Util.composable<HTMLDivElement, PresentationShe
       <div
         {...Util.composableProps(props, {
           classNames: [
-            'relative grow overflow-hidden bg-black transition-opacity',
+            'relative grow overflow-hidden bg-black transition-opacity outline-none',
             visible && !exiting ? 'opacity-100' : 'opacity-0',
           ],
           style: { transitionDuration: `${fadeDuration}ms` },
         })}
-        ref={forwardedRef}
+        tabIndex={-1}
+        ref={ref}
       >
         {children}
         {fullscreen && (

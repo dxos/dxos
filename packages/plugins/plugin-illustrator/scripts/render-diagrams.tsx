@@ -21,11 +21,10 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
 
-import { Diagnostics, Dsl, Mermaid, MermaidEngine, type Scene, SVG_SCHEMA } from '@dxos/diagram';
+import { Diagnostics, Dsl, Mermaid, MermaidEngine, type Scene } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { DrawingFile, SvgBuilder } from '#model';
-import { Drawing } from '#types';
+import { DrawingFile } from '#model';
 
 import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
 import { type Reply } from './emit-worker.ts';
@@ -41,16 +40,14 @@ const PLAIN = process.argv.includes('--plain');
 
 const RAW_LOADER = fileURLToPath(new URL('./raw-loader.mjs', import.meta.url));
 
-/** The `.dx.svg` for a compiled diagram: the drawing built in memory as the app would store it. */
+/** The `.dx.svg` for a compiled diagram, built in memory as the app would store it; the same input gives the same bytes. */
 const toDxSvg = (
   name: string,
   source: DrawingFile.Source,
   commands: readonly Scene.Command[],
   objects: readonly Scene.WorldObject[],
 ) => {
-  const canvas = Drawing.makeCanvas({ schema: SVG_SCHEMA });
-  SvgBuilder.apply(canvas, commands);
-  const drawing = Drawing.make({ name, canvas });
+  const { drawing, canvas } = DrawingFile.makeDrawing({ name, commands, source });
   return DrawingFile.toDxSvg(toSvgFile(objects), DrawingFile.toPayload({ drawing, canvas, source }));
 };
 
@@ -149,7 +146,7 @@ const compileSource = async ({
   source,
 }: (typeof sources)[number]): Promise<{ commands: readonly Scene.Command[]; problems: readonly Dsl.Problem[] }> =>
   language === 'dsl'
-    ? EffectEx.runPromise(Dsl.compile(source))
+    ? EffectEx.runPromise(Dsl.compile(source, { emitCandidate }))
     : {
         commands: await MermaidEngine.compile(source, { emitCandidate, ...(LAYERING ? { layering: LAYERING } : {}) }),
         problems: [],

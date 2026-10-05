@@ -112,6 +112,36 @@ describe('semantic statements', () => {
     expect(edges[2].label).toBe('one');
   });
 
+  test('soft sides, group shape and aspect', ({ expect }) => {
+    const { diagram, problems } = read(`
+      diagram aspect=16:9
+      group g "G" compact max-width=3 { node A }
+      node B
+      edge A:~left|top -> B:bottom
+    `);
+    expect(problems).toEqual([]);
+    expect(diagram?.aspect).toBeCloseTo(16 / 9);
+    expect(diagram?.groups[0]).toMatchObject({ id: 'g', compact: true, maxWidth: 3 });
+    expect(diagram?.edges[0].from).toMatchObject({ sides: ['left', 'top'], soft: true });
+    expect(diagram?.edges[0].to.soft).toBeUndefined();
+    expect(diagram?.hinted).toBe(true);
+  });
+
+  test('a fan-in bus gathers into its target', ({ expect }) => {
+    const { diagram, problems } = read('node A  node B  node C  node D\nedge A, B, C -> D "joins" bus');
+    expect(problems).toEqual([]);
+    const keys = new Set(diagram?.edges.map((edge) => edge.bus));
+    expect([...keys]).toHaveLength(1);
+    expect([...keys][0]).toMatch(/^D\|.*\|in$/);
+    expect([...(diagram?.busLabels.values() ?? [])]).toEqual(['joins']);
+  });
+
+  test('a bus the engine cannot honour is reported', ({ expect }) => {
+    expect(problemsOf('node A\nnode B\nedge A -> B bus')).toEqual(['warning: bus']);
+    expect(problemsOf('node A\nnode B\nedge A -> B bus=solo')).toEqual(['warning: bus=solo']);
+    expect(problemsOf('node A\nnode B\nnode C\nedge A -> B, C bus via 10,_')).toEqual(['warning: 10,_']);
+  });
+
   test('every problem names its source', ({ expect }) => {
     expect(problemsOf('node A\nedge A -> Missing')).toEqual(['error: Missing']);
     expect(problemsOf('node A\nnode B sideways-of A')).toEqual(['error: sideways-of']);
@@ -125,6 +155,8 @@ describe('semantic statements', () => {
     expect(problemsOf('node A\nnode B\nnode C\nnode D\nedge A, B -> C, D bus')).toEqual(['error: bus']);
     expect(problemsOf('node A colour=red')).toEqual(['error: colour=red']);
     expect(problemsOf('diagram grid=big\nnode A')).toEqual(['error: grid=big']);
+    expect(problemsOf('diagram aspect=wide\nnode A')).toEqual(['error: aspect=wide']);
+    expect(problemsOf('group g max-width=1.5 { node A }')).toEqual(['error: max-width=1.5']);
   });
 
   test('contradictions are relaxed with a warning, and the diagram still lays out', ({ expect }) => {
@@ -143,7 +175,7 @@ describe('semantic statements', () => {
   });
 
   test('the new keywords are reserved, so the printer quotes them as ids', ({ expect }) => {
-    for (const word of ['diagram', 'group', 'node', 'edge', 'cell', 'via', 'bus']) {
+    for (const word of ['diagram', 'group', 'node', 'edge', 'cell', 'via', 'bus', 'compact']) {
       expect(formatId(word)).toBe(`"${word}"`);
     }
     // Relation words and sides stay usable as ids.
