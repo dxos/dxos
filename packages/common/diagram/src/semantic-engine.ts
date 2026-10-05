@@ -346,7 +346,18 @@ const draw = (diagram: Semantic.Diagram, geometry: Geometry): { commands: Scene.
   const pieces = single.flatMap((edge): Route.Piece[] => {
     const start = endOf(edge.from);
     const end = endOf(edge.to);
-    return start && end ? [{ id: edge.id, start, end, via: edge.via.map(waypoint), points: [] }] : [];
+    return start && end
+      ? [
+          {
+            id: edge.id,
+            start,
+            end,
+            via: edge.via.map(waypoint),
+            points: [],
+            significance: Semantic.significance(edge.relation, edge.stroke),
+          },
+        ]
+      : [];
   });
   const requests = buses.flatMap((bus): Route.BusRequest[] => {
     const side = facing.get(bus);
@@ -355,7 +366,8 @@ const draw = (diagram: Semantic.Diagram, geometry: Geometry): { commands: Scene.
       const end = endOf(bus.direction === 'out' ? edge.to : edge.from, side && [OPPOSITE[side]]);
       return end ? [{ id: edge.id, end }] : [];
     });
-    return hub && spokes.length > 0 ? [{ id: bus.id, hub, spokes, direction: bus.direction }] : [];
+    const significance = Math.max(...bus.edges.map((edge) => Semantic.significance(edge.relation, edge.stroke)));
+    return hub && spokes.length > 0 ? [{ id: bus.id, hub, spokes, direction: bus.direction, significance }] : [];
   });
 
   const first = Route.routeAll(pieces, requests, context);

@@ -91,6 +91,25 @@ export const CONNECTORS = 'edges';
 export const pointsUp = (relation: Scene.Relation | undefined): boolean =>
   relation === 'inheritance' || relation === 'implementation';
 
+/**
+ * How strongly a connector's relation shapes the reading of a diagram, highest first; on a box face
+ * shared by several connectors the most significant takes the centre.
+ */
+export const SIGNIFICANCE: Readonly<Record<Scene.Relation, number>> = {
+  'inheritance': 4,
+  'implementation': 4,
+  'composition': 3,
+  'aggregation': 2,
+  'one-to-many': 2,
+  'many-to-many': 2,
+  'association': 1,
+  'dependency': 0,
+};
+
+/** The significance of an edge's relation; an untyped dashed edge reads as a dependency. */
+export const significance = (relation: Scene.Relation | undefined, stroke?: Scene.Stroke): number =>
+  SIGNIFICANCE[relation ?? (stroke === 'dashed' ? 'dependency' : 'association')];
+
 export type EdgeStyle = {
   relation?: Scene.Relation;
   head?: Scene.ArrowHead;
