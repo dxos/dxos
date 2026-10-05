@@ -11,6 +11,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import * as Process from '@dxos/compute/Process';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { Block, Card, Icon } from '@dxos/react-ui';
 
 import {
@@ -99,7 +100,11 @@ const useMandelbrot = (item: ProcessItem, canvas: HTMLCanvasElement | null): num
         return;
       }
       granted.current += frames;
-      void EffectEx.runPromise(handle.submitInput({ ...input, frames }));
+      void EffectEx.runPromise(handle.submitInput({ ...input, frames })).catch((error) => {
+        // An undelivered grant is not owed: still counted, it would hold back every later top-up.
+        granted.current -= frames;
+        log.warn('frame grant failed', { pid: handle.pid, error });
+      });
     };
 
     const fiber = Effect.runFork(

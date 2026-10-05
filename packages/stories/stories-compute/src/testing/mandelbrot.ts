@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as StorageService from '@dxos/compute/StorageService';
 import { Annotation } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -238,76 +240,107 @@ const computeFrame = (frame: number, size: number, center: Point, width: number)
   };
 };
 
+/** Everything the process keeps between handlers; persisted so a revived host resumes the render. */
+const MandelbrotState = Schema.Struct({
+  frame: Schema.Number,
+  credits: Schema.Number,
+  size: Schema.Number,
+  center: Point,
+  width: Schema.Number,
+  interval: Schema.Number,
+  frameCount: Schema.Number,
+  lastRequest: Schema.Number,
+  /** Whether the pending alarm is a frame rather than the idle check. */
+  rendering: Schema.Boolean,
+});
+
+type MandelbrotState = Schema.Schema.Type<typeof MandelbrotState>;
+
+const StateCell = StorageService.cell(Schema.fromJsonString(MandelbrotState), 'mandelbrot/state');
+
+const initialState = (): MandelbrotState => {
+  const start = randomStartingPoint();
+  return {
+    frame: 0,
+    credits: 0,
+    size: DEFAULT_SIZE,
+    center: { x: start.real, y: start.imaginary },
+    width: start.viewWidth,
+    interval: DEFAULT_INTERVAL,
+    frameCount: DEFAULT_FRAME_COUNT,
+    lastRequest: Date.now(),
+    rendering: false,
+  };
+};
+
 /**
  * Renders a Mandelbrot zoom on credit: each input grants `frames` more frames, which the process pushes
  * one per `interval` and then waits. It never computes more than it was granted (capped at
  * {@link MAX_CREDITS}), and finishes after `frameCount` frames (or once the zoom outruns double precision), or once no request has arrived for {@link IDLE_TIMEOUT}.
+ *
+ * Its state lives in the process's storage rather than in the closure: a host revives a process by
+ * creating it afresh (an EDGE Durable Object after eviction or a deploy), and a closure would restart it
+ * at frame 0 with no credit, leaving the client waiting for frames that never come.
  */
 export const MandelbrotProcess = Operation.makeDurable(
   { key: MANDELBROT_PROCESS_KEY, input: MandelbrotInput, output: MandelbrotOutput, services: [] },
   (ctx) =>
-    Effect.sync(() => {
-      let frame = 0;
-      let credits = 0;
-      let size: number = DEFAULT_SIZE;
-      const start = randomStartingPoint();
-      let center: Point = { x: start.real, y: start.imaginary };
-      let width = start.viewWidth;
-      let interval = DEFAULT_INTERVAL;
-      let frameCount = DEFAULT_FRAME_COUNT;
-      let lastRequest = Date.now();
-      let rendering = false;
+    Effect.gen(function* () {
+      let state = Option.getOrElse(yield* StateCell.get, initialState);
+      const save = (next: MandelbrotState) =>
+        Effect.suspend(() => {
+          state = next;
+          return StateCell.set(next);
+        });
 
       // One alarm serves both roles: the next frame while credits remain, otherwise the idle check. It is
-      // first armed by a request, not at spawn: a pending alarm keeps the process from settling, and a
-      // host that waits for a spawned process to settle would wait out the whole idle timeout.
-      const schedule = () => {
-        rendering = credits > 0;
-        return ctx.setAlarm(rendering ? interval : IDLE_TIMEOUT);
-      };
+      // first armed by a request, not at spawn, so a spawned process settles without one pending.
+      const schedule = () =>
+        Effect.gen(function* () {
+          const rendering = state.credits > 0;
+          yield* save({ ...state, rendering });
+          yield* ctx.setAlarm(rendering ? state.interval : IDLE_TIMEOUT);
+        });
 
       return {
         onInput: (input) =>
           Effect.gen(function* () {
-            lastRequest = Date.now();
-            credits = Math.min(MAX_CREDITS, credits + Math.max(0, input.frames));
-            if (input.size !== undefined) {
-              size = input.size;
-            }
-            if (input.center !== undefined) {
-              center = input.center;
-              frame = 0;
-            }
-            if (input.interval !== undefined) {
-              interval = Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, input.interval));
-            }
-            if (input.frameCount !== undefined) {
-              frameCount = Math.max(1, Math.floor(input.frameCount));
-            }
-            if (input.width !== undefined) {
-              width = input.width;
-              frame = 0;
-            }
-            if (!rendering && credits > 0) {
-              rendering = true;
+            const restart = input.center !== undefined || input.width !== undefined;
+            const next: MandelbrotState = {
+              ...state,
+              lastRequest: Date.now(),
+              credits: Math.min(MAX_CREDITS, state.credits + Math.max(0, input.frames)),
+              frame: restart ? 0 : state.frame,
+              size: input.size ?? state.size,
+              center: input.center ?? state.center,
+              width: input.width ?? state.width,
+              interval:
+                input.interval !== undefined
+                  ? Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, input.interval))
+                  : state.interval,
+              frameCount: input.frameCount !== undefined ? Math.max(1, Math.floor(input.frameCount)) : state.frameCount,
+            };
+            const start = !next.rendering && next.credits > 0;
+            yield* save(start ? { ...next, rendering: true } : next);
+            if (start) {
               yield* ctx.setAlarm(0);
             }
           }),
         onAlarm: () =>
           Effect.gen(function* () {
-            if (credits > 0) {
-              credits--;
-              const { output, next, exhausted } = computeFrame(frame++, size, center, width);
+            if (state.credits > 0) {
+              const { output, next, exhausted } = computeFrame(state.frame, state.size, state.center, state.width);
+              const frame = state.frame + 1;
+              yield* save({ ...state, credits: state.credits - 1, frame, center: next });
               ctx.submitOutput(output);
-              center = next;
-              if (frame >= frameCount || exhausted) {
+              if (frame >= state.frameCount || exhausted) {
                 ctx.succeed();
                 return;
               }
               yield* schedule();
               return;
             }
-            const idle = Date.now() - lastRequest;
+            const idle = Date.now() - state.lastRequest;
             if (idle >= IDLE_TIMEOUT) {
               ctx.succeed();
               return;
