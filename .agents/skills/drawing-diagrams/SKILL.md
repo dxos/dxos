@@ -60,6 +60,43 @@ Conventions (full text in `plugin-illustrator/docs/diagrams/README.md`):
 - End with one `%% ref <Id> <repo-relative path>` per node. It is a mermaid comment, so the file
   still renders elsewhere; in the corpus test every ref must point at a path that exists.
 
+### Or write the semantic DSL directly
+
+When you want a say in placement, skip mermaid and write the diagram DSL's semantic statements: the
+same graph, plus only the hints that matter. The engine (`SemanticEngine` in `@dxos/diagram`) puts
+boxes on a grid, routes arrows through the gutters with the fewest bends, spreads ports and places
+labels; with no hints at all it also tries the mermaid engine's placements and keeps the better.
+
+```
+diagram flow=down
+group local "Local runtime" {
+  node PM "ProcessManager" ref="packages/core/compute/compute-runtime/src/ProcessManager.ts"
+  node Invoker "ProcOpInvoker" right-of PM
+  node Store "ProcessStore" below PM
+}
+group remote "EDGE runtime" right-of local {
+  node RPM "RemoteProcessMgr"
+}
+edge PM owns Store "persist"
+edge PM -> Invoker
+edge Invoker -> PM "spawn child"
+edge PM -> RPM:top "spawn on EDGE"
+```
+
+- Placement: `right-of X`, `left-of X`, `above X`, `below X`, `same-row X`, `same-col X` (rules; `~` makes
+  one a preference), `@cell(c,r)`, or exact `@ x,y`. Groups take the same relations to other groups and
+  `gap=N`.
+- Routing: sides `A:left -> B:top|left`, waypoints `via x,_` / `via _,y` / `via cell(1.5,_)` (the gutter
+  between columns 1 and 2), and `bus` (`edge A -> B, C bus`) or `bus=<name>` across edges for one trunk.
+- Meaning: `extends`, `implements`, `composes`, `owns`, `one-to-many`, `many-to-many`, `depends-on` in
+  place of `->` draw the UML/ER markers; the left end is the child, the whole, the owner or the "one".
+- The full reference the agent reads is the `uml` skill text in
+  `packages/plugins/plugin-illustrator/src/skills/uml-skill.ts`; the Storybook bench is
+  `plugins/plugin-illustrator/components/Constraints`.
+
+Compile it with `Dsl.compile(text)` (an Effect; `Dsl.parse` lays out synchronously without the mermaid
+candidates) and render the scene with `toSvgFile` as below.
+
 ## 3. Render
 
 The renderer runs straight from source (`node --conditions=source --import tsx`), so it needs no
