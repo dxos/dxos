@@ -4,15 +4,16 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import type * as Exit from 'effect/Exit';
+import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
 import type * as Rpc from 'effect/rpc/Rpc';
 import type * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
-import type * as Stream from 'effect/Stream';
+import * as Stream from 'effect/Stream';
 
 import { Annotation, type Database } from '@dxos/echo';
 import { type SpaceId, URI } from '@dxos/keys';
@@ -282,7 +283,7 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
    * the collector with {@link Effect.forkDetach}, not {@link Effect.forkChild} — the
    * parent scope closes as soon as `forEach` finishes and interrupts scoped forks
    * before live `pushEphemeral` events arrive. Interrupt the daemon fiber explicitly
-   * on dispose (see {@link ProcessOperationInvoker.fiberFromProcess}).
+   * on dispose.
    */
   subscribeEphemeral(): Stream.Stream<Trace.Message>;
 
@@ -347,7 +348,11 @@ export namespace Handle {
  * Options for spawning a process.
  */
 export interface SpawnOptions {
-  /** Parent process ID — child inherits the parent's trace context. */
+  /**
+   * Parent process ID — child inherits the parent's trace context.
+   * Inside a process, its {@link ManagerService} defaults this to that process; pass `undefined`
+   * explicitly to spawn a detached process.
+   */
   readonly parentProcessId?: ID;
 
   /**
@@ -467,7 +472,49 @@ export interface Manager {
    * Dies when the location is a remote runtime that offers no process control.
    */
   handles(options?: ListOptions & LocationOptions): Effect.Effect<readonly Handle.Any[]>;
+
+  /**
+   * Handle on the process `pid` at `options.location`. A handle on a process that has already exited
+   * replays its outputs, so its result stays readable after the exit.
+   *
+   * Dies when no such process is known, or when the location is a remote runtime that offers no
+   * process control.
+   */
+  attach<I, O, Rpcs extends Rpc.Any = never>(pid: ID, options?: LocationOptions): Effect.Effect<Handle<I, O, Rpcs>>;
 }
+
+/**
+ * The first output of a single-output process (e.g. one running an operation), failing with the
+ * process's own cause when it fails without one.
+ */
+export const awaitOutput = <O>(handle: Handle<any, O, any>): Effect.Effect<O> =>
+  handle.subscribeOutputs().pipe(
+    Stream.runHead,
+    Effect.flatMap(
+      Option.match({
+        onSome: Effect.succeed,
+        onNone: () => {
+          switch (handle.status.state) {
+            case State.FAILED:
+              return Effect.failCause(
+                handle.status.exit.pipe(
+                  Option.flatMap(Exit.getCause),
+                  Option.getOrElse(() => Cause.die('Operation failed with unknown error')),
+                ),
+              );
+            case State.TERMINATED:
+              return Effect.die('Operation was terminated');
+            case State.SUCCEEDED:
+              return Effect.die('Process produced no output');
+            default:
+              // Outputs close on a live process only when its manager suspends it (app shutdown): the
+              // wait was cut short rather than answered.
+              return Effect.interrupt;
+          }
+        },
+      }),
+    ),
+  );
 
 export class ManagerService extends Context.Service<ManagerService, Manager>()(
   '@dxos/compute/Process.ManagerService',

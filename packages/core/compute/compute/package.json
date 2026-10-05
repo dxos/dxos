@@ -38,6 +38,11 @@
       "types": "./dist/types/src/Credential.d.ts",
       "import": "./dist/lib/Credential.mjs"
     },
+    "./DurableOperation": {
+      "source": "./src/DurableOperation.ts",
+      "types": "./dist/types/src/DurableOperation.d.ts",
+      "import": "./dist/lib/DurableOperation.mjs"
+    },
     "./Header": {
       "source": "./src/Header.ts",
       "types": "./dist/types/src/Header.d.ts",

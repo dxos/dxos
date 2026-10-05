@@ -23,6 +23,7 @@ import { type HarnessControlRpcs, SessionLink } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as ComputeAgentService from '@dxos/compute/AgentService';
+import * as DurableOperation from '@dxos/compute/DurableOperation';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -213,9 +214,8 @@ const StubDelegationStrategy: DelegationStrategy = {
         .map((work) => ({
           id: work.id,
           spawn: Effect.gen(function* () {
-            const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-            const fiber = yield* invoker.invokeFiber(DelegatedWork, work.input);
-            return fiber.pid;
+            const handle = yield* DurableOperation.spawn(DelegatedWork, work.input);
+            return handle.pid;
           }),
         })),
     ),

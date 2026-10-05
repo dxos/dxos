@@ -43,9 +43,7 @@ to 0.47 and leaves the other rules unchanged; the edge stays because the cycle i
 
 Findings the diagrams surface but do not fix, each a candidate issue:
 
-- `ProcessManager.#handles` and `ProcessOperationInvoker`'s `fiberCache` grow for the whole session
-  (`bounded-live-state` 0.24).
-- `ProcessManager` and `ProcessOperationInvoker` depend on each other (`dependency-direction` 0.15–0.19).
+- `ProcessManager.#handles` grows for the whole session (`bounded-live-state` 0.24).
 - Local and EDGE process managers are parallel services merged only by their callers
   (`one-mechanism-per-concern` 0.24).
 - `echo-client` imports `QueryPlanner` and filters from `@dxos/echo-host`, so the query engine runs on both tiers.

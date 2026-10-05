@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { ProcessManager } from '@dxos/compute-runtime';
+import * as DurableOperation from '@dxos/compute/DurableOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -70,9 +70,8 @@ const StubDelegationStrategy: DelegationStrategy = {
         .map((work) => ({
           id: work.id,
           spawn: Effect.gen(function* () {
-            const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-            const fiber = yield* invoker.invokeFiber(DelegatedWork, work.input);
-            return fiber.pid;
+            const handle = yield* DurableOperation.spawn(DelegatedWork, work.input);
+            return handle.pid;
           }),
         })),
     ),

@@ -14,8 +14,8 @@ the agent/plan ECHO types (it cannot depend on `@dxos/assistant-toolkit`).
 
 ```mermaid
 flowchart TB
-  subgraph rt["@dxos/compute-runtime"]
-    POI["ProcessOperationInvoker<br/>invokeFiber() / attachFiber()<br/><i>(linked child)</i>"]
+  subgraph rt["@dxos/compute"]
+    POI["Process.ManagerService<br/>DurableOperation.spawn() / attach()<br/><i>(linked child)</i>"]
   end
 
   subgraph fr["@dxos/functions-runtime · agent-service"]
@@ -40,9 +40,9 @@ flowchart TB
   IMPL --> CAP
 ```
 
-- **`ProcessOperationInvoker`** (runtime primitive, no AI): `invokeFiber` spawns a linked,
-  non-blocking child and returns a fiber with `pid`; `attachFiber` + `fiber.await` reads the
-  finished child's `Exit`.
+- **`Process.ManagerService`** (runtime primitive, no AI): the process's own manager links every child
+  it spawns to the process. `DurableOperation.spawn` spawns an operation as such a child and returns its
+  `Process.Handle`; `attach(pid)` + `Process.awaitOutput` reads the finished child's result.
 - **`DelegationStrategy`** (this dir, type-only): the pluggable policy `AgentProcess` calls —
   `reconcile` (what to delegate) and `onComplete` (how to fold a result back). Absent → plain chat.
 - **`makeDelegationStrategy()`** (assistant-toolkit): the concrete, agent/plan-aware implementation,
@@ -51,7 +51,7 @@ flowchart TB
 ## Delegation lifecycle
 
 The child's exit is only a **wake signal** — its output value is read separately via
-`attachFiber` + `fiber.await` (the `ChildEvent` does not carry the payload). `DelegationsKey` persists the
+`attach(pid)` + `Process.awaitOutput` (the `ChildEvent` does not carry the payload). `DelegationsKey` persists the
 `pid → id` map so a child that exits after the supervisor hibernates can still be correlated.
 
 ```mermaid
@@ -59,7 +59,7 @@ sequenceDiagram
   participant U as User
   participant AP as AgentProcess (supervisor)
   participant ST as DelegationStrategy
-  participant POI as ProcessOperationInvoker
+  participant POI as Process.ManagerService
   participant CH as Sub-agent (child process)
 
   U->>AP: submitInput(prompt)
@@ -67,7 +67,7 @@ sequenceDiagram
   AP->>ST: reconcile(chat, activeIds)
   ST-->>AP: Delegation[] { id, spawn }
   loop per delegation
-    AP->>POI: invokeFiber(op, input)
+    AP->>POI: DurableOperation.spawn(op, input)
     POI->>CH: linked child (non-blocking)
     POI-->>AP: pid
     AP->>AP: DelegationsKey.set(pid → id)
@@ -76,7 +76,7 @@ sequenceDiagram
 
   CH-->>AP: exit (wake only — no payload)
   AP->>AP: onChildEvent: match pid → id, drop from DelegationsKey
-  AP->>POI: attachFiber(pid) + await
+  AP->>POI: attach(pid) + Process.awaitOutput
   POI-->>AP: Exit of output value
   AP->>ST: onComplete(chat, id, exit)
   ST->>U: update Task status + post message (reference blocks → dx-anchor)
@@ -89,5 +89,5 @@ sequenceDiagram
 | `AgentService` / `layer` | `AgentService.ts` | Per-chat session cache (model-aware); wires `delegationStrategy` into `AgentProcess`. |
 | `AgentProcess` | `agent-process.ts` | Turn loop (`onAlarm`) + child-exit wake (`onChildEvent`); owns `DelegationsKey`. |
 | `DelegationStrategy`, `Delegation` | `delegation-strategy.ts` | Type-only seam: `reconcile` / `onComplete`; `Delegation = { id, spawn }`. |
-| `ProcessOperationInvoker.invokeFiber` / `attachFiber` | `@dxos/compute-runtime` | Linked-child spawn + result read. |
+| `DurableOperation.spawn` / `Process.Manager.attach` | `@dxos/compute` | Linked-child spawn + result read. |
 | `makeDelegationStrategy()` | `@dxos/assistant-toolkit` | Concrete agent/plan-aware strategy. |

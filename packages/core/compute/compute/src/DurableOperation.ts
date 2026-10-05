@@ -4,18 +4,28 @@
 
 // @import-as-namespace
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Semaphore from 'effect/Semaphore';
 
-import { InvalidOperationInputError } from '@dxos/compute';
-import * as Operation from '@dxos/compute/Operation';
-import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import * as StorageService from '@dxos/compute/StorageService';
-import * as Trace from '@dxos/compute/Trace';
+import { Database } from '@dxos/echo';
 import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
+
+import { InvalidOperationInputError } from './errors.ts';
+import * as Operation from './Operation.ts';
+import * as OperationHandlerSet from './OperationHandlerSet.ts';
+import * as Process from './Process.ts';
+import * as StorageService from './StorageService.ts';
+import * as Trace from './Trace.ts';
+
+/*
+ * Runtime plumbing that runs plain operations as durable processes. Deliberately kept out of the
+ * package barrel: operation authors use `Operation.invoke`, not these.
+ */
 
 /**
  * Durable marker recording that an operation's input handler has begun executing.
@@ -208,3 +218,60 @@ const undeclaredTopLevelKeys = (typeAst: SchemaAST.AST, input: unknown): string[
 };
 
 const CONTENTLESS_INPUT_TAGS: ReadonlySet<string> = new Set(['Any', 'Unknown', 'Void', 'Undefined', 'Null', 'Never']);
+
+/**
+ * Spawns `op` as a process through the ambient {@link Process.ManagerService} and submits `input`; read its
+ * result with {@link Process.awaitOutput}.
+ */
+export const spawn = <I, O>(
+  op: Operation.Definition<I, O>,
+  input: I,
+  options?: Process.SpawnOptions & Process.LocationOptions,
+): Effect.Effect<
+  Process.Handle<I, O, never>,
+  never,
+  Process.ManagerService | OperationHandlerSet.OperationHandlerProvider
+> =>
+  Effect.gen(function* () {
+    const manager = yield* Process.ManagerService;
+    const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
+    const handle = yield* manager.spawn(fromOperation(op, handlers), {
+      name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
+      ...options,
+    });
+    yield* handle.submitInput(input);
+    return handle;
+  });
+
+/**
+ * The {@link Operation.ProcessInvoker} {@link layer} provides as `Operation.Service`, for a host that reads its
+ * invocation events and follow-ups.
+ */
+export class InvokerService extends Context.Service<InvokerService, Operation.ProcessInvoker>()(
+  '@dxos/compute/DurableOperation.InvokerService',
+) {}
+
+/**
+ * Provides `Operation.Service` by running every invocation as a process spawned through
+ * {@link Process.ManagerService}.
+ */
+export const layer: Layer.Layer<
+  Operation.Service | InvokerService,
+  never,
+  Process.ManagerService | OperationHandlerSet.OperationHandlerProvider
+> = Layer.effectContext(
+  Effect.gen(function* () {
+    const manager = yield* Process.ManagerService;
+    const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
+    // A host provides `Database.Origin` to label what its root invocations write, e.g. `user` for an app's UI.
+    const origin = yield* Database.Origin;
+    const tracer = yield* Effect.tracer;
+    const invoker = Operation.makeProcessInvoker({
+      manager,
+      toProcess: (op) => fromOperation(op, handlers),
+      origin,
+      tracer,
+    });
+    return Context.make(Operation.Service, invoker).pipe(Context.add(InvokerService, invoker));
+  }),
+);

@@ -23,6 +23,7 @@ import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
 import { NoHandlerError, RunAgainError } from '@dxos/compute';
+import * as DurableOperation from '@dxos/compute/DurableOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
@@ -43,7 +44,6 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as DurableOperation from '../DurableOperation.ts';
 import * as ProcessManager from '../ProcessManager.ts';
 import { filterReadyFeedItems } from './feed-position.ts';
 import { createInvocationPayload } from './input-builder.ts';

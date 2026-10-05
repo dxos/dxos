@@ -22,8 +22,10 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
+import type * as Tracer from 'effect/Tracer';
 
 import * as Cancellation from '@dxos/compute/Cancellation';
+import * as DurableOperation from '@dxos/compute/DurableOperation';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -41,7 +43,6 @@ import { ProcessManagerService } from './process-manager-service.ts';
 import { type PersistedProcess, ProcessStore } from './process-store.ts';
 import { createProcessTraceService } from './process-trace.ts';
 import * as ProcessHandle from './ProcessHandle.ts';
-import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 import { layer as storageServiceLayer } from './storage-service-layer.ts';
 
 /**
@@ -62,8 +63,6 @@ export {
   SequentialProcessIdGenerator,
   UUIDProcessIdGenerator,
 } from './process-id.ts';
-
-export { ProcessOperationInvoker };
 
 /**
  * Builds the in-memory loopback RPC client for a process's declared control surface.
@@ -208,6 +207,8 @@ export class Impl implements Manager {
   readonly #store: ProcessStore;
 
   readonly #finished: Process.Process[] = [];
+  // Exited handles, retained alongside `#finished` so a late {@link attach} can still read a result.
+  readonly #finishedHandles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
   readonly #processTreeAtom: Atom.Writable<readonly Process.Process[]>;
   /**
    * Manager-level ephemeral trace hub (DX-1125). Every process's ephemeral messages are fanned out
@@ -233,6 +234,52 @@ export class Impl implements Manager {
 
   get processTreeAtom(): Atom.Atom<readonly Process.Process[]> {
     return this.#processTreeAtom;
+  }
+
+  /**
+   * Services a process spawns children through: a {@link Process.Manager} over this runtime whose spawns
+   * default to the process as their parent and inherit its origin, and an `Operation.Service` running
+   * each invocation as such a child.
+   */
+  #childServices(pid: Process.ID, origin: Database.Origin | undefined, tracer: Tracer.Tracer): Context.Context<never> {
+    const manager: Process.Manager = {
+      processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
+      processTreeAtom: this.#processTreeAtom,
+      list: (filter) => Process.listFromTree(Effect.sync(() => this.#registry.get(this.#processTreeAtom)))(filter),
+      subscribeToTraceMessages: (filter) => this.subscribeToTraceMessages(filter),
+      spawn: (definition, { location, ...options } = {}) =>
+        location?.kind === 'edge'
+          ? Effect.die(new Error('A process cannot spawn a remote process.'))
+          : this.spawn(definition, {
+              origin,
+              ...options,
+              parentProcessId: 'parentProcessId' in options ? options.parentProcessId : pid,
+            }),
+      handles: ({ location, ...options } = {}) =>
+        location?.kind === 'edge'
+          ? Effect.die(new Error('A process cannot list remote processes.'))
+          : this.list(options),
+      attach: (childPid, { location } = {}) =>
+        location?.kind === 'edge'
+          ? Effect.die(new Error('A process cannot attach to a remote process.'))
+          : this.attach(childPid),
+    };
+    let services = Context.make(Process.ManagerService, manager);
+    if (this.#handlerSet) {
+      const handlers = this.#handlerSet;
+      services = services.pipe(
+        Context.add(OperationHandlerSet.OperationHandlerProvider, handlers),
+        Context.add(
+          Operation.Service,
+          Operation.makeProcessInvoker({
+            manager,
+            toProcess: (op) => DurableOperation.fromOperation(op, handlers),
+            tracer,
+          }),
+        ),
+      );
+    }
+    return services;
   }
 
   subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message> {
@@ -304,8 +351,12 @@ export class Impl implements Manager {
     }
     this.#handles.delete(pid);
     this.#finished.push(handle.snapshotProcessInfo());
+    this.#finishedHandles.set(pid, handle);
     if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
-      this.#finished.shift();
+      const evicted = this.#finished.shift();
+      if (evicted !== undefined) {
+        this.#finishedHandles.delete(evicted.pid);
+      }
     }
     this.#refreshProcessTree();
   }
@@ -338,6 +389,7 @@ export class Impl implements Manager {
         }
         this.#handles.clear();
         this.#finished.length = 0;
+        this.#finishedHandles.clear();
         this.#shutDown = true;
         this.#refreshProcessTree();
         log('lifecycle: manager suspended', { suspended: handleCount });
@@ -452,25 +504,15 @@ export class Impl implements Manager {
         ),
       );
 
-      // Provide Operation.Service that spawns child processes with parentProcessId set.
-      if (this.#handlerSet) {
-        const childInvoker = ProcessOperationInvoker.make({
-          manager: this,
-          handlerSet: this.#handlerSet,
-          parentProcessId: id,
-          origin,
-          tracer,
-        });
-        builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
-        builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
-      }
+      builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,
-        ProcessOperationInvoker.Service.key,
+        Process.ManagerService.key,
+        OperationHandlerSet.OperationHandlerProvider.key,
         Cancellation.Service.key,
       ]);
       const externalServices = definition.services.filter((tag: Context.Key<any, any>) => !builtinTagKeys.has(tag.key));
@@ -665,24 +707,15 @@ export class Impl implements Manager {
         ),
       );
 
-      if (this.#handlerSet) {
-        const childInvoker = ProcessOperationInvoker.make({
-          manager: this,
-          handlerSet: this.#handlerSet,
-          parentProcessId: id,
-          origin,
-          tracer,
-        });
-        builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
-        builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
-      }
+      builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,
-        ProcessOperationInvoker.Service.key,
+        Process.ManagerService.key,
+        OperationHandlerSet.OperationHandlerProvider.key,
         Cancellation.Service.key,
       ]);
       const externalServices = definition.services.filter((tag: Context.Key<any, any>) => !builtinTagKeys.has(tag.key));
@@ -852,7 +885,7 @@ export class Impl implements Manager {
 
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Handle<I, O, Rpcs>> {
     return Effect.gen({ self: this }, function* () {
-      const handle = this.#handles.get(id);
+      const handle = this.#handles.get(id) ?? this.#finishedHandles.get(id);
       if (!handle) {
         log('lifecycle: attach failed (not found)', { pid: id });
         return yield* Effect.die(new Error(`Process not found: ${id}`));

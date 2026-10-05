@@ -15,7 +15,9 @@ import {
   RemoteTraceMonitor,
   UnifiedProcessManager,
 } from '@dxos/compute-runtime';
+import * as DurableOperation from '@dxos/compute/DurableOperation';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import type * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -195,11 +197,6 @@ export default Capability.makeModule(
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
       Layer.provide(baseLayer),
     );
-    const operationInvokerLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
-      // Operations invoked through the app's own invoker are the person's actions, from a menu, dialog or shortcut.
-      Layer.provide(Layer.mergeAll(processManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
-    );
-
     // App-framework has no EDGE runtime, so the remote process view is empty;
     // the aggregate manager therefore equals the local process tree.
     const remoteProcessManagerLayer = RemoteProcessManager.layerNoop.pipe(Layer.provide(baseLayer));
@@ -210,6 +207,10 @@ export default Capability.makeModule(
         : RemoteTraceMonitor.layerNoop;
     const unifiedProcessManagerLayer = UnifiedProcessManager.layer.pipe(
       Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, remoteTraceMonitorLayer, baseLayer)),
+    );
+    const operationInvokerLayer = DurableOperation.layer.pipe(
+      // Operations invoked through the app's own invoker are the person's actions, from a menu, dialog or shortcut.
+      Layer.provide(Layer.mergeAll(unifiedProcessManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
     );
 
     const runtimeLayer = Layer.mergeAll(
@@ -252,13 +253,12 @@ export default Capability.makeModule(
       >,
     );
 
-    // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer.
-    // Pulled via the ProcessOperationInvoker tag so the contributed value carries
-    // the full OperationInvoker interface (`invocations`, `pendingFollowups`,
-    // `awaitFollowups`, `_invokeCore`) that HistoryTracker requires.
+    // Eagerly extract the operation invoker built by DurableOperation.layer, via its own tag so the contributed
+    // value carries the full OperationInvoker interface (`invocations`, `pendingFollowups`, `awaitFollowups`,
+    // `_invokeCore`) that HistoryTracker requires.
     const operationInvoker: OperationInvoker.OperationInvoker = managedRuntime.runSync(
-      Effect.flatMap(ProcessManager.ProcessOperationInvoker.Service, Effect.succeed) as unknown as Effect.Effect<
-        OperationInvoker.OperationInvoker,
+      Effect.flatMap(DurableOperation.InvokerService, Effect.succeed) as Effect.Effect<
+        Operation.ProcessInvoker,
         never,
         never
       >,

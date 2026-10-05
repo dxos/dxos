@@ -11,6 +11,7 @@ export default defineConfig({
     'AgentService': 'src/AgentService.ts',
     'Cancellation': 'src/Cancellation.ts',
     'Credential': 'src/Credential.ts',
+    'DurableOperation': 'src/DurableOperation.ts',
     'Header': 'src/Header.ts',
     'LayerSpec': 'src/LayerSpec.ts',
     'McpServer': 'src/McpServer.ts',

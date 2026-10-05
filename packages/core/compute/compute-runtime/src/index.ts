@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as DurableOperation from './DurableOperation.ts';
 export * from './errors.ts';
 export * as FeedTraceSink from './FeedTraceSink.ts';
 export * from './functions-trace.ts';

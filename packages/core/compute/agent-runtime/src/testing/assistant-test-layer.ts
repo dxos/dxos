@@ -29,6 +29,7 @@ import {
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Credential from '@dxos/compute/Credential';
+import * as DurableOperation from '@dxos/compute/DurableOperation';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -101,7 +102,7 @@ export type AssistantTestServices =
   | Operation.Service
   | ProcessManager.Service
   | RemoteProcessManager.Service
-  | ProcessManager.ProcessOperationInvoker.Service
+  | DurableOperation.InvokerService
   | Process.ManagerService
   | AtomRegistry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider
@@ -139,7 +140,7 @@ export const AssistantTestLayer = (
   return Layer.empty.pipe(
     // Captures must sit above the layers they read (a provideMerge chain feeds upward).
     Layer.provideMerge(captureAgentService(agentServiceHolder)),
-    Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
+    Layer.provideMerge(DurableOperation.layer),
     Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
     Layer.provideMerge(UnifiedProcessManager.layer),
     // A local test stack has no EDGE, so both the manager's remote half and `location: 'edge'` see

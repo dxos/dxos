@@ -182,6 +182,9 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
   readonly #scope: Scope.Closeable;
   readonly #registry: Registry.AtomRegistry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
+  // Kept so a subscriber that arrives after the exit (an attach to a finished child) still reads the
+  // result, which the queue's first consumer has already taken.
+  readonly #outputs: O[] = [];
   readonly #storage: StorageService.Service;
   readonly #traceSink: Trace.Sink;
   readonly #ephemeralBuffer = new EphemeralTraceBuffer();
@@ -301,7 +304,11 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
     });
   }
   subscribeOutputs(): Stream.Stream<O> {
-    return Stream.fromQueue(this.#outputQueue).pipe(Stream.takeWhile(Option.isSome), Stream.map(Option.getOrThrow));
+    return Stream.suspend(() =>
+      Process.isExited(this.snapshotStatus().state)
+        ? Stream.fromIterable([...this.#outputs])
+        : Stream.fromQueue(this.#outputQueue).pipe(Stream.takeWhile(Option.isSome), Stream.map(Option.getOrThrow)),
+    );
   }
   pushEphemeral(event: Trace.Message): void {
     this.#ephemeralBuffer.push(event);
@@ -659,6 +666,7 @@ export class Impl<I, O, R> implements Process.Handle<I, O, any> {
   requestSubmitOutput(output: O): void {
     log('lifecycle: submit output', { pid: this.pid });
     this.#outputCount++;
+    this.#outputs.push(output);
     this.#onStatusChanged?.();
     Queue.offerUnsafe(this.#outputQueue, Option.some(output));
   }
