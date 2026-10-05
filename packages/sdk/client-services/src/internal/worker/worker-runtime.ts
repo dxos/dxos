@@ -7,11 +7,9 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Reactivity from 'effect/reactivity/Reactivity';
 import type * as RpcClient from 'effect/rpc/RpcClient';
 import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Scope from 'effect/Scope';
-import type * as SqlClient from 'effect/sql/SqlClient';
 
 import { Trigger } from '@dxos/async';
 import { PROXY_CONNECTION_TIMEOUT, makeRtcServiceClientOverProtocol } from '@dxos/client-protocol';
