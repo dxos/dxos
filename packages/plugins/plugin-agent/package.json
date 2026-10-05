@@ -1,7 +1,7 @@
 {
   "name": "@dxos/plugin-agent",
   "version": "0.11.1",
-  "description": "Autonomous agents that converse from Discord threads and Composer chats.",
+  "description": "Autonomous agents that converse in channels (Discord, freeq, local feeds) and Composer chats.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -73,6 +73,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AgentChannels": {
+      "source": "./src/types/AgentChannels.ts",
+      "types": "./dist/types/src/types/AgentChannels.d.ts",
+      "import": "./dist/lib/AgentChannels.mjs"
+    },
     "./AgentOperation": {
       "source": "./src/types/AgentOperation.ts",
       "types": "./dist/types/src/types/AgentOperation.d.ts",
@@ -97,16 +102,6 @@
       "source": "./src/types/ChatParticipant.ts",
       "types": "./dist/types/src/types/ChatParticipant.d.ts",
       "import": "./dist/lib/ChatParticipant.mjs"
-    },
-    "./DiscordBinding": {
-      "source": "./src/types/DiscordBinding.ts",
-      "types": "./dist/types/src/types/DiscordBinding.d.ts",
-      "import": "./dist/lib/DiscordBinding.mjs"
-    },
-    "./DiscordOperation": {
-      "source": "./src/types/DiscordOperation.ts",
-      "types": "./dist/types/src/types/DiscordOperation.d.ts",
-      "import": "./dist/lib/DiscordOperation.mjs"
     },
     "./FactEntry": {
       "source": "./src/types/FactEntry.ts",
@@ -183,6 +178,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "AgentChannels": [
+        "dist/types/src/types/AgentChannels.d.ts"
+      ],
       "AgentOperation": [
         "dist/types/src/types/AgentOperation.d.ts"
       ],
@@ -194,12 +192,6 @@
       ],
       "ChatParticipant": [
         "dist/types/src/types/ChatParticipant.d.ts"
-      ],
-      "DiscordBinding": [
-        "dist/types/src/types/DiscordBinding.d.ts"
-      ],
-      "DiscordOperation": [
-        "dist/types/src/types/DiscordOperation.d.ts"
       ],
       "FactEntry": [
         "dist/types/src/types/FactEntry.d.ts"
@@ -244,32 +236,25 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/link": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/react-hooks": "workspace:*",
+    "@dxos/plugin-thread": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",

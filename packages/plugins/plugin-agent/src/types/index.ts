@@ -2,10 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+export * as AgentChannels from './AgentChannels.ts';
 export * as AgentOperation from './AgentOperation.ts';
 export * as ChatParticipant from './ChatParticipant.ts';
-export * as DiscordBinding from './DiscordBinding.ts';
-export * as DiscordOperation from './DiscordOperation.ts';
 export * as FactEntry from './FactEntry.ts';
 export * as Goal from './Goal.ts';
 export * as Memory from './Memory.ts';

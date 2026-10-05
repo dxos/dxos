@@ -23,7 +23,8 @@ const handler: Operation.WithHandler<typeof RelayOperation.CreateRelay> = RelayO
       recipient: recipientRef,
       requester: requesterRef,
       message,
-      replyChannelId,
+      replyChannel,
+      replyThread,
       dueInHours,
     }) {
       const text = message.trim();
@@ -59,7 +60,8 @@ const handler: Operation.WithHandler<typeof RelayOperation.CreateRelay> = RelayO
           task: Ref.make(task),
           recipient: Ref.make(recipient),
           requester: requesterObject ? Ref.make(requesterObject) : undefined,
-          replyChannelId,
+          replyChannel,
+          replyThread,
           message: text,
           dueAt: dueInHours !== undefined ? new Date(Date.now() + dueInHours * 3_600_000).toISOString() : undefined,
         }),

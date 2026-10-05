@@ -6,17 +6,17 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { DiscordBinding, Goal, Memory } from '#types';
+import { AgentChannels, Goal, Memory } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(DiscordBinding.DiscordBinding)]: {
-        'typename.label': 'Discord binding',
-        'typename.label_zero': 'Discord bindings',
-        'typename.label_one': 'Discord binding',
-        'typename.label_other': 'Discord bindings',
-        'object-name.placeholder': 'New Discord binding',
+      [Type.getTypename(AgentChannels.AgentChannels)]: {
+        'typename.label': 'Agent channels',
+        'typename.label_zero': 'Agent channels',
+        'typename.label_one': 'Agent channels',
+        'typename.label_other': 'Agent channels',
+        'object-name.placeholder': 'New agent channels',
       },
       [Type.getTypename(Memory.Memory)]: {
         'typename.label': 'Memory',
@@ -35,33 +35,16 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Agent',
         'conversations.heading': 'Conversations',
-        'conversations-empty.message': 'No Discord threads yet.',
-        'conversation-untitled.label': 'Untitled thread',
+        'conversations-empty.message': 'No channel conversations yet.',
+        'conversation-untitled.label': 'Untitled conversation',
         'skills.heading': 'Skills',
         'skills-empty.message': 'No skills bound.',
         'skill-compiled.label': 'Built-in',
         'skill-customized.label': 'Customized — open to edit its instructions',
         'skill-customize.label': 'Customize',
         'skill-reset.label': 'Reset to built-in',
-        'discord-binding.label': 'Discord',
-        'discord-binding.description': 'Connect the agent to a Discord bot.',
-        'discord-bot-actions.label': 'Discord bot',
-        'discord-bot-start.label': 'Start bot',
-        'discord-bot-restart.label': 'Restart bot',
-        'discord-bot-stop.label': 'Stop bot',
-        'discord-bot-refresh.label': 'Refresh status',
-        'discord-bot-unreachable.label': 'Could not reach EDGE',
-        'discord-bot-other-binding.label': 'Running another binding',
-        'discord-bot-other-binding.message': 'This bot is running a different binding. Press Start to apply this one.',
-        'discord-bot-threads.label_zero': 'No threads',
-        'discord-bot-threads.label_one': '{{count}} thread',
-        'discord-bot-threads.label_other': '{{count}} threads',
-        'discord-gateway-checking.label': 'Checking bot status',
-        'discord-gateway-idle.label': 'Stopped',
-        'discord-gateway-connecting.label': 'Connecting',
-        'discord-gateway-ready.label': 'Connected',
-        'discord-gateway-closed.label': 'Disconnected',
-        'discord-gateway-failed.label': 'Failed',
+        'channels.label': 'Channels',
+        'channels.description': 'Where the agent converses: pick channels; each backend shows its own settings below.',
         'create-agent.label': 'Add agent',
         'new-agent.name': 'New agent',
         'profile-graph-empty.message': 'Nothing recorded yet.',

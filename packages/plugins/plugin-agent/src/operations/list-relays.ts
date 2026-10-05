@@ -28,7 +28,8 @@ const handler: Operation.WithHandler<typeof RelayOperation.ListRelays> = RelayOp
             status: relay.status,
             dueAt: relay.dueAt,
             overdue: Relay.isOverdue(relay, now),
-            replyChannelId: relay.replyChannelId,
+            replyChannel: relay.replyChannel,
+            replyThread: relay.replyThread,
             outcome: relay.outcome,
           })),
       };

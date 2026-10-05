@@ -12,8 +12,8 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
+import { Channel } from '@dxos/types';
 
-import * as DiscordBinding from './DiscordBinding.ts';
 import * as FactEntry from './FactEntry.ts';
 
 /** Creates an agent (instructions, feed and companion chat) in the space. */
@@ -21,7 +21,8 @@ export const CreateAgent = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.create'),
     name: 'Create agent',
-    description: 'Creates an autonomous agent that converses with people from Discord threads and Composer chats.',
+    description:
+      'Creates an autonomous agent that converses with people in channels (e.g. Discord) and Composer chats.',
     icon: 'ph--chats-circle--regular',
   },
   services: [Database.Service],
@@ -37,27 +38,27 @@ export const CreateAgent = Operation.make({
 });
 
 /**
- * Maps a Discord thread to the agent's chat for it, creating the chat on first contact.
- * Idempotent on `(agent, source, threadId)`: the chat carries the thread id as an `Obj.Meta` foreign key.
+ * Maps a conversation — a channel, or a thread inside one (a Discord thread or DM) — to the agent's
+ * chat for it, creating the chat on first contact. Idempotent on `(agent, channel, thread)`: the chat
+ * carries `AgentChannels.chatKey` as an `Obj.Meta` foreign key.
  */
-export const EnsureThreadChat = Operation.make({
+export const EnsureChannelChat = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.agent.ensureThreadChat'),
-    name: 'Ensure thread chat',
-    description: 'Returns the chat that mirrors a Discord thread for the agent, creating it if absent.',
+    key: DXN.make('org.dxos.operation.agent.ensureChannelChat'),
+    name: 'Ensure channel chat',
+    description: 'Returns the chat that mirrors a channel conversation for the agent, creating it if absent.',
     icon: 'ph--chat-circle-dots--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
-    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that converses in the thread.' }),
-    threadId: Schema.String.annotate({ description: 'The Discord thread id.' }),
-    title: Schema.optional(Schema.String.annotate({ description: 'The thread title; names a new chat.' })),
-    channelId: Schema.optional(Schema.String.annotate({ description: 'The Discord channel the thread belongs to.' })),
-    source: Schema.optional(
-      DiscordBinding.ThreadSource.annotate({
-        description: "'discord.com' for a guild thread (default), 'discord.com/dm' for a DM channel id.",
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that converses in the channel.' }),
+    channel: Ref.Ref(Channel.Channel).annotate({ description: 'The channel the conversation is in.' }),
+    thread: Schema.optional(
+      Schema.String.annotate({
+        description: 'A backend-scoped thread id inside the channel (a Discord thread or DM).',
       }),
     ),
+    title: Schema.optional(Schema.String.annotate({ description: 'The conversation title; names a new chat.' })),
   }),
   output: Schema.Struct({
     chat: Ref.Ref(Chat.Chat),
@@ -119,7 +120,7 @@ export const ListSkills = Operation.make({
 
 /**
  * Forks a plugin skill into an editable space Skill owned by the agent and rebinds the agent's chats
- * (primary and Discord threads) to it, so editing its instructions retunes the agent without a rebuild.
+ * (primary and channel conversations) to it, so editing its instructions retunes the agent without a rebuild.
  * Idempotent: an existing copy is returned.
  */
 export const CustomizeSkill = Operation.make({

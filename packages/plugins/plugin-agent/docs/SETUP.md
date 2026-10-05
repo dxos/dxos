@@ -47,8 +47,11 @@ dxos version edge's catalog pins with newer local builds and fails to bundle.
    node scripts/link-packages.mjs <dxos> --all --install
    ```
 
-3. In `<edge>/packages/services/operation-service/src/registry.ts`, add
-   `AgentPlugin.make()` to `PLUGINS` (import `@dxos/plugin-agent/AgentPlugin`).
+3. In `<edge>/packages/services/operation-service/src/registry.ts`, add `ThreadPlugin.make()`,
+   `DiscordPlugin.make()` and `AgentPlugin.make()` to `PLUGINS` (imports
+   `@dxos/plugin-thread/ThreadPlugin`, `@dxos/plugin-discord/DiscordPlugin`,
+   `@dxos/plugin-agent/AgentPlugin`). plugin-agent depends on plugin-thread, whose operations carry
+   the agent's posts, and plugin-discord provides the Discord channel backend they dispatch to.
 
 Never commit the `file:` overrides or the registry edit; undo them with
 `git checkout -- package.json pnpm-lock.yaml packages/services/operation-service/src/registry.ts && pnpm install`.
@@ -89,7 +92,11 @@ If wrangler reports an expired login and your shell has `CLOUDFLARE_API_TOKEN` s
 `env -u CLOUDFLARE_API_TOKEN npx wrangler login`.
 
 Check that the agent's operations are registered: operation-service should list the
-`org.dxos.operation.agent.*` keys (`ensureThreadChat` among them).
+`org.dxos.operation.agent.*` keys (`ensureChannelChat` among them).
+
+> Until edge step 4 lands, the bot still reads a `DiscordBinding` and calls `ensureThreadChat`, which
+> plugin-agent no longer has; Start works, but messages do not reach the agent. Use an edge branch
+> with step 4, or a dxos commit before the channel switch, for an end-to-end run.
 
 ## 4. Start Composer against local EDGE
 
@@ -101,14 +108,17 @@ DX_EDGE_BASE_URL=http://localhost:8787 moon run composer-app:serve -- --port 528
 
 Then, in Composer at `http://localhost:5282`:
 
-1. **Settings → Plugins**: enable **Agent** and **Discord**.
+1. **Settings → Plugins**: enable **Agent**, **Threads** and **Discord**.
 2. Connect Discord in the space's integrations by pasting the bot token. This creates the
-   `AccessToken` object the binding refers to (EDGE uses `DISCORD_BOT_TOKEN_DEV` when set).
-3. **Assistant → Agents → +** to create an agent.
-4. Open the agent → **Activity** companion → **Discord**: pick the bot token, enter the
-   **Application ID** and the **channel ID**, and **Save**.
-5. **Start bot** in the companion's toolbar: the status (polled every 5 s) should read **Connected**.
-   Otherwise `lastError` says why (the watchdog retries every 30 s).
+   `AccessToken` object the Discord channel refers to (EDGE uses `DISCORD_BOT_TOKEN_DEV` when set).
+3. Create a **channel** with the **Discord** backend: pick the bot token, enter the **Application ID**
+   and the Discord **channel ID**. This is plugin-discord's `DiscordChannel` config on a `Channel`.
+4. **Assistant → Agents → +** to create an agent.
+5. Open the agent → **Activity** companion → **Channels**: pick the Discord channel. Its bot settings
+   appear below the picker.
+6. **Start bot** in the channel's toolbar: the status (polled every 5 s) should read **Connected**.
+   Otherwise the banner says why (the watchdog retries every 30 s). The same controls are on the
+   channel's own properties panel.
 
 ## 5. Test
 
@@ -116,20 +126,20 @@ Then, in Composer at `http://localhost:5282`:
    on the message and replies in it.
 2. Answer a few questions; confirm the goals it reads back.
 3. In Composer:
-   - the agent's **Activity** companion lists that thread under **Conversations**; click it to open the chat;
+   - the agent's **Activity** companion lists that conversation under **Conversations**; click it to open the chat;
    - your **Person** properties list your goals (proposed, then confirmed) and memories;
    - a profile document exists for you.
 4. In the agent's own Composer chat, ask what it knows about you; it reads the same objects.
 
 ## Troubleshooting
 
-| Symptom                            | Check                                                                                                                                                                                                                                                                                                                                                                |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Start returns 401/403              | Local EDGE may not accept a fresh identity. For a test, set `"EDGE_CONFIG": { "functions": { "noAuth": true } }` in the local-only block of `compute-service/wrangler.jsonc` (never commit) and `curl -X PUT localhost:8787/compute/discord/bots/<appId> -H 'content-type: application/json' -d '{"spaceId":"<spaceId>","binding":"echo://<spaceId>/<bindingId>"}'`. |
-| Gateway not `ready`                | `GET localhost:8787/compute/discord/bots/<appId>` → `lastError`; usually a bad token or the Message Content intent is off.                                                                                                                                                                                                                                           |
-| No reply in the thread             | Tail compute-service (the bot) and operation-service (the agent's tools); confirm `ensureThreadChat` is registered and the AI key was written by `pnpm dev:env`.                                                                                                                                                                                                     |
-| Bundle errors in operation-service | A package lacks `dist/` or the link mixes versions: rebuild `<dxos>` and re-link with `--all`.                                                                                                                                                                                                                                                                       |
-| Start/Stop do nothing in Composer  | The bot operations are browser-only; check the plugin is enabled and the page is on the local EDGE (`DX_EDGE_BASE_URL`).                                                                                                                                                                                                                                             |
+| Symptom                            | Check                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Start returns 401/403              | Local EDGE may not accept a fresh identity. For a test, set `"EDGE_CONFIG": { "functions": { "noAuth": true } }` in the local-only block of `compute-service/wrangler.jsonc` (never commit) and `curl -X PUT localhost:8787/compute/discord/bots/<appId> -H 'content-type: application/json' -d '{"spaceId":"<spaceId>","binding":"echo://<spaceId>/<configId>","channel":"echo://<spaceId>/<channelId>"}'`. |
+| Gateway not `ready`                | `GET localhost:8787/compute/discord/bots/<appId>` → `lastError`; usually a bad token or the Message Content intent is off.                                                                                                                                                                                                                                                                                   |
+| No reply in the thread             | Tail compute-service (the bot) and operation-service (the agent's tools); confirm `ensureChannelChat` is registered and the AI key was written by `pnpm dev:env`.                                                                                                                                                                                                                                            |
+| Bundle errors in operation-service | A package lacks `dist/` or the link mixes versions: rebuild `<dxos>` and re-link with `--all`.                                                                                                                                                                                                                                                                                                               |
+| Start/Stop do nothing in Composer  | Starting the bot needs the app's client; check plugin-discord and plugin-thread are enabled and the page is on the local EDGE (`DX_EDGE_BASE_URL`).                                                                                                                                                                                                                                                          |
 
 ## Without Discord or a model key
 

@@ -37,8 +37,8 @@ agents".
 - [x] **Backends depend on plugin-thread** — plugin-freeq and plugin-bluesky `dependsOn: ['org.dxos.plugin.thread']` (2ded7e8d518).
 - [x] **Extend `ChannelBackendProvider`** — optional `openDirect`, `threads`, `connection`; generic `sendToChannel`, `openDirect`, `connectChannel`/`disconnectChannel`/`getChannelStatus` operations in plugin-thread.
 - [x] **Discord `ChannelBackend`** — plugin-discord implements it (`send`, `threads`, `openDirect`, `connection` over the EDGE bot routes) on a `DiscordChannel` config and `dependsOn` plugin-thread; takes over the binding form and bot status as the Discord channel's ObjectProperties surface.
-- [ ] **plugin-agent on channels** — `AgentChannels`, `ensureChannelChat`, `Relay.replyChannel`, channel-based `sendMessage`; delete `sendDiscordMessage`, `start/stop/getDiscordBotStatus`, `ensureThreadChat`, `DiscordBinding`.
-- [ ] **EDGE bot passes `Channel` refs** — calls `ensureChannelChat` (edge PR).
+- [x] **plugin-agent on channels** — `AgentChannels`, `ensureChannelChat`, `Relay.replyChannel` (Relay 0.2.0, no migration), channel-based `sendMessage`; deleted `sendDiscordMessage`, `start/stop/getDiscordBotStatus`, `ensureThreadChat`, `DiscordBinding`.
+- [ ] **EDGE bot passes `Channel` refs** — reads the `DiscordChannel` config named by `PUT { binding, channel }`, resolves the agent through `AgentChannels`, calls `ensureChannelChat` (edge PR). Discord messages do not reach the agent until this lands.
 - [ ] **Stories on a feed channel** — the playground exercises the agent through the same capability.
 
 ## Phase 3: durable intent

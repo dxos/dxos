@@ -14,6 +14,7 @@ import * as Goal from '@dxos/plugin-agent/Goal';
 import * as Memory from '@dxos/plugin-agent/Memory';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
@@ -201,7 +202,7 @@ const INTERLOCUTOR = {
 
 const decorators = createDecorators({
   createAgent: INTERLOCUTOR,
-  plugins: [AgentPlugin.make()],
+  plugins: [ThreadPlugin.make(), AgentPlugin.make()],
   types: INTERVIEW_TYPES,
   skills: [INTERVIEW_SKILL_KEY],
   onChatCreated: captureDatabase,
@@ -348,7 +349,7 @@ export const TestInterviewScripted: Story = {
 export const Live: Story = {
   decorators: createDecorators({
     createAgent: INTERLOCUTOR,
-    plugins: [AgentPlugin.make()],
+    plugins: [ThreadPlugin.make(), AgentPlugin.make()],
     types: INTERVIEW_TYPES,
     skills: [INTERVIEW_SKILL_KEY],
     // Set before the first turn so the interview runs on the model it is evaluated on.

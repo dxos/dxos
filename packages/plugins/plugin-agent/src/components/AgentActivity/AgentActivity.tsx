@@ -15,14 +15,11 @@ import {
   type TimestampProps,
   useTranslation,
 } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { type DiscordBinding, type DiscordOperation } from '#types';
-
-import { DiscordBindingForm } from '../DiscordBindingForm/index.ts';
-import { DiscordBotStatus } from '../DiscordBotStatus/index.ts';
+import { AgentChannels } from '#types';
 
 //
 // Root
@@ -30,131 +27,65 @@ import { DiscordBotStatus } from '../DiscordBotStatus/index.ts';
 
 type AgentActivityRootProps = PropsWithChildren<{
   role?: string;
-  /** Scopes the bot toolbar to the host plank's attention; without one the toolbar is always enabled. */
-  attendableId?: string;
-  /** Whether the agent has a saved Discord binding; the bot cannot start without one. */
-  bound?: boolean;
-  running?: boolean;
-  busy?: boolean;
-  onStart?: () => void;
-  onStop?: () => void;
-  onRefresh?: () => void;
 }>;
 
-/** The agent's activity panel: the Discord bot toolbar above a scrolling body. */
-const AgentActivityRoot = ({
-  role,
-  attendableId,
-  bound = false,
-  running = false,
-  busy = false,
-  onStart,
-  onStop,
-  onRefresh,
-  children,
-}: AgentActivityRootProps) => {
-  const menuActions = useMenuBuilder(
-    () =>
-      MenuBuilder.make()
-        .root({ label: ['discord-bot-actions.label', { ns: meta.profile.key }] })
-        .action(
-          'start',
-          {
-            // Reconfigures a running bot, so the label follows the state.
-            label: [running ? 'discord-bot-restart.label' : 'discord-bot-start.label', { ns: meta.profile.key }],
-            icon: running ? 'ph--arrow-clockwise--regular' : 'ph--play--regular',
-            disabled: busy || !bound,
-          },
-          () => onStart?.(),
-        )
-        .action(
-          'stop',
-          {
-            label: ['discord-bot-stop.label', { ns: meta.profile.key }],
-            icon: 'ph--stop--regular',
-            disabled: busy || !bound || !running,
-          },
-          () => onStop?.(),
-        )
-        .action(
-          'refresh',
-          {
-            label: ['discord-bot-refresh.label', { ns: meta.profile.key }],
-            icon: 'ph--arrows-counter-clockwise--regular',
-            disabled: busy || !bound,
-          },
-          () => onRefresh?.(),
-        )
-        .build(),
-    [running, busy, bound, onStart, onStop, onRefresh],
-  );
-
-  return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />
-      </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport asChild>
-            <Container>{children}</Container>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
-  );
-};
+/** The agent's activity panel: its channels, skills and conversations in one scrolling body. */
+const AgentActivityRoot = ({ role, children }: AgentActivityRootProps) => (
+  <Panel.Root role={role}>
+    <Panel.Body asChild>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport asChild>
+          <Container>{children}</Container>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Panel.Body>
+  </Panel.Root>
+);
 
 AgentActivityRoot.displayName = 'AgentActivity.Root';
 
 //
-// Discord
+// Channels
 //
 
-type AgentActivityDiscordProps = {
-  /** Database the bot-token picker queries. */
+type AgentActivityChannelsProps = PropsWithChildren<{
+  /** Database the channel picker queries. */
   db?: Database.Database;
-  values?: Partial<DiscordBinding.Properties>;
-  /** Whether the binding exists; an unsaved binding saves on explicit submit and reports no status. */
-  bound?: boolean;
-  status?: DiscordOperation.BotStatus;
-  /** A failure to reach EDGE. */
-  error?: string;
-  /** Id of the saved binding, to tell this agent's bot from one EDGE runs for another binding. */
-  bindingId?: string;
-  onSave?: (values: DiscordBinding.Properties) => void;
-};
+  values?: Partial<AgentChannels.Properties>;
+  onSave?: (values: AgentChannels.Properties) => void;
+}>;
 
-/** The agent's Discord binding and its bot's gateway status. */
-const AgentActivityDiscord = ({
-  db,
-  values,
-  bound = false,
-  status,
-  error,
-  bindingId,
-  onSave,
-}: AgentActivityDiscordProps) => {
+/**
+ * The channels the agent converses in; children render each channel's backend settings
+ * (e.g. the Discord bot) below the picker.
+ */
+const AgentActivityChannels = ({ db, values, onSave, children }: AgentActivityChannelsProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
     <Flex asChild column gap='sm'>
-      <section aria-label={t('discord-binding.label')}>
-        <DiscordBindingForm
+      <section aria-label={t('channels.label')}>
+        <Form.Root<AgentChannels.Properties>
+          schema={AgentChannels.Properties}
           db={db}
-          label={t('discord-binding.label')}
-          description={t('discord-binding.description')}
           values={values}
-          autoSave={bound}
+          autoSave
           onSave={onSave}
         >
-          {bound && <DiscordBotStatus status={status} error={error} bindingId={bindingId} />}
-        </DiscordBindingForm>
+          <Form.Viewport>
+            <Form.Content>
+              <Form.FieldSet label={t('channels.label')} description={t('channels.description')}>
+                <Form.Fields />
+              </Form.FieldSet>
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+        {children}
       </section>
     </Flex>
   );
 };
 
-AgentActivityDiscord.displayName = 'AgentActivity.Discord';
+AgentActivityChannels.displayName = 'AgentActivity.Channels';
 
 //
 // Skills
@@ -253,7 +184,7 @@ type AgentActivityConversationsProps = PropsWithChildren<{
   ids: readonly string[];
 }>;
 
-/** The agent's conversations bridged from Discord threads; children are {@link AgentActivityConversation} rows. */
+/** The agent's conversations bridged from its channels; children are {@link AgentActivityConversation} rows. */
 const AgentActivityConversations = ({ ids, children }: AgentActivityConversationsProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
@@ -283,19 +214,19 @@ AgentActivityConversations.displayName = 'AgentActivity.Conversations';
 type AgentActivityConversationProps = {
   id: string;
   title?: string;
-  /** When the thread last had a message; absent before its first. */
+  /** When the conversation last had a message; absent before its first. */
   lastActivity?: TimestampProps['date'];
   /** Fixes the instant timestamps are measured against, so stories and tests do not drift. */
   now?: Date;
   onSelect?: (id: string) => void;
 };
 
-/** One Discord thread the agent converses in. */
+/** One channel conversation (a channel, thread or DM) the agent converses in. */
 const AgentActivityConversation = ({ id, title, lastActivity, now, onSelect }: AgentActivityConversationProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
     <Listbox.Item id={id} onClick={() => onSelect?.(id)}>
-      <Listbox.ItemIcon icon='ph--discord-logo--regular' />
+      <Listbox.ItemIcon icon='ph--chat-circle-dots--regular' />
       <Listbox.ItemText>{title || t('conversation-untitled.label')}</Listbox.ItemText>
       {lastActivity !== undefined && (
         <Listbox.ItemDescription>
@@ -314,7 +245,7 @@ AgentActivityConversation.displayName = 'AgentActivity.Conversation';
 
 export const AgentActivity = {
   Root: AgentActivityRoot,
-  Discord: AgentActivityDiscord,
+  Channels: AgentActivityChannels,
   Skills: AgentActivitySkills,
   Skill: AgentActivitySkill,
   Conversations: AgentActivityConversations,
@@ -322,9 +253,9 @@ export const AgentActivity = {
 };
 
 export type {
+  AgentActivityChannelsProps,
   AgentActivityConversationProps,
   AgentActivityConversationsProps,
-  AgentActivityDiscordProps,
   AgentActivityRootProps,
   AgentActivitySkillProps,
   AgentActivitySkillsProps,

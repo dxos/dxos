@@ -11,12 +11,13 @@ export default Config2.make({
     name: 'Agent',
     author: 'DXOS',
     description: trim`
-      Autonomous agents that converse with people from Discord threads and Composer chats.
-      Bind an agent to a Discord bot and each thread becomes a chat the agent replies in.
+      Autonomous agents that converse with people in channels and Composer chats. Give an agent
+      channels — a Discord bot, a freeq room, a local feed — and each conversation in them becomes a
+      chat the agent replies in.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-agent',
     icon: { key: 'ph--chats-circle--regular', hue: 'violet' },
     tags: ['labs', 'assistant'],
-    dependsOn: ['org.dxos.plugin.assistant'],
+    dependsOn: ['org.dxos.plugin.assistant', 'org.dxos.plugin.thread'],
   },
 });

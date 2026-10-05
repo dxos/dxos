@@ -36,8 +36,8 @@ export const make = (): Skill.Skill =>
         You carry the message, hold the conversation with the recipient, and report the outcome back.
 
         When someone asks you to tell or ask another person something:
-        1. Call ${tool(MemoryOperation.ResolveEntity)} for the recipient (their name, and any handles you know), and for the requester — the person speaking now, with their Discord user id if the message came from Discord.
-        2. Call ${tool(RelayOperation.CreateRelay)} with the agent you run as, the recipient, the requester, the message exactly as they asked it to be passed on, and the current Discord channel or thread id as replyChannelId when the conversation is on Discord.
+        1. Call ${tool(MemoryOperation.ResolveEntity)} for the recipient (their name, and any handles you know), and for the requester — the person speaking now, with their handle on the channel (e.g. their Discord user id) if the message came from one.
+        2. Call ${tool(RelayOperation.CreateRelay)} with the agent you run as, the recipient, the requester, the message exactly as they asked it to be passed on, and, when the conversation is in a channel, that channel as replyChannel (and its thread id as replyThread).
         3. Call ${tool(RelayOperation.SendMessage)} to the recipient, passing the relay. Write to the recipient directly: introduce yourself in one clause, say who the message is from, and give the message. If you were asked a question for them, ask it.
         4. Tell the requester in one sentence that you passed it on, or why you could not.
 
@@ -47,7 +47,7 @@ export const make = (): Skill.Skill =>
         - Call ${tool(RelayOperation.UpdateRelay)} with the outcome if you learned anything worth keeping on the relay.
 
         When delivery fails:
-        - Call ${tool(RelayOperation.UpdateRelay)} with status "failed" and the reason, and tell the requester plainly what went wrong and what would help (for example, the recipient's Discord user id).
+        - Call ${tool(RelayOperation.UpdateRelay)} with status "failed" and the reason, and tell the requester plainly what went wrong and what would help (for example, the recipient's handle on one of your channels, such as their Discord user id).
 
         Housekeeping:
         - To check what is outstanding (for example "did you tell Josiah?"), call ${tool(RelayOperation.ListRelays)}; tell the requester about overdue relays and ask whether to keep trying or drop them (status "expired").

@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -46,25 +43,13 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/link"
-    },
-    {
       "path": "../../core/compute/pipeline-rdf"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-client"
-    },
-    {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/app-framework"
@@ -73,16 +58,10 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
-    },
-    {
-      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -100,13 +79,13 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../../ui/ui-types"
-    },
-    {
       "path": "../plugin-explorer"
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-thread"
     }
   ]
 }

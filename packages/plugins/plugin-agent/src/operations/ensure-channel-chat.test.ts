@@ -14,11 +14,13 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { AccessToken } from '@dxos/link';
 import { Text } from '@dxos/schema';
+import { Channel } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { AgentOperation, DiscordBinding, Mode } from '#types';
+import { AgentChannels, AgentOperation, Mode } from '#types';
+
+import { makeTestChannel } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -31,16 +33,16 @@ const TestLayer = AssistantTestLayer({
     Feed.Feed,
     Text.Text,
     Instructions.Instructions,
-    AccessToken.AccessToken,
-    DiscordBinding.DiscordBinding,
+    Channel.Channel,
+    AgentChannels.AgentChannels,
     Mode.Mode,
   ],
   disableLlmMemoization: true,
 });
 
-describe('EnsureThreadChat', () => {
+describe('EnsureChannelChat', () => {
   it.effect(
-    'returns the same chat for the same thread and a new chat for another thread',
+    'returns the same chat for the same conversation and a new chat for another',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, {
@@ -49,22 +51,31 @@ describe('EnsureThreadChat', () => {
         });
         const agent = yield* Database.load(agentRef);
         const primary = yield* Agent.loadChat(agent);
+        const channel = yield* Database.add(makeTestChannel());
+        const channelRef = Ref.make(channel);
         yield* Database.flush();
 
-        const first = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
+        const first = yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
           agent: agentRef,
-          threadId: 'thread-1',
+          channel: channelRef,
+          thread: 'thread-1',
           title: 'Hello',
-          channelId: 'channel-1',
         });
         yield* Database.flush();
-        const again = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
+        const again = yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
           agent: agentRef,
-          threadId: 'thread-1',
+          channel: channelRef,
+          thread: 'thread-1',
         });
-        const other = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
+        const other = yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
           agent: agentRef,
-          threadId: 'thread-2',
+          channel: channelRef,
+          thread: 'thread-2',
+        });
+        // The channel itself (no thread) is a conversation of its own.
+        const whole = yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
+          agent: agentRef,
+          channel: channelRef,
         });
 
         const chat = yield* Database.load(first.chat);
@@ -72,35 +83,19 @@ describe('EnsureThreadChat', () => {
         expect(again.feed.uri).toBe(first.feed.uri);
         expect(other.chat.uri).not.toBe(first.chat.uri);
         expect(other.feed.uri).not.toBe(first.feed.uri);
+        expect(whole.chat.uri).not.toBe(first.chat.uri);
         expect(primary?.id).toBeDefined();
         expect(chat.id).not.toBe(primary?.id);
 
         expect(chat.name).toBe('Hello');
         expect(Obj.getParent(chat)?.id).toBe(agent.id);
         expect(chat.instructions?.uri).toBe(agent.instructions.uri);
-        expect(chat.feed.uri).toBe(first.feed.uri);
-        expect(Obj.getMeta(chat).keys).toEqual([
-          { source: DiscordBinding.DISCORD_SOURCE, id: 'thread-1' },
-          { source: DiscordBinding.DISCORD_CHANNEL_SOURCE, id: 'channel-1' },
-        ]);
+        expect(Obj.getMeta(chat).keys).toEqual([AgentChannels.chatKey(channel.id, 'thread-1')]);
+        expect(AgentChannels.conversationOf(chat)).toEqual({ channelId: channel.id, thread: 'thread-1' });
+        expect(AgentChannels.conversationOf(yield* Database.load(whole.chat))).toEqual({ channelId: channel.id });
 
-        // A DM channel is keyed by its own source, so it never collides with a thread of the same id.
-        const dm = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
-          agent: agentRef,
-          threadId: 'thread-1',
-          source: 'discord.com/dm',
-        });
-        yield* Database.flush();
-        const dmAgain = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
-          agent: agentRef,
-          threadId: 'thread-1',
-          source: 'discord.com/dm',
-        });
-        expect(dm.chat.uri).not.toBe(first.chat.uri);
-        expect(dmAgain.chat.uri).toBe(dm.chat.uri);
-        expect(Obj.getMeta(yield* Database.load(dm.chat)).keys).toEqual([
-          { source: DiscordBinding.DISCORD_DM_SOURCE, id: 'thread-1' },
-        ]);
+        // A bridged chat never shadows the agent's primary chat.
+        expect((yield* Agent.loadChat(agent))?.id).toBe(primary?.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -108,20 +103,23 @@ describe('EnsureThreadChat', () => {
   );
 
   it.effect(
-    'keeps threads separate per agent',
+    'keeps conversations separate per agent',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent: first } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'First' });
         const { agent: second } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Second' });
+        const channel = Ref.make(yield* Database.add(makeTestChannel()));
         yield* Database.flush();
 
-        const left = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
+        const left = yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
           agent: first,
-          threadId: 'shared',
+          channel,
+          thread: 'shared',
         });
-        const right = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
+        const right = yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
           agent: second,
-          threadId: 'shared',
+          channel,
+          thread: 'shared',
         });
         expect(right.chat.uri).not.toBe(left.chat.uri);
 
@@ -139,22 +137,20 @@ describe('EnsureThreadChat', () => {
   );
 });
 
-describe('DiscordBinding', () => {
+describe('AgentChannels', () => {
   it.effect(
-    'is parented to its agent and found from it',
+    'is parented to its agent and resolves its channels',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Bot' });
         const agent = yield* Database.load(agentRef);
-        const token = yield* Database.add(AccessToken.make({ source: 'discord.com', token: 'secret' }));
-        const binding = yield* Database.add(
-          DiscordBinding.make({ agent, accessToken: Ref.make(token), applicationId: 'app', channels: ['c1'] }),
-        );
+        const channel = yield* Database.add(makeTestChannel());
+        const list = yield* Database.add(AgentChannels.make({ agent, channels: [channel] }));
         yield* Database.flush();
 
-        expect(Obj.getParent(binding)?.id).toBe(agent.id);
-        const found = yield* DiscordBinding.loadForAgent(agent);
-        expect(found?.id).toBe(binding.id);
+        expect(Obj.getParent(list)?.id).toBe(agent.id);
+        expect((yield* AgentChannels.loadForAgent(agent))?.id).toBe(list.id);
+        expect((yield* AgentChannels.loadChannels(agent)).map(({ id }) => id)).toEqual([channel.id]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

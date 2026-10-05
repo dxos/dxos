@@ -10,17 +10,18 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { type Channel } from '@dxos/types';
 
-import { AgentOperation, DiscordBinding } from '#types';
+import { AgentChannels, AgentOperation } from '#types';
 
-/** Loaded on demand: the context runtime is heavy and only needed when a thread's chat is first created. */
+/** Loaded on demand: the context runtime is heavy and only needed when a conversation's chat is first created. */
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');
 
 type ContextBindings = { skills: Ref.Ref<Skill.Skill>[]; objects: Ref.Ref<Obj.Unknown>[] };
 
 /**
- * The skills and objects bound to the agent's current chat, so a thread runs with the same context
- * as the agent's own conversation; an agent without a chat contributes itself only.
+ * The skills and objects bound to the agent's current chat, so a conversation runs with the same
+ * context as the agent's own chat; an agent without a chat contributes itself only.
  */
 export const loadAgentBindings = (agent: Agent.Agent) =>
   Effect.gen(function* () {
@@ -42,29 +43,26 @@ export const loadAgentBindings = (agent: Agent.Agent) =>
     } satisfies ContextBindings;
   });
 
-export type EnsureThreadChatProps = {
+export type EnsureChannelChatProps = {
   agent: Agent.Agent;
-  threadId: string;
+  channel: Channel.Channel;
+  thread?: string;
   title?: string;
-  channelId?: string;
-  source?: DiscordBinding.ThreadSource;
 };
 
 /**
- * Returns the agent's chat for a Discord thread or DM channel, creating it on first contact.
- * Shared with `sendDiscordMessage`, which records what it posts in the same chat.
+ * Returns the agent's chat for a channel conversation, creating it on first contact.
+ * Shared with `sendMessage`, which records what it posts in the same chat.
  */
-export const ensureThreadChat = Effect.fnUntraced(function* ({
+export const ensureChannelChat = Effect.fnUntraced(function* ({
   agent,
-  threadId,
+  channel,
+  thread,
   title,
-  channelId,
-  source = DiscordBinding.DISCORD_SOURCE,
-}: EnsureThreadChatProps) {
-  // Thread ids are global, but the same thread may be bridged to more than one agent.
-  const existing = yield* Database.query(
-    Query.select(Filter.foreignKeys(Chat.Chat, [DiscordBinding.threadKey(threadId, source)])),
-  ).run;
+}: EnsureChannelChatProps) {
+  const key = AgentChannels.chatKey(channel.id, thread);
+  // The same conversation may be bridged to more than one agent.
+  const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [key]))).run;
   const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
   if (match) {
     return match;
@@ -76,12 +74,7 @@ export const ensureThreadChat = Effect.fnUntraced(function* ({
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(
     Chat.make({
-      [Obj.Meta]: {
-        keys: [
-          DiscordBinding.threadKey(threadId, source),
-          ...(channelId ? [{ source: DiscordBinding.DISCORD_CHANNEL_SOURCE, id: channelId }] : []),
-        ],
-      },
+      [Obj.Meta]: { keys: [key] },
       [Obj.Parent]: agent,
       name: title,
       feed: Ref.make(feed),
@@ -96,11 +89,12 @@ export const ensureThreadChat = Effect.fnUntraced(function* ({
   return chat;
 }, Effect.scoped);
 
-const handler: Operation.WithHandler<typeof AgentOperation.EnsureThreadChat> = AgentOperation.EnsureThreadChat.pipe(
+const handler: Operation.WithHandler<typeof AgentOperation.EnsureChannelChat> = AgentOperation.EnsureChannelChat.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ agent: agentRef, threadId, title, channelId, source }) {
+    Effect.fnUntraced(function* ({ agent: agentRef, channel: channelRef, thread, title }) {
       const agent = yield* Database.load(agentRef);
-      const chat = yield* ensureThreadChat({ agent, threadId, title, channelId, source });
+      const channel = yield* Database.load(channelRef);
+      const chat = yield* ensureChannelChat({ agent, channel, thread, title });
       return { chat: Ref.make(chat), feed: chat.feed };
     }),
   ),

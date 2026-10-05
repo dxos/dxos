@@ -70,8 +70,8 @@ told and the goal is achieved. Tagged `!test`.
   is read into a negative fact that must not fire it; "the indexer PR is up" fires it — Rich's panel
   shows the notification, the goal is achieved and the watch list is empty. `triggers.test.ts` covers
   pattern matching, the registry and the same three turns through real agent processes (scripted model).
-- **Components** — `moon run plugin-agent:test-storybook` renders the `AgentActivity`, `ProfileGraph`
-  and `DiscordBindingForm` stories.
+- **Components** — `moon run plugin-agent:test-storybook` renders the `AgentActivity` and
+  `ProfileGraph` stories; the Discord form and bot status stories live in plugin-discord.
 - **Freezing a regression** — when an eval or a live run finds a bug, record that conversation as a
   memoized test (see the `testing-assistant-conversations` skill) so CI pins the fix without model
   calls.

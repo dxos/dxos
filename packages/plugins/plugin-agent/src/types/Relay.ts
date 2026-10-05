@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Agent from '@dxos/assistant/Agent';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { Person, Task } from '@dxos/types';
+import { Channel, Person, Task } from '@dxos/types';
 
 /** Where a relay is in its life: delivered to the recipient, then reported back to the requester. */
 export const Status = Schema.Literals(['pending', 'delivered', 'reported', 'failed', 'expired']);
@@ -34,15 +34,21 @@ export const taskStatus: Record<Status, Task.Status> = {
  * own `TaskSet`; this object adds who it is for, who asked, and what happened, without changing the
  * shared `Task` schema. Parented to the agent, so it cascades with it.
  */
-export class Relay extends Type.makeObject<Relay>(DXN.make('org.dxos.type.agent.relay', '0.1.0'))(
+export class Relay extends Type.makeObject<Relay>(DXN.make('org.dxos.type.agent.relay', '0.2.0'))(
   Schema.Struct({
     task: Ref.Ref(Task.Task).annotate({ title: 'Task' }),
     recipient: Ref.Ref(Obj.Unknown).annotate({ title: 'Recipient', description: 'The person or organization.' }),
     requester: Schema.optional(Ref.Ref(Person.Person).annotate({ title: 'Requester' })),
-    replyChannelId: Schema.optional(
-      Schema.String.annotate({
+    replyChannel: Schema.optional(
+      Ref.Ref(Channel.Channel).annotate({
         title: 'Reply channel',
-        description: "The requester's Discord channel or thread, where the outcome is reported.",
+        description: "The requester's channel, where the outcome is reported.",
+      }),
+    ),
+    replyThread: Schema.optional(
+      Schema.String.annotate({
+        title: 'Reply thread',
+        description: 'The thread inside the reply channel (a Discord thread or DM), if the request came from one.',
       }),
     ),
     message: Schema.String.annotate({ title: 'Message', description: 'What to tell the recipient.' }),

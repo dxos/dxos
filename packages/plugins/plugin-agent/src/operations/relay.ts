@@ -39,9 +39,3 @@ export const partyName = (party: Person.Person | Organization.Organization): str
   Obj.instanceOf(Person.Person, party)
     ? (party.preferredName ?? party.fullName ?? 'someone')
     : (party.name ?? 'an organization');
-
-/** The person's Discord user id, from their `discord` identity. */
-export const discordUserId = (party: Person.Person | Organization.Organization): string | undefined =>
-  Obj.instanceOf(Person.Person, party)
-    ? party.identities?.find((identity) => identity.label === 'discord')?.value
-    : undefined;

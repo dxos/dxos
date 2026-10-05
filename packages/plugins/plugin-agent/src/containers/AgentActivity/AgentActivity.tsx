@@ -4,104 +4,82 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { type SpaceId } from '@dxos/keys';
-import { useInterval } from '@dxos/react-hooks';
-import { Message } from '@dxos/types';
+import { type Channel, Message } from '@dxos/types';
 
 import { AgentActivity as AgentActivityComponent } from '#components';
-import { AgentOperation, DiscordBinding, DiscordOperation } from '#types';
-
-/** How often the bot status is re-read; the gateway changes state on EDGE without notifying Composer. */
-const STATUS_POLL_MS = 5_000;
+import { AgentChannels, AgentOperation } from '#types';
 
 export type AgentActivityProps = {
   role?: string;
-  attendableId?: string;
   agent: Agent.Agent;
 };
 
-/** The Agent's main article: its Discord binding and bot, and the conversations bridged from Discord threads. */
-export const AgentActivity = ({ role, attendableId, agent }: AgentActivityProps) => {
+/** The Agent's main article: the channels it converses in (with each backend's settings), its skills and its conversations. */
+export const AgentActivity = ({ role, agent }: AgentActivityProps) => {
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(agent);
 
   // Child-of filters rather than `.children()` traversals, which EDGE's query planner cannot run.
-  const bindingFilter = useMemo(
-    () => Filter.and(Filter.type(DiscordBinding.DiscordBinding), Filter.childOf(agent)),
+  const channelsFilter = useMemo(
+    () => Filter.and(Filter.type(AgentChannels.AgentChannels), Filter.childOf(agent)),
     [agent],
   );
   // `Filter.and` widens to the child-of filter's untyped result, so the element type is restated here.
-  const binding: DiscordBinding.DiscordBinding | undefined = useQuery(db, bindingFilter).at(0);
-  const [values] = useObject(binding);
+  const list: AgentChannels.AgentChannels | undefined = useQuery(db, channelsFilter).at(0);
+  const [values] = useObject(list);
 
   const chatFilter = useMemo(() => Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)), [agent]);
   const chats: Chat.Chat[] = useQuery(db, chatFilter);
-  // Thread chats carry their Discord key from creation, so membership alone decides the list; ULID ids sort by age.
-  const threads = useMemo(
+  // Channel chats carry their conversation key from creation, so membership alone decides the list; ULID ids sort by age.
+  const conversations = useMemo(
     () =>
       chats
-        .filter((chat) => Obj.getMeta(chat).keys.some((key) => key.source === DiscordBinding.DISCORD_SOURCE))
+        .filter((chat) => AgentChannels.conversationOf(chat) !== undefined)
         .sort((left, right) => right.id.localeCompare(left.id)),
     [chats],
   );
 
   const handleSave = useCallback(
-    (properties: DiscordBinding.Properties) => {
-      if (binding) {
-        Obj.update(binding, (binding) => {
-          binding.accessToken = properties.accessToken;
-          binding.applicationId = properties.applicationId;
-          binding.guildId = properties.guildId;
-          binding.channels = [...properties.channels];
+    ({ channels }: AgentChannels.Properties) => {
+      if (list) {
+        Obj.update(list, (list) => {
+          list.channels = [...channels];
         });
       } else {
-        db?.add(DiscordBinding.make({ ...properties, agent }));
+        db?.add(AgentChannels.make({ agent, channels }));
       }
     },
-    [db, binding, agent],
+    [db, list, agent],
   );
 
   const handleSelect = useCallback(
     (id: string) => {
-      const chat = threads.find((chat) => chat.id === id);
+      const chat = conversations.find((chat) => chat.id === id);
       if (chat) {
         void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(chat)] });
       }
     },
-    [threads, invokePromise],
+    [conversations, invokePromise],
   );
 
-  const bot = useDiscordBot(binding, db?.spaceId);
   const skills = useAgentSkills(agent);
 
   return (
-    <AgentActivityComponent.Root
-      role={role}
-      attendableId={attendableId}
-      bound={binding !== undefined}
-      running={bot.status?.running}
-      busy={bot.busy}
-      onStart={bot.start}
-      onStop={bot.stop}
-      onRefresh={bot.refresh}
-    >
-      <AgentActivityComponent.Discord
-        db={db}
-        values={values}
-        bound={binding !== undefined}
-        status={bot.status}
-        error={bot.error}
-        bindingId={binding?.id}
-        onSave={handleSave}
-      />
+    <AgentActivityComponent.Root role={role}>
+      <AgentActivityComponent.Channels db={db} values={values ?? { channels: [] }} onSave={handleSave}>
+        {(values?.channels ?? []).map((ref) => (
+          <ChannelSettings key={ref.uri} channel={ref} />
+        ))}
+      </AgentActivityComponent.Channels>
       <AgentActivityComponent.Skills ids={skills.skills.map((skill) => skill.key)}>
         {skills.skills.map(({ key, name, customized }) => (
           <AgentActivityComponent.Skill
@@ -116,13 +94,23 @@ export const AgentActivity = ({ role, attendableId, agent }: AgentActivityProps)
           />
         ))}
       </AgentActivityComponent.Skills>
-      <AgentActivityComponent.Conversations ids={threads.map((chat) => chat.id)}>
-        {threads.map((chat) => (
+      <AgentActivityComponent.Conversations ids={conversations.map((chat) => chat.id)}>
+        {conversations.map((chat) => (
           <ConversationTile key={chat.id} chat={chat} onSelect={handleSelect} />
         ))}
       </AgentActivityComponent.Conversations>
     </AgentActivityComponent.Root>
   );
+};
+
+/** The channel's backend settings, from whichever plugin owns its backend (e.g. the Discord bot). */
+const ChannelSettings = ({ channel: ref }: { channel: Ref.Ref<Channel.Channel> }) => {
+  const channel = useResolveRef(ref);
+  const data = useMemo<AppSurface.ObjectPropertiesData | undefined>(
+    () => (channel ? { subject: channel } : undefined),
+    [channel],
+  );
+  return data ? <Surface.Surface type={AppSurface.ObjectProperties} data={data} /> : null;
 };
 
 AgentActivity.displayName = 'AgentActivity';
@@ -154,65 +142,6 @@ const ConversationTile = ({ chat, onSelect }: ConversationTileProps) => {
   return (
     <AgentActivityComponent.Conversation id={chat.id} title={name} lastActivity={lastActivity} onSelect={onSelect} />
   );
-};
-
-/** Start/stop/refresh for the binding's bot, polling its EDGE gateway status while a binding exists. */
-const useDiscordBot = (binding: DiscordBinding.DiscordBinding | undefined, spaceId: SpaceId | undefined) => {
-  const { invokePromise } = useOperationInvoker();
-  const [status, setStatus] = useState<DiscordOperation.BotStatus>();
-  const [error, setError] = useState<string>();
-  const [busy, setBusy] = useState(false);
-
-  const refresh = useCallback(async () => {
-    if (!binding || !spaceId) {
-      return;
-    }
-
-    const { data, error } = await invokePromise(
-      DiscordOperation.GetBotStatus,
-      { binding: Ref.make(binding) },
-      { spaceId },
-    );
-    setError(error?.message);
-    // A failed poll keeps the last status on screen beside the error.
-    if (data) {
-      setStatus(data.status);
-    }
-  }, [invokePromise, binding, spaceId]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-  useInterval(refresh, STATUS_POLL_MS, [refresh]);
-
-  const start = useCallback(async () => {
-    if (!binding || !spaceId) {
-      return;
-    }
-
-    setBusy(true);
-    const { data, error } = await invokePromise(DiscordOperation.StartBot, { binding: Ref.make(binding) }, { spaceId });
-    setError(error?.message);
-    setStatus(data?.status);
-    setBusy(false);
-  }, [invokePromise, binding, spaceId]);
-
-  const stop = useCallback(async () => {
-    if (!binding || !spaceId) {
-      return;
-    }
-
-    setBusy(true);
-    const { error } = await invokePromise(DiscordOperation.StopBot, { binding: Ref.make(binding) }, { spaceId });
-    if (error) {
-      setError(error.message);
-    } else {
-      await refresh();
-    }
-    setBusy(false);
-  }, [invokePromise, binding, spaceId, refresh]);
-
-  return { status, error, busy, start, stop, refresh };
 };
 
 type ListedSkill = { key: string; name: string; customized: boolean; skill?: Ref.Ref<Skill.Skill> };

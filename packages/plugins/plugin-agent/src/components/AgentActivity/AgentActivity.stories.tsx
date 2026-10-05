@@ -8,7 +8,6 @@ import React, { useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { type DiscordBinding, type DiscordOperation } from '#types';
 
 import { AgentActivity } from './AgentActivity.tsx';
 
@@ -22,12 +21,6 @@ const THREADS: Conversation[] = [
   { id: 'thread-1', title: 'Discord bot on EDGE', lastActivity: '2026-09-28T16:40:00Z' },
 ];
 
-const BINDING: Partial<DiscordBinding.Properties> = {
-  applicationId: '1234567890',
-  guildId: '9988776655',
-  channels: ['1122334455'],
-};
-
 type SkillRow = { id: string; name: string; customized: boolean };
 
 const SKILLS: SkillRow[] = [
@@ -36,18 +29,13 @@ const SKILLS: SkillRow[] = [
 ];
 
 type StoryProps = {
-  bound: boolean;
-  values?: Partial<DiscordBinding.Properties>;
-  status?: DiscordOperation.BotStatus;
-  error?: string;
-  bindingId?: string;
   conversations: Conversation[];
   skills?: SkillRow[];
 };
 
-const DefaultStory = ({ bound, values, status, error, bindingId, conversations, skills = [] }: StoryProps) => (
-  <AgentActivity.Root bound={bound} running={status?.running}>
-    <AgentActivity.Discord bound={bound} values={values} status={status} error={error} bindingId={bindingId} />
+const DefaultStory = ({ conversations, skills = [] }: StoryProps) => (
+  <AgentActivity.Root>
+    <AgentActivity.Channels values={{ channels: [] }} />
     <SkillList initial={skills} />
     <AgentActivity.Conversations ids={conversations.map((conversation) => conversation.id)}>
       {conversations.map((conversation) => (
@@ -92,67 +80,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    bound: true,
-    values: BINDING,
-    status: { running: true, gateway: 'ready', botUserId: '42', threads: THREADS.length },
     conversations: THREADS,
     skills: SKILLS,
   },
 };
 
-export const Skills: Story = {
+export const Empty: Story = {
   args: {
-    bound: false,
-    conversations: [],
-    skills: SKILLS,
-  },
-};
-
-export const NotConfigured: Story = {
-  args: {
-    bound: false,
-    conversations: [],
-  },
-};
-
-export const Failed: Story = {
-  name: 'Error',
-  args: {
-    bound: true,
-    values: BINDING,
-    status: { running: true, gateway: 'failed', threads: 1, lastError: 'Authentication failed (4004).' },
-    error: 'Failed to fetch',
-    conversations: THREADS.slice(2),
-  },
-};
-
-export const Connecting: Story = {
-  args: {
-    bound: true,
-    values: BINDING,
-    status: { running: true, gateway: 'connecting', threads: 0 },
-    conversations: [],
-  },
-};
-
-export const OtherBinding: Story = {
-  args: {
-    bound: true,
-    values: BINDING,
-    bindingId: 'binding-new',
-    status: {
-      running: true,
-      gateway: 'ready',
-      threads: 2,
-      config: {
-        spaceId: 'space',
-        agent: 'echo:///agent-old',
-        applicationId: '1234567890',
-        accessTokenId: 'token',
-        channels: ['1122334455'],
-        binding: 'echo://space/binding-old',
-      },
-    },
     conversations: [],
   },
 };

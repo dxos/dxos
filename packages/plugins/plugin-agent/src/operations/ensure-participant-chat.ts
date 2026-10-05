@@ -13,7 +13,7 @@ import { Person } from '@dxos/types';
 
 import { AgentOperation, ChatParticipant, Mode } from '#types';
 
-import { loadAgentBindings } from './ensure-thread-chat.ts';
+import { loadAgentBindings } from './ensure-channel-chat.ts';
 import { AgentOperationError } from './errors.ts';
 import { BASE_SKILL_KEYS, skillRef } from './modes.ts';
 

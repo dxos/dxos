@@ -6,18 +6,11 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { GoalsSkill } from '#skills';
-import {
-  AgentOperation,
-  DiscordOperation,
-  MemoryOperation,
-  ModeOperation,
-  RelayOperation,
-  TriggerOperation,
-} from '#types';
+import { AgentOperation, MemoryOperation, ModeOperation, RelayOperation, TriggerOperation } from '#types';
 
 export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent.ts'))),
-  AgentOperation.EnsureThreadChat.pipe(Operation.lazyHandler(() => import('./ensure-thread-chat.ts'))),
+  AgentOperation.EnsureChannelChat.pipe(Operation.lazyHandler(() => import('./ensure-channel-chat.ts'))),
   AgentOperation.ListAgents.pipe(Operation.lazyHandler(() => import('./list-agents.ts'))),
   AgentOperation.ListSkills.pipe(Operation.lazyHandler(() => import('./list-skills.ts'))),
   AgentOperation.CustomizeSkill.pipe(Operation.lazyHandler(() => import('./customize-skill.ts'))),
@@ -41,13 +34,4 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   TriggerOperation.ListTriggers.pipe(Operation.lazyHandler(() => import('./list-triggers.ts'))),
   TriggerOperation.CancelTrigger.pipe(Operation.lazyHandler(() => import('./cancel-trigger.ts'))),
   GoalsSkill.RunTriggers.pipe(Operation.lazyHandler(() => import('./run-triggers.ts'))),
-  // Plain REST with the binding's token, so it runs on EDGE too, unlike the gateway verbs below.
-  DiscordOperation.SendMessage.pipe(Operation.lazyHandler(() => import('./send-discord-message.ts'))),
-]);
-
-/** Calls EDGE as the user, so only hosts that provide `EdgeHttpClientService` (the app) contribute it. */
-export const DiscordOperationHandlerSet = OperationHandlerSet.lazy([
-  DiscordOperation.StartBot.pipe(Operation.lazyHandler(() => import('./start-discord-bot.ts'))),
-  DiscordOperation.StopBot.pipe(Operation.lazyHandler(() => import('./stop-discord-bot.ts'))),
-  DiscordOperation.GetBotStatus.pipe(Operation.lazyHandler(() => import('./get-discord-bot-status.ts'))),
 ]);

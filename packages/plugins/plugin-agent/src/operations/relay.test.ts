@@ -2,42 +2,42 @@
 // Copyright 2026 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, it, vi } from '@effect/vitest';
+import { beforeEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { AccessToken } from '@dxos/link';
-import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
+import { ThreadOperationHandlerSet } from '@dxos/plugin-thread/operations';
 import { Text } from '@dxos/schema';
-import { Message, Organization, Person, Task, TaskSet } from '@dxos/types';
+import { Channel, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, RelaySkill } from '#skills';
-import {
-  AgentOperation,
-  ChatParticipant,
-  DiscordBinding,
-  DiscordOperation,
-  MemoryOperation,
-  Mode,
-  Relay,
-  RelayOperation,
-} from '#types';
+import { AgentChannels, AgentOperation, ChatParticipant, MemoryOperation, Mode, Relay, RelayOperation } from '#types';
 
-import { chunkText } from './discord-rest.ts';
+import { TEST_HANDLE_LABEL, makeChannelCapabilities, makeTestChannel, makeTestChannelBackend } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
+/** Handle the test backend refuses to DM, standing in for a Discord user with closed DMs. */
+const CLOSED_DMS = '300';
+
+const backend = makeTestChannelBackend({ refuse: [CLOSED_DMS] });
+
 const TestLayer = AssistantTestLayer({
-  operationHandlers: AgentOperationHandlerSet,
+  operationHandlers: OperationHandlerSet.merge(AgentOperationHandlerSet, ThreadOperationHandlerSet),
+  // plugin-thread's channel operations resolve the backend from the capability registry.
+  extraServices: Layer.succeed(Capability.Service, makeChannelCapabilities(backend.provider)),
   types: [
     Agent.Agent,
     Chat.Chat,
@@ -50,8 +50,8 @@ const TestLayer = AssistantTestLayer({
     Task.Task,
     TaskSet.TaskSet,
     Message.Message,
-    AccessToken.AccessToken,
-    DiscordBinding.DiscordBinding,
+    Channel.Channel,
+    AgentChannels.AgentChannels,
     Relay.Relay,
     Mode.Mode,
   ],
@@ -59,49 +59,23 @@ const TestLayer = AssistantTestLayer({
   disableLlmMemoization: true,
 });
 
-type Call = { url: string; method?: string; authorization?: string; body: unknown };
-
-/** A fake Discord REST API: answers DM-channel and message posts, or a scripted error. */
-const fakeDiscord = (options: { fail?: { status: number; code?: number; message?: string } } = {}) => {
-  const calls: Call[] = [];
-  let next = 0;
-  const fetch = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-    const url = String(input);
-    const headers = new Headers(init?.headers);
-    calls.push({
-      url,
-      method: init?.method,
-      authorization: headers.get('Authorization') ?? undefined,
-      body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined,
-    });
-    if (options.fail) {
-      return Response.json({ code: options.fail.code, message: options.fail.message }, { status: options.fail.status });
-    }
-    if (url.endsWith('/users/@me/channels')) {
-      return Response.json({ id: 'dm-1', type: 1 });
-    }
-    return Response.json({ id: `message-${++next}` });
-  });
-  return { calls, fetch };
-};
-
-/** An agent bound to a bot with a pasted token. */
-const setupAgent = (token = 'bot-secret') =>
+/** An agent that converses in one channel on the test backend. */
+const setupAgent = (options: { channels?: boolean } = {}) =>
   Effect.gen(function* () {
     const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Concierge' });
     const agent = yield* Database.load(agentRef);
-    const accessToken = yield* Database.add(AccessToken.make({ source: 'discord.com', token }));
-    const binding = yield* Database.add(
-      DiscordBinding.make({ agent, accessToken: Ref.make(accessToken), applicationId: 'app' }),
-    );
+    const channel = yield* Database.add(makeTestChannel());
+    if (options.channels !== false) {
+      yield* Database.add(AgentChannels.make({ agent, channels: [channel] }));
+    }
     yield* Database.flush();
-    return { agent, agentRef, binding };
+    return { agent, agentRef, channel };
   });
 
-const resolve = (name: string, discordId?: string) =>
+const resolve = (name: string, handle?: string) =>
   Operation.invoke(MemoryOperation.ResolveEntity, {
     name,
-    handles: discordId ? [{ label: 'discord', value: discordId }] : undefined,
+    handles: handle ? [{ label: TEST_HANDLE_LABEL, value: handle }] : undefined,
   }).pipe(Effect.map(({ entity }) => entity));
 
 const hoursUntil = (iso: string) => (Date.parse(iso) - Date.now()) / 3_600_000;
@@ -113,127 +87,9 @@ const chatMessages = (chat: Chat.Chat) =>
     return messages.filter((message) => Obj.instanceOf(Message.Message, message));
   });
 
-describe('chunkText', () => {
-  it('splits past the limit on a boundary and keeps short text whole', ({ expect }) => {
-    expect(chunkText('hello')).toEqual(['hello']);
-    const words = Array.from({ length: 50 }, (_, index) => `word${index}`).join(' ');
-    const chunks = chunkText(words, 100);
-    expect(chunks.every((chunk) => chunk.length <= 100)).toBe(true);
-    expect(chunks.join(' ')).toBe(words);
-    expect(chunkText('x'.repeat(250), 100).map((chunk) => chunk.length)).toEqual([100, 100, 50]);
-  });
-});
-
-describe('SendDiscordMessage', () => {
-  let discord: ReturnType<typeof fakeDiscord>;
-  beforeEach(() => {
-    discord = fakeDiscord();
-    vi.stubGlobal('fetch', discord.fetch);
-  });
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it.effect(
-    'opens a DM, posts in chunks without mentions, and records the posts in a DM chat',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const { agent, binding } = yield* setupAgent();
-        const text = `${'a'.repeat(1500)}\n${'b'.repeat(1000)}`;
-        const result = yield* Operation.invoke(DiscordOperation.SendMessage, {
-          binding: Ref.make(binding),
-          userId: 'user-7',
-          text,
-        });
-
-        expect(result).toEqual({ delivered: true, channelId: 'dm-1', messageIds: ['message-1', 'message-2'] });
-        expect(discord.calls.map(({ url, method }) => ({ url, method }))).toEqual([
-          { url: 'https://discord.com/api/v10/users/@me/channels', method: 'POST' },
-          { url: 'https://discord.com/api/v10/channels/dm-1/messages', method: 'POST' },
-          { url: 'https://discord.com/api/v10/channels/dm-1/messages', method: 'POST' },
-        ]);
-        expect(discord.calls[0].authorization).toBe('Bot bot-secret');
-        expect(discord.calls[0].body).toEqual({ recipient_id: 'user-7' });
-        expect(discord.calls[1].body).toEqual({ content: 'a'.repeat(1500), allowed_mentions: { parse: [] } });
-        expect(discord.calls[2].body).toEqual({ content: 'b'.repeat(1000), allowed_mentions: { parse: [] } });
-
-        const { chat: chatRef } = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
-          agent: Ref.make(agent),
-          threadId: 'dm-1',
-          source: 'discord.com/dm',
-        });
-        const chat = yield* Database.load(chatRef);
-        expect(Obj.getMeta(chat).keys).toEqual([{ source: DiscordBinding.DISCORD_DM_SOURCE, id: 'dm-1' }]);
-        const messages = yield* chatMessages(chat);
-        expect(messages.map((message) => message.properties)).toEqual([
-          { discord: { channelId: 'dm-1', messageId: 'message-1' } },
-          { discord: { channelId: 'dm-1', messageId: 'message-2' } },
-        ]);
-        expect(messages.every((message) => message.sender.role === 'assistant')).toBe(true);
-
-        // A DM chat never shadows the agent's primary chat, nor a guild thread with the same id.
-        expect((yield* Agent.loadChat(agent))?.id).not.toBe(chat.id);
-        const { chat: threadRef } = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
-          agent: Ref.make(agent),
-          threadId: 'dm-1',
-        });
-        expect(threadRef.uri).not.toBe(chatRef.uri);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
-    'reports a closed DM (50007) as undelivered and records nothing',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        discord = fakeDiscord({ fail: { status: 403, code: 50007, message: 'Cannot send messages to this user' } });
-        vi.stubGlobal('fetch', discord.fetch);
-        const { binding } = yield* setupAgent();
-        const result = yield* Operation.invoke(DiscordOperation.SendMessage, {
-          binding: Ref.make(binding),
-          channelId: 'channel-1',
-          text: 'hi',
-        });
-        expect(result.delivered).toBe(false);
-        expect(result.reason).toContain('DMs are closed');
-        const chats = yield* Database.query(Filter.type(Chat.Chat)).run;
-        expect(chats.some((chat) => Obj.getMeta(chat).keys.some(({ id }) => id === 'channel-1'))).toBe(false);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
-    'declines a managed token without calling Discord',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const { binding } = yield* setupAgent(MANAGED_ACCESS_TOKEN);
-        const result = yield* Operation.invoke(DiscordOperation.SendMessage, {
-          binding: Ref.make(binding),
-          userId: 'user-7',
-          text: 'hi',
-        });
-        expect(result.delivered).toBe(false);
-        expect(result.reason).toContain('managed');
-        expect(discord.calls).toHaveLength(0);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-});
-
 describe('Relay', () => {
-  let discord: ReturnType<typeof fakeDiscord>;
   beforeEach(() => {
-    discord = fakeDiscord();
-    vi.stubGlobal('fetch', discord.fetch);
-  });
-  afterEach(() => {
-    vi.unstubAllGlobals();
+    backend.posts.length = 0;
   });
 
   it.effect(
@@ -298,7 +154,7 @@ describe('Relay', () => {
         expect(relay.status).toBe('reported');
         expect(task.status).toBe('done');
         expect((yield* chatMessages(richChat)).map(Message.extractText)).toEqual(['Dima says Friday works.']);
-        expect(discord.calls).toHaveLength(0);
+        expect(backend.posts).toHaveLength(0);
 
         const { relays } = yield* Operation.invoke(RelayOperation.ListRelays, { agent: agentRef });
         expect(relays.map(({ status, overdue, message }) => ({ status, overdue, message }))).toEqual([
@@ -311,10 +167,10 @@ describe('Relay', () => {
   );
 
   it.effect(
-    'is delivered by Discord DM and reported in the requester thread',
+    'is delivered by a direct message through a channel and reported in the requester thread',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const { agentRef } = yield* setupAgent();
+        const { agentRef, channel } = yield* setupAgent();
         const rich = yield* resolve('Rich', '100');
         const josiah = yield* resolve('Josiah', '200');
         const { relay: relayRef } = yield* Operation.invoke(RelayOperation.CreateRelay, {
@@ -322,7 +178,8 @@ describe('Relay', () => {
           recipient: josiah,
           requester: rich,
           message: 'Review the PR.',
-          replyChannelId: 'thread-9',
+          replyChannel: Ref.make(channel),
+          replyThread: 'thread-9',
         });
 
         const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
@@ -331,15 +188,25 @@ describe('Relay', () => {
           text: 'Rich asked me to ask you to review the PR.',
           relay: relayRef,
         });
-        expect(delivered).toMatchObject({ delivered: true, via: 'discord' });
-        expect(discord.calls[0].body).toEqual({ recipient_id: '200' });
+        expect(delivered).toMatchObject({ delivered: true, via: 'channel' });
+        expect(backend.posts).toEqual([
+          { channel: channel.id, thread: 'dm-200', text: 'Rich asked me to ask you to review the PR.' },
+        ]);
 
-        // The DM chat now belongs to Josiah, so the next delivery reuses it.
+        // The direct chat now belongs to Josiah and records the post with the backend's receipt.
         expect(delivered.chat).toBeDefined();
         if (delivered.chat) {
           const dmChat = yield* Database.load(delivered.chat);
           expect(ChatParticipant.get(dmChat)).toBe((yield* Database.load(josiah)).id);
+          expect(AgentChannels.conversationOf(dmChat)).toEqual({ channelId: channel.id, thread: 'dm-200' });
+          expect((yield* chatMessages(dmChat)).map((message) => message.properties)).toEqual([
+            { test: { messageId: 'post-1' } },
+          ]);
         }
+
+        // A second delivery reuses Josiah's conversation instead of opening another.
+        yield* Operation.invoke(RelayOperation.SendMessage, { agent: agentRef, recipient: josiah, text: 'Thanks!' });
+        expect(backend.posts.at(-1)).toEqual({ channel: channel.id, thread: 'dm-200', text: 'Thanks!' });
 
         const reported = yield* Operation.invoke(RelayOperation.SendMessage, {
           agent: agentRef,
@@ -347,9 +214,54 @@ describe('Relay', () => {
           text: 'Josiah will review it today.',
           relay: relayRef,
         });
-        expect(reported).toMatchObject({ delivered: true, via: 'discord' });
-        expect(discord.calls.at(-1)?.url).toBe('https://discord.com/api/v10/channels/thread-9/messages');
+        expect(reported).toMatchObject({ delivered: true, via: 'channel' });
+        expect(backend.posts.at(-1)).toEqual({
+          channel: channel.id,
+          thread: 'thread-9',
+          text: 'Josiah will review it today.',
+        });
         expect((yield* Database.load(relayRef)).status).toBe('reported');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    "is not delivered when the backend refuses, with the backend's reason",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agentRef } = yield* setupAgent();
+        const closed = yield* resolve('Closed', CLOSED_DMS);
+        const result = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: closed,
+          text: 'hi',
+        });
+        expect(result.delivered).toBe(false);
+        expect(result.reason).toContain('direct messages are closed');
+        expect(backend.posts).toHaveLength(0);
+        const chats = yield* Database.query(Filter.type(Chat.Chat)).run;
+        expect(chats.some((chat) => AgentChannels.conversationOf(chat)?.thread === `dm-${CLOSED_DMS}`)).toBe(false);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'is not delivered when the agent has no channels',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agentRef } = yield* setupAgent({ channels: false });
+        const josiah = yield* resolve('Josiah', '200');
+        const result = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'hi',
+        });
+        expect(result).toMatchObject({ delivered: false });
+        expect(result.reason).toContain('no channels');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -375,7 +287,7 @@ describe('Relay', () => {
           relay: relayRef,
         });
         expect(result.delivered).toBe(false);
-        expect(result.reason).toContain('no known Discord user id');
+        expect(result.reason).toContain('no known handle');
 
         const { relays } = yield* Operation.invoke(RelayOperation.ListRelays, { agent: agentRef, status: 'pending' });
         expect(relays.map(({ overdue }) => overdue)).toEqual([true]);

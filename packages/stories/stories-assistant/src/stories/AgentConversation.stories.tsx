@@ -15,6 +15,7 @@ import * as Memory from '@dxos/plugin-agent/Memory';
 import * as Mode from '@dxos/plugin-agent/Mode';
 import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { HasSubject, Message, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
@@ -135,7 +136,7 @@ const waitForReply = async (db: Database.Database, participant: Participant, bef
  */
 export const Conversation: Story = {
   decorators: createDecorators({
-    plugins: [AgentPlugin.make()],
+    plugins: [ThreadPlugin.make(), AgentPlugin.make()],
     types: TYPES,
     onReady: async ({ db, invoker }) => {
       storyDb = db;

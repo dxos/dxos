@@ -15,6 +15,7 @@ import * as Memory from '@dxos/plugin-agent/Memory';
 import * as Mode from '@dxos/plugin-agent/Mode';
 import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { HasSubject, Message, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
@@ -94,7 +95,7 @@ const LAYOUT = makeLayout();
  */
 export const Playground: Story = {
   decorators: createDecorators({
-    plugins: [AgentPlugin.make()],
+    plugins: [ThreadPlugin.make(), AgentPlugin.make()],
     types: TYPES,
     onReady: ({ db, invoker }) => setupPlayground({ db, invoker, model: PLAYGROUND_MODEL, read: true }),
   }),
@@ -182,7 +183,7 @@ const panel = async (canvasElement: HTMLElement, participant: string): Promise<H
  */
 export const PlaygroundScripted: Story = {
   decorators: createDecorators({
-    plugins: [AgentPlugin.make()],
+    plugins: [ThreadPlugin.make(), AgentPlugin.make()],
     types: TYPES,
     scripted: makePlaygroundScript(refs),
     onReady: async ({ db, invoker }) => {
@@ -298,7 +299,7 @@ export const PlaygroundScripted: Story = {
  */
 export const Goals: Story = {
   decorators: createDecorators({
-    plugins: [AgentPlugin.make()],
+    plugins: [ThreadPlugin.make(), AgentPlugin.make()],
     types: TYPES,
     onReady: ({ db, invoker }) => setupPlayground({ db, invoker, model: PLAYGROUND_MODEL }),
   }),
@@ -352,7 +353,7 @@ const expectWatches = (canvasElement: HTMLElement, count: number) =>
  */
 export const GoalsScripted: Story = {
   decorators: createDecorators({
-    plugins: [AgentPlugin.make()],
+    plugins: [ThreadPlugin.make(), AgentPlugin.make()],
     types: TYPES,
     scripted: makePlaygroundScript(refs),
     onReady: async ({ db, invoker }) => {

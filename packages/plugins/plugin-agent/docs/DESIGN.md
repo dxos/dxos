@@ -43,15 +43,15 @@ Discord threads and Composer chats see the same knowledge.
 ```
  Composer (browser)                    EDGE (Cloudflare)                                  Discord
  ──────────────────                    ─────────────────                                  ───────
- Agent + DiscordBinding form
-   │ Start ─ startDiscordBot ─ PUT /compute/discord/bots/:appId ─▶ compute-service
+ Agent → AgentChannels → Channel (Discord backend: DiscordChannel config)
+   │ Start ─ thread.connectChannel ─ PUT /compute/discord/bots/:appId ─▶ compute-service
    │   (EdgeHttpClient.request, signed with the user's identity)  ├ edgeAuth + space membership
    │                                                              └▶ DiscordBot DO (one per bot)
-   │                                                                  ├ reads DiscordBinding + AccessToken (DataService)
+   │                                                                  ├ reads the bot config + AccessToken (DataService)
    │                                                                  ├ gateway websocket ◀───────────── MESSAGE_CREATE
    │                                                                  ├ SQLite inbox → alarm drains in order
-   │                                                                  ├ ensureThreadChat ─▶ operation-service
-   │                                                                  │                      (Chat per thread, child of Agent)
+   │                                                                  ├ ensureChannelChat ─▶ operation-service
+   │                                                                  │                      (Chat per conversation, child of Agent)
    │                                                                  ├ spawn AgentProcess + submitInput(AgentInput)
    │                                                                  │     └▶ model + skills → tool calls → ECHO writes
    │                                                                  └ mirror: new assistant Messages ── REST ──▶ thread reply
@@ -62,17 +62,24 @@ Discord threads and Composer chats see the same knowledge.
 ### 1. Setup (Composer)
 
 - `createAgent` makes an `Agent` (instructions, primary chat, the agent-conversation and interview skills).
-- The agent's **Activity** companion carries a `DiscordBinding` form: `{ agent, accessToken, applicationId,
-guildId?, channels }`, parented to the agent. The bot token is an `AccessToken` object.
-- Start / Stop / Refresh invoke `startDiscordBot` / `stopDiscordBot` / `getDiscordBotStatus`, which
-  call `PUT` / `DELETE` / `GET /compute/discord/bots/:appId` through `EdgeHttpClient.request`, a
-  generic call signed with the identity's verifiable presentation. `PUT` sends
-  `{ spaceId, binding: "echo://<space>/<bindingId>" }`; every verb returns `DiscordBotStatus`
-  (`running`, `gateway`, `threads`, `lastError`…), shown under the form and polled every 5 s. The
-  same companion lists the agent's Discord thread chats. These operations are
-  browser-only: they need the user's identity, so the EDGE build of the plugin leaves them out.
+- The agent's **Activity** companion edits its `AgentChannels` (`{ agent, channels: Ref<Channel>[] }`,
+  parented to the agent) with a channel picker, and below it renders each channel's
+  `ObjectProperties` surface. For a Discord-backed channel that is plugin-discord's form over the
+  `DiscordChannel` config (`{ accessToken, applicationId, guildId?, channels }`; the bot token is an
+  `AccessToken` object), the bot status and Start / Stop / Refresh.
+- Start / Stop / Refresh invoke plugin-thread's `connectChannel` / `disconnectChannel` /
+  `getChannelStatus`, which dispatch to the Discord backend's `connection`: `PUT` / `DELETE` / `GET
+/compute/discord/bots/:appId` through `EdgeHttpClient.request`, a generic call signed with the
+  identity's verifiable presentation. `PUT` sends `{ spaceId, binding: "echo://<space>/<configId>",
+channel: "echo://<space>/<channelId>" }`; the status (`running`, gateway state, thread count, last
+  error) is shown under the form and polled every 5 s. The companion lists the agent's channel
+  conversations. Starting needs the user's identity, so it works only in the app.
 
 ### 2. Inbound (Discord → agent)
+
+> Until edge step 4 lands, the EDGE side below still reads a `DiscordBinding` (with its `agent`) and
+> calls `ensureThreadChat`; plugin-agent no longer provides either, so Discord messages do not reach
+> the agent in between. Step 4 resolves the agent from the channel and calls `ensureChannelChat`.
 
 1. compute-service routes to the `DiscordBot` Durable Object keyed by application id. It reads the
    binding and the token from the space with DataService (a managed token resolves through KMS) and
@@ -178,10 +185,10 @@ it spawns) runs against, and the browser and EDGE invokers both honour it. What 
    awake; that cost is accepted.
 2. **The agent turn runs on EDGE**, spawned by the DO; hosted agents get tools from operation-service's
    plugin registry.
-3. **One Chat per Discord thread**, created on demand by `ensureThreadChat` and idempotent on the
-   thread id.
-4. **`DiscordBinding` in ECHO is the source of truth** for which bot serves which agent in which
-   channels; the DO caches it.
+3. **One Chat per conversation** (a channel, or a thread or DM inside it), created on demand by
+   `ensureChannelChat` and idempotent on the channel and thread id.
+4. **ECHO is the source of truth** for which bot serves which agent in which channels — the
+   `DiscordChannel` config and the agent's `AgentChannels` — and the DO caches it.
 5. **Replies are mirrored by the DO for the spike** (option A); a tool the agent calls is the target
    (option B).
 6. **`plugin-agent` manages agents**; shared Discord code (dfx client, message mapping) is
@@ -210,19 +217,19 @@ What the shared app changes:
 4. Discord-side work: verification, Message Content intent approval, and an install page in
    Composer.
 
-## Channel-agnostic agents (next milestone)
+## Channel-agnostic agents (steps 1–3 built)
 
 **Goal:** plugin-agent knows nothing about Discord. An agent talks in any conversation a channel
 backend provides — Discord, freeq, Bluesky, the local feed — through plugin-thread's
 `ThreadCapabilities.ChannelBackend`, implemented by each backend plugin. plugin-discord owns
 everything Discord-specific (token, gateway, binding form, bot status).
 
-### Today
+### Before
 
-`ChannelBackendProvider` has `kind`, `label`, `createFields`, `makeConfig`, `subscribe` and `send`
+`ChannelBackendProvider` had `kind`, `label`, `createFields`, `makeConfig`, `subscribe` and `send`
 (plus optional `readOnly`). plugin-thread (local feed), plugin-freeq and plugin-bluesky implement it;
-both of the latter now `dependsOn: ['org.dxos.plugin.thread']`. **plugin-discord implements nothing**;
-plugin-agent talks to Discord itself (`sendDiscordMessage`, the Discord branches of `sendMessage`,
+both of the latter `dependsOn: ['org.dxos.plugin.thread']`. plugin-discord implemented nothing;
+plugin-agent talked to Discord itself (`sendDiscordMessage`, the Discord branches of `sendMessage`,
 `ensureThreadChat`, `start/stop/getDiscordBotStatus`, `DiscordBinding`).
 
 ### Extending `ChannelBackendProvider` (step 1, built)
@@ -285,9 +292,36 @@ channel: <channel URI> }`; until step 4 EDGE still expects a binding with an `ag
 - **UI.** The Channel's `ObjectProperties` surface (kind = Discord) renders the config form, the bot
   status and Start/Stop/Refresh; plugin-agent shows it for each of the agent's channels.
 
-### What moves where
+### plugin-agent on channels (step 3, built)
 
-| Today (plugin-agent)                                                     | After                                                                                                                                            |
+plugin-agent no longer names a backend:
+
+- **`AgentChannels`** (`org.dxos.type.agent.channels@0.1.0`, parented to the agent) lists the
+  `Channel`s the agent converses in; a new object rather than a field on `Agent`, which
+  `@dxos/assistant` owns and which is not channel-aware.
+- **`ensureChannelChat { agent, channel, thread?, title? }`** replaces `ensureThreadChat`. The chat's
+  foreign key is `{ source: 'org.dxos.agent/channel', id: '<channelId>[/<thread>]' }`, so a channel and
+  each thread or DM in it are separate conversations, and thread ids from different backends never
+  collide.
+- **`Relay`** is `0.2.0`: `replyChannel: Ref<Channel>` and `replyThread?: string` replace
+  `replyChannelId`. Relays at `0.1.0` are not migrated (labs plugin; they stop listing).
+- **`sendMessage`** delivers in order: a report to a relay's requester goes to its reply channel and
+  thread; else the person's chat (posted through its channel when the chat mirrors one); else the first
+  of the agent's channels whose backend opens a direct conversation. Every post goes through
+  `sendToChannel` and is recorded in that conversation's chat with the receipt's `properties`.
+  Delivery `'discord'` became `'channel'`. A backend without `openDirect` just cannot reach the person
+  through that channel; its typed error becomes part of the reason.
+- **Deleted:** `DiscordBinding`, `DiscordOperation` (`startDiscordBot`, `stopDiscordBot`,
+  `getDiscordBotStatus`, `sendDiscordMessage`), `ensureThreadChat`, `discord-rest.ts`, the Discord
+  components and their tests; the REST and gateway tests moved to plugin-discord.
+- **Instructions** describe a `[<backend> #channel; addressed: …]` header; EDGE still writes
+  `[discord …]`, which matches. RelaySkill asks for `replyChannel`/`replyThread`; ConversationSkill
+  lists `ensureChannelChat`.
+- plugin-agent `dependsOn` plugin-thread, whose operations carry its messages.
+
+### What moved where
+
+| Before (plugin-agent)                                                    | After                                                                                                                                            |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `DiscordBinding` (agent, token, app id, channel ids)                     | plugin-discord's backend config (`makeConfig`) on a `Channel`; plugin-agent keeps a generic `AgentChannels { agent, channels: Ref<Channel>[] }`  |
 | `sendDiscordMessage`                                                     | `channel.sendToChannel { channel, thread?, text }` in plugin-thread, dispatching to the backend's `send` / `threads.send`                        |

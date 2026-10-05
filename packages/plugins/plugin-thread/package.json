@@ -80,6 +80,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
+    },
     "./ChannelBackend": {
       "source": "./src/types/ChannelBackend.ts",
       "types": "./dist/types/src/types/ChannelBackend.d.ts",
@@ -120,6 +125,9 @@
       ],
       "ThreadOperation": [
         "dist/types/src/types/ThreadOperation.d.ts"
+      ],
+      "operations": [
+        "dist/types/src/operations/index.d.ts"
       ]
     }
   },

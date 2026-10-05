@@ -1,12 +1,14 @@
 # @dxos/plugin-agent
 
 Manages autonomous agents in a space: assistant `Agent` objects that talk to people
-from Discord threads and Composer chats.
+in channels (Discord, freeq, local feeds) and Composer chats.
 
-- `DiscordBinding` binds an agent to a Discord bot (access token, application id, guild, channels).
-- `ensureThreadChat` maps a Discord thread to a `Chat` parented to the agent, keyed by the thread id
-  (`Obj.Meta` key `{ source: 'discord.com', id: threadId }`), so repeated calls return the same chat.
-  The EDGE Discord gateway calls it to route thread messages into the agent's conversation.
+- `AgentChannels` lists the `Channel`s an agent converses in. Backends (Discord in plugin-discord)
+  implement plugin-thread's `ChannelBackendProvider`; this plugin reaches them only through
+  plugin-thread's `sendToChannel` / `openDirect` operations.
+- `ensureChannelChat` maps a channel conversation (the channel, or a thread or DM inside it) to a
+  `Chat` parented to the agent, keyed by `{ source: 'org.dxos.agent/channel', id: '<channelId>[/<thread>]' }`,
+  so repeated calls return the same chat.
 - The plugin ships a workerd variant (`./AgentPlugin` resolves without React) so EDGE's
   operation service can host the operations.
 

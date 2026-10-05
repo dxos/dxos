@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Agent.Agent),
         position: Position.first,
         component: AgentActivity,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, attendableId, agent: subject }),
+        props: ({ role, data: { subject } }) => ({ role, agent: subject }),
       }),
       // Appended to the Person/Organization properties panel; plugin-crm contributes no surface there.
       Surface.create({

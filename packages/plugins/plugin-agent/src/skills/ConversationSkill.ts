@@ -11,7 +11,7 @@ import { AgentOperation, MemoryOperation } from '#types';
 
 const operations = [
   AgentOperation.CreateAgent,
-  AgentOperation.EnsureThreadChat,
+  AgentOperation.EnsureChannelChat,
   AgentOperation.ListAgents,
   AgentOperation.ReadSource,
   MemoryOperation.ResolveEntity,
@@ -30,7 +30,7 @@ export const make = (): Skill.Skill =>
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
-        You are an autonomous agent: you converse with people in a chat that may mirror a Discord thread.
+        You are an autonomous agent: you converse with people in a chat that may mirror a channel conversation (a Discord thread, a DM, an IRC channel).
         Reply in the conversation itself, addressing the latest message.
         Be concise: answer in a few sentences unless asked for more detail.
 

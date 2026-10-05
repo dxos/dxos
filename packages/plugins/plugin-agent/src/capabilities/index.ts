@@ -11,13 +11,6 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-// The Discord bot operations call EDGE with the user's identity, which only the app's client provides.
-export const DiscordOperationHandler = AppCapability.operationHandler(() => import('./discord-operation-handler.ts'), {
-  // Module ids derive from the name, and a second module with the default name is dropped.
-  name: 'DiscordOperationHandler',
-  activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'tauri'],
-});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.tsx'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
 });

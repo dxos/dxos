@@ -5,7 +5,7 @@ version: 0.1.0
 ---
 
 Manages autonomous agents in a space: assistant `Agent` objects that converse with
-people from Discord threads and Composer chats, interview them, and keep what they learn as ECHO
+people in channels (Discord, freeq, local feeds) and Composer chats, interview them, and keep what they learn as ECHO
 objects — `Memory` claims and `Goal`s linked to the `Person` or `Organization` they are about.
 
 This document records what is built. Design intent lives in [`docs/DESIGN.md`](./docs/DESIGN.md)
@@ -14,8 +14,10 @@ the interview skill); items there that are not built are listed under "Not built
 specified.
 
 The plugin depends on `org.dxos.plugin.assistant` (which registers `Agent`, `Chat` and `HasSubject`
-and renders the Agent article). It ships a workerd variant with no React surfaces and no Discord
-operations, so EDGE's operation service can host the agent and memory operations.
+and renders the Agent article) and `org.dxos.plugin.thread`, whose channel operations carry every
+message the agent sends outside Composer. It knows no channel backend: Discord lives in
+plugin-discord as a `ChannelBackendProvider`. It ships a workerd variant with no React surfaces, so
+EDGE's operation service can host the agent and memory operations.
 
 ## Extensions
 
@@ -48,44 +50,41 @@ profiles can be written without plugin-crm enabled) and `Markdown.Document` (`@d
 ## Types
 
 ```mdl
-type DiscordBinding
+type AgentChannels
   desc: |
-    Binds an agent to a Discord bot. Typename `org.dxos.type.agent.discordBinding@0.1.0`.
-    Parented to its agent (`Obj.Parent`), so it is deleted with the agent; at most one per agent is
-    expected and `loadForAgent` returns the first child binding. Label: `applicationId`.
+    The channels an agent converses in, whatever their backend. Typename
+    `org.dxos.type.agent.channels@0.1.0`. Parented to its agent (`Obj.Parent`), so it is deleted with
+    the agent; `loadForAgent` returns the first child list and `loadChannels` loads its channels.
+    The backend's own settings (a Discord bot token) live on each channel's config, not here.
   fields:
     agent: Ref<Agent>               # hidden from forms; set once by make()
-    accessToken: Ref<AccessToken>   # "Bot token"
-    applicationId: string           # "Application ID"; also the EDGE route key
-    guildId?: string                # "Server ID"
-    channels: string[]              # Discord channel ids the bot listens in
+    channels: Ref<Channel>[]        # "Channels"
 ```
 
 ```mdl
-type DiscordBinding.Properties
-  desc: The user-editable subset of DiscordBinding (everything but `agent`); the binding form's schema.
+type AgentChannels.Properties
+  desc: The user-editable subset (channels); the Activity companion's channel picker.
   fields:
-    accessToken: Ref<AccessToken>
-    applicationId: string
-    guildId?: string
-    channels: string[]
+    channels: Ref<Channel>[]
 ```
 
 ```mdl
-type GatewayState
-  literals: idle | connecting | ready | closed | failed
-```
-
-```mdl
-type BotStatus
-  desc: Mirrors the EDGE compute-service `DiscordBotStatus`; every bot route answers with one.
+type Relay
+  desc: |
+    The delivery record of a relay. Typename `org.dxos.type.agent.relay@0.2.0` (0.1.0 held a Discord
+    `replyChannelId`; relays at 0.1.0 are not migrated and no longer list). Parented to the agent.
   fields:
-    running: boolean
-    gateway: GatewayState
-    config?: { spaceId: string, agent: string, applicationId: string, accessTokenId: string, channels: string[], binding?: string }
-    botUserId?: string
-    threads: number                 # Discord threads mapped to chats
-    lastError?: string              # why the gateway last failed; EDGE retries on a watchdog
+    task: Ref<Task>
+    recipient: Ref<Obj>
+    requester?: Ref<Person>
+    replyChannel?: Ref<Channel>     # where the requester asked, for the report
+    replyThread?: string            # the thread inside replyChannel (a Discord thread or DM)
+    message: string
+    dueAt: DateTime
+    status: pending | delivered | reported | failed | expired
+    deliveredAt?: DateTime
+    reportedAt?: DateTime
+    outcome?: string
 ```
 
 ```mdl
@@ -151,24 +150,44 @@ op createAgent
 ```
 
 ```mdl
-op ensureThreadChat
-  key: org.dxos.operation.agent.ensureThreadChat
-  desc: Returns the chat mirroring a Discord thread for the agent, creating it on first contact.
+op ensureChannelChat
+  key: org.dxos.operation.agent.ensureChannelChat
+  desc: Returns the chat mirroring a channel conversation (a channel, or a thread or DM in it), creating it on first contact.
   input:
     agent: Ref<Agent>
-    threadId: string
+    channel: Ref<Channel>
+    thread?: string                 # backend-scoped thread id
     title?: string                  # names a new chat
-    channelId?: string
   output: { chat: Ref<Chat>, feed: Ref<Feed> }
   effects: [echo:read, echo:write]
   requires: [Database.Service]
   note: |
-    Idempotent on (agent, threadId): the chat carries `Obj.Meta` keys `{ source: 'discord.com', id:
-    threadId }` and, when given, `{ source: 'discord.com/channel', id: channelId }`; a chat with the
-    thread key parented to another agent is not a match. A new chat is parented to the agent, shares
-    its Instructions, and is bound to the skills and objects of the agent's current chat (an agent
-    with no chat contributes itself), plus the new chat. Called by the EDGE gateway, which lives
-    outside this package.
+    Idempotent on (agent, channel, thread): the chat carries the `Obj.Meta` key
+    `{ source: 'org.dxos.agent/channel', id: '<channelId>' | '<channelId>/<thread>' }`
+    (`AgentChannels.chatKey`); a chat with the key parented to another agent is not a match. A new chat
+    is parented to the agent, shares its Instructions, and is bound to the skills and objects of the
+    agent's current chat (an agent with no chat contributes itself), plus the new chat. Called by
+    sendMessage and, from step 4, by the EDGE gateway.
+```
+
+```mdl
+op sendMessage
+  key: org.dxos.operation.agent.sendMessage
+  desc: Delivers a message to a person through the agent's conversation with them.
+  input:
+    agent: Ref<Agent>
+    recipient: Ref<Obj>
+    text: string
+    relay?: Ref<Relay>
+  output: { delivered: boolean, via?: chat | channel, chat?: Ref<Chat>, reason?: string }
+  requires: [Database.Service]
+  note: |
+    In order: a report to a relay's requester goes to `relay.replyChannel`/`replyThread`; else the
+    recipient's participant chat (appended, or posted through its channel when it mirrors one); else
+    the first of the agent's channels whose backend opens a direct conversation (`openDirect`), which
+    then becomes the person's chat. Posts go through plugin-thread's `sendToChannel` and are recorded
+    in the conversation's chat with the backend's receipt properties. A backend refusal is returned
+    as `{ delivered: false, reason }`.
 ```
 
 ```mdl
@@ -283,51 +302,6 @@ op updateProfile
     otherwise creates a `Markdown.Document` parented to the subject plus a `ProfileOf` relation.
 ```
 
-Discord bot operations (`DiscordOperationHandlerSet`, browser and tauri only — they call EDGE as the
-user through `EdgeHttpClientService`). Every verb addresses `/compute/discord/bots/<applicationId>`.
-
-```mdl
-op startDiscordBot
-  key: org.dxos.operation.agent.startDiscordBot
-  desc: Starts, or reconfigures, the EDGE gateway for the binding's bot.
-  input:
-    binding: Ref<DiscordBinding>
-  output: { status: BotStatus }
-  errors:
-    AgentOperationError: binding has no applicationId; EDGE unreachable; response is not a BotStatus
-  effects: [http]
-  requires: [Database.Service, EdgeHttpClientService]
-  note: PUT with body `{ spaceId, binding: 'echo://<spaceId>/<bindingId>' }`; EDGE reads the rest from the binding.
-```
-
-```mdl
-op stopDiscordBot
-  key: org.dxos.operation.agent.stopDiscordBot
-  desc: Stops the EDGE gateway for the binding's bot; EDGE keeps its config and thread map.
-  input:
-    binding: Ref<DiscordBinding>
-  output: {}
-  errors:
-    AgentOperationError: as startDiscordBot
-  effects: [http]
-  requires: [Database.Service, EdgeHttpClientService]
-  note: DELETE.
-```
-
-```mdl
-op getDiscordBotStatus
-  key: org.dxos.operation.agent.getDiscordBotStatus
-  desc: Reports the EDGE gateway status of the binding's bot.
-  input:
-    binding: Ref<DiscordBinding>
-  output: { status: BotStatus }
-  errors:
-    AgentOperationError: as startDiscordBot
-  effects: [http]
-  requires: [Database.Service, EdgeHttpClientService]
-  note: GET.
-```
-
 ## Skills
 
 ```mdl
@@ -336,11 +310,11 @@ skill ConversationSkill
   desc: Bound to every autonomous agent's first chat; the conversational role.
   contributes:
     - op:createAgent
-    - op:ensureThreadChat
+    - op:ensureChannelChat
     - op:listAgents
   instructions: >
     Authored in `src/skills/ConversationSkill.ts`: reply in the conversation (which may mirror a
-    Discord thread), address the latest message, be concise.
+    channel conversation), address the latest message, be concise.
 ```
 
 ```mdl
@@ -383,32 +357,6 @@ node AgentsSection
 ## Components
 
 ```mdl
-component DiscordBindingForm
-  desc: Schema form over DiscordBinding.Properties; the token field is a picker over AccessTokens in `db`.
-  props:
-    db?: Database
-    label?: string
-    description?: string
-    values?: Partial<DiscordBinding.Properties>
-    autoSave?: boolean              # true once a binding exists: save on blur, no Save button
-  emits:
-    onSave(values: DiscordBinding.Properties)
-```
-
-```mdl
-component DiscordBotStatus
-  desc: |
-    A banner for the gateway state. With `error` (EDGE unreachable or a bad response): error valence,
-    title "Could not reach EDGE", the message as body. With no status yet: "Checking bot status".
-    Otherwise the gateway label (Stopped | Connecting | Connected | Disconnected | Failed), the thread
-    count ("No threads" / "N threads"), and `lastError` as a second body line, in which case the
-    valence is warning regardless of the gateway state.
-  props:
-    status?: BotStatus
-    error?: string
-```
-
-```mdl
 component ProfileGraph
   desc: |
     Two labelled regions, "Goals" (title; horizon · status) and "Memories" (content; kind · origin ·
@@ -421,28 +369,17 @@ component ProfileGraph
 ```mdl
 component AgentActivity
   desc: |
-    Pure activity panel (components/AgentActivity), a composite of four parts. Root: Panel with an
-    ActionToolbar ("Discord bot") — Start bot (Restart bot while running), Stop bot (disabled unless
-    running) and Refresh status, all disabled while a call is in flight or before a binding exists —
-    over a scrolling body; enabled only while the host plank has attention, or always when no
-    attendableId is given (storybook). Discord: DiscordBindingForm (Save button until a binding
-    exists, auto-save after) and, once bound, DiscordBotStatus. Conversations: a "Conversations"
-    list, or "No Discord threads yet." when empty. Conversation: one row (Discord icon, thread
-    title or "Untitled thread", compact last-activity Timestamp) that emits onSelect.
+    Pure activity panel (components/AgentActivity), a composite. Root: Panel over a scrolling body.
+    Channels: an auto-saving form over AgentChannels.Properties (a picker over the space's Channels)
+    followed by its children (each channel's backend settings). Skills and Skill: the bound skills
+    with customize/reset. Conversations: a "Conversations" list, or "No channel conversations yet."
+    when empty. Conversation: one row (chat icon, title or "Untitled conversation", compact
+    last-activity Timestamp) that emits onSelect.
   props:
-    attendableId?: string
-    bound?: boolean
-    running?: boolean
-    busy?: boolean
-    values?: Partial<DiscordBinding.Properties>
-    status?: BotStatus
-    error?: string
+    values?: Partial<AgentChannels.Properties>
     conversations: { id: string, title?: string, lastActivity?: string }[]
   emits:
-    onStart()
-    onStop()
-    onRefresh()
-    onSave(values: DiscordBinding.Properties)
+    onSave(values: AgentChannels.Properties)
     onSelect(id: string)
 ```
 
@@ -450,24 +387,16 @@ component AgentActivity
 component AgentActivityContainer
   desc: |
     Container (containers/AgentActivity) wiring AgentActivity to the agent. Finds the agent's
-    DiscordBinding and its Chats with child-of queries (`Filter.and(Filter.type(T), Filter.childOf(agent))`,
-    never `.children()` — EDGE cannot run traversals). With no binding, saving adds one parented to the
-    agent (`db.add`, no operation); with one, edits auto-save into it. Lists the chats carrying a
-    `discord.com` meta key (bridged threads), newest first by id; each row subscribes to its own chat
-    name and feed so last activity is the newest message's `created`. Selecting a row opens the chat.
-    Status is fetched on mount and polled every 5s while a binding exists; a failed poll keeps the last
-    status beside the error.
+    AgentChannels and its Chats with child-of queries (`Filter.and(Filter.type(T), Filter.childOf(agent))`,
+    never `.children()` — EDGE cannot run traversals). With no list, saving adds one parented to the
+    agent (`db.add`, no operation); with one, edits auto-save into it. Under the picker, each channel
+    renders the generic `ObjectProperties` surface for the Channel, so its backend plugin shows its
+    settings (plugin-discord: the bot form, status and Start/Stop). Lists the chats carrying an
+    `org.dxos.agent/channel` key, newest first by id; each row subscribes to its own chat name and
+    feed so last activity is the newest message's `created`. Selecting a row opens the chat.
   props:
     agent: Agent
-    attendableId?: string
-  state:
-    status?: BotStatus
-    error?: string
-    busy: boolean
   actions:
-    start() → op:startDiscordBot
-    stop() → op:stopDiscordBot, then op:getDiscordBotStatus
-    refresh() → op:getDiscordBotStatus
     select(chat) → org.dxos.operation.appToolkit.open
 ```
 
@@ -530,33 +459,34 @@ feat F-1: Agents
 ```
 
 ```mdl
-feat F-2: Discord threads
+feat F-2: Channel conversations
 
   req F-2.1:
-    when: op:ensureThreadChat is called twice for the same agent and thread
+    when: op:ensureChannelChat is called twice for the same agent, channel and thread
     then: the same chat and feed are returned
   req F-2.2:
-    when: a new thread arrives
-    then: a new chat is parented to the agent, named after the thread, sharing the agent's Instructions, keyed by thread and channel
-  req F-2.3: The same thread id bridged to two agents yields two chats.
+    when: a new conversation arrives
+    then: a new chat is parented to the agent, named after the conversation, sharing the agent's Instructions, keyed by channel and thread
+  req F-2.3: The same conversation bridged to two agents yields two chats.
+  req F-2.4: A channel and a thread inside it are separate conversations.
 ```
 
 ```mdl
-feat F-3: Discord binding and bot control
+feat F-3: Agent channels and delivery
 
-  req F-3.1: An Agent's Activity companion shows the Discord binding form; the first save creates a binding parented to the agent.
-  req F-3.2: The binding is deleted with its agent and found from it by DiscordBinding.loadForAgent.
-  req F-3.3:
-    when: a binding exists
-    then: the Start/Stop/Refresh toolbar enables, the gateway status banner appears, and the status is polled every 5s
-  req F-3.4: Start PUTs, Stop DELETEs and status GETs `/compute/discord/bots/<applicationId>`; Start sends the space id and the binding URI.
+  req F-3.1: An Agent's Activity companion shows a channel picker; the first save creates an AgentChannels parented to the agent.
+  req F-3.2: The list is deleted with its agent and found from it by AgentChannels.loadForAgent.
+  req F-3.3: Under the picker, each channel shows its backend's ObjectProperties surface (plugin-discord: bot form, status, Start/Stop).
+  req F-3.4:
+    when: op:sendMessage reaches a person with no chat
+    then: the first of the agent's channels whose backend opens a direct conversation posts it, and that conversation becomes the person's chat
   req F-3.5:
-    when: the gateway reports lastError
-    then: the banner shows it, in warning valence
+    when: a relay's requester is reported to
+    then: the report goes to the relay's replyChannel and replyThread first
   req F-3.6:
-    when: EDGE cannot be reached or answers something that is not a BotStatus
-    then: the operation fails and the banner reads "Could not reach EDGE", beside the last status read
-  req F-3.7: The Activity companion lists the agent's Discord thread chats newest first, with title and last activity; selecting one opens the chat.
+    when: the backend refuses, or no channel can reach the person
+    then: op:sendMessage returns delivered false with a reason the agent can relay, and records nothing
+  req F-3.7: The Activity companion lists the agent's channel chats newest first, with title and last activity; selecting one opens the chat.
 ```
 
 ```mdl
@@ -588,20 +518,20 @@ feat F-5: Interview and profile panel
 Derived criteria, each executed by a vitest case or a storybook play function.
 
 ```mdl
-scenario T-1: Thread chats are idempotent per thread   # ensure-thread-chat.test.ts
-  # covers [F-2.1, F-2.2]
-  given: an agent created by op:createAgent
-  when: ensureThreadChat for thread-1 (title Hello, channel-1), again for thread-1, then for thread-2
+scenario T-1: Channel chats are idempotent per conversation   # ensure-channel-chat.test.ts
+  # covers [F-2.1, F-2.2, F-2.4]
+  given: an agent created by op:createAgent and a channel on a test backend
+  when: ensureChannelChat for thread-1 (title Hello), again for thread-1, then for thread-2 and for the channel itself
   then:
-    - both thread-1 calls return the same chat and feed; thread-2 returns another
+    - both thread-1 calls return the same chat and feed; thread-2 and the channel each return another
     - the thread chat is not the agent's first chat, is named Hello and is parented to the agent
-    - it shares the agent's Instructions; its meta keys are the thread key then the channel key
+    - it shares the agent's Instructions; its only meta key is AgentChannels.chatKey(channel, thread-1)
 ```
 
 ```mdl
-scenario T-2: Threads are separate per agent   # ensure-thread-chat.test.ts
+scenario T-2: Conversations are separate per agent   # ensure-channel-chat.test.ts
   # covers [F-2.3, F-1.3]
-  given: agents First and Second
+  given: agents First and Second and one channel
   when: each ensures a chat for thread "shared"
   then:
     - the two chats differ
@@ -609,11 +539,11 @@ scenario T-2: Threads are separate per agent   # ensure-thread-chat.test.ts
 ```
 
 ```mdl
-scenario T-3: Binding belongs to its agent   # ensure-thread-chat.test.ts
+scenario T-3: Channels belong to their agent   # ensure-channel-chat.test.ts
   # covers [F-3.2]
-  given: an agent and an AccessToken
-  when: DiscordBinding.make for the agent is added
-  then: its parent is the agent and DiscordBinding.loadForAgent returns it
+  given: an agent and a channel
+  when: AgentChannels.make for the agent with the channel is added
+  then: its parent is the agent, loadForAgent returns it and loadChannels returns the channel
 ```
 
 ```mdl
@@ -639,19 +569,13 @@ scenario T-5: Invalid memory and goal input is rejected   # interview.test.ts
 ```
 
 ```mdl
-scenario T-6: Start, status and stop address the bot route   # discord-bot.test.ts (mocked EDGE)
-  # covers [F-3.4, F-3.5]
+scenario T-6: Relays travel through channels   # relay.test.ts (test channel backend)
+  # covers [F-3.4, F-3.5, F-3.6]
   then:
-    - start PUTs /compute/discord/bots/app-1 with { spaceId, binding: echo://<space>/<binding> } and returns the status
-    - status GETs the route and returns the gateway's lastError
-    - stop DELETEs the route and returns {}
-```
-
-```mdl
-scenario T-7: A malformed EDGE response fails   # discord-bot.test.ts
-  # covers [F-3.6]
-  when: EDGE answers { unexpected: true }
-  then: getDiscordBotStatus fails
+    - a person with a handle but no chat is reached by a direct thread on the agent's channel, which becomes their chat with the backend's receipt on the recorded message
+    - the report to the requester goes to the relay's replyChannel and replyThread
+    - a refused direct message returns the backend's reason and records no chat
+    - an agent with no channels, or a person with no handle, is not delivered to, with a reason
 ```
 
 ```mdl
@@ -670,9 +594,10 @@ scenario T-8: Scripted interview fills the profile panel
 
 Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does not implement:
 
-- The EDGE gateway Durable Object, the agent turn on EDGE and the `SendDiscordMessage` reply path
-  live outside this package (EDGE repo); this plugin only stores the binding and calls the bot routes.
-- Real per-agent HALO identity, joined spaces, relay tasks, and multiple bindings per agent.
+- The EDGE gateway Durable Object and the agent turn on EDGE live outside this package (EDGE repo).
+  Until edge step 4 the gateway still reads a `DiscordBinding` and calls `ensureThreadChat`, neither of
+  which exists any more, so Discord conversations do not reach the agent.
+- Real per-agent HALO identity and joined spaces.
 - Runtime-assembled memory context at the start of each turn; consolidation (dedupe, promotion of
   inferred memories); editing or retracting memories in the UI (`retracted` exists as a status only).
 - Required provenance: `Memory.source` is optional as built.
@@ -684,29 +609,33 @@ Executable tests. Each step carries a human instruction (`do`) and, where the st
 invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-test QA-1: Create an autonomous agent, bind it to Discord, start the bot
+test QA-1: Create an autonomous agent, give it a Discord channel, start the bot
   desc: |
-    The primary journey: an agent from the Agents section, its Discord binding, and the bot control
-    round-trip to EDGE. Run against a local EDGE with a deliberately invalid bot token, so the gateway
-    cannot connect and the status must carry the gateway's lastError — a "Connected" banner here is a
-    defect, not a pass.
+    The primary journey: an agent from the Agents section, a Discord-backed channel picked as one of
+    its channels, and the bot control round-trip to EDGE through plugin-thread's generic channel
+    operations. Run against a local EDGE with a deliberately invalid bot token, so the gateway cannot
+    connect and the status must carry the gateway's error — a "Connected" banner here is a defect.
   actors: human
-  covers: [F-1.1, F-3.1, F-3.3, F-3.4, F-3.5]
+  covers: [F-1.1, F-3.1, F-3.3]
   status: unverified         # never run against the app
   given:
     - an identity exists
     - space: a space is open and SPACE_READY
-    - plugin-agent is enabled (it is tagged labs) and Composer points at a local EDGE
-    - no Agent named "QA: Interlocutor $runId" and no DiscordBinding with applicationId "qa-app-$runId" exist
-    - binding: the DiscordBinding the human saves in step 3 — resolved by the runner after that step as
-      the one `org.dxos.type.agent.discordBinding` whose applicationId is "qa-app-$runId"; the
-      form writes it with `db.add`, so there is no operation to `capture` it from
+    - plugin-agent and plugin-discord are enabled (both are tagged labs) and Composer points at a local EDGE
+    - no Agent named "QA: Interlocutor $runId" exists
   before:
     - name: Add a bot token
       do: Add an access token with source "discord.com", account "QA: bot $runId" and value "qa-invalid-token".
       invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.accessToken", source: "discord.com", account: "QA: bot $runId", token: "qa-invalid-token" } }
       capture: token
-      expect: the token exists in the space and is offered by the binding form's Bot token picker
+      expect: the token exists in the space
+    - name: Create a Discord channel
+      do: |
+        Create a channel named "QA: discord $runId" with the Discord backend: Bot token "QA: bot $runId",
+        Application ID "qa-app-$runId", channel "qa-channel-$runId".
+      invoke: org.dxos.operation.thread.createChannel { spaceId: $given.space.id, name: "QA: discord $runId", kind: "org.dxos.channel.backend.discord", options: { accessToken: Ref($token.object), applicationId: "qa-app-$runId", channels: ["qa-channel-$runId"] } }
+      capture: channel
+      expect: the channel exists and its properties show the Discord form and a bot status banner
   steps:
     - name: Create the agent
       do: |
@@ -715,70 +644,32 @@ test QA-1: Create an autonomous agent, bind it to Discord, start the bot
       invoke: [op:createAgent] { name: "QA: Interlocutor $runId" }
       capture: agent
       expect: the agent appears under Agents with that name
-      assert: |
-        const { agents } = await composer.invoke('org.dxos.operation.agent.list', {}, { spaceId: $given.space.id });
-        const mine = agents.filter((row) => JSON.stringify(row.agent) === JSON.stringify($agent.agent));
-        return mine.length === 1 && mine[0].name === `QA: Interlocutor ${$runId}` && mine[0].chats === 1;
-      note: |
-        The human path is two gestures (+ then rename) because the section's + passes name ''; the
-        agent path is one operation. `chats === 1` holds because createAgent makes the first chat.
-    - name: Open the agent's Activity companion
-      do: Click the agent in the navtree, then open its Activity companion.
-      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/ai/org.dxos.type.agent/$agent.agent.objectId/~activity"] }
+    - name: Give the agent the channel
+      do: Open the agent's Activity companion and pick "QA: discord $runId" under Channels.
       expect: |
-        the Activity companion shows a disabled "Discord bot" toolbar (Start bot, Stop bot, Refresh
-        status), a "Discord" fieldset ("Connect the agent to a Discord bot.") with Bot token,
-        Application ID, Server ID and Channels and a Save button, and a "Conversations" section reading
-        "No Discord threads yet."
-      assert: return $snapshot.surfaces.some((surface) => surface.id?.includes('agentActivity')) && $stepErrors.length === 0
-      note: If `open` mounts only the article, the runner opens the `activity` companion too.
-    - name: Save a binding
-      do: |
-        Pick "QA: bot $runId" as Bot token, enter Application ID "qa-app-$runId", add channel
-        "qa-channel-$runId", and click Save.
-      expect: |
-        the Save button disappears (the form now auto-saves), the toolbar enables Start bot and Refresh
-        status (Stop bot stays disabled), and a status banner appears below the form
-      note: |
-        NO `invoke` — the container adds the binding with `db.add`, parented to the agent; no operation
-        creates a binding. This step is why the test is `actors: human`.
+        the Discord form, the bot status banner and the Start/Stop/Refresh toolbar appear under the
+        picker, and "Conversations" reads "No channel conversations yet."
+      note: NO `invoke` — the container saves AgentChannels with `db.add`. This step is why the test is `actors: human`.
     - name: Start the bot
       do: Click Start bot.
-      invoke: [op:startDiscordBot] { binding: Ref($given.binding) }
+      invoke: org.dxos.operation.thread.connectChannel { channel: Ref($channel.object) }
       expect: the toolbar is briefly disabled, then the banner shows a gateway state other than Connected
-      assert: return $result.status.gateway !== 'ready' && $stepErrors.length === 0
-      note: |
-        An invocation failure (EDGE not running) is not a pass: the banner then reads "Could not reach
-        EDGE", which means the fixture is wrong, not the plugin — report the step as blocked.
+      assert: return $result.status.state !== 'ready' && $stepErrors.length === 0
+      note: An invocation failure (EDGE not running) means the fixture is wrong — report the step as blocked.
     - name: Read the status
       do: Click Refresh status.
-      invoke: [op:getDiscordBotStatus] { binding: Ref($given.binding) }
-      expect: |
-        the banner title reads "Failed" (or "Connecting" while EDGE retries), it is in warning valence,
-        and its second line shows the gateway's lastError (an authentication failure); it never reads
-        "Connected"
-      assert: |
-        const { status } = $result;
-        return status.gateway !== 'ready'
-          && typeof status.lastError === 'string' && status.lastError.length > 0
-          && status.config?.applicationId === `qa-app-${$runId}`;
-      note: |
-        The applicationId check ties the status to this run's bot; a lastError left on another bot's
-        route by an earlier run cannot satisfy it (Rule 5). If EDGE has not yet failed the handshake,
-        refresh again before judging.
+      invoke: org.dxos.operation.thread.getChannelStatus { channel: Ref($channel.object) }
+      expect: the banner reads "Failed" (or "Connecting" while EDGE retries) and shows the gateway's error; never "Connected"
+      assert: return $result.status.state !== 'ready' && typeof $result.status.error === 'string'
   after:
     - name: Stop the bot
       do: Click Stop bot (if enabled).
-      invoke: [op:stopDiscordBot] { binding: Ref($given.binding) }
+      invoke: org.dxos.operation.thread.disconnectChannel { channel: Ref($channel.object) }
       expect: the banner reads Stopped or Disconnected
-    - name: Delete the agent
-      do: Right-click "QA: Interlocutor $runId" in the navtree and choose Delete agent.
-      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($agent.agent)] }
-      expect: the agent leaves the Agents section; its binding and chats go with it (they are its children)
-    - name: Delete the token
-      do: Remove the "QA: bot $runId" access token.
-      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($token.object)] }
-      expect: no access token with account "QA: bot $runId" remains
+    - name: Delete the agent, channel and token
+      do: Delete "QA: Interlocutor $runId", the "QA: discord $runId" channel and the "QA: bot $runId" token.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($agent.agent), Obj($channel.object), Obj($token.object)] }
+      expect: none of them remains; the agent's channel list and chats go with it (they are its children)
 ```
 
 ```mdl

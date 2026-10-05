@@ -16,18 +16,29 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
+import { Channel } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
 import { AgentOperation, Mode } from '#types';
 
 import { findBound, openBinder } from './agent-skills.ts';
+import { makeTestChannel } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
-  types: [Agent.Agent, Chat.Chat, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions, Mode.Mode],
+  types: [
+    Agent.Agent,
+    Chat.Chat,
+    Skill.Skill,
+    Feed.Feed,
+    Text.Text,
+    Instructions.Instructions,
+    Channel.Channel,
+    Mode.Mode,
+  ],
   skills: [
     ConversationSkill.make(),
     InterviewSkill.make(),
@@ -59,9 +70,10 @@ describe('CustomizeSkill', () => {
         if (!primary) {
           return;
         }
-        const { chat: threadRef } = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
+        const { chat: threadRef } = yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
           agent: agentRef,
-          threadId: 'thread-1',
+          channel: Ref.make(yield* Database.add(makeTestChannel())),
+          thread: 'thread-1',
         });
         const thread = yield* Database.load(threadRef);
         yield* Database.flush();

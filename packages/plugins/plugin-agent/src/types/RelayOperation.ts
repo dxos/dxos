@@ -10,7 +10,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Obj, Ref } from '@dxos/echo';
-import { Task } from '@dxos/types';
+import { Channel, Task } from '@dxos/types';
 
 import * as Relay from './Relay.ts';
 
@@ -31,8 +31,11 @@ export const CreateRelay = Operation.make({
       Ref.Ref(Obj.Unknown).annotate({ description: 'The person who asked (the current speaker, resolved first).' }),
     ),
     message: Schema.String.annotate({ description: 'Exactly what the requester asked to pass on.' }),
-    replyChannelId: Schema.optional(
-      Schema.String.annotate({ description: "The requester's current Discord channel or thread id, for the report." }),
+    replyChannel: Schema.optional(
+      Ref.Ref(Channel.Channel).annotate({ description: "The requester's current channel, for the report." }),
+    ),
+    replyThread: Schema.optional(
+      Schema.String.annotate({ description: "The requester's current thread inside that channel, if any." }),
     ),
     dueInHours: Schema.optional(
       Schema.Number.annotate({ description: `Hours until the relay is overdue (default ${Relay.DEFAULT_DUE_HOURS}).` }),
@@ -74,7 +77,8 @@ export const ListedRelay = Schema.Struct({
   status: Relay.Status,
   dueAt: Format.DateTime,
   overdue: Schema.Boolean,
-  replyChannelId: Schema.optional(Schema.String),
+  replyChannel: Schema.optional(Ref.Ref(Channel.Channel)),
+  replyThread: Schema.optional(Schema.String),
   outcome: Schema.optional(Schema.String),
 });
 
@@ -98,12 +102,14 @@ export const ListRelays = Operation.make({
   }),
 });
 
-export const DeliveryChannel = Schema.Literals(['chat', 'discord']);
+/** `chat`: appended to a Composer chat; `channel`: posted through a channel backend (Discord, freeq, …). */
+export const DeliveryChannel = Schema.Literals(['chat', 'channel']);
 export type DeliveryChannel = Schema.Schema.Type<typeof DeliveryChannel>;
 
 /**
- * Delivers a message to a person through whatever channel the agent has with them: their chat with
- * the agent (see `ChatParticipant`), else a Discord DM. Given a relay, delivery to its recipient
+ * Delivers a message to a person through whatever conversation the agent has with them: their chat with
+ * the agent (see `ChatParticipant`, posted through its channel when it mirrors one), else a direct
+ * message opened through one of the agent's channels. Given a relay, delivery to its recipient
  * marks it `delivered` and delivery to its requester marks it `reported`.
  */
 export const SendMessage = Operation.make({
@@ -111,7 +117,7 @@ export const SendMessage = Operation.make({
     key: DXN.make('org.dxos.operation.agent.sendMessage'),
     name: 'Send message',
     description:
-      "Sends a message to a person through the agent's conversation with them (their chat, else a Discord DM). Pass the relay it belongs to.",
+      "Sends a message to a person through the agent's conversation with them (their chat, else a direct message through one of the agent's channels). Pass the relay it belongs to.",
     icon: 'ph--paper-plane-tilt--regular',
   },
   services: [Database.Service],
