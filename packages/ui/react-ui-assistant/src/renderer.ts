@@ -113,7 +113,7 @@ export const createRenderer = (
     if (delivery) {
       return {
         kind: 'markdown',
-        text: `${text}\n\n<delivery status="${delivery}" id="${escapeAttribute(message.id)}" />`,
+        text: `${text}\n<delivery status="${delivery}" id="${escapeAttribute(message.id)}" />`,
       };
     }
 

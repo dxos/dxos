@@ -18,9 +18,7 @@ describe('createRenderer', () => {
     expect(markdown(render(prompt))).not.toContain('<delivery');
 
     Obj.update(prompt, (prompt) => Annotation.set(prompt, DeliveryAnnotation, 'delivered'));
-    expect(markdown(render(prompt))).toBe(
-      `<prompt>hello</prompt>\n\n<delivery status="delivered" id="${prompt.id}" />`,
-    );
+    expect(markdown(render(prompt))).toBe(`<prompt>hello</prompt>\n<delivery status="delivered" id="${prompt.id}" />`);
   });
 
   test('a run of tool calls is one panel', ({ expect }) => {

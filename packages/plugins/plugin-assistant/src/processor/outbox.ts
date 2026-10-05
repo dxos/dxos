@@ -6,6 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { Obj } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
@@ -33,11 +34,10 @@ export type OutboxEntry = {
 export type OutboxDispatch<T> = (payload: T) => Promise<void>;
 
 /** A dispatch stopped before the prompt reached the agent, by the reader: the prompt is dropped, not failed. */
-export class PromptCancelledError extends Error {
-  constructor() {
-    super('Prompt cancelled before it was sent.');
-  }
-}
+export class PromptCancelledError extends BaseError.extend(
+  'PromptCancelledError',
+  'Prompt cancelled before it was sent.',
+) {}
 
 /**
  * The prompts this client has sent, in submit order.
@@ -58,6 +58,11 @@ export class Outbox<T> {
     private readonly _registry: AtomRegistry.AtomRegistry,
     private readonly _dispatch: OutboxDispatch<T>,
   ) {}
+
+  /** Settles once every dispatch scheduled so far has settled. */
+  get idle(): Promise<void> {
+    return this.#tail;
+  }
 
   get(id: string): OutboxEntry | undefined {
     return this._registry.get(this.entries).find((entry) => entry.id === id);
