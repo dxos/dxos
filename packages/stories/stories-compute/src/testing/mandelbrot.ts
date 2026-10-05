@@ -9,23 +9,40 @@ import * as Operation from '@dxos/compute/Operation';
 
 export const MANDELBROT_PROCESS_KEY = 'org.dxos.stories.compute.mandelbrot';
 
-export const WIDTH = 160;
-export const HEIGHT = 120;
+export const DEFAULT_SIZE = 160;
+export const SIZES = [80, 160, 320] as const;
 
-/** Delay between frames; the process hybernates in between rather than looping. */
+/** Delay between pushed frames. */
 const FRAME_INTERVAL = 1_000;
+
+/** Most frames a process will owe at once, however many are requested. */
+const MAX_CREDITS = 10;
+
+/** A process that receives no request for this long exits, so an abandoned one stops costing anything. */
+const IDLE_TIMEOUT = 30_000;
 
 /** Seahorse valley: detail persists at every zoom depth. */
 const CENTER = { x: -0.743643887037151, y: 0.13182590420533 };
-const INITIAL_SCALE = 3 / WIDTH;
 const ZOOM = 0.7;
+
+/** Grants the process `frames` more frames to push, optionally at a new square resolution. */
+export const MandelbrotInput = Schema.Struct({
+  frames: Schema.Number,
+  size: Schema.optional(Schema.Number),
+});
+
+export type MandelbrotInput = Schema.Schema.Type<typeof MandelbrotInput>;
 
 export const MandelbrotOutput = Schema.Struct({
   /** Zoom depth of the frame. */
   frame: Schema.Number,
-  maxIterations: Schema.Number,
-  /** Escape iteration per pixel, row-major, `WIDTH` x `HEIGHT`. */
-  data: Schema.Array(Schema.Number),
+  /** Width and height in pixels. */
+  size: Schema.Number,
+  /**
+   * Base64 of one byte per pixel, row-major, `size` x `size`: 0 for points inside the set, otherwise
+   * 1-255 by escape speed. Bytes rather than a number array keep a frame small enough to poll from EDGE.
+   */
+  data: Schema.String,
 });
 
 export type MandelbrotOutput = Schema.Schema.Type<typeof MandelbrotOutput>;
@@ -43,36 +60,87 @@ const escapeIterations = (cx: number, cy: number, maxIterations: number): number
   return iteration;
 };
 
-const computeFrame = (frame: number): MandelbrotOutput => {
-  const scale = INITIAL_SCALE * Math.pow(ZOOM, frame);
-  // Deeper frames need more iterations to resolve the boundary.
-  const maxIterations = Math.round(64 + frame * 24);
-  const data: number[] = [];
-  for (let row = 0; row < HEIGHT; row++) {
-    for (let column = 0; column < WIDTH; column++) {
-      data.push(
-        escapeIterations(CENTER.x + (column - WIDTH / 2) * scale, CENTER.y + (row - HEIGHT / 2) * scale, maxIterations),
-      );
-    }
+const toBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
   }
-  return { frame, maxIterations, data };
+  return btoa(binary);
 };
 
+/** Decodes {@link MandelbrotOutput.data} to one intensity byte per pixel. */
+export const decodeFrame = (data: string): Uint8Array => Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
+
+const computeFrame = (frame: number, size: number): MandelbrotOutput => {
+  const scale = (3 / size) * Math.pow(ZOOM, frame);
+  // Deeper frames need more iterations to resolve the boundary.
+  const maxIterations = Math.round(64 + frame * 24);
+  const bytes = new Uint8Array(size * size);
+  for (let row = 0; row < size; row++) {
+    for (let column = 0; column < size; column++) {
+      const iterations = escapeIterations(
+        CENTER.x + (column - size / 2) * scale,
+        CENTER.y + (row - size / 2) * scale,
+        maxIterations,
+      );
+      bytes[row * size + column] =
+        iterations >= maxIterations ? 0 : 1 + Math.floor(254 * Math.sqrt(iterations / maxIterations));
+    }
+  }
+  return { frame, size, data: toBase64(bytes) };
+};
+
+const clampSize = (size: number): number => Math.min(SIZES[SIZES.length - 1], Math.max(SIZES[0], Math.round(size)));
+
 /**
- * Renders an endless Mandelbrot zoom, one frame per alarm every second, until it is terminated.
- * Each frame is scheduled by an alarm, so the process hybernates between frames instead of looping.
+ * Renders a Mandelbrot zoom on credit: each input grants `frames` more frames, which the process pushes
+ * one per {@link FRAME_INTERVAL} and then waits. It never computes more than it was granted (capped at
+ * {@link MAX_CREDITS}), and exits once no request has arrived for {@link IDLE_TIMEOUT}.
  */
 export const MandelbrotProcess = Operation.makeDurable(
-  { key: MANDELBROT_PROCESS_KEY, input: Schema.Void, output: MandelbrotOutput, services: [] },
+  { key: MANDELBROT_PROCESS_KEY, input: MandelbrotInput, output: MandelbrotOutput, services: [] },
   (ctx) =>
     Effect.sync(() => {
       let frame = 0;
+      let credits = 0;
+      let size = DEFAULT_SIZE;
+      let lastRequest = Date.now();
+      let rendering = false;
+
+      // One alarm serves both roles: the next frame while credits remain, otherwise the idle check.
+      const schedule = () => {
+        rendering = credits > 0;
+        return ctx.setAlarm(rendering ? FRAME_INTERVAL : IDLE_TIMEOUT);
+      };
+
       return {
-        onSpawn: () => ctx.setAlarm(0),
+        onSpawn: () => ctx.setAlarm(IDLE_TIMEOUT),
+        onInput: (input) =>
+          Effect.gen(function* () {
+            lastRequest = Date.now();
+            credits = Math.min(MAX_CREDITS, credits + Math.max(0, input.frames));
+            if (input.size !== undefined) {
+              size = clampSize(input.size);
+            }
+            if (!rendering && credits > 0) {
+              rendering = true;
+              yield* ctx.setAlarm(0);
+            }
+          }),
         onAlarm: () =>
           Effect.gen(function* () {
-            ctx.submitOutput(computeFrame(frame++));
-            yield* ctx.setAlarm(FRAME_INTERVAL);
+            if (credits > 0) {
+              credits--;
+              ctx.submitOutput(computeFrame(frame++, size));
+              yield* schedule();
+              return;
+            }
+            const idle = Date.now() - lastRequest;
+            if (idle >= IDLE_TIMEOUT) {
+              ctx.succeed();
+              return;
+            }
+            yield* ctx.setAlarm(IDLE_TIMEOUT - idle);
           }),
       };
     }),

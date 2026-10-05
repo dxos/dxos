@@ -31,7 +31,7 @@ export type ComputeContextValue = {
   ready: boolean;
   items: ProcessItem[];
   error?: string;
-  create: (location: Process.Location) => void;
+  create: (location: Process.Location, size: number) => void;
   /** Drops an ended process's card; the manager itself prunes finished processes. */
   remove: (item: ProcessItem) => void;
 };
@@ -66,7 +66,7 @@ export const ComputeProvider = ({ remote, children }: ComputeProviderProps) => {
   }, [registry, remote, client]);
 
   const create = useCallback(
-    (location: Process.Location) => {
+    (location: Process.Location, size: number) => {
       if (!runtime || !space) {
         return;
       }
@@ -84,7 +84,7 @@ export const ComputeProvider = ({ remote, children }: ComputeProviderProps) => {
         )
         .then((exit) =>
           Exit.match(exit, {
-            onSuccess: (handle) => setItems((prev) => [{ id: handle.pid, location, handle }, ...prev]),
+            onSuccess: (handle) => setItems((prev) => [{ id: handle.pid, location, size, handle }, ...prev]),
             onFailure: (cause) => setError(Cause.pretty(cause)),
           }),
         );
