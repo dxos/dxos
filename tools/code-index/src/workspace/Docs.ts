@@ -59,7 +59,7 @@ export const systemPrompt = (): string =>
     'giving, `display` it — a diagram, a table, or markdown — and only then summarise it in a',
     'sentence. An answer described but never displayed has not been given.',
     '',
-    'Prefer a Mermaid diagram when the answer is a shape (dependencies, layering, a flow) and a',
+    'Prefer a Mermaid flowchart when the answer is a shape (dependencies, layering, a flow) and a',
     'table when it is a list of facts. Explore first with small queries and `print`, then display',
     'the finished result.',
     '',

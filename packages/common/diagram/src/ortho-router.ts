@@ -106,6 +106,19 @@ export type AvoidingRouterOptions = {
   step: number;
 };
 
+/** Paths an avoiding router marked as used, so a later router can replay them; weak, so it holds nothing alive. */
+const marked = new WeakSet<readonly Point[]>();
+
+/** The avoiding router plus a way to replay an earlier route's footprint without searching again. */
+export type AvoidingRouter = Router & {
+  /**
+   * Marks the cells of a path an avoiding router over the same obstacles returned before as used, as
+   * routing it did; a path that marked nothing (a fallback route) marks nothing, so a replayed prefix
+   * leaves the same state.
+   */
+  reserve: (points: readonly Point[]) => void;
+};
+
 /**
  * Creates a router that avoids the given node rects. Stateful across edges: earlier routes
  * penalize (not block) the cells they occupy, spreading parallel runs apart. `fallback` handles
@@ -116,7 +129,7 @@ export const makeAvoidingRouter = (
   obstacles: Rect[],
   fallback: Router,
   { step: STEP }: AvoidingRouterOptions,
-): Router => {
+): AvoidingRouter => {
   const xs = obstacles.flatMap((rect) => [rect.x, rect.x + rect.w]);
   const ys = obstacles.flatMap((rect) => [rect.y, rect.y + rect.h]);
   const bounds = {
@@ -337,7 +350,21 @@ export const makeAvoidingRouter = (
     return { cost: stateCost[found], cells };
   };
 
-  return (edge: RoutedRelation): Point[] => {
+  const markPath = (path: readonly Point[]) => {
+    for (let index = 0; index < path.length - 1; index++) {
+      const a = path[index];
+      const b = path[index + 1];
+      const ax = Math.round(a.x / STEP);
+      const ay = Math.round(a.y / STEP);
+      const steps = Math.max(Math.abs(Math.round(b.x / STEP) - ax), Math.abs(Math.round(b.y / STEP) - ay));
+      const dx = Math.sign(b.x - a.x);
+      const dy = Math.sign(b.y - a.y);
+      for (let step = 0; step <= steps; step++) {
+        markUsed(ax + dx * step, ay + dy * step);
+      }
+    }
+  };
+  const route = (edge: RoutedRelation): Point[] => {
     const { from, to, horizontal, ports } = edge;
     // Flow-axis faces mirror the Z-router (and the port assignment in `emit`).
     const sameLane = horizontal ? from.x === to.x : from.y === to.y;
@@ -476,18 +503,15 @@ export const makeAvoidingRouter = (
     }
 
     // Mark the final path's cells so later edges route (and center) around it.
-    for (let index = 0; index < simplified.length - 1; index++) {
-      const a = simplified[index];
-      const b = simplified[index + 1];
-      const ax = Math.round(a.x / STEP);
-      const ay = Math.round(a.y / STEP);
-      const steps = Math.max(Math.abs(Math.round(b.x / STEP) - ax), Math.abs(Math.round(b.y / STEP) - ay));
-      const dx = Math.sign(b.x - a.x);
-      const dy = Math.sign(b.y - a.y);
-      for (let step = 0; step <= steps; step++) {
-        markUsed(ax + dx * step, ay + dy * step);
-      }
-    }
+    markPath(simplified);
+    marked.add(simplified);
     return simplified;
   };
+
+  const reserve = (points: readonly Point[]) => {
+    if (marked.has(points)) {
+      markPath(points);
+    }
+  };
+  return Object.assign(route, { reserve });
 };

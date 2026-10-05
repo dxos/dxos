@@ -179,14 +179,16 @@
     min-width: 0;
   }
   /* A multi-line frame: `--dx-rows` lines tall at least, growing with its content; the first line and the adornments
-     sit where a single-line control's do, like a Textarea's. */
+     sit where a single-line control's do, like a Textarea's. The content stretches (through any `display: contents`
+     wrapper, which a child selector would miss) so a scrolling editor's scroller ends at the frame's foot. */
   .dx-control-frame[data-rows] {
     height: auto;
     min-height: calc(var(--dx-rows) * var(--dx-line-height) + var(--dx-control-size) - var(--dx-line-height));
-    align-items: start;
+    align-items: stretch;
     padding-block: calc((var(--dx-control-size) - var(--dx-line-height)) / 2);
   }
   .dx-control-frame[data-rows] > .dx-input-adornment {
+    align-self: start;
     height: var(--dx-line-height);
   }
   /* `:has()` cannot nest, so focus deeper in the content (an editor's own element) is a descendant selector instead. */
@@ -362,6 +364,10 @@
     margin: var(--dx-control-inset);
     padding-inline: 0;
   }
+  /* In a Block the cell is the Block's (it centres its child), so the button's own inset would be counted twice. */
+  .dx-block > .dx-button[data-square] {
+    margin: 0;
+  }
   /* Raw DOM (an editor widget, a table cell's HTML) positions its own box, so its square button has no block-cell inset. */
   .dx-button.dx-button-square {
     width: var(--dx-control-size);
@@ -394,8 +400,14 @@
     flex-direction: column;
     min-width: 0;
   }
+  /* A control's own `center` would centre it across a stacked field; it starts under its label instead. */
   .dx-field > .dx-control {
+    align-self: start;
     margin-block: var(--dx-control-inset);
+  }
+  /* An icon-only Button's inset centres it in a block; in a field it starts at the label's edge as an Input does. */
+  .dx-field > .dx-button[data-square] {
+    margin-inline: 0;
   }
 
   /*
@@ -857,6 +869,25 @@
   .dx-popup:is(:focus-visible, :has(> .dx-scroll-viewport:focus-visible)) {
     --dx-arrow-border: var(--dx-focus-ring-color);
     --dx-arrow-border-width: var(--dx-focus-ring-width);
+  }
+  /*
+   * The ring is inset, so it crosses the arrow's base: the arrow rises above it, clipped to its outer half plus the
+   * ring's band, so its fill opens the ring under the base without covering an item's highlight further in.
+   */
+  .dx-popup:is(:focus-visible, :has(> .dx-scroll-viewport:focus-visible)) > .dx-arrow {
+    z-index: 1;
+  }
+  .dx-popup:has(> [data-placement^='bottom']) > .dx-arrow {
+    clip-path: inset(0 0 calc(50% - var(--dx-focus-ring-width)) 0);
+  }
+  .dx-popup:has(> [data-placement^='top']) > .dx-arrow {
+    clip-path: inset(calc(50% - var(--dx-focus-ring-width)) 0 0 0);
+  }
+  .dx-popup:has(> [data-placement^='right']) > .dx-arrow {
+    clip-path: inset(0 calc(50% - var(--dx-focus-ring-width)) 0 0);
+  }
+  .dx-popup:has(> [data-placement^='left']) > .dx-arrow {
+    clip-path: inset(0 0 0 calc(50% - var(--dx-focus-ring-width)));
   }
   /* A small caption naming the Menu or Select group that follows. */
   .dx-popup-group-label {

@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -15,6 +16,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
+import { Button } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -86,3 +88,29 @@ export default meta;
 type Story = StoryObj;
 
 export const Default: Story = { render: () => <DefaultStory /> };
+
+/** With a breadcrumb trail (flat mode) the header's controls still sit at its end, not straight after the trail. */
+const BreadcrumbStory = () => {
+  const [organization] = useMemo(() => [Organization.make({ name: random.company.name() })], []);
+  const node = useNode(organization, 'ph--building-office--regular');
+  return (
+    <div className='flex h-full p-3 dx-deck-surface'>
+      <Plank
+        node={node}
+        classNames={[PLANK_CLASSNAMES, 'w-[40rem]']}
+        breadcrumbs={[{ id: 'parent', label: 'Parent' }]}
+        controls={<Button icon='ph--x--regular' iconOnly label='Close' data-testid='plank.close' />}
+      />
+    </div>
+  );
+};
+
+export const TestBreadcrumbControlsAtEnd: Story = {
+  render: () => <BreadcrumbStory />,
+  play: async ({ canvasElement }) => {
+    const close = await within(canvasElement).findByTestId('plank.close');
+    const toolbar = close.closest<HTMLElement>('[data-tauri-drag-region]');
+    await expect(toolbar).not.toBeNull();
+    await expect((toolbar?.getBoundingClientRect().right ?? 0) - close.getBoundingClientRect().right).toBeLessThan(8);
+  },
+};
