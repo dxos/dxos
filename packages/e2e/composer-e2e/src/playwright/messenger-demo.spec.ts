@@ -62,8 +62,7 @@ let demoPeers: AppManager[] = [];
 
 const step = async (label: string, { keepCompanions = false } = {}): Promise<void> => {
   if (DEMO) {
-    // eslint-disable-next-line no-console
-    console.log(`== ${label}`);
+    log.info('demo step', { label });
     // Navigation can reopen R1; a recording keeps it closed unless a step is about a companion.
     if (!keepCompanions) {
       await Promise.all(demoPeers.map((peer) => peer.closeCompanions()));
@@ -98,8 +97,7 @@ const typeText = async (page: Page, text: string): Promise<void> => {
 const waitForDemoTrigger = async (): Promise<void> => {
   mkdirSync(path.dirname(DEMO_TRIGGER), { recursive: true });
   rmSync(DEMO_TRIGGER, { force: true });
-  // eslint-disable-next-line no-console
-  console.log(`READY — waiting for ${path.relative(process.cwd(), DEMO_TRIGGER)} (${DEMO_TRIGGER})`);
+  log.info('READY — waiting for demo trigger', { trigger: path.relative(process.cwd(), DEMO_TRIGGER) });
   while (!existsSync(DEMO_TRIGGER)) {
     await delay(500);
   }

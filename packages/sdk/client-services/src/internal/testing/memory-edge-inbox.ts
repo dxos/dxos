@@ -30,6 +30,12 @@ export class MemoryEdgeInbox implements InboxRelay {
   readonly accountless = new Set<string>();
   readonly #devices = new Set<Device>();
   #nextId = 0;
+  #listCalls = 0;
+
+  /** `listInbox` calls so far, refused ones included, so a test can wait for a pull without sleeping. */
+  get listCalls(): number {
+    return this.#listCalls;
+  }
 
   /** Stores a payload as EDGE would after authenticating `senderDid`. */
   put(recipientDid: string, senderDid: string, payload: string): string {
@@ -61,7 +67,10 @@ export class MemoryEdgeInbox implements InboxRelay {
       sendInboxMessage: async (_ctx: Context, recipientDid: string, payload: string) => ({
         id: this.put(recipientDid, await authenticate(), payload),
       }),
-      listInbox: async () => ({ notices: [...this.#list(await authenticate())] }),
+      listInbox: async () => {
+        this.#listCalls++;
+        return { notices: [...this.#list(await authenticate())] };
+      },
       ackInbox: async (_ctx: Context, ids: readonly string[]) => {
         const did = await authenticate();
         this.notices.set(

@@ -255,14 +255,16 @@ describe('InboxService', () => {
 
     await vi.waitFor(() => expect(refused()).toHaveLength(1));
     for (let i = 0; i < 3; i++) {
+      const calls = edge.listCalls;
       bob.source.stateUpdate.emit();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await vi.waitFor(() => expect(edge.listCalls).toBeGreaterThan(calls));
     }
-    expect(refused()).toHaveLength(1);
 
     edge.accountless.delete(bob.did);
     bob.source.stateUpdate.emit();
     await vi.waitFor(() => expect(snapshots.at(-1)?.status).toBe('available'));
+    // Pulls run one at a time, so every refused pull above has published (or not) by now.
+    expect(refused()).toHaveLength(1);
   });
 
   test('without EDGE it reports an empty inbox and refuses to send', async ({ expect }) => {
