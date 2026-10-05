@@ -11,7 +11,7 @@ import { safeFetchBytes, validateExternalUrl } from '@dxos/util';
 
 import { FileLimits, FileOperation } from '#types';
 
-import { FileReadError, FileTooLargeError, resolveActiveStorage } from './create.ts';
+import { FileReadError, FileTooLargeError, resolvePreferredStorage } from './create.ts';
 
 /**
  * Cap on the `base64` arm. Far below the storage limits on purpose: the payload arrives as a
@@ -85,7 +85,9 @@ const handler: Operation.WithHandler<typeof FileOperation.CreateFromSource> = Fi
       const type = FileLimits.toStoredMimeType(declaredType);
 
       // Shared with the UI path, so the two cannot diverge on which backend an upload lands in.
-      const storage = yield* resolveActiveStorage;
+      // The lenient resolver: an agent invokes this in a host with no plugin capabilities, where
+      // the registry's own default is the only answer there is.
+      const storage = yield* resolvePreferredStorage;
       const object = yield* File.fromBytes(bytes, { name, type, storage }).pipe(
         Effect.catchTag('BlobTooLargeError', () => Effect.fail(new FileTooLargeError(bytes.byteLength))),
       );

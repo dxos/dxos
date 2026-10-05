@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
+import { type BlobBackend } from '@dxos/blob';
 import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '@dxos/compute';
 import * as Credential from '@dxos/compute/Credential';
 import * as Header from '@dxos/compute/Header';
@@ -64,6 +65,18 @@ export interface FunctionWrappingOptions {
    * Toolkits to make available via the `OpaqueToolkitProvider`.
    */
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
+
+  /**
+   * Blob storage backends to register for the duration of the invocation, in addition to the S3
+   * backend this runtime registers itself.
+   *
+   * Supplied by the host rather than built here because a hosted store is reached through whatever
+   * the host has — on EDGE a service binding, in the app an HTTP client — and neither is
+   * constructible from this package. Without one a handler sees inline storage only, so
+   * `Blob.fromUpload` (the tail of the direct-upload flow) fails with `backend-not-registered`
+   * however well the upload itself went.
+   */
+  blobBackends?: readonly { name: string; backend: BlobBackend; default?: boolean }[];
 }
 
 /**
@@ -192,7 +205,7 @@ export class FunctionContext extends Resource {
   db: DatabaseImpl | undefined;
   readonly opts: FunctionWrappingOptions;
   /** Released in `_close`: this is a `Resource`, so a reopen would otherwise stack registrations. */
-  #unregisterBlobBackend: (() => void) | undefined;
+  #unregisterBlobBackends: (() => void)[] = [];
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
     super();
@@ -278,16 +291,26 @@ export class FunctionContext extends Resource {
     if (this.client && this.db) {
       const db = this.db;
       const { S3_BACKEND, createS3BlobBackend } = await import('@dxos/blob/s3');
-      this.#unregisterBlobBackend = this.client.graph.registerBlobBackend(
-        S3_BACKEND,
-        createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),
+      this.#unregisterBlobBackends.push(
+        this.client.graph.registerBlobBackend(
+          S3_BACKEND,
+          createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),
+        ),
       );
+
+      // The host's own backends, registered after S3 so a host naming one as the default gets it:
+      // `registerBlobBackend` takes the last `default` it is given.
+      for (const { name, backend, default: isDefault } of this.opts.blobBackends ?? []) {
+        this.#unregisterBlobBackends.push(this.client.graph.registerBlobBackend(name, backend, { default: isDefault }));
+      }
     }
   }
 
   override async _close() {
-    this.#unregisterBlobBackend?.();
-    this.#unregisterBlobBackend = undefined;
+    for (const unregister of this.#unregisterBlobBackends) {
+      unregister();
+    }
+    this.#unregisterBlobBackends = [];
     await this.db?.close();
     await this.client?.close();
   }
