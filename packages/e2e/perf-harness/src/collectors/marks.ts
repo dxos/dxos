@@ -5,8 +5,8 @@
 import { type Attached } from '../cdp.ts';
 import { type TargetKind } from '../types.ts';
 
-/** Duplicated from `@dxos/util`'s `WORK_MARKS_GLOBAL` for the reason `disk.ts` gives. */
-const WORK_MARKS_GLOBAL = '__dxosWorkMarks';
+/** Duplicated from `@dxos/util`'s `WORK_MARK_PREFIX` for the reason `disk.ts` gives. */
+const WORK_MARK_PREFIX = 'dxos:';
 
 /** One realm's mark, labelled with the realm it was taken in. */
 export type RealmMark = {
@@ -20,13 +20,29 @@ export type RealmMark = {
 
 export type MarkReading = {
   marks: RealmMark[];
-  /** Realms that published the probe; `0` means nothing was instrumented, not that nothing happened. */
+  /** Realms that have ever written a work mark; `0` means nothing was instrumented, not that nothing happened. */
   realms: number;
 };
 
+/** Reads the realm's User Timing marks directly, so a realm needs no probe beyond `markWork` itself. */
 const expression = (since: number) => `(() => {
-  const read = globalThis['${WORK_MARKS_GLOBAL}'];
-  return typeof read === 'function' ? JSON.stringify(read(${since})) : null;
+  const perf = globalThis.performance;
+  if (typeof perf?.getEntriesByType !== 'function') {
+    return null;
+  }
+  const own = perf.getEntriesByType('mark').filter((mark) => mark.name.startsWith('${WORK_MARK_PREFIX}'));
+  if (own.length === 0) {
+    return null;
+  }
+  return JSON.stringify(
+    own
+      .map((mark) => ({
+        name: mark.name.slice(${WORK_MARK_PREFIX.length}),
+        at: perf.timeOrigin + mark.startTime,
+        detail: typeof mark.detail === 'string' ? mark.detail : undefined,
+      }))
+      .filter((mark) => mark.at >= ${since}),
+  );
 })()`;
 
 type RemoteResult = { result?: { value?: unknown } };

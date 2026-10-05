@@ -3,69 +3,86 @@
 //
 
 /**
- * Global the marks are published under, for a reader OUTSIDE the realm.
+ * Prefix on every mark this module writes to the User Timing timeline.
  *
- * The arrangement `WORK_COUNTERS_GLOBAL` uses: a latency that starts in the tab and ends in a
- * worker can only be measured by a harness that reads every realm over CDP and joins the marks.
+ * The timeline is shared with React's profiler and other libraries; the prefix is how a reader
+ * (the perf harness over CDP, or the DevTools Timings track) picks out ours.
  */
-export const WORK_MARKS_GLOBAL = '__dxosWorkMarks';
+export const WORK_MARK_PREFIX = 'dxos:';
 
-/** Where the ring lives, so two bundled copies of this module in one realm share it. */
-const STORE_GLOBAL = '__dxosWorkMarksStore';
-
-/** Bounded so a long-lived tab cannot grow it; a perf stage reads far fewer than this. */
+/** Bounded because User Timing entries are never evicted, and marks stay on in production. */
 const CAPACITY = 4_096;
 
 /** One named instant. */
 export type WorkMark = {
   name: string;
   /**
-   * Wall-clock epoch milliseconds (`timeOrigin + now()`).
+   * Wall-clock epoch milliseconds (`timeOrigin + startTime`).
    *
-   * Absolute rather than `performance.now()`, which is relative to each realm's own origin: a mark
-   * taken in a worker is only comparable to one taken in the tab on this clock.
+   * Absolute rather than `startTime`, which is relative to each realm's own origin: a mark taken
+   * in a worker is only comparable to one taken in the tab on this clock.
    */
   at: number;
   detail?: string;
 };
 
-const isStore = (value: unknown): value is WorkMark[] => Array.isArray(value);
+const isMark = (entry: PerformanceEntry): entry is PerformanceMark => entry.entryType === 'mark';
 
-const resolveStore = (): WorkMark[] => {
-  const existing: unknown = Reflect.get(globalThis, STORE_GLOBAL);
-  if (isStore(existing)) {
-    return existing;
+const ownMarks = (): PerformanceMark[] =>
+  performance
+    .getEntriesByType('mark')
+    .filter(isMark)
+    .filter((mark) => mark.name.startsWith(WORK_MARK_PREFIX));
+
+const clearOwnMarks = (marks: readonly PerformanceMark[]): void => {
+  for (const name of new Set(marks.map((mark) => mark.name))) {
+    performance.clearMarks(name);
   }
-  const store: WorkMark[] = [];
-  Object.assign(globalThis, { [STORE_GLOBAL]: store });
-  return store;
 };
 
-const marks = resolveStore();
+/** Marks written since the last trim; the timeline is only scanned when this overflows. */
+let written = 0;
+
+/** Keeps the newest `CAPACITY` marks; `clearMarks` drops by name, so the survivors are re-marked at their original times. */
+const trim = (): void => {
+  const marks = ownMarks();
+  const keep = marks.slice(-CAPACITY);
+  clearOwnMarks(marks);
+  for (const mark of keep) {
+    performance.mark(mark.name, { startTime: mark.startTime, detail: mark.detail });
+  }
+  written = keep.length;
+};
 
 /** Epoch milliseconds on the high-resolution clock, comparable across realms. */
 export const absoluteNow = (): number => performance.timeOrigin + performance.now();
 
 /**
- * Records a named instant: `markWork('ai.request')`, `markWork('chat.submit', chatId)`.
+ * Records a named instant on the User Timing timeline: `markWork('ai.request')`,
+ * `markWork('chat.submit', chatId)`.
  *
- * Latency milestones for the perf harness, which joins every realm's marks on their absolute time.
- * One array push, so it is cheap enough to leave on in production.
+ * Latency milestones for the perf harness, which joins every realm's marks on their absolute time;
+ * they also show on the DevTools Performance panel's Timings track.
  */
 export const markWork = (name: string, detail?: string): void => {
-  marks.push(detail === undefined ? { name, at: absoluteNow() } : { name, at: absoluteNow(), detail });
-  if (marks.length > CAPACITY * 2) {
-    marks.splice(0, marks.length - CAPACITY);
+  performance.mark(WORK_MARK_PREFIX + name, detail === undefined ? undefined : { detail });
+  if (++written > CAPACITY * 2) {
+    trim();
   }
 };
 
-/** A copy of this realm's marks at or after `since` (epoch ms), oldest first. */
-export const getWorkMarks = (since = 0): WorkMark[] => marks.slice(-CAPACITY).filter((mark) => mark.at >= since);
+/** This realm's marks at or after `since` (epoch ms), oldest first, without the prefix. */
+export const getWorkMarks = (since = 0): WorkMark[] =>
+  ownMarks()
+    .map((mark): WorkMark => {
+      const at = performance.timeOrigin + mark.startTime;
+      const name = mark.name.slice(WORK_MARK_PREFIX.length);
+      return typeof mark.detail === 'string' ? { name, at, detail: mark.detail } : { name, at };
+    })
+    .filter((mark) => mark.at >= since);
 
-/** Drops every mark. For tests; nothing in the app resets them. */
+/** Drops every mark this module wrote. For tests; nothing in the app resets them. */
 export const resetWorkMarks = (): void => {
-  marks.length = 0;
+  clearOwnMarks(ownMarks());
+  written = 0;
 };
-
-// At module scope, so a realm that marked nothing is distinguishable from one without the probe.
-Object.assign(globalThis, { [WORK_MARKS_GLOBAL]: getWorkMarks });

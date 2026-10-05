@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, test } from 'vitest';
 
-import { WORK_MARKS_GLOBAL, absoluteNow, getWorkMarks, markWork, resetWorkMarks } from './work-marks.ts';
+import { WORK_MARK_PREFIX, absoluteNow, getWorkMarks, markWork, resetWorkMarks } from './work-marks.ts';
 
 describe('work marks', () => {
   beforeEach(() => {
@@ -25,21 +25,36 @@ describe('work marks', () => {
     expect(Math.abs(marks[0].at - Date.now())).toBeLessThan(1_000);
   });
 
-  test('filters by time and publishes a reader on the global', ({ expect }) => {
+  test('filters by time and writes prefixed entries to the user timing timeline', ({ expect }) => {
     markWork('early');
     const cut = absoluteNow() + 1;
     while (absoluteNow() < cut) {}
-    markWork('late');
-    const read: unknown = Reflect.get(globalThis, WORK_MARKS_GLOBAL);
-    expect(typeof read === 'function' ? read(cut).map(({ name }: { name: string }) => name) : undefined).toEqual([
-      'late',
+    markWork('late', 'tools');
+    expect(getWorkMarks(cut).map(({ name, detail }) => ({ name, detail }))).toEqual([
+      { name: 'late', detail: 'tools' },
     ]);
+    const entry = performance.getEntriesByName(`${WORK_MARK_PREFIX}late`, 'mark').at(-1);
+    expect(entry && 'detail' in entry ? entry.detail : undefined).toEqual('tools');
+  });
+
+  test('leaves marks written by others alone', ({ expect }) => {
+    performance.mark('other');
+    markWork('ours');
+    resetWorkMarks();
+    expect(getWorkMarks()).toEqual([]);
+    expect(performance.getEntriesByName('other', 'mark')).toHaveLength(1);
+    performance.clearMarks('other');
   });
 
   test('stays bounded', ({ expect }) => {
     for (let index = 0; index < 20_000; index++) {
       markWork('tick');
     }
-    expect(getWorkMarks().length).toBeLessThanOrEqual(4_096);
+    markWork('last');
+    const marks = getWorkMarks();
+    expect(marks.length).toBeLessThanOrEqual(8_192);
+    expect(marks.at(-1)?.name).toEqual('last');
+    // Survivors keep their original times through a trim.
+    expect(marks.every((mark, index) => index === 0 || mark.at >= marks[index - 1].at)).toBe(true);
   });
 });
