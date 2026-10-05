@@ -14,7 +14,7 @@ import { Options, Root } from './components/index.ts';
 const OptionsApp = () => {
   return (
     <Root name='options'>
-      <div className='dx-fullscreen flex justify-center overflow-hidden dx-modal-surface'>
+      <div className='dx-cover flex justify-center overflow-hidden dx-modal-surface'>
         <div className='dx-document dx-base-surface'>
           <Options />
         </div>

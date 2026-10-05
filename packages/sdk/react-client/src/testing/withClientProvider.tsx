@@ -167,7 +167,7 @@ export const withMultiClientProvider = ({
     }, []);
 
     return (
-      <div className='dx-fullscreen grid grid-flow-col auto-cols-fr gap-4 overflow-hidden'>
+      <div className='dx-cover grid grid-flow-col auto-cols-fr gap-4 overflow-hidden'>
         {clients.map((client, index) => (
           <ClientProvider
             key={index}

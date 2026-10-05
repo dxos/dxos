@@ -20,6 +20,7 @@ export default defineConfig({
     util: 'src/util/index.ts',
     Drawing: 'src/types/Drawing.ts',
     LegacySketch: 'src/types/LegacySketch.ts',
+    SceneSvg: 'src/components/SceneSvg.tsx',
     DrawingOperation: 'src/types/DrawingOperation.ts',
     IllustratorCapabilities: 'src/types/IllustratorCapabilities.ts',
     IllustratorError: 'src/types/IllustratorError.ts',

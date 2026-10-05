@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Card, Flex, SystemIconButton, composable, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Flex, SystemButton, composable, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -49,27 +49,21 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
     return (
       <Card.Root
         ref={forwardedRef}
-        fullWidth
         classNames={['dx-hover cursor-pointer', current && 'dx-current', classNames]}
         {...props}
       >
         {imageUrl && (
-          <Card.Poster
-            alt={result.title ?? t('product.label')}
-            image={imageUrl}
-            fit='cover'
-            classNames='rounded-t-xs'
-          />
+          <Card.Poster alt={result.title ?? t('product.label')} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Card.Block>
-            <SystemIconButton.Star variant='ghost' iconOnly square active={starred} onClick={handleToggleStar} />
-          </Card.Block>
+          <Block>
+            <SystemButton.Star variant='ghost' iconOnly pressed={starred} onClick={handleToggleStar} />
+          </Block>
           <Flex column gap='xs' classNames='min-w-0 py-2'>
-            <Card.Title classNames='line-clamp-2'>{result.title}</Card.Title>
-            {price && <span className='text-sm text-description'>{price}</span>}
+            <Card.Title lines={2}>{result.title}</Card.Title>
+            {price && <span className='text-sm text-fg-muted'>{price}</span>}
           </Flex>
-          <Card.Block end />
+          <Block rail='end' />
         </Card.Header>
       </Card.Root>
     );

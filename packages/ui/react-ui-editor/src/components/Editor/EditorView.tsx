@@ -98,7 +98,7 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
       });
     }, [view, value, selectionEnd]);
 
-    // Focus chrome (border/ring) is the caller's responsibility (e.g. `dx-input`).
+    // Focus chrome (border/ring) is the caller's responsibility (e.g. `dx-input-box`).
     return (
       <div
         className={mx('w-full outline-hidden', classNames)}

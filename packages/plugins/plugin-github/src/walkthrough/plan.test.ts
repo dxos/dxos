@@ -154,6 +154,15 @@ describe('assembleWalkthrough', () => {
     expect(body.indexOf('## One')).to.be.lessThan(body.indexOf('## Two'));
     expect(body).to.not.contain('\n\n\n');
   });
+
+  test('puts a blank line between one chapter and the next heading', () => {
+    const body = assembleWalkthrough({ title: 'A change', overview: 'Why it exists.', chapters: [] }, [
+      '## One\n\nFirst.',
+      '## Two\n\nSecond.',
+    ]);
+
+    expect(body).to.contain('First.\n\n## Two');
+  });
 });
 
 // A declaration rather than an arrow: the fixture above calls it at module evaluation.

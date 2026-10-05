@@ -4,6 +4,9 @@
 
 // @import-as-namespace
 
+import * as AiError from 'effect/ai/AiError';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import type * as Toolkit from 'effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
@@ -12,9 +15,6 @@ import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import {
   AiParser,

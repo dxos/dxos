@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
     // NOTE: This needs to be a chat object rather than a string id to avoid a query race.
     // TODO(wittjosiah): Handle serialization and hydration for this so it can be cached.
     const stateAtom = createKvsStore({
-      key: meta.profile.key,
+      key: `${meta.profile.key}.state`,
       schema: AssistantCapabilities.StateSchema,
       defaultValue: () => ({
         currentChat: {},

@@ -12,7 +12,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
-import { ToggleGroup, ToggleGroupItem, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { ToggleGroup, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -236,6 +236,7 @@ const RoutineFormImpl = ({
       onValuesChanged={handleValuesChanged}
       onSave={onSave}
       onCancel={onCancel}
+      testId='routine-form'
     >
       <Form.Viewport scroll {...composableProps(props)} ref={forwardedRef}>
         <Form.Content>
@@ -260,10 +261,7 @@ const RoutineFormImpl = ({
 
 /** Lightweight labelled grouping for a section (no `Settings` chrome). */
 const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
-  <div className='flex flex-col mt-4'>
-    <Form.Label standalone label={title} />
-    {children}
-  </div>
+  <Form.FieldSet label={title}>{children}</Form.FieldSet>
 );
 
 //
@@ -305,7 +303,7 @@ const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: 
   return (
     // `type='single'` emits `''` when the selected item is clicked again (toggled off); ignore that and any
     // other non-kind value so it can't fall through and overwrite the current action.
-    <ToggleGroup
+    <ToggleGroup.Root
       type='single'
       value={value}
       onValueChange={(next) => {
@@ -314,9 +312,9 @@ const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: 
         }
       }}
     >
-      <ToggleGroupItem value='instructions'>{t('action-kind.instructions.label')}</ToggleGroupItem>
-      <ToggleGroupItem value='runnable'>{t('action-kind.operation.label')}</ToggleGroupItem>
-    </ToggleGroup>
+      <ToggleGroup.Item value='instructions'>{t('action-kind.instructions.label')}</ToggleGroup.Item>
+      <ToggleGroup.Item value='runnable'>{t('action-kind.operation.label')}</ToggleGroup.Item>
+    </ToggleGroup.Root>
   );
 };
 

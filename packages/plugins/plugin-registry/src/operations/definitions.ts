@@ -128,7 +128,7 @@ export const LoadPlugin = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.registry.loadPlugin'),
     name: 'Load Plugin',
-    description: 'Load a plugin from the URL of its manifest.json and enable it.',
+    description: 'Load a plugin from the URL of its manifest.json and, unless told not to, enable it.',
     icon: 'ph--cloud-arrow-down--regular',
   },
   services: [Plugin.Service],
@@ -136,9 +136,13 @@ export const LoadPlugin = Operation.make({
     url: Schema.String.annotate({
       description: 'URL of the plugin manifest, e.g. https://example.com/my-plugin/manifest.json.',
     }),
+    enable: Schema.optional(Schema.Boolean).annotate({
+      description:
+        'Enable the plugin once it is loaded (default true); false leaves it listed but off, unless its id is already enabled (e.g. from an earlier session), in which case it starts.',
+    }),
   }),
   output: Schema.Struct({
-    id: Schema.String.annotate({ description: 'Id of the plugin that was loaded and enabled.' }),
+    id: Schema.String.annotate({ description: 'Id of the plugin that was loaded.' }),
     name: Schema.optional(Schema.String),
   }),
 }).pipe(Operation.mutation('write'));

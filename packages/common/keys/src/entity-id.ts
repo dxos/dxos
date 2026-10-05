@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { type PRNG, type ULIDFactory, monotonicFactory } from 'ulidx';
 
+import { withStatics } from './schema-statics.ts';
+
 // Crockford Base32 alphabet used by ULID. Excludes I, L, O, U.
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
@@ -16,7 +18,15 @@ const MNEMONIC_PATTERN = new RegExp(`^[0-9A-HJKMNP-TV-Z]{${MNEMONIC_LENGTH}}$`, 
 // TODO(dmaretskyi): Make brand.
 // export const EntityIdBrand: unique symbol = Symbol('@dxos/echo/EntityId');
 // export const EntityIdSchema = Schema.ULID.pipe(S.brand(EntityIdBrand));
-const EntityIdSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i))).annotate({
+// JSON Schema patterns take no flags, so the canonical uppercase form is exported in place of the
+// case-insensitive check, which effect would otherwise drop.
+const EntityIdSchema = Schema.String.pipe(
+  Schema.check(
+    Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i, {
+      toJsonSchema: () => ({ pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$' }),
+    }),
+  ),
+).annotate({
   description: 'A Universally Unique Lexicographically Sortable Identifier',
   pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$',
 });
@@ -139,7 +149,7 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
 let factory: ULIDFactory = monotonicFactory();
 let seedTime: number | undefined;
 
-export const EntityId: EntityIdClass = Object.assign(EntityIdSchema, {
+export const EntityId: EntityIdClass = withStatics(EntityIdSchema, {
   isValid: (id: string): id is EntityId => {
     try {
       Schema.decodeSync(EntityIdSchema)(id);

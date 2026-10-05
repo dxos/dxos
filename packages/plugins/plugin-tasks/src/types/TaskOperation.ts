@@ -61,6 +61,15 @@ export const CreateTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/** The coding-agent session a verb attributes work to, by its harness session id. */
+const RemoteSessionInput = Schema.Struct({
+  sessionId: Schema.String.annotate({ description: 'The harness session id (your own, when claiming work).' }),
+  title: Schema.optional(Schema.String),
+  repo: Schema.optional(Schema.String),
+  branch: Schema.optional(Schema.String),
+  worktree: Schema.optional(Schema.String),
+});
+
 /**
  * The only writer that may re-parent a task: a generic object update cannot reject a cycle or a
  * cross-set parent, nor move the lifecycle edge that decides what the task cascades with.
@@ -73,7 +82,7 @@ export const UpdateTask = Operation.make({
       'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field. ' +
       'Pass `remoteSession` with a harness session id to assign the task to that coding-agent session, ' +
       'creating the session record in the space if it is not there yet. ' +
-      'A task with sub-tasks is one unit of work landing in one PR: assigning or starting any task in a tree ' +
+      'A task with sub-tasks is one unit of work: assigning or starting any task in a tree ' +
       'assigns (and starts, if not yet started) its root and every sub-task too.',
     icon: 'ph--pencil-simple--regular',
   },
@@ -98,15 +107,7 @@ export const UpdateTask = Operation.make({
      * created in the task's space when this id is not recorded there yet, so an agent can claim
      * work on its first call.
      */
-    remoteSession: Schema.optional(
-      Schema.Struct({
-        sessionId: Schema.String.annotate({ description: 'The harness session id (your own, when claiming work).' }),
-        title: Schema.optional(Schema.String),
-        repo: Schema.optional(Schema.String),
-        branch: Schema.optional(Schema.String),
-        worktree: Schema.optional(Schema.String),
-      }),
-    ),
+    remoteSession: Schema.optional(RemoteSessionInput),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
     milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone.Milestone))),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set. */
@@ -133,7 +134,8 @@ export const AskQuestion = Operation.make({
       'Ask the user a question you cannot answer yourself about one task, and block the task on it. ' +
       'The question is recorded in the task history, where the user answers it. Offer likely answers ' +
       'in `options`; the user may still type their own. Refused while the task already has an ' +
-      "unanswered question. Read the answer back later from the task's `history`: the entry with " +
+      'unanswered question. Pass `remoteSession` with your harness session id to assign the blocked task ' +
+      "to your session. Read the answer back later from the task's `history`: the entry with " +
       '`event: "answer"` whose `questionId` is the id this returns.',
     icon: 'ph--question--regular',
   },
@@ -151,6 +153,11 @@ export const AskQuestion = Operation.make({
     ),
     /** Who is asking; recorded on the question and on the status change it causes. */
     actor: Schema.optional(Actor.Actor),
+    /**
+     * Assigns the blocked task to the asking coding-agent session, as `UpdateTask` does, and makes
+     * that session the asker — a session's check-in lists its open tasks by the assignee ref.
+     */
+    remoteSession: Schema.optional(RemoteSessionInput),
   }),
   // JSON snapshot, not a live object — see the create/update verbs above.
   output: Schema.Struct({
@@ -222,9 +229,9 @@ export const AddArtifact = Operation.make({
     name: 'Add Task Artifact',
     description:
       'Attach an existing object (e.g. a File created by file.createFromUpload) to a task as an artifact ' +
-      'the task produced. Adding the same object twice is a no-op. A pull request is recorded on the ROOT ' +
-      "of the task's tree (the returned task), since all sub-tasks land in one PR; it is refused when the " +
-      'root already has a different open PR.',
+      'the task produced. Adding the same object twice is a no-op. A pull request is recorded on the task ' +
+      'given — attach a PR that fixes one sub-task to that sub-task, and one covering the whole tree to its ' +
+      'root; it is refused only when that task already has a different open PR.',
     icon: 'ph--paperclip--regular',
   },
   services: [Database.Service],

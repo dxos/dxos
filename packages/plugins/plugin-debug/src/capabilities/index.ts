@@ -17,7 +17,7 @@ import { Debug, DebugEvents } from '#types';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
@@ -36,7 +36,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
 export const DebugSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [Debug.DebugCapabilities.Settings],
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const GraphRetention = Capability.lazyModule(
   'GraphRetention',

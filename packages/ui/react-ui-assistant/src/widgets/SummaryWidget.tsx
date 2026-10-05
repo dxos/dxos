@@ -15,10 +15,10 @@ export const SummaryWidget = ({ children }: WidgetProps) => {
 
   return (
     <TogglePanel.Root>
-      <TogglePanel.Content classNames='border border-subdued-separator rounded-md'>
+      <TogglePanel.Content classNames='border border-separator-subtle rounded-md'>
         <TogglePanel.Header classNames='text-sm dx-group-surface'>{t('summary.label')}</TogglePanel.Header>
         <TogglePanel.Body>
-          <div className='p-1 text-sm text-subdued'>{getXmlTextChild(children ?? [])}</div>
+          <div className='p-1 text-sm text-fg-subtle'>{getXmlTextChild(children ?? [])}</div>
         </TogglePanel.Body>
       </TogglePanel.Content>
     </TogglePanel.Root>

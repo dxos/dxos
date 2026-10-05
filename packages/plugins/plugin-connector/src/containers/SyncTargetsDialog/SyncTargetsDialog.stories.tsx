@@ -43,9 +43,7 @@ const DefaultStory = ({ availableTargets }: StoryArgs) => {
 
   return (
     <Dialog.Root open>
-      <Dialog.Overlay>
-        <SyncTargetsDialog {...props} />
-      </Dialog.Overlay>
+      <SyncTargetsDialog {...props} />
     </Dialog.Root>
   );
 };

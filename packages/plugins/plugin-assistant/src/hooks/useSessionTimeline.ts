@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-trace';
 import { Task } from '@dxos/types';
 
-const atomEmpty = Atom.make(() => [] as const as readonly Process.Info[]);
+const atomEmpty = Atom.make(() => [] as const as readonly Process.Process[]);
 
 /** A chat as the timeline's session: its uri is the agent process's target, its feed the trace meta's. */
 export const sessionFromChat = (chat: Chat.Chat): Session => ({

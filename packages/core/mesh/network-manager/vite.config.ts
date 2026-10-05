@@ -20,7 +20,7 @@ export default defineConfig({
       browsers: ['chromium'],
       include: ['**/src/**/*.browser.test.ts'],
       // Pulled in by `rtc-proxy-worker.ts`, so vite only discovers them once the worker boots.
-      optimizeDeps: ['@effect/platform-browser/BrowserWorker', 'effect/unstable/rpc/RpcClient'],
+      optimizeDeps: ['@effect/platform-browser/BrowserWorker', 'effect/rpc/RpcClient'],
     },
   },
 });

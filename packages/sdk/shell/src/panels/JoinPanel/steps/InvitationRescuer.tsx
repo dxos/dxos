@@ -34,7 +34,7 @@ const InvitationActions = ({
   if (failReason) {
     return (
       <>
-        <InputLabel classNames='text-description'>
+        <InputLabel classNames='text-fg-muted'>
           {t(
             failReason === 'timeout'
               ? 'timeout status label'
@@ -58,7 +58,7 @@ const InvitationActions = ({
   } else {
     return (
       <>
-        <InputLabel classNames='text-description'>{t('connecting-status.label')}</InputLabel>
+        <InputLabel classNames='text-fg-muted'>{t('connecting-status.label')}</InputLabel>
         <div className='grow' />
         <ActionBar>
           <Action disabled classNames='order-2' data-testid='next'>
@@ -82,7 +82,7 @@ export const InvitationRescuer = (props: InvitationRescuerProps) => {
       {typeof invitationState === 'undefined' ? (
         <>
           <div className='grow flex flex-col justify-center'>
-            <InputLabel classNames='text-description'>There was a problem joining the space</InputLabel>
+            <InputLabel classNames='text-fg-muted'>There was a problem joining the space</InputLabel>
           </div>
           <ActionBar>
             <Action

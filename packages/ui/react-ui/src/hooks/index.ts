@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './useDensityContext.ts';
-export * from './useElevationContext.ts';
 export * from './useIconHref.ts';
 export * from './usePositioning.ts';
 export * from './useSafeArea.ts';

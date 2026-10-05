@@ -8,8 +8,14 @@ import type * as Chat from '@dxos/assistant/Chat';
 import type * as Project from '@dxos/compute/Project';
 import { useSessionTimeline } from '@dxos/plugin-assistant/hooks';
 import { type Space } from '@dxos/react-client/echo';
-import { Banner, useTranslation } from '@dxos/react-ui';
-import { Gantt, type GanttAxis, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';
+import { Empty, useTranslation } from '@dxos/react-ui';
+import {
+  Gantt,
+  type GanttAxis,
+  type GanttLane,
+  type GanttLegendMode,
+  sessionTimelineToGantt,
+} from '@dxos/react-ui-trace';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -25,7 +31,13 @@ export type ProjectPipelineProps = {
   axis?: GanttAxis;
   /** Called by the chart's axis toggle; the toggle is hidden without it. */
   onAxisChange?: (axis: GanttAxis) => void;
-  /** Called with the chat behind a lane the reader picks — a session's, or a task's session. */
+  /** What the chart's first column shows per lane: its title or its token and tool counts. */
+  legend?: GanttLegendMode;
+  /** Called by the chart's legend toggle. */
+  onLegendChange?: (legend: GanttLegendMode) => void;
+  /** Called with the task behind a task lane the reader picks. */
+  onSelectTask?: (taskId: string) => void;
+  /** Called with the chat behind a session lane the reader picks, and a task lane's with no `onSelectTask`. */
   onSelectChat?: (chat: Chat.Chat) => void;
 };
 
@@ -40,6 +52,9 @@ export const ProjectPipeline = ({
   tasks,
   axis = 'time',
   onAxisChange,
+  legend,
+  onLegendChange,
+  onSelectTask,
   onSelectChat,
 }: ProjectPipelineProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -50,17 +65,21 @@ export const ProjectPipeline = ({
   // id does, so the pick is resolved through it.
   const handleLaneSelect = useCallback(
     (lane: GanttLane) => {
-      const chatId = timeline.lanes.find((candidate) => candidate.id === lane.id)?.sessionId;
-      const chat = chatId && chats.find((candidate) => candidate.id === chatId);
+      const source = timeline.lanes.find((candidate) => candidate.id === lane.id);
+      if (source?.taskId && onSelectTask) {
+        onSelectTask(source.taskId);
+        return;
+      }
+      const chat = source?.sessionId && chats.find((candidate) => candidate.id === source.sessionId);
       if (chat) {
         onSelectChat?.(chat);
       }
     },
-    [timeline.lanes, chats, onSelectChat],
+    [timeline.lanes, chats, onSelectTask, onSelectChat],
   );
 
   if (timeline.lanes.length === 0) {
-    return <Banner.Empty label={t('no-sessions.message')} />;
+    return <Empty>{t('no-sessions.message')}</Empty>;
   }
 
   // The timeline speaks of sessions and tasks; the chart speaks of groups and lanes. One mapping at
@@ -75,15 +94,17 @@ export const ProjectPipeline = ({
       range={timeline.range}
       axis={axis}
       onAxisChange={onAxisChange}
+      legend={legend}
+      onLegendChange={onLegendChange}
       now={Date.now()}
-      onLaneSelect={onSelectChat && handleLaneSelect}
+      onLaneSelect={onSelectTask || onSelectChat ? handleLaneSelect : undefined}
       classNames='p-1'
       data-testid='projectsPlugin.pipeline.chart'
     >
       <Gantt.Legend>
         <Gantt.AxisToggle />
+        <Gantt.LegendToggle />
       </Gantt.Legend>
-      <Gantt.Meta />
       <Gantt.Chart />
     </Gantt.Root>
   );

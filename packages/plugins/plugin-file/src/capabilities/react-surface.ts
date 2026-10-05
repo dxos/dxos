@@ -47,7 +47,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'createForm',
         filter: AppSurface.formInputBySchema(
-          (ast) => !!SchemaEx.findAnnotation<Record<string, string[]>>(ast, FileAction.UploadAnnotationId),
+          (ast) => !!SchemaEx.findAnnotation<boolean>(ast, FileAction.UploadAnnotationId),
         ),
         component: FileUploadField,
       }),

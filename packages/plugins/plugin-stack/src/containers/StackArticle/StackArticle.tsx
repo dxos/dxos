@@ -3,14 +3,14 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic } from '@dxos/react-ui-mosaic';
@@ -177,10 +177,9 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   return (
     <Panel.Root>
-      <Panel.Toolbar classNames='dx-toolbar-surface'>
+      <Panel.Header classNames='dx-toolbar-surface'>
         <Toolbar.Root classNames='dx-document'>
-          <Toolbar.IconButton
-            square
+          <Button
             icon='ph--plus--regular'
             iconOnly
             label={t('add-section.label')}
@@ -189,8 +188,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
           />
           <Toolbar.Separator />
           <ActionMenu actions={optionsMenu}>
-            <Toolbar.IconButton
-              square
+            <Button
               icon='ph--dots-three-vertical--regular'
               iconOnly
               label={t('options.label')}
@@ -198,8 +196,8 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
             />
           </ActionMenu>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <Stack.Root
           id={Obj.getURI(collection)}
           attendableId={attendableId}
@@ -211,13 +209,13 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
           onMoveDown={handleMoveDown}
           onDelete={handleDelete}
         >
-          <Stack.Content centered padding data-testid='main.stack'>
+          <Stack.Content data-testid='main.stack'>
             <Stack.Viewport>
               <Mosaic.Stack classNames='dx-document' items={items} getId={getId} Tile={Stack.Section} />
             </Stack.Viewport>
           </Stack.Content>
         </Stack.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

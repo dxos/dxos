@@ -39,14 +39,23 @@ const make = () =>
           against the conversation, so a large file is slow and expensive before it is anything else.
 
         For a file that is already on your own disk -- a screenshot you just took, a screen
-        recording, a log bundle -- use neither arm above. Ask the host for an upload URL, transfer
-        the bytes with the shell command it returns, then call
-        ${Operation.toolName(FileOperation.CreateFromUpload)} with the \`uploadId\`. The bytes go
-        from disk to storage without passing through this conversation, so the cost is the same
-        whether the file is 40KB or 90MB. Base64 is never the right choice for a video.
+        recording, a log bundle -- use neither arm above. Upload it directly:
+        1. Call the host's \`createUpload\` tool (with the file's \`name\`, and its \`size\` if known).
+        2. Run the \`command\` it returns in a shell; it transfers the bytes with \`curl\`.
+        3. Call ${Operation.toolName(FileOperation.CreateFromUpload)} with the returned \`uploadId\` to create the file object.
+        The bytes go from disk to storage without passing through this conversation, so the cost is
+        the same whether the file is 40KB or 90MB. Base64 is never the right choice for a video.
 
-        Images, video, PDFs, and plain text, CSV, Markdown and JSON are accepted. HTML is not.
-        Always pass the true media type of the content; do not infer it from a file extension.
+        To save a file from the space to your own disk, download it directly:
+        1. Call the host's \`createDownload\` tool with the file's reference.
+        2. Run the \`command\` it returns in a shell; it saves the file in the working directory.
+        Use ${Operation.toolName(FileOperation.Read)} only when you need to look at a file yourself; never read one
+        just to write its bytes out. \`createUpload\` and \`createDownload\` are tools of the MCP host, not
+        operations; a host without them (the in-app chat) has no direct transfer.
+
+        Any file type is accepted; HTML and XML are stored as \`application/octet-stream\` so they
+        download rather than render. Always pass the true media type of the content; do not infer it
+        from a file extension.
       `,
     }),
     agentCanEnable: true,

@@ -80,7 +80,7 @@ export const getSchemaURI = (schema: Schema.Top): URI.URI | undefined => {
 export const TypenameSchema = Schema.String.pipe(
   Schema.check(
     Schema.isPattern(
-      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/u,
     ),
   ),
 ).annotate({
@@ -92,7 +92,7 @@ export const TypenameSchema = Schema.String.pipe(
  * Semantic version format: `major.minor.patch`
  * Example: `1.0.0`
  */
-export const VersionSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+.\d+.\d+$/))).annotate({
+export const VersionSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+.\d+.\d+$/u))).annotate({
   description: 'Semantic version format: `major.minor.patch`',
   example: '1.0.0',
 });
@@ -426,6 +426,27 @@ export const FormOrderedAnnotationId = '@dxos/schema/annotation/FormOrdered';
 export const FormOrderedAnnotation = createAnnotationHelper<boolean>(FormOrderedAnnotationId);
 
 /**
+ * How a form presents an array of references; the two options are independent.
+ */
+export type ArrayPresentation = {
+  /** Rows (or chips) reorder by drag and keyboard, and the order is persisted; `false` by default. */
+  ordered?: boolean;
+  /**
+   * `tag`: removable chips in the targets' hues (the default for arrays of `Tag` refs). `title`: a row per target with
+   * its type's icon, its label and an optional description (the default otherwise).
+   */
+  display?: 'tag' | 'title';
+  /** A property of the target whose value is the `title` row's description line. */
+  description?: string;
+};
+
+/**
+ * When set on an array-of-`Ref` property, sets how the form presents it ({@link ArrayPresentation}).
+ */
+export const ArrayPresentationAnnotationId = '@dxos/schema/annotation/ArrayPresentation';
+export const ArrayPresentationAnnotation = createAnnotationHelper<ArrayPresentation>(ArrayPresentationAnnotationId);
+
+/**
  * Annotation carrying one or more named layout DSL templates that control how a
  * form arranges a schema's fields (consumed by `@dxos/react-ui-form`'s
  * `Form.Layout` / `Form.FieldSet`). Callers select a variant by name; the
@@ -520,7 +541,7 @@ const IconAnnotationSchema = Schema.Struct({
    * weight variants. All three are admitted because a type whose subject IS a brand — an Anthropic
    * session, a GitHub repo — has no honest Phosphor equivalent.
    */
-  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/))),
+  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/u))),
 
   /**
    * Color name.

@@ -16,10 +16,10 @@ import * as Fiber from 'effect/Fiber';
 import * as Latch from 'effect/Latch';
 import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
+import type * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Scope from 'effect/Scope';
 import * as TestClock from 'effect/testing/TestClock';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -136,6 +136,39 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getEnabled(), []);
       yield* manager.enable(added.meta.profile.key);
       assert.deepStrictEqual(manager.getEnabled(), [testMeta.profile.key]);
+    }),
+  );
+
+  it.effect('activates a plugin added after startup whose id was already enabled', () =>
+    Effect.gen(function* () {
+      const testPlugin = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          provides: [String],
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
+        }),
+        Plugin.make,
+      )();
+      const urlLocator = 'https://example.com/manifest.json';
+      const urlLoader = Effect.fn(function* (locator: string) {
+        if (locator === urlLocator) {
+          return { plugin: testPlugin };
+        }
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
+      });
+
+      // The persisted enabled set outlives the plugin itself, as it does across sessions.
+      const manager = PluginManager.make({ pluginLoader: urlLoader, enabled: [testMeta.profile.key] });
+      yield* manager.start();
+      assert.deepStrictEqual(manager.getEnabled(), [testMeta.profile.key]);
+
+      yield* manager.add(urlLocator);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.deepStrictEqual(
+        manager.capabilities.getAll(String).map((value) => value.string),
+        ['hello'],
+      );
     }),
   );
 

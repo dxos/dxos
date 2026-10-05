@@ -22,10 +22,15 @@ const MIN_QUERY_INTERVAL = 5_000;
 
 const POLL_INTERVAL = 10_000;
 
+/** Whether the local replica of a document contains the change with the given hash; `false` marks it `different`. */
+export type HasLocalChange = (documentId: DocumentId, changeHash: string) => boolean;
+
 export type CollectionSynchronizerProps = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
   queryCollectionState: (collectionId: string, peerId: PeerId) => void;
   shouldSyncCollection: (collectionId: string, peerId: PeerId) => boolean;
+  /** Tells an ancestor head from a missing change. */
+  hasLocalChange?: HasLocalChange;
 };
 
 /**
@@ -35,6 +40,7 @@ export class CollectionSynchronizer extends Resource {
   private readonly _sendCollectionState: CollectionSynchronizerProps['sendCollectionState'];
   private readonly _queryCollectionState: CollectionSynchronizerProps['queryCollectionState'];
   private readonly _shouldSyncCollection: CollectionSynchronizerProps['shouldSyncCollection'];
+  private readonly _hasLocalChange: CollectionSynchronizerProps['hasLocalChange'];
 
   /**
    * CollectionId -> State.
@@ -62,6 +68,7 @@ export class CollectionSynchronizer extends Resource {
     this._sendCollectionState = params.sendCollectionState;
     this._queryCollectionState = params.queryCollectionState;
     this._shouldSyncCollection = params.shouldSyncCollection;
+    this._hasLocalChange = params.hasLocalChange;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
@@ -246,7 +253,12 @@ export class CollectionSynchronizer extends Resource {
     }
 
     const localState = perCollectionState.localState ?? { documents: {} };
-    return isDiffEmpty(diffCollectionStateForPeer(localState, remoteState, { isEdgePeer: isEdgePeerId(peerId) }));
+    return isDiffEmpty(
+      diffCollectionStateForPeer(localState, remoteState, {
+        isEdgePeer: isEdgePeerId(peerId),
+        hasLocalChange: this._hasLocalChange,
+      }),
+    );
   }
 
   private _diffCollectionState(collectionId: string, peerId: PeerId, trigger: SyncSpanTrigger) {
@@ -258,7 +270,10 @@ export class CollectionSynchronizer extends Resource {
 
     log('diffCollectionState', { collectionId, peerId });
     const localState = perCollectionState.localState ?? { documents: {} };
-    const diff = diffCollectionStateForPeer(localState, remoteState, { isEdgePeer: isEdgePeerId(peerId) });
+    const diff = diffCollectionStateForPeer(localState, remoteState, {
+      isEdgePeer: isEdgePeerId(peerId),
+      hasLocalChange: this._hasLocalChange,
+    });
     if (isDiffEmpty(diff)) {
       this._endSyncSpan(collectionId, peerId, 'synced');
     } else {
@@ -432,8 +447,9 @@ type SyncSpanOutcome = 'synced' | 'disconnected' | 'closed';
 const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
   diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
 
-export const isCollectionStateEqual = (local: CollectionState, remote: CollectionState): boolean =>
-  isDiffEmpty(diffCollectionState(local, remote));
+/** Same documents and heads, as sets; exact because a head added beside a shared one is a change. */
+export const isCollectionStateEqual = (left: CollectionState, right: CollectionState): boolean =>
+  isDiffEmpty(diffCollectionState(left, right, { exact: true }));
 
 /**
  * Strip entries whose heads array is empty before sending a CollectionState
@@ -473,13 +489,23 @@ export const subsetRemoteToLocal = (local: CollectionState, remote: CollectionSt
 export const diffCollectionStateForPeer = (
   local: CollectionState,
   remote: CollectionState,
-  { isEdgePeer }: { isEdgePeer: boolean },
+  { isEdgePeer, hasLocalChange }: { isEdgePeer: boolean; hasLocalChange?: HasLocalChange },
 ): CollectionStateDiff => {
   const effectiveRemote = isEdgePeer ? subsetRemoteToLocal(local, remote) : remote;
-  return diffCollectionState(local, effectiveRemote);
+  return diffCollectionState(local, effectiveRemote, { hasLocalChange });
 };
 
-export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
+export type DiffCollectionStateOptions = {
+  hasLocalChange?: HasLocalChange;
+  /** Compares head sets exactly instead of applying the overlap rule. */
+  exact?: boolean;
+};
+
+export const diffCollectionState = (
+  local: CollectionState,
+  remote: CollectionState,
+  { hasLocalChange, exact = false }: DiffCollectionStateOptions = {},
+): CollectionStateDiff => {
   const localDocuments = Record.filter(local.documents, (heads) => heads.length > 0);
   const remoteDocuments = Record.filter(remote.documents, (heads) => heads.length > 0);
   // NOTE: Using `Array.union` is slow.
@@ -493,13 +519,19 @@ export const diffCollectionState = (local: CollectionState, remote: CollectionSt
       missingOnLocal.push(documentId);
     } else if (!remoteDocuments[documentId]) {
       missingOnRemote.push(documentId);
-    } else if (!headsOverlap(local.documents[documentId], remote.documents[documentId])) {
+    } else if (
+      exact
+        ? !headsEqual(local.documents[documentId], remote.documents[documentId])
+        : !headsOverlap(local.documents[documentId], remote.documents[documentId]) ||
+          advertisesMissingChange(documentId, local.documents[documentId], remote.documents[documentId], hasLocalChange)
+    ) {
       // Subduction's `getAllHeads()` on the edge mixes raw `LooseCommit` tips with
       // fragment heads (commit IDs promoted to depth >= 1 by leading-zero count of the
       // hash). The host's `automerge.getHeads(doc)` only ever sees raw change tips —
       // it has no notion of fragments — so the two views can disagree on a doc's
       // head set even when every change byte is replicated. We treat the doc as in
-      // sync as long as both sides agree on at least one head.
+      // sync as long as both sides agree on at least one head and the remote advertises no change
+      // the local replica lacks.
       different.push(documentId);
     }
   }
@@ -527,6 +559,25 @@ const headsOverlap = (a: readonly string[], b: readonly string[]): boolean => {
     }
   }
   return false;
+};
+
+const headsEqual = (a: readonly string[], b: readonly string[]): boolean => {
+  const aset = new Set(a);
+  const bset = new Set(b);
+  return aset.size === bset.size && [...bset].every((head) => aset.has(head));
+};
+
+const advertisesMissingChange = (
+  documentId: DocumentId,
+  local: readonly string[],
+  remote: readonly string[],
+  hasLocalChange: HasLocalChange | undefined,
+): boolean => {
+  if (!hasLocalChange) {
+    return false;
+  }
+  const localSet = new Set(local);
+  return remote.some((head) => !localSet.has(head) && !hasLocalChange(documentId, head));
 };
 
 const validateCollectionState = (state: CollectionState) => {

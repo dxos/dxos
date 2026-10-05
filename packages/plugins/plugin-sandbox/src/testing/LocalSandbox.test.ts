@@ -105,4 +105,17 @@ describe.skipIf(unavailable)('SandboxPlugin (local backend)', { timeout: 60_000 
       expect(yield* Blob.read(blob)).toEqual(PNG_BYTES);
     }).pipe(Effect.provide(TestLayer), Effect.provideService(TestContextService, ctx)),
   );
+
+  // Only the desktop app's helper serves files; in-process, the model gets the reason instead of a failure.
+  it.effect('reports that an in-process backend cannot publish files', (ctx) =>
+    Effect.gen(function* () {
+      yield* Operation.invoke(SandboxOperation.CreateSandbox, { name: 'publish-test' });
+      const [sandbox] = yield* Database.query(Filter.type(Sandbox.Sandbox)).run;
+      const result = yield* Operation.invoke(SandboxOperation.PublishFiles, {
+        sandbox: Ref.make(sandbox),
+        path: 'dist',
+      });
+      expect(result).toEqual({ url: '', error: 'this sandbox backend cannot publish files' });
+    }).pipe(Effect.provide(TestLayer), Effect.provideService(TestContextService, ctx)),
+  );
 });

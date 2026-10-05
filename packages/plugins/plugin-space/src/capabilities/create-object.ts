@@ -4,17 +4,41 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
-import { Collection, Type } from '@dxos/echo';
+import { Collection, Format, Type } from '@dxos/echo';
 import { createDefaultSchema } from '@dxos/schema';
 import { Organization, Person, Task } from '@dxos/types';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
+/**
+ * A task is named by its title, so the form holds its submit (button and Cmd/Ctrl+Enter alike) until
+ * there is one; the description is edited as markdown, as it is everywhere else a task is written.
+ */
+export const TaskInputSchema = Schema.Struct(Task.Task.fields).mapFields(
+  Struct.assign({
+    title: Schema.String.pipe(
+      Schema.check(Schema.makeFilter((value: string) => value.trim().length > 0 || 'Title cannot be empty.')),
+      Schema.annotate({ title: 'Title' }),
+    ),
+    description: Schema.optional(
+      Schema.String.pipe(
+        Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+        Schema.annotate({ title: 'Description' }),
+      ),
+    ),
+  }),
+);
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Held for the Type entry: the dialog creates through `AddType`, whose process cannot see them.
+    const plugins = yield* Plugin.Service;
+    const capabilities = yield* Capability.Service;
     return [
       Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
         {
@@ -46,6 +70,12 @@ export default Capability.makeModule(
                 },
                 { spaceId: options.db.spaceId },
               );
+              if (!result.notified) {
+                yield* SpaceCapabilities.notifyTypeAdded(
+                  { plugins, capabilities },
+                  { db: options.db, type: result.object },
+                );
+              }
               return {
                 id: result.id,
                 object: result.object,
@@ -84,7 +114,7 @@ export default Capability.makeModule(
         },
         {
           id: Type.getTypename(Task.Task),
-          inputSchema: Type.getSchema(Task.Task),
+          inputSchema: TaskInputSchema,
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Task.make(props);

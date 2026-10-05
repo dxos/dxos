@@ -20,14 +20,14 @@ export const SearchPanel = ({ children, ...props }: SearchPanelProps) => {
   return (
     <SearchList.Root {...props}>
       <Panel.Root classNames='dx-expand dx-base-surface'>
-        <Panel.Content asChild>
+        <Panel.Body asChild>
           <SearchList.Content>{children}</SearchList.Content>
-        </Panel.Content>
-        <Panel.Statusbar asChild>
+        </Panel.Body>
+        <Panel.Footer>
           <Toolbar.Root>
             <SearchList.Input placeholder={t('search.placeholder')} autoFocus={autoFocus} />
           </Toolbar.Root>
-        </Panel.Statusbar>
+        </Panel.Footer>
       </Panel.Root>
     </SearchList.Root>
   );

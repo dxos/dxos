@@ -4,11 +4,11 @@
 
 // @import-as-namespace
 
+import * as Telemetry from 'effect/ai/Telemetry';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { DXN } from '@dxos/keys';
 

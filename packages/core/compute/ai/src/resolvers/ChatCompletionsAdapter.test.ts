@@ -3,16 +3,16 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { expect } from 'vitest';
 
 import { Obj } from '@dxos/echo';
@@ -198,6 +198,50 @@ const promptWithToolCall = [
     ],
   },
 ];
+
+/** A model whose every request is rejected with the given status and body. */
+const rejecting = (status: number, body: string) => {
+  const stub = HttpClient.make((request) =>
+    Effect.succeed(
+      HttpClientResponse.fromWeb(
+        request,
+        new Response(body, { status, headers: { 'content-type': 'application/json' } }),
+      ),
+    ),
+  );
+  const clientLayer = ChatCompletionsAdapter.clientLayer({
+    baseUrl: 'http://test',
+    apiFormat: 'ollama',
+    provider: 'ollama',
+  }).pipe(Layer.provide(Layer.succeed(HttpClient.HttpClient, stub)));
+  return ChatCompletionsAdapter.layer('test-model').pipe(Layer.provide(clientLayer));
+};
+
+describe('rejected requests', () => {
+  it.effect(
+    "a tool call Ollama cannot parse fails generateText as the model's invalid output",
+    Effect.fn(function* (_) {
+      const error = yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(
+        Effect.provide(rejecting(500, JSON.stringify({ error: "error parsing tool call: raw='{ code: `1` }'" }))),
+        Effect.flip,
+      );
+      expect(error.reason._tag).toBe('InvalidOutputError');
+      expect(error.message).toContain('error parsing tool call');
+    }),
+  );
+
+  it.effect(
+    'any other rejection fails generateText with the status and the provider message',
+    Effect.fn(function* (_) {
+      const error = yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(
+        Effect.provide(rejecting(404, JSON.stringify({ error: "model 'nope' not found" }))),
+        Effect.flip,
+      );
+      expect(error.reason._tag).toBe('UnknownError');
+      expect(error.message).toContain("HTTP 404: model 'nope' not found");
+    }),
+  );
+});
 
 describe('tool call encoding', () => {
   // Ollama decodes `arguments` into a map and rejects a JSON string with 400.

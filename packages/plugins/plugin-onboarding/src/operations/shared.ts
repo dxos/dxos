@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
-import { type Client } from '@dxos/client';
+import { type Config } from '@dxos/config';
 import { Context as DxContext } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -20,8 +20,8 @@ import { OAuthFlowError } from './errors.ts';
  * so all OAuth recovery operations share the same construction pattern.
  * TODO(wittjosiah): Use shared edge client.
  */
-export const createEdgeHttpClient = (client: Client): EdgeHttpClient => {
-  const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+export const createEdgeHttpClient = (config: Config): EdgeHttpClient => {
+  const edgeUrl = config.values.runtime?.services?.edge?.url;
   invariant(edgeUrl, 'Edge URL not configured.');
   return new EdgeHttpClient(edgeUrl);
 };

@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -17,7 +17,7 @@ import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
@@ -48,12 +48,8 @@ import { TaskFilter } from './TaskFilter.tsx';
 import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
-  /**
-   * Where a row opens its task. `'plank'` (the default) opens it beside the list, reusing the host's
-   * `task` deck level; `'companion'` opens the host's `~task` companion instead, which keeps the
-   * host itself in front of the reader. A host offers `'companion'` only where it contributes one.
-   */
-  detail?: 'plank' | 'companion';
+  /** Whether rows render their task's description beneath the title. */
+  showDescription?: boolean;
 };
 
 /**
@@ -63,7 +59,12 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
  * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs are
  * what keep the lists and parent edges consistent.
  */
-export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 'plank' }: TaskSetArticleProps) => {
+export const TaskSetArticle = ({
+  role,
+  attendableId,
+  subject: taskSet,
+  showDescription = true,
+}: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
@@ -162,15 +163,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     spaceId,
   });
 
-  // A row opens its task through the shared reading gesture: the companion beside the list where the
-  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
-  // the host's node — the project's inside its Tasks tab.
   const currentId = useSelection(attendableId, 'single');
   const openDetail = useDetailNavigation({
     contextId: attendableId,
     getPath: (id) => `${attendableId}/${id}`,
-    level: 'task',
-    companion: detail === 'companion' ? 'task' : undefined,
   });
   const handleOpen = useCallback(
     (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),
@@ -278,13 +274,16 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     </TaskFilter>
   );
 
-  const content = (
+  return (
+    // One layout whether the set is its own plank or a host's section (the project's Tasks tab): the filter in the
+    // header, the list filling the body, and the editor in the footer so it stays below the list. `TaskList.Root`
+    // renders no element, so it can wrap the whole panel.
     <TaskList.Root
       tasks={tasks}
       groups={groups}
       hierarchical
       selectable
-      showDescription
+      showDescription={showDescription}
       showEstimates
       descriptionComponents={descriptionComponents}
       checked={checked}
@@ -298,47 +297,29 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       onTaskMove={arranged ? undefined : handleMove}
       onTaskSelect={handleOpen}
     >
-      <TaskList.Viewport>
-        <TaskList.Content />
-      </TaskList.Viewport>
-      {/* Create-only: the detail is the task the row opens, so the pane stays the add row rather
-          than turning into an editor the moment a row is selected. Full width, edge to edge — it is
-          the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
-      <TaskList.Editor
-        createOnly
-        showDescription
-        // Only where a plugin can store the file, as the task's own article decides.
-        acceptFiles={!!attachFile}
-        descriptionExtensions={descriptionExtensions}
-        // Flush with the list, with no border of its own: it reads as the list's last row.
-        classNames='bg-input-surface px-15 pb-2'
-        placeholder={t('task-create.placeholder')}
-      />
+      <Panel.Root role={role}>
+        <Panel.Header>
+          <Toolbar.Root inactive={!hasAttention}>{filterRow}</Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body>
+          {/* Fills the body (no flex container, so growing alone would not bound it): rows scroll inside it. */}
+          <TaskList.Viewport classNames='dx-expand'>
+            <TaskList.Content />
+          </TaskList.Viewport>
+        </Panel.Body>
+        {/* Framed as the chat prompt is: inset from the panel's edges, in a bordered box of its own surface. */}
+        <Panel.Footer classNames='p-2 dx-grow bg-base-surface'>
+          <TaskList.Editor
+            createOnly
+            showDescription
+            acceptFiles={!!attachFile}
+            descriptionExtensions={descriptionExtensions}
+            classNames='py-2 dx-group-surface border border-separator-subtle rounded-sm'
+            placeholder={t('task-create.placeholder')}
+          />
+        </Panel.Footer>
+      </Panel.Root>
     </TaskList.Root>
-  );
-
-  return (
-    <Switch.Root
-      on={role}
-      fallback={
-        <Panel.Root role={role}>
-          <Panel.Toolbar asChild>
-            <Toolbar.Root disabled={!hasAttention}>{filterRow}</Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content>{content}</Panel.Content>
-        </Panel.Root>
-      }
-    >
-      {/* Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
-          chrome, so render the bare list under its own filter row — a nested Panel/scroll root would
-          collapse width, but the filter has to come along or the host's copy of the list has none. */}
-      <Switch.Match when={AppSurface.Section.role}>
-        <div className='flex flex-col dx-grow'>
-          <Toolbar.Root>{filterRow}</Toolbar.Root>
-          {content}
-        </div>
-      </Switch.Match>
-    </Switch.Root>
   );
 };
 

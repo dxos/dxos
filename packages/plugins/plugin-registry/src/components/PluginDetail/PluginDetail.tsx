@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
@@ -16,12 +16,14 @@ import {
   Link,
   ScrollArea,
   Select,
+  Switch,
   Tag,
   ThemedClassName,
-  useThemeContext,
+  composable,
+  composableProps,
+  useThemeMode,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -137,7 +139,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.profile.key);
-    const { themeMode } = useThemeContext();
+    const themeMode = useThemeMode();
     const layout = useLayout();
     // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
     // 4rem floor on both left it with less width for the center content than the gutters themselves.
@@ -146,6 +148,15 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     const iconKey = rawIcon?.key ?? 'ph--circle--regular';
     const iconHue = rawIcon?.hue ?? 'neutral';
     const styles = getStyles(iconHue);
+
+    const versionItems = useMemo(
+      () =>
+        (versions ?? []).map(({ version }) => ({
+          value: version,
+          label: installedVersionTag === version ? `${version} (${t('installed.label')})` : version,
+        })),
+      [versions, installedVersionTag, t],
+    );
 
     const resolvedScreenshots = (screenshots ?? [])
       .map((entry) => (themeMode === 'dark' ? (entry.dark ?? entry.light) : (entry.light ?? entry.dark)))
@@ -165,37 +176,39 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
            */}
           <Grid
             cols={isMobile ? ['2.5rem', 'minmax(0, 1fr)', '2.5rem'] : ['4rem', 'minmax(0, 1fr)', '4rem']}
-            grow={false}
             align='start'
             classNames='dx-document gap-x-4 p-4'
           >
             <Icon
-              classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)}
+              classNames={mx('row-start-1 p-1 rounded-md', isMobile ? 'size-8' : 'size-14', styles.bg, styles.fg)}
               icon={iconKey}
-              size={isMobile ? 8 : 14}
             />
 
-            <Grid
-              cols={['1fr', 'min-content']}
-              grow={false}
-              classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'
-            >
+            <Grid cols={['fill', 'min']} classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'>
               <div className='flex items-center gap-2'>
                 <h2 className='text-xl'>{name}</h2>
-                {failure && <PluginFailureBadge failure={failure} size={5} />}
+                {failure && <PluginFailureBadge failure={failure} size='lg' />}
               </div>
               {onInstall ? (
-                <Button density='md' variant='primary' disabled={installing} onClick={onInstall}>
+                <Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
                   {installing ? t('installing.label') : t('install.label')}
                 </Button>
               ) : (
                 <Field.Root>
-                  <Field.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
+                  <Switch
+                    classNames='self-center'
+                    checked={enabled}
+                    onCheckedChange={({ checked }) => onEnabledChange?.(checked)}
+                  />
                 </Field.Root>
               )}
-              <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
+              <div className='flex items-center gap-1 pt-0.5 text-sm text-fg-muted'>
                 {slug}
-                {author && <span className='dx-tag dx-tag--info'>{author}</span>}
+                {author && (
+                  <span className='dx-tag dx-tag-inline' data-hue='info'>
+                    {author}
+                  </span>
+                )}
               </div>
             </Grid>
 
@@ -210,7 +223,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('description.label')} />
                 <Section.Body>
-                  <MarkdownView classNames='text-description' content={description} />
+                  <MarkdownView classNames='text-fg-muted' content={description} />
                 </Section.Body>
               </Section.Root>
             )}
@@ -220,14 +233,12 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Heading title={t('preview.label')} />
                 <Section.Body>
                   <Carousel.Root count={resolvedScreenshots.length}>
-                    <Carousel.Content classNames='contents'>
-                      <Carousel.Viewport>
-                        {resolvedScreenshots.map((src, index) => (
-                          <Carousel.Slide key={src} index={index} src={src} alt={name} />
-                        ))}
-                      </Carousel.Viewport>
-                      <Carousel.Indicators />
-                    </Carousel.Content>
+                    <Carousel.ItemGroup>
+                      {resolvedScreenshots.map((src, index) => (
+                        <Carousel.Item key={src} index={index} src={src} alt={name} />
+                      ))}
+                    </Carousel.ItemGroup>
+                    <Carousel.IndicatorGroup />
                   </Carousel.Root>
                 </Section.Body>
               </Section.Root>
@@ -238,16 +249,24 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Body>
                 <div className='flex gap-3 items-center'>
                   {homePage && (
-                    <Link href={homePage} classNames='text-sm text-description'>
+                    <Link href={homePage} classNames='text-sm text-fg-muted'>
                       {t('home-page.label')}
-                      <Icon icon='ph--arrow-square-out--regular' size={3} classNames='ml-1 dx-icon-inline' />
+                      <Icon
+                        icon='ph--arrow-square-out--regular'
+                        size='xs'
+                        classNames='ml-1 inline-block align-[-0.125em]'
+                      />
                     </Link>
                   )}
 
                   {source && (
-                    <Link href={source} classNames='text-sm text-description'>
+                    <Link href={source} classNames='text-sm text-fg-muted'>
                       {t('source.label')}
-                      <Icon icon='ph--arrow-square-out--regular' size={3} classNames='ml-1 dx-icon-inline' />
+                      <Icon
+                        icon='ph--arrow-square-out--regular'
+                        size='xs'
+                        classNames='ml-1 inline-block align-[-0.125em]'
+                      />
                     </Link>
                   )}
 
@@ -297,24 +316,21 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Heading title={t('versions.label')} />
                 <Section.Body>
                   <div className='flex gap-2 items-center'>
-                    <Select.Root value={selectedVersionTag} onValueChange={onVersionChange}>
-                      <Select.TriggerButton classNames='min-w-32' />
-                      <Select.Portal>
-                        <Select.Content>
-                          <Select.Viewport>
-                            {versions.map((versionEntry) => (
-                              <Select.Option key={versionEntry.version} value={versionEntry.version}>
-                                {versionEntry.version}
-                                {installedVersionTag === versionEntry.version ? ` (${t('installed.label')})` : ''}
-                              </Select.Option>
-                            ))}
-                          </Select.Viewport>
-                        </Select.Content>
-                      </Select.Portal>
+                    <Select.Root
+                      items={versionItems}
+                      value={selectedVersionTag ? [selectedVersionTag] : []}
+                      onValueChange={({ value: [value] }) => value && onVersionChange?.(value)}
+                    >
+                      <Select.Trigger classNames='min-w-32' />
+                      <Select.Content>
+                        {versionItems.map((item) => (
+                          <Select.Item key={item.value} item={item} />
+                        ))}
+                      </Select.Content>
                     </Select.Root>
                     {onInstallVersion && (
                       <Button
-                        density='md'
+                        size='md'
                         variant='primary'
                         disabled={installing || selectedVersionTag === installedVersionTag}
                         onClick={onInstallVersion}
@@ -353,7 +369,7 @@ PluginDetail.displayName = 'PluginDetail';
 const SectionRoot = ({ children }: PropsWithChildren<{}>) => <>{children}</>;
 
 const SectionHeading = ({ title }: { title: string }) => (
-  <h2 className='col-start-2 col-span-2 pt-6 pb-2 uppercase text-sm font-medium text-subdued'>{title}</h2>
+  <h2 className='col-start-2 col-span-2 pt-6 pb-2 uppercase text-sm font-medium text-fg-subtle'>{title}</h2>
 );
 
 const SectionBody = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (

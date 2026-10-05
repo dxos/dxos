@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type ProcessManager } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { EntityId } from '@dxos/keys';
@@ -106,7 +107,7 @@ type AgentStep = Schema.Schema.Type<typeof AgentStep>;
  * it one step, so the caller can interleave the agent's own trace events with the child operation
  * processes that {@link runScenario} spawns beneath it.
  */
-export const SimulatedAgent = Process.make(
+export const SimulatedAgent = Operation.makeDurable(
   {
     key: 'org.dxos.testing.process.agent',
     input: AgentStep,
@@ -196,7 +197,7 @@ type OperationInput = Schema.Schema.Type<typeof OperationInput>;
  * Storybook fixture: a {@link Process} that emits the `operation.start`/`operation.end` pair a real
  * operation process emits, with a simulated execution time in between.
  */
-export const SimulatedOperation = Process.make(
+export const SimulatedOperation = Operation.makeDurable(
   {
     key: 'org.dxos.testing.process.operation',
     input: OperationInput,

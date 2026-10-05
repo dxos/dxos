@@ -5,7 +5,7 @@
 import { useAtomSet } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useContext, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';

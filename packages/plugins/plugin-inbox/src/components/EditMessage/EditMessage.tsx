@@ -8,10 +8,10 @@ import React, { type Ref, useCallback, useMemo, useRef, useState } from 'react';
 import { type Database, Obj } from '@dxos/echo';
 import {
   Button,
-  Column,
+  Container,
   Field,
   Icon,
-  IconButton,
+  Input,
   ScrollArea,
   composable,
   composableProps,
@@ -21,6 +21,7 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, RefEditor } from '@dxos/react-ui-form';
 import { type Message as MessageType, Person } from '@dxos/types';
 import { type Extension, keymap } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -83,22 +84,24 @@ const RecipientEditor = ({
   classNames?: string;
   onChange: (value: string) => void;
 }) => (
-  <RefEditor
-    ref={editorRef}
-    extensions={extensions}
-    db={db}
-    type={Person.Person}
-    mode='email'
-    match={EMAIL_REGEX}
-    icon='ph--user--regular'
-    getLabel={getPersonLabel}
-    getValues={getPersonValues}
-    activateOnTyping
-    classNames={['flex min-w-0 h-[2rem] items-center', classNames]}
-    placeholder={placeholder}
-    value={value}
-    onChange={onChange}
-  />
+  // The grid cell: the editor's frame takes no layout classes, so its placement in the header grid lives here.
+  <div className={mx('min-w-0', classNames)}>
+    <RefEditor
+      ref={editorRef}
+      extensions={extensions}
+      db={db}
+      type={Person.Person}
+      mode='email'
+      match={EMAIL_REGEX}
+      icon='ph--user--regular'
+      getLabel={getPersonLabel}
+      getValues={getPersonValues}
+      activateOnTyping
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+    />
+  </div>
 );
 
 export type EditMessageProps = {
@@ -206,12 +209,12 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
     const showHeader = title != null || !!onDelete;
 
-    const labelStyles = 'shrink-0 ps-2 pe-2 text-description text-sm';
+    const labelStyles = 'shrink-0 ps-2 pe-2 text-fg-muted text-sm';
 
     return (
       <ScrollArea.Root>
         <ScrollArea.Viewport>
-          <Column.Root
+          <Container
             {...composableProps(props, {
               // The editor row uses `minmax(8lh,1fr)` (not `1fr`) so its minimum height participates in
               // layout: when the surface is short the whole form scrolls (outer ScrollArea) instead of
@@ -224,10 +227,10 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
             ref={forwardedRef}
           >
             {showHeader && (
-              <Column.Center classNames='flex items-center justify-between pt-form-gap'>
+              <div className='flex items-center justify-between pt-form-gap'>
                 <h2 className='text-lg'>{title}</h2>
                 {onDelete && (
-                  <IconButton
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--trash--regular'
@@ -235,13 +238,13 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                     onClick={onDelete}
                   />
                 )}
-              </Column.Center>
+              </div>
             )}
 
             {/* Label / editor / reveal-links tracks; every row shares the grid so the labels and
                 fields align as columns, with a small row gap separating the fields vertically. */}
-            <Column.Center
-              classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-y-2'
+            <div
+              className='grid grid-cols-[min-content_1fr_min-content] items-center gap-y-2'
               data-testid='edit-email-form'
             >
               <span className={labelStyles}>{t('draft-to.label')}</span>
@@ -255,7 +258,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                 onChange={(value) => updateField('to', value)}
               />
               {(!showCc || !showBcc) && (
-                <span className='shrink-0 flex items-center gap-2 ps-2 text-sm text-description'>
+                <span className='shrink-0 flex items-center gap-2 ps-2 text-sm text-fg-muted'>
                   {!showCc && (
                     <button type='button' className='dx-link-hover' onClick={revealCc}>
                       {t('draft-cc.label')}
@@ -299,7 +302,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
               <Field.Root>
                 <Field.Label srOnly>{t('draft-subject.label')}</Field.Label>
-                <Field.Input
+                <Input
                   ref={subjectRef}
                   classNames='col-span-3'
                   placeholder={t('draft-subject.placeholder')}
@@ -314,26 +317,26 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                   }}
                 />
               </Field.Root>
-            </Column.Center>
+            </div>
 
-            <Column.Center classNames='flex flex-col dx-grow py-3'>
+            <div className='flex flex-col dx-grow py-3'>
               <Editor
                 compact
-                classNames='dx-input dx-expand'
+                classNames='dx-input-box dx-expand'
                 placeholder={t('message-body.placeholder')}
                 extensions={extensions}
                 value={message.blocks?.find((block) => block._tag === 'text')?.text ?? ''}
                 onChange={handleBodyChanged}
               />
-            </Column.Center>
+            </div>
 
-            <Column.Center classNames='pb-form-padding'>
+            <div className='pb-form-padding'>
               <Button variant='primary' onClick={handleSend} data-testid='send-email-button'>
-                <Icon icon='ph--paper-plane-right--regular' size={5} />
+                <Icon icon='ph--paper-plane-right--regular' size='lg' />
                 <span className='ms-2'>{t('send-email-button.label')}</span>
               </Button>
-            </Column.Center>
-          </Column.Root>
+            </div>
+          </Container>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );

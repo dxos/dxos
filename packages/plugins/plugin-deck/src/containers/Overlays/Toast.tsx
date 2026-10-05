@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Button, Toast as NaturalToast, type ToastRootProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type ToastRootProps, Toast as UiToast, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -31,21 +31,17 @@ export const Toast = ({
   };
 
   return (
-    <NaturalToast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
-      <NaturalToast.Title icon={icon} onClose={() => handleOpenChange(false)}>
-        {title && <span>{toLocalizedString(title, t)}</span>}
-      </NaturalToast.Title>
-      {description && <NaturalToast.Description>{toLocalizedString(description, t)}</NaturalToast.Description>}
+    <UiToast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
+      <UiToast.Header icon={icon}>{title && toLocalizedString(title, t)}</UiToast.Header>
+      {description && <UiToast.Description>{toLocalizedString(description, t)}</UiToast.Description>}
       {onAction && actionAlt && actionLabel && (
-        <NaturalToast.Actions>
-          <NaturalToast.Action altText={toLocalizedString(actionAlt, t)} asChild>
-            <Button data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
-              {toLocalizedString(actionLabel, t)}
-            </Button>
-          </NaturalToast.Action>
-        </NaturalToast.Actions>
+        <UiToast.Footer>
+          <UiToast.ActionTrigger data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
+            {toLocalizedString(actionLabel, t)}
+          </UiToast.ActionTrigger>
+        </UiToast.Footer>
       )}
-    </NaturalToast.Root>
+    </UiToast.Root>
   );
 };
 

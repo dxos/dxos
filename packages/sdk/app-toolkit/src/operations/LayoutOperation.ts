@@ -4,10 +4,13 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { NoHandlerError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { Selection } from '@dxos/react-ui-attention/types';
@@ -241,7 +244,7 @@ export const setNotifyOverride = (override: NotifyOverride): { notifyOverride: N
   notifyOverride: override,
 });
 
-/** Extracts a {@link NotifyOverride} from a failed process's `error` (`Process.Info.error`, a `SerializedError` whose `context` carries it), if present. */
+/** Extracts a {@link NotifyOverride} from a failed process's `error` (`Process.Process.error`, a `SerializedError` whose `context` carries it), if present. */
 export const getNotifyOverride = (failure: unknown): NotifyOverride | null => {
   if (!Predicate.isObject(failure) || !Predicate.isObject(failure.context)) {
     return null;
@@ -323,26 +326,11 @@ export const Open = Operation.make({
     name: Schema.optional(
       Schema.String.annotate({
         description:
-          'Optional name for the plank, which behaves like a browser tab: opening under a name that ' +
-          'is already taken reuses that plank in place rather than adding another. Callers that open ' +
-          'a stream of one-at-a-time items (a message from a mailbox, say) pass a constant name so the ' +
-          'deck does not grow an entry per item.',
-      }),
-    ),
-    root: Schema.optional(
-      Schema.String.annotate({
-        description:
-          'The deck root this open is relative to, whose type declares the chain of levels (see ' +
-          '`level`). Only meaningful together with `level`.',
-      }),
-    ),
-    level: Schema.optional(
-      Schema.String.annotate({
-        description:
-          "Open at this level of the root's declared chain (e.g. `message` in `mailbox / message / " +
-          "attachment`). The level supplies the plank name, so the level's plank is reused rather " +
-          'than added to, and opening at a level closes every level below it — reading a second ' +
-          "message drops the first one's attachment. Prefer this to hand-building `name`.",
+          'Optional name for the plank, which behaves like a browser tab: adding a plank under a name ' +
+          'that is already taken reuses that plank in place rather than adding another (a `solo` ' +
+          'navigation replaces the deck anyway, and shift asks for a new plank). Callers that open ' +
+          'a stream of one-at-a-time items pass a constant name so the deck does not grow an entry per ' +
+          'item. A `detail` open needs no name: the deck names it after its pivot.',
       }),
     ),
     workspace: Schema.optional(Schema.String.annotate({ description: 'The workspace to open the items in.' })),
@@ -361,15 +349,18 @@ export const Open = Operation.make({
     ),
     pivotId: Schema.optional(Schema.String.annotate({ description: 'The id of the item to place new items next to.' })),
     disposition: Schema.optional(
-      Schema.Literals(['solo', 'add', 'auto']).annotate({
+      Schema.Literals(['solo', 'add', 'auto', 'detail']).annotate({
         description:
           'How the deck should place the opened items. `solo` (the default) navigates: the deck becomes ' +
           'just the opened items, unless they are all already open (the existing plank scrolls into view). ' +
           '`add` inserts the items as new planks — immediately after `pivotId` when provided (in-plank ' +
           'navigation anchors at its origin), else at the end of the deck. `auto` follows the deck: ' +
           'when already sliding (2+ planks) it adds beside its origin (`pivotId`, falling back to the ' +
-          'attended plank); when solo it navigates. Holding shift (via `modifiers`) forces any ' +
-          'disposition into `add`.',
+          'attended plank); when solo it navigates. `detail` opens the item as the detail of `pivotId` ' +
+          "(a list's selected row), a named open under a name the deck derives from `pivotId`: it " +
+          'replaces whatever `pivotId` last opened as its detail, and that ' +
+          "detail's own details close with it; a flattened deck shows it in the companion beside " +
+          'its pivot. Holding shift (via `modifiers`) forces any disposition into `add`.',
       }),
     ),
     modifiers: Schema.optional(
@@ -478,6 +469,21 @@ export const UpdateCompanion = Operation.make({
   }),
   output: Schema.Void,
 });
+
+/**
+ * Closes the companion, for a view that has nothing for one to accompany (settings). A layout without companions has
+ * no `UpdateCompanion` handler, which is not a failure; it is matched on the whole cause, since some invokers report it
+ * as a defect rather than an error.
+ */
+export const closeCompanion = (): Effect.Effect<void, NoHandlerError, Operation.Service> =>
+  Operation.invoke(UpdateCompanion, { subject: null }).pipe(
+    Effect.catchCause((cause) => {
+      const error = Cause.squash(cause);
+      return error instanceof NoHandlerError && error.context?.operationKey === UpdateCompanion.meta.key
+        ? Effect.void
+        : Effect.failCause(cause);
+    }),
+  );
 
 //
 // Selection Operations

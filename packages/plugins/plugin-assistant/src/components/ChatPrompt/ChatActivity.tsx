@@ -66,17 +66,21 @@ export const ChatActivity = ({ classNames, activity, wakeAt }: ChatActivityProps
 
   return (
     // `font-body` overrides the pill root's `font-mono`, which suits the status pill's token counts
-    // and elapsed clock but renders a sentence as debug output.
-    <NaturalChatStatus.Root defaultRunning={false} classNames={['py-1 px-2 gap-2 text-sm font-body', classNames]}>
-      <NaturalChatStatus.Icon />
-      <NaturalChatStatus.Text>
+    // and elapsed clock but renders a sentence as debug output. One line: a long tool detail truncates
+    // rather than wrapping, so the prompt below does not jump as the phase changes.
+    <NaturalChatStatus.Root
+      defaultRunning={false}
+      classNames={['py-1 px-2 gap-2 text-sm font-body max-w-full min-w-0 whitespace-nowrap', classNames]}
+    >
+      <NaturalChatStatus.Icon classNames='shrink-0' />
+      <NaturalChatStatus.Text classNames='min-w-0 truncate'>
         <span data-testid='assistant.chat-activity'>{label}</span>
       </NaturalChatStatus.Text>
       {/* Only a re-issued request has an attempt worth naming; the first one is just the request. */}
       {activity?.attempt != null && activity.attempt > 1 && (
         <>
-          <NaturalChatStatus.Separator />
-          <NaturalChatStatus.Text>
+          <NaturalChatStatus.Separator classNames='shrink-0' />
+          <NaturalChatStatus.Text classNames='shrink-0'>
             <span data-testid='assistant.chat-activity.attempt'>
               {t('activity.attempt', { attempt: activity.attempt })}
             </span>
@@ -85,8 +89,8 @@ export const ChatActivity = ({ classNames, activity, wakeAt }: ChatActivityProps
       )}
       {activity?.detail && !INLINE_DETAIL_PHASES.has(activity.phase) && (
         <>
-          <NaturalChatStatus.Separator />
-          <NaturalChatStatus.Text>{activity.detail}</NaturalChatStatus.Text>
+          <NaturalChatStatus.Separator classNames='shrink-0' />
+          <NaturalChatStatus.Text classNames='min-w-0 truncate'>{activity.detail}</NaturalChatStatus.Text>
         </>
       )}
     </NaturalChatStatus.Root>

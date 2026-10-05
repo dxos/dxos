@@ -7,7 +7,7 @@
 // pane, which lives in its own file, needs the same context the list provides.
 
 import { createContext } from '@dxos/react-ui';
-import { type MenuItem } from '@dxos/react-ui-menu';
+import type { MenuItem } from '@dxos/react-ui-menu';
 import { type Task } from '@dxos/types';
 
 import { type TaskPlacement } from './hierarchy.ts';
@@ -36,25 +36,25 @@ export type TaskListContextValue = {
   showEstimates: boolean;
   /** Render the questions in each task's history under its title. */
   hierarchical: boolean;
-  /** Paint the tree's drop bands on every row (development affordance). */
-  debug: boolean;
   /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
   showGutter: boolean;
+  /** Render who holds each task; off collapses the assignee track. */
+  showAssignees: boolean;
+  /** Render each task's mnemonic in the leading column, beside its ordinal. */
+  showMnemonics: boolean;
+  /** Rows and the edit pane run to the host's edges, with no inline inset. */
+  flush: boolean;
   /**
-   * The row's column template, built once from the options so the tree's rows and the edit pane
-   * lay out on the same named tracks (`gutter`, `status`, `title`, `assignee`, `estimate`, `priority`,
-   * `actions`).
+   * The column template, built once from the options so the tree's rows and the edit pane lay out on the same named
+   * tracks (`gutter`, `status`, `title`, `artifacts`, `assignee`, `estimate`, `priority`, `actions`).
    */
-  gridTemplateColumns: string;
+  columns: string;
   selected?: string;
   /** Ids of the checked rows — the set an action acts on, distinct from the current row. */
   checked: ReadonlySet<string>;
   /** Whether a branch's sub-tasks are hidden, and the toggle that flips it. */
   isCollapsed: (id: string) => boolean;
   onCollapseToggle: (id: string) => void;
-  /** Ids of the task being dragged and its sub-tasks — lifted out of the list for the drag's duration. */
-  dragging: ReadonlySet<string>;
-  onDraggingChange: (task: Task.Task | undefined) => void;
   onTaskCreate?: TaskCreateHandler;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   getTaskActions?: (task: Task.Task) => MenuItem[];

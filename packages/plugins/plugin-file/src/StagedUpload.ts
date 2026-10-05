@@ -8,11 +8,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database, Ref } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { File } from '@dxos/types';
 
 import { FileLimits, FileOperation } from '#types';
 
-import { UnsupportedUploadTypeError, UploadNotFoundError } from './operations/create-from-upload.ts';
+import { UploadNotFoundError } from './operations/create-from-upload.ts';
 
 /** Bytes a local host received on its own upload listener, keyed by the id it minted. */
 export type Upload = {
@@ -43,11 +44,8 @@ export const createFromUploadHandler = (source: Source) =>
         if (!staged) {
           return yield* Effect.fail(new UploadNotFoundError(uploadId));
         }
-        if (!FileLimits.isAcceptedMimeType(staged.type)) {
-          return yield* Effect.fail(new UnsupportedUploadTypeError(staged.type));
-        }
 
-        const blob = yield* Blob.fromBytes(staged.bytes, { type: staged.type });
+        const blob = yield* Blob.fromBytes(staged.bytes, { type: FileLimits.toStoredMimeType(staged.type) });
         const object = File.make({ name: name ?? staged.name, data: Ref.make(blob) });
         // The blob first: `SetParent` on `File.data` cascades deletion, so the child must exist
         // before the parent references it.
@@ -56,6 +54,47 @@ export const createFromUploadHandler = (source: Source) =>
         yield* Database.flush();
         source.consume(uploadId);
         return { object };
+      }),
+    ),
+  );
+
+/** Where a local host holds bytes for its download listener to serve. */
+export type Sink = {
+  /** Bytes the sink can still accept, checked before a blob is read so an oversized one is never materialized. */
+  available(): number;
+  /** Holds the bytes and returns the id the host's `createDownload` tool signs a URL for. */
+  stage(download: Upload): string;
+};
+
+/** Raised when a file is larger than the host can stage for download. */
+export class DownloadTooLargeError extends BaseError.extend('DownloadTooLargeError') {
+  constructor(size: number, available: number) {
+    super({
+      message: `File is ${size} bytes; the host can stage ${available} more bytes for download. Try again in a few minutes.`,
+    });
+  }
+}
+
+/**
+ * `file.resolveDownload` for a host that serves downloads itself. Registered in place of the default
+ * handler, which only resolves files already in EDGE's content-addressed store: this one reads the
+ * bytes through whichever backend holds them, so inline and extension-backed files download too.
+ */
+export const resolveDownloadHandler = (sink: Sink) =>
+  FileOperation.ResolveDownload.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ file }) {
+        const object = yield* Database.load(file);
+        const blob = yield* Database.load(object.data);
+        const available = sink.available();
+        if (blob.size > available) {
+          return yield* Effect.fail(new DownloadTooLargeError(blob.size, available));
+        }
+
+        const bytes = yield* Blob.read(blob);
+        const type = blob.type ?? 'application/octet-stream';
+        const downloadId = sink.stage({ bytes, type, name: object.name });
+        return { downloadId, name: object.name, type, size: bytes.byteLength };
       }),
     ),
   );

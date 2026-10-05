@@ -17,15 +17,16 @@ tasks:
   # Renders docs/diagrams/*.mmd to .svg through the SVG variant and prints the layout report;
   # `-- --scoreboard` prints the strategy × metric table instead. See docs/diagrams/README.md.
   render-diagrams:
-    # vite-node, not bun: bun's CJS interop cannot construct elkjs's bundled fake worker.
-    command: vite-node scripts/render-diagrams.tsx
-    # vite-node loads vite.config.ts (tool packages, generated `#capabilities` barrels) and resolves
-    # `@dxos/*` imports to dist, so a fresh clone needs all of these built first.
-    deps:
-      - esbuild-plugins:build
-      - vite-plugin-import-source:build
-      - ~:gen-modules
-      - ^:build
+    # Straight from source (`--conditions=source`), so a render never waits on the plugin's ~150
+    # upstream builds; the script reaches only `@dxos/diagram`, `@dxos/ui-theme` and React. tsx, not
+    # bun: bun's CJS interop cannot construct elkjs's bundled fake worker.
+    # `node --import tsx` rather than the tsx CLI, which spends ~2s starting a second process.
+    command: node
+    args:
+      - '--conditions=source'
+      - '--import'
+      - tsx
+      - scripts/render-diagrams.tsx
     inputs:
       - scripts/render-diagrams.tsx
       - docs/diagrams/*.mmd
@@ -51,6 +52,18 @@ tasks:
   eval-layout-views:
     # Compares System One reading each `View` rendering with a reference that saw the image; needs TYPESAFE_API_KEY.
     command: vite-node scripts/eval-layout-views.ts
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
+    options:
+      cache: false
+      runInCI: false
+
+  appeal-diagrams:
+    # Scores diagrams against @dxos/diagram's rule library, by code and, with --judge clef, from the rendered image.
+    command: vite-node scripts/appeal-diagrams.ts
     deps:
       - esbuild-plugins:build
       - vite-plugin-import-source:build

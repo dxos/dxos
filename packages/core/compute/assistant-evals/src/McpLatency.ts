@@ -49,6 +49,11 @@ export type Probe = {
    * for it is an average over verbs that have nothing in common.
    */
   readonly label?: string;
+  /**
+   * Skill whose token an `invokeOperation` probe carries: the `skillToken` an earlier `loadSkill`
+   * probe for that skill returned, since the server refuses a skill's operations without it.
+   */
+  readonly skill?: string;
 };
 
 /** `invokeOperation` dispatches by `key`, so the operation is what a row must be named after. */
@@ -144,8 +149,12 @@ export const probe = async ({
     await client.listTools();
     connectMillis = Date.now() - connectStarted;
 
+    // Filled by `loadSkill` probes as they answer, so the probes after them can present the token.
+    const skillTokens = new Map<string, string>();
     for (const probe of probes) {
-      const { tool, args } = probe;
+      const { tool, skill } = probe;
+      const token = skill === undefined ? undefined : skillTokens.get(skill);
+      const args = token === undefined ? probe.args : { ...probe.args, skillToken: token };
       const label = labelOf(probe);
       for (let index = 0; index < warmup + iterations; ++index) {
         const started = Date.now();
@@ -153,6 +162,14 @@ export const probe = async ({
         try {
           const result = await client.callTool({ name: tool, arguments: args ?? {} });
           isError = result.isError === true;
+          const structured: unknown = result.structuredContent;
+          const issued =
+            typeof structured === 'object' && structured !== null && 'skillToken' in structured
+              ? structured.skillToken
+              : undefined;
+          if (tool === 'loadSkill' && typeof args?.skill === 'string' && typeof issued === 'string') {
+            skillTokens.set(args.skill, issued);
+          }
         } catch {
           // A transport failure is a sample too: a target that 401s every call should show up as a
           // latency report full of errors rather than as a thrown eval with no numbers at all.

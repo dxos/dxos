@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { Banner, IconButton, Progress, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import { formatForDisplay } from '@dxos/schema';
 
@@ -102,10 +102,10 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
           <div className='flex items-start justify-between gap-trim-md pb-form-section-gap'>
             <div className='flex min-w-0 flex-col gap-0.5'>
               <h2 className='text-lg'>{t('fundamentals.heading')}</h2>
-              {asOfDescription && <p className='text-description'>{asOfDescription}</p>}
+              {asOfDescription && <p className='text-fg-muted'>{asOfDescription}</p>}
             </div>
             {onRefresh ? (
-              <IconButton
+              <Button
                 iconOnly
                 variant='ghost'
                 icon='ph--arrows-clockwise--regular'
@@ -117,20 +117,16 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
           </div>
 
           {loading ? (
-            <Progress indeterminate aria-label={t('fundamentals.heading')} />
+            <Progress indeterminate label={t('fundamentals.heading')} />
           ) : error ? (
             <Banner.Root valence='error'>
-              <Banner.Content>
-                <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>
-                <Banner.Body>{error}</Banner.Body>
-              </Banner.Content>
+              <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>
+              <Banner.Body>{error}</Banner.Body>
             </Banner.Root>
           ) : empty ? (
             <Banner.Root valence='neutral'>
-              <Banner.Content>
-                <Banner.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Banner.Title>
-                <Banner.Body>{t('fundamentals.empty.label')}</Banner.Body>
-              </Banner.Content>
+              <Banner.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Banner.Title>
+              <Banner.Body>{t('fundamentals.empty.label')}</Banner.Body>
             </Banner.Root>
           ) : (
             <Form.Fields readonly fieldProvider={fieldProvider} />
