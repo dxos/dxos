@@ -58,6 +58,11 @@
         },
         {
           "args": [],
+          "cmd": "$RESOURCE/dx-agent",
+          "name": "dx-agent"
+        },
+        {
+          "args": [],
           "cmd": "$RESOURCE/dx-sandbox",
           "name": "dx-sandbox"
         }

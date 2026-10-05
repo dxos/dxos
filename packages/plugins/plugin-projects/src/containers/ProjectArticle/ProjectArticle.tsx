@@ -294,6 +294,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   <Form.FieldSet label={t('artifacts.label')} data-testid='projectsPlugin.artifacts'>
                     <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
                   </Form.FieldSet>
+
+                  {/* Settings other plugins keep for this project, such as its folder on this device. */}
+                  <Surface.Surface type={ProjectView.Settings} data={{ project: subject }} />
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>

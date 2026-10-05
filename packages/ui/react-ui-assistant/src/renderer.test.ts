@@ -23,6 +23,21 @@ describe('createRenderer', () => {
     expect(toolkitTags(rendered)).toBe(1);
   });
 
+  test('a request renders as a card that names its message', ({ expect }) => {
+    const request: ContentBlock.Request = {
+      _tag: 'request',
+      requestId: 'tool-2',
+      title: 'Run pnpm test',
+      options: [{ id: 'allow', label: 'Yes', kind: 'allow_once' }],
+      resolution: { outcome: 'selected', optionId: 'allow' },
+    };
+    const asked = message([request]);
+    const text = markdown(createRenderer('normal')(asked));
+    const [, id, payload] = text.match(/^<request message="([^"]+)">(.*)<\/request>$/) ?? [];
+    expect(id).toBe(asked.id);
+    expect(JSON.parse(payload.replace(/&quot;/g, '"'))).toEqual(request);
+  });
+
   test('an empty text block between calls does not split the run', ({ expect }) => {
     const render = createRenderer(undefined);
     // What the runtime actually emits around tool calls. Flushing on one produced a panel per call

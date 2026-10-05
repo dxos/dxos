@@ -59,6 +59,12 @@ export const DelegateTaskToChat = Operation.make({
     // A plain array rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` — a
     // keyword the persisted-operation JSON schema does not carry. The handler rejects an empty list.
     tasks: Schema.Array(Ref.Ref(Task.Task)),
+    harness: Schema.optional(
+      Schema.String.annotate({
+        description:
+          "Id of the agent that works the tasks, e.g. composer or claude-code. Defaults to the reader's default agent.",
+      }),
+    ),
   }),
   output: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
