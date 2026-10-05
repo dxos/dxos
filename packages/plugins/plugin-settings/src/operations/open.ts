@@ -26,6 +26,8 @@ const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOp
           subject: [SettingsPath.getPluginSettingsSectionPath(input.plugin)],
         });
       }
+      // Settings have nothing to accompany, so a companion carried over from the previous workspace would only narrow them.
+      yield* invoke(LayoutOperation.UpdateCompanion, { subject: null });
     }),
   ),
 );
