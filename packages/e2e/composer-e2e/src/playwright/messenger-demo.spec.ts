@@ -57,10 +57,15 @@ const BOB_PARAGRAPH = 'I will draft the launch checklist and share it on Friday.
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** The peers whose companion panels each step closes; set once both have booted. */
+let demoPeers: AppManager[] = [];
+
 const step = async (label: string): Promise<void> => {
   if (DEMO) {
     // eslint-disable-next-line no-console
     console.log(`== ${label}`);
+    // Navigation can reopen R1; a recording keeps it closed unless a step is about a companion.
+    await Promise.all(demoPeers.map((peer) => peer.closeComplementarySidebar()));
     await delay(DEMO_PAUSE);
   }
 };
@@ -152,6 +157,7 @@ test.describe('Messenger demo', () => {
       await waitForDemoTrigger();
     }
 
+    demoPeers = [alice, bob];
     await step('1. Alice names herself');
     await alice.setDisplayName('Alice');
 
