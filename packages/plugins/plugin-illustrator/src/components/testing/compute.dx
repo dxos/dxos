@@ -1,0 +1,43 @@
+# packages/core/compute: agents on top, runtime and hosts in the middle, primitives at the bottom.
+diagram flow=down
+
+group Agents "Agents and pipelines" {
+  node AssistantToolkit "assistant-toolkit"
+  node AgentRuntime "agent-runtime" below AssistantToolkit
+  node Assistant "assistant" left-of AgentRuntime
+  node Link "link: cursors, creds" right-of AgentRuntime
+  node Pipeline "pipeline" right-of Link
+}
+
+group Runtime "Runtime and hosts" below Agents {
+  node Conductor "conductor graphs" below Assistant
+  node ComputeRuntime "compute-runtime" below Link
+  node EdgeCompute "edge-compute" right-of ComputeRuntime
+  node McpServer "mcp-server" below Conductor
+  node CfRuntime "functions-runtime-cf" below EdgeCompute
+}
+
+group Primitives "Primitives" below Runtime {
+  node Compute "compute umbrella" below AgentRuntime
+  node Ai "ai: models, providers" left-of Compute
+  node McpClient "mcp-client" left-of Ai
+  node OperationPkg "operation invoker" right-of Compute
+}
+
+edge Compute -> Ai
+edge OperationPkg -> Compute
+edge McpClient -> Ai
+edge ComputeRuntime -> Compute "processes, triggers"
+edge ComputeRuntime -> OperationPkg
+edge ComputeRuntime -> Link
+edge Link -> Pipeline
+edge EdgeCompute -> ComputeRuntime "remote seams"
+edge EdgeCompute -> CfRuntime
+edge Conductor -> Compute "graph nodes"
+edge Conductor -> Assistant
+edge McpServer -> Compute "ops as tools"
+edge AgentRuntime, Assistant -> ComputeRuntime "spawns processes" bus
+edge AgentRuntime implements Compute "AgentService"
+edge Assistant:left -> McpClient:top
+edge AssistantToolkit -> Assistant
+edge AssistantToolkit -> AgentRuntime

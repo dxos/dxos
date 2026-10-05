@@ -25,7 +25,7 @@ describe('Docs', () => {
       'ask',
       'prefixes',
       'vocabulary',
-      'mermaid',
+      'diagram',
       'table',
       'clear',
       'declarations',

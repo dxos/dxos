@@ -144,14 +144,51 @@ describe.skipIf(Sandbox.interpreter() === undefined)('Sandbox', () => {
 
   test('`display` output is returned separately from the transcript', async () => {
     const result = await run(`
-      await display.mermaid('graph TD\\n  a --> b', 'A diagram');
+      await display.diagram({ nodes: [{ id: 'a' }], edges: [{ from: 'a', to: 'b' }] }, 'A diagram');
       print('the diagram is up');
     `);
     expect(result.ok).toBe(true);
     // The presentation goes to the screen and the print goes to the model; neither leaks into the
     // other, which is the whole basis for telling the agent the user sees only what it displays.
     expect(result.output).toEqual('the diagram is up');
-    expect(result.presented.map((event) => [event.kind, event.title])).toEqual([['mermaid', 'A diagram']]);
+    expect(result.presented.map((event) => [event.kind, event.title])).toEqual([['diagram', 'A diagram']]);
+  });
+
+  test('`display.diagram` stores the normalized graph, from a spec or from mermaid', async () => {
+    const result = await run(`
+      await display.diagram({ direction: 'LR', nodes: [{ id: '@dxos/a', label: 'A' }], edges: [{ from: '@dxos/a', to: 'b' }] });
+      await display.diagram('graph TD; x --> y');
+    `);
+    expect(result.ok).toBe(true);
+    expect(result.presented.map((event) => JSON.parse(event.content))).toEqual([
+      {
+        direction: 'LR',
+        groups: [],
+        nodes: [
+          { id: '@dxos/a', label: 'A' },
+          { id: 'b', label: 'b' },
+        ],
+        edges: [{ from: '@dxos/a', to: 'b' }],
+      },
+      {
+        direction: 'TB',
+        groups: [],
+        nodes: [
+          { id: 'x', label: 'x' },
+          { id: 'y', label: 'y' },
+        ],
+        edges: [{ from: 'x', to: 'y' }],
+      },
+    ]);
+  });
+
+  test('a diagram the illustrator cannot draw fails the snippet, so the model sees why', async () => {
+    const result = await run(`
+      await display.diagram('sequenceDiagram\\n  A->>B: hi');
+    `);
+    expect(result.ok).toBe(false);
+    expect(result.output).toContain('flowcharts only, not sequenceDiagram');
+    expect(result.presented).toEqual([]);
   });
 
   test('`display.clear` drops what this run had published', async () => {
@@ -186,7 +223,7 @@ describe.skipIf(Sandbox.interpreter() === undefined)('Sandbox', () => {
   test('an unrecognised kind renders as text rather than being dropped', () => {
     // The snippet is model-authored, so a typo must not lose a result the user was promised.
     expect(Events.toKind('diagramme')).toEqual('text');
-    expect(Events.toKind('mermaid')).toEqual('mermaid');
+    expect(Events.toKind('diagram')).toEqual('diagram');
   });
 
   test('the host environment is not inherited', async () => {
