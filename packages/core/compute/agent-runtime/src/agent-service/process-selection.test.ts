@@ -62,11 +62,10 @@ const TestLayer = AssistantTestLayer({
   agent: { processes: () => [EchoProcess] },
 });
 
-const makeChat = (process?: string) =>
-  Effect.gen(function* () {
-    const feed = yield* Database.add(Feed.make());
-    return yield* Database.add(Chat.make({ feed: Ref.make(feed), ...(process ? { session: { process } } : {}) }));
-  });
+const makeChat = Effect.fnUntraced(function* (process?: string) {
+  const feed = yield* Database.add(Feed.make());
+  return yield* Database.add(Chat.make({ feed: Ref.make(feed), ...(process ? { session: { process } } : {}) }));
+});
 
 const runningKeys = Effect.gen(function* () {
   const manager = yield* ProcessManager.Service;

@@ -110,13 +110,12 @@ export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
           return [...state.pendingMessages, ...unseen.values()];
         };
 
-        const enqueue = (blocks: readonly ContentBlock.Any[]) =>
-          Effect.gen(function* () {
-            const message = Message.make({ sender: { role: 'user' }, blocks: [...blocks] });
-            unseen.set(message.id, message);
-            yield* store.enqueueMessage(feed, message);
-            yield* ctx.setAlarm(0);
-          });
+        const enqueue = Effect.fnUntraced(function* (blocks: readonly ContentBlock.Any[]) {
+          const message = Message.make({ sender: { role: 'user' }, blocks: [...blocks] });
+          unseen.set(message.id, message);
+          yield* store.enqueueMessage(feed, message);
+          yield* ctx.setAlarm(0);
+        });
 
         /** Arms the process alarm for what is left: now for a queued prompt, at the next wake-up otherwise. */
         const rearm = Effect.gen(function* () {
@@ -130,18 +129,17 @@ export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
           }
         });
 
-        const runTurn = (prompt: readonly ContentBlock.Any[]) =>
-          Effect.gen(function* () {
-            yield* Trace.write(Trace.AgentRequestBegin, {});
-            yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt] }).pipe(
-              Effect.onExit((exit) =>
-                Trace.write(Trace.AgentRequestEnd, {
-                  status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
-                  error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
-                }),
-              ),
-            );
-          });
+        const runTurn = Effect.fnUntraced(function* (prompt: readonly ContentBlock.Any[]) {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt] }).pipe(
+            Effect.onExit((exit) =>
+              Trace.write(Trace.AgentRequestEnd, {
+                status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
+                error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+              }),
+            ),
+          );
+        });
 
         return {
           // Runs on a fresh spawn only: whatever is pending was left by a process that is gone for

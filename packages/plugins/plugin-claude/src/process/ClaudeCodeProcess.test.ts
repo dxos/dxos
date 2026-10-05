@@ -34,39 +34,37 @@ const TestLayer = AssistantTestLayer({
   extraServices: NodeSubprocess.layer,
 });
 
-const setup = (command: ClaudeCodeProcess.Command, env?: Record<string, string>) =>
-  Effect.gen(function* () {
-    const workspace = realpathSync(mkdtempSync(join(tmpdir(), 'claude-code-process-')));
-    definition = ClaudeCodeProcess.ClaudeCodeProcess({
-      id: CLAUDE_CODE_AGENT,
-      sessions: yield* AcpAgent.Sessions.make(),
-      workspace: () => Effect.succeed(workspace),
-      command: { ...command, env: { ...command.env, ...env } },
-    });
-    const feed = yield* Database.add(Feed.make());
-    const chat = yield* Database.add(
-      Chat.make({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.CLAUDE_CODE_PROCESS_KEY } }),
-    );
-    return { chat, workspace };
+const setup = Effect.fnUntraced(function* (command: ClaudeCodeProcess.Command, env?: Record<string, string>) {
+  const workspace = realpathSync(mkdtempSync(join(tmpdir(), 'claude-code-process-')));
+  definition = ClaudeCodeProcess.ClaudeCodeProcess({
+    id: CLAUDE_CODE_AGENT,
+    sessions: yield* AcpAgent.Sessions.make(),
+    workspace: () => Effect.succeed(workspace),
+    command: { ...command, env: { ...command.env, ...env } },
   });
+  const feed = yield* Database.add(Feed.make());
+  const chat = yield* Database.add(
+    Chat.make({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.CLAUDE_CODE_PROCESS_KEY } }),
+  );
+  return { chat, workspace };
+});
 
 /** The assistant's text in the order the turns produced it. */
-const replies = (feed: Feed.Feed, count: number) =>
-  Effect.gen(function* () {
-    const texts: string[] = [];
-    for (let index = 0; index < count; index++) {
-      const reply = yield* waitForMessage(
-        feed,
-        (message) =>
-          message.sender.role === 'assistant' &&
-          Message.extractText(message).length > 0 &&
-          !texts.includes(Message.extractText(message)),
-        { timeout: 120_000 },
-      );
-      texts.push(Message.extractText(reply));
-    }
-    return texts;
-  });
+const replies = Effect.fnUntraced(function* (feed: Feed.Feed, count: number) {
+  const texts: string[] = [];
+  for (let index = 0; index < count; index++) {
+    const reply = yield* waitForMessage(
+      feed,
+      (message) =>
+        message.sender.role === 'assistant' &&
+        Message.extractText(message).length > 0 &&
+        !texts.includes(Message.extractText(message)),
+      { timeout: 120_000 },
+    );
+    texts.push(Message.extractText(reply));
+  }
+  return texts;
+});
 
 describe('ClaudeCodeProcess', () => {
   it.effect(
