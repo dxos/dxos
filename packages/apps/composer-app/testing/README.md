@@ -110,5 +110,11 @@ node packages/apps/composer-app/testing/bin/qa-browser.mjs http://127.0.0.1:5182
 
 `bin/two-user-invite.mjs [url]` drives a full contact-book invitation between two fresh identities
 (admit before contact, join, admit as contact) and prints Alice's inbox, contacts and envelope badge
-at each step plus every EDGE `/inbox` call. Point it at a deployed origin to check that EDGE accepts
-its identities: a fresh identity there gets `403 identity_not_associated_with_account`.
+at each step plus every EDGE `/inbox` call. A deployed origin serves the inbox only to identities bound
+to a hub account (otherwise `403 identity_not_associated_with_account`); `--account` binds each fresh
+identity with a `test+…@dxos.org` address against `DX_HUB_URL` (default the PR-preview hub,
+`https://preview.dxos.network/hub/`):
+
+```bash
+node packages/apps/composer-app/testing/bin/two-user-invite.mjs https://pr-<n>-composer-dev.dxos.workers.dev/ --account
+```

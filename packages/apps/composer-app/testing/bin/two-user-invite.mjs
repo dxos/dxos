@@ -6,10 +6,15 @@
 // space through the real `SpaceOperation.AddMembers`, and the script reports what reached Alice's inbox
 // and her notifications store. Pages are driven in-process rather than through the debug port, which
 // serves one command at a time and wedges when a caller is interrupted.
-//   node packages/apps/composer-app/testing/bin/two-user-invite.mjs [url]
+//   node packages/apps/composer-app/testing/bin/two-user-invite.mjs [url] [--account]
 import { chromium } from '@playwright/test';
 
-const url = process.argv[2] ?? 'http://127.0.0.1:5182/';
+const args = process.argv.slice(2);
+// Binds each fresh identity to a hub account first, which a deployed origin requires for the inbox.
+const withAccount = args.includes('--account');
+// The hub PR previews are built against (`.github/workflows/env/dev`).
+const HUB_URL = process.env.DX_HUB_URL ?? 'https://preview.dxos.network/hub/';
+const url = args.find((arg) => !arg.startsWith('--')) ?? 'http://127.0.0.1:5182/';
 const TIMEOUT = 600_000;
 // Console lines worth keeping: the inbox send/receive path and anything that failed.
 const RELEVANT = /inbox|invitation|messenger|notification|envelope/i;
@@ -53,6 +58,21 @@ const openUser = async (name) => {
     return { did: id.did, key: Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('') };
   });
   console.log(`${name}: ${identity.did}`);
+  if (withAccount) {
+    // Deployed origins only serve the inbox to identities bound to a hub account. This is the request
+    // `Account.redeemAccessCode` makes; `test+…@dxos.org` addresses skip the code gate on non-production
+    // hubs. Sent from Node so the hub's CORS policy for the app origin does not matter.
+    const response = await fetch(new URL('account/invitation-code/redeem', HUB_URL), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: `test+messenger-${name}-${Date.now()}@dxos.org`,
+        identityDid: identity.did,
+        identityKey: identity.key,
+      }),
+    });
+    console.log(`${name} account (${HUB_URL}): ${response.status} ${(await response.text()).slice(0, 300)}`);
+  }
   return { name, page, logs, ...identity };
 };
 
