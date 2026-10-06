@@ -37,6 +37,7 @@ const CHAT_THREAD_NAME = 'ChatThread';
 
 type ChatThreadContextValue = {
   userHue?: string;
+  viewType?: ChatView;
   onEvent?: (event: ChatThreadEvent) => void;
 };
 
@@ -86,6 +87,9 @@ type ChatThreadRootProps = PropsWithChildren<
  * streaming tail; reserve room to bring the last prompt to the top). Composes with the feed's own
  * parts: `MessageList.Nav`, `useMessageList`, and the rails all work inside it.
  */
+/** Debug's registry: identity-stable, since the feed caches its extensions per registry. */
+const DEBUG_REGISTRY: XmlWidgetRegistry = {};
+
 const ChatThreadRoot = ({
   children,
   model,
@@ -102,9 +106,11 @@ const ChatThreadRoot = ({
   controllerRef,
 }: ChatThreadRootProps) => {
   const renderer = useMemo(() => createRenderer(viewType, { getObjectLabel }), [viewType, getObjectLabel]);
-  // Debug shows the raw document: with no registry the tags stay visible as the text they are.
+  // Debug shows the raw document: an empty registry renders no widgets, so the tags stay visible as
+  // the text they are, but still highlighted as tags.
   const merged = useMemo(
-    () => (viewType === 'debug' ? undefined : registry ? { ...assistantRegistry, ...registry } : assistantRegistry),
+    () =>
+      viewType === 'debug' ? DEBUG_REGISTRY : registry ? { ...assistantRegistry, ...registry } : assistantRegistry,
     [registry, viewType],
   );
   const handleRewind = useCallback((id: string) => onEvent?.({ type: 'rewind', id }), [onEvent]);
@@ -118,7 +124,7 @@ const ChatThreadRoot = ({
   }, [model]);
 
   return (
-    <ChatThreadProvider userHue={userHue} onEvent={onEvent}>
+    <ChatThreadProvider userHue={userHue} viewType={viewType} onEvent={onEvent}>
       <MessageChromeProvider
         onRewind={onEvent && rewind ? handleRewind : undefined}
         streaming={streaming}
@@ -162,7 +168,7 @@ type ChatThreadViewportProps = ComponentPropsWithoutRef<typeof MessageList.Viewp
  * events, which is what keeps the widgets renderable from the tag alone.
  */
 const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThreadViewportProps) => {
-  const { userHue, onEvent } = useChatThreadContext(CHAT_THREAD_VIEWPORT_NAME);
+  const { userHue, viewType, onEvent } = useChatThreadContext(CHAT_THREAD_VIEWPORT_NAME);
 
   const handleClick = useCallback(
     (event: React.MouseEvent) => {
@@ -198,7 +204,12 @@ const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThr
           default, and a caller's classNames extend or override it. */}
       <MessageList.Viewport
         {...props}
-        classNames={['dx-grow', classNames]}
+        classNames={[
+          'dx-grow',
+          // Debug's raw tags and toolkit JSON are reference text, set smaller than the prose around them.
+          viewType === 'debug' && '[&_.cm-codeblock-line]:text-sm [&_.cm-xml-tag]:text-sm',
+          classNames,
+        ]}
         overlay={
           <>
             <ScrollToBottom />
@@ -239,7 +250,7 @@ const ScrollToBottom = () => {
       variant='primary'
       icon='ph--arrow-line-down--regular'
       iconOnly
-      size='sm'
+      size='lg'
       label={t('scroll-to-bottom.label')}
       disabled={hidden}
       aria-hidden={hidden}

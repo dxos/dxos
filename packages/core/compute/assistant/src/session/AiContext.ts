@@ -449,7 +449,13 @@ export class Binder extends Resource {
         }
 
         // Fallback to existing object.
-        return target ?? current.find((obj) => Obj.getURI(obj) === ref.uri);
+        const resolved = target ?? current.find((obj) => Obj.getURI(obj) === ref.uri);
+        if (!resolved) {
+          // A binding that cannot load (e.g. a registry skill the host never registered) would otherwise
+          // vanish from the session without trace.
+          log.warn('unresolved context binding', { uri: ref.uri });
+        }
+        return resolved;
       })
       .filter(isNonNullable);
   }

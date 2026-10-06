@@ -141,20 +141,49 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         const result = data ?? {
           joinUrl: '',
           failed: identityKeys.map((key) => ({ key, error: error?.message ?? 'Unknown error' })),
+          notNotified: [],
         };
-        if (result.failed.length > 0) {
-          const names = result.failed
+        const namesOf = (entries: readonly { key: string }[]) =>
+          entries
             .map(({ key }) => {
               const contact = contacts.find((candidate) => contactKeyHex(candidate) === key);
               return contact ? contactDisplayName(contact) : key.slice(0, 8);
             })
             .join(', ');
+        if (result.failed.length > 0) {
+          const names = namesOf(result.failed);
           await invokePromise(LayoutOperation.AddToast, {
             id: `${meta.profile.key}/add-members-failed`,
             title: ['add-members-failed-toast.title', { ns: meta.profile.key }],
             // Label tuples carry no interpolation values, so the names are resolved here.
             description: t('add-members-failed-toast.description', { names }),
             icon: 'ph--warning--regular',
+          });
+        }
+        if (result.notNotified.length > 0) {
+          const names = namesOf(result.notNotified);
+          const accountRequired = result.notNotified.some(({ reason }) => reason === 'account-required');
+          const { joinUrl } = result;
+          await invokePromise(LayoutOperation.AddToast, {
+            id: `${meta.profile.key}/add-members-not-notified`,
+            title: ['add-members-not-notified-toast.title', { ns: meta.profile.key }],
+            // Label tuples carry no interpolation values, so the names are resolved here.
+            description: t(
+              accountRequired
+                ? 'add-members-not-notified-account-toast.description'
+                : 'add-members-not-notified-toast.description',
+              { names },
+            ),
+            icon: 'ph--bell-slash--regular',
+            ...(joinUrl
+              ? {
+                  actionLabel: ['copy-link.label', { ns: meta.profile.key }],
+                  onAction: () =>
+                    void navigator.clipboard
+                      .writeText(joinUrl)
+                      .catch((error) => log.warn('failed to copy join link', { error })),
+                }
+              : {}),
           });
         }
 

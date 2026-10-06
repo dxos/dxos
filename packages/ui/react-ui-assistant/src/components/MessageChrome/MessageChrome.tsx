@@ -225,9 +225,11 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
 const reveal =
   'pt-1 opacity-0 transition-opacity group-hover/message:opacity-100 group-data-[streaming]/message:invisible';
 
+// Bleeds into the gutter by its own inset, so a selection highlight frames the text rather than
+// ending flush against it while the text keeps the column's alignment.
 const Row = ({ children, classNames, streaming }: PropsWithChildren<{ classNames?: string; streaming?: boolean }>) => (
   <div
-    className={mx('group/message relative py-2', classNames)}
+    className={mx('group/message relative -mx-2 px-2 py-2 rounded-md', classNames)}
     data-streaming={streaming || undefined}
     data-testid='feed.message'
   >
@@ -236,6 +238,16 @@ const Row = ({ children, classNames, streaming }: PropsWithChildren<{ classNames
 );
 
 const promptReveal = mx('justify-end', reveal);
+
+/**
+ * Whether an answer row carries the toolbar: only when it has prose to copy or stats to show. A row
+ * of machinery alone (a synthetic prompt, a tool run) would otherwise reserve a blank toolbar line.
+ */
+const hasToolbar = (message: Message.Message): boolean =>
+  message.blocks.some(
+    (block) =>
+      block._tag === 'stats' || (block._tag === 'text' && block.disposition !== 'synthetic' && !!block.text.trim()),
+  );
 
 /**
  * The assistant feed's per-message frame: the reader's prompts and the model's answers are framed
@@ -270,7 +282,7 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
       ) : (
         <div className='min-w-0'>
           {children}
-          <AssistantToolbar classNames={reveal} message={message} />
+          {hasToolbar(message) && <AssistantToolbar classNames={reveal} message={message} />}
         </div>
       )}
     </Row>

@@ -90,18 +90,25 @@ PaneContent.displayName = 'Pane.Content';
 // Title
 //
 
-type PaneTitleProps = Util.ThemedClassName<ComponentPropsWithRef<'h1'>> & Attention.AttendableId & Attention.Related;
+type PaneTitleProps = Util.ThemedClassName<ComponentPropsWithRef<'h1'>> &
+  Attention.AttendableId &
+  Attention.Related & {
+    /** Set by a slotting parent (`asChild`), whose classes the title keeps alongside its own. */
+    className?: string;
+  };
 
 /** Attention-aware plank title; colors to the accent when the plank (or a related companion) is attended. */
 const PaneTitle = forwardRef<HTMLHeadingElement, PaneTitleProps>(
-  ({ attendableId, related, classNames, ...props }, forwardedRef) => {
+  ({ attendableId, related, classNames, className, ...props }, forwardedRef) => {
     const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     return (
       <h1
         {...props}
         data-attention={((related && isRelated) || hasAttention || isAncestor).toString()}
+        // `className` is what a slotting parent (e.g. `Breadcrumb.Current asChild`) passes down; kept, not replaced.
         className={mx(
           'px-1 min-w-0 w-0 grow truncate font-medium text-fg data-[attention=true]:text-accent-text self-center',
+          className,
           classNames,
         )}
         ref={forwardedRef}

@@ -19,7 +19,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { Message } from '@dxos/types';
 
 import { AssistantTestLayer, waitForMessage } from '../testing/index.ts';
-import { AGENT_PROCESS_KEY, AgentInput, type AgentProcessDefinition } from './agent-process.ts';
+import { AGENT_PROCESS_KEY, AgentInput, type AgentProcessDefinition, makeInputMessage } from './agent-process.ts';
 
 const ECHO_PROCESS_KEY = 'com.example.process.echo';
 
@@ -47,12 +47,7 @@ const EchoProcess: AgentProcessDefinition = Operation.makeDurable(
           setAlarm: () => Effect.void,
           enqueueMessage: () => Effect.void,
         }),
-        onInput: (prompt) =>
-          reply(
-            typeof prompt === 'string'
-              ? prompt
-              : prompt.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join(''),
-          ),
+        onInput: (input) => reply(Message.extractText(makeInputMessage(input))),
       };
     }),
 );

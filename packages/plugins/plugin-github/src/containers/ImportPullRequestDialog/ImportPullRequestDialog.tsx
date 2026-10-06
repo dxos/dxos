@@ -130,26 +130,29 @@ export const ImportPullRequestDialog = () => {
 
   return (
     <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>{t('import-pull-request-dialog.title')}</Dialog.Title>
-        <Dialog.CloseTrigger asChild>
-          <SystemButton.Close />
-        </Dialog.CloseTrigger>
-      </Dialog.Header>
-      <Dialog.Body>
-        <Form.Root
-          autoFocus
-          schema={ImportPullRequestForm}
-          defaultValues={{ reference: '' }}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        >
+      {/* The form spans the dialog, so its actions sit in the footer while reading the form's context. */}
+      <Form.Root
+        autoFocus
+        schema={ImportPullRequestForm}
+        defaultValues={{ reference: '' }}
+        onSave={handleSave}
+        onCancel={handleCancel}
+      >
+        <Dialog.Header>
+          <Dialog.Title>{t('import-pull-request-dialog.title')}</Dialog.Title>
+          <Dialog.CloseTrigger asChild>
+            <SystemButton.Close />
+          </Dialog.CloseTrigger>
+        </Dialog.Header>
+        <Dialog.Body>
           <Form.Content>
             <Form.Fields />
-            <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
           </Form.Content>
-        </Form.Root>
-      </Dialog.Body>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
+        </Dialog.Footer>
+      </Form.Root>
     </Dialog.Content>
   );
 };

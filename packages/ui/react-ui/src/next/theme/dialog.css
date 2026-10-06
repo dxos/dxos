@@ -99,4 +99,8 @@
     padding-inline: var(--dx-dialog-gutter);
     padding-block-end: var(--dx-dialog-gutter);
   }
+  /* A footer a step fills only sometimes (actions portalled in) takes no space while empty. */
+  .dx-dialog-footer:empty {
+    display: none;
+  }
 }

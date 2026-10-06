@@ -41,6 +41,8 @@ import { createToolkit } from './toolkit.ts';
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
+  /** Who the prompt is from, when not the session's reader (e.g. one of several people in a shared agent chat). */
+  sender?: Message.Message['sender'];
   system?: string;
   observer?: GenerationObserver;
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
@@ -269,6 +271,7 @@ export class Session extends Resource {
         objects,
         instructions: this.#instructions,
         prompt: params.prompt,
+        sender: params.sender,
         system: params.system,
         systemPrompt: yield* formatSystem(skills, objects),
       });

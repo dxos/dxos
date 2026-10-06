@@ -14,7 +14,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
-import { AgentInput, type AgentProcessDefinition } from '@dxos/agent-runtime';
+import { AgentInput, type AgentProcessDefinition, makeInputMessage } from '@dxos/agent-runtime';
 import { Alarm, HarnessControl, type PendingState, SessionStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
@@ -112,8 +112,7 @@ export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
           return [...state.pendingMessages, ...unseen.values()];
         };
 
-        const enqueue = Effect.fnUntraced(function* (blocks: readonly ContentBlock.Any[]) {
-          const message = Message.make({ sender: { role: 'user' }, blocks: [...blocks] });
+        const enqueue = Effect.fnUntraced(function* (message: Message.Message) {
           unseen.set(message.id, message);
           yield* store.enqueueMessage(feed, message);
           yield* ctx.setAlarm(0);
@@ -155,10 +154,9 @@ export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
               yield* store.setAlarm(feed, { wakeAt: DateTime.toEpochMillis(at), message: message ?? undefined });
               yield* rearm;
             }),
-            enqueueMessage: ({ content }) => enqueue(content),
+            enqueueMessage: ({ content }) => enqueue(makeInputMessage(content)),
           }),
-          onInput: (prompt) =>
-            enqueue(typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : prompt),
+          onInput: (input) => enqueue(makeInputMessage(input)),
           // One turn per wake, so a stop between turns lands before the next one starts.
           onAlarm: Effect.fnUntraced(
             function* () {

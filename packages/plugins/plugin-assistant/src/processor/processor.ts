@@ -75,6 +75,8 @@ export type AiChatProcessorOptions = {
    */
   chat?: Ref.Ref<Chat.Chat>;
   system?: string;
+  /** Who this processor's prompts come from, when the chat is one of several people's with one agent. */
+  sender?: AgentService.PromptSender;
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
@@ -355,7 +357,7 @@ export class AiChatProcessor {
         yield* this.#forkEphemeralCollector(session);
 
         log('chat processor submitting prompt', { length: requestProp.message.length });
-        yield* session.submitPrompt(createPromptContent(requestProp));
+        yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
         markWork('chat.prompt-submitted');
         log('chat processor submitPrompt returned, waiting for agent', {});
 
@@ -416,7 +418,7 @@ export class AiChatProcessor {
       await this._runtime.runPromise(
         Effect.gen({ self: this }, function* () {
           const session = yield* this.#getSession();
-          yield* session.submitPrompt(createPromptContent(requestProp));
+          yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
           markWork('chat.prompt-submitted');
         }).pipe(Effect.provide(this._spaceLayer)),
       );

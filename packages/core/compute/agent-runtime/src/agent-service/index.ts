@@ -11,6 +11,7 @@ export {
   AgentProcess,
   type AgentProcessDefinition,
   type AgentProcessOptions,
+  makeInputMessage,
 } from './agent-process.ts';
 export { type Delegation, type DelegationStrategy } from './delegation-strategy.ts';
 export * from './turn-producer.ts';

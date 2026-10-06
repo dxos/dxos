@@ -144,6 +144,7 @@
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",

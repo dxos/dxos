@@ -95,3 +95,9 @@ export const formatDiscordSyncFailure = (error: unknown): string => {
   }
   return String(error);
 };
+
+/**
+ * A Discord-backed channel could not do what it was asked: the config is missing or invalid, the
+ * token is unusable, or Discord refused. The message is a reason a person can act on.
+ */
+export class DiscordChannelError extends BaseError.extend('DiscordChannelError', 'Discord channel request failed.') {}
