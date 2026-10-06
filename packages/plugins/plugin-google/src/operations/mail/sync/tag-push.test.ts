@@ -128,9 +128,11 @@ describe('gmail tag push', () => {
     expect(Exit.isFailure(await runCapped())).toBe(true);
     expect(tagHeadsOf(binding)?.length).toBeGreaterThan(0);
 
-    // The user stars an already-synced message mid-backfill; the next capped run pushes only that.
+    // The user stars an already-synced message mid-backfill; the next capped run pushes only that. The
+    // newest message is in run 1's batch because the initial backfill walks newest-first.
     const target = dataset.messages.at(-1)!;
     const message = await feedMessageFor(db, mailbox, target.id);
+    expect(message).toBeDefined();
     const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
     const starred = await Tag.findOrCreate(db, { key: SystemTags.systemTagKey('starred'), label: 'Starred' });
     Tagging.set(message, Obj.getURI(starred).toString(), { index: tagIndex });

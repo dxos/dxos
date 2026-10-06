@@ -54,8 +54,8 @@ export const ExternalSpec = Schema.Struct({
    * `Obj.getVersion` to recover what the index looked like then, without storing a shadow copy.
    *
    * Written in the same update as {@link token} (see {@link writeSyncState}), and also alone by a capped
-   * run: heads ahead of the token only re-read a delta the base already holds, whereas a token ahead of
-   * the heads lets a run diff a fresh delta against a stale base.
+   * run: heads ahead of the token only re-read a delta the base already holds (idempotent absent
+   * concurrent local edits), whereas a token ahead of the heads diffs a fresh delta against a stale base.
    */
   tagHeads: Schema.Array(Schema.String).pipe(Schema.optional),
 });

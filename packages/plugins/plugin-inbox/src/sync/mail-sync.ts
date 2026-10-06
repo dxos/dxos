@@ -782,7 +782,8 @@ export const runMailSync = (
     if (tagPush.pending.length === 0) {
       // Heads advance on capped runs too: a backfill caps every run, and without a base each run's
       // additive reconcile re-pushes — and loads in full — every message synced so far until the
-      // isolate OOMs. Heads ahead of the token only re-read a delta the base already holds.
+      // isolate OOMs. Heads ahead of the token only re-read a delta the base already holds (see
+      // TAG-SYNC.md for the one concurrent-edit case this does not cover).
       //
       // The token and backfill mark advance LAST and only uncapped, after the merged stream committed
       // and the push returned; a crash/cap leaves them, so the next run re-fetches the same chunk.

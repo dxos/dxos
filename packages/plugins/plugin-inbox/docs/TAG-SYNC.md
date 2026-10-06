@@ -192,7 +192,11 @@ if (pending.length === 0) {
 ```
 
 A capped run writes the heads alone. That is the safe direction: the next run re-reads, from the
-unadvanced token, a delta the base already holds, and re-applying it is idempotent. Withholding the
+unadvanced token, a delta the base already holds, and re-applying it is idempotent absent concurrent
+local edits. With one, a replayed `add X` re-applies X over a local removal made between the runs,
+and the removal is lost — not a regression, since without a base the additive path never pushed
+removals at all. An initial backfill never replays: the token is written only by an uncapped run, so
+it stays undefined until backfill completes. Withholding the
 heads instead is not safe for memory: a backfill caps every run, so the base would never exist, and
 every run's additive reconcile would re-push — and load in full — every message synced so far. On
 EDGE that grew until the operation-service isolate ran out of memory.

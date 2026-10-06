@@ -23,17 +23,14 @@ import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
 import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
 import { runGoogleSync } from '../../../testing/sync-fixture.ts';
 
-// Reproduces the production `syncMail` OOM ("Worker exceeded memory limit.", operation-service, 128 MB
-// isolate): a backfill succeeds run after run, then dies once the mailbox feed is large. Two per-run
-// loads read full feed messages (raw HTML body plus synthesized markdown) only to get their foreign ids,
-// and the first is the growth term:
-//  - `pushLocalTags` → `resolveForeignIds`: tag heads are saved only by an uncapped run, so during a
-//    backfill (every run capped) there is never a base, and each run re-pushes — and loads — every
-//    message synced so far. Production logged 100, 200, … 1100 pushed ops, then the query exceeded the
-//    32 MiB RPC cap, and the OOMed run's last log was that query carrying ~1900 ids.
-//  - `Cursor.seedDedupSet`: the newest and oldest 500 feed messages, loaded in full every run, so it
-//    saturates at `2 × DEFAULT_DEDUP_SEED_TAIL × message size` once the feed passes 1000.
-// On EDGE both payloads also cross the db-service → operation-service RPC as JSON before hydration.
+// Memory profile of a capped Gmail backfill, from the production `syncMail` OOM ("Worker exceeded memory
+// limit.", operation-service, 128 MB isolate). Before the fix, tag heads were saved only by uncapped runs,
+// so every backfill run re-pushed — and loaded in full — every message synced so far (production logged
+// 100, 200, … 1100 pushed ops, then the 32 MiB RPC cap, then the OOM). This asserts no run re-pushes.
+// The regression guard that runs in CI is `tag-push.test.ts`; this one is gated and prints a table.
+//
+// Still loaded in full every run: `Cursor.seedDedupSet` reads the newest and oldest 500 feed messages,
+// so it saturates at `2 × DEFAULT_DEDUP_SEED_TAIL × message size` once the feed passes 1000.
 //
 //   DX_SYNC_MEMORY=1 moon run plugin-google:test -- src/operations/mail/sync/sync-memory.test.ts
 //
@@ -96,7 +93,7 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
     await builder.close();
   });
 
-  test('per-run peak heap grows with the dedup seed until the feed passes 2 × seed tail', async ({ expect }) => {
+  test('a capped backfill re-pushes nothing and its dedup seed saturates at 2 × seed tail', async ({ expect }) => {
     const now = new Date();
     const dataset = withHtmlBodies(
       generateGmailDataset({ count: MESSAGES, seed: 11, start: subDays(now, 27), end: subDays(now, 1) }),
@@ -175,6 +172,8 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
     console.table(rows);
 
     expect(Exit.isSuccess(exit)).toBe(true);
+    // No tags change locally in this scenario, so nothing may be pushed back.
+    expect(rows.every((row) => row.pushedOps === 0)).toBe(true);
     // The seed saturates at 2 × tail once the feed holds more than that.
     expect(rows.at(-1)!.seedItems).toBe(2 * SEED_TAIL);
   });
