@@ -38,6 +38,7 @@ export const usePrivateChat = (agent: Agent.Agent): PrivateChatState => {
     }
 
     let cancelled = false;
+    setChat(undefined);
     setFailed(false);
     void (async () => {
       const { data, error } = await invokePromise(
@@ -59,7 +60,10 @@ export const usePrivateChat = (agent: Agent.Agent): PrivateChatState => {
       }
 
       // The returned ref crossed the operation boundary without a resolver, so it is re-made on the database.
-      const loaded = await db.makeRef<Chat.Chat>(data.chat.uri).tryLoad();
+      const loaded = await db
+        .makeRef<Chat.Chat>(data.chat.uri)
+        .tryLoad()
+        .catch(() => undefined);
       if (!cancelled) {
         if (loaded) {
           setChat(loaded);
