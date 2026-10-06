@@ -1,7 +1,7 @@
 /*
  * Breadcrumb: the trail is one block-tall row that never wraps; when it overflows it scrolls sideways with no
  * scrollbar (a crumb trail is glanced at, not scrolled through), so it can sit in a header row. Links are subdued
- * text that takes the base colour on hover; the current page keeps the base colour; separators are faint.
+ * text that takes the base colour on hover; the current page keeps the base colour; separators take the muted colour, as the links do.
  */
 
 @layer dx-components {
@@ -55,7 +55,6 @@
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    color: var(--color-fg-subtle);
-    opacity: 0.5;
+    color: var(--color-fg-muted);
   }
 }
