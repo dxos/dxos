@@ -140,6 +140,32 @@ wake(refusal)  :- fact(dima, P, O), force(commissive), polarity(negative), about
 wake(followup) :- elapsed(goal, 2d), not achieved(goal).
 ```
 
+### State
+
+Goal state is split by who reads it:
+
+- **On the goal object — what the runtime and UI read directly.** `status` (`active` | `paused` |
+  `achieved` | `cancelled`), priority, drivers, the compiled wake rules, and a **situation**: one or two
+  sentences the agent rewrites after each judgment ("Asked Dima Monday; he deferred Tuesday; following
+  up Thursday"). The situation is what a user sees when they ask what the agent is doing for them, and
+  what the model reads first at the next judgment.
+- **In the goal's own fact feed — the history.** A goal is a source like any chat, so its actions and
+  judgments are recorded as tuples: `(goal, relayed, <message>)`, `(goal, awaiting, dima)`,
+  `(goal, declined-by, dima)`, `(goal, judged, "remind him it's the priority")`. The history is
+  append-only and auditable, and other goals' wake rules can match it ("keep me informed" sees the
+  relay).
+
+Nothing on the goal is unjustified by its feed, and `not achieved(goal)` stays a field lookup.
+
+Goal 3 over a week:
+
+| When | Event                                                                                     | Status / situation                                   | Goal feed                            |
+| ---- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------ |
+| Mon  | Rich: "get Dima to help me with the agent plugin"; created, compiled, judged actionable   | active / "Asked Dima; waiting"                       | `relayed <msg>`, `awaiting dima`     |
+| Tue  | Dima: "busy with the release this week"; `wake(refusal)`; instructions say press priority | active / "Dima deferred; told him it's the priority" | `declined-by dima`, `relayed <msg2>` |
+| Thu  | `wake(followup)` alarm after 2 days                                                       | active / "Followed up with Dima"                     | `followed-up dima`                   |
+| Thu  | Dima: "OK, I'll start on it"; `wake(reply)`; achieved; Rich's watch sees it               | achieved / "Dima committed Thursday"                 | `achieved`, `committed dima`         |
+
 ### Examples
 
 | #   | Goal                                             | Kind                 | Drivers                      | What the agent does                                                    | Hard part                                                 |
@@ -156,8 +182,7 @@ wake(followup) :- elapsed(goal, 2d), not achieved(goal).
 ## Open questions
 
 1. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
-2. How achievement and progress are recorded: a status on the goal, facts about the goal, or both.
-3. Where goal evaluation runs — in the Durable Object directly, or by waking an agent session.
-4. How a goal relates to tasks (the agent's planned steps) and whether tasks are derived from goals.
-5. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
-6. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
+2. Where goal evaluation runs — in the Durable Object directly, or by waking an agent session.
+3. How a goal relates to tasks (the agent's planned steps) and whether tasks are derived from goals.
+4. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
+5. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
