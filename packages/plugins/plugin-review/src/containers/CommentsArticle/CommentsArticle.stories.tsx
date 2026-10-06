@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
+import { expect, screen, userEvent, waitFor } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -356,5 +357,17 @@ export const WithCommentsAndSuggestions: Story = {
   args: {
     seedComments: true,
     seedAgentSuggestions: true,
+  },
+};
+
+/**
+ * The companion's toolbar adds a comment on the whole document, not anchored to a span, without selecting any text.
+ */
+export const TestUnanchoredComment: Story = {
+  play: async () => {
+    const button = await screen.findByTestId('comments.object-comment.add', undefined, { timeout: 30_000 });
+    await expect(screen.queryAllByTestId('thread.delete')).toHaveLength(0);
+    await userEvent.click(button);
+    await waitFor(() => expect(screen.getAllByTestId('thread.delete').length).toBeGreaterThan(0), { timeout: 10_000 });
   },
 };

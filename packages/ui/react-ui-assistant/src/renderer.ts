@@ -5,6 +5,7 @@
 import { type URI } from '@dxos/keys';
 import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
+import { safeParseJson } from '@dxos/util';
 
 import { type ChatView } from './types.ts';
 
@@ -41,7 +42,7 @@ export const createRenderer = (
 
     const flushRun = () => {
       if (run.length) {
-        segments.push(toolkitTag(run));
+        segments.push(toolkitTag(run, viewType === 'debug'));
         run = [];
       }
       if (deferred.length) {
@@ -53,6 +54,14 @@ export const createRenderer = (
     for (const block of blocks) {
       if (block._tag === 'toolCall' || block._tag === 'toolResult') {
         run.push(block);
+        continue;
+      }
+
+      // A background tool's result arrives as the next turn's synthetic prompt; it is a result, so it
+      // joins the tool panel rather than reading as a prompt nobody typed.
+      const recovered = isPrompt(message) ? undefined : recoveredToolResult(block);
+      if (recovered) {
+        run.push(recovered);
         continue;
       }
 
@@ -189,6 +198,30 @@ const blockToMarkdown = (
 };
 
 /** The prose a narration block carries; blank means the widget would render no row for it. */
+/** Tool name of a recovered background result; the widget names it, since the original call is gone. */
+export const BACKGROUND_TOOL = 'background';
+
+/** The agent runtime's `<result pid=…>` / `<error pid=…>` prompt for a background tool's outcome. */
+const RECOVERED_RESULT = /^<(result|error) pid=([^>\s]+)>([\s\S]*)<\/\1>$/;
+
+const recoveredToolResult = (block: ContentBlock.Any): ContentBlock.ToolResult | undefined => {
+  if (block._tag !== 'text' || block.disposition !== 'synthetic') {
+    return undefined;
+  }
+  const match = block.text.trim().match(RECOVERED_RESULT);
+  if (!match) {
+    return undefined;
+  }
+  const [, kind, pid, body] = match;
+  return {
+    _tag: 'toolResult',
+    toolCallId: pid,
+    name: BACKGROUND_TOOL,
+    providerExecuted: false,
+    ...(kind === 'error' ? { error: body } : { result: body }),
+  };
+};
+
 const narrationText = (block: ContentBlock.Any): string => {
   switch (block._tag) {
     case 'status':
@@ -201,9 +234,26 @@ const narrationText = (block: ContentBlock.Any): string => {
 };
 
 /** A run of tool blocks as one tag; the widget parses the payload back out. */
-const toolkitTag = (blocks: ContentBlock.Any[]): string => {
+/**
+ * Debug shows the tag as text, so its JSON is indented, with JSON-string payloads expanded in place;
+ * the widget parses either form.
+ */
+const toolkitTag = (blocks: ContentBlock.Any[], pretty = false): string => {
   const pending = blocks.some((block) => block.pending);
-  return `<toolkit${pending ? ' pending="true"' : ''}>${escapeXml(JSON.stringify(blocks))}</toolkit>`;
+  const open = `<toolkit${pending ? ' pending="true"' : ''}>`;
+  if (pretty) {
+    // One fenced block holding the tags and the run, so the markdown parser renders it as code.
+    const json = JSON.stringify(blocks, expandJsonStrings, 2);
+    return `\`\`\`json\n${open}\n${json}\n</toolkit>\n\`\`\``;
+  }
+  return `${open}${escapeXml(JSON.stringify(blocks))}</toolkit>`;
+};
+
+const expandJsonStrings = (key: string, value: unknown): unknown => {
+  if ((key === 'input' || key === 'result') && typeof value === 'string') {
+    return safeParseJson(value) ?? value;
+  }
+  return value;
 };
 
 /**

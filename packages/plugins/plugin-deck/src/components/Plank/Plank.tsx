@@ -172,26 +172,28 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                 <Breadcrumb.List classNames='gap-1'>
                   {breadcrumbs.map((crumb) => (
                     <Fragment key={crumb.id}>
-                      <Breadcrumb.Item asChild>
-                        <button
-                          type='button'
-                          className='shrink-0 whitespace-nowrap text-fg-muted hover:text-fg'
-                          onClick={() => onSelectBreadcrumb?.(crumb.id)}
-                        >
-                          {crumb.label}
-                        </button>
+                      <Breadcrumb.Item>
+                        <Breadcrumb.Link asChild>
+                          <button type='button' onClick={() => onSelectBreadcrumb?.(crumb.id)}>
+                            {crumb.label}
+                          </button>
+                        </Breadcrumb.Link>
                       </Breadcrumb.Item>
                       <Breadcrumb.Separator />
                     </Fragment>
                   ))}
                   <Breadcrumb.Item>
-                    <Pane.Title
-                      attendableId={attendableId}
-                      related={related}
-                      classNames={[pending && 'text-fg-muted', 'w-auto grow-0']}
-                    >
-                      {label}
-                    </Pane.Title>
+                    {/* The crumb's own inset and weight rather than the title's, so a crumb keeps its size and place
+                        as it becomes (or stops being) the current page. */}
+                    <Breadcrumb.Current asChild>
+                      <Pane.Title
+                        attendableId={attendableId}
+                        related={related}
+                        classNames={[pending && 'text-fg-muted', 'w-auto grow-0 px-(--dx-control-inset) font-normal']}
+                      >
+                        {label}
+                      </Pane.Title>
+                    </Breadcrumb.Current>
                   </Breadcrumb.Item>
                 </Breadcrumb.List>
               </Breadcrumb.Root>
