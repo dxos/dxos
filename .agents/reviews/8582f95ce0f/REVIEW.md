@@ -16,12 +16,12 @@ _2 error(s), 4 warning(s)._
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 8582f95ce0f-1 - ignored - test-asserts-real-behavior - packages/core/echo/echo/src/internal/JsonSchema/json-schema.test.ts:102 (outside this PR: already on main via #13590; this PR changes only .agents/projects/agent-brain/DESIGN.md)
-- 8582f95ce0f-2 - ignored - no-casts - packages/core/echo/echo/src/internal/JsonSchema/json-schema.test.ts:294 (outside this PR: already on main via #13590; this PR changes only .agents/projects/agent-brain/DESIGN.md)
-- 8582f95ce0f-3 - ignored - no-casts - packages/core/mesh/edge-client/src/edge-http-client.test.ts:344 (outside this PR: already on main via #13590; this PR changes only .agents/projects/agent-brain/DESIGN.md)
-- 8582f95ce0f-4 - ignored - namespace-export-with-internal-hiding - packages/plugins/plugin-agent/src/index.ts:1 (outside this PR: already on main via #13590; this PR changes only .agents/projects/agent-brain/DESIGN.md)
-- 8582f95ce0f-5 - ignored - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-agent/src/operations/relay.test.ts:82 (outside this PR: already on main via #13590; this PR changes only .agents/projects/agent-brain/DESIGN.md)
-- 8582f95ce0f-6 - ignored - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-agent/src/operations/triggers.test.ts:538 (outside this PR: already on main via #13590; this PR changes only .agents/projects/agent-brain/DESIGN.md)
+- 8582f95ce0f-1 - ignored - test-asserts-real-behavior - packages/core/echo/echo/src/internal/JsonSchema/json-schema.test.ts:102
+- 8582f95ce0f-2 - ignored - no-casts - packages/core/echo/echo/src/internal/JsonSchema/json-schema.test.ts:294
+- 8582f95ce0f-3 - ignored - no-casts - packages/core/mesh/edge-client/src/edge-http-client.test.ts:344
+- 8582f95ce0f-4 - ignored - namespace-export-with-internal-hiding - packages/plugins/plugin-agent/src/index.ts:1
+- 8582f95ce0f-5 - ignored - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-agent/src/operations/relay.test.ts:82
+- 8582f95ce0f-6 - ignored - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-agent/src/operations/triggers.test.ts:538
 
 ## Issues
 
@@ -65,3 +65,7 @@ estimated input tokens: 3968537
 billed input tokens: 3675663 (cost $0.1544)
 measured chars per token: 3.24
 ```
+
+### Dismissals
+
+All six issues are ignored as out of scope: they are in files merged to main by #13590, which this branch still carries in its pre-squash history. This PR changes only `.agents/projects/agent-brain/DESIGN.md`.
