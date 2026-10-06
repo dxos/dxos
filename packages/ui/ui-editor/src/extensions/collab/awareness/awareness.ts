@@ -220,6 +220,13 @@ type HoveredCaret = { pos: number; name: string; color: string };
 
 const setHoveredCaret = StateEffect.define<HoveredCaret | null>();
 
+/** How long a caret's name stays up once shown, in ms. */
+const MIN_TOOLTIP_DURATION = 1_000;
+
+// Per view, so a pending hide is cancelled when the pointer returns to any caret in the same editor.
+const hoveredAt = new WeakMap<EditorView, number>();
+const hideTimers = new WeakMap<EditorView, ReturnType<typeof setTimeout>>();
+
 /**
  * The name of the remote caret under the pointer, shown as a tooltip: CodeMirror draws tooltips outside the
  * scroller, so the name is not clipped above the first line, and flips below only when the window has no room.
@@ -279,10 +286,26 @@ class RemoteCaretWidget extends WidgetType {
     span.appendChild(document.createTextNode('\u2060'));
     span.appendChild(name);
     span.addEventListener('mouseenter', () => {
+      clearTimeout(hideTimers.get(view));
+      hoveredAt.set(view, Date.now());
       const pos = view.posAtDOM(span);
       view.dispatch({ effects: setHoveredCaret.of({ pos, name: this._name, color: this._color }) });
     });
-    span.addEventListener('mouseleave', () => view.dispatch({ effects: setHoveredCaret.of(null) }));
+    span.addEventListener('mouseleave', () => {
+      // A 2px caret is easy to leave by accident; a name that vanished at once could not be read.
+      const remaining = MIN_TOOLTIP_DURATION - (Date.now() - (hoveredAt.get(view) ?? 0));
+      hideTimers.set(
+        view,
+        setTimeout(
+          () => {
+            if (view.dom.isConnected) {
+              view.dispatch({ effects: setHoveredCaret.of(null) });
+            }
+          },
+          Math.max(0, remaining),
+        ),
+      );
+    });
     return span;
   }
 

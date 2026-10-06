@@ -224,7 +224,9 @@ export const WithEcho: Story = {
       void expect(infoBox.top).toBeGreaterThanOrEqual(0);
     });
 
+    // It outlasts the pointer leaving, so a name glimpsed on a 2px caret can still be read, then goes.
     caret.dispatchEvent(new MouseEvent('mouseleave'));
-    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeNull());
+    await expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeInstanceOf(HTMLElement);
+    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeNull(), { timeout: 3_000 });
   },
 };
