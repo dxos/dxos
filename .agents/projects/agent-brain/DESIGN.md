@@ -131,11 +131,16 @@ layers, each with one job:
    authority: when the rules and the text disagree, the agent recompiles; it never rewrites the text
    to fit the rules.
 
-**v1 rule language: SPARQL `ASK`**, because pipeline-rdf already ships the engine. Time rules
-(`elapsed`) and goal state (`not achieved`) are supplied by the Durable Object as bindings rather than
-expressed in SPARQL. **Datalog** is the intended successor once SPARQL's limits bite (negation, time,
-recursion, model-writability): it is the terminating, set-based subset of Prolog, fits
-subject–predicate–object tuples, and can be evaluated incrementally as facts arrive.
+**Rule language: Datalog for goals, SPARQL for retrieval.** Goals compile to Datalog from M1: rules
+build on each other (`wake`, `achieved` and `holds` reference one another), stratified negation gives
+`not achieved(goal)` a clear meaning, recursion covers relations like "part of" and "blocked by", and
+semi-naive evaluation re-derives only what a new fact affects, which suits a Durable Object following
+feeds. The fact tuples map directly to predicates (`fact(Id, S, P, O)`, `speaker(Id, dima)`,
+`force(Id, commissive)`). Built-ins supply what plain Datalog lacks: time (`elapsed`), text and
+semantic matching (`about`), and counting. SPARQL — already shipped in pipeline-rdf — stays the tool
+for judgment-time retrieval ("everything Dima said about the plugin this week"), where it is strong.
+The cost is owning a dialect and an engine; the engine can stay small because rules come from the
+compiler, not from people.
 
 Goal 3 below, compiled (Datalog notation, for readability):
 
@@ -233,13 +238,13 @@ conditional and has none of a goal's kinds. Earlier drafts conflated the two; th
 
 Milestones, each ending in a demo that can be watched.
 
-| #   | Milestone                   | Delivers                                                                                                                                                                                                                                   | Demo                                                                                                                                        |
-| --- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| M0  | Private threads             | A session feed carries threads the conversation view hides; agent-runtime runs a turn inside a thread with the session's context. Decides per-user vs per-agent background sessions.                                                       | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view.                                                    |
-| M1  | Facts and goals, in-process | `readSource` writes one tuple per feed item; hierarchical `Goal` objects (status, priority, situation, drivers, wake rules) with their own feeds; the in-process brain: SPARQL `ASK` wake rules, judgment in the session's private thread. | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment) in one runtime; goals and sub-goals in the Goals tab. |
-| M2  | Brain on EDGE               | A Durable Object per agent follows the fact feeds, rebuilds its index, evaluates wake rules, schedules time drivers with alarms and runs per-user background sessions; the agent service routes results to sessions and channels.          | Josiah sets a watch on Discord; Dima's update in Composer reaches him; a follow-up fires after a restart (shortened timeout).               |
-| M3  | Planning and constraints    | Judgment decomposes goals into sub-goals; action drivers (a hook before every action) enforce constraints; a session goal can be promoted to a durable one.                                                                                | "Complete my taxes" grows sub-goals and reminders; "never book meetings on Fridays" rewrites a proposed Friday meeting.                     |
-| M4  | Pattern library and evals   | The goal-pattern skill with worked examples; eval personas scoring the eight example goals; cost controls (batching, judgment limits).                                                                                                     | An eval report across the example goals, with judgment-call counts.                                                                         |
+| #   | Milestone                   | Delivers                                                                                                                                                                                                                                                                                | Demo                                                                                                                                        |
+| --- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0  | Private threads             | A session feed carries threads the conversation view hides; agent-runtime runs a turn inside a thread with the session's context. Decides per-user vs per-agent background sessions.                                                                                                    | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view.                                                    |
+| M1  | Facts and goals, in-process | `readSource` writes one tuple per feed item; hierarchical `Goal` objects (status, priority, situation, drivers, wake rules) with their own feeds; the in-process brain: a Datalog engine (adopted or written) evaluating compiled goal rules, judgment in the session's private thread. | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment) in one runtime; goals and sub-goals in the Goals tab. |
+| M2  | Brain on EDGE               | A Durable Object per agent follows the fact feeds, rebuilds its index, evaluates wake rules, schedules time drivers with alarms and runs per-user background sessions; the agent service routes results to sessions and channels.                                                       | Josiah sets a watch on Discord; Dima's update in Composer reaches him; a follow-up fires after a restart (shortened timeout).               |
+| M3  | Planning and constraints    | Judgment decomposes goals into sub-goals; action drivers (a hook before every action) enforce constraints; a session goal can be promoted to a durable one.                                                                                                                             | "Complete my taxes" grows sub-goals and reminders; "never book meetings on Fridays" rewrites a proposed Friday meeting.                     |
+| M4  | Pattern library and evals   | The goal-pattern skill with worked examples; eval personas scoring the eight example goals; cost controls (batching, judgment limits).                                                                                                                                                  | An eval report across the example goals, with judgment-call counts.                                                                         |
 
 ## Open questions
 
