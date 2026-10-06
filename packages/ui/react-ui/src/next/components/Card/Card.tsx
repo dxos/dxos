@@ -254,6 +254,8 @@ CardFooter.displayName = 'Card.Footer';
 type CardSectionProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   /** A caption heading the section; the section is then a `group` named by it. */
   title?: ReactNode;
+  /** Set by a slotting parent (`asChild`), e.g. `Collapsible.Content`, whose animation lives in its class. */
+  className?: string;
 };
 
 /**
@@ -261,7 +263,7 @@ type CardSectionProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * a plain column.
  */
 const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
-  ({ classNames, title, children, ...props }, forwardedRef) => {
+  ({ classNames, className, title, children, ...props }, forwardedRef) => {
     const titleId = useId();
     return (
       <div
@@ -270,7 +272,7 @@ const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
         aria-labelledby={title ? titleId : undefined}
         data-scope='card'
         data-part='section'
-        className={mx(recipes.cardSection(), classNames)}
+        className={mx(recipes.cardSection(), className, classNames)}
         ref={forwardedRef}
       >
         {title && (
