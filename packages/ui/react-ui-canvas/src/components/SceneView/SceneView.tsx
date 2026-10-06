@@ -920,8 +920,7 @@ const SceneViewProperties = ({
   classNames = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]',
   fields,
 }: SceneViewPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, grid, selection } =
-    useSceneViewContext('SceneView.Properties');
+  const { projection, atoms, nodeRegistry, capabilities, selection } = useSceneViewContext('SceneView.Properties');
   if (selection.size === 0) {
     return null;
   }
@@ -933,7 +932,6 @@ const SceneViewProperties = ({
       atoms={atoms}
       nodes={nodeRegistry}
       fields={fields}
-      grid={grid}
       readonly={!capabilities.update}
     />
   );

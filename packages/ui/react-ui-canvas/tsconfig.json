@@ -21,6 +21,9 @@
       "path": "../../common/test-utils"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../react-primitives/react-hooks"
     },
     {
