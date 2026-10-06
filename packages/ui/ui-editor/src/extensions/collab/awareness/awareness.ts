@@ -2,15 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Annotation, type Extension, type Range, RangeSet } from '@codemirror/state';
+import { Annotation, type Extension, type Range, RangeSet, StateEffect, StateField } from '@codemirror/state';
 import {
   Decoration,
   type DecorationSet,
   EditorView,
   type PluginValue,
+  type Tooltip,
   ViewPlugin,
   type ViewUpdate,
   WidgetType,
+  showTooltip,
 } from '@codemirror/view';
 
 import { Event } from '@dxos/async';
@@ -54,6 +56,7 @@ export const awareness = (provider = dummyProvider): Extension => {
     ViewPlugin.fromClass(RemoteSelectionsDecorator, {
       decorations: (value) => value.decorations,
     }),
+    hoveredCaret,
     styles,
   ];
 };
@@ -213,6 +216,42 @@ export class RemoteSelectionsDecorator implements PluginValue {
   }
 }
 
+type HoveredCaret = { pos: number; name: string; color: string };
+
+const setHoveredCaret = StateEffect.define<HoveredCaret | null>();
+
+/**
+ * The name of the remote caret under the pointer, shown as a tooltip: CodeMirror draws tooltips outside the
+ * scroller, so the name is not clipped above the first line, and flips below only when the window has no room.
+ */
+const hoveredCaret = StateField.define<HoveredCaret | null>({
+  create: () => null,
+  update: (value, tr) => {
+    for (const effect of tr.effects) {
+      if (effect.is(setHoveredCaret)) {
+        return effect.value;
+      }
+    }
+    return value && tr.docChanged ? { ...value, pos: tr.changes.mapPos(value.pos) } : value;
+  },
+  provide: (field) =>
+    showTooltip.from(field, (caret): Tooltip | null =>
+      caret
+        ? {
+            pos: caret.pos,
+            above: true,
+            create: () => {
+              const dom = document.createElement('div');
+              dom.className = 'cm-collab-selectionInfo';
+              dom.style.backgroundColor = caret.color;
+              dom.textContent = caret.name;
+              return { dom };
+            },
+          }
+        : null,
+    ),
+});
+
 class RemoteCaretWidget extends WidgetType {
   constructor(
     private readonly _name: string,
@@ -221,7 +260,7 @@ class RemoteCaretWidget extends WidgetType {
     super();
   }
 
-  override toDOM(): HTMLElement {
+  override toDOM(view: EditorView): HTMLElement {
     const span = document.createElement('span');
     span.className = 'cm-collab-selectionCaret';
     span.style.backgroundColor = this._color;
@@ -230,15 +269,20 @@ class RemoteCaretWidget extends WidgetType {
     const dot = document.createElement('div');
     dot.className = 'cm-collab-selectionCaretDot';
 
-    const info = document.createElement('div');
-    info.className = 'cm-collab-selectionInfo';
-    info.innerText = this._name;
+    // The name for assistive tech; sighted readers get it from the hover tooltip.
+    const name = document.createElement('span');
+    name.className = 'cm-collab-selectionName';
+    name.textContent = this._name;
 
     span.appendChild(document.createTextNode('\u2060'));
     span.appendChild(dot);
     span.appendChild(document.createTextNode('\u2060'));
-    span.appendChild(info);
-    span.appendChild(document.createTextNode('\u2060'));
+    span.appendChild(name);
+    span.addEventListener('mouseenter', () => {
+      const pos = view.posAtDOM(span);
+      view.dispatch({ effects: setHoveredCaret.of({ pos, name: this._name, color: this._color }) });
+    });
+    span.addEventListener('mouseleave', () => view.dispatch({ effects: setHoveredCaret.of(null) }));
     return span;
   }
 
@@ -247,7 +291,7 @@ class RemoteCaretWidget extends WidgetType {
   }
 
   override eq(widget: this): boolean {
-    return widget._color === this._color;
+    return widget._color === this._color && widget._name === this._name;
   }
 
   override get estimatedHeight() {
@@ -290,32 +334,26 @@ const styles = EditorView.theme({
     transform: 'scale(0)',
     transformOrigin: 'center',
   },
-  '.cm-collab-selectionInfo': {
-    // Hangs from the caret rather than centring on it, so a cursor at the start of a line keeps its
-    // name in the editor; `bottom: 100%` sits it on the line whatever the font size.
+  // Visually hidden, read by assistive tech.
+  '.cm-collab-selectionName': {
     position: 'absolute',
-    bottom: '100%',
-    left: '-1px',
+    width: '1px',
+    height: '1px',
+    overflow: 'hidden',
+    clipPath: 'inset(50%)',
+    whiteSpace: 'nowrap',
+  },
+  // Inside a tooltip, which takes the editor's font rather than the line's.
+  '.cm-tooltip.cm-collab-selectionInfo': {
     fontSize: '.75em',
     fontFamily: 'sans-serif',
-    fontStyle: 'normal',
-    fontWeight: 'normal',
     lineHeight: 'normal',
     userSelect: 'none',
     color: 'white',
     padding: '2px 6px',
-    zIndex: 101,
-    transition: 'opacity .3s ease-in-out',
-    backgroundColor: 'inherit',
+    border: 'none',
     borderRadius: '2px',
-    opacity: 0,
-    transitionDelay: '0s',
     whiteSpace: 'nowrap',
-    // A list item's hanging indent (`text-indent: -width`) is inherited and pulls the name out of its own background.
-    textIndent: 0,
-  },
-  '.cm-collab-selectionCaret:hover > .cm-collab-selectionInfo': {
-    opacity: 1,
-    transitionDelay: '0s',
+    pointerEvents: 'none',
   },
 });

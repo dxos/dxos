@@ -185,38 +185,46 @@ export const WithEcho: Story = {
     }
 
     // Focusing peer A broadcasts its cursor position over the gossip channel; peer B renders it
-    // as a `.cm-collab-selectionInfo` decoration.
+    // as a `.cm-collab-selectionCaret` decoration.
     contentA.focus();
-    await waitFor(() => expect(editors[1].querySelector('.cm-collab-selectionInfo')).toBeInTheDocument(), {
+    await waitFor(() => expect(editors[1].querySelector('.cm-collab-selectionCaret')).toBeInTheDocument(), {
       timeout: 10_000,
     });
 
     // And symmetrically in the other direction.
     contentB.focus();
-    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeInTheDocument(), {
+    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionCaret')).toBeInTheDocument(), {
       timeout: 10_000,
     });
 
-    const info = editors[0].querySelector<HTMLElement>('.cm-collab-selectionInfo');
-    const caret = info?.parentElement;
-    const line = info?.closest<HTMLElement>('.cm-line');
-    await expect(info).toBeInstanceOf(HTMLElement);
+    // Hovering the caret shows its name as a tooltip: above the caret, starting at it, and inside the window
+    // even for a cursor at the start of the first line, where the editor's scroller would clip a label.
+    const caret = editors[0].querySelector<HTMLElement>('.cm-collab-selectionCaret');
     await expect(caret).toBeInstanceOf(HTMLElement);
-    await expect(line).toBeInstanceOf(HTMLElement);
-    if (!info || !caret || !line) {
+    if (!caret) {
       return;
     }
+    await expect(caret).toHaveTextContent(/.+/);
+    caret.dispatchEvent(new MouseEvent('mouseenter'));
+    const info = await waitFor(() => {
+      const found = editors[0].querySelector<HTMLElement>('.cm-tooltip.cm-collab-selectionInfo');
+      void expect(found).toBeInstanceOf(HTMLElement);
+      return found;
+    });
+    if (!info) {
+      return;
+    }
+    await expect(info).toHaveTextContent(caret.textContent?.replaceAll('\u2060', '') ?? '');
+    // CodeMirror places a tooltip on its next measure, so the geometry is awaited rather than read once.
+    await waitFor(() => {
+      const caretBox = caret.getBoundingClientRect();
+      const infoBox = info.getBoundingClientRect();
+      void expect(Math.round(infoBox.bottom)).toBeLessThanOrEqual(Math.round(caretBox.top) + 1);
+      void expect(Math.round(infoBox.left)).toBeGreaterThanOrEqual(Math.round(caretBox.left) - 2);
+      void expect(infoBox.top).toBeGreaterThanOrEqual(0);
+    });
 
-    // Hung from the caret: above it, and starting at it rather than centred on it.
-    const caretBox = caret.getBoundingClientRect();
-    await expect(Math.round(info.getBoundingClientRect().bottom)).toBeLessThanOrEqual(Math.round(caretBox.top));
-    await expect(Math.round(info.getBoundingClientRect().left)).toBeGreaterThanOrEqual(Math.round(caretBox.left) - 1);
-
-    // The name stays inside its own background on a line with a hanging indent (a list item).
-    line.style.textIndent = '-40px';
-    const range = document.createRange();
-    range.selectNodeContents(info);
-    await expect(range.getBoundingClientRect().left).toBeGreaterThanOrEqual(info.getBoundingClientRect().left);
-    line.style.textIndent = '';
+    caret.dispatchEvent(new MouseEvent('mouseleave'));
+    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeNull());
   },
 };
