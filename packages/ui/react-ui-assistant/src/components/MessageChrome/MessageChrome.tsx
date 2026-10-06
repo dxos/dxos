@@ -225,9 +225,11 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
 const reveal =
   'pt-1 opacity-0 transition-opacity group-hover/message:opacity-100 group-data-[streaming]/message:invisible';
 
+// Bleeds into the gutter by its own inset, so a selection highlight frames the text rather than
+// ending flush against it while the text keeps the column's alignment.
 const Row = ({ children, classNames, streaming }: PropsWithChildren<{ classNames?: string; streaming?: boolean }>) => (
   <div
-    className={mx('group/message relative py-2', classNames)}
+    className={mx('group/message relative -mx-2 px-2 py-2 rounded-md', classNames)}
     data-streaming={streaming || undefined}
     data-testid='feed.message'
   >
