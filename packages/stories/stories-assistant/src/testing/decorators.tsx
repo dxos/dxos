@@ -101,6 +101,14 @@ export const config = {
   /** A local EDGE stack (`moon run edge:dev` in dxos/edge): every worker behind :8787, ai-service under `/ai`. */
   edgeLocal: new Config({
     runtime: {
+      // As `configPreset({ edge: 'local' })`: without these the client never replicates the space to EDGE.
+      client: {
+        edgeFeatures: {
+          signaling: true,
+          subductionReplicator: true,
+          feedReplicator: true,
+        },
+      },
       services: {
         edge: { url: 'http://localhost:8787' },
         ai: { server: 'http://localhost:8787/ai' },

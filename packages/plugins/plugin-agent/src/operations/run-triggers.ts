@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { type AiService } from '@dxos/ai';
 import * as Agent from '@dxos/assistant/Agent';
@@ -12,7 +13,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import { BrainSkill } from '#skills';
-import { BrainService, FactEntry, type Goal, Profile, RelayOperation, Trigger } from '#types';
+import { BrainService, FactEntry, Goal, Profile, RelayOperation, Trigger } from '#types';
 
 import { composeUpdate } from './compose-update.ts';
 import { firstMatch, matchesPattern } from './match-facts.ts';
@@ -64,7 +65,7 @@ export const fireTriggers: (
 
   for (const trigger of yield* brain.listTriggers(agent.id)) {
     const goal = trigger.goal
-      ? yield* Database.load(trigger.goal).pipe(Effect.orElseSucceed(() => undefined))
+      ? yield* Database.resolve(trigger.goal, Goal.Goal).pipe(Effect.orElseSucceed(() => undefined))
       : undefined;
     if (goal && CLOSED.includes(goal.status)) {
       yield* brain.removeTrigger(trigger.id);
@@ -76,7 +77,10 @@ export const fireTriggers: (
     if (!fact || (!trigger.ongoing && !(yield* brain.removeTrigger(trigger.id)))) {
       continue;
     }
-    const recipient = yield* Database.load(trigger.then.recipient).pipe(Effect.orElseSucceed(() => undefined));
+    // Through the database: a trigger read back from the brain carries refs with no resolver of their own.
+    // `Effect.option` because the schema-less overload still fails at runtime when the target is gone.
+    const resolved = Option.getOrUndefined(yield* Database.resolve(trigger.then.recipient).pipe(Effect.option));
+    const recipient = Obj.isObject(resolved) ? resolved : undefined;
     const text = yield* composeUpdate({
       agentName: agent.name ?? 'Agent',
       recipientName: recipient ? Profile.displayName(recipient) : 'the requester',
@@ -87,7 +91,7 @@ export const fireTriggers: (
     });
     const delivery = yield* Operation.invoke(RelayOperation.SendMessage, {
       agent: Ref.make(agent),
-      recipient: trigger.then.recipient,
+      recipient: recipient ? Ref.make(recipient) : trigger.then.recipient,
       text,
     }).pipe(Effect.orElseSucceed(() => ({ delivered: false, reason: 'The message could not be sent.' })));
     if (!delivery.delivered) {

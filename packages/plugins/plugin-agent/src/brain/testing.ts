@@ -36,7 +36,21 @@ export const makeTestBrain = ({ wake = 'session' }: TestBrainOptions = {}) => {
     AgentService.AgentService.pipe(
       Effect.map((agents) => {
         // Built once per layer, each with its own host's agents, over the same stores.
-        const { service } = BrainMemory.make(agents, { triggers, stores });
+        const { service: memory } = BrainMemory.make(agents, { triggers, stores });
+        // Triggers come back through JSON, as from EDGE's brain: their refs then have no resolver of their own.
+        const service: BrainService.Service = {
+          ...memory,
+          listTriggers: (agent) =>
+            memory
+              .listTriggers(agent)
+              .pipe(
+                Effect.map((listed) =>
+                  listed.map((trigger) =>
+                    BrainService.decodeTrigger(JSON.parse(JSON.stringify(BrainService.encodeTrigger(trigger)))),
+                  ),
+                ),
+              ),
+        };
         return wake === 'session'
           ? service
           : { ...service, wake: (request: BrainService.WakeRequest) => Effect.sync(() => void wakes.push(request)) };

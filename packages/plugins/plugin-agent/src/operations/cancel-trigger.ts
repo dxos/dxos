@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { BrainService, Trigger, TriggerOperation } from '#types';
+import { BrainService, Goal, Trigger, TriggerOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof TriggerOperation.CancelTrigger> = TriggerOperation.CancelTrigger.pipe(
   Operation.withHandler(
@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.CancelTrigger> = Tr
         return { cancelled: false };
       }
       if (dropGoal && trigger.goal) {
-        const goal = yield* Database.load(trigger.goal);
+        const goal = yield* Database.resolve(trigger.goal, Goal.Goal);
         Obj.update(goal, (goal) => {
           goal.status = 'dropped';
         });
