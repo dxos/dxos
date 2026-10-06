@@ -4,4 +4,4 @@
 
 - **Remote cursor name:** a collaborator's name shows as a tooltip above their caret on hover, drawn outside the editor's scroller so it is never clipped (it flips below only when the window has no room above). The name also stays inside its coloured label on list lines, and the caret carries it as visually hidden text for assistive tech.
 - **Devices settings:** the logout section is headed "Danger Zone", with the full warning on the Log out field.
-- **Banner:** a neutral (default) banner is transparent, taking its host's surface; valence banners keep their own.
+- **Banner:** a neutral (default) banner is transparent and bordered, with the host's text colour and a muted body; valence banners keep their own surfaces.
