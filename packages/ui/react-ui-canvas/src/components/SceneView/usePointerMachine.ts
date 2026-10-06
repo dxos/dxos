@@ -36,6 +36,7 @@ import {
   isPortalNode,
 } from '../../model/types.ts';
 import { boundsCenter, panBy, screenToScene } from '../../utils/camera.ts';
+import { duplicateSelection } from '../../utils/clipboard.ts';
 import { boundsFromPoints, hitTest, nodesIntersecting } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
 import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
@@ -255,7 +256,10 @@ export const usePointerMachine = ({
       if (capabilities.move && !node.locked) {
         const { x, y } = nodeBounds(node);
         const ids = [...next].filter((id) => scene.nodes[id] !== undefined);
-        startDrag({ kind: 'move', ids, origin: toScene(event), anchor: { x, y }, delta: { x: 0, y: 0 } }, event);
+        startDrag(
+          { kind: 'move', ids, origin: toScene(event), anchor: { x, y }, delta: { x: 0, y: 0 }, copy: event.metaKey },
+          event,
+        );
       }
     },
     [registry, atoms.tool, clickSelect, capabilities.move, capabilities.link, scene.nodes, toScene, startDrag],
@@ -517,6 +521,8 @@ export const usePointerMachine = ({
               x: snapMinor(current.anchor.x + raw.x) - current.anchor.x,
               y: snapMinor(current.anchor.y + raw.y) - current.anchor.y,
             },
+            // Read on every move, so pressing or releasing ⌘ mid-drag switches between moving and copying.
+            copy: event.metaKey && capabilities.create === true,
           });
           break;
         }
@@ -581,6 +587,7 @@ export const usePointerMachine = ({
       linkTarget,
       updateHover,
       isNavigating,
+      capabilities.create,
     ],
   );
 
@@ -698,7 +705,15 @@ export const usePointerMachine = ({
         break;
       }
       case 'move': {
-        if (current.delta.x !== 0 || current.delta.y !== 0) {
+        if (current.delta.x === 0 && current.delta.y === 0) {
+          break;
+        }
+        // ⌘-drag leaves the selection where it was and drops a copy, which becomes the selection.
+        const copy = current.copy ? duplicateSelection(scene, current.ids, current.delta, createId) : undefined;
+        if (copy) {
+          projection.apply(copy.intent);
+          select(copy.ids);
+        } else {
           projection.apply({ kind: 'move', ids: current.ids, delta: current.delta });
         }
         break;

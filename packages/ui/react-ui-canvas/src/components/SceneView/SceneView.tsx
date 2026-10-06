@@ -46,6 +46,7 @@ import {
   isPointEndpoint,
 } from '../../model/types.ts';
 import { MIN_ZOOM, cameraTransform, fitBounds, panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
+import { duplicateSelection } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
 import { hitTest } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
@@ -356,7 +357,14 @@ const SceneViewRoot = ({
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped.
   const displayScene = useMemo<Scene>(() => {
     if (drag?.kind === 'move') {
-      return reduceIntent(scene, { kind: 'move', ids: drag.ids, delta: drag.delta });
+      // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
+      let preview = 0;
+      const copy = drag.copy
+        ? duplicateSelection(scene, drag.ids, drag.delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${preview++}`)
+        : undefined;
+      return copy
+        ? reduceIntent(scene, copy.intent)
+        : reduceIntent(scene, { kind: 'move', ids: drag.ids, delta: drag.delta });
     }
     if (drag?.kind === 'resize') {
       return reduceIntent(scene, { kind: 'resize', id: drag.id, bounds: drag.bounds });

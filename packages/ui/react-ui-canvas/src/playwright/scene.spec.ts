@@ -98,6 +98,25 @@ test.describe('SceneView', () => {
     await expect(page.getByTestId('node-debug')).toHaveCount(0);
   });
 
+  test('a ⌘-drag leaves the selection and drops a copy, which becomes the selection', async () => {
+    const id = 'scene:root/a';
+    const before = await scene.nodeCount();
+    const box = await scene.box(scene.node(id));
+    const start = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await page.keyboard.down('Meta');
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.mouse.move(start.x, start.y + box.height * 1.5, { steps: 8 });
+    await page.mouse.up();
+    await page.keyboard.up('Meta');
+    await expect(page.locator('[data-node-id]')).toHaveCount(before + 1);
+    // The original has not moved; the selection is the copy.
+    expect(await scene.box(scene.node(id))).toEqual(box);
+    const selected = await scene.selectedNodes();
+    expect(selected).toHaveLength(1);
+    expect(selected[0]).not.toBe(id);
+  });
+
   test('shift-resize keeps the centre; a plain resize keeps the opposite edge', async () => {
     const id = 'scene:root/a';
     await scene.clickNode(id);
