@@ -477,27 +477,50 @@ describe('EdgeFeedReplicator', () => {
     test('backs off asking about a feed EDGE never answers for', async () => {
       const { replica } = await setupFeeds(1);
       const edge = await createScriptedEdge(async () => undefined);
-      await startReplicator(edge.endpoint, replica, edge.admitConnection, 10);
-      await expect.poll(() => edge.received.length).toBeGreaterThanOrEqual(3);
-      await sleep(400);
-      // Asking on every 10ms tick would have sent about 40.
-      expect(edge.received.length).toBeLessThan(10);
+      await startReplicator(edge.endpoint, replica, edge.admitConnection, 20);
+      const askedAt: number[] = [];
+      for (const _ of range(5)) {
+        expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+        askedAt.push(Date.now());
+      }
+      // Re-asks wait 2, 3, 5 and then 9 ticks; asking on a fixed timer would keep the gaps equal.
+      expect(askedAt[4] - askedAt[3]).toBeGreaterThanOrEqual(2 * (askedAt[2] - askedAt[1]));
     });
 
     test('does not ask again about a feed that is caught up', async () => {
-      const { replica, feedKey, blocksIn, holds } = await setupFeeds(3);
+      const caughtUp = await setupFeeds(3);
+      const lagging = await setupFeeds(1);
       const edge = await createScriptedEdge(async (message) => {
+        if (message.feedKey !== caughtUp.feedKey) {
+          return undefined;
+        }
         if (message.type === 'get-metadata') {
-          return { type: 'metadata', feedKey, length: 3 };
+          return { type: 'metadata', feedKey: caughtUp.feedKey, length: 3 };
         }
         if (message.type === 'request') {
-          return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
+          return { type: 'data', feedKey: caughtUp.feedKey, blocks: await caughtUp.blocksIn(message.range) };
         }
       });
-      await startReplicator(edge.endpoint, replica, edge.admitConnection, 20);
-      await holds([0, 1, 2]);
-      await sleep(200);
-      expect(edge.received.map(({ type }) => type)).toEqual(['get-metadata', 'request']);
+      const { messenger } = await createClient(edge.endpoint);
+      const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random(), resyncInterval: 10 });
+      await replicator.addHypercore(caughtUp.replica);
+      await replicator.addHypercore(lagging.replica);
+      await openAndClose(replicator);
+      edge.admitConnection.wake();
+      await caughtUp.holds([0, 1, 2]);
+
+      // The lagging feed asked about three times means resync ticks ran over the caught-up one in between.
+      let laggingAsks = 0;
+      while (laggingAsks < 3) {
+        const message = await edge.next();
+        if (message.type === 'get-metadata' && message.feedKey === lagging.feedKey) {
+          laggingAsks++;
+        }
+      }
+      const caughtUpAsks = edge.received.filter(
+        (message) => message.type === 'get-metadata' && message.feedKey === caughtUp.feedKey,
+      );
+      expect(caughtUpAsks).toHaveLength(1);
     });
 
     test('a hole above the remote length does not block the feed', async () => {
