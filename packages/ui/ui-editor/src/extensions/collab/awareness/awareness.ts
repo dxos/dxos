@@ -142,6 +142,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
     ];
 
     const hovered = view.state.field(hoveredCaret, false);
+    let hoveredRendered = false;
     const awarenessStates = this._provider.getRemoteStates();
     for (const state of awarenessStates) {
       const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
@@ -202,19 +203,23 @@ export class RemoteSelectionsDecorator implements PluginValue {
         }
       }
 
+      const name = state.info.displayName ?? 'Anonymous';
+      const isHovered = hovered?.pos === head && hovered.name === name;
+      hoveredRendered ||= isHovered;
       decorations.push({
         from: head,
         to: head,
         value: Decoration.widget({
           side: head - anchor > 0 ? -1 : 1, // The local cursor should be rendered outside the remote selection.
           block: false,
-          widget: new RemoteCaretWidget(
-            state.info.displayName ?? 'Anonymous',
-            darkColor,
-            hovered?.pos === head && hovered.name === (state.info.displayName ?? 'Anonymous'),
-          ),
+          widget: new RemoteCaretWidget(name, darkColor, isHovered),
         }),
       });
+    }
+
+    // The peer moved or left: its caret element went without a `mouseleave`, so nothing else would hide the name.
+    if (hovered && !hoveredRendered) {
+      scheduleHide(view);
     }
 
     this.decorations = Decoration.set(decorations, true);
@@ -231,6 +236,31 @@ const MIN_TOOLTIP_DURATION = 1_000;
 // Per view, so a pending hide is cancelled when the pointer returns to any caret in the same editor.
 const hoveredAt = new WeakMap<EditorView, number>();
 const hideTimers = new WeakMap<EditorView, ReturnType<typeof setTimeout>>();
+
+/** Hides the name once it has been up for {@link MIN_TOOLTIP_DURATION}; a hide already pending is kept. */
+const scheduleHide = (view: EditorView) => {
+  if (hideTimers.has(view)) {
+    return;
+  }
+  const remaining = MIN_TOOLTIP_DURATION - (Date.now() - (hoveredAt.get(view) ?? 0));
+  hideTimers.set(
+    view,
+    setTimeout(
+      () => {
+        hideTimers.delete(view);
+        if (view.dom.isConnected) {
+          view.dispatch({ effects: setHoveredCaret.of(null) });
+        }
+      },
+      Math.max(0, remaining),
+    ),
+  );
+};
+
+const cancelHide = (view: EditorView) => {
+  clearTimeout(hideTimers.get(view));
+  hideTimers.delete(view);
+};
 
 /**
  * The name of the remote caret under the pointer, shown as a tooltip: CodeMirror draws tooltips outside the
@@ -296,26 +326,13 @@ class RemoteCaretWidget extends WidgetType {
     span.appendChild(document.createTextNode('\u2060'));
     span.appendChild(name);
     span.addEventListener('mouseenter', () => {
-      clearTimeout(hideTimers.get(view));
+      cancelHide(view);
       hoveredAt.set(view, Date.now());
       const pos = view.posAtDOM(span);
       view.dispatch({ effects: setHoveredCaret.of({ pos, name: this._name, color: this._color }) });
     });
-    span.addEventListener('mouseleave', () => {
-      // A 2px caret is easy to leave by accident; a name that vanished at once could not be read.
-      const remaining = MIN_TOOLTIP_DURATION - (Date.now() - (hoveredAt.get(view) ?? 0));
-      hideTimers.set(
-        view,
-        setTimeout(
-          () => {
-            if (view.dom.isConnected) {
-              view.dispatch({ effects: setHoveredCaret.of(null) });
-            }
-          },
-          Math.max(0, remaining),
-        ),
-      );
-    });
+    // A 2px caret is easy to leave by accident; a name that vanished at once could not be read.
+    span.addEventListener('mouseleave', () => scheduleHide(view));
     return span;
   }
 

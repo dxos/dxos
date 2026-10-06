@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { Obj, Query, Ref } from '@dxos/echo';
 import { createObject } from '@dxos/echo-client';
@@ -224,8 +224,20 @@ export const WithEcho: Story = {
       void expect(infoBox.top).toBeGreaterThanOrEqual(0);
     });
 
+    // The peer moving its caret removes the hovered caret without a `mouseleave`; the name still goes.
+    contentB.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeNull(), { timeout: 3_000 });
+
     // It outlasts the pointer leaving, so a name glimpsed on a 2px caret can still be read, then goes.
-    caret.dispatchEvent(new MouseEvent('mouseleave'));
+    const movedCaret = await waitFor(() => {
+      const found = editors[0].querySelector<HTMLElement>('.cm-collab-selectionCaret');
+      void expect(found).toBeInstanceOf(HTMLElement);
+      return found;
+    });
+    movedCaret?.dispatchEvent(new MouseEvent('mouseenter'));
+    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeInstanceOf(HTMLElement));
+    movedCaret?.dispatchEvent(new MouseEvent('mouseleave'));
     await expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeInstanceOf(HTMLElement);
     await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeNull(), { timeout: 3_000 });
   },
