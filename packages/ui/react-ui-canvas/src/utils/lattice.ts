@@ -4,12 +4,11 @@
 
 //
 // Lattice mode geometry (docs/DESIGN.md §8b): shapes occupy whole cells of a coarse lattice, separated by
-// fixed gutters. A cell's pitch is a one-cell shape plus a gutter; a shape spans an odd number of cells on
-// each axis and covers the gutters between them, so its centre is always a cell centre and every channel
-// between shapes is exactly one gutter wide.
+// fixed gutters. A cell's pitch is a one-cell shape plus a gutter; a shape spans any whole number of cells
+// on each axis and covers the gutters between them, so every channel between shapes is one gutter wide.
 //
 
-import { type Bounds, type ElementId, type Node, type Point } from '../model/types.ts';
+import { type Bounds, type ElementId, type Node } from '../model/types.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** The size of a one-cell shape and the gutter between shapes, in scene units. */
@@ -17,99 +16,91 @@ export type LatticeSpec = { width: number; height: number; gutterX: number; gutt
 
 export const DEFAULT_LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
-/** A shape on the lattice: its centre cell and how many cells it spans (odd) on each axis. */
+/** A shape on the lattice: its first (top-left) cell and how many cells it spans on each axis. */
 export type LatticeCell = { col: number; row: number; spanX: number; spanY: number };
 
 const pitchX = (spec: LatticeSpec) => spec.width + spec.gutterX;
 const pitchY = (spec: LatticeSpec) => spec.height + spec.gutterY;
 
-/** The nearest odd span (at least 1) for a frame `length` long, one cell being `cell` plus `gutter`. */
-const oddSpan = (length: number, cell: number, gutter: number): number => {
-  const cells = (length + gutter) / (cell + gutter);
-  return Math.max(1, Math.round((cells - 1) / 2) * 2 + 1);
+/** The nearest whole span (at least 1) for a frame `length` long, one cell being `cell` plus `gutter`. */
+const spanOf = (length: number, cell: number, gutter: number): number =>
+  Math.max(1, Math.round((length + gutter) / (cell + gutter)));
+
+/** The lattice cells nearest a frame: the nearest whole spans, placed so their centre is nearest the frame's. */
+export const toCell = (bounds: Bounds, spec: LatticeSpec): LatticeCell => {
+  const spanX = spanOf(bounds.width, spec.width, spec.gutterX);
+  const spanY = spanOf(bounds.height, spec.height, spec.gutterY);
+  return {
+    // `+ 0` folds -0 into 0, so a cell just left of the origin is the same key as the origin's.
+    col: Math.round((bounds.x + bounds.width / 2) / pitchX(spec) - (spanX - 1) / 2) + 0,
+    row: Math.round((bounds.y + bounds.height / 2) / pitchY(spec) - (spanY - 1) / 2) + 0,
+    spanX,
+    spanY,
+  };
 };
 
-/** The lattice cell nearest a frame: the cell under its centre, and the odd spans nearest its size. */
-export const toCell = (bounds: Bounds, spec: LatticeSpec): LatticeCell => ({
-  col: Math.round((bounds.x + bounds.width / 2) / pitchX(spec)),
-  row: Math.round((bounds.y + bounds.height / 2) / pitchY(spec)),
-  spanX: oddSpan(bounds.width, spec.width, spec.gutterX),
-  spanY: oddSpan(bounds.height, spec.height, spec.gutterY),
+/** The frame a lattice cell range draws: its spanned shapes and the gutters between them. */
+export const cellBounds = ({ col, row, spanX, spanY }: LatticeCell, spec: LatticeSpec): Bounds => ({
+  x: col * pitchX(spec) - spec.width / 2,
+  y: row * pitchY(spec) - spec.height / 2,
+  width: spanX * spec.width + (spanX - 1) * spec.gutterX,
+  height: spanY * spec.height + (spanY - 1) * spec.gutterY,
 });
 
-/** The frame a lattice cell draws: its spanned shapes and the gutters between them, centred on the cell. */
-export const cellBounds = ({ col, row, spanX, spanY }: LatticeCell, spec: LatticeSpec): Bounds => {
-  const width = spanX * spec.width + (spanX - 1) * spec.gutterX;
-  const height = spanY * spec.height + (spanY - 1) * spec.gutterY;
-  return { x: col * pitchX(spec) - width / 2, y: row * pitchY(spec) - height / 2, width, height };
-};
-
 /**
- * A cell resized to the frame a handle drag left (`from` was the frame before): the centre cell stays and
- * the span grows or shrinks symmetrically to the moved edge, so the dragged edge steps one cell position at a
- * time (an odd span cannot keep the opposite edge fixed and grow by one). An axis with no moved edge keeps
- * its span.
+ * A cell range resized to the frame a handle drag left (`from` was the frame before): on each axis the
+ * moved edge snaps to the nearest cell edge and the opposite edge stays where it was, so a dragged face
+ * steps one cell at a time; the range never shrinks below one cell, and an axis with no moved edge keeps
+ * its cells.
  */
 export const resizeCell = (cell: LatticeCell, from: Bounds, to: Bounds, spec: LatticeSpec): LatticeCell => {
   const axis = (
-    fromLow: number,
-    fromHigh: number,
-    toLow: number,
-    toHigh: number,
-    centre: number,
-    size: number,
-    gutter: number,
+    [fromLow, fromHigh, toLow, toHigh]: [number, number, number, number],
+    first: number,
     span: number,
-  ) => {
-    const [low, high] = [Math.abs(toLow - fromLow), Math.abs(toHigh - fromHigh)];
-    if (low === 0 && high === 0) {
-      return span;
+    size: number,
+    pitch: number,
+  ): [first: number, span: number] => {
+    const last = first + span - 1;
+    if (Math.abs(toLow - fromLow) > Math.abs(toHigh - fromHigh)) {
+      // The low edge moved: the cell whose low edge (`k x pitch - size / 2`) is nearest, up to the last cell.
+      const next = Math.min(last, Math.round((toLow + size / 2) / pitch));
+      return [next, last - next + 1];
     }
-    const half = high >= low ? toHigh - centre : centre - toLow;
-    return oddSpan(Math.max(0, 2 * half), size, gutter);
+    if (toHigh !== fromHigh) {
+      // The high edge moved: the cell whose high edge (`k x pitch + size / 2`) is nearest, from the first cell.
+      const next = Math.max(first, Math.round((toHigh - size / 2) / pitch));
+      return [first, next - first + 1];
+    }
+    return [first, span];
   };
-  return {
-    ...cell,
-    spanX: axis(
-      from.x,
-      from.x + from.width,
-      to.x,
-      to.x + to.width,
-      cell.col * pitchX(spec),
-      spec.width,
-      spec.gutterX,
-      cell.spanX,
-    ),
-    spanY: axis(
-      from.y,
-      from.y + from.height,
-      to.y,
-      to.y + to.height,
-      cell.row * pitchY(spec),
-      spec.height,
-      spec.gutterY,
-      cell.spanY,
-    ),
-  };
+  const [col, spanX] = axis(
+    [from.x, from.x + from.width, to.x, to.x + to.width],
+    cell.col,
+    cell.spanX,
+    spec.width,
+    pitchX(spec),
+  );
+  const [row, spanY] = axis(
+    [from.y, from.y + from.height, to.y, to.y + to.height],
+    cell.row,
+    cell.spanY,
+    spec.height,
+    pitchY(spec),
+  );
+  return { col, row, spanX, spanY };
 };
 
-/** A frame snapped onto the lattice: the nearest cell centre and odd spans. */
+/** A frame snapped onto the lattice: the nearest whole spans at the nearest cells. */
 export const quantize = (bounds: Bounds, spec: LatticeSpec): Bounds => cellBounds(toCell(bounds, spec), spec);
-
-/** The centre of the cell nearest `point`, so a dragged shape's centre can be read off the pointer. */
-export const nearestCentre = (point: Point, spec: LatticeSpec): Point => ({
-  x: Math.round(point.x / pitchX(spec)) * pitchX(spec),
-  y: Math.round(point.y / pitchY(spec)) * pitchY(spec),
-});
 
 const cellKey = (col: number, row: number) => `${col},${row}`;
 
 /** Every lattice position a cell covers, as `col,row` keys. */
 export const coveredCells = ({ col, row, spanX, spanY }: LatticeCell): string[] => {
-  const [halfX, halfY] = [(spanX - 1) / 2, (spanY - 1) / 2];
   const keys: string[] = [];
-  for (let x = col - halfX; x <= col + halfX; x++) {
-    for (let y = row - halfY; y <= row + halfY; y++) {
+  for (let x = col; x < col + spanX; x++) {
+    for (let y = row; y < row + spanY; y++) {
       keys.push(cellKey(x, y));
     }
   }

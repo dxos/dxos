@@ -82,7 +82,7 @@ const createLatticeTree = () => {
   const scene = SceneBuilder.create(root, 'root')
     .rect('a', at(-1, -1), 'A')
     .rect('b', at(1, -1), 'B')
-    .rect('bar', at(0, 1, 3), 'Bar')
+    .rect('bar', at(-1, 1, 3), 'Bar')
     .line('ab', 'a', 'b')
     .line('a-bar', 'a', 'bar')
     .build();
@@ -164,8 +164,8 @@ export const Classes: Story = {
 };
 
 /**
- * Lattice mode (DESIGN §8b): shapes snap to whole cells of a 256x128 lattice with 128x64 gutters, span odd
- * numbers of cells, and may not overlap; a drag onto occupied cells previews in red and is refused.
+ * Lattice mode (DESIGN §8b): shapes snap to whole cells of a 256x128 lattice with 128x64 gutters, span any number
+ * of cells, and may not overlap; a drag onto occupied cells previews in red and is refused.
  */
 export const Lattice: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'lattice' },

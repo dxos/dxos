@@ -72,7 +72,7 @@ export const constrainIntent = (scene: Scene, intent: Intent, spec: LatticeSpec)
     }
 
     case 'resize': {
-      // Symmetric about the node's cell, so the dragged edge steps one cell position at a time.
+      // The dragged edge snaps to a cell edge and the opposite edge stays, so a face steps one cell at a time.
       const node = scene.nodes[intent.id];
       const from = node && nodeBounds(node);
       const bounds = from
