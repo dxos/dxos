@@ -216,6 +216,18 @@ closing a goal closes its open sub-goals.
 | 7   | "Never book meetings on Fridays"                 | Constraint           | action                       | Blocks or rewrites the action                                          | Checked before every action, not on facts                 |
 | 8   | "Help me draft this PR description"              | Outcome (session)    | fact (the conversation)      | Normal chat work                                                       | Whether a session goal is a goal or just the task at hand |
 
+## Implementation
+
+Milestones, each ending in a demo that can be watched.
+
+| #   | Milestone                   | Delivers                                                                                                                                                                                                                                   | Demo                                                                                                                                        |
+| --- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0  | Private threads             | A session feed carries threads the conversation view hides; agent-runtime runs a turn inside a thread with the session's context. Decides per-user vs per-agent background sessions.                                                       | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view.                                                    |
+| M1  | Facts and goals, in-process | `readSource` writes one tuple per feed item; hierarchical `Goal` objects (status, priority, situation, drivers, wake rules) with their own feeds; the in-process brain: SPARQL `ASK` wake rules, judgment in the session's private thread. | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment) in one runtime; goals and sub-goals in the Goals tab. |
+| M2  | Brain on EDGE               | A Durable Object per agent follows the fact feeds, rebuilds its index, evaluates wake rules, schedules time drivers with alarms and runs per-user background sessions; the agent service routes results to sessions and channels.          | Josiah sets a watch on Discord; Dima's update in Composer reaches him; a follow-up fires after a restart (shortened timeout).               |
+| M3  | Planning and constraints    | Judgment decomposes goals into sub-goals; action drivers (a hook before every action) enforce constraints; a session goal can be promoted to a durable one.                                                                                | "Complete my taxes" grows sub-goals and reminders; "never book meetings on Fridays" rewrites a proposed Friday meeting.                     |
+| M4  | Pattern library and evals   | The goal-pattern skill with worked examples; eval personas scoring the eight example goals; cost controls (batching, judgment limits).                                                                                                     | An eval report across the example goals, with judgment-call counts.                                                                         |
+
 ## Open questions
 
 1. How goals relate to `@dxos/types` `Task`: whether user-visible task lists render sub-goals, or a sub-goal links to a `Task` when one is wanted.
