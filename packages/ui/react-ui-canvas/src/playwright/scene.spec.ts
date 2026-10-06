@@ -216,6 +216,10 @@ test.describe('SceneView', () => {
     // The new link is the selection, and nothing else is.
     await expect(page.locator('[data-link-id].stroke-primary-500')).toHaveCount(1);
     expect(await scene.selectedNodes()).toEqual([]);
+    // The hover follows the pointer, not the gesture: the source is no longer highlighted, the target under
+    // the released pointer is.
+    await expect(scene.node('scene:root/a')).not.toHaveClass(/border-primary-500\/50/);
+    await expect(scene.node('scene:root/c')).toHaveClass(/border-primary-500\/50/);
   });
 
   test('the line tool draws nothing when a press on a node never moves', async () => {
