@@ -141,6 +141,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
       // },
     ];
 
+    const hovered = view.state.field(hoveredCaret, false);
     const awarenessStates = this._provider.getRemoteStates();
     for (const state of awarenessStates) {
       const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
@@ -207,7 +208,11 @@ export class RemoteSelectionsDecorator implements PluginValue {
         value: Decoration.widget({
           side: head - anchor > 0 ? -1 : 1, // The local cursor should be rendered outside the remote selection.
           block: false,
-          widget: new RemoteCaretWidget(state.info.displayName ?? 'Anonymous', darkColor),
+          widget: new RemoteCaretWidget(
+            state.info.displayName ?? 'Anonymous',
+            darkColor,
+            hovered?.pos === head && hovered.name === (state.info.displayName ?? 'Anonymous'),
+          ),
         }),
       });
     }
@@ -263,6 +268,8 @@ class RemoteCaretWidget extends WidgetType {
   constructor(
     private readonly _name: string,
     private readonly _color: string,
+    /** Its name tooltip is showing, which outlasts the pointer; the dot hides for as long. */
+    private readonly _hovered = false,
   ) {
     super();
   }
@@ -270,6 +277,9 @@ class RemoteCaretWidget extends WidgetType {
   override toDOM(view: EditorView): HTMLElement {
     const span = document.createElement('span');
     span.className = 'cm-collab-selectionCaret';
+    span.dataset.name = this._name;
+    span.dataset.color = this._color;
+    span.toggleAttribute('data-hovered', this._hovered);
     span.style.backgroundColor = this._color;
     span.style.borderColor = this._color;
 
@@ -309,12 +319,17 @@ class RemoteCaretWidget extends WidgetType {
     return span;
   }
 
-  override updateDOM(): boolean {
-    return false;
+  override updateDOM(dom: HTMLElement): boolean {
+    // Only the hover state changes in place: replacing the element under the pointer would drop its hover.
+    if (dom.dataset.name !== this._name || dom.dataset.color !== this._color) {
+      return false;
+    }
+    dom.toggleAttribute('data-hovered', this._hovered);
+    return true;
   }
 
   override eq(widget: this): boolean {
-    return widget._color === this._color && widget._name === this._name;
+    return widget._color === this._color && widget._name === this._name && widget._hovered === this._hovered;
   }
 
   override get estimatedHeight() {
@@ -353,7 +368,7 @@ const styles = EditorView.theme({
     transition: 'transform .3s ease-in-out',
     boxSizing: 'border-box',
   },
-  '.cm-collab-selectionCaret:hover > .cm-collab-selectionCaretDot': {
+  '.cm-collab-selectionCaret[data-hovered] > .cm-collab-selectionCaretDot': {
     transform: 'scale(0)',
     transformOrigin: 'center',
   },
