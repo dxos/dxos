@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import * as Agent from '@dxos/assistant/Agent';
@@ -133,12 +133,11 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
     return objects;
   };
 
-  const say = (chat: Chat.Chat, name: string, prompt: string) =>
-    Effect.gen(function* () {
-      const session = yield* AgentService.getSession(chat, { location: 'edge' });
-      yield* session.submitPrompt(prompt, { sender: { name } });
-      yield* session.waitForCompletion();
-    });
+  const say = Effect.fnUntraced(function* (chat: Chat.Chat, name: string, prompt: string) {
+    const session = yield* AgentService.getSession(chat, { location: 'edge' });
+    yield* session.submitPrompt(prompt, { sender: { name } });
+    yield* session.waitForCompletion();
+  });
 
   /** What `GET /compute/brain/:spaceId/:agentId` answers; triggers arrive encoded (`BrainService.encodeTrigger`). */
   const BrainStateResponse = Schema.Struct({
@@ -157,18 +156,17 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
   };
 
   /** Polls until `check` holds, so EDGE's replication and alarms have time to land. */
-  const eventually = async <T>(read: () => Promise<T>, check: (value: T) => boolean, timeout = 180_000) => {
-    const deadline = Date.now() + timeout;
-    let value = await read();
-    while (!check(value)) {
-      if (Date.now() > deadline) {
-        throw new Error(`Timed out; last saw ${JSON.stringify(value).slice(0, 2_000)}`);
-      }
-      await new Promise((resolve) => setTimeout(resolve, 2_000));
-      value = await read();
-    }
-    return value;
-  };
+  const eventually = <T>(read: () => Promise<T>, check: (value: T) => boolean, timeout = 180_000) =>
+    vi.waitFor(
+      async () => {
+        const value = await read();
+        if (!check(value)) {
+          throw new Error(`Not yet; last saw ${JSON.stringify(value).slice(0, 2_000)}`);
+        }
+        return value;
+      },
+      { timeout, interval: 2_000 },
+    );
 
   const replies = (chat: Chat.Chat) =>
     run(
