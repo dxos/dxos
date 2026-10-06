@@ -4,7 +4,7 @@
 
 import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
 
-import { Event, Mutex, scheduleMicroTask } from '@dxos/async';
+import { Event, Mutex, scheduleMicroTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from '@dxos/edge-client';
@@ -22,9 +22,19 @@ import {
 import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
 import { ComplexMap, arrayToBuffer, bufferToArray, defaultMap, rangeFromTo } from '@dxos/util';
 
+/**
+ * How often a connection re-checks feeds still behind EDGE. The router relays frames best-effort,
+ * so a `get-metadata`, a `request`, or the reply to either can be dropped without an error.
+ */
+const RESYNC_INTERVAL_MS = 5_000;
+
+/** Cap on the resync ticks between two asks about one feed, so a feed EDGE cannot serve is not polled hot. */
+const RESYNC_MAX_WAIT_TICKS = 12;
+
 export type EdgeFeedReplicatorProps = {
   messenger: EdgeConnection;
   spaceId: SpaceId;
+  resyncInterval?: number;
 };
 
 export class EdgeFeedReplicator extends Resource {
@@ -50,10 +60,16 @@ export class EdgeFeedReplicator extends Resource {
   /** Every block below this is held or already requested on this connection. */
   private _requestedUpTo = new ComplexMap<PublicKey, number>(PublicKey.hash);
 
-  constructor({ messenger, spaceId }: EdgeFeedReplicatorProps) {
+  /** Feeds behind EDGE as of the last resync tick: ticks since last asked, and ticks to wait before asking again. */
+  private _behind = new ComplexMap<PublicKey, { ticks: number; wait: number }>(PublicKey.hash);
+
+  private readonly _resyncInterval: number;
+
+  constructor({ messenger, spaceId, resyncInterval = RESYNC_INTERVAL_MS }: EdgeFeedReplicatorProps) {
     super();
     this._messenger = messenger;
     this._spaceId = spaceId;
+    this._resyncInterval = resyncInterval;
   }
 
   protected override async _open(): Promise<void> {
@@ -113,6 +129,40 @@ export class EdgeFeedReplicator extends Resource {
         await this._replicateFeed(connectionCtx, feed);
       }
     });
+    scheduleTaskInterval(connectionCtx, () => this._resyncLaggingFeeds(connectionCtx), this._resyncInterval);
+  }
+
+  /**
+   * Re-asks EDGE about feeds still behind it, since nothing else would: metadata is requested once per
+   * feed per connection, and a lost reply leaves the remote length unknown, which stops both pulling
+   * and pushing until the socket reconnects.
+   */
+  private async _resyncLaggingFeeds(ctx: Context): Promise<void> {
+    const behind = new ComplexMap<PublicKey, { ticks: number; wait: number }>(PublicKey.hash);
+    for (const feed of this._feeds.values()) {
+      const remoteLength = this._remoteLength.get(feed.key);
+      if (remoteLength !== undefined && (remoteLength === 0 || feed.has(0, remoteLength))) {
+        continue;
+      }
+      // A full tick of grace first, so a request whose reply is merely slow is not sent twice.
+      const lag = this._behind.get(feed.key) ?? { ticks: 0, wait: 1 };
+      behind.set(feed.key, lag);
+      if (++lag.ticks <= lag.wait) {
+        continue;
+      }
+      lag.ticks = 0;
+      lag.wait = Math.min(lag.wait * 2, RESYNC_MAX_WAIT_TICKS);
+      log.info('feed still behind edge; asking again', {
+        feedKey: feed.key,
+        localLength: feed.length,
+        remoteLength,
+        requestedUpTo: this._requestedUpTo.get(feed.key),
+      });
+      // The metadata reply re-requests from the first missing block only if nothing claims it is in flight.
+      this._requestedUpTo.delete(feed.key);
+      await this._sendMessage(ctx, { type: 'get-metadata', feedKey: feed.key.toHex() });
+    }
+    this._behind = behind;
   }
 
   private async _resetConnection(): Promise<void> {
@@ -122,6 +172,7 @@ export class EdgeFeedReplicator extends Resource {
     this._connectionCtx = undefined;
     this._remoteLength.clear();
     this._requestedUpTo.clear();
+    this._behind.clear();
   }
 
   async addHypercore(feed: HypercoreWrapper<any>): Promise<void> {
