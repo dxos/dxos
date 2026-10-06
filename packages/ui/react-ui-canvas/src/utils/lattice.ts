@@ -44,6 +44,55 @@ export const cellBounds = ({ col, row, spanX, spanY }: LatticeCell, spec: Lattic
   return { x: col * pitchX(spec) - width / 2, y: row * pitchY(spec) - height / 2, width, height };
 };
 
+/**
+ * A cell resized to the frame a handle drag left (`from` was the frame before): the centre cell stays and
+ * the span grows or shrinks symmetrically to the moved edge, so the dragged edge steps one cell position at a
+ * time (an odd span cannot keep the opposite edge fixed and grow by one). An axis with no moved edge keeps
+ * its span.
+ */
+export const resizeCell = (cell: LatticeCell, from: Bounds, to: Bounds, spec: LatticeSpec): LatticeCell => {
+  const axis = (
+    fromLow: number,
+    fromHigh: number,
+    toLow: number,
+    toHigh: number,
+    centre: number,
+    size: number,
+    gutter: number,
+    span: number,
+  ) => {
+    const [low, high] = [Math.abs(toLow - fromLow), Math.abs(toHigh - fromHigh)];
+    if (low === 0 && high === 0) {
+      return span;
+    }
+    const half = high >= low ? toHigh - centre : centre - toLow;
+    return oddSpan(Math.max(0, 2 * half), size, gutter);
+  };
+  return {
+    ...cell,
+    spanX: axis(
+      from.x,
+      from.x + from.width,
+      to.x,
+      to.x + to.width,
+      cell.col * pitchX(spec),
+      spec.width,
+      spec.gutterX,
+      cell.spanX,
+    ),
+    spanY: axis(
+      from.y,
+      from.y + from.height,
+      to.y,
+      to.y + to.height,
+      cell.row * pitchY(spec),
+      spec.height,
+      spec.gutterY,
+      cell.spanY,
+    ),
+  };
+};
+
 /** A frame snapped onto the lattice: the nearest cell centre and odd spans. */
 export const quantize = (bounds: Bounds, spec: LatticeSpec): Bounds => cellBounds(toCell(bounds, spec), spec);
 

@@ -12,6 +12,7 @@ import {
   nearestFree,
   occupancy,
   quantize,
+  resizeCell,
   toCell,
 } from './lattice.ts';
 import { createNode } from './shapes.ts';
@@ -55,6 +56,22 @@ describe('lattice', () => {
     // Quantizing is idempotent.
     const once = quantize({ x: 300, y: 170, width: 900, height: 300 }, spec);
     expect(quantize(once, spec)).toEqual(once);
+  });
+
+  test('dragging one edge resizes about the centre cell, so that edge steps one position at a time', ({ expect }) => {
+    const one = { col: 0, row: 0, spanX: 1, spanY: 1 };
+    const from = cellBounds(one, spec);
+    // The east edge dragged more than half a pitch right: three cells, its east edge on the next position.
+    const grown = resizeCell(one, from, { ...from, width: from.width + 230 }, spec);
+    expect(grown).toEqual({ col: 0, row: 0, spanX: 3, spanY: 1 });
+    expect(cellBounds(grown, spec).x + cellBounds(grown, spec).width).toBe(from.x + from.width + 384);
+    // Less than half a pitch is not enough to step.
+    expect(resizeCell(one, from, { ...from, width: from.width + 150 }, spec)).toEqual(one);
+    // Dragging the east edge of a three-cell bar back in shrinks it, though its west edge never moved.
+    const bar = cellBounds(grown, spec);
+    expect(resizeCell(grown, bar, { ...bar, width: bar.width - 230 }, spec)).toEqual(one);
+    // An untouched axis keeps its span.
+    expect(resizeCell({ ...one, spanY: 3 }, from, { ...from, width: from.width + 230 }, spec).spanY).toBe(3);
   });
 
   test('a shape covers every position it spans; occupancy collides with them', ({ expect }) => {

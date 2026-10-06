@@ -13,10 +13,12 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import {
   DEFAULT_LATTICE,
   type LatticeSpec,
+  cellBounds,
   collides,
   coveredCells,
   occupancy,
   quantize,
+  resizeCell,
   toCell,
 } from '../../utils/lattice.ts';
 import { nodeBounds, resizeNode } from '../../utils/shapes.ts';
@@ -70,7 +72,12 @@ export const constrainIntent = (scene: Scene, intent: Intent, spec: LatticeSpec)
     }
 
     case 'resize': {
-      const bounds = quantize(intent.bounds, spec);
+      // Symmetric about the node's cell, so the dragged edge steps one cell position at a time.
+      const node = scene.nodes[intent.id];
+      const from = node && nodeBounds(node);
+      const bounds = from
+        ? cellBounds(resizeCell(toCell(from, spec), from, intent.bounds, spec), spec)
+        : quantize(intent.bounds, spec);
       return blocked(scene, spec, bounds, new Set([intent.id])) ? undefined : { kind: 'resize', id: intent.id, bounds };
     }
 
