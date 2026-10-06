@@ -90,7 +90,11 @@ const armQueuedProbe = (page: Page) =>
       Reflect.set(globalThis, key, probe);
       const visible = () =>
         [...document.querySelectorAll('[data-testid="feed.message"]')].some(
-          (row) => row.querySelector('[data-testid="chat.delivery"]') && row.textContent?.includes(prompt),
+          // A `read` row is the turn itself, so it would time the agent's pickup rather than the queued row.
+          (row) =>
+            row.querySelector(
+              '[data-testid="chat.delivery"][data-delivery="sent"], [data-testid="chat.delivery"][data-delivery="delivered"]',
+            ) && row.textContent?.includes(prompt),
         );
       const onKeyDown = (event: KeyboardEvent) => {
         if (event.key !== 'Enter') {

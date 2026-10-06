@@ -410,7 +410,8 @@ export class AiChatProcessor {
     }
 
     await new Promise<void>((resolve, reject) => {
-      void this.request(request, { resolve, reject });
+      // `request` rejects without settling the submission only when cancelling the previous turn fails.
+      this.request(request, { resolve, reject }).catch(reject);
     });
   }
 
