@@ -8,6 +8,7 @@
 import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
+import { injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
 
 type Env = {
   ASSETS: Fetcher;
@@ -350,7 +351,30 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
     );
   }
 
-  return env.ASSETS.fetch(new Request(new URL('/', url), request));
+  const page = await env.ASSETS.fetch(new Request(new URL('/', url), request));
+  return withLinkPreview(request, page, url);
+};
+
+/**
+ * Name a client-side route's `index.html` after the `title` its URL carries, so a link pasted into a
+ * messenger previews as the object it opens rather than as the bare app. Anything else passes through.
+ */
+const withLinkPreview = async (request: Request, page: Response, url: URL): Promise<Response> => {
+  const title = readLinkTitle(url);
+  if (
+    !title ||
+    request.method !== 'GET' ||
+    page.status !== 200 ||
+    !page.headers.get('Content-Type')?.includes('text/html')
+  ) {
+    return page;
+  }
+
+  const headers = new Headers(page.headers);
+  // The body changes, so the asset's length and validator no longer describe it.
+  headers.delete('Content-Length');
+  headers.delete('ETag');
+  return new Response(injectLinkPreview(await page.text(), title), { status: page.status, headers });
 };
 
 const OTEL_PREFIX = '/api/otel';
