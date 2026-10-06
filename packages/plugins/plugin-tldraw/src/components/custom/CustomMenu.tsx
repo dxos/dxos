@@ -23,6 +23,7 @@ export const CustomMenu = ({ isMobile }: TLUiStylePanelProps) => {
           <DefaultQuickActions>
             <DefaultQuickActionsContent />
             <TldrawUiMenuItem {...actions.snap} disabled={isReadonlyMode} />
+            {actions.comment && <TldrawUiMenuItem {...actions.comment} />}
           </DefaultQuickActions>
         </div>
       </div>

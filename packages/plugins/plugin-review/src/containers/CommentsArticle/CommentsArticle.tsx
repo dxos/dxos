@@ -41,7 +41,7 @@ import { meta } from '#meta';
 import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state.ts';
-import { currentObjectId, getMessageMetadata } from '../../util/index.ts';
+import { currentObjectId, findCommentConfig, getMessageMetadata } from '../../util/index.ts';
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -164,6 +164,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
   const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
+  // An object whose comments are not anchored to a span (a drawing) has no text to select, so its empty state says so.
+  const unanchored = findCommentConfig(commentConfigs, subject)?.comments === 'unanchored';
   const anchorSorts = Hooks.useCapabilities(AppCapabilities.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
@@ -506,7 +508,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             <Theme.Trans
               {...{
                 t,
-                i18nKey: 'no-comments.message',
+                i18nKey: unanchored ? 'no-comments-unanchored.message' : 'no-comments.message',
                 components: {
                   commentIcon: (
                     <Icon.Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
