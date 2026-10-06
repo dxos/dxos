@@ -14,7 +14,6 @@ import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtens
 import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvider';
 import { getHostPlatform, isNonNullable } from '@dxos/util';
 
-import { orderConfigSources } from './config-sources.ts';
 import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants.ts';
 
 export const PARAM_PROFILER = 'profiler';
@@ -35,7 +34,7 @@ export const setSafeModeUrl = (on: boolean) => {
 };
 
 export const setupConfig = async () => {
-  const sources = orderConfigSources({ settings: await Storage(), envs: Envs(), local: Local(), defaults: Defaults() });
+  const sources = [await Storage(), Envs(), Local(), Defaults()];
   // Not available in the worker.
   if (typeof window !== 'undefined') {
     const searchProps = new URLSearchParams(window.location.search);
