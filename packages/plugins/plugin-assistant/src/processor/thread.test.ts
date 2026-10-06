@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { Alarm, ConsumedAnnotation, InFlightAnnotation, QueuedAnnotation } from '@dxos/assistant';
 import { Annotation, Feed, Obj } from '@dxos/echo';
-import { getDelivery } from '@dxos/react-ui-assistant';
+import { getDelivery } from '@dxos/react-ui-assistant/types';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type OutboxEntry } from './outbox.ts';

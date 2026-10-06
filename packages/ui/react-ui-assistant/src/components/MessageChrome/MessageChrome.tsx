@@ -14,8 +14,8 @@ import type * as Util from '@dxos/react-ui/Util';
 import { type ContentBlock, Message } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { getDelivery, isUnread } from '../../delivery.ts';
 import { translationKey } from '../../translations.ts';
+import { getDelivery, isUnread } from '../../types.ts';
 import { formatTime } from './format-time.ts';
 
 //

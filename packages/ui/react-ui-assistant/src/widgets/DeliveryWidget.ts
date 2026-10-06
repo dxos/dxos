@@ -7,7 +7,7 @@ import { WidgetType } from '@codemirror/view';
 import { Domino, mx } from '@dxos/ui';
 import { getSize } from '@dxos/ui-theme';
 
-import { type DeliveryStatus } from '../delivery.ts';
+import { type DeliveryStatus } from '../types.ts';
 
 export type DeliveryLabels = Record<DeliveryStatus | 'remove', string>;
 

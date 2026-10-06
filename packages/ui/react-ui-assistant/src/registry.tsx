@@ -12,7 +12,7 @@ import {
   getXmlTextChild,
 } from '@dxos/ui-editor';
 
-import { DeliveryStatus } from './delivery.ts';
+import { DeliveryStatus } from './types.ts';
 import {
   type DeliveryLabels,
   DeliveryWidget,

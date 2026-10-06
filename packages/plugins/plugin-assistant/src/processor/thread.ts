@@ -7,7 +7,7 @@ import * as Order from 'effect/Order';
 
 import { type Alarm, isConsumed, isInFlight, isQueued } from '@dxos/assistant';
 import { Annotation, Feed, Obj } from '@dxos/echo';
-import { DeliveryAnnotation, type DeliveryStatus } from '@dxos/react-ui-assistant';
+import { DeliveryAnnotation, type DeliveryStatus } from '@dxos/react-ui-assistant/types';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { type OutboxEntry } from './outbox.ts';

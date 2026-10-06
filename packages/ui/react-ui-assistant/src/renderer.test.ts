@@ -8,8 +8,8 @@ import { Annotation, Obj } from '@dxos/echo';
 import { type ItemContent } from '@dxos/react-ui-feed';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { DeliveryAnnotation } from './delivery.ts';
 import { createRenderer, linkBareObjectUris } from './renderer.ts';
+import { DeliveryAnnotation } from './types.ts';
 
 describe('createRenderer', () => {
   // A folded tool run (`collapseToolRuns`) and a patched streaming copy are plain spreads, not ECHO

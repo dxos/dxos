@@ -18,9 +18,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
-import { DeliveryAnnotation, type DeliveryStatus } from '../../delivery.ts';
 import { translations } from '../../translations.ts';
-import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { type ChatThreadEvent, type ChatView, DeliveryAnnotation, type DeliveryStatus } from '../../types.ts';
 import { ChatThread, type ChatThreadController } from './ChatThread.tsx';
 
 /**
