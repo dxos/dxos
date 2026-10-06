@@ -197,6 +197,9 @@ test.describe('SceneView', () => {
     expect(await scene.linkCount()).toBe(before + 1);
     // No node was created: the drop landed on an existing one rather than on empty canvas.
     expect(await scene.nodeCount()).toBe(4);
+    // The new link is the selection, and nothing else is.
+    await expect(page.locator('[data-link-id].stroke-primary-500')).toHaveCount(1);
+    expect(await scene.selectedNodes()).toEqual([]);
   });
 
   test('the line tool draws nothing when a press on a node never moves', async () => {

@@ -765,6 +765,8 @@ export const usePointerMachine = ({
             directed: isDirected(scene, nodeRegistry, current.source, target),
           });
           projection.apply({ kind: 'link', link });
+          // The new link is what the user just made, so it is what they act on next (style, delete).
+          select([link.id]);
         }
         break;
       }
