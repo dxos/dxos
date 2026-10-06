@@ -23,6 +23,7 @@ import { type Space, getSpace } from '@dxos/react-client/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -41,7 +42,7 @@ import { meta } from '#meta';
 import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state.ts';
-import { currentObjectId, getMessageMetadata } from '../../util/index.ts';
+import { currentObjectId, findCommentConfig, getMessageMetadata } from '../../util/index.ts';
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -164,6 +165,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
   const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
+  // An object whose comments are not anchored to a span (a drawing) has no text to select, so its empty state points
+  // only to the toolbar's whole-object comment.
+  const unanchored = findCommentConfig(commentConfigs, subject)?.comments === 'unanchored';
   const anchorSorts = Hooks.useCapabilities(AppCapabilities.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
@@ -185,6 +189,16 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     return branch?.key;
   }, [markdownDoc, versionSelection]);
   const activeBranch = reviewBranch ?? 'main';
+
+  // A comment on the whole object: no anchor, which the editors' comment sync and anchor sorts already pass over.
+  const handleAddObjectComment = useCallback(
+    () =>
+      invokePromise(CommentOperation.Create, {
+        subject,
+        branch: reviewBranch,
+      }),
+    [invokePromise, subject, reviewBranch],
+  );
 
   const db = Obj.getDatabase(subject);
   const objectsAnchoredTo = useQuery(db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
@@ -506,7 +520,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             <Theme.Trans
               {...{
                 t,
-                i18nKey: 'no-comments.message',
+                i18nKey: unanchored ? 'no-comments-unanchored.message' : 'no-comments.message',
                 components: {
                   commentIcon: (
                     <Icon.Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
@@ -514,6 +528,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                   versionsIcon: (
                     <Icon.Icon icon='ph--git-branch--regular' size='md' classNames='inline-block align-[-0.125em]' />
                   ),
+                  addIcon: <Icon.Icon icon='ph--plus--regular' size='md' classNames='inline-block align-[-0.125em]' />,
                 },
               }}
             />
@@ -539,6 +554,15 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 {t('show-all.label')}
               </Tabs.Trigger>
             </Tabs.List>
+            <Toolbar.Separator variant='gap' />
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--plus--regular'
+              label={t('add-object-comment.label')}
+              onClick={handleAddObjectComment}
+              data-testid='comments.object-comment.add'
+            />
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body asChild>

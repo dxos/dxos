@@ -8,6 +8,7 @@ export * from './collectors/allocation.ts';
 export * from './collectors/calls.ts';
 export * from './collectors/cpu.ts';
 export * from './collectors/data.ts';
+export { type WaitForQuietDiskOptions, waitForQuietDisk } from './collectors/disk.ts';
 export * from './collectors/frames.ts';
 export * from './collectors/latency.ts';
 export * from './collectors/marks.ts';

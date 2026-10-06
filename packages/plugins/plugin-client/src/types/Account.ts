@@ -12,7 +12,6 @@ export const id = 'dxos:account';
 export const Profile = 'profile';
 export const Devices = 'devices';
 export const Contacts = 'contacts';
-export const SpaceInvitations = 'space-invitations';
 export const Security = 'security';
 export const Account = 'account';
 export const Invitations = 'invitations';

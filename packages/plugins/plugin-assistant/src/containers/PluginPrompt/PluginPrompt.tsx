@@ -8,10 +8,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Operations from '@dxos/plugin-registry/Operations';
+import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -75,30 +74,26 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
   const isEnabled = enabled.includes(pluginId);
 
   return (
-    <Layout.Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
-      <Layout.Flex gap='sm' align='center'>
-        <Icon.Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
-        <Layout.Flex column classNames='min-w-0'>
-          <p className='text-sm font-medium truncate'>{t('plugin-prompt.title', { plugin: label })}</p>
-          {/* A plugin's own description runs to paragraphs and would dwarf the chat. */}
-          <p className='text-sm text-fg-subtle'>
-            {!plugin
-              ? t('plugin-prompt.unavailable', { plugin: label })
-              : isEnabled
-                ? t('plugin-prompt.enabled', { plugin: label })
-                : t('plugin-prompt.description', { plugin: label })}
-          </p>
-        </Layout.Flex>
-      </Layout.Flex>
-      {failed && <p className='text-sm text-error-text'>{t('plugin-prompt.failed', { plugin: label })}</p>}
+    <Banner.Root valence={failed ? 'error' : 'neutral'} icon='ph--plugs--regular' classNames='my-2'>
+      <Banner.Title>{t('plugin-prompt.title', { plugin: label })}</Banner.Title>
+      {/* A plugin's own description runs to paragraphs and would dwarf the chat. */}
+      <Banner.Body>
+        {failed
+          ? t('plugin-prompt.failed', { plugin: label })
+          : !plugin
+            ? t('plugin-prompt.unavailable', { plugin: label })
+            : isEnabled
+              ? t('plugin-prompt.enabled', { plugin: label })
+              : t('plugin-prompt.description', { plugin: label })}
+      </Banner.Body>
       {plugin && !isEnabled && (
-        <Layout.Flex justify='end'>
+        <Button.Group>
           <Button.Root variant='primary' disabled={pending} onClick={handleEnable}>
             {t('plugin-prompt.button')}
           </Button.Root>
-        </Layout.Flex>
+        </Button.Group>
       )}
-    </Layout.Flex>
+    </Banner.Root>
   );
 };
 

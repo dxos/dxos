@@ -17,7 +17,6 @@ export * from './usePlatform.ts';
 export * from './usePresets.ts';
 export * from './useReferencesProvider.ts';
 export * from './useSelectionContext.ts';
-export * from './useSettled.ts';
 export * from './useHomeSuggestions.ts';
 export * from './useProcessEphemeralStatus.ts';
 export * from './useSessionTimeline.ts';

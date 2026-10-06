@@ -15,7 +15,6 @@ import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { type Actor, type Message, Person } from '@dxos/types';
@@ -631,10 +630,10 @@ const ConversationMessageRow = ({
   );
 
   return (
-    <Card.Row classNames='items-start'>
-      <Layout.Block classNames='h-8 items-center'>
-        <ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />
-      </Layout.Block>
+    <Card.Row
+      classNames='items-start'
+      leading={<ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />}
+    >
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
         <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
           <span className='truncate'>{from}</span>

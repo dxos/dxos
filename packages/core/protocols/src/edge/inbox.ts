@@ -5,11 +5,16 @@
 import * as Schema from 'effect/Schema';
 
 /**
+ * Longest `payload` EDGE accepts on `POST /inbox/:recipientDid`; a sender checks it before sending.
+ */
+export const INBOX_MAX_PAYLOAD_LENGTH = 16 * 1024;
+
+/**
  * Body of `POST /inbox/:recipientDid`.
  * The sender is taken from the verified presentation, never from the body.
  */
 export const InboxSendRequestSchema = Schema.Struct({
-  /** Opaque to EDGE: base64 of a binary-encoded signed `dxos.halo.credentials.Credential`. */
+  /** Opaque to EDGE: base64 of a binary-encoded `dxos.halo.inbox.InboxEnvelope` (legacy: a signed `Credential`). */
   payload: Schema.String,
 });
 export type InboxSendRequest = Schema.Schema.Type<typeof InboxSendRequestSchema>;

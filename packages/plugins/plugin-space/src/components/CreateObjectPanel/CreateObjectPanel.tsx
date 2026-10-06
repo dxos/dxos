@@ -4,6 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -65,6 +66,11 @@ export type CreateObjectPanelProps = {
   onCreateObject?: (params: { metadata: Metadata; data?: Record<string, any> }) => MaybePromise<void>;
   /** Abandons the create; the draft form offers a Cancel button only when this is supplied. */
   onCancel?: () => void;
+  /**
+   * Where the draft form's Cancel and Create go, e.g. a dialog's footer; inline under the fields when absent. A portal
+   * rather than a lifted form, since only the schema-form step of the panel has actions.
+   */
+  actionsContainer?: HTMLElement | null;
 };
 
 export const CreateObjectPanel = ({
@@ -82,6 +88,7 @@ export const CreateObjectPanel = ({
   onTypenameChange,
   onCreateObject,
   onCancel,
+  actionsContainer,
 }: CreateObjectPanelProps) => {
   const initialFormValues = Hooks.useDefaultValue(initialFormValuesProp, () => ({}));
   const metadata = typename && resolve?.(typename);
@@ -173,7 +180,7 @@ export const CreateObjectPanel = ({
         testId='create-object-form'
       >
         <Form.Viewport>
-          <CreateObjectFormContent onCancel={onCancel} />
+          <CreateObjectFormContent onCancel={onCancel} actionsContainer={actionsContainer} />
         </Form.Viewport>
       </Form.Root>
     );
@@ -184,10 +191,10 @@ export const CreateObjectPanel = ({
 
 CreateObjectPanel.displayName = 'CreateObjectPanel';
 
-type CreateObjectFormContentProps = Pick<CreateObjectPanelProps, 'onCancel'>;
+type CreateObjectFormContentProps = Pick<CreateObjectPanelProps, 'onCancel' | 'actionsContainer'>;
 
 /** The draft form's body: its fields, then Cancel and Create; Enter in a single-line field creates. */
-const CreateObjectFormContent = ({ onCancel }: CreateObjectFormContentProps) => {
+const CreateObjectFormContent = ({ onCancel, actionsContainer }: CreateObjectFormContentProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const {
     form: { canSave, onSave },
@@ -200,19 +207,29 @@ const CreateObjectFormContent = ({ onCancel }: CreateObjectFormContentProps) => 
   }, [canSave, onSave]);
   useSubmitOnEnter(contentRef, handleSubmit);
 
+  const actions = (
+    <>
+      {onCancel && (
+        <Button.Root onClick={onCancel} data-testid='cancel-button'>
+          {t('object-form-cancel.label')}
+        </Button.Root>
+      )}
+      <Button.Root variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
+        {t('object-form-confirm.label')}
+      </Button.Root>
+    </>
+  );
+
   return (
     <Form.Content ref={contentRef}>
       <Form.Fields />
-      <Layout.Flex gap='sm' justify='end' classNames='pt-form-padding'>
-        {onCancel && (
-          <Button.Root onClick={onCancel} data-testid='cancel-button'>
-            {t('object-form-cancel.label')}
-          </Button.Root>
-        )}
-        <Button.Root variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
-          {t('object-form-confirm.label')}
-        </Button.Root>
-      </Layout.Flex>
+      {actionsContainer ? (
+        createPortal(actions, actionsContainer)
+      ) : (
+        <Layout.Flex gap='sm' justify='end' classNames='pt-form-padding'>
+          {actions}
+        </Layout.Flex>
+      )}
     </Form.Content>
   );
 };

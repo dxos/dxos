@@ -614,18 +614,18 @@ export const ContactsServiceRegistrationSpec = LayerSpec.make(
 );
 
 // The edge tags are required only when configured, so the service is built after them rather than
-// finding them absent; without them it still serves an empty inbox.
+// finding them absent; without them (and without a test relay) it still serves an empty inbox.
 export const InboxServiceSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
       affinity: 'application',
       requires: [
         IdentityContract.ManagerService,
-        ...(options.edgeAvailable ? [EdgeHttpClientService, EdgeConnectionService] : []),
+        ...(options.edgeAvailable && !options.inboxRelay ? [EdgeHttpClientService, EdgeConnectionService] : []),
       ],
       provides: [InboxService.Tag],
     },
-    () => InboxServiceLayer,
+    () => InboxServiceLayer({ relay: options.inboxRelay }),
   );
 
 export const InboxServiceRegistrationSpec = LayerSpec.make(

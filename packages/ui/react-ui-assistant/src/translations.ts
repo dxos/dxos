@@ -11,6 +11,11 @@ export const translations = [
     'en-US': {
       [translationKey]: {
         'context.label': 'Context',
+        'delivery-sent.label': 'Sent',
+        'delivery-delivered.label': 'Delivered, not yet read',
+        'delivery-read.label': 'Read',
+        'delivery-failed.label': 'Not sent',
+        'delivery-remove.label': 'Remove',
         'copy.label': 'Copy',
         'just-now.label': 'just now',
         'rewind.label': 'Rewind to this prompt',
@@ -27,6 +32,7 @@ export const translations = [
         'tool-run-suffix.label_one': 'Ran {{count}} command',
         'tool-run-suffix.label_other': 'Ran {{count}} commands',
         'tool-thinking.label': 'Thinking',
+        'tool-background.label': 'Background result',
         'tool-failed.label_one': '{{count}} failed',
         'tool-failed.label_other': '{{count}} failed',
         'nav-first.label': 'First message',

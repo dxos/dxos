@@ -241,6 +241,20 @@ export const DraftEnterCreates: Story = {
   },
 };
 
+/** The draft's Cancel and Create sit in the dialog's footer, as every dialog's actions do, not in its scrolling body. */
+export const DraftActionsInFooter: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    const save = await body.findByTestId('save-button', undefined, { timeout: 15_000 });
+    const footer = save.closest<HTMLElement>('[data-scope="dialog"][data-part="footer"]');
+    await expect(footer).not.toBeNull();
+    await expect(footer?.contains(body.getByTestId('cancel-button'))).toBe(true);
+    // The footer keeps its bottom padding under the actions.
+    await expect(Number.parseFloat(getComputedStyle(footer ?? save).paddingBottom)).toBeGreaterThan(0);
+  },
+};
+
 /** With the required name blank, Enter creates nothing and leaves the dialog open. */
 export const DraftEnterInvalid: Story = {
   args: { mode: 'draft' },
@@ -260,8 +274,8 @@ export const DraftCreateButton: Story = {
   args: { mode: 'draft' },
   play: async () => {
     const body = within(document.body);
-    const form = await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
-    await userEvent.click(within(form).getByTestId('save-button'));
+    await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
+    await userEvent.click(body.getByTestId('save-button'));
 
     await waitFor(
       async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:1 settled:committed'),
@@ -275,8 +289,8 @@ export const DraftCancelButton: Story = {
   args: { mode: 'draft' },
   play: async () => {
     const body = within(document.body);
-    const form = await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
-    await userEvent.click(within(form).getByTestId('cancel-button'));
+    await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
+    await userEvent.click(body.getByTestId('cancel-button'));
 
     await waitFor(
       async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:0 settled:dismissed'),

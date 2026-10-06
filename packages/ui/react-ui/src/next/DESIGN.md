@@ -386,8 +386,8 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     part: Popover and Menu anchor through `positioning.getAnchorRect` (Popover also has `Anchor`). `Tooltip.Trigger
 content side` is the current shorthand: the trigger brings its own Root and Content, so `Next.Tooltip` stays a
     namespace. `Next.TextTooltip` is one ellipsizing line whose controlled tooltip opens only if the text is cut off,
-    measured when it would open. `Next.AlertDialog` reuses the Dialog parts with `role=alertdialog` (zag keeps it open
-    on an outside click); it focuses a control marked `DIALOG_AUTOFOCUS_ATTRIBUTE` (`data-autofocus`, which zag's own
+    measured when it would open. `Next.AlertDialog` reuses the Dialog parts with `role=alertdialog` (only its own controls
+    close it); it focuses a control marked `DIALOG_AUTOFOCUS_ATTRIBUTE` (`data-autofocus`, which zag's own
     initial-focus lookup already honours in a Dialog), else `Cancel`; `Action` is a `primary` Button that closes after
     its handler unless the handler prevents default. Next ships no labels for Cancel or Action (AUDIT 2.10).
 

@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
+import { Annotation, Obj } from '@dxos/echo';
 import { FeedModel, MessageList, Outline, type OutlineMarker, useMessageList } from '@dxos/react-ui-feed';
 import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '@dxos/react-ui-feed/debug';
 import { createScenario, streamTurn } from '@dxos/react-ui-feed/testing';
@@ -18,7 +19,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
 import { translations } from '../../translations.ts';
-import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { type ChatThreadEvent, type ChatView, DeliveryAnnotation, type DeliveryStatus } from '../../types.ts';
 import { ChatThread, type ChatThreadController } from './ChatThread.tsx';
 
 /**
@@ -338,6 +339,11 @@ const type = (input: HTMLInputElement, value: string) => {
 /** The loop, hands on: type a prompt, or press ▶ and watch. No play — this one is for people. */
 export const Default: Story = {};
 
+/** The raw document, tags and all: no widgets, but the tags are highlighted so the structure reads. */
+export const DebugView: Story = {
+  args: { viewType: 'debug' },
+};
+
 /**
  * A turn that calls several tools, one of which fails.
  *
@@ -462,5 +468,68 @@ export const Interrupted: Story = {
 
     (canvasElement.querySelector('[data-testid="assistant.auto"]') as HTMLElement).click();
     await expect({ stayed, resumed }).toEqual({ stayed: true, resumed: true });
+  },
+};
+
+/** A prompt row as a host projects one still on its way to the agent. */
+const deliveryRow = (text: string, status: DeliveryStatus) => {
+  const message = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] });
+  Obj.update(message, (message) => Annotation.set(message, DeliveryAnnotation, status));
+  return message;
+};
+
+/** Events the delivery rows emitted, for the play to assert against. */
+const deliveryEvents: ChatThreadEvent[] = [];
+
+const DeliveryStory = () => {
+  const model = useMemo(
+    () =>
+      new FeedModel({
+        stops: 'prompt',
+        messages: [
+          Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Summarize the meeting notes.' }] }),
+          Message.make({
+            sender: { role: 'assistant' },
+            blocks: [{ _tag: 'text', text: 'Here is a summary of the three decisions the meeting took.' }],
+          }),
+          deliveryRow('Then draft a follow-up email to the team.', 'read'),
+          Message.make({
+            sender: { role: 'assistant' },
+            blocks: [{ _tag: 'text', text: 'Drafting the email now.' }],
+          }),
+          deliveryRow('Copy in the design leads.', 'delivered'),
+          deliveryRow('And attach the slides.', 'sent'),
+          deliveryRow('Book a follow-up for Thursday.', 'failed'),
+        ],
+      }),
+    [],
+  );
+
+  return (
+    <ChatThread.Root model={model} viewType='normal' onEvent={(event) => deliveryEvents.push(event)}>
+      <ChatThread.Viewport />
+    </ChatThread.Root>
+  );
+};
+
+/**
+ * Prompts on their way to the agent, one per delivery state: read (the agent took it up), delivered
+ * (its queue holds it), sent (the client holds it) and failed (with remove). Each renders
+ * exactly as an acknowledged prompt does, with the ticks as a widget in the prompt's own document.
+ */
+export const Delivery: Story = {
+  render: () => <DeliveryStory />,
+  play: async ({ canvasElement }) => {
+    deliveryEvents.length = 0;
+    await settle(20);
+    const statuses = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="chat.delivery"]')].map(
+        (element) => element.dataset.delivery,
+      );
+    await expect(statuses()).toEqual(['read', 'delivered', 'sent', 'failed']);
+
+    const failed = canvasElement.querySelector<HTMLElement>('[data-delivery="failed"]');
+    failed?.querySelector<HTMLElement>('[data-action="remove"]')?.click();
+    await expect(deliveryEvents.map(({ type }) => type)).toEqual(['remove-prompt']);
   },
 };

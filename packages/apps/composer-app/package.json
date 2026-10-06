@@ -122,6 +122,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-meeting": "workspace:*",
     "@dxos/plugin-mermaid": "workspace:*",
+    "@dxos/plugin-messenger": "workspace:*",
     "@dxos/plugin-mobile": "workspace:*",
     "@dxos/plugin-native": "workspace:*",
     "@dxos/plugin-navtree": "workspace:*",

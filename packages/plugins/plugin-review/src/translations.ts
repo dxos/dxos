@@ -56,6 +56,8 @@ export const translations = [
         'message-deleted.label': 'Message deleted',
         'draft.button': 'DRAFT',
         'no-comments.message': 'Select text and click <commentIcon></commentIcon> in the toolbar to create a comment.',
+        'no-comments-unanchored.message': 'Click <addIcon></addIcon> to add a comment.',
+        'add-object-comment.label': 'Add comment',
         'comments.label': 'Comments',
         'show-unresolved.label': 'Active comments',
         'show-all.label': 'All comments',

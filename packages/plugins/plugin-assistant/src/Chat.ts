@@ -6,7 +6,7 @@
 
 import { Chat as ChatParts } from './components/Chat/index.ts';
 
-export const { Root, Toolbar, Content, Prompt, Queue, Activity, Status, Thread, Outline } = ChatParts;
+export const { Root, Toolbar, Content, Prompt, Activity, Status, Thread, Outline } = ChatParts;
 export { ObjectCard, ObjectCardWidget, objectCardWidget } from './components/Chat/index.ts';
 export type {
   ChatContentProps as ContentProps,
@@ -16,7 +16,6 @@ export type {
   ObjectCardWidgetProps,
   ChatOutlineProps as OutlineProps,
   ChatPromptProps as PromptProps,
-  ChatQueueProps as QueueProps,
   ChatReportContextValue as ReportContextValue,
   ChatRequestTiming as RequestTiming,
   ChatRootProps as RootProps,
