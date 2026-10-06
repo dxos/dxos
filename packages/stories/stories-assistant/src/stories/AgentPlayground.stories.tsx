@@ -29,6 +29,7 @@ import {
   SCRIPTED_PROMPTS,
   SCRIPTED_REPLIES,
   TRANSCRIPT_FACTS,
+  config,
   createDecorators,
   greeting,
   makePlaygroundScript,
@@ -100,6 +101,27 @@ export const Playground: Story = {
     onReady: ({ db, invoker }) => setupPlayground({ db, invoker, model: PLAYGROUND_MODEL, read: true }),
   }),
   args: { layout: makeLayout('hello') },
+  tags: ['!test'],
+};
+
+/**
+ * {@link Playground} with every chat hosted on EDGE: turns, tools and the end-of-turn hook run in a local
+ * EDGE stack (`moon run edge:dev` in dxos/edge, on :8787), and the agent's brain is EDGE's Durable Object.
+ * A relay or a watch firing starts a turn in the recipient's chat there, so the agent itself tells them.
+ * The model is EDGE's (Anthropic); live, so excluded from CI.
+ *
+ * Try:
+ * 1. As Josiah: "Keep me posted about what Dima is working on." — a goal appears in the Goals tab with its watch.
+ * 2. As Dima: "I'm working on the indexer migration." — a fact about Dima appears, and Josiah's chat gets an update.
+ */
+export const PlaygroundRemote: Story = {
+  decorators: createDecorators({
+    config: config.edgeLocal,
+    plugins: [ThreadPlugin.make(), AgentPlugin.make()],
+    types: TYPES,
+    onReady: ({ db, invoker }) => setupPlayground({ db, invoker, read: true, remote: true }),
+  }),
+  args: { layout: LAYOUT },
   tags: ['!test'],
 };
 

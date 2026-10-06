@@ -98,6 +98,15 @@ export const config = {
       services: SERVICES_CONFIG.LOCAL,
     },
   }),
+  /** A local EDGE stack (`moon run edge:dev` in dxos/edge): every worker behind :8787, ai-service under `/ai`. */
+  edgeLocal: new Config({
+    runtime: {
+      services: {
+        edge: { url: 'http://localhost:8787' },
+        ai: { server: 'http://localhost:8787/ai' },
+      },
+    },
+  }),
   /**
    * Persistent OPFS storage with no EDGE: the client gates every EDGE layer on an edge URL, so
    * leaving it out keeps replication, signaling and agents off and a perf run measures only the

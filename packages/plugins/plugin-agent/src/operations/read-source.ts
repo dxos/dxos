@@ -16,7 +16,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { AgentOperation, FactEntry, Profile } from '#types';
+import { AgentOperation, BrainService, FactEntry, Profile } from '#types';
 
 import { ensureAnnotationFeed } from './annotations.ts';
 import { AgentOperationError } from './errors.ts';
@@ -84,7 +84,8 @@ const readChat = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Cha
   const start = index + 1;
   const toSegment = Effect.fnUntraced(function* (message: Message.Message) {
     const text = Message.extractText(message).trim();
-    if (message.sender.role === 'tool' || text.length === 0) {
+    // A woken chat's prompt is the agent's own relay, not something a person said.
+    if (message.sender.role === 'tool' || text.length === 0 || message.properties?.[BrainService.WAKE_PROPERTY]) {
       return undefined;
     }
     return {

@@ -7,12 +7,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { EntityId } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 
-import { Goal, type Trigger, TriggerOperation } from '#types';
+import { BrainService, Goal, Trigger, TriggerOperation } from '#types';
 
-import { MAX_TRIGGERS, triggerRegistry } from '../triggers.ts';
 import { AgentOperationError } from './errors.ts';
 
 const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = TriggerOperation.WatchFacts.pipe(
@@ -28,11 +26,11 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       recipient,
       ongoing,
     }) {
-      if (triggerRegistry.isFull) {
+      const brain = yield* BrainService.BrainService;
+      const agent = yield* Database.load(agentRef);
+      if ((yield* brain.listTriggers(agent.id)).length >= BrainService.MAX_TRIGGERS) {
         return yield* Effect.fail(registryFull());
       }
-
-      const agent = yield* Database.load(agentRef);
       const requester = yield* Database.load(requesterRef);
       // The schema cannot express a Person | Organization ref, so the constraint is checked here.
       if (!Obj.instanceOf(Person.Person, requester) && !Obj.instanceOf(Organization.Organization, requester)) {
@@ -61,7 +59,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       }
 
       const trigger: Trigger.Trigger = {
-        id: EntityId.random(),
+        id: Trigger.makeId(agent.id),
         agent: agent.id,
         goal: Ref.make(goal),
         ...(request ? { request } : {}),
@@ -70,7 +68,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         ...(ongoing ? { ongoing } : {}),
         createdAt: DateTime.formatIso(yield* DateTime.now),
       };
-      if (!triggerRegistry.add(trigger)) {
+      if (!(yield* brain.putTrigger(trigger))) {
         return yield* Effect.fail(registryFull());
       }
       yield* Database.flush();
@@ -83,5 +81,5 @@ export default handler;
 
 const registryFull = () =>
   new AgentOperationError({
-    message: `Already watching for ${MAX_TRIGGERS} things; cancel a watch before adding another.`,
+    message: `Already watching for ${BrainService.MAX_TRIGGERS} things; cancel a watch before adding another.`,
   });

@@ -10,7 +10,7 @@ import { type Quad } from 'n3';
 import { SemanticIndexError } from '../errors.ts';
 import { insertQuadsMemory, makeMemorySource } from '../internal/source/memory-source.ts';
 import { insertQuads, makeSqliteSource } from '../internal/source/sqlite-source.ts';
-import { makeEngine, selectTriples } from '../internal/sparql/engine.ts';
+import type * as Engine from '../internal/sparql/engine.ts';
 import { factToTriples, triplesToFacts } from '../internal/sparql/mapping.ts';
 import { queryMemory } from '../internal/sparql/query-memory.ts';
 import { querySqlite } from '../internal/sparql/query-sqlite.ts';
@@ -31,12 +31,20 @@ const reassemble = (quads: Quad[]): Effect.Effect<Fact[], SemanticIndexError> =>
     catch: (cause) => new SemanticIndexError({ message: 'Failed to reassemble facts', cause }),
   });
 
-// Raw SPARQL execution via Comunica. The engine is constructed lazily so persist-only flows never
-// pay for it — and so the memory layer can avoid it entirely (Comunica does not run in the browser).
-const makeSelect = (source: Parameters<typeof selectTriples>[1]): FactStoreApi['select'] => {
-  let engine: ReturnType<typeof makeEngine> | undefined;
-  const getEngine = () => (engine ??= makeEngine());
-  return (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble));
+// Raw SPARQL execution via Comunica, imported on first use: Comunica does not run in the browser or a
+// Worker, so the persist and structured-query paths must not load it at all.
+const makeSelect = (source: Parameters<typeof Engine.selectTriples>[1]): FactStoreApi['select'] => {
+  let engine: Promise<{ module: typeof Engine; engine: ReturnType<typeof Engine.makeEngine> }> | undefined;
+  const getEngine = () =>
+    (engine ??= import('../internal/sparql/engine.ts').then((module) => ({ module, engine: module.makeEngine() })));
+  return (sparql) =>
+    Effect.tryPromise({
+      try: getEngine,
+      catch: (cause) => new SemanticIndexError({ message: 'Failed to load the SPARQL engine', cause }),
+    }).pipe(
+      Effect.flatMap(({ module, engine }) => module.selectTriples(engine, source, sparql)),
+      Effect.flatMap(reassemble),
+    );
 };
 
 export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.effect(

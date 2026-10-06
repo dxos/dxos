@@ -65,11 +65,18 @@ export const absoluteNow = (): number => performance.timeOrigin + performance.no
  * they also show on the DevTools Performance panel's Timings track.
  */
 export const markWork = (name: string, detail?: string): void => {
-  performance.mark(WORK_MARK_PREFIX + name, detail === undefined ? undefined : { detail });
+  // Wrapped in an object: workerd's `performance.mark` rejects a primitive `detail`.
+  performance.mark(WORK_MARK_PREFIX + name, detail === undefined ? undefined : { detail: { text: detail } });
   if (++written > CAPACITY * 2) {
     trim();
   }
 };
+
+/** The text {@link markWork} stored in a mark's `detail`. */
+const markText = (detail: unknown): string | undefined =>
+  typeof detail === 'object' && detail !== null && 'text' in detail && typeof detail.text === 'string'
+    ? detail.text
+    : undefined;
 
 /** This realm's marks at or after `since` (epoch ms), oldest first, without the prefix. */
 export const getWorkMarks = (since = 0): WorkMark[] =>
@@ -77,7 +84,8 @@ export const getWorkMarks = (since = 0): WorkMark[] =>
     .map((mark): WorkMark => {
       const at = performance.timeOrigin + mark.startTime;
       const name = mark.name.slice(WORK_MARK_PREFIX.length);
-      return typeof mark.detail === 'string' ? { name, at, detail: mark.detail } : { name, at };
+      const text = markText(mark.detail);
+      return text === undefined ? { name, at } : { name, at, detail: text };
     })
     .filter((mark) => mark.at >= since);
 

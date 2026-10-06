@@ -37,6 +37,12 @@ export interface OperationHandlerSet {
    * the key is not in this set.
    */
   getHandlerFor(key: string): Promise<Operation.WithHandler<Operation.Definition.Any> | undefined>;
+
+  /**
+   * The handlers dispatch each invocation to another runtime (e.g. EDGE's operation worker), which
+   * resolves the operations' services itself; the local process runtime then resolves none for them.
+   */
+  readonly remote?: boolean;
 }
 
 /**

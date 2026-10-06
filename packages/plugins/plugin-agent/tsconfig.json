@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -43,6 +46,12 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
+      "path": "../../core/compute/edge-compute"
+    },
+    {
       "path": "../../core/compute/pipeline-rdf"
     },
     {
@@ -52,10 +61,25 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../core/halo/halo-react"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/schema"

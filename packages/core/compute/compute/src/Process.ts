@@ -61,6 +61,14 @@ export interface Environment {
 }
 
 /**
+ * The environment the running process was spawned with, for a handler that hands its work to another
+ * runtime (e.g. EDGE dispatching an operation to its operation worker), which must carry the conversation along.
+ */
+export class EnvironmentService extends Context.Service<EnvironmentService, Environment>()(
+  '@dxos/compute/Process.EnvironmentService',
+) {}
+
+/**
  * Attaches the process to a target object.
  */
 export const TargetAnnotation = Annotation.make({

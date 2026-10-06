@@ -42,7 +42,9 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
       key: DXN.getName(op.meta.key),
       input: op.input,
       output: op.output,
-      services: op.services,
+      // A remote handler set runs the body where its services live; resolving them here would demand
+      // services (a conversation's harness, a plugin's store) this runtime need not have.
+      services: handlers.remote ? [] : op.services,
     },
     (ctx) =>
       Effect.gen(function* () {

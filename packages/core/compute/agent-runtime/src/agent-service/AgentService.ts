@@ -375,7 +375,15 @@ const makeSession = (
     Effect.flatMap(isFinished, (finished) =>
       finished
         ? resubmit(prompt, options)
-        : process.submitInput(options?.sender ? { prompt, sender: options.sender } : prompt),
+        : process.submitInput(
+            options?.sender || options?.properties
+              ? {
+                  prompt,
+                  ...(options.sender ? { sender: options.sender } : {}),
+                  ...(options.properties ? { properties: options.properties } : {}),
+                }
+              : prompt,
+          ),
     ),
   // Derived from the process's status atom, written on the app-wide registry the UI reads.
   running: Atom.make(

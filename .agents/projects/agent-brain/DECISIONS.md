@@ -1,0 +1,51 @@
+# Agent Brain (Prototype 1) — decision log
+
+Autonomous run. One line per non-obvious decision, at the moment it was taken.
+
+## Definition of done
+
+1. `BrainService` (Effect service) with an in-memory local implementation (dxos) and a Durable Object + SQLite implementation (edge), both satisfying one shared contract test.
+2. Chats created with an agent carry a private-to-user ECHO annotation; the Agent article/list shows a member only their own private chat.
+3. BrainSkill: end-of-turn hook records the turn's facts (RDF triples via pipeline-rdf) into `BrainService` and matches them against goals; a match relays to the goal owner's chat by starting a new turn there (synthetic user message) so the agent replies.
+4. Three tests — E2E relay (Alice/Bob/Kai), Facts ("I'm working on X" → fact), Goals ("keep me updated…" → goal) — pass against `local` and `edge-local` (own `wrangler dev`), with command output recorded.
+5. Storybook: a remote (edge-hosted) variant of Rich's AgentPlayground story runs; autocue recording produced.
+6. Composer: create agent → private chat per member → facts & goals in the companion; autocue recording produced.
+7. Both repos formatted, linted, typechecked; committed and pushed to `dm/gifted-brahmagupta-c2ejou`; PRs opened; tasks tracked in the Agents project (DXOS space), milestone M4.
+
+## Log
+
+- 2026-10-06 — `/autonomous` hook state absent (session project dir is `/home/user`, not the repo), so DoD + log kept here instead of `.claude/.autonomous-*`.
+- 2026-10-06 — Build on Rich's plugin-agent (AgentPlayground story, commit 246ee3ce): its facts (FactEntry/pipeline-rdf), goals and triggers already exist; Prototype 1 moves goal/trigger + fact state behind a BrainService rather than writing a parallel system.
+- 2026-10-06 — Session check-in (`tasks-record-session`) rejected by the user; project tracked via milestone/tasks only.
+- 2026-10-06 — Fact store = pipeline-rdf `FactStore` (RDF triples): memory backend locally, `FactStoreLive.layer` over `@effect/sql-sqlite-do` in the Brain DO — one RDF implementation on both platforms instead of a bespoke table.
+- 2026-10-06 — Keep annotation feeds (`FactEntry`) as the replicated audit trail the companion already renders; the brain is the queryable index + trigger store.
+- 2026-10-06 — "Goals" = Rich's `Goal` ECHO object (visible in companion) + a brain-held `Trigger` (the watch that matches facts); `Goals 1` asserts both.
+- 2026-10-06 — Relay wakes the recipient's chat via `BrainService.wake` (synthetic user message) rather than appending an assistant message; channel-backed chats (Discord/Slack) keep posting through their channel.
+- 2026-10-06 — EDGE wake is asynchronous (DO outbox + alarm), because a synchronous `submitInput` from inside the sender's tool call would hold the sender's turn for the recipient's whole turn and hit operation-service's 60 s deadline.
+- 2026-10-06 — EDGE end-of-turn hook: carry skill hooks through operation-service `listSkills` and rebuild them in compute-service `_registerSkills` (existing task 01M406BZJPV4A4MXC8Q5Q543ZF) — without it no hosted turn updates the brain.
+- 2026-10-06 — Tests use one identity with Alice/Bob as `Person`s (sender attribution), as Rich's tests do; two-identity privacy is covered by a unit test of the `ChatOwner` filter, since a second identity needs an invitation flow outside this prototype.
+- 2026-10-06 — Trigger ids are `<agentId>.<random>` (`Trigger.makeId`), so `removeTrigger(id)` routes to the right per-agent brain (one DO per agent on EDGE) without widening `CancelTrigger`'s input.
+- 2026-10-06 — Loop guards for relay-as-turn: (1) facts the agent itself stated never fire triggers; (2) a woken prompt carries `properties['org.dxos.agent.woken']` and `readSource` skips it. Needed `SubmitPromptOptions.properties` in `@dxos/compute` (AgentInput already carried it; the session API did not expose it).
+- 2026-10-06 — BrainSkill (new, `org.dxos.skill.agentBrain`) owns the end-of-turn `runTriggers` hook and the wake instructions; GoalsSkill keeps its watch tools but loses the hook, so binding both never fires it twice. BrainSkill joins `BASE_SKILL_KEYS` and `createAgent`.
+- 2026-10-06 — `AssistantTestLayer.extraServices` may now require `AgentService` (served through the late-bound holder), so a test brain that wakes chats can be provided to operations.
+- 2026-10-06 — Composer: `BrainService` = in-memory brain via an application-affinity `LayerSpec` (browser/node/tauri only), writing the app's `triggerRegistry` that the AgentState panel lists; EDGE provides its own.
+- 2026-10-06 — Private chat = `ChatParticipant.OwnerAnnotation` (identity DID) + `OpenPrivateChat { agent, identityDid, name }` (person found by a `did` identity handle, created on first use).
+- 2026-10-06 — relay.test asserts the wake request (record-mode test brain) rather than a turn: it tests routing, and a turn would need a model.
+- 2026-10-06 — pipeline-rdf `FactStoreLive` now imports Comunica lazily (only `select` needs it), so the SQLite store bundles into a Worker; structured `query` never needed it.
+- 2026-10-06 — EDGE brain = compute-service `BrainObject` (one DO per agent, SQLite) behind `BrainServiceEntrypoint`; operation-service binds it as `BRAIN_SERVICE` (same target worker as `AI_SERVICE` per env) and provides `BrainService` to every handler; clients read `GET /compute/brain/:spaceId/:agentId` (member-checked).
+- 2026-10-06 — A wake reuses the chat's live `AgentProcess` (found by its target annotation) or spawns one with the same target/environment/harness-host annotations the client's `AgentService` uses, so the client attaches to it — not the Discord adapter's `interlocutor:<chat>` idempotency key, which would fork a second process on the feed.
+- 2026-10-06 — `SkillRecord.hooks` (edge-protocol) carries skill hooks by operation key; compute-service rebuilds them against the operation records it already lists for the toolkit.
+- 2026-10-06 — operation-service declares `@dxos/react-ui-form` / `@dxos/react-ui-menu` directly: plugin-thread's UI peers are otherwise auto-installed from npm, outside `pnpm.overrides`, and fail to resolve (same reason `react-ui`/`ui-theme` were already listed).
+- 2026-10-06 — Edge-local tests live in plugin-agent (`brain.edge.test.ts`, tag `manual`) rather than core `functions-testing`, so a core package does not depend on a plugin.
+- 2026-10-06 — Linking dxos `main` into edge surfaced API drift edge must take with its next catalog bump anyway: `@dxos/compute` errors moved under `Operation.*` / `FunctionsAiError.*` (#13615) and `ProcessManager.Handle`/`SpawnOptions` moved to `Process.*` (#13724). Migrated the edge call sites in this PR rather than pinning the old dxos, since the brain needs this dxos branch.
+- 2026-10-06 — Fixed `markWork` (`@dxos/util`) to store its detail as `{ text }`: workerd's `performance.mark` rejects a primitive detail, so on current dxos main every EDGE-hosted agent turn failed before reaching the model (found by the edge-local run). Perf-harness collector reads the new shape.
+- 2026-10-06 — Participant chats bind the agent object into their context: without it a real model has no ref to pass as "the agent you run as" (`watchFacts` failed input validation on EDGE); scripted tests never noticed because they pass refs themselves.
+- 2026-10-06 — EDGE end-of-turn hooks needed two runtime fixes besides carrying hooks over `listSkills`: (1) `Process.EnvironmentService` (`@dxos/compute`), provided by `ProcessManager`, so compute-service's remote handler set forwards the hook's conversation and operation-service can build `HarnessService`; (2) `OperationHandlerSet.remote`, so `DurableOperation.fromOperation` resolves no local services for a body that runs in operation-service (the DO cannot supply `BrainService`/`HarnessService` and need not).
+- 2026-10-06 — Edge-local tests sync the space to EDGE (`syncToEdge`) after creating the agent and chats: the hosted process reads the chat from EDGE's replica and otherwise races it (`EntityNotFoundError`).
+- 2026-10-06 — Composer: the Agent article is the viewer's private chat (`OpenPrivateChat { remote: true }` → plugin-assistant's Chat article surface); "Brain" (AgentKnowledge: facts, goals + watches, graph) and "Activity" (the former article: channels, skills, conversations) are companions. Private chats never appear in the sidebar: they are parented to the agent and the Chat type section lists only root chats.
+- 2026-10-06 — For agents whose chats run on EDGE, the UI's watch list polls `listTriggers` with `on: 'edge'` (EDGE's brain has no change feed); local agents keep the live in-memory registry.
+- 2026-10-06 — EDGE tool inputs: compute-service's hosted toolkit now decodes the model's raw arguments through the projected tool schema (`decodeToolParameters`, newly exported from `@dxos/assistant`) as the local path does, and sends operation input to operation-service as JSON (a `Ref` structured-clones to an unreadable shell; its JSON is the `{'/': uri}` operation-service decodes). Every ref-taking agent tool (`watchFacts`, `listModes`, `retrieveMemories`) failed validation on EDGE before this.
+- 2026-10-06 — pipeline-rdf extraction: `softEnum`'s wire schema is a nullable string, not `Unknown` — Anthropic structured output rejects the untyped property with a 400, which made every real-model `readSource` extract nothing (the strict call's failure surfaced as a defect, so the lenient fallback never ran). Regression test walks the JSON schema for untyped nodes. A non-string stray enum value now drops its fact rather than its field; models emit strings or null.
+- 2026-10-06 — Facts cross from operation-service to `BrainObject` as JSON: facts read from ECHO carry live array proxies that RPC's structured clone cannot copy (`wasDerivedFrom is not iterable`).
+- 2026-10-06 — Edge-local tests create a fresh space per test: with one shared space a real model met the earlier tests' Kai/Bob and attached E2E's watch to the wrong agent.
+- 2026-10-06 — Result (a): `DX_RUN_MANUAL_TESTS=1 vitest run src/brain/brain.edge.test.ts` against `moon run edge:dev` — Goals 1 ✓ (21.7 s), Facts 1 ✓ (20.0 s), E2E 1 ✓ (39.2 s); local suite 40 passed.
