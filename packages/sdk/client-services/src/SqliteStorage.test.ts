@@ -8,7 +8,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as SqlClient from 'effect/sql/SqlClient';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
 
 import * as SqliteStorage from './SqliteStorage.ts';

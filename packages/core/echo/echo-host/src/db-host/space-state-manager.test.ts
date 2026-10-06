@@ -18,7 +18,7 @@ import {
   createIdFromSpaceKey,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
