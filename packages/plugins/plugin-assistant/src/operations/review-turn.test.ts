@@ -43,52 +43,57 @@ type Captured = {
   uploads: { ndjson: string; kind: string }[];
 };
 
-let captured: Captured;
-let manager: ReturnType<typeof CapabilityManager.make>;
-let settingsAtom: Atom.Writable<Assistant.Settings>;
+let captured: Captured = { events: [], uploads: [] };
+let telemetryEnabled = true;
 
 /** A real {@link Observability} over one recording extension, so the handler sees the production API. */
-const makeObservability = (enabled: boolean) =>
-  Effect.runSync(
-    Function.pipe(
-      Observability.make(),
-      Observability.addExtension(
-        Effect.succeed({
-          enabled,
-          apis: [
-            {
-              kind: 'events',
-              isAvailable: () => Effect.succeed(true),
-              captureEvent: (event, attributes) => void captured.events.push({ event, attributes }),
+const observability = Effect.runSync(
+  Function.pipe(
+    Observability.make(),
+    Observability.addExtension(
+      Effect.succeed({
+        get enabled() {
+          return telemetryEnabled;
+        },
+        apis: [
+          {
+            kind: 'events',
+            isAvailable: () => Effect.succeed(true),
+            captureEvent: (event, attributes) => void captured.events.push({ event, attributes }),
+          },
+          {
+            kind: 'support',
+            isAvailable: () => Effect.succeed(true),
+            uploadLogs: async () => undefined,
+            uploadNdjson: async (ndjson, kind) => {
+              captured.uploads.push({ ndjson, kind });
+              return 'trajectories/2026-10-06/test.ndjson.gz';
             },
-            {
-              kind: 'support',
-              isAvailable: () => Effect.succeed(true),
-              uploadLogs: async () => undefined,
-              uploadNdjson: async (ndjson, kind) => {
-                captured.uploads.push({ ndjson, kind });
-                return 'trajectories/2026-10-06/test.ndjson.gz';
-              },
-              sessionContext: () => undefined,
-              flushLogs: async () => {},
-            },
-          ],
-        }),
-      ),
+            sessionContext: () => undefined,
+            flushLogs: async () => {},
+          },
+        ],
+      }),
     ),
-  );
+  ),
+);
+
+// One manager for the file: the test layer resolves `Capability.Service` before a test body runs, so
+// each test varies the state the manager holds rather than the manager itself.
+const registry = AtomRegistry.make();
+const settingsAtom = Atom.make<Assistant.Settings>({}).pipe(Atom.keepAlive);
+const manager = CapabilityManager.make({ registry });
+manager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, implementation: registry });
+manager.contribute({ module: 'test', interface: AssistantCapabilities.Settings, implementation: settingsAtom });
+manager.contribute({
+  module: 'test',
+  interface: ObservabilityCapabilities.Observability,
+  implementation: observability,
+});
 
 const setup = ({ reportStruggles, telemetry }: { reportStruggles: boolean; telemetry: boolean }) => {
-  const registry = AtomRegistry.make();
-  manager = CapabilityManager.make({ registry });
-  settingsAtom = Atom.make<Assistant.Settings>({ reportStruggles, codeMode: true }).pipe(Atom.keepAlive);
-  manager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, implementation: registry });
-  manager.contribute({ module: 'test', interface: AssistantCapabilities.Settings, implementation: settingsAtom });
-  manager.contribute({
-    module: 'test',
-    interface: ObservabilityCapabilities.Observability,
-    implementation: makeObservability(telemetry),
-  });
+  registry.set(settingsAtom, { reportStruggles, codeMode: true });
+  telemetryEnabled = telemetry;
 };
 
 const TestLayer = AssistantTestLayer({
@@ -97,7 +102,7 @@ const TestLayer = AssistantTestLayer({
   aiService: ScriptedLanguageModel.scriptedAiService(() => ({
     parts: [ScriptedLanguageModel.text(JSON.stringify(VERDICT))],
   })),
-  extraServices: Layer.sync(Capability.Service, () => manager),
+  extraServices: Layer.succeed(Capability.Service, manager),
 });
 
 const SINCE = '2026-10-06T10:00:00.000Z';

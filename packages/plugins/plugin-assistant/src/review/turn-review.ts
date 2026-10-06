@@ -115,7 +115,7 @@ const formatMessage = (message: Message.Message): string => {
         return `[${block._tag}]`;
     }
   });
-  return `${message.sender.role.toUpperCase()}:\n${lines.join('\n')}`;
+  return `${(message.sender.role ?? 'unknown').toUpperCase()}:\n${lines.join('\n')}`;
 };
 
 export type ReviewInput = {
