@@ -1,0 +1,5 @@
+---
+'@dxos/react-ui-canvas': minor
+---
+
+Add a lattice projection (`createLatticeProjection`): shapes snap to a grid of fixed cells separated by gutters (256x128 cells, 128x64 gutters by default), span any whole number of cells, resize one cell at a time with the opposite face fixed, and preview a move, copy, resize or create onto occupied cells in red before refusing it. Smart links on a lattice route at right angles through the gutters, run straight through free cells, and are nudged into separate lanes where they share a gutter. Route corners share one radius; a link tool click without a drag draws nothing and returns to the select tool; hover clears while dragging; and a link's start and end markers sit side by side in the properties panel.
