@@ -539,7 +539,13 @@ export class ClientReplicant {
 
     const accepted: string[] = [];
     const refused: string[] = [];
-    const authentication = await authenticateViaChallengeEndpoint(edgeUrl, createEdgeIdentity(client));
+    let authentication: Awaited<ReturnType<typeof authenticateViaChallengeEndpoint>>;
+    try {
+      authentication = await authenticateViaChallengeEndpoint(edgeUrl, createEdgeIdentity(client));
+    } catch (err) {
+      log.warn('cleanup: authentication threw', { edgeUrl, err });
+      return { accepted, refused: targets.map(({ label }) => label) };
+    }
     if (!authentication) {
       log.warn('cleanup: edge issued no auth challenge', { edgeUrl });
       return { accepted, refused: targets.map(({ label }) => label) };
