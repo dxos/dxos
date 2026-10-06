@@ -22,6 +22,7 @@ import {
   type Capabilities,
   type Intent,
   type Node,
+  type NodeStyle,
   type Point,
   type Scene,
   type Size,
@@ -35,7 +36,7 @@ export type Relation = 'east' | 'west' | 'north' | 'south' | 'aligned';
 export type Constraint = { subject: string; relation: Relation; object: string };
 
 /** `type` is the node's shape; the solver places every type on the same grid. */
-export type ConstrainedNode = { id: string; label?: string; type?: BuiltinNodeType };
+export type ConstrainedNode = { id: string; label?: string; type?: BuiltinNodeType; style?: NodeStyle };
 
 export type ConstrainedModel = {
   nodes: ConstrainedNode[];
@@ -192,10 +193,11 @@ export const solve = (model: ConstrainedModel, options: ConstrainedOptions = {})
       x: origin.x + (columns.get(node.id) ?? 0) * pitch.width,
       y: origin.y + (rows.get(node.id) ?? 0) * pitch.height,
     };
-    nodes[node.id] = withLabel(
+    const solved = withLabel(
       createNode({ type: node.type ?? 'rect', id: node.id, z: keys[index], center, size }),
       node.label ?? node.id,
     );
+    nodes[node.id] = node.style ? { ...solved, style: node.style } : solved;
   });
   return { id: CONSTRAINED_SCENE_ID, name: 'Constrained', nodes, links: {} };
 };
@@ -288,6 +290,7 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
           id: intent.node.id,
           type: intent.node.type,
           label: labelOf(intent.node),
+          style: intent.node.style,
         };
         const added = { ...current, nodes: [...current.nodes, node] };
         // Constrain the new node as if it had been dropped where it was drawn.
@@ -308,12 +311,17 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
         intent.intents.forEach(apply);
         break;
       case 'update': {
-        // Only the label lives in the model; geometry is solved, so those edits are dropped.
+        // Only the label and style live in the model; geometry is solved, so those edits are dropped.
         const label = labelOf(intent.values);
-        if (label !== undefined) {
+        const style = 'style' in intent.values ? intent.values.style : undefined;
+        if (label !== undefined || style !== undefined) {
           registry.set(model, {
             ...current,
-            nodes: current.nodes.map((node) => (node.id === intent.id ? { ...node, label } : node)),
+            nodes: current.nodes.map((node) =>
+              node.id === intent.id
+                ? { ...node, ...(label !== undefined && { label }), ...(style !== undefined && { style }) }
+                : node,
+            ),
           });
         }
         break;
