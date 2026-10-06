@@ -86,6 +86,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
   private readonly _ctx = new Context();
   private readonly _cursorConverter: CursorConverter;
   private readonly _provider: AwarenessProvider;
+  private readonly _view: EditorView;
 
   private _lastAnchor?: number;
   private _lastHead?: number;
@@ -93,6 +94,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
   public decorations: DecorationSet = RangeSet.of([]);
 
   constructor(view: EditorView) {
+    this._view = view;
     this._cursorConverter = view.state.facet(Cursor.converter);
     this._provider = view.state.facet(awarenessProvider);
     this._provider.open();
@@ -102,6 +104,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
   }
 
   destroy(): void {
+    cancelHide(this._view);
     void this._ctx.dispose();
     this._provider.close();
   }
