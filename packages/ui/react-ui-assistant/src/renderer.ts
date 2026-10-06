@@ -5,6 +5,7 @@
 import { type URI } from '@dxos/keys';
 import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
+import { safeParseJson } from '@dxos/util';
 
 import { type ChatView } from './types.ts';
 
@@ -41,7 +42,7 @@ export const createRenderer = (
 
     const flushRun = () => {
       if (run.length) {
-        segments.push(toolkitTag(run));
+        segments.push(toolkitTag(run, viewType === 'debug'));
         run = [];
       }
       if (deferred.length) {
@@ -233,9 +234,21 @@ const narrationText = (block: ContentBlock.Any): string => {
 };
 
 /** A run of tool blocks as one tag; the widget parses the payload back out. */
-const toolkitTag = (blocks: ContentBlock.Any[]): string => {
+/**
+ * Debug shows the tag as text, so its JSON is indented, with JSON-string payloads expanded in place;
+ * the widget parses either form.
+ */
+const toolkitTag = (blocks: ContentBlock.Any[], pretty = false): string => {
   const pending = blocks.some((block) => block.pending);
-  return `<toolkit${pending ? ' pending="true"' : ''}>${escapeXml(JSON.stringify(blocks))}</toolkit>`;
+  const json = pretty ? JSON.stringify(blocks, expandJsonStrings, 2) : JSON.stringify(blocks);
+  return `<toolkit${pending ? ' pending="true"' : ''}>${escapeXml(json)}</toolkit>`;
+};
+
+const expandJsonStrings = (key: string, value: unknown): unknown => {
+  if ((key === 'input' || key === 'result') && typeof value === 'string') {
+    return safeParseJson(value) ?? value;
+  }
+  return value;
 };
 
 /**

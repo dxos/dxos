@@ -139,7 +139,15 @@ const toEntries = (blocks: ContentBlock.Any[]): ToolEntry[] => {
         // rather than answering whichever call in this run is still unanswered.
         let entry: ToolEntry | undefined;
         if (block.name === BACKGROUND_TOOL) {
-          entry = { id: block.toolCallId, kind: 'call', active: false, background: true, title: '', icon: TOOL_ICON };
+          // Indexed: a pid can be reported more than once, and a shared id is a shared accordion value.
+          entry = {
+            id: `background-${entries.length}`,
+            kind: 'call',
+            active: false,
+            background: true,
+            title: '',
+            icon: TOOL_ICON,
+          };
           entries.push(entry);
         } else {
           entry = pending();

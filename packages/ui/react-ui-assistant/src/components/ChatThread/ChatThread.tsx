@@ -86,6 +86,9 @@ type ChatThreadRootProps = PropsWithChildren<
  * streaming tail; reserve room to bring the last prompt to the top). Composes with the feed's own
  * parts: `MessageList.Nav`, `useMessageList`, and the rails all work inside it.
  */
+/** Debug's registry: identity-stable, since the feed caches its extensions per registry. */
+const DEBUG_REGISTRY: XmlWidgetRegistry = {};
+
 const ChatThreadRoot = ({
   children,
   model,
@@ -102,9 +105,11 @@ const ChatThreadRoot = ({
   controllerRef,
 }: ChatThreadRootProps) => {
   const renderer = useMemo(() => createRenderer(viewType, { getObjectLabel }), [viewType, getObjectLabel]);
-  // Debug shows the raw document: with no registry the tags stay visible as the text they are.
+  // Debug shows the raw document: an empty registry renders no widgets, so the tags stay visible as
+  // the text they are, but still highlighted as tags.
   const merged = useMemo(
-    () => (viewType === 'debug' ? undefined : registry ? { ...assistantRegistry, ...registry } : assistantRegistry),
+    () =>
+      viewType === 'debug' ? DEBUG_REGISTRY : registry ? { ...assistantRegistry, ...registry } : assistantRegistry,
     [registry, viewType],
   );
   const handleRewind = useCallback((id: string) => onEvent?.({ type: 'rewind', id }), [onEvent]);

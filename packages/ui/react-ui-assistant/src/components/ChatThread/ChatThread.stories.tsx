@@ -338,6 +338,11 @@ const type = (input: HTMLInputElement, value: string) => {
 /** The loop, hands on: type a prompt, or press ▶ and watch. No play — this one is for people. */
 export const Default: Story = {};
 
+/** The raw document, tags and all: no widgets, but the tags are highlighted so the structure reads. */
+export const DebugView: Story = {
+  args: { viewType: 'debug' },
+};
+
 /**
  * A turn that calls several tools, one of which fails.
  *

@@ -95,7 +95,8 @@ const build = (registry: XmlWidgetRegistry | undefined, editable: boolean, theme
     // tags have to survive as single blocks through the markdown parser before `xmlTags` can
     // replace them, and without that they render as the literal angle brackets they are.
     registry ? extendedMarkdown({ registry }) : createMarkdownExtensions(),
-    registry && xmlFormatting({ skip: ['prompt'] }),
+    // `prompt` is skipped only when its block decoration frames it; otherwise its tags are text like any other.
+    registry && xmlFormatting({ skip: registry.prompt ? ['prompt'] : [] }),
     decorateMarkdown(),
     // The tags are hidden but the prompt is NOT framed here: the frame is chrome's, which also
     // owns the rewind toolbar under it. Styling it in both places drew the border twice.
