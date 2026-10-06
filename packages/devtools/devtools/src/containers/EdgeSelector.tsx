@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useMemo } from 'react';
 
 import { EDGE_URLS, SaveConfig, Storage } from '@dxos/config';
 import { useConfig } from '@dxos/react-client';
 
 import { Select } from '../components/index.ts';
+import { selectEdge } from './edge-selection.ts';
 import { getTarget } from './VaultSelector.tsx';
 
 const edgeServers = [
@@ -23,19 +23,7 @@ export const EdgeSelector = () => {
   const target = useMemo(() => getTarget(), [window.location.search]);
 
   const handleSetSignalServer = async (value: string) => {
-    const existing = await Storage();
-    await SaveConfig(
-      defaultsDeep(
-        {
-          runtime: {
-            services: {
-              edge: { url: value },
-            },
-          },
-        },
-        existing,
-      ),
-    );
+    await SaveConfig(selectEdge(await Storage(), config, value));
     window.location.reload();
   };
 
