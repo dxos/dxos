@@ -65,7 +65,9 @@ const PartEditor = ({ classNames, part, text, editing }: PartEditorProps) => {
         createBasicExtensions({ lineWrapping: true, history: false, search: false }),
         createThemeExtensions({
           themeMode,
-          slots: { editor: { className: 'h-full w-full [&>.cm-scroller]:scrollbar-none' } },
+          // Content height, not full height, so the part's own layout places the editor where it puts the
+          // static text (a label centred in its cell).
+          slots: { editor: { className: 'w-full max-h-full [&>.cm-scroller]:scrollbar-none' } },
         }),
         EditorView.focusChangeEffect.of((state, focusing) => {
           if (!focusing) {

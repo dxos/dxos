@@ -10,6 +10,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { useSceneProjection } from '../../hooks/index.ts';
 import { createSceneViewAtoms } from '../../model/atoms.ts';
 import { createMemoryStore } from '../../model/store.ts';
+import { SceneBuilder } from '../../utils/builder.ts';
 import { createClassSceneTree, createSceneTree } from '../../utils/testing.ts';
 import { Properties } from '../Properties/index.ts';
 import { SceneView } from './SceneView.tsx';
@@ -27,7 +28,7 @@ import { SceneView } from './SceneView.tsx';
  * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The right panel edits the selected element.
  */
-type StoryArgs = { depth: number; liveDepth: number; readonly?: boolean; fixture?: 'elements' | 'classes' };
+type StoryArgs = { depth: number; liveDepth: number; readonly?: boolean; fixture?: 'elements' | 'classes' | 'square' };
 
 type EditorProps = {
   store: ReturnType<typeof createMemoryStore>;
@@ -53,10 +54,22 @@ const Editor = ({ store, root, liveDepth, readonly }: EditorProps) => {
   );
 };
 
+/** One square centred on the origin: something to select and style straight away. */
+const createSquareTree = () => {
+  const root = 'scene:root';
+  const scene = SceneBuilder.create(root, 'root').rect('square', { x: -128, y: -128, width: 256, height: 256 }).build();
+  return { scenes: [scene], root };
+};
+
 const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     // The class fixture is a fixed three levels, so `depth` does not apply to it.
-    const tree = fixture === 'classes' ? createClassSceneTree() : createSceneTree(depth);
+    const tree =
+      fixture === 'classes'
+        ? createClassSceneTree()
+        : fixture === 'square'
+          ? createSquareTree()
+          : createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, [depth, fixture]);
 
@@ -84,9 +97,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** An empty canvas: draw the first node, then link it. */
+/** A single square at the origin: select it to style it, or draw more nodes and link them. */
 export const Default: Story = {
-  args: { depth: 0, liveDepth: 1 },
+  args: { depth: 0, liveDepth: 1, fixture: 'square' },
 };
 
 /** One scene, no portals: selection, move, resize, linking and the palette. */

@@ -31,6 +31,7 @@ import {
   getElement,
   isLink,
 } from '../../model/types.ts';
+import { resolveStyle } from '../../utils/style.ts';
 import { createGeometryField } from './GeometryField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
@@ -142,18 +143,22 @@ const NodeForm = ({
   fields,
   readonly,
   onSave,
-}: FormProps & { node: Node; nodes: NodeRegistry; fields: FormFieldMap }) => (
-  <Form.Root
-    schema={nodeDef(nodes, node)?.schema ?? NodeBase}
-    values={node}
-    fieldMap={fields}
-    readonly={readonly}
-    autoSave
-    onSave={onSave}
-  >
-    {formFields}
-  </Form.Root>
-);
+}: FormProps & { node: Node; nodes: NodeRegistry; fields: FormFieldMap }) => {
+  // The toggles show what the frame draws, so an unset fill or border reads as on.
+  const values = useMemo(() => ({ ...node, style: resolveStyle(node.style) }), [node]);
+  return (
+    <Form.Root
+      schema={nodeDef(nodes, node)?.schema ?? NodeBase}
+      values={values}
+      fieldMap={fields}
+      readonly={readonly}
+      autoSave
+      onSave={onSave}
+    >
+      {formFields}
+    </Form.Root>
+  );
+};
 
 /** One `Form.Root` per link type: the schema and the values must agree, which a switch proves per branch. */
 const LinkForm = ({ link, readonly, onSave }: FormProps & { link: Link }) => {
