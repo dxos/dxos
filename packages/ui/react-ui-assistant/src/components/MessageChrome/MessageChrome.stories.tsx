@@ -28,9 +28,11 @@ type StoryArgs = {
   context?: string;
   /** Only the synthetic block, no prose: a row of machinery. */
   machinery?: boolean;
+  /** Overrides the message's prose. */
+  text?: string;
 };
 
-const DefaultStory = ({ variant, rewind, debug, selected, context, machinery }: StoryArgs) => {
+const DefaultStory = ({ variant, rewind, debug, selected, context, machinery, text }: StoryArgs) => {
   // Made in a render so the story's `created` is now: the toolbar prints elapsed time.
   const message = useMemo(
     () =>
@@ -50,14 +52,15 @@ const DefaultStory = ({ variant, rewind, debug, selected, context, machinery }: 
                 {
                   _tag: 'text' as const,
                   text:
-                    variant === 'answer' || variant === 'assistant-toolbar'
+                    text ??
+                    (variant === 'answer' || variant === 'assistant-toolbar'
                       ? 'Give every flex ancestor of the scroll viewport `min-h-0`, then put `overflow-y-auto` on the leaf.'
-                      : 'How do I make a nested flex column scroll instead of growing?',
+                      : 'How do I make a nested flex column scroll instead of growing?'),
                 },
               ]),
         ],
       }),
-    [variant, context, machinery],
+    [variant, context, machinery, text],
   );
 
   return (
@@ -147,5 +150,25 @@ export const TestMachineryOnly: Story = {
   play: async ({ canvasElement }) => {
     const row = await within(canvasElement).findByTestId('feed.message');
     await expect(within(row).queryByRole('button')).toBeNull();
+  },
+};
+
+/** A prompt's bubble is sized by its own text: the toolbar under it (and its changing timestamp) must not widen it. */
+export const TestPromptSizedByText: Story = {
+  args: { variant: 'prompt', rewind: true, text: 'hi' },
+  play: async ({ canvasElement }) => {
+    const row = await within(canvasElement).findByTestId('feed.message');
+    const bubble = row.querySelector<HTMLElement>('.border-s-2');
+    await expect(bubble).not.toBeNull();
+    const width = bubble?.getBoundingClientRect().width ?? 0;
+    const column = bubble?.parentElement?.getBoundingClientRect().width ?? 0;
+    // A one-line prompt fits its text; were it stretched to the column, it would match the column exactly.
+    await expect(width).toBeLessThanOrEqual(column);
+    if (bubble) {
+      bubble.style.width = 'max-content';
+      const intrinsic = bubble.getBoundingClientRect().width;
+      bubble.style.width = '';
+      await expect(Math.abs(width - Math.min(intrinsic, column))).toBeLessThanOrEqual(1);
+    }
   },
 };

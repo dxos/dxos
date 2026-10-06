@@ -12,13 +12,13 @@ import { ModuleContainer, createStoryDecorators, makeModuleSurfacesPlugin } from
 
 import { ComputeProvider, StoryRole, moduleSurfaces } from '../modules/index.ts';
 
-const surfacesPlugin = () => makeModuleSurfacesPlugin('org.dxos.stories.compute.modules', moduleSurfaces);
-
 /** Processes run only in this runtime. */
 const LocalProvider = ({ children }: PropsWithChildren) => <ComputeProvider>{children}</ComputeProvider>;
 
 /** Processes run locally or on the EDGE service the client is configured for. */
 const EdgeProvider = ({ children }: PropsWithChildren) => <ComputeProvider edge>{children}</ComputeProvider>;
+
+const surfacesPlugin = () => makeModuleSurfacesPlugin('org.dxos.stories.compute.modules', moduleSurfaces);
 
 /** Client config pointing at an EDGE service, for the stories that spawn there for real. */
 const makeEdgeConfig = (url: string) =>
