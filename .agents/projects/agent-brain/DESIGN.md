@@ -90,11 +90,9 @@ against everything the agent knows.
 Goals are evaluated whenever the facts change. Evaluating every goal with a model call on every fact
 does not scale, so evaluation is two-stage:
 
-1. **Relevance (cheap, in the Durable Object).** When facts are appended, find the goals they could
-   bear on. The agent derives each goal's _interests_ when the goal is created or edited — the
-   entities, predicates and topics it depends on — and stores them with the goal. A new fact is
-   matched against interests by entity overlap and text/embedding similarity. Most facts touch no
-   goal.
+1. **Wake (cheap, in the Durable Object).** When facts are appended, the Durable Object evaluates
+   each goal's compiled wake rules (below) over the fact index. Most facts wake no goal, and no
+   model is called.
 2. **Judgment (model call).** For each relevant goal, the agent is given the goal, its instructions,
    the new facts, the related facts and the source context, and decides: nothing to do; act (and
    how); the goal is achieved; or the goal needs the user (ambiguous, blocked, conflicting).
@@ -109,10 +107,55 @@ Not every goal is driven by facts:
 An action the agent takes is itself recorded as facts, so goals can depend on each other ("keep me
 informed" sees the relay that "get Dima to help" sent).
 
+### Representation
+
+The runtime needs to know only _when_ to wake a goal; that must be cheap and deterministic. What the
+goal means and what to do is judgment, which belongs to the model. So a goal is represented in three
+layers, each with one job:
+
+1. **Drivers — the only part hardcoded in code.** `fact`, `time` and `action`, because each maps to
+   one runtime mechanism: an index subscription, a Durable Object alarm, a hook before every action
+   the agent takes. A goal may have several. "Outcome" and "condition" are not types in code — the
+   model reads them from the text — so a new kind of goal never needs a code change.
+2. **Goal patterns — a document the model reads.** A skill of goal patterns with worked examples (the
+   table below) teaches the agent how to read a goal, propose its instructions, decide whether it is
+   actionable and recognise achievement. It grows by adding examples, and the evals score against it.
+3. **Wake rules — compiled, never written by users.** When a goal is created or edited, the agent
+   compiles its text into rules over the fact tuples, which the Durable Object evaluates without a
+   model. The compiled rules sit beside the text so they can be inspected. The text is the
+   authority: when the rules and the text disagree, the agent recompiles; it never rewrites the text
+   to fit the rules.
+
+**v1 rule language: SPARQL `ASK`**, because pipeline-rdf already ships the engine. Time rules
+(`elapsed`) and goal state (`not achieved`) are supplied by the Durable Object as bindings rather than
+expressed in SPARQL. **Datalog** is the intended successor once SPARQL's limits bite (negation, time,
+recursion, model-writability): it is the terminating, set-based subset of Prolog, fits
+subject–predicate–object tuples, and can be evaluated incrementally as facts arrive.
+
+Goal 3 below, compiled (Datalog notation, for readability):
+
+```prolog
+wake(reply)    :- fact(dima, P, O), force(commissive), about(O, "agent plugin").
+wake(refusal)  :- fact(dima, P, O), force(commissive), polarity(negative), about(O, "agent plugin").
+wake(followup) :- elapsed(goal, 2d), not achieved(goal).
+```
+
+### Examples
+
+| #   | Goal                                             | Kind                 | Drivers                      | What the agent does                                                    | Hard part                                                 |
+| --- | ------------------------------------------------ | -------------------- | ---------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------- |
+| 1   | "Keep me informed about what Dima is working on" | Condition            | fact                         | Writes an update from the conversation's context                       | Update vs noise; how often to send                        |
+| 2   | "Let me know when the release ships"             | Outcome              | fact                         | Tells the user once, then closes the goal                              | Recognising "shipped" across wordings                     |
+| 3   | "Get Dima to help me with the agent plugin"      | Outcome              | fact, time (2-day follow-up) | Relays the request; closes on "OK, I'll start"; escalates on a refusal | Acts now and also waits, with a timeout                   |
+| 4   | "Keep my inbox empty"                            | Condition            | fact (each new email)        | Triages each email using the goal's instructions                       | Volume: cheap wake rules and batching                     |
+| 5   | "Complete my taxes by April 15"                  | Outcome              | time (deadline), fact        | Breaks the goal into tasks, reminds, gathers documents                 | Goal → tasks, and tracking progress                       |
+| 6   | "Learn French"                                   | Outcome (open-ended) | time (daily cadence)         | Starts a practice session on schedule                                  | Achievement is fuzzy; the user closes it                  |
+| 7   | "Never book meetings on Fridays"                 | Constraint           | action                       | Blocks or rewrites the action                                          | Checked before every action, not on facts                 |
+| 8   | "Help me draft this PR description"              | Outcome (session)    | fact (the conversation)      | Normal chat work                                                       | Whether a session goal is a goal or just the task at hand |
+
 ## Open questions
 
-1. What a goal's interests are concretely (entities, predicates, embeddings), and when they are
-   re-derived.
+1. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
 2. How achievement and progress are recorded: a status on the goal, facts about the goal, or both.
 3. Where goal evaluation runs — in the Durable Object directly, or by waking an agent session.
 4. How a goal relates to tasks (the agent's planned steps) and whether tasks are derived from goals.
