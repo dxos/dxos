@@ -49,6 +49,7 @@ type Settings
     modelProvider?: ModelProvider
     modelDefaults?: ModelDefaults
     codeMode?: boolean
+    reportStruggles?: boolean
     tracePanelDebug?: boolean
 ```
 
@@ -157,6 +158,21 @@ op UpdateChatName
     chat: Chat
   output: void
   effects: [echo:write, ai:infer]
+```
+
+```mdl
+op ReviewTurn
+  key: org.dxos.operation.assistant.reviewTurn
+  desc: Judges the chat's latest turn with a small model and reports it when the agent struggled because of its prompting or tooling.
+  input:
+    chat: Chat
+    outcome: success | error
+    error?: string
+    since: string
+    model?: string
+    skills: string[]
+  output: void
+  effects: [echo:read, ai:infer, http:post]
 ```
 
 ```mdl
@@ -293,6 +309,20 @@ feat F-7: Execution Trace
 
   req F-7.1: Every AI operation produces a structured span tree captured in the TracePanel.
   req F-7.2: User can toggle between commit-graph and raw JSON views via op:ToggleTracePanelDebug.
+```
+
+```mdl
+feat F-8: Agent Struggle Reports
+
+  req F-8.1: Reporting is opt-in via `Settings.reportStruggles`, off by default, and also requires telemetry to be enabled.
+  req F-8.2:
+    when: a turn the chat processor issued settles (success, or an error other than over-quota) with reporting enabled
+    then: op:ReviewTurn is scheduled detached, so the review never delays the next turn
+  req F-8.3:
+    when: the reviewer judges the agent struggled from missing/wrong instructions or a missing/faulty tool
+    then: the trajectory is uploaded to the feedback-logs bucket under `trajectories/` and an `agent_struggle` event is captured
+          carrying the cause, model DXN, code mode, and enabled skills
+  req F-8.4: A review that fails is logged and dropped; it never surfaces to the user.
 ```
 
 ## Acceptance

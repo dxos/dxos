@@ -54,6 +54,36 @@ export const UpdateChatName = Operation.make({
   output: Schema.Void,
 });
 
+/** How a reviewed turn ended, as the chat processor saw it. */
+export const TurnOutcome = Schema.Literals(['success', 'error']);
+export type TurnOutcome = Schema.Schema.Type<typeof TurnOutcome>;
+
+/**
+ * Asks a small model whether the agent struggled in the chat's latest turn because of its prompting or
+ * tooling, and if so reports the trajectory. Scheduled detached at turn end, only when the user opted in.
+ */
+export const ReviewTurn = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.reviewTurn'),
+    name: 'Review Agent Turn',
+    icon: 'ph--magnifying-glass--regular',
+  },
+  services: [Database.Service, AiService.AiService, Capability.Service],
+  input: Schema.Struct({
+    chat: Type.getSchema(Chat.Chat),
+    outcome: TurnOutcome,
+    /** The error shown to the user, when the turn failed. */
+    error: Schema.optional(Schema.String),
+    /** ISO timestamp the turn was submitted at; messages created before it are context, not the turn. */
+    since: Schema.String,
+    /** The model the turn ran on. */
+    model: Schema.optional(Schema.String),
+    /** Names of the skills bound to the conversation. */
+    skills: Schema.Array(Schema.String),
+  }),
+  output: Schema.Void,
+});
+
 export const SetCurrentChat = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.assistant.setCurrentChat'),

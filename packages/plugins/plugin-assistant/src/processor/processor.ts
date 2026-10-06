@@ -77,6 +77,8 @@ export type AiChatProcessorOptions = {
   system?: string;
   /** Who this processor's prompts come from, when the chat is one of several people's with one agent. */
   sender?: AgentService.PromptSender;
+  /** Schedules {@link AssistantOperation.ReviewTurn} after each turn this processor issues (opt-in setting). */
+  reviewTurns?: boolean;
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
@@ -336,6 +338,7 @@ export class AiChatProcessor {
       await this.cancel();
     }
 
+    const since = new Date().toISOString();
     try {
       this.#lastRequest = requestProp;
       this.#registry.set(this.error, Option.none());
@@ -391,11 +394,17 @@ export class AiChatProcessor {
       this.#registry.set(this.error, Option.none());
       this.#lastRequest = undefined;
       this.#requestFiber = undefined;
+      this.#scheduleReview(since, 'success');
     } catch (err) {
       // `EffectEx.causeToError` above unwraps the fiber failure into the underlying error (e.g. an AiError
       // carrying "model 'x' not found"); `parseError` decides what to surface to the user.
       log.error('request failed', { error: err });
-      this.#registry.set(this.error, Option.some(parseError(err)));
+      const error = parseError(err);
+      this.#registry.set(this.error, Option.some(error));
+      // An over-quota rejection says nothing about prompting or tooling.
+      if (!(error instanceof AiUsageQuotaError)) {
+        this.#scheduleReview(since, 'error', error.message);
+      }
     } finally {
       log.info('setting active to false');
       this.#registry.set(this.active, false);
@@ -693,6 +702,27 @@ export class AiChatProcessor {
       this.#registry.set(this.#streaming, []);
     }
     this.#finalizedIds.clear();
+  }
+
+  /**
+   * Schedules the struggle review detached, so it never delays the next turn; the handler re-checks
+   * the opt-in, since this flag is only as fresh as the render that built the processor.
+   */
+  #scheduleReview(since: string, outcome: AssistantOperation.TurnOutcome, error?: string): void {
+    const chat = this._options.chat?.target;
+    const spaceId = chat && Obj.getDatabase(chat)?.spaceId;
+    if (!this._options.reviewTurns || !chat || !spaceId) {
+      return;
+    }
+
+    const skills = this.context.getSkills().map((skill) => skill.name);
+    this._runtime.runFork(
+      Operation.schedule(
+        AssistantOperation.ReviewTurn,
+        { chat, outcome, error, since, model: this._options.model, skills },
+        { spaceId },
+      ),
+    );
   }
 
   /**

@@ -82,6 +82,7 @@ export const useChatProcessor = ({
   // Primitives rather than the object, so an inline `sender` literal does not rebuild the processor each render.
   const senderName = sender?.name;
   const senderDid = sender?.identityDid;
+  const reviewTurns = settings?.reportStruggles ?? false;
 
   const processor = useMemo(() => {
     if (!runtime || !session || !chat || !feed || !db) {
@@ -110,8 +111,9 @@ export const useChatProcessor = ({
         senderName || senderDid
           ? { ...(senderName ? { name: senderName } : {}), ...(senderDid ? { identityDid: senderDid } : {}) }
           : undefined,
+      reviewTurns,
     });
-  }, [runtime, session, registry, preset, chat, feed, db?.spaceId, senderName, senderDid]);
+  }, [runtime, session, registry, preset, chat, feed, db?.spaceId, senderName, senderDid, reviewTurns]);
 
   // A remount (e.g. the user navigated to another page mid-turn) gets a fresh processor whose
   // active/streaming state starts empty, while the agent process for the feed keeps running;
