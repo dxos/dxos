@@ -8,6 +8,7 @@ export * from './clipboard.ts';
 export * from './diagram.ts';
 export * from './dnd.ts';
 export * from './hit.ts';
+export * from './lattice.ts';
 export * from './layout.ts';
 export * from './order.ts';
 export * from './parts.ts';
