@@ -343,13 +343,13 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import config from '../dx.config.ts';
 
@@ -563,7 +563,8 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -571,10 +572,11 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, DXN, Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { IconButton, ScrollArea } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { timezones } from '@dxos/react-ui-geo/data';
@@ -685,7 +687,7 @@ const ClockCard = ({
     <div style={{ opacity: 0.7 }}>{timeZone}</div>
     {/* Last, so it paints above the text it overlaps. */}
     <div style={{ position: 'absolute', top: 4, right: 4 }}>
-      <IconButton
+      <Button.Root
         data-testid='worldClock.delete'
         variant='ghost'
         icon='ph--x--regular'
@@ -733,7 +735,7 @@ const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
           </Form.Content>
         </Form.Root>
       ) : (
-        <IconButton
+        <Button.Root
           data-testid='worldClock.add'
           variant='ghost'
           icon='ph--plus--regular'

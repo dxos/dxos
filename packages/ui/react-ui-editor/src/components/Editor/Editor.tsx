@@ -18,7 +18,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -106,7 +106,7 @@ EditorRoot.displayName = 'Editor.Root';
 
 const EDITOR_CONTENT_NAME = 'Editor.Content';
 
-type EditorContentProps = ThemedClassName<PropsWithChildren<{}>>;
+type EditorContentProps = Util.ThemedClassName<PropsWithChildren<{}>>;
 
 /**
  * Content component that wraps the toolbar and editor view area.
@@ -212,7 +212,7 @@ const countExtensions = (extension: Extension | undefined): number =>
       ? extension.reduce((sum, child) => sum + countExtensions(child), 0)
       : 1;
 
-type EditorDiagnosticsProps = ThemedClassName<{}>;
+type EditorDiagnosticsProps = Util.ThemedClassName<{}>;
 
 /**
  * Developer panel showing live editor state read from the CodeMirror `EditorState` (document size,

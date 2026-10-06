@@ -12,7 +12,9 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Icon, Input } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { Input } from './Input.tsx';
 
 /** Plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, `subdued` and `mono`. */
 const DefaultStory = ({ size }: SizeArgs) => (
@@ -20,7 +22,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
     <Input placeholder='Search' aria-label='Search' noAutoFill data-testid={`input-${size}`} />
     <Input placeholder='Disabled' aria-label='Disabled' disabled />
     <Input
-      start={<Icon icon='ph--magnifying-glass--regular' />}
+      start={<Icon.Icon icon='ph--magnifying-glass--regular' />}
       placeholder='Find…'
       aria-label='Find'
       data-testid={`start-${size}`}

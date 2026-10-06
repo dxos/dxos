@@ -8,7 +8,7 @@ import * as Migrator from 'effect/sql/Migrator';
 import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import agentRegistryInit from './agent-registry/0001_init.sql?raw';

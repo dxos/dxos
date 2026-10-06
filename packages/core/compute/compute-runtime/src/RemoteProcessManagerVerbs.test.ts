@@ -16,7 +16,7 @@ import { describe, test } from 'vitest';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 
 import * as RemoteProcessManager from './RemoteProcessManager.ts';
@@ -175,7 +175,7 @@ describe('RemoteProcessManager control verbs', () => {
   test('a spawn publishes into the remote manager tree the monitor reads', async ({ expect }) => {
     const host = makeFakeHost();
     // The verbs write the atom belonging to `RemoteProcessManager.Service`, which is the remote
-    // half of the aggregate `ProcessMonitor` — a private atom would leave a hosted process invisible
+    // half of the aggregate `Process.Manager` — a private atom would leave a hosted process invisible
     // there. The merge itself is covered by the edge e2e, which has a real local manager too.
     const tree = await runWithMonitor(
       Effect.gen(function* () {
@@ -226,7 +226,7 @@ const remoteManager = Effect.gen(function* () {
 
 /**
  * The EDGE manager as a client sees it: a tree atom plus the verbs built over `control`, which
- * publish into that atom — the half of the aggregate `ProcessMonitor` where hosted processes belong.
+ * publish into that atom — the half of the aggregate `Process.Manager` where hosted processes belong.
  */
 const remoteLayer = (control: RemoteProcessManager.Control) =>
   Layer.effect(
@@ -343,7 +343,7 @@ type TestServices = RemoteProcessManager.Service | Registry.AtomRegistry;
 const run = <A>(effect: Effect.Effect<A, never, TestServices>, control: RemoteProcessManager.Control) =>
   EffectEx.runPromise(provide(effect, control));
 
-/** Reads the manager's own tree atom, which is what the aggregate `ProcessMonitor` renders. */
+/** Reads the manager's own tree atom, which is what the aggregate `Process.Manager` renders. */
 const runWithMonitor = run;
 
 /** Runs to an `Exit`, so a defect a verb raises can be asserted instead of failing the test. */

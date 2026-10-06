@@ -21,8 +21,8 @@ import React, {
   useMemo,
 } from 'react';
 
-import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -74,7 +74,7 @@ ToolListRoot.displayName = 'ToolList.Root';
 // Content — the `role=listbox` container that renders rows from `tools`.
 //
 
-export type ToolListContentProps = ThemedClassName<{
+export type ToolListContentProps = Util.ThemedClassName<{
   /**
    * Optional render override for each row. Default renders title +
    * description via `<ToolList.Item>`. Override when you want extra row
@@ -86,27 +86,33 @@ export type ToolListContentProps = ThemedClassName<{
 
 // `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref
 // land on the listbox's content element.
-const ToolListContent = composable<HTMLDivElement, ToolListContentProps>(({ renderItem, ...props }, forwardedRef) => {
-  const tools = useContext(ToolsContext);
-  return (
-    <Listbox.Content
-      {...composableProps<HTMLDivElement>(props, { classNames: 'flex flex-col gap-px' })}
-      aria-label='Tools'
-      ref={forwardedRef}
-    >
-      {tools.map((tool) =>
-        renderItem ? <Fragment key={tool.id}>{renderItem(tool)}</Fragment> : <ToolListItem key={tool.id} tool={tool} />,
-      )}
-    </Listbox.Content>
-  );
-});
+const ToolListContent = Util.composable<HTMLDivElement, ToolListContentProps>(
+  ({ renderItem, ...props }, forwardedRef) => {
+    const tools = useContext(ToolsContext);
+    return (
+      <Listbox.Content
+        {...Util.composableProps<HTMLDivElement>(props, { classNames: 'flex flex-col gap-px' })}
+        aria-label='Tools'
+        ref={forwardedRef}
+      >
+        {tools.map((tool) =>
+          renderItem ? (
+            <Fragment key={tool.id}>{renderItem(tool)}</Fragment>
+          ) : (
+            <ToolListItem key={tool.id} tool={tool} />
+          ),
+        )}
+      </Listbox.Content>
+    );
+  },
+);
 ToolListContent.displayName = 'ToolList.Content';
 
 //
 // Item
 //
 
-export type ToolListItemProps = ThemedClassName<
+export type ToolListItemProps = Util.ThemedClassName<
   PropsWithChildren<{
     tool: Tool;
   }>
@@ -139,7 +145,7 @@ ToolListItem.displayName = 'ToolList.Item';
 // ItemTitle
 //
 
-export type ToolListItemTitleProps = ThemedClassName<ComponentProps<'span'>>;
+export type ToolListItemTitleProps = Util.ThemedClassName<ComponentProps<'span'>>;
 
 const ToolListItemTitle = ({ classNames, ...props }: ToolListItemTitleProps): ReactNode => (
   <span className={mx('truncate text-sm font-medium', classNames)} {...props} />
@@ -150,7 +156,7 @@ ToolListItemTitle.displayName = 'ToolList.ItemTitle';
 // ItemDescription
 //
 
-export type ToolListItemDescriptionProps = ThemedClassName<ComponentProps<'span'>>;
+export type ToolListItemDescriptionProps = Util.ThemedClassName<ComponentProps<'span'>>;
 
 const ToolListItemDescription = ({ classNames, ...props }: ToolListItemDescriptionProps): ReactNode => (
   <span

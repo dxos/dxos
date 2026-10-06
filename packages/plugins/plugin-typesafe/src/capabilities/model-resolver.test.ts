@@ -9,7 +9,7 @@ import * as Redacted from 'effect/Redacted';
 import { describe, test } from 'vitest';
 
 import * as Credential from '@dxos/compute/Credential';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { TypeSafeSettings } from '#types';
 

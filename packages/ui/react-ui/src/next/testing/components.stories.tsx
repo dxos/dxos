@@ -9,32 +9,29 @@ import React from 'react';
 import { expect, userEvent } from 'storybook/test';
 
 import { withTheme } from '../../testing/index.ts';
-import {
-  Block,
-  Button,
-  Checkbox,
-  Collapsible,
-  Combobox,
-  Container,
-  DateInput,
-  Field,
-  Icon,
-  Input,
-  Select,
-  type SelectOption,
-  Switch,
-  Textarea,
-  Toggle,
-  Toolbar,
-  Typography,
-} from '../components/index.ts';
+import { Block } from '../components/Block/Block.tsx';
+import { Button } from '../components/Button/Button.tsx';
+import { Checkbox } from '../components/Checkbox/Checkbox.tsx';
+import * as Collapsible from '../components/Collapsible/Collapsible.tsx';
+import * as Combobox from '../components/Combobox/Combobox.tsx';
+import { Container } from '../components/Container/Container.tsx';
+import * as Field from '../components/Field/Field.tsx';
+import * as Icon from '../components/Icon/Icon.tsx';
+import { Input } from '../components/Input/Input.tsx';
 import { Label } from '../components/Label/Label.tsx';
+import * as Select from '../components/Select/Select.tsx';
+import { Switch } from '../components/Switch/Switch.tsx';
+import { Textarea } from '../components/Textarea/Textarea.tsx';
+import { Toggle } from '../components/Toggle/Toggle.tsx';
+import * as Toolbar from '../components/Toolbar/Toolbar.tsx';
+import * as Typography from '../components/Typography/Typography.tsx';
+import * as UiInput from '../namespaces/Input.ts';
 import { type Size, SIZES } from '../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs } from './stories.tsx';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
-const OPTIONS: SelectOption[] = [
+const OPTIONS: Select.Option[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
@@ -44,7 +41,7 @@ const SizeSection = ({ size }: { size: Size }) => (
   <Container size={size} gutter='rail' columns={LABEL_COLUMNS} data-testid={`section-${size}`}>
     <Toolbar.Root data-testid={`toolbar-${size}`}>
       <Block>
-        <Icon icon='ph--circle--regular' />
+        <Icon.Icon icon='ph--circle--regular' />
       </Block>
       <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
       <Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
@@ -62,14 +59,14 @@ const SizeSection = ({ size }: { size: Size }) => (
 
     <Container layout='row' data-testid={`row-${size}`}>
       <Block rail='start' data-testid={`row-${size}-rail-start`}>
-        <Icon icon='ph--user--regular' />
+        <Icon.Icon icon='ph--user--regular' />
       </Block>
       <Label htmlFor={`name-${size}`} classNames='pe-(--dx-gap-size)'>
         Name
       </Label>
       <Input id={`name-${size}`} data-testid={`row-input-${size}`} />
       <Block rail='end'>
-        <Icon icon='ph--x--regular' label='Clear' />
+        <Icon.Icon icon='ph--x--regular' label='Clear' />
       </Block>
     </Container>
 
@@ -91,11 +88,11 @@ const SizeSection = ({ size }: { size: Size }) => (
 
     <Container>
       <Block rail='start'>
-        <Icon icon='ph--chat-circle--regular' />
+        <Icon.Icon icon='ph--chat-circle--regular' />
       </Block>
-      <Typography>
+      <Typography.Text>
         Typography centres its first line in the block, so the icon beside it lines up however far it wraps.
-      </Typography>
+      </Typography.Text>
     </Container>
   </Container>
 );
@@ -145,11 +142,11 @@ const FocusRingsStory = () => (
       </Field.Root>
       <Field.Root>
         <Field.Label>Date</Field.Label>
-        <DateInput defaultValue='2026-09-29' />
+        <UiInput.Date defaultValue='2026-09-29' />
       </Field.Root>
       <Field.Root>
         <Field.Label>Time</Field.Label>
-        <DateInput type='time' defaultValue='09:30' />
+        <UiInput.Date type='time' defaultValue='09:30' />
       </Field.Root>
       <Field.Root>
         <Select.Root items={OPTIONS}>
@@ -177,7 +174,7 @@ const FocusRingsStory = () => (
       <Collapsible.Root>
         <Collapsible.Trigger>Collapsible</Collapsible.Trigger>
         <Collapsible.Content>
-          <Typography>Hidden content.</Typography>
+          <Typography.Text>Hidden content.</Typography.Text>
         </Collapsible.Content>
       </Collapsible.Root>
       <Toolbar.Root>

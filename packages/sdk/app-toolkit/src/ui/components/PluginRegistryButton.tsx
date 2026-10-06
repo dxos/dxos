@@ -4,15 +4,16 @@
 
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Button, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { SettingsOperation } from '../../operations/index.ts';
 import { usePluginRegistryAvailable } from '../hooks/index.ts';
 
 export type PluginRegistryButtonProps = Pick<
-  ComponentPropsWithoutRef<typeof Button>,
+  ComponentPropsWithoutRef<typeof Button.Root>,
   'onClick' | 'variant' | 'size' | 'disabled' | 'classNames'
 >;
 
@@ -25,15 +26,15 @@ export type PluginRegistryButtonProps = Pick<
  */
 export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistryButtonProps>(
   ({ onClick, ...props }, forwardedRef) => {
-    const { t } = useTranslation(osTranslations);
-    const { invokePromise } = useOperationInvoker();
+    const { t } = UiHooks.useTranslation(osTranslations);
+    const { invokePromise } = Hooks.useOperationInvoker();
     const available = usePluginRegistryAvailable();
     if (!available) {
       return null;
     }
 
     return (
-      <Button
+      <Button.Root
         {...props}
         ref={forwardedRef}
         icon='ph--squares-four--regular'

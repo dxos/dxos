@@ -9,16 +9,15 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapabilityState, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import { Annotation, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import {
   TracePanel as NaturalTracePanel,
@@ -28,6 +27,7 @@ import {
   useExecutionGraph,
   useTraceMessages,
 } from '@dxos/react-ui-trace';
+import * as Util from '@dxos/react-ui/Util';
 
 import { AssistantCapabilities } from '#types';
 
@@ -37,11 +37,11 @@ export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<NaturalTracePane
  * The trace panel bound to the app: the process monitor, the space's trace feed, the assistant's
  * settings (environment filter, debug view), a view-state process selection, and navigation.
  */
-export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
+export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
   ({ space, attendableId, onProcessTerminate, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes(attendableId);
-    const { invokePromise } = useOperationInvoker();
-    const [settings, updateSettings] = useAtomCapabilityState(AssistantCapabilities.Settings);
+    const { invokePromise } = Hooks.useOperationInvoker();
+    const [settings, updateSettings] = Hooks.useAtomCapabilityState(AssistantCapabilities.Settings);
     const environments = useMemo(
       () => parseProcessEnvironments(settings.traceProcessEnvironments),
       [settings.traceProcessEnvironments],
@@ -57,7 +57,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const selectedPids = useSelection(attendableId, 'multi');
     const { multi: setSelected } = useSelectionActions(attendableId);
 
-    const monitor = useCapability(Capabilities.ProcessMonitor);
+    const monitor = Hooks.useCapability(Capabilities.ProcessManager);
     const processesAtom = useMemo(
       () => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty,
       [monitor],
@@ -115,7 +115,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 
     return (
       <NaturalTracePanel
-        {...composableProps(props, attentionAttrs)}
+        {...Util.composableProps(props, attentionAttrs)}
         ref={forwardedRef}
         processes={processes}
         graph={graph}

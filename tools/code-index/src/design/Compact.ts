@@ -4,6 +4,7 @@
 // @import-as-namespace
 //
 
+import * as Diagram from '../workspace/Diagram.ts';
 import * as Graph from './Graph.ts';
 import * as Zoom from './Zoom.ts';
 
@@ -46,13 +47,13 @@ export type Node = {
 
 export type Arrow = { readonly from: string; readonly to: string; readonly label?: string; readonly kind: string };
 
-export type Diagram = {
+export type Compacted = {
   readonly variant: Variant;
   readonly groups: readonly { readonly id: string; readonly label: string }[];
   readonly nodes: readonly Node[];
   readonly edges: readonly Arrow[];
-  /** The mermaid source, ending in one `%% ref <id> <path>` per node. */
-  readonly mermaid: string;
+  /** The illustrator's semantic DSL, with each box's file as its `ref`. */
+  readonly dsl: string;
 };
 
 /** The words an edge says, for the kinds worth labelling; imports and relays stay unlabelled. */
@@ -130,7 +131,7 @@ export const variants = (chosen: Graph.Grouping): Variant[] => {
 };
 
 /** One diagram variant from a scored graph. */
-export const build = (scored: Graph.Scored, variant: Variant): Diagram => {
+export const build = (scored: Graph.Scored, variant: Variant): Compacted => {
   // The kept set, topped up from the best of the rest: a strict threshold can keep so few nodes that,
   // once boxes without arrows are dropped, nothing is left to draw — and judges score an empty page well.
   const ranked = [...scored.nodes].sort(
@@ -226,33 +227,18 @@ export const build = (scored: Graph.Scored, variant: Variant): Diagram => {
     groups: groups.map(({ id, label }) => ({ id, label })),
     nodes,
     edges: finalArrows,
-    mermaid: toMermaid(groups, nodes, finalArrows),
+    dsl: toDsl(groups, nodes, finalArrows),
   };
 };
 
-/** Mermaid in the subset `@dxos/diagram` parses: flat subgraphs, `Id[Label]`, `-->` and `-->|label|`. */
-export const toMermaid = (
+/** The compact diagram as the illustrator's semantic DSL, each box's `ref` the file it depicts. */
+export const toDsl = (
   groups: readonly { id: string; label: string }[],
   nodes: readonly Node[],
   edges: readonly Arrow[],
-): string => {
-  const quote = (label: string) => label.replace(/[[\]|"]/g, ' ');
-  const lines = ['flowchart TB'];
-  for (const group of groups) {
-    lines.push(`  subgraph ${group.id} [${quote(group.label)}]`);
-    for (const node of nodes.filter((entry) => entry.group === group.id)) {
-      lines.push(`    ${node.id}[${quote(node.label)}]`);
-    }
-    lines.push('  end');
-  }
-  for (const node of nodes.filter((entry) => entry.group === undefined)) {
-    lines.push(`  ${node.id}[${quote(node.label)}]`);
-  }
-  for (const edge of edges) {
-    lines.push(edge.label ? `  ${edge.from} -->|${edge.label}| ${edge.to}` : `  ${edge.from} --> ${edge.to}`);
-  }
-  for (const node of nodes) {
-    lines.push(`%% ref ${node.id} ${node.path}`);
-  }
-  return `${lines.join('\n')}\n`;
-};
+): string =>
+  `${Diagram.print({
+    groups,
+    nodes: nodes.map(({ id, label, group, path }) => ({ id, label, ref: path, ...(group ? { group } : {}) })),
+    edges: edges.map(({ from, to, label }) => ({ from, to, ...(label ? { label } : {}) })),
+  })}\n`;

@@ -15,10 +15,10 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
+import * as AlarmSkill from './AlarmSkill.ts';
 import { SetAlarm } from './operations/definitions.ts';
 import { AlarmHandlers } from './operations/index.ts';
 import { resolveWakeAt } from './operations/resolve-wake-at.ts';
-import AlarmSkill from './skill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

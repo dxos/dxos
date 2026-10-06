@@ -3,7 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { PullRequest } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -122,4 +122,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

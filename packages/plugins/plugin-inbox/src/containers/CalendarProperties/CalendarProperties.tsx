@@ -4,15 +4,18 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
-import { Button, Field, Flex, Group, useTranslation } from '@dxos/react-ui';
+import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
@@ -21,10 +24,10 @@ import { Calendar } from '#types';
 export type CalendarPropertiesProps = AppSurface.ObjectPropertiesProps<Calendar.Calendar>;
 
 export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
-  const connectors = useCapabilities(ConnectorSpec.Connector);
+  const connectors = Hooks.useCapabilities(ConnectorSpec.Connector);
 
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({ db, subject, connectors });
 
@@ -33,7 +36,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
       return;
     }
     void invokePromise(LayoutOperation.Open, {
-      subject: [getRoutinesSettingsPath(db.spaceId)],
+      subject: [RoutinePath.getRoutinesSettingsPath(db.spaceId)],
       workspace: GraphPath.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
@@ -43,20 +46,25 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
       <Field.Root>
         <Field.Label>{t('calendar-sync.label')}</Field.Label>
         {/* TODO(burdon): Replace custom components with Field.Switch. */}
-        <Flex gap='xs'>
-          <Group>
-            <Button onClick={handleToggleSync} disabled={pending}>
+        <Layout.Flex gap='xs'>
+          <Button.Group>
+            <Button.Root onClick={handleToggleSync} disabled={pending}>
               {pending
                 ? t('enabling-background-sync.label')
                 : syncEnabled
                   ? t('disable-background-sync.label')
                   : t('enable-background-sync.label')}
-            </Button>
+            </Button.Root>
             {syncTrigger && (
-              <Button iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
+              <Button.Root
+                iconOnly
+                icon='ph--gear--regular'
+                label={t('view-trigger.label')}
+                onClick={handleViewTrigger}
+              />
             )}
-          </Group>
-        </Flex>
+          </Button.Group>
+        </Layout.Flex>
       </Field.Root>
     </Form.FieldSet>
   );

@@ -23,7 +23,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { Channel, Event } from '@dxos/types';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';

@@ -2,21 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Dialog as DialogPrimitive, useDialogContext } from '@ark-ui/react/dialog';
 import { useEnvironmentContext } from '@ark-ui/react/environment';
 import React, { forwardRef, useId } from 'react';
 
-import { Button, type ButtonProps } from '../Button/index.ts';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogRootProps } from '../Dialog/index.ts';
+import { Button, type ButtonProps } from '../Button/Button.tsx';
+import * as Dialog from '../Dialog/Dialog.tsx';
 
 //
 // Root
 //
 
-type AlertDialogRootProps = Omit<DialogRootProps, 'role'>;
+type AlertDialogRootProps = Omit<Dialog.RootProps, 'role' | 'closeOnInteractOutside' | 'closeOnEscape'>;
 
 /**
- * A Dialog with `role=alertdialog`, which zag keeps open on an outside click. It opens with focus on a control marked
+ * A Dialog with `role=alertdialog` that only its own controls close. It opens with focus on a control marked
  * `DIALOG_AUTOFOCUS_ATTRIBUTE`, else on `Cancel`, the least destructive choice.
  */
 const AlertDialogRoot = ({ ids, initialFocusEl, ...props }: AlertDialogRootProps) => {
@@ -32,11 +34,13 @@ const AlertDialogRoot = ({ ids, initialFocusEl, ...props }: AlertDialogRootProps
   return (
     <Dialog.Root
       {...props}
+      closeOnInteractOutside={false}
+      closeOnEscape={false}
       role='alertdialog'
       ids={{ ...ids, content: contentId, closeTrigger: cancelId }}
       initialFocusEl={
         initialFocusEl ??
-        (() => byId(contentId)?.querySelector<HTMLElement>(`[${DIALOG_AUTOFOCUS_ATTRIBUTE}]`) ?? byId(cancelId))
+        (() => byId(contentId)?.querySelector<HTMLElement>(`[${Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE}]`) ?? byId(cancelId))
       }
     />
   );
@@ -86,18 +90,28 @@ const AlertDialogAction = forwardRef<HTMLButtonElement, AlertDialogActionProps>(
 );
 
 AlertDialogAction.displayName = 'AlertDialog.Action';
-
-export const AlertDialog = {
-  Root: AlertDialogRoot,
-  Trigger: Dialog.Trigger,
-  Content: Dialog.Content,
-  Header: Dialog.Header,
-  Title: Dialog.Title,
-  Description: Dialog.Description,
-  Body: Dialog.Body,
-  Footer: Dialog.Footer,
-  Cancel: AlertDialogCancel,
-  Action: AlertDialogAction,
+const AlertDialogTrigger = Dialog.Trigger;
+const AlertDialogContent = Dialog.Content;
+const AlertDialogHeader = Dialog.Header;
+const AlertDialogTitle = Dialog.Title;
+const AlertDialogDescription = Dialog.Description;
+const AlertDialogBody = Dialog.Body;
+const AlertDialogFooter = Dialog.Footer;
+export type {
+  AlertDialogActionProps as ActionProps,
+  AlertDialogCancelProps as CancelProps,
+  AlertDialogRootProps as RootProps,
 };
 
-export type { AlertDialogActionProps, AlertDialogCancelProps, AlertDialogRootProps };
+export {
+  AlertDialogAction as Action,
+  AlertDialogBody as Body,
+  AlertDialogCancel as Cancel,
+  AlertDialogContent as Content,
+  AlertDialogDescription as Description,
+  AlertDialogFooter as Footer,
+  AlertDialogHeader as Header,
+  AlertDialogRoot as Root,
+  AlertDialogTitle as Title,
+  AlertDialogTrigger as Trigger,
+};

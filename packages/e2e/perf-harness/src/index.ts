@@ -10,6 +10,8 @@ export * from './collectors/cpu.ts';
 export * from './collectors/data.ts';
 export { type WaitForQuietDiskOptions, waitForQuietDisk } from './collectors/disk.ts';
 export * from './collectors/frames.ts';
+export * from './collectors/latency.ts';
+export * from './collectors/marks.ts';
 export * from './collectors/memory.ts';
 export * from './collectors/network.ts';
 export * from './collectors/profiler.ts';

@@ -106,6 +106,19 @@ export type AvoidingRouterOptions = {
   step: number;
 };
 
+/** Paths an avoiding router marked as used, so a later router can replay them; weak, so it holds nothing alive. */
+const marked = new WeakSet<readonly Point[]>();
+
+/** The avoiding router plus a way to replay an earlier route's footprint without searching again. */
+export type AvoidingRouter = Router & {
+  /**
+   * Marks the cells of a path an avoiding router over the same obstacles returned before as used, as
+   * routing it did; a path that marked nothing (a fallback route) marks nothing, so a replayed prefix
+   * leaves the same state.
+   */
+  reserve: (points: readonly Point[]) => void;
+};
+
 /**
  * Creates a router that avoids the given node rects. Stateful across edges: earlier routes
  * penalize (not block) the cells they occupy, spreading parallel runs apart. `fallback` handles
@@ -116,7 +129,7 @@ export const makeAvoidingRouter = (
   obstacles: Rect[],
   fallback: Router,
   { step: STEP }: AvoidingRouterOptions,
-): Router => {
+): AvoidingRouter => {
   const xs = obstacles.flatMap((rect) => [rect.x, rect.x + rect.w]);
   const ys = obstacles.flatMap((rect) => [rect.y, rect.y + rect.h]);
   const bounds = {
@@ -125,14 +138,25 @@ export const makeAvoidingRouter = (
     x1: Math.ceil(Math.max(...xs) / STEP) + MARGIN,
     y1: Math.ceil(Math.max(...ys) / STEP) + MARGIN,
   };
-  const width = bounds.x1 - bounds.x0 + 1;
-  const height = bounds.y1 - bounds.y0 + 1;
+  // The grids carry a one-cell blocked border, so the search's blocked test also keeps it in bounds.
+  const width = bounds.x1 - bounds.x0 + 3;
+  const height = bounds.y1 - bounds.y0 + 3;
   const inBounds = (x: number, y: number) => x >= bounds.x0 && x <= bounds.x1 && y >= bounds.y0 && y <= bounds.y1;
-  const cellIndex = (x: number, y: number) => (y - bounds.y0) * width + (x - bounds.x0);
+  const cellIndex = (x: number, y: number) => (y - bounds.y0 + 1) * width + (x - bounds.x0 + 1);
+  /** Cell offsets per direction, matching `DX` and `DY`. */
+  const STEPS = [1, width, -1, -width];
 
   // Flat grids in place of per-cell string keys: the search touches every cell many times over and
   // the string building was half its running time.
   const blockedGrid = new Uint8Array(width * height);
+  for (let x = 0; x < width; x++) {
+    blockedGrid[x] = 1;
+    blockedGrid[(height - 1) * width + x] = 1;
+  }
+  for (let y = 0; y < height; y++) {
+    blockedGrid[y * width] = 1;
+    blockedGrid[y * width + width - 1] = 1;
+  }
   for (const rect of obstacles) {
     const x0 = Math.floor(rect.x / STEP) - CLEARANCE;
     const y0 = Math.floor(rect.y / STEP) - CLEARANCE;
@@ -271,7 +295,10 @@ export const makeAvoidingRouter = (
       -1,
     );
     generation++;
-    const settledAt = (index: number) => (settledGen[index] === generation ? settledCost[index] : undefined);
+    const targetCell = inBounds(target.x, target.y) ? cellIndex(target.x, target.y) : -1;
+    // Coordinates relative to the padded grid, so the estimate needs no conversion per state.
+    const targetX = target.x - bounds.x0 + 1;
+    const targetY = target.y - bounds.y0 + 1;
     let found = -1;
 
     for (let iterations = 0; heapSize > 0 && iterations < budget; iterations++) {
@@ -284,30 +311,24 @@ export const makeAvoidingRouter = (
       const stateIndex = stateKey[current];
       const currentDir = stateIndex & 3;
       const currentCell = stateIndex >> 2;
-      const currentX = (currentCell % width) + bounds.x0;
-      const currentY = Math.floor(currentCell / width) + bounds.y0;
       const currentCost = stateCost[current];
-      if (currentX === target.x && currentY === target.y) {
+      if (currentCell === targetCell) {
         found = current;
         break;
       }
-      const seen = settledAt(stateIndex);
-      if (seen !== undefined && seen <= currentCost) {
+      if (settledGen[stateIndex] === generation && settledCost[stateIndex] <= currentCost) {
         continue;
       }
       settledGen[stateIndex] = generation;
       settledCost[stateIndex] = currentCost;
+      const currentY = Math.floor(currentCell / width);
+      const currentX = currentCell - currentY * width;
 
       for (let dir = 0; dir < 4; dir++) {
         if ((dir + 2) % 4 === currentDir) {
           continue;
         }
-        const x = currentX + DX[dir];
-        const y = currentY + DY[dir];
-        if (!inBounds(x, y)) {
-          continue;
-        }
-        const cell = cellIndex(x, y);
+        const cell = currentCell + STEPS[dir];
         if (blockedGrid[cell] !== 0) {
           continue;
         }
@@ -317,12 +338,19 @@ export const makeAvoidingRouter = (
           (dir === currentDir ? 0 : TURN_COST) +
           (usedGrid[cell] !== 0 ? USED_COST : 0) +
           // Entering the target off-axis forces one more bend at arrival; fold it in.
-          (x === target.x && y === target.y && dir !== endDir ? TURN_COST : 0);
-        const dominated = settledAt(cell * 4 + dir);
-        if (dominated !== undefined && dominated <= cost) {
+          (cell === targetCell && dir !== endDir ? TURN_COST : 0);
+        const next = cell * 4 + dir;
+        if (settledGen[next] === generation && settledCost[next] <= cost) {
           continue;
         }
-        heapPush(cell * 4 + dir, cost, cost + estimateFrom(x, y, dir, target, endDir), current);
+        const dx = targetX - (currentX + DX[dir]);
+        const dy = targetY - (currentY + DY[dir]);
+        heapPush(
+          next,
+          cost,
+          cost + (Math.abs(dx) + Math.abs(dy) + turnsBetween(dx, dy, dir, endDir) * TURN_COST),
+          current,
+        );
       }
     }
 
@@ -332,12 +360,26 @@ export const makeAvoidingRouter = (
     const cells: Point[] = [];
     for (let slot = found; slot >= 0; slot = statePrev[slot]) {
       const cell = stateKey[slot] >> 2;
-      cells.unshift({ x: (cell % width) + bounds.x0, y: Math.floor(cell / width) + bounds.y0 });
+      cells.unshift({ x: (cell % width) + bounds.x0 - 1, y: Math.floor(cell / width) + bounds.y0 - 1 });
     }
     return { cost: stateCost[found], cells };
   };
 
-  return (edge: RoutedRelation): Point[] => {
+  const markPath = (path: readonly Point[]) => {
+    for (let index = 0; index < path.length - 1; index++) {
+      const a = path[index];
+      const b = path[index + 1];
+      const ax = Math.round(a.x / STEP);
+      const ay = Math.round(a.y / STEP);
+      const steps = Math.max(Math.abs(Math.round(b.x / STEP) - ax), Math.abs(Math.round(b.y / STEP) - ay));
+      const dx = Math.sign(b.x - a.x);
+      const dy = Math.sign(b.y - a.y);
+      for (let step = 0; step <= steps; step++) {
+        markUsed(ax + dx * step, ay + dy * step);
+      }
+    }
+  };
+  const route = (edge: RoutedRelation): Point[] => {
     const { from, to, horizontal, ports } = edge;
     // Flow-axis faces mirror the Z-router (and the port assignment in `emit`).
     const sameLane = horizontal ? from.x === to.x : from.y === to.y;
@@ -476,18 +518,15 @@ export const makeAvoidingRouter = (
     }
 
     // Mark the final path's cells so later edges route (and center) around it.
-    for (let index = 0; index < simplified.length - 1; index++) {
-      const a = simplified[index];
-      const b = simplified[index + 1];
-      const ax = Math.round(a.x / STEP);
-      const ay = Math.round(a.y / STEP);
-      const steps = Math.max(Math.abs(Math.round(b.x / STEP) - ax), Math.abs(Math.round(b.y / STEP) - ay));
-      const dx = Math.sign(b.x - a.x);
-      const dy = Math.sign(b.y - a.y);
-      for (let step = 0; step <= steps; step++) {
-        markUsed(ax + dx * step, ay + dy * step);
-      }
-    }
+    markPath(simplified);
+    marked.add(simplified);
     return simplified;
   };
+
+  const reserve = (points: readonly Point[]) => {
+    if (marked.has(points)) {
+      markPath(points);
+    }
+  };
+  return Object.assign(route, { reserve });
 };

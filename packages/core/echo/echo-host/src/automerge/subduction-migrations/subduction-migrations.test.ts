@@ -27,7 +27,7 @@ import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { PublicKey } from '@dxos/keys';
 
 import { type TestSqliteRuntime, createTestSqliteRuntime } from '../../testing/index.ts';

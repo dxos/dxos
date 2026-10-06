@@ -8,9 +8,9 @@ import type * as Scope from 'effect/Scope';
 import { type IQueryEngine, createLens } from 'ldkit';
 import { DataFactory, Parser } from 'n3';
 import { EventEmitter } from 'node:events';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as Ontology from '../Ontology.ts';
@@ -72,9 +72,67 @@ interface QueryCancel {
 interface Addon {
   NativeStore: { open(dir: string): NativeStore };
   QueryCancel: new () => QueryCancel;
+  /** Absent from addons built before it existed, which is itself the answer `staleness` gives. */
+  sourcesHash?: () => string;
 }
 
 export const isAvailable = (): boolean => existsSync(ADDON_PATH);
+
+/** What the addon is built from besides the Rust files under `src`; `build.rs` hashes the same list. */
+const CRATE_INPUTS = ['Cargo.toml', 'Cargo.lock', 'build.rs'];
+
+/**
+ * FNV-1a 64 over each crate input's relative path and contents, in path order — the hash `build.rs`
+ * bakes into the addon, so the two agree exactly when the addon was built from these sources.
+ * Undefined when the crate is absent, as in an installed package.
+ */
+export const sourcesHash = (crate = dirname(ADDON_PATH)): string | undefined => {
+  const src = join(crate, 'src');
+  if (!existsSync(src)) {
+    return undefined;
+  }
+  const paths = [
+    ...CRATE_INPUTS,
+    ...readdirSync(src, { recursive: true, encoding: 'utf8' })
+      .filter((name) => name.endsWith('.rs'))
+      .map((name) => `src/${name.replaceAll('\\', '/')}`),
+  ]
+    .filter((path) => existsSync(join(crate, path)))
+    .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+  const encoder = new TextEncoder();
+  let hash = 0xcbf29ce484222325n;
+  const feed = (bytes: Uint8Array) => {
+    for (const byte of bytes) {
+      hash = BigInt.asUintN(64, (hash ^ BigInt(byte)) * 0x100000001b3n);
+    }
+  };
+  for (const path of paths) {
+    feed(encoder.encode(path));
+    feed(Uint8Array.of(0));
+    feed(readFileSync(join(crate, path)));
+    feed(Uint8Array.of(0));
+  }
+  return hash.toString(16).padStart(16, '0');
+};
+
+/**
+ * Why the addon cannot be trusted to match its sources, if it cannot. Running the CLI directly
+ * skips moon's `cargo-build` dependency, so a pull that changes the crate leaves the old addon in
+ * place, and its symptoms — a RocksDB lock error, a missing method — do not name the cause.
+ */
+export const staleness = (addon: { sourcesHash?: () => string }, crate?: string): string | undefined => {
+  const expected = sourcesHash(crate);
+  if (expected === undefined) {
+    return undefined;
+  }
+  if (typeof addon.sourcesHash !== 'function') {
+    return 'it predates the source check, so it is older than the crate';
+  }
+  const built = addon.sourcesHash();
+  return built === expected
+    ? undefined
+    : `it was built from other sources (${built}) than the crate has now (${expected})`;
+};
 
 const load = (): Addon => createRequire(import.meta.url)(ADDON_PATH);
 
@@ -172,7 +230,12 @@ const fromJson = (term: JsonTerm): RDF.Term => {
 class Row implements RDF.Bindings {
   readonly type = 'bindings';
 
-  constructor(private readonly entries: ReadonlyMap<string, RDF.Term>) {}
+  // A declared field rather than a parameter property: the indexer worker loads this file under Node's type stripping.
+  private readonly entries: ReadonlyMap<string, RDF.Term>;
+
+  constructor(entries: ReadonlyMap<string, RDF.Term>) {
+    this.entries = entries;
+  }
 
   get size() {
     return this.entries.size;
@@ -255,9 +318,11 @@ class Row implements RDF.Bindings {
 /** A finished result set as the RDF/JS `ResultStream` LDkit consumes (events plus `toArray`). */
 class Results<T> extends EventEmitter implements RDF.ResultStream<T> {
   #index = 0;
+  readonly #items: readonly T[];
 
-  constructor(private readonly items: readonly T[]) {
+  constructor(items: readonly T[]) {
     super();
+    this.#items = items;
     // Emitted on the next turn, after the consumer has attached its listeners.
     setImmediate(() => {
       for (const item of items) {
@@ -268,11 +333,11 @@ class Results<T> extends EventEmitter implements RDF.ResultStream<T> {
   }
 
   read(): T | null {
-    return this.#index < this.items.length ? this.items[this.#index++] : null;
+    return this.#index < this.#items.length ? this.#items[this.#index++] : null;
   }
 
   toArray(): Promise<T[]> {
-    return Promise.resolve([...this.items]);
+    return Promise.resolve([...this.#items]);
   }
 }
 
@@ -294,6 +359,14 @@ export const make = <E>(
       );
     }
     const addon = load();
+    const stale = staleness(addon);
+    if (stale !== undefined) {
+      return yield* Effect.fail(
+        fail('Native backend out of date')(
+          new Error(`${ADDON_PATH}: ${stale}; run \`moon run code-index-native:cargo-build\`.`),
+        ),
+      );
+    }
     // RocksDB holds a lock on its directory, so the store is closed with the scope rather than left
     // to the garbage collector — a reopen in the same process would otherwise fail.
     const native = yield* Effect.acquireRelease(

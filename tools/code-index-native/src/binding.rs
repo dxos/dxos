@@ -141,6 +141,13 @@ where
     })
 }
 
+/// The hash of the crate sources this addon was built from (see `build.rs`), which the CLI checks
+/// against the sources on disk.
+#[napi]
+pub fn sources_hash() -> String {
+    env!("CODE_INDEX_SOURCES").to_string()
+}
+
 /// Cancels the queries it was passed to; each stops at the next quad it reads.
 #[napi]
 pub struct QueryCancel {
@@ -169,11 +176,12 @@ fn count(value: usize) -> u32 {
 
 #[napi]
 impl NativeStore {
-    /// Opens (creating if absent) the store rooted at `dir`.
+    /// Opens (creating if absent) the store rooted at `dir`, sharing it with every other handle this
+    /// process holds on the same directory, whichever thread or worker opened that one.
     #[napi(factory)]
     pub fn open(dir: String) -> Result<Self> {
         Ok(Self {
-            store: Some(Arc::new(store::NativeStore::open(dir).map_err(error)?)),
+            store: Some(store::NativeStore::open_shared(dir).map_err(error)?),
         })
     }
 
@@ -183,8 +191,8 @@ impl NativeStore {
             .ok_or_else(|| Error::from_reason("the native store is closed"))
     }
 
-    /// Releases RocksDB's directory lock once no call is in flight (each holds the store); every later
-    /// call fails.
+    /// Releases this handle; RocksDB's directory lock goes once no other handle or call in flight
+    /// (each holds the store) remains. Every later call on this handle fails.
     #[napi]
     pub fn close(&mut self) {
         self.store = None;
@@ -322,13 +330,17 @@ impl NativeStore {
     #[napi(ts_return_type = "Promise<number>")]
     pub fn quad_count(&self) -> Result<AsyncTask<Blocking<u32>>> {
         let store = Arc::clone(self.inner()?);
-        Ok(blocking(move || store.quad_count().map(count).map_err(error)))
+        Ok(blocking(move || {
+            store.quad_count().map(count).map_err(error)
+        }))
     }
 
     #[napi(ts_return_type = "Promise<number>")]
     pub fn graph_length(&self, graph: String) -> Result<AsyncTask<Blocking<u32>>> {
         let store = Arc::clone(self.inner()?);
-        Ok(blocking(move || store.graph_len(&graph).map(count).map_err(error)))
+        Ok(blocking(move || {
+            store.graph_len(&graph).map(count).map_err(error)
+        }))
     }
 
     /// A counter read, so it stays synchronous.

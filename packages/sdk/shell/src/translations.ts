@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translationKey = 'org.dxos.i18n.shell';
 
@@ -191,11 +191,10 @@ export const translations = [
         'contact-picker.placeholder': 'Select contact',
         'contact-picker-search.placeholder': 'Search contacts…',
         'contact-picker-empty.message': 'No matching contacts.',
-        'space-invitations.label': 'Space invitations',
-        'empty-space-invitations.message': 'No pending invitations.',
-        'space-invitation.description': 'Invited you to {{space}} as {{role}} · {{time}}',
+        'space-invitation.description': 'Invited you to {{space}} as {{role}}',
         'join-space-invitation.label': 'Join',
-        'dismiss-space-invitation.label': 'Dismiss',
+        'open-space-invitation.label': 'Open space',
+        'unknown-sender.label': 'Unknown sender',
         'invitation-role-owner.label': 'owner',
         'invitation-role-admin.label': 'admin',
         'invitation-role-editor.label': 'editor',
@@ -203,4 +202,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

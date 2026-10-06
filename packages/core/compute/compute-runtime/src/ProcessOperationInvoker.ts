@@ -23,10 +23,12 @@ import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
 import { Database } from '@dxos/echo';
-import { EffectEx, SpanAttributes } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
+import { markWork } from '@dxos/util';
 
 import * as DurableOperation from './DurableOperation.ts';
 import type { ProcessNotFoundError } from './errors.ts';
@@ -48,7 +50,7 @@ export interface ProcessOperationInvoker {
   invokeFiber: <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment'>,
+    options?: Pick<Process.SpawnOptions, 'traceMeta' | 'environment'>,
   ) => Effect.Effect<OperationFiber<O>>;
 
   /**
@@ -62,7 +64,7 @@ export class Service extends Context.Service<
   Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker
 >()('@dxos/functions/ProcessOperationInvoker') {}
 
-const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effect.Effect<OperationFiber<T>> =>
+const fiberFromProcess = <T>(handle: Process.Handle<any, T, never>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {
     // `forkDaemon` so the collector fiber's lifetime is independent of whichever
     // scope originated the `invoke`/`attach` call. Otherwise, subsequent
@@ -158,7 +160,7 @@ export const make = (opts: {
   const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment' | 'notify'> & {
+    options?: Pick<Process.SpawnOptions, 'traceMeta' | 'environment' | 'notify'> & {
       /**
        * If true, do NOT link the spawned process to the current process as a
        * child. Used by {@link schedule} so that fire-and-forget operations
@@ -196,6 +198,7 @@ export const make = (opts: {
       // TTL).
       fiberCache.set(handle.pid, fiber);
       yield* handle.submitInput(input);
+      markWork('process.input-submitted');
       log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
       return fiber;
     }).pipe(

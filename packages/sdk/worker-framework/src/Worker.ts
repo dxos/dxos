@@ -12,7 +12,7 @@ import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Scope from 'effect/Scope';
 
 import { Trigger } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 

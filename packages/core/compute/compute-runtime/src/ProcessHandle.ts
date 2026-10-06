@@ -26,12 +26,12 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
 import type * as Trace from '@dxos/compute/Trace';
-import { Performance, SpanAttributes } from '@dxos/effect';
+import * as Performance from '@dxos/effect/Performance';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { isCancellation } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import type { PersistedEvent, PersistedEventInput } from './process-store.ts';
-import type * as ProcessManager from './ProcessManager.ts';
 import { EphemeralTraceBuffer } from './trace-buffer.ts';
 
 /**
@@ -146,18 +146,18 @@ const fromPersistedChildEvent = (event: {
  * ephemeral trace buffer/subscribers for a single spawned process. The
  * manager drives lifecycle by invoking `runOnSpawn()` after construction,
  * `submitInput()`/`requestSubmitOutput()` during operation, and `terminate()`
- * on shutdown. ProcessManager.Status transitions are computed here from handler accounting
+ * on shutdown. Process.Status transitions are computed here from handler accounting
  * (`#activeHandlers`, `#succeedRequested`, `#failError`, alarm/children).
  */
-export class Impl<I, O, R> implements ProcessManager.Handle<I, O, any> {
-  readonly statusAtom: Atom.Atom<ProcessManager.Status> = Atom.readable(() => this.#currentStatus);
+export class Impl<I, O, R> implements Process.Handle<I, O, any> {
+  readonly statusAtom: Atom.Atom<Process.Status> = Atom.readable(() => this.#currentStatus);
   readonly parentId: Process.ID | null;
   readonly environment: Process.Environment;
 
   /** In-memory client for the process's declared RPC control surface. */
   readonly rpc: RpcClient.RpcClient<any>;
 
-  #currentStatus: ProcessManager.Status;
+  #currentStatus: Process.Status;
   #activeHandlers = 0;
   #finished = false;
   #succeedRequested = false;
@@ -247,7 +247,7 @@ export class Impl<I, O, R> implements ProcessManager.Handle<I, O, any> {
     };
     log('lifecycle: created', { parentId, key, params });
   }
-  snapshotStatus(): ProcessManager.Status {
+  snapshotStatus(): Process.Status {
     return this.#currentStatus;
   }
   snapshotProcessInfo(): Process.Process {
@@ -346,7 +346,7 @@ export class Impl<I, O, R> implements ProcessManager.Handle<I, O, any> {
       yield* this.#cleanup();
     }).pipe(Effect.withSpan('Process.terminate', { attributes: this.#spanAttributes() }));
   }
-  hydrate(definition: Operation.Durable<I, O, any, any>): Effect.Effect<ProcessManager.Handle<I, O, any>> {
+  hydrate(definition: Operation.Durable<I, O, any, any>): Effect.Effect<Process.Handle<I, O, any>> {
     if (definition.key !== this.key) {
       return Effect.die(
         new Error(`Process definition key mismatch for ${this.pid}: expected "${this.key}", got "${definition.key}"`),
@@ -576,7 +576,7 @@ export class Impl<I, O, R> implements ProcessManager.Handle<I, O, any> {
     return this.#alarmDueAt;
   }
 
-  get status(): ProcessManager.Status {
+  get status(): Process.Status {
     return this.#currentStatus;
   }
   requestSucceed(): void {
@@ -853,13 +853,11 @@ export class Impl<I, O, R> implements ProcessManager.Handle<I, O, any> {
     if (state !== this.#currentStatus.state) {
       log('lifecycle: state', { state, previous: this.#currentStatus.state });
     }
-    const isTerminal =
-      state === Process.State.SUCCEEDED || state === Process.State.TERMINATED || state === Process.State.FAILED;
     this.#currentStatus = {
       state,
       exit: exit ? Option.some(exit) : Option.none(),
       startedAt: this.#currentStatus.startedAt,
-      completedAt: isTerminal ? Option.some(new Date()) : Option.none(),
+      completedAt: Process.isExited(state) ? Option.some(new Date()) : Option.none(),
     };
     log('state updated', { pid: this.pid, state });
     this.#registry.refresh(this.statusAtom);

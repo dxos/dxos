@@ -10,7 +10,7 @@ import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
 import * as Worker from '@dxos/worker-framework/Worker';
 
 import { STORAGE_LOCK_KEY } from '../lock-key.ts';

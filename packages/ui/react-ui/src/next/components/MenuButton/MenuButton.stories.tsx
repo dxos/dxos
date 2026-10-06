@@ -11,7 +11,10 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { byTestId, expectAnchoredBelow, expectPopupSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Group, MenuButton, type MenuButtonItem, Typography } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import { MenuButton, type MenuButtonItem } from './MenuButton.tsx';
 
 const DEVICES = ['Built-in microphone', 'USB headset'];
 
@@ -76,7 +79,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         }))}
         data-testid={`view-${size}`}
       />
-      <Typography data-testid={`state-${size}`}>{`${mode} · ${device || 'default'} · ${extraction}`}</Typography>
+      <Typography.Text
+        data-testid={`state-${size}`}
+      >{`${mode} · ${device || 'default'} · ${extraction}`}</Typography.Text>
     </Group>
   );
 };

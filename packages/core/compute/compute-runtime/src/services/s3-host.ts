@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { type S3Host } from '@dxos/blob/s3';
 import * as Credential from '@dxos/compute/Credential';
 import { Database, Query } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type SpaceId } from '@dxos/keys';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';

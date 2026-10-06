@@ -9,15 +9,15 @@ import * as Exit from 'effect/Exit';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
@@ -36,6 +36,9 @@ import {
   type TaskPlacement,
   type TaskSelectModifiers,
 } from '@dxos/react-ui-task';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -65,7 +68,7 @@ export const TaskSetArticle = ({
   subject: taskSet,
   showDescription = true,
 }: TaskSetArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
@@ -119,7 +122,7 @@ export const TaskSetArticle = ({
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Files dropped on the create pane attach once the task exists: the create answers with the new
   // task's id, and the live object is in the working set by then, since this client wrote it.
   const attachFile = useAttachFile();
@@ -153,18 +156,18 @@ export const TaskSetArticle = ({
     [invokePromise, taskSet, spaceId, attachFile, db],
   );
 
-  const handleUpdate = useOperation(
+  const handleUpdate = Hooks.useOperation(
     TaskOperation.UpdateTask,
     (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
   );
 
-  const handleDelete = useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
+  const handleDelete = Hooks.useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
     spaceId,
   });
 
   const currentId = useSelection(attendableId, 'single');
-  const openDetail = useDetailNavigation({
+  const openDetail = ToolkitHooks.useDetailNavigation({
     contextId: attendableId,
     getPath: (id) => `${attendableId}/${id}`,
   });
@@ -223,7 +226,7 @@ export const TaskSetArticle = ({
   // unloaded, so with the rows already in hand the write commits in the same tick the gesture ends.
   // Going through the invoker instead re-rendered from the model before the write landed and again
   // after it, which is the jump.
-  const move = useOperationHandler(
+  const move = Hooks.useOperationHandler(
     TaskOperation.MoveTask,
     (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
       task: Ref.make(task),
@@ -422,7 +425,7 @@ const useFilterQuery = (
  * which rows an action will act on, so with nothing to act on it is an affordance that does nothing.
  */
 const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
-  const actions = useCapabilities(TasksCapabilities.TaskAction);
+  const actions = Hooks.useCapabilities(TasksCapabilities.TaskAction);
   const ids = useSelection(taskSet.id, 'multi');
   const { toggle } = useSelectionActions(taskSet.id);
   const checked = useMemo(() => new Set(ids), [ids]);

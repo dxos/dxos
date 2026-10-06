@@ -12,7 +12,11 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size } from '../../sizes.ts';
 import { byTestId, expectPopupSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { AlertDialog, Button, DIALOG_AUTOFOCUS_ATTRIBUTE, Group, Typography } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import * as Dialog from '../Dialog/Dialog.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as AlertDialog from './AlertDialog.tsx';
 
 type ConfirmProps = {
   /** Overrides the size the dialog inherits from its trigger's row. */
@@ -40,7 +44,7 @@ const Confirm = ({ contentSize, testId, autofocusAction, onAction }: ConfirmProp
         <AlertDialog.Action
           variant='destructive'
           onClick={onAction}
-          {...(autofocusAction && { [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' })}
+          {...(autofocusAction && { [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' })}
         >
           Delete
         </AlertDialog.Action>
@@ -64,7 +68,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         autofocusAction
         onAction={() => setDeleted((count) => count + 1)}
       />
-      <Typography data-testid={`deleted-${size}`}>Deleted {deleted}</Typography>
+      <Typography.Text data-testid={`deleted-${size}`}>Deleted {deleted}</Typography.Text>
     </Group>
   );
 };
@@ -86,8 +90,8 @@ export const Default: Story = {};
 
 /**
  * An `alertdialog` named by its title and described by its description; it opens with focus on Cancel (the least
- * destructive choice) unless a control carries `DIALOG_AUTOFOCUS_ATTRIBUTE`. A click outside does not dismiss it;
- * Cancel and Escape close it without acting; Action runs its handler and closes. The story ends open.
+ * destructive choice) unless a control carries `DIALOG_AUTOFOCUS_ATTRIBUTE`. Neither Escape nor a click outside dismisses
+ * it; Cancel closes it without acting; Action runs its handler and closes. The story ends open.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -117,6 +121,9 @@ export const Test: Story = {
     dialog = await body.findByRole('alertdialog');
     await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus());
     await userEvent.keyboard('{Escape}');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await expect(body.getByRole('alertdialog')).toBe(dialog);
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(body.queryByRole('alertdialog')).toBeNull());
 
     await userEvent.click(trigger);
@@ -129,7 +136,7 @@ export const Test: Story = {
     await userEvent.click(byTestId(canvasElement, 'confirm-sm-trigger'));
     dialog = await body.findByRole('alertdialog');
     await expectPopupSize(dialog, 'sm');
-    await userEvent.keyboard('{Escape}');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(body.queryByRole('alertdialog')).toBeNull());
 
     // The marked control takes focus instead of Cancel; rest open.

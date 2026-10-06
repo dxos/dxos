@@ -16,6 +16,7 @@ import {
   detachAll,
   installProbes,
   installReactProbe,
+  latencySummary,
   launchInstrumentedBrowser,
   listTargets,
   parseCounters,
@@ -28,6 +29,8 @@ import {
   writePosthogBatch,
   writeRunReport,
 } from '@dxos/perf-harness';
+
+import { PERF_PORT, SERVING_MODE } from './perf/server.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
 
@@ -54,12 +57,12 @@ const ITERATIONS = Math.max(1, Number.parseInt(process.env.DX_PERF_ITERATIONS ??
 /** The costed work counters (`DX_PERF_COUNTERS`: `all`, `none`, or e.g. `trace,react`). */
 const COUNTERS = parseCounters(process.env.DX_PERF_COUNTERS);
 
-const storyUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
+const storyUrl = (storyId: string) => `http://localhost:${PERF_PORT}/iframe.html?id=${storyId}&viewMode=story`;
 
 /** The closing line the scripted model emits only after its twentieth tool result. */
 const DONE = /Done — ran 20 calculations/;
 
-/** Idle after ready before the first measured stage, since a dev server keeps streaming modules in. */
+/** Idle after ready before the first measured stage, so boot's trailing work (and a dev server's module stream) lands outside it. */
 const SETTLE_MS = 10_000;
 
 /** Wait after the turns before the retained-memory read: twice the registry's 5 s idle TTL. */
@@ -98,7 +101,7 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     const network = trackNetwork(page);
 
     const comparability: Comparability = {
-      servingMode: 'dev',
+      servingMode: SERVING_MODE,
       pluginSet: 'storybook',
       profileState: 'returning',
       settleMs: SETTLE_MS,
@@ -234,6 +237,10 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     }
     for (const row of rows) {
       log.info('stage', summarize(row));
+      if (row.latency) {
+        log.info('submit path', { stage: row.stage, steps: row.latency.submitPath });
+        log.info('turn path', { stage: row.stage, steps: row.latency.turnPath });
+      }
     }
     runner.dispose();
 
@@ -273,4 +280,10 @@ const summarize = (row: StageRow) => ({
   heapMB: Math.round(row.heapUsedTotalBytes / MB),
   domNodes: row.domNodes,
   lagMaxMs: row.responsiveness.lagMaxMs,
+  ...(row.latency
+    ? {
+        submitToRequestMs: row.latency.submitToRequestMs,
+        turnToRequest: latencySummary(row.latency.turnToRequestMs),
+      }
+    : {}),
 });

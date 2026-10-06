@@ -20,11 +20,12 @@ import React, {
   useRef,
 } from 'react';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useStable } from '@dxos/react-hooks';
-import { Position, shallowEqual } from '@dxos/util';
+import { shallowEqual } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { ActivationEvents, Capabilities, Role } from '../../../common/index.ts';
 import { type PluginManager } from '../../../core/index.ts';

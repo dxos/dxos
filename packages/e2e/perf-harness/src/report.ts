@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { latencySummary } from './collectors/latency.ts';
 import { type HeapReading, type StageRow, type TargetKind } from './types.ts';
 
 /** Repo-root-relative, alongside the startup harness's rows. */
@@ -209,8 +210,8 @@ export const dataColumn = (name: string): string => {
 };
 
 /**
- * The costed counters' columns, present only when the counter ran: a zero from a counter that was
- * off would read as "no work", which is the one thing these columns must never say falsely.
+ * The optional readings' columns (costed counters, request latency), present only when measured: a
+ * zero from a reading that was off would read as "no work", which these columns must never say falsely.
  */
 const counterColumns = (row: StageRow): Record<string, number | boolean> => {
   const columns: Record<string, number | boolean> = {};
@@ -253,6 +254,19 @@ const counterColumns = (row: StageRow): Record<string, number | boolean> => {
       reactMounts: row.react.mounts,
       reactWastedRenders: row.react.wastedRenders,
       reactRenderers: row.react.renderers,
+    });
+  }
+  if (row.latency) {
+    const submit = latencySummary(row.latency.submitToRequestMs);
+    const turn = latencySummary(row.latency.turnToRequestMs);
+    Object.assign(columns, {
+      submitToRequestP50Ms: submit.p50,
+      submitToRequestMaxMs: submit.max,
+      submitToRequestCount: submit.count,
+      turnToRequestP50Ms: turn.p50,
+      turnToRequestMaxMs: turn.max,
+      turnToRequestCount: turn.count,
+      markRealms: row.latency.realms,
     });
   }
   if (row.data) {

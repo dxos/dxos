@@ -7,7 +7,7 @@ import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';

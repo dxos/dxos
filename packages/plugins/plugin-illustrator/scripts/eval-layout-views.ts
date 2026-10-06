@@ -3,33 +3,45 @@
 //
 
 //
-// Evaluates the text views of a diagram's layout (`View` in `@dxos/diagram`) that let System One, which
-// reads no images, judge a diagram as drawn. Two measures per view:
-//   - layout questions whose answers are read off the geometry (is X above Y, do lines cross, which way
-//     the arrows run): accuracy against the truth;
-//   - the architecture rules (`Architecture.RULES`): distance and correlation to a reference grader
-//     that saw the rendered image.
-// `--questions out.json` writes the questions for the reference grader; `--reference answers.json` runs
-// System One over every view and prints the comparison. Needs `TYPESAFE_API_KEY`.
+// Evaluates how a judge reads a diagram as drawn, and whether that reading picks better layouts. A grader
+// is a judge and a view of the page: `jev:ascii+rows` gives Jev, which reads no images, the text views
+// (`View` in `@dxos/diagram`); `clef:image` gives Clef the rendered PNG. Every diagram is laid out once per
+// layering (`--layerings down,up,free`), and each grader answers three things per drawing:
+//   - layout questions whose answers are read off the geometry (is X above Y, do lines cross, which way the
+//     arrows run): accuracy against the truth;
+//   - the architecture and aesthetic rules (`Architecture.RULES`, `Aesthetics.RULES`): distance and
+//     correlation to a reference grader that saw the rendered image;
+//   - which layering it would ship (highest mean aesthetic score): how often that is the reference's pick,
+//     and how much worse the reference rates it than its own pick.
+// `--questions out.json` writes the questions and PNGs for the reference grader; `--reference answers.json`
+// runs the graders (`--graders jev:ascii+rows,clef:image`) and prints the comparison. Jev needs
+// `TYPESAFE_API_KEY`; Clef needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`.
 // Run: `moon run plugin-illustrator:eval-layout-views -- --reference /abs/answers.json /abs/path/x.mmd …`.
 //
 
 import * as Decision from 'effect/ai/Decision';
 import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/http/FetchHttpClient';
-import * as Layer from 'effect/Layer';
-import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, resolve } from 'node:path';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 
-import { AiModelResolver, AiService } from '@dxos/ai';
-import { TypeSafeResolver } from '@dxos/ai/resolvers';
-import { Architecture, Diagnostics, Mermaid, MermaidEngine, type Scene, Score, View } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import {
+  Aesthetics,
+  Architecture,
+  Diagnostics,
+  Mermaid,
+  MermaidEngine,
+  Objective,
+  type Scene,
+  Score,
+  View,
+} from '@dxos/diagram';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-const MODEL = 'ai.typesafe.model.jev.latest';
+import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
+import { IMAGE_NOTE, type Judge, decisionModel, isJudge, seesImages } from './judges.ts';
+import { toPngs } from './render.tsx';
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
@@ -38,17 +50,23 @@ const objectsOf = (commands: readonly Scene.Command[]) =>
 const nameOf = (path: string) =>
   `${basename(dirname(path)) === 'ideas' ? 'ideas' : path.includes('-v0') ? 'draft' : 'corpus'}-${basename(path, '.mmd')}`;
 
-// `none-again` repeats `none`, so the table shows how far System One moves between identical calls.
-const VIEWS: Record<string, (objects: readonly Scene.WorldObject[]) => string | undefined> = {
-  'none': () => undefined,
-  'none-again': () => undefined,
-  'coordinates': (objects) => View.coordinates(objects),
-  'ascii': (objects) => View.ascii(objects),
-  'ascii-coarse': (objects) => View.ascii(objects, { column: 12, row: 32 }),
-  'rows': (objects) => View.rows(objects),
-  'ascii+rows': (objects) => `${View.ascii(objects)}\n\n${View.rows(objects)}`,
-  'coordinates+rows': (objects) => `${View.coordinates(objects)}\n\n${View.rows(objects)}`,
+/** What a grader is shown of the page beside the graph: text in `layout`, and whether the PNG goes too. */
+type Rendering = { layout: (objects: readonly Scene.WorldObject[]) => string | undefined; image?: boolean };
+
+const VIEWS: Record<string, Rendering> = {
+  'none': { layout: () => undefined },
+  'coordinates': { layout: (objects) => View.coordinates(objects) },
+  'ascii': { layout: (objects) => View.ascii(objects) },
+  'rows': { layout: (objects) => View.rows(objects) },
+  'ascii+rows': { layout: (objects) => `${View.ascii(objects)}\n\n${View.rows(objects)}` },
+  'coordinates+rows': { layout: (objects) => `${View.coordinates(objects)}\n\n${View.rows(objects)}` },
+  'image': { layout: () => IMAGE_NOTE, image: true },
+  'image+rows': { layout: (objects) => `${IMAGE_NOTE}\n\n${View.rows(objects)}`, image: true },
 };
+
+/** The aesthetic rules as a grader reads them: with the image, they name it instead of the text drawing. */
+const aestheticsFor = (view: Rendering): readonly Architecture.Rule[] =>
+  view.image ? Aesthetics.IMAGE_RULES : Aesthetics.RULES;
 
 type Question = {
   key: string;
@@ -177,40 +195,91 @@ const layoutDefinition = (questions: readonly Question[]) =>
     ),
   });
 
-/** One diagram's answers: a probability per yes/no question or rule, a key per choice. */
+/** One drawing's answers: a probability per yes/no question or rule, a key per choice. */
 type Answers = { rules: Record<string, number>; layout: Record<string, number | string> };
-type Diagram = { name: string; objects: Scene.WorldObject[]; content: Architecture.Content; questions: Question[] };
 
-const load = (path: string) =>
+type Diagram = {
+  /** `<source>@<layering>`. */
+  name: string;
+  source: string;
+  layering: MermaidEngine.Layering;
+  objects: Scene.WorldObject[];
+  content: Architecture.Content;
+  questions: Question[];
+  /** The layout objective's overall score: what the engine optimizes when no judge is asked. */
+  objective: number;
+  svg: string;
+  png?: DecisionModel.Image;
+};
+
+type Grader = { id: string; judge: Judge; view: Rendering };
+
+const parseGrader = (id: string): Grader => {
+  const [judge, view] = id.split(':');
+  if (!isJudge(judge) || !VIEWS[view]) {
+    throw new Error(`Unknown grader ${id}: expected <jev|clef|clef-flash>:<${Object.keys(VIEWS).join('|')}>.`);
+  }
+  if (VIEWS[view].image && !seesImages(judge)) {
+    throw new Error(`${judge} reads no images, so it cannot grade ${view}.`);
+  }
+  return { id, judge, view: VIEWS[view] };
+};
+
+const load = (path: string, layering: MermaidEngine.Layering) =>
   Effect.gen(function* () {
     const source = readFileSync(path, 'utf8');
-    const objects = objectsOf(yield* Effect.promise(() => MermaidEngine.compile(source)));
-    // No caption: the rendered image has none, so both graders see the same diagram.
-    const content = Architecture.contentOf(Mermaid.parse(source));
-    return { name: nameOf(path), objects, content, questions: questionsOf(objects) } satisfies Diagram;
+    const objects = objectsOf(yield* Effect.promise(() => MermaidEngine.compile(source, { layering: [layering] })));
+    const objective = yield* Score.evaluate(Score.fromObjective(Objective.DEFAULT), {
+      objects,
+      report: Diagnostics.analyze(objects),
+    });
+    const diagram: Diagram = {
+      name: `${nameOf(path)}@${layering}`,
+      source: nameOf(path),
+      layering,
+      objects,
+      // No caption: the rendered image has none, so every grader sees the same diagram.
+      content: Architecture.contentOf(Mermaid.parse(source)),
+      questions: questionsOf(objects),
+      objective: Score.overall(objective) ?? 0,
+      svg: toSvgFile(objects),
+    };
+    return diagram;
   });
 
-const ask = ({ content, objects, questions }: Diagram, render: (typeof VIEWS)[string]) =>
+const ruleKeys = (rules: readonly Architecture.Rule[]) => rules.map(({ key }) => key);
+
+const ask = (diagram: Diagram, { judge, view }: Grader) =>
   Effect.gen(function* () {
-    const layout = render(objects);
-    const [rules, answers] = yield* Effect.all(
+    const layout = view.layout(diagram.objects);
+    const content = { ...diagram.content, ...(layout ? { layout } : {}) };
+    const images = view.image && diagram.png ? [diagram.png] : undefined;
+    const aesthetics = aestheticsFor(view);
+    const [architecture, looks, answers] = yield* Effect.all(
       [
-        Score.evaluate([Architecture.judge()], { content: { ...content, ...(layout ? { layout } : {}) } }),
-        DecisionModel.decide(layoutDefinition(questions), { input: { content, ...(layout ? { layout } : {}) } }),
+        Score.evaluate([Architecture.judge()], { content, images }),
+        // Without a drawing there is nothing for the aesthetic rules to judge.
+        layout ? Score.evaluate([Aesthetics.judge(aesthetics)], { content, images }) : Effect.succeed([]),
+        DecisionModel.decide(layoutDefinition(diagram.questions), {
+          input: { content, ...(layout ? { layout } : {}) },
+          images,
+        }),
       ],
-      { concurrency: 2 },
+      { concurrency: 3 },
     );
+    const keys = [...ruleKeys(Architecture.RULES), ...(layout ? ruleKeys(aesthetics) : [])];
+    const scores = [...architecture, ...looks];
     const layoutAnswers: Record<string, number | string> = {};
     for (const [key, answer] of Object.entries(answers.answers)) {
       layoutAnswers[key] = 'probability' in answer ? answer.probability : 'label' in answer ? answer.label : '';
     }
     return {
       rules: Object.fromEntries(
-        Architecture.RULES.flatMap(({ key }, index) => (rules[index].error ? [] : [[key, rules[index].score]])),
+        keys.flatMap((key, index) => (scores[index].error ? [] : [[key, scores[index].score]])),
       ),
       layout: layoutAnswers,
     } satisfies Answers;
-  });
+  }).pipe(Effect.provide(decisionModel(judge)));
 
 const mean = (values: readonly number[]) => values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1);
 
@@ -223,126 +292,200 @@ const pearson = (pairs: readonly (readonly [number, number])[]) => {
   return spread ? covariance / spread : 0;
 };
 
-const accuracy = (diagrams: readonly Diagram[], answersOf: (name: string) => Answers | undefined, type?: string) => {
-  const outcomes = diagrams.flatMap(({ name, questions }) =>
-    questions
-      .filter((question) => !type || question.type === type)
-      .flatMap(({ key, truth }) => {
-        const answer = answersOf(name)?.layout[key];
-        if (answer === undefined) {
-          return [];
-        }
-        return [typeof truth === 'boolean' ? Number(answer) > 0.5 === truth : answer === truth];
-      }),
-  );
-  return outcomes.length ? `${Math.round(mean(outcomes.map(Number)) * 100)}%` : '—';
-};
+const percent = (outcomes: readonly boolean[]) =>
+  outcomes.length ? `${Math.round(mean(outcomes.map(Number)) * 100)}%` : '—';
 
-const rulesAgreement = (
+const accuracy = (diagrams: readonly Diagram[], answersOf: (name: string) => Answers | undefined, type?: string) =>
+  percent(
+    diagrams.flatMap(({ name, questions }) =>
+      questions
+        .filter((question) => !type || question.type === type)
+        .flatMap(({ key, truth }) => {
+          const answer = answersOf(name)?.layout[key];
+          if (answer === undefined) {
+            return [];
+          }
+          return [typeof truth === 'boolean' ? Number(answer) > 0.5 === truth : answer === truth];
+        }),
+    ),
+  );
+
+const agreement = (
   diagrams: readonly Diagram[],
   answersOf: (name: string) => Answers | undefined,
   reference: Record<string, Answers>,
-  rule?: string,
+  keys: readonly string[],
 ) => {
   const pairs = diagrams.flatMap(({ name }) =>
-    Architecture.RULES.filter(({ key }) => !rule || key === rule).flatMap(({ key }) => {
+    keys.flatMap((key) => {
       const [mine, theirs] = [answersOf(name)?.rules[key], reference[name]?.rules[key]];
       return mine === undefined || theirs === undefined ? [] : [[mine, theirs] as const];
     }),
   );
   return pairs.length
-    ? { mae: mean(pairs.map(([mine, theirs]) => Math.abs(mine - theirs))), r: pearson(pairs) }
-    : undefined;
+    ? `${mean(pairs.map(([mine, theirs]) => Math.abs(mine - theirs))).toFixed(2)} r${pearson(pairs).toFixed(2)}`
+    : '—';
 };
 
-const decisionModel = AiService.decisionModel(MODEL).pipe(
-  Layer.provide(AiModelResolver.buildAiService),
-  Layer.provide(
-    TypeSafeResolver.make({
-      apiKey: Effect.sync(() => Redacted.make(process.env.TYPESAFE_API_KEY ?? '')),
-    }),
-  ),
-  Layer.provide(FetchHttpClient.layer),
-);
+const AESTHETICS = ruleKeys(Aesthetics.RULES);
+const ARCHITECTURE = ruleKeys(Architecture.RULES);
+
+/** A drawing's mean aesthetic score under one grader; undefined when it judged none. */
+const looksOf = (answers: Answers | undefined) => {
+  const values = AESTHETICS.flatMap((key) => (answers?.rules[key] === undefined ? [] : [answers.rules[key]]));
+  return values.length ? mean(values) : undefined;
+};
+
+/**
+ * How well a grader picks the layering to ship, against the reference: how often its favourite is the
+ * reference's, how often it orders a pair of layerings as the reference does, and how far below the
+ * reference's favourite the reference rates the grader's (the regret of shipping its choice).
+ */
+const selection = (
+  diagrams: readonly Diagram[],
+  scoreOf: (diagram: Diagram) => number | undefined,
+  reference: Record<string, Answers>,
+) => {
+  const bySource = Map.groupBy(diagrams, ({ source }) => source);
+  const [top, pairs, regrets]: [boolean[], boolean[], number[]] = [[], [], []];
+  for (const variants of bySource.values()) {
+    const scored = variants.flatMap((diagram) => {
+      const [mine, theirs] = [scoreOf(diagram), looksOf(reference[diagram.name])];
+      return mine === undefined || theirs === undefined ? [] : [{ mine, theirs }];
+    });
+    if (scored.length < 2) {
+      continue;
+    }
+    const best = (pick: (entry: (typeof scored)[number]) => number) =>
+      scored.reduce((winner, entry) => (pick(entry) > pick(winner) ? entry : winner));
+    const [mineBest, theirsBest] = [best(({ mine }) => mine), best(({ theirs }) => theirs)];
+    top.push(mineBest === theirsBest);
+    regrets.push(theirsBest.theirs - mineBest.theirs);
+    scored.forEach((first, index) =>
+      scored.slice(index + 1).forEach((second) => {
+        if (first.theirs !== second.theirs) {
+          pairs.push(first.mine > second.mine === first.theirs > second.theirs);
+        }
+      }),
+    );
+  }
+  return `${percent(top).padEnd(8)} ${percent(pairs).padEnd(8)} ${(regrets.length ? mean(regrets) : 0).toFixed(3)}`;
+};
 
 const argument = (flag: string) => {
   const index = process.argv.indexOf(flag);
   return index > 0 ? process.argv[index + 1] : undefined;
 };
 
+const DEFAULT_GRADERS = 'jev:ascii+rows,clef:ascii+rows,clef:image,clef:image+rows,clef-flash:image';
+
 const program = Effect.gen(function* () {
   const paths = process.argv.slice(2).filter((arg) => arg.endsWith('.mmd'));
-  const diagrams = yield* Effect.forEach(paths, (path) => load(resolve(path)), { concurrency: 4 });
+  const layerings = (argument('--layerings') ?? 'down,up,free')
+    .split(',')
+    .filter((value): value is MermaidEngine.Layering => ['down', 'up', 'free'].includes(value));
+  const graders = (argument('--graders') ?? DEFAULT_GRADERS).split(',').map(parseGrader);
+  const diagrams = yield* Effect.forEach(
+    paths.flatMap((path) => layerings.map((layering) => [resolve(path), layering] as const)),
+    ([path, layering]) => load(path, layering),
+    { concurrency: 4 },
+  );
+  const pngs = yield* Effect.promise(() => toPngs(diagrams.map(({ svg }) => svg)));
+  diagrams.forEach((diagram, index) => (diagram.png = pngs[index]));
 
   const questionsFile = argument('--questions');
   if (questionsFile) {
+    const imageDir = join(dirname(resolve(questionsFile)), 'images');
+    mkdirSync(imageDir, { recursive: true });
     writeFileSync(
       questionsFile,
       JSON.stringify(
         {
-          rules: Architecture.RULES.map(({ key, instructions, criteria }) => ({
+          rules: [...Architecture.RULES, ...aestheticsFor(VIEWS.image)].map(({ key, instructions, criteria }) => ({
             key,
             question: instructions,
             criteria,
           })),
           diagrams: Object.fromEntries(
-            diagrams.map(({ name, questions }) => [
-              name,
-              questions.map(({ key, question, options }) => ({ key, question, ...(options ? { options } : {}) })),
-            ]),
+            diagrams.map(({ name, questions, png }) => {
+              const image = join(imageDir, `${name}.png`);
+              writeFileSync(image, Buffer.from(typeof png?.data === 'string' ? png.data : '', 'base64'));
+              return [
+                name,
+                {
+                  image,
+                  questions: questions.map(({ key, question, options }) => ({
+                    key,
+                    question,
+                    ...(options ? { options } : {}),
+                  })),
+                },
+              ];
+            }),
           ),
         },
         null,
         2,
       ),
     );
-    console.log(`wrote ${diagrams.length} diagrams' questions to ${questionsFile}`);
+    console.log(`wrote ${diagrams.length} drawings' questions to ${questionsFile} and their images to ${imageDir}`);
     return;
   }
 
   const referenceFile = argument('--reference');
   if (!referenceFile) {
     for (const { name, objects } of diagrams) {
-      for (const [view, render] of Object.entries(VIEWS)) {
-        console.log(`\n=== ${name} × ${view}\n${render(objects) ?? '(none)'}`);
+      for (const [view, { layout }] of Object.entries(VIEWS)) {
+        console.log(`\n=== ${name} × ${view}\n${layout(objects) ?? '(none)'}`);
       }
     }
     return;
   }
   const reference: Record<string, Answers> = JSON.parse(readFileSync(referenceFile, 'utf8'));
-  // `--views a,b` reruns a subset, e.g. after changing one view.
-  const views = argument('--views')?.split(',') ?? Object.keys(VIEWS);
-  const results = new Map<string, Answers>();
-  yield* Effect.forEach(
-    diagrams.flatMap((diagram) => views.map((view) => ({ diagram, view, render: VIEWS[view] }))),
-    ({ diagram, view, render }) =>
-      ask(diagram, render).pipe(
-        Effect.tap((answers) => Effect.sync(() => results.set(`${view}/${diagram.name}`, answers))),
-        Effect.catch((error) =>
-          Effect.sync(() =>
-            console.error(`${diagram.name} × ${view}: ${error instanceof Error ? error.message : error}`),
-          ),
-        ),
+  // Never over the reference: its answers are the costly half of the eval.
+  const resultsFile = referenceFile.replace(/(\.json)?$/i, '.graders.json');
+  const results = new Map<string, Answers>(
+    Object.entries(
+      JSON.parse(
+        (() => {
+          try {
+            return readFileSync(resultsFile, 'utf8');
+          } catch {
+            return '{}';
+          }
+        })(),
       ),
+    ),
+  );
+  // Answers already on file are reused, so `--graders` can add one grader without re-asking the rest.
+  yield* Effect.forEach(
+    diagrams.flatMap((diagram) => graders.map((grader) => ({ diagram, grader }))),
+    ({ diagram, grader }) =>
+      results.has(`${grader.id}/${diagram.name}`)
+        ? Effect.void
+        : ask(diagram, grader).pipe(
+            Effect.tap((answers) => Effect.sync(() => results.set(`${grader.id}/${diagram.name}`, answers))),
+            Effect.catch((error) =>
+              Effect.sync(() =>
+                console.error(`${diagram.name} × ${grader.id}: ${error instanceof Error ? error.message : error}`),
+              ),
+            ),
+          ),
     { concurrency: 4 },
   );
-  // Never over the reference: its answers are the costly half of the eval.
-  const resultsFile = /\.json$/i.test(referenceFile)
-    ? referenceFile.replace(/\.json$/i, '.jev.json')
-    : `${referenceFile}.jev.json`;
   writeFileSync(resultsFile, JSON.stringify(Object.fromEntries(results), null, 2));
 
-  const graders: [string, (name: string) => Answers | undefined][] = [
+  const columns: [string, (name: string) => Answers | undefined][] = [
     ['reference (image)', (name) => reference[name]],
-    ...views.map((view): [string, (name: string) => Answers | undefined] => [
-      `jev ${view}`,
-      (name) => results.get(`${view}/${name}`),
+    ...graders.map(({ id }): [string, (name: string) => Answers | undefined] => [
+      id,
+      (name) => results.get(`${id}/${name}`),
     ]),
   ];
   const types = [...new Set(diagrams.flatMap(({ questions }) => questions.map(({ type }) => type)))];
-  console.log(`\nLayout questions — accuracy against the geometry, ${diagrams.length} diagrams`);
+  console.log(`\nLayout questions — accuracy against the geometry, ${diagrams.length} drawings`);
   console.log(['grader'.padEnd(22), 'all'.padEnd(6), ...types.map((type) => type.padEnd(10))].join(' '));
-  for (const [grader, answersOf] of graders) {
+  for (const [grader, answersOf] of columns) {
     console.log(
       [
         grader.padEnd(22),
@@ -351,16 +494,35 @@ const program = Effect.gen(function* () {
       ].join(' '),
     );
   }
-  console.log('\nArchitecture rules — mean |jev − reference| and Pearson r over every diagram × rule');
-  const rules = Architecture.RULES.map(({ key }) => key);
-  console.log(['grader'.padEnd(22), 'all'.padEnd(12), ...rules.map((rule) => rule.slice(0, 12).padEnd(12))].join(' '));
-  for (const [grader, answersOf] of graders.slice(1)) {
-    const cell = (rule?: string) => {
-      const agreement = rulesAgreement(diagrams, answersOf, reference, rule);
-      return (agreement ? `${agreement.mae.toFixed(2)} r${agreement.r.toFixed(2)}` : '—').padEnd(12);
-    };
-    console.log([grader.padEnd(22), cell(), ...rules.map(cell)].join(' '));
+
+  console.log('\nRules — mean |grader − reference| and Pearson r over every drawing × rule');
+  console.log(
+    [
+      'grader'.padEnd(22),
+      'architecture'.padEnd(12),
+      'aesthetics'.padEnd(12),
+      ...AESTHETICS.map((key) => key.slice(0, 12).padEnd(12)),
+    ].join(' '),
+  );
+  for (const [grader, answersOf] of columns.slice(1)) {
+    console.log(
+      [
+        grader.padEnd(22),
+        agreement(diagrams, answersOf, reference, ARCHITECTURE).padEnd(12),
+        agreement(diagrams, answersOf, reference, AESTHETICS).padEnd(12),
+        ...AESTHETICS.map((key) => agreement(diagrams, answersOf, reference, [key]).padEnd(12)),
+      ].join(' '),
+    );
+  }
+
+  console.log(`\nPicking a layering (${layerings.join(', ')}) by mean aesthetic score, against the reference's pick`);
+  console.log(['chooser'.padEnd(22), 'top-1'.padEnd(8), 'pairs'.padEnd(8), 'regret'].join(' '));
+  console.log(`${'layout objective'.padEnd(22)} ${selection(diagrams, ({ objective }) => objective, reference)}`);
+  for (const { id } of graders) {
+    console.log(
+      `${id.padEnd(22)} ${selection(diagrams, ({ name }) => looksOf(results.get(`${id}/${name}`)), reference)}`,
+    );
   }
 });
 
-void EffectEx.runPromise(program.pipe(Effect.provide(decisionModel)));
+void EffectEx.runPromise(program);

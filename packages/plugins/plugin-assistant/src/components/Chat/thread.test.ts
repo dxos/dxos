@@ -92,6 +92,57 @@ describe('projectThread', () => {
     expect(text(messages)).toEqual(['first', 'answer']);
   });
 
+  // The agent sends a turn's prompt to the thread before the feed has it; with no lineage of its own it
+  // must continue from the rewind point, not chain onto the abandoned reply that sorts before it.
+  test('a turn message the feed has not recorded yet follows the rewound head', ({ expect }) => {
+    const first = message('first');
+    const answer = message('answer');
+    const asked = message('asked');
+    const replied = message('replied');
+    const revised = message('revised');
+
+    const { messages } = projectThread({
+      feedMessages: [first, answer, asked, replied],
+      pendingMessages: [replied, revised],
+      rewindFrom: asked.id,
+    });
+    expect(text(messages)).toEqual(['first', 'answer', 'revised']);
+  });
+
+  test('a recorded continuation ends the rewind before its pointer is cleared', ({ expect }) => {
+    const first = message('first');
+    const answer = message('answer');
+    const asked = message('asked');
+    const replied = message('replied');
+    const revised = message('revised');
+    Feed.setParent(revised, answer);
+
+    const { messages } = projectThread({
+      feedMessages: [first, answer, asked, replied, revised],
+      rewindFrom: asked.id,
+    });
+    expect(text(messages)).toEqual(['first', 'answer', 'revised']);
+  });
+
+  // The rewound prompt may itself continue an earlier fork from the same head; that is not the
+  // continuation of this rewind.
+  test('a rewound turn that continues an earlier fork does not end its own rewind', ({ expect }) => {
+    const first = message('first');
+    const answer = message('answer');
+    const asked = message('asked');
+    const replied = message('replied');
+    Feed.setParent(asked, answer);
+    // Delivered twice before the feed records it, which must still render once.
+    const revised = message('revised');
+
+    const { messages } = projectThread({
+      feedMessages: [first, answer, asked, replied],
+      pendingMessages: [revised, revised],
+      rewindFrom: asked.id,
+    });
+    expect(text(messages)).toEqual(['first', 'answer', 'revised']);
+  });
+
   test('an empty feed projects nothing', ({ expect }) => {
     expect(projectThread({ feedMessages: [] }).messages).toEqual([]);
   });
@@ -263,6 +314,25 @@ describe('collapseToolRuns', () => {
     ]);
   });
 
+  // An agent that asks before a call reveals the call, then the request card, then the result.
+  test("a result held apart by a request card joins its call's panel", ({ expect }) => {
+    const call = toolCall('tc-1');
+    const card = request('tc-1');
+    const collapsed = collapseToolRuns([
+      message('prompt'),
+      call,
+      card,
+      toolResult('tc-1'),
+      message('answer', 'assistant'),
+    ]);
+
+    expect(collapsed).toHaveLength(4);
+    expect(collapsed[1].id).toBe(call.id);
+    expect(collapsed[1].blocks.map((block) => block._tag)).toEqual(['toolCall', 'toolResult']);
+    expect(collapsed[2]).toBe(card);
+    expect(text([collapsed[3]])).toEqual(['answer']);
+  });
+
   test('two runs separated by prose stay separate', ({ expect }) => {
     const collapsed = collapseToolRuns([
       toolCall('tc-1'),
@@ -299,6 +369,13 @@ const toolCall = (toolCallId: string) =>
     created: new Date(clock++).toISOString(),
     sender: 'assistant',
     blocks: [{ _tag: 'toolCall', toolCallId, name: 'search', input: '{}', providerExecuted: false }],
+  });
+
+const request = (toolCallId: string) =>
+  Message.make({
+    created: new Date(clock++).toISOString(),
+    sender: 'assistant',
+    blocks: [{ _tag: 'request', requestId: toolCallId, title: 'Run search', toolCallId, options: [] }],
   });
 
 const status = () =>

@@ -6,7 +6,7 @@ import * as AiError from 'effect/ai/AiError';
 import { createServer } from 'node:http';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Models from './Models.ts';
 

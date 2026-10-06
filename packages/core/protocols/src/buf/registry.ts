@@ -24,6 +24,7 @@ import { file_dxos_error } from './proto/gen/dxos/error_pb.ts';
 import { file_dxos_field_options } from './proto/gen/dxos/field_options_pb.ts';
 import { file_dxos_google } from './proto/gen/dxos/google_pb.ts';
 import { file_dxos_halo_credentials } from './proto/gen/dxos/halo/credentials_pb.ts';
+import { file_dxos_halo_inbox } from './proto/gen/dxos/halo/inbox_pb.ts';
 import { file_dxos_halo_invitations } from './proto/gen/dxos/halo/invitations_pb.ts';
 import { file_dxos_halo_keyring } from './proto/gen/dxos/halo/keyring_pb.ts';
 import { file_dxos_halo_signed } from './proto/gen/dxos/halo/signed_pb.ts';
@@ -72,6 +73,7 @@ export const bufRegistry: Registry = createRegistry(
   file_dxos_field_options,
   file_dxos_google,
   file_dxos_halo_credentials,
+  file_dxos_halo_inbox,
   file_dxos_halo_invitations,
   file_dxos_halo_keyring,
   file_dxos_halo_signed,

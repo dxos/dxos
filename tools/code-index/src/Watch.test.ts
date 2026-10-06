@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Store from './Store.ts';
 import * as Watch from './Watch.ts';
@@ -26,7 +26,8 @@ describe('Watch', () => {
   }, 60_000);
 
   afterAll(async () => {
-    await rm(root, { recursive: true, force: true });
+    // Retried: a native call still in flight when the scope closed keeps RocksDB writing until it returns.
+    await rm(root, { recursive: true, force: true, maxRetries: 5 });
   });
 
   test('only source paths count as changes', () => {

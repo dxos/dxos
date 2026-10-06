@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { TablePlugin } from '#plugin';
@@ -15,7 +15,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 describe('TablePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     // on-type-added needs SpaceEvents (not fired in tests).
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), TablePlugin()],
     });
 

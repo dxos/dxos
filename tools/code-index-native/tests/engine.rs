@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use code_index_native::facts::Dict;
 use code_index_native::rules;
-use code_index_native::store::{NativeStore, Stratum};
+use code_index_native::store::{DERIVED_PREFIX, DocumentWrite, NativeStore, Stratum};
 use oxigraph::model::{GraphName, NamedNode, Quad};
 
 /// The IRIs a rule file names, as the N3 parser resolves its prefixes.
@@ -405,6 +405,132 @@ fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
     }
 }
 
+/// The running quad count against a full scan, after every kind of write: a write path that forgets
+/// to report its change shows up here as a drift.
+#[test]
+fn the_quad_count_tracks_every_write() {
+    let strata = shipped();
+    let constants = constants(&strata);
+    let graphs: Vec<String> = (0..4).map(|index| format!("urn:graph:{index}")).collect();
+    let dir = tempfile::tempdir().unwrap();
+    for seed in 1..=8u64 {
+        let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15));
+        let store = if seed % 2 == 0 {
+            NativeStore::in_memory(100_000).unwrap()
+        } else {
+            NativeStore::open(dir.path().join(seed.to_string())).unwrap()
+        };
+        let check = |step: &str| {
+            assert_eq!(
+                store.quad_count().unwrap(),
+                store.scanned_quad_count().unwrap(),
+                "seed {seed}: the count drifted after {step}"
+            );
+        };
+        check("open");
+        let random = |rng: &mut Rng, count: usize| -> Vec<Quad> {
+            (0..count)
+                .map(|_| random_quad(rng, &constants, &graphs))
+                .collect()
+        };
+
+        let initial = random(&mut rng, 120);
+        store
+            .insert_quads(&NativeStore::to_nquads(&initial).unwrap())
+            .unwrap();
+        check("insert");
+        // Repeated quads, and quads already present, must not count twice.
+        store
+            .insert_quads(
+                &NativeStore::to_nquads(&[initial.clone(), random(&mut rng, 10)].concat()).unwrap(),
+            )
+            .unwrap();
+        check("insert with duplicates");
+        store.reason_all(&strata).unwrap();
+        check("reason_all (full)");
+
+        let triples: String = random(&mut rng, 30)
+            .iter()
+            .map(|quad| format!("{} {} {} .\n", quad.subject, quad.predicate, quad.object))
+            .collect();
+        store
+            .put_documents(&[
+                DocumentWrite {
+                    graph: "urn:graph:doc-a".into(),
+                    drop: vec![graphs[0].clone()],
+                    triples: triples.clone(),
+                },
+                DocumentWrite {
+                    graph: "urn:graph:doc-b".into(),
+                    drop: Vec::new(),
+                    triples,
+                },
+            ])
+            .unwrap();
+        check("put_documents");
+        store
+            .put_document_nquads(
+                "urn:graph:doc-a",
+                &[graphs[1].clone()],
+                &NativeStore::to_nquads(&random(&mut rng, 12)).unwrap(),
+            )
+            .unwrap();
+        check("put_document_nquads");
+        // A swap journals once a signature exists, so this one runs the journalled path.
+        store.drop_graphs(&[graphs[2].clone()]).unwrap();
+        check("drop_graphs");
+
+        let existing = store.match_quads(None, None, None, None).unwrap();
+        let removed: Vec<Quad> = (0..20).map(|_| rng.pick(&existing).clone()).collect();
+        let mut removed_and_absent = removed.clone();
+        removed_and_absent.extend(random(&mut rng, 5));
+        store
+            .remove_quads(&NativeStore::to_nquads(&removed_and_absent).unwrap())
+            .unwrap();
+        check("remove (base and derived, some absent)");
+        store.reason_all(&strata).unwrap();
+        check("reason_all (incremental)");
+
+        let derived_graph = format!("{DERIVED_PREFIX}scratch");
+        let derived_quads: Vec<Quad> = random(&mut rng, 6)
+            .into_iter()
+            .map(|quad| {
+                Quad::new(
+                    quad.subject,
+                    quad.predicate,
+                    quad.object,
+                    NamedNode::new_unchecked(derived_graph.as_str()),
+                )
+            })
+            .collect();
+        store
+            .insert_quads(
+                &NativeStore::to_nquads(&[derived_quads.clone(), derived_quads.clone()].concat())
+                    .unwrap(),
+            )
+            .unwrap();
+        check("insert into a derived graph");
+        store
+            .remove_quads(&NativeStore::to_nquads(&derived_quads[..3]).unwrap())
+            .unwrap();
+        check("remove from a derived graph");
+        store
+            .reason(&strata[0].graph, &strata[0].rules, true)
+            .unwrap();
+        check("reason (materialized)");
+        store.invalidate().unwrap();
+        store.reason_all(&strata).unwrap();
+        check("invalidate + reason_all");
+
+        store.clear().unwrap();
+        check("clear");
+        store
+            .insert_quads(&NativeStore::to_nquads(&random(&mut rng, 10)).unwrap())
+            .unwrap();
+        check("insert after clear");
+    }
+}
+
 /// The binding runs writes and reasoning on separate libuv threads: a write landing while a pass
 /// runs must stay journalled for the next one, or incremental maintenance would miss it.
 #[test]
@@ -773,4 +899,37 @@ fn constructs_maintain_like_recomputation() {
             }
         }
     }
+}
+
+#[test]
+fn shared_open_returns_one_store_per_directory() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("native");
+    let first = NativeStore::open_shared(&path).unwrap();
+    // A second opener on another thread, as `serve`'s indexer worker is, gets the same store rather
+    // than RocksDB's lock error.
+    let second = std::thread::spawn({
+        let path = path.clone();
+        move || NativeStore::open_shared(path).unwrap()
+    })
+    .join()
+    .unwrap();
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+
+    second
+        .put_documents(&[DocumentWrite {
+            graph: "https://example.com/file/a".into(),
+            drop: Vec::new(),
+            triples: "<https://example.com/a> <https://example.com/p> <https://example.com/b> .\n"
+                .into(),
+        }])
+        .unwrap();
+    assert_eq!(first.quad_count().unwrap(), 1);
+
+    // Once every handle is gone the directory is released, so a fresh open succeeds and sees the data.
+    drop(first);
+    drop(second);
+    let reopened = NativeStore::open_shared(&path).unwrap();
+    assert_eq!(reopened.quad_count().unwrap(), 1);
+    assert!(NativeStore::open(&path).is_err());
 }

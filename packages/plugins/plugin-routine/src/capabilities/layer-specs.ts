@@ -8,11 +8,11 @@ import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { OpaqueToolkit } from '@dxos/ai';
-import { processStorageLayer } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ClientService } from '@dxos/client';
@@ -26,10 +26,12 @@ import {
   TriggerDispatcher,
   TriggerMonitor,
   TriggerStateStore,
+  UnifiedProcessManager,
 } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Registry } from '@dxos/echo';
 import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
@@ -281,7 +283,7 @@ const RemoteProcessManagerSpec = LayerSpec.make(
         const kvStore = yield* KeyValueStore.KeyValueStore;
         return EdgeProcessManager.fromClient(client, { kvStore, onConnected: onNetworkOnline });
       }),
-    ).pipe(Layer.provide(processStorageLayer)),
+    ).pipe(Layer.provide(ProcessManagerPlugin.storageLayer)),
 );
 
 /**
@@ -317,6 +319,24 @@ const RemoteTraceMonitorSpec = LayerSpec.make(
           : RemoteTraceMonitor.layerNoop;
       }),
     ),
+);
+
+/**
+ * Application-scoped {@link Process.ManagerService}: one surface over the local process manager and the
+ * remote one, so a consumer such as `AgentService` names where a process runs instead of holding both.
+ */
+const ProcessManagerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      ProcessManager.ProcessManagerService,
+      RemoteProcessManager.Service,
+      RemoteTraceMonitor.Service,
+      AtomRegistry.AtomRegistry,
+    ],
+    provides: [Process.ManagerService],
+  },
+  () => UnifiedProcessManager.layer,
 );
 
 const TriggerDispatcherSpec = LayerSpec.make(
@@ -357,6 +377,7 @@ export default Capability.makeModule(() =>
       RemoteOperationInvokerSpec,
       RemoteTraceMonitorSpec,
       RemoteProcessManagerSpec,
+      ProcessManagerSpec,
     ]),
     Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),

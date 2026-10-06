@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, type EntityId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';

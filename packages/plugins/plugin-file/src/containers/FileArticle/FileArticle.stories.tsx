@@ -9,7 +9,7 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { Blob, Database, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { File } from '@dxos/types';

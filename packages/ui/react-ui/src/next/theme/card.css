@@ -91,7 +91,9 @@
     grid-template-columns: subgrid;
     min-width: 0;
   }
-  :is(.dx-card-body, .dx-card-section) > * {
+  /* A plugin surface (`<dx-surface>`, box-less in dev builds) adds no box, so its children take the content track too. */
+  :is(.dx-card-body, .dx-card-section) > *,
+  :is(.dx-card-body, .dx-card-section) > dx-surface > * {
     grid-column: content;
   }
   /* Also through a plugin surface (`<dx-surface>`, box-less), e.g. the Body a `CardContent` surface renders. */
@@ -183,6 +185,10 @@
   .dx-card-row > * {
     grid-row: 1;
     grid-column: content;
+  }
+  /* A row of wrapped text tops its icon against the first line; text pads its first line into a block, as a rail does. */
+  .dx-card-row:has(.dx-typography[data-lines]) {
+    align-items: start;
   }
   .dx-card-row > [data-rail='start'] {
     grid-column: full-start / content-start;
