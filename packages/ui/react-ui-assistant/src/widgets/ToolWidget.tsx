@@ -136,19 +136,19 @@ const toEntries = (blocks: ContentBlock.Any[]): ToolEntry[] => {
 
       case 'toolResult': {
         // A background tool's result answers a call from an earlier turn, so it stands as its own row
-        // rather than answering whichever call in this run is still unanswered.
+        // rather than answering whichever call in this run is still unanswered. A pid reported again
+        // replaces its earlier row: the latest report is the outcome.
         let entry: ToolEntry | undefined;
         if (block.name === BACKGROUND_TOOL) {
-          // Indexed: a pid can be reported more than once, and a shared id is a shared accordion value.
-          entry = {
-            id: `background-${entries.length}`,
-            kind: 'call',
-            active: false,
-            background: true,
-            title: '',
-            icon: TOOL_ICON,
-          };
-          entries.push(entry);
+          const id = `background-${block.toolCallId}`;
+          entry = { id, kind: 'call', active: false, background: true, title: '', icon: TOOL_ICON };
+          // Replaced in place, not moved: `indexById` holds positions of the calls after it.
+          const previous = entries.findIndex((existing) => existing.id === id);
+          if (previous === -1) {
+            entries.push(entry);
+          } else {
+            entries[previous] = entry;
+          }
         } else {
           entry = pending();
         }

@@ -529,6 +529,24 @@ export const ToolkitBackgroundResult: Story = {
   },
 };
 
+/** The same background run reported twice shows once, with the latest report. */
+export const TestToolkitBackgroundDuplicate: Story = {
+  args: {
+    content: toolkit([
+      result('pid-1', BACKGROUND_TOOL, { exitCode: 1 }),
+      result('pid-1', BACKGROUND_TOOL, { exitCode: 0 }),
+    ]),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = await canvas.findByTestId('assistant.tool-call');
+    await expect(row).toHaveTextContent('Background result');
+    await userEvent.click(row);
+    await waitFor(() => expect(canvasElement.textContent).toContain('"exitCode": 0'));
+    await expect(canvasElement.textContent).not.toContain('"exitCode": 1');
+  },
+};
+
 export const ToolkitBackgroundError: Story = {
   args: {
     content: toolkit([

@@ -240,6 +240,16 @@ const Row = ({ children, classNames, streaming }: PropsWithChildren<{ classNames
 const promptReveal = mx('justify-end', reveal);
 
 /**
+ * Whether an answer row carries the toolbar: only when it has prose to copy or stats to show. A row
+ * of machinery alone (a synthetic prompt, a tool run) would otherwise reserve a blank toolbar line.
+ */
+const hasToolbar = (message: Message.Message): boolean =>
+  message.blocks.some(
+    (block) =>
+      block._tag === 'stats' || (block._tag === 'text' && block.disposition !== 'synthetic' && !!block.text.trim()),
+  );
+
+/**
  * The assistant feed's per-message frame: the reader's prompts and the model's answers are framed
  * differently because they are different kinds of thing — a prompt is an instruction the thread
  * can be rewound to, an answer is a result.
@@ -272,7 +282,7 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
       ) : (
         <div className='min-w-0'>
           {children}
-          <AssistantToolbar classNames={reveal} message={message} />
+          {hasToolbar(message) && <AssistantToolbar classNames={reveal} message={message} />}
         </div>
       )}
     </Row>

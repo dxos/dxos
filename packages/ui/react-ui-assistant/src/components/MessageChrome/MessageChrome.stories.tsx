@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
@@ -25,9 +26,11 @@ type StoryArgs = {
   selected?: boolean;
   /** Synthetic context riding on the prompt — the selection or event that started the turn. */
   context?: string;
+  /** Only the synthetic block, no prose: a row of machinery. */
+  machinery?: boolean;
 };
 
-const DefaultStory = ({ variant, rewind, debug, selected, context }: StoryArgs) => {
+const DefaultStory = ({ variant, rewind, debug, selected, context, machinery }: StoryArgs) => {
   // Made in a render so the story's `created` is now: the toolbar prints elapsed time.
   const message = useMemo(
     () =>
@@ -41,16 +44,20 @@ const DefaultStory = ({ variant, rewind, debug, selected, context }: StoryArgs) 
               },
         blocks: [
           ...(context ? [{ _tag: 'text' as const, text: context, disposition: 'synthetic' as const }] : []),
-          {
-            _tag: 'text' as const,
-            text:
-              variant === 'answer' || variant === 'assistant-toolbar'
-                ? 'Give every flex ancestor of the scroll viewport `min-h-0`, then put `overflow-y-auto` on the leaf.'
-                : 'How do I make a nested flex column scroll instead of growing?',
-          },
+          ...(machinery
+            ? []
+            : [
+                {
+                  _tag: 'text' as const,
+                  text:
+                    variant === 'answer' || variant === 'assistant-toolbar'
+                      ? 'Give every flex ancestor of the scroll viewport `min-h-0`, then put `overflow-y-auto` on the leaf.'
+                      : 'How do I make a nested flex column scroll instead of growing?',
+                },
+              ]),
         ],
       }),
-    [variant, context],
+    [variant, context, machinery],
   );
 
   return (
@@ -132,4 +139,13 @@ export const Answer: Story = {
 
 export const Selected: Story = {
   args: { variant: 'answer', selected: true },
+};
+
+/** A row of machinery alone (a synthetic prompt) reserves no toolbar line: there is nothing to copy. */
+export const TestMachineryOnly: Story = {
+  args: { variant: 'answer', context: 'Your scheduled alarm fired.', machinery: true },
+  play: async ({ canvasElement }) => {
+    const row = await within(canvasElement).findByTestId('feed.message');
+    await expect(within(row).queryByRole('button')).toBeNull();
+  },
 };

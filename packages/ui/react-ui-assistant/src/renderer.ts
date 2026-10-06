@@ -240,8 +240,13 @@ const narrationText = (block: ContentBlock.Any): string => {
  */
 const toolkitTag = (blocks: ContentBlock.Any[], pretty = false): string => {
   const pending = blocks.some((block) => block.pending);
-  const json = pretty ? JSON.stringify(blocks, expandJsonStrings, 2) : JSON.stringify(blocks);
-  return `<toolkit${pending ? ' pending="true"' : ''}>${escapeXml(json)}</toolkit>`;
+  const open = `<toolkit${pending ? ' pending="true"' : ''}>`;
+  if (pretty) {
+    // Blank lines around a fence between the tags, so the markdown parser renders the run as JSON code.
+    const json = JSON.stringify(blocks, expandJsonStrings, 2);
+    return `${open}\n\n\`\`\`json\n${json}\n\`\`\`\n\n</toolkit>`;
+  }
+  return `${open}${escapeXml(JSON.stringify(blocks))}</toolkit>`;
 };
 
 const expandJsonStrings = (key: string, value: unknown): unknown => {
