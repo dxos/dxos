@@ -75,7 +75,7 @@ export const make = (
         .getSession(chat)
         .pipe(
           Effect.flatMap((session) =>
-            session.submitPrompt(prompt, { sender, properties: BrainService.WAKE_PROPERTIES }),
+            session.submitPrompt(BrainService.wakeBlocks(prompt), sender ? { sender } : undefined),
           ),
         ),
   };

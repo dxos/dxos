@@ -13,6 +13,7 @@ import type * as AgentService from '@dxos/compute/AgentService';
 import type { Database } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import type { RDF } from '@dxos/pipeline-rdf';
+import { ContentBlock } from '@dxos/types';
 
 import * as Trigger from './Trigger.ts';
 
@@ -32,7 +33,7 @@ export const FactQuery = Schema.Struct({
 
 export interface FactQuery extends Schema.Schema.Type<typeof FactQuery> {}
 
-/** A request to start a turn in a chat: the prompt lands as a user message, so the agent replies there. */
+/** A request to start a turn in a chat: the prompt lands as a synthetic note ({@link wakeBlocks}), so the agent replies there. */
 export type WakeRequest = {
   readonly chat: Chat.Chat;
   readonly prompt: string;
@@ -48,6 +49,10 @@ export class BrainError extends BaseError.extend('BrainError', 'The agent brain 
  *
  * One brain per agent, keyed by the agent's entity id. Implementations differ per platform: in memory
  * in the client (`BrainMemory`), a Durable Object with SQLite on EDGE.
+ *
+ * TODO(dmaretskyi): Reshape as a durable outbox — `push(facts)`, one-time `query(facts)`, `register(regId, meta)`,
+ * `subscribe(regId, to)`, `take(regId): Event[]`, `ack(regId, eventIds)`, `unsubscribe(regId)` — so consumers pull
+ * matched events instead of the brain waking chats itself.
  */
 export interface Service {
   /** Appends facts to the agent's store; facts already stored are kept once. */
@@ -66,7 +71,7 @@ export interface Service {
   readonly removeTrigger: (id: string) => Effect.Effect<boolean, BrainError>;
 
   /**
-   * Starts a turn in the chat with the prompt as a user message. Returns once the turn is scheduled,
+   * Starts a turn in the chat with the prompt as a synthetic note. Returns once the turn is scheduled,
    * not when it ends: a relay must not hold the turn that sent it.
    */
   readonly wake: (request: WakeRequest) => Effect.Effect<void, BrainError, Database.Service>;
@@ -83,11 +88,13 @@ export const key = BrainService.key;
  */
 export const MAX_TRIGGERS = 256;
 
-/** Marks a prompt the brain woke a chat with; reading the chat into facts skips it (the agent said it, not a person). */
-export const WAKE_PROPERTY = 'org.dxos.agent.woken';
-
-/** The message properties a woken chat's prompt carries. */
-export const WAKE_PROPERTIES: Record<string, unknown> = { [WAKE_PROPERTY]: true };
+/**
+ * The content a woken chat's turn starts from: a synthetic text block, so it renders as a system note rather than
+ * a user message, and reading the chat into facts skips it (the agent relayed it; no person said it).
+ */
+export const wakeBlocks = (prompt: string): ContentBlock.Any[] => [
+  ContentBlock.Text.make({ text: prompt, disposition: 'synthetic' }),
+];
 
 /** A trigger as plain JSON, for brains across a wire (its refs become `{ "/": uri }`). */
 export const encodeTrigger = Schema.encodeSync(Trigger.Trigger);

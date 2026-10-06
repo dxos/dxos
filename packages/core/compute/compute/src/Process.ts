@@ -68,6 +68,11 @@ export class EnvironmentService extends Context.Service<EnvironmentService, Envi
   '@dxos/compute/Process.EnvironmentService',
 ) {}
 
+/** The running process's environment; empty outside a process, so a handler can read it wherever it runs. */
+export const currentEnvironment: Effect.Effect<Environment> = Effect.serviceOption(EnvironmentService).pipe(
+  Effect.map(Option.getOrElse((): Environment => ({}))),
+);
+
 /**
  * Attaches the process to a target object.
  */

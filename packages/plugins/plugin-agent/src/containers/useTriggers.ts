@@ -58,18 +58,25 @@ export const useTriggers = (agent: Agent.Agent): Watch[] => {
 
   const [remoteWatches, setRemoteWatches] = useState<Watch[]>([]);
   useEffect(() => {
+    // Never show the previous agent's watches while this one's load.
+    setRemoteWatches([]);
     if (!remote || !db) {
       return;
     }
 
     let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    // Each read schedules the next once it settles, so a slow EDGE call never overlaps (or overwrites) a newer one.
     const read = async () => {
       const { data } = await invokePromise(
         TriggerOperation.ListTriggers,
         { agent: Ref.make(agent) },
         { spaceId: db.spaceId, on: 'edge' },
       );
-      if (!cancelled && data) {
+      if (cancelled) {
+        return;
+      }
+      if (data) {
         setRemoteWatches(
           data.triggers.map(({ trigger, goal, when, recipient, message }) => ({
             id: trigger,
@@ -80,12 +87,12 @@ export const useTriggers = (agent: Agent.Agent): Watch[] => {
           })),
         );
       }
+      timeout = setTimeout(() => void read(), REMOTE_POLL_MS);
     };
     void read();
-    const interval = setInterval(() => void read(), REMOTE_POLL_MS);
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      clearTimeout(timeout);
     };
   }, [remote, db, agent, invokePromise]);
 

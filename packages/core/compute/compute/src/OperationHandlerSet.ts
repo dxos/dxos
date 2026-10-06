@@ -159,6 +159,8 @@ export const merge = (...sets: OperationHandlerSet[]): OperationHandlerSet => {
     getHandlerFor: (key) => resolveFromSets(sets, key),
     getHandlers,
     handlers: Effect.promise(getHandlers),
+    // Only an all-remote merge may skip local service resolution; one local set still needs its services here.
+    ...(sets.length > 0 && sets.every((set) => set.remote) ? { remote: true } : {}),
   };
 };
 

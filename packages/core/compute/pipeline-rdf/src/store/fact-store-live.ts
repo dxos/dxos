@@ -35,8 +35,14 @@ const reassemble = (quads: Quad[]): Effect.Effect<Fact[], SemanticIndexError> =>
 // Worker, so the persist and structured-query paths must not load it at all.
 const makeSelect = (source: Parameters<typeof Engine.selectTriples>[1]): FactStoreApi['select'] => {
   let engine: Promise<{ module: typeof Engine; engine: ReturnType<typeof Engine.makeEngine> }> | undefined;
+  // A failed load is forgotten, so the next query retries instead of replaying the same rejection.
   const getEngine = () =>
-    (engine ??= import('../internal/sparql/engine.ts').then((module) => ({ module, engine: module.makeEngine() })));
+    (engine ??= import('../internal/sparql/engine.ts')
+      .then((module) => ({ module, engine: module.makeEngine() }))
+      .catch((error: unknown) => {
+        engine = undefined;
+        throw error;
+      }));
   return (sparql) =>
     Effect.tryPromise({
       try: getEngine,

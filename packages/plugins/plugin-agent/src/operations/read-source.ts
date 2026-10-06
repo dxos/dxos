@@ -16,7 +16,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { AgentOperation, BrainService, FactEntry, Profile } from '#types';
+import { AgentOperation, FactEntry, Profile } from '#types';
 
 import { ensureAnnotationFeed } from './annotations.ts';
 import { AgentOperationError } from './errors.ts';
@@ -49,6 +49,9 @@ const segmentMarkdown = (content: string): Segment[] =>
     return match ? { speaker: match[1].trim(), text: paragraph.trim().slice(match[0].length) } : { text: paragraph };
   });
 
+/** The name the agent's own messages are attributed to in extracted facts. */
+export const agentSpeaker = (agent: Agent.Agent): string => agent.name ?? 'Agent';
+
 /** The display name of a message's sender: its name, its contact, or its role. */
 const speakerOf = Effect.fnUntraced(function* (agent: Agent.Agent, message: Message.Message) {
   if (message.sender.name) {
@@ -57,7 +60,7 @@ const speakerOf = Effect.fnUntraced(function* (agent: Agent.Agent, message: Mess
   if (message.sender.contact) {
     return Profile.displayName(yield* Database.load(message.sender.contact));
   }
-  return message.sender.role === 'assistant' ? (agent.name ?? 'Agent') : 'User';
+  return message.sender.role === 'assistant' ? agentSpeaker(agent) : 'User';
 });
 
 /** Feed items in append order. */
@@ -83,9 +86,12 @@ const readChat = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Cha
   const index = after === undefined ? -1 : messages.findIndex((message) => Obj.getURI(message) === after);
   const start = index + 1;
   const toSegment = Effect.fnUntraced(function* (message: Message.Message) {
-    const text = Message.extractText(message).trim();
-    // A woken chat's prompt is the agent's own relay, not something a person said.
-    if (message.sender.role === 'tool' || text.length === 0 || message.properties?.[BrainService.WAKE_PROPERTY]) {
+    // Synthetic text (a woken chat's relay, system notes) is not something anyone said.
+    const text = message.blocks
+      .flatMap((block) => (block._tag === 'text' && block.disposition !== 'synthetic' ? [block.text] : []))
+      .join('\n')
+      .trim();
+    if (message.sender.role === 'tool' || text.length === 0) {
       return undefined;
     }
     return {

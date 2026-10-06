@@ -65,8 +65,6 @@ export type PromptSender = {
 export type SubmitPromptOptions = {
   /** Recorded on the appended user message; a named sender is shown to the model as the speaker. */
   readonly sender?: PromptSender;
-  /** Copied onto the appended user message, e.g. to mark a prompt the agent relayed to itself. */
-  readonly properties?: Record<string, unknown>;
 };
 
 /**

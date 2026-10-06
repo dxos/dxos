@@ -43,6 +43,13 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
     if (owner && ChatParticipant.getOwner(match) === undefined) {
       Obj.update(match, (match) => ChatParticipant.setOwner(match, owner));
     }
+    // `AgentService.getSession` sees the location change and moves the conversation to a fresh EDGE
+    // process, which replays the feed, so flipping the flag is the migration.
+    if (remote && !match.remote) {
+      Obj.update(match, (match) => {
+        match.remote = true;
+      });
+    }
     return match;
   }
 

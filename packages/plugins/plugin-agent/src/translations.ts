@@ -36,6 +36,8 @@ export const translations = [
         'plugin.name': 'Agent',
         'brain-companion.label': 'Brain',
         'activity-companion.label': 'Activity',
+        'private-chat-failed.message': 'Could not open your chat with this agent.',
+        'private-chat-retry.label': 'Try again',
         'conversations.heading': 'Conversations',
         'conversations-empty.message': 'No channel conversations yet.',
         'conversation-untitled.label': 'Untitled conversation',

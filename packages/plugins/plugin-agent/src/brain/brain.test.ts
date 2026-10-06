@@ -168,11 +168,15 @@ const settle = Effect.fnUntraced(function* (chat: Chat.Chat) {
 });
 
 /** The agent's replies in the chat. */
-const replies = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const messages = Effect.fnUntraced(function* (chat: Chat.Chat) {
   const feed = yield* Database.load(chat.feed);
-  const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-  return messages.filter((message) => message.sender.role === 'assistant').map(Message.extractText);
+  return yield* Feed.query(feed, Filter.type(Message.Message)).run;
 });
+
+const replies = (chat: Chat.Chat) =>
+  messages(chat).pipe(
+    Effect.map((all) => all.filter((message) => message.sender.role === 'assistant').map(Message.extractText)),
+  );
 
 const watchesOn = (triggers: readonly Trigger.Trigger[], speaker: string) =>
   triggers.filter(({ when, ongoing }) => when.speaker === speaker && ongoing);
@@ -201,6 +205,13 @@ describe('agent brain (local)', () => {
         // The brain woke Alice's chat, and the agent's reply there carries Bob's update.
         expect(yield* replies(alice.chat)).toContain(SCENARIO.composed);
         expect(yield* replies(bob.chat)).not.toContain(SCENARIO.composed);
+
+        // The relay is a synthetic note (rendered as a system message), never a user utterance.
+        const relays = (yield* messages(alice.chat)).flatMap(({ blocks }) =>
+          blocks.filter((block) => block._tag === 'text' && BrainSkill.wakeText(block.text) !== undefined),
+        );
+        expect(relays.length).toBeGreaterThan(0);
+        expect(relays.every((block) => block._tag === 'text' && block.disposition === 'synthetic')).toBe(true);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -281,6 +292,18 @@ describe('agent brain (local)', () => {
           name: 'Alice',
         });
         expect(again.target?.id ?? (yield* Database.load(again)).id).toBe(alice.chat.id);
+
+        // Asking for it on EDGE moves the same chat there rather than leaving it local.
+        expect(alice.chat.remote).toBeFalsy();
+        const { chat: moved } = yield* Operation.invoke(AgentOperation.OpenPrivateChat, {
+          agent: Ref.make(agent),
+          identityDid: SCENARIO.alice.did,
+          name: 'Alice',
+          remote: true,
+        });
+        const movedChat = yield* Database.load(moved);
+        expect(movedChat.id).toBe(alice.chat.id);
+        expect(movedChat.remote).toBe(true);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

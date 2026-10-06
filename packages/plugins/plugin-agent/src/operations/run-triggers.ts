@@ -17,7 +17,7 @@ import { BrainService, FactEntry, Goal, Profile, RelayOperation, Trigger } from 
 
 import { composeUpdate } from './compose-update.ts';
 import { firstMatch, matchesPattern } from './match-facts.ts';
-import { readSource } from './read-source.ts';
+import { agentSpeaker, readSource } from './read-source.ts';
 
 /** Statuses after which a goal's triggers have nothing left to wait for. */
 const CLOSED: readonly Goal.Status[] = ['achieved', 'dropped'];
@@ -55,8 +55,9 @@ export const fireTriggers: (
   AiService.AiService | Database.Service | Operation.Service | BrainService.BrainService
 > = Effect.fnUntraced(function* (agent, allFacts, transcript) {
   const brain = yield* BrainService.BrainService;
-  const self = agent.name ? normalizeEntityId(agent.name) : undefined;
-  const facts = allFacts.filter((fact) => self === undefined || fact.attribution.agent !== self);
+  // The same name `readSource` attributes the agent's own messages to, unnamed agents included.
+  const self = normalizeEntityId(agentSpeaker(agent));
+  const facts = allFacts.filter((fact) => fact.attribution.agent !== self);
   const fired: string[] = [];
   const undelivered: string[] = [];
   if (facts.length === 0) {
