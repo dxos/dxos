@@ -68,4 +68,4 @@ measured chars per token: 3.24
 
 ### Dismissals
 
-All six issues are ignored as out of scope: they are in files merged to main by #13590, which this branch still carries in its pre-squash history. The only product change in this PR is `.agents/projects/agent-brain/DESIGN.md`; the rest is this review store.
+All six issues are ignored as out of scope: they are in files merged to main by #13590, which this branch still carries in its pre-squash history. The only product change in this PR is `packages/plugins/plugin-agent/docs/BRAIN.md`; the rest is this review store.

@@ -1,8 +1,8 @@
 # Agent Brain — design
 
 Status: draft 1 (2026-10-06), in discussion. Builds on plugin-agent's
-[ONTOLOGY.md](../../../packages/plugins/plugin-agent/docs/ONTOLOGY.md) (draft 3) and
-[DESIGN.md](../../../packages/plugins/plugin-agent/docs/DESIGN.md), which describe the agent as built in
+[ONTOLOGY.md](./ONTOLOGY.md) (draft 3) and
+[DESIGN.md](./DESIGN.md), which describe the agent as built in
 PR #13590.
 
 ## Summary
