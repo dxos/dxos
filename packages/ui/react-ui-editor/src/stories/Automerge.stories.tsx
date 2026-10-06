@@ -197,22 +197,26 @@ export const WithEcho: Story = {
       timeout: 10_000,
     });
 
-    // The name stays inside its own background on a line with a hanging indent (a list item).
     const info = editors[0].querySelector<HTMLElement>('.cm-collab-selectionInfo');
+    const caret = info?.parentElement;
     const line = info?.closest<HTMLElement>('.cm-line');
-    if (info && line) {
-      // Hung from the caret: above it, and starting at it rather than centred on it.
-      const caret = info.parentElement?.getBoundingClientRect();
-      await expect(Math.round(info.getBoundingClientRect().bottom)).toBeLessThanOrEqual(Math.round(caret?.top ?? 0));
-      await expect(Math.round(info.getBoundingClientRect().left)).toBeGreaterThanOrEqual(
-        Math.round(caret?.left ?? 0) - 1,
-      );
-
-      line.style.textIndent = '-40px';
-      const range = document.createRange();
-      range.selectNodeContents(info);
-      await expect(range.getBoundingClientRect().left).toBeGreaterThanOrEqual(info.getBoundingClientRect().left);
-      line.style.textIndent = '';
+    await expect(info).toBeInstanceOf(HTMLElement);
+    await expect(caret).toBeInstanceOf(HTMLElement);
+    await expect(line).toBeInstanceOf(HTMLElement);
+    if (!info || !caret || !line) {
+      return;
     }
+
+    // Hung from the caret: above it, and starting at it rather than centred on it.
+    const caretBox = caret.getBoundingClientRect();
+    await expect(Math.round(info.getBoundingClientRect().bottom)).toBeLessThanOrEqual(Math.round(caretBox.top));
+    await expect(Math.round(info.getBoundingClientRect().left)).toBeGreaterThanOrEqual(Math.round(caretBox.left) - 1);
+
+    // The name stays inside its own background on a line with a hanging indent (a list item).
+    line.style.textIndent = '-40px';
+    const range = document.createRange();
+    range.selectNodeContents(info);
+    await expect(range.getBoundingClientRect().left).toBeGreaterThanOrEqual(info.getBoundingClientRect().left);
+    line.style.textIndent = '';
   },
 };
