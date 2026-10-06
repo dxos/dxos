@@ -32,17 +32,21 @@ export const createFileProcessor = ({
     if (levels.length > 0 && !levels.includes(entry.level)) {
       return;
     }
-    if (!shouldLog(entry, filters)) {
+    // `shouldLog` rejects every entry when given no filters, which would leave `levels` writing nothing.
+    if (filters !== undefined && !shouldLog(entry, filters)) {
       return;
     }
 
-    if (typeof pathOrFd === 'number') {
-      fd = pathOrFd;
-    } else {
-      try {
-        mkdirSync(dirname(pathOrFd));
-      } catch {}
-      fd = openSync(pathOrFd, 'a');
+    if (fd === undefined) {
+      if (typeof pathOrFd === 'number') {
+        fd = pathOrFd;
+      } else {
+        try {
+          mkdirSync(dirname(pathOrFd), { recursive: true });
+        } catch {}
+        // Opened once: a descriptor per entry is never closed, and a long run exhausts the limit.
+        fd = openSync(pathOrFd, 'a');
+      }
     }
 
     const record = {
