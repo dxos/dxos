@@ -11,7 +11,7 @@ import { Domino } from '@dxos/ui';
 export const submitButton = (value: string, icon?: string) => {
   const button = Domino.of('button')
     .attributes({ 'data-size': 'md', 'data-action': 'submit', 'data-value': value })
-    .classNames('dx-control dx-button dx-container-query-inline-size gap-2 min-w-0 max-w-full overflow-hidden');
+    .classNames('dx-control dx-button dx-container-query-inline-size gap-2 min-w-0 overflow-hidden');
   if (icon) {
     button.append(Domino.svg(icon).classNames('shrink-0 size-4 text-fg-muted'));
   }

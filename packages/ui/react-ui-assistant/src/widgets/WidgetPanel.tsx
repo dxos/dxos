@@ -50,7 +50,8 @@ export const WidgetPanel = ({
     // the min-width then takes the line's own width, which is what bounds the payload's scroller.
     classNames='w-0 min-w-full'
   >
-    <TogglePanel.Header caret='end' data-testid={testId} classNames='gap-1'>
+    {/* Hovers like the tool run's accordion rows, so every disclosure in the thread answers the pointer alike. */}
+    <TogglePanel.Header caret='end' data-testid={testId} classNames='gap-1 rounded-md hover:bg-hover-surface'>
       <span className='flex min-w-0 items-center gap-2 text-fg-muted tabular-nums'>
         <Icon.Icon icon={icon} size='md' />
         <span className={mx('truncate', error && 'text-error-text')}>{label}</span>

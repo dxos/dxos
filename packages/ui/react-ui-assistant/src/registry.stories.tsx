@@ -88,6 +88,18 @@ export const AllWidgets: Story = {
   ),
 };
 
+/** Capped by the container query: a long suggestion truncates rather than widening the editor into a horizontal scroll. */
+export const TestAllWidgetsFit: Story = {
+  ...AllWidgets,
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector('[data-action="submit"]')).not.toBeNull());
+    const scroller = canvasElement.querySelector<HTMLElement>('.cm-scroller');
+    await expect(scroller && scroller.scrollWidth - scroller.clientWidth).toBeLessThanOrEqual(1);
+    const label = canvasElement.querySelector<HTMLElement>('[data-action="submit"] span');
+    await expect(label && label.scrollWidth > label.clientWidth).toBe(true);
+  },
+};
+
 //
 // DOM widgets
 //
