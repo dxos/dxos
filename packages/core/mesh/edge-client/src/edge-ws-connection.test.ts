@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, onTestFinished, test, vi } from 'vites
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { EdgeWebsocketProtocol } from '@dxos/protocols';
+import { EDGE_CLIENT_COMPAT_LEVEL, EdgeWebsocketProtocol } from '@dxos/protocols';
 import { bufWkt } from '@dxos/protocols/buf';
 import { type Message, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
@@ -145,6 +145,27 @@ describe('EdgeWsConnection', () => {
       expect(payloads).toHaveLength(1);
     });
   }
+});
+
+describe('EdgeWsConnection compatibility level', () => {
+  test('advertises the compatibility level alongside the protocols and auth header', async ({ expect }) => {
+    const connection = new EdgeWsConnection(
+      testIdentity,
+      { url: new URL('ws://localhost:1234'), protocolHeader: 'base64url.bearer.authorization.dxos.org.AAAA' },
+      { onConnected: () => {}, onMessage: () => {}, onRestartRequired: () => {} },
+    );
+    await connection.open();
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    expect(FakeWebSocket.instances.at(-1)?.protocols).toEqual([
+      EdgeWebsocketProtocol.V0,
+      EdgeWebsocketProtocol.V1,
+      `dxos-compat.${EDGE_CLIENT_COMPAT_LEVEL}`,
+      'base64url.bearer.authorization.dxos.org.AAAA',
+    ]);
+  });
 });
 
 //

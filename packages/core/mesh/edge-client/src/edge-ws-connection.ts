@@ -8,7 +8,7 @@ import { Mutex, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
-import { EdgeWebsocketProtocol } from '@dxos/protocols';
+import { EdgeWebsocketProtocol, encodeEdgeClientCompatProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
@@ -180,7 +180,8 @@ export class EdgeWsConnection extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    const baseProtocols = [...Object.values(EdgeWebsocketProtocol)];
+    // Browsers cannot set WebSocket headers, so the compat level rides in the subprotocol list.
+    const baseProtocols = [...Object.values(EdgeWebsocketProtocol), encodeEdgeClientCompatProtocol()];
     this._ws = new WebSocket(
       this._connectionInfo.url.toString(),
       this._connectionInfo.protocolHeader
