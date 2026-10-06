@@ -6,23 +6,22 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type Identity, type Invitation } from '@dxos/halo';
+import { type Invitation } from '@dxos/halo';
 import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Form } from '@dxos/react-ui-form';
-import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as QrCode from '@dxos/react-ui/QrCode';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
-import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
+import { AuthCode, Centered, Emoji, Viewport } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
+import { DevicesForm } from '#components';
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 import { ClientCapabilities, ClientOptions } from '#types';
@@ -32,7 +31,6 @@ export type DevicesContainerProps = Pick<ClientOptions.ClientPluginOptions, 'ide
 };
 
 export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: DevicesContainerProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();
@@ -50,67 +48,14 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
   );
 
   return (
-    <Form.Root variant='settings'>
-      <Form.Viewport scroll>
-        <Form.Content>
-          <Form.FieldSet
-            label={t('devices-verbose.label', { ns: meta.profile.key })}
-            description={t('devices.description', { ns: meta.profile.key })}
-          >
-            <Form.FieldSet label={t('devices.label', { ns: meta.profile.key })}>
-              <Listbox.Root items={devices.map((device) => ({ value: device.key, label: device.label ?? device.key }))}>
-                <Listbox.Content scroll={false} aria-label={t('devices.label', { ns: meta.profile.key })}>
-                  {devices.map((device: Identity.DeviceInfo) => (
-                    <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
-                  ))}
-                </Listbox.Content>
-              </Listbox.Root>
-            </Form.FieldSet>
-            {createInvitationUrl && (
-              <Form.FieldSet label={t('add-device.label')}>
-                <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-              </Form.FieldSet>
-            )}
-          </Form.FieldSet>
-          <Form.FieldSet label={t('logout-section.title')} description={t('logout-section.description')}>
-            <Form.Field standalone label={t('logout.label')} description={t('logout.description')}>
-              <Button.Root variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
-                {t('logout.label')}
-              </Button.Root>
-            </Form.Field>
-          </Form.FieldSet>
-          {identityTestActions && (
-            <Form.FieldSet
-              label={t('identity-test-section.title')}
-              description={t('identity-test-section.description')}
-            >
-              <Form.Field
-                standalone
-                label={t('recover-identity.label')}
-                description={t('recover-identity.description')}
-              >
-                <Button.Root variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
-                  {t('recover-identity.label')}
-                </Button.Root>
-              </Form.Field>
-              <Form.Field
-                standalone
-                label={t('join-new-identity.label')}
-                description={t('join-new-identity.description')}
-              >
-                <Button.Root
-                  variant='destructive'
-                  onClick={handleJoinNewIdentity}
-                  data-testid='devicesContainer.joinExisting'
-                >
-                  {t('join-new-identity.label')}
-                </Button.Root>
-              </Form.Field>
-            </Form.FieldSet>
-          )}
-        </Form.Content>
-      </Form.Viewport>
-    </Form.Root>
+    <DevicesForm
+      devices={devices}
+      connectionState={connectionState}
+      invitation={createInvitationUrl && <DeviceInvitation createInvitationUrl={createInvitationUrl} />}
+      onLogout={handleLogout}
+      onRecover={identityTestActions ? handleRecover : undefined}
+      onJoinNewIdentity={identityTestActions ? handleJoinNewIdentity : undefined}
+    />
   );
 };
 

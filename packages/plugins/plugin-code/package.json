@@ -81,10 +81,20 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
+    "./AcpAgent": {
+      "source": "./src/agents/AcpAgent.ts",
+      "types": "./dist/types/src/agents/AcpAgent.d.ts",
+      "import": "./dist/lib/AcpAgent.mjs"
+    },
     "./CodeAgent": {
       "source": "./src/agents/CodeAgent.ts",
       "types": "./dist/types/src/agents/CodeAgent.d.ts",
       "import": "./dist/lib/CodeAgent.mjs"
+    },
+    "./ComposerMcp": {
+      "source": "./src/agents/ComposerMcp.ts",
+      "types": "./dist/types/src/agents/ComposerMcp.d.ts",
+      "import": "./dist/lib/ComposerMcp.mjs"
     },
     "./CodeCapabilities": {
       "source": "./src/types/CodeCapabilities.ts",
