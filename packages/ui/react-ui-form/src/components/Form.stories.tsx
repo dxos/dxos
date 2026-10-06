@@ -87,6 +87,27 @@ export const DocumentWidth: Story = {
   },
 };
 
+const MIXED = new Set(['age', 'active', 'status']);
+
+/**
+ * `mixed`: the paths several edited objects disagree on read as unset with a "Mixed" placeholder (a dimmed switch
+ * for a boolean) until edited; the rest show the shared value.
+ */
+export const Mixed: Story = {
+  render: () => (
+    <Form.Root schema={ScalarSchema} values={{ ...SCALAR_VALUES, active: true, status: 'active' }} mixed={MIXED}>
+      <Form.Content>
+        <Form.Fields include={['name', 'age', 'active', 'status']} />
+      </Form.Content>
+    </Form.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByPlaceholderText('Mixed')).toBeInTheDocument();
+    await expect(canvasElement.querySelector('[data-mixed]')).not.toBeNull();
+  },
+};
+
 /** `Form.Submit` with its own icon, spinning while busy (a send rather than a save). */
 export const Submit: Story = {
   render: () => (

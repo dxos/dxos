@@ -126,6 +126,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
 
   const fieldState = useFormFieldState(FormFieldDispatch.displayName, path);
   const jsonPath = SchemaEx.createJsonPath(path ?? []);
+  const mixed = fieldState.getStatus().mixed;
   const fieldProps: FormFieldRendererProps = {
     type,
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
@@ -133,9 +134,11 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     label,
     description,
     jsonPath,
-    placeholder,
+    // A mixed value reads as none, so its placeholder says why rather than naming the field.
+    placeholder: mixed ? t('mixed.placeholder') : placeholder,
     presentation: layout,
     required,
+    mixed,
     db,
     ...fieldState,
   };

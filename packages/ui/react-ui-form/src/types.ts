@@ -21,6 +21,8 @@ import { type Palette } from '@dxos/ui-types';
 export type FormFieldStatus = {
   status?: 'error';
   error?: string;
+  /** The objects the form edits disagree on this value, and it has not been edited since (see `mixed`). */
+  mixed?: boolean;
 };
 
 /**
@@ -68,6 +70,8 @@ export type FormFieldRendererProps<T = any> = {
   presentation?: FormPresentation;
   /** Whether the field is required AND still unfilled; surfaces a trailing asterisk on the label. */
   required?: boolean;
+  /** The edited objects disagree on this value: the field shows none, and says so, until it is edited. */
+  mixed?: boolean;
 } & FormFieldStateProps<T>;
 
 /** Where a row puts its label: above the control, or beside it on one line, after a toggle. */

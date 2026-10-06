@@ -22,7 +22,10 @@ import { type FormFieldsProps } from './property-walk.ts';
 
 export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
   Omit<FormContextValue<T>, 'form'>,
-  Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'>,
+  Pick<
+    FormHandlerProps<T>,
+    'schema' | 'autoSave' | 'mixed' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'
+  >,
   Omit<FormFieldsProps<T>, 'path' | 'schema'>,
   PropsWithChildren<{
     /**

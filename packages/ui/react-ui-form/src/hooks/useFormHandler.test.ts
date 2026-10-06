@@ -82,3 +82,21 @@ describe('useFormHandler reactive buffering', () => {
     expect(result.current.getValue(['city'])).toBe('SF');
   });
 });
+
+describe('useFormHandler mixed values', () => {
+  test('a mixed path reads as unset and reports mixed until it is edited', ({ expect }) => {
+    const mixed = new Set(['city']);
+    const { result } = renderHook(() =>
+      useFormHandler<Values>({ schema, values: { name: 'Alice', city: 'NYC' }, mixed }),
+    );
+    expect(result.current.getValue(['city'])).toBeUndefined();
+    expect(result.current.getStatus(['city']).mixed).toBe(true);
+    expect(result.current.getStatus(['name']).mixed).toBe(false);
+
+    // The source still holds a valid value at the mixed path, so the form validates.
+    act(() => result.current.onValueChange(['city'], stringAst, 'LA'));
+    expect(result.current.getValue(['city'])).toBe('LA');
+    expect(result.current.getStatus(['city']).mixed).toBe(false);
+    expect(result.current.isValid).toBe(true);
+  });
+});
