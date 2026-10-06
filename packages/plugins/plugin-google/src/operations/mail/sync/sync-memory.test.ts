@@ -15,6 +15,7 @@ import * as Process from '@dxos/compute/Process';
 import { Feed, Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { invariant } from '@dxos/invariant';
 import { ambientSyncServices, seedMailboxBinding } from '@dxos/plugin-inbox/testing/sync';
 
 import { type GmailDataset, GoogleMailApi } from '#services';
@@ -44,7 +45,7 @@ const MB = 1024 * 1024;
 /** Forces a full GC; works without `--expose-gc` on the command line. */
 const collectGarbage = (() => {
   setFlagsFromString('--expose-gc');
-  const gc = runInNewContext('gc') as () => void;
+  const gc: () => void = runInNewContext('gc');
   return () => {
     gc();
     gc();
@@ -104,7 +105,10 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
       connectorId: GMAIL_CONNECTOR_ID,
       options: { syncBackDays: 29 },
     });
-    const feedUri = Feed.getFeedUri(mailbox.feed.target!)!;
+    const feed = mailbox.feed.target;
+    invariant(feed, 'mailbox feed not loaded');
+    const feedUri = Feed.getFeedUri(feed);
+    invariant(feedUri, 'mailbox feed has no URI');
 
     // What `Cursor.seedDedupSet` loads every run, measured as the JSON that crosses the RPC on EDGE.
     const seedBytes = async () => {
@@ -175,7 +179,7 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
     // No tags change locally in this scenario, so nothing may be pushed back.
     expect(rows.every((row) => row.pushedOps === 0)).toBe(true);
     // The seed saturates at 2 × tail once the feed holds more than that.
-    expect(rows.at(-1)!.seedItems).toBe(2 * SEED_TAIL);
+    expect(rows.at(-1)?.seedItems).toBe(2 * SEED_TAIL);
   });
 });
 
