@@ -37,16 +37,14 @@ const TestLayer = AssistantTestLayer({
 
 const setup = Effect.fnUntraced(function* (command: ClaudeCodeProcess.Command, env?: Record<string, string>) {
   const workspace = realpathSync(mkdtempSync(join(tmpdir(), 'claude-code-process-')));
-  definition = ClaudeCodeProcess.ClaudeCodeProcess({
+  definition = ClaudeCodeProcess.make({
     id: CLAUDE_CODE_AGENT,
     sessions: yield* AcpAgent.Sessions.make(),
     workspace: () => Effect.succeed(workspace),
     command: { ...command, env: { ...command.env, ...env } },
   });
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(
-    Chat.make({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.CLAUDE_CODE_PROCESS_KEY } }),
-  );
+  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.KEY } }));
   return { chat, workspace };
 });
 

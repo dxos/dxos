@@ -18,15 +18,14 @@ import { ClaudeCodeConnector } from './connector.ts';
 const form = Effect.fromNullishOr(ClaudeCodeConnector.credentialForm).pipe(Effect.orDie);
 
 /** The message the form shows for `token`, or undefined when it is accepted. */
-const rejection = (token: string) =>
-  Effect.gen(function* () {
-    const { onValidate } = yield* form;
-    if (!onValidate) {
-      return yield* Effect.die(new Error('the connector validates its token'));
-    }
-    const exit = yield* onValidate({ values: { token }, connector: ClaudeCodeConnector }).pipe(Effect.exit);
-    return Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined;
-  });
+const rejection = Effect.fnUntraced(function* (token: string) {
+  const { onValidate } = yield* form;
+  if (!onValidate) {
+    return yield* Effect.die(new Error('the connector validates its token'));
+  }
+  const exit = yield* onValidate({ values: { token }, connector: ClaudeCodeConnector }).pipe(Effect.exit);
+  return Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined;
+});
 
 describe('ClaudeCodeConnector', () => {
   it.effect('accepts a token from claude setup-token', () =>

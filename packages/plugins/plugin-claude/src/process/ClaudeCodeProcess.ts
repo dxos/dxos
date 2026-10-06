@@ -32,7 +32,7 @@ import { claudeCodeToken } from '../claude-code-token.ts';
 import { CLAUDE_CODE_OAUTH_TOKEN_ENV } from '../constants.ts';
 
 /** Key a chat names in `chat.session.process` to run on Claude Code. */
-export const CLAUDE_CODE_PROCESS_KEY = 'org.dxos.plugin.claude.process.claude-code';
+export const KEY = 'org.dxos.plugin.claude.process.claude-code';
 
 /** The Claude Code ACP adapter, as installed by `npm install -g @agentclientprotocol/claude-agent-acp`. */
 export const DEFAULT_COMMAND: Command = { command: 'claude-agent-acp' };
@@ -53,10 +53,10 @@ export type Options = Omit<AcpAgent.AgentOptions, 'connect'> & {
  * mid-turn waits its turn and one left by a process that died is redelivered. The agent stays
  * running between turns, so a follow-up does not pay for starting it again.
  */
-export const ClaudeCodeProcess = (options: Options): AgentProcessDefinition =>
+export const make = (options: Options): AgentProcessDefinition =>
   Operation.makeDurable(
     {
-      key: CLAUDE_CODE_PROCESS_KEY,
+      key: KEY,
       input: AgentInput,
       output: Schema.Void,
       // Typed queries match nothing for an unregistered type: `SessionStore` reads the queue with them,
