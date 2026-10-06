@@ -65,6 +65,10 @@ against everything the agent knows.
 
 ### What a goal is
 
+A goal is a **directive** — an order given to the agent. It defines a future outcome or state; it may
+or may not say how to achieve it, and it may define conditions. It is distinct from a `@dxos/types`
+`Task`, which is a concrete action with a history (see "Goals, sub-goals and tasks").
+
 - **Plain text.** A user states a goal in natural language and it evolves through discussion with the
   agent. A DSL for more precise goals may come later; v1 assumes text.
 - **Owned by actors.** A goal belongs to a user and an agent. The agent can enumerate a user's goals
@@ -120,9 +124,10 @@ layers, each with one job:
 2. **Goal patterns — a document the model reads.** A skill of goal patterns with worked examples (the
    table below) teaches the agent how to read a goal, propose its instructions, decide whether it is
    actionable and recognise achievement. It grows by adding examples, and the evals score against it.
-3. **Wake rules — compiled, never written by users.** When a goal is created or edited, the agent
-   compiles its text into rules over the fact tuples, which the Durable Object evaluates without a
-   model. The compiled rules sit beside the text so they can be inspected. The text is the
+3. **Compiled rules — never written by users.** When a goal is created or edited, the agent compiles
+   its text into a separate rule DSL over the fact tuples (Datalog-style): the outcome or state the
+   goal wants (`achieved` / `holds`), its conditions, and the wake rules that decide when to judge it.
+   The Durable Object evaluates them without a model. The compiled rules sit beside the text so they can be inspected. The text is the
    authority: when the rules and the text disagree, the agent recompiles; it never rewrites the text
    to fit the rules.
 
@@ -138,6 +143,7 @@ Goal 3 below, compiled (Datalog notation, for readability):
 wake(reply)    :- fact(dima, P, O), force(commissive), about(O, "agent plugin").
 wake(refusal)  :- fact(dima, P, O), force(commissive), polarity(negative), about(O, "agent plugin").
 wake(followup) :- elapsed(goal, 2d), not achieved(goal).
+achieved(goal) :- fact(dima, works_on, "agent plugin"), force(commissive), polarity(positive).
 ```
 
 ### State
@@ -190,18 +196,25 @@ judged depends on how long it lives:
 - **A session goal can be promoted to a durable one** ("keep watching this after we're done"); its
   private thread's history moves with it into the goal's feed.
 
-### Goals are hierarchical
+### Goals, sub-goals and tasks
 
-There is one kind of thing: a goal. The steps of a goal are sub-goals, parented to it in the ECHO
-parent tree, each with its own status, situation and feed. "Complete my taxes" is judged into "gather
-the W-2s", "find last year's return" and "book the accountant", each owned by the agent or assigned to
-the user.
+**Goals are directives, and hierarchical.** A goal's steps are sub-goals, parented to it in the ECHO
+parent tree, each with its own text, compiled rules, status, situation and feed. "Complete my taxes"
+is judged into "gather the W-2s", "find last year's return" and "book the accountant". The machinery
+is optional per goal, so a sub-goal costs nothing until judgment gives it drivers ("book the
+accountant" gains a follow-up rule when the accountant does not reply). A sub-goal's change of status
+is a fact its parent's rules can match; closing a goal closes its open sub-goals.
 
-The machinery is optional per goal, so a step costs nothing until it needs it: a sub-goal with no
-drivers is a plain checklist item, and gains wake rules or a deadline only when judgment gives it
-some ("book the accountant" gets a follow-up rule when the accountant does not reply). A sub-goal's
-change of status is a fact in its parent's view, so a parent's wake rules can match its children;
-closing a goal closes its open sub-goals.
+**Tasks are concrete, and a record of work.** A `@dxos/types` `Task` is a detailed action with a
+history, assignee and status, and once done it is the record that the work happened. It is not
+conditional and has none of a goal's kinds. Earlier drafts conflated the two; they are separate:
+
+- A goal (or sub-goal) **creates a `Task`** only when the step is substantive enough to warrant one:
+  long-lived, assignable to a person, or worth keeping as a record of work. "Book the accountant" may
+  become a `Task` assigned to the user; "check Dima's reply" never does.
+- The `Task` links back to the goal that created it, and its completion is a fact the goal's rules
+  match. The task carries the work; the goal carries the intent.
+- plugin-agent's current `Goal` type becomes this directive; tasks stay as they are.
 
 ### Examples
 
@@ -230,8 +243,7 @@ Milestones, each ending in a demo that can be watched.
 
 ## Open questions
 
-1. How goals relate to `@dxos/types` `Task`: whether user-visible task lists render sub-goals, or a sub-goal links to a `Task` when one is wanted.
-2. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
-3. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
-4. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
-5. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
+1. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
+2. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
+3. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
+4. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
