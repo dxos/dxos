@@ -52,15 +52,17 @@ other.
 
 1. Follow the `drawing-diagrams` skill to write the `.dx`: derive edges from real imports or
    `package.json` dependencies, not memory; give every node `ref="<repo-relative path>"`.
-2. Write `before.dx` and `after.dx` in the scratchpad. Copy `before.dx` to `after.dx` and edit only
-   the changed nodes and edges, so the two layouts stay comparable.
+2. Write `after.dx` in the scratchpad. When the PR changes existing structure, first write
+   `before.dx` from the base, then copy it to `after.dx` and edit only the changed nodes and edges,
+   so the two layouts stay comparable. For entirely new code (`{{BEFORE_PNG}}` is `—`) there is no
+   `before.dx`, and every later step applies to `after.dx` alone.
 3. Mark what changed on the after diagram with these exact labels, and nothing else (the renderer
    ignores `color=`, so a colour-only mark does not show):
    - an added edge: label `"added"` (`edge Plugin -> Echo "added"`);
    - a removed edge stays on the after diagram: `"removed" stroke=dashed`;
    - an added node: append ` (new)` to its label, within the 17-character limit;
    - unchanged edges carry no label.
-4. Render both with the illustrator CLI, which writes `<name>.png` and `<name>.dx.svg` beside each
+4. Render each diagram with the illustrator CLI, which writes `<name>.png` and `<name>.dx.svg` beside each
    source and prints a layout report:
 
    ```bash
@@ -68,9 +70,9 @@ other.
      "$SCRATCH/before.dx" "$SCRATCH/after.dx"
    ```
 
-   Omit `CHROMIUM_PATH` outside the cloud sandbox. A DSL or layout `error` exits 1; fix it before
+   Pass only `"$SCRATCH/after.dx"` when there is no before diagram. Omit `CHROMIUM_PATH` outside the cloud sandbox. A DSL or layout `error` exits 1; fix it before
    going on.
 
-5. `Read` both PNGs and run the look-before-you-submit checklist in `drawing-diagrams` step 4.
-6. Attach the PNGs per `hosting-artifacts` (`gh --attach`, R2 as the fallback). Commit the `.dx` only
+5. `Read` every PNG you rendered and run the look-before-you-submit checklist in `drawing-diagrams` step 4.
+6. Attach every rendered PNG per `hosting-artifacts` (`gh --attach`, R2 as the fallback). Commit the `.dx` only
    when the diagram belongs in the package's docs.

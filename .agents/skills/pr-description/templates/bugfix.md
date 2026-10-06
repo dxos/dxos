@@ -51,11 +51,12 @@ first.
 
 A test this PR adds does not exist on the base, so show the failure by reverse-applying only the
 fix's hunks against the PR's base (the same `$BASE` used to pick templates), with the test and every
-other edit kept:
+other edit kept. Run exactly one of these, whichever matches how the fix is isolated; each undoes
+the fix, so running both fails:
 
 ```bash
-git diff "$BASE"...HEAD -- "$FIX_FILE" | git apply -R   # the fix has a file to itself
-git revert --no-commit "$FIX_COMMIT"                    # the fix has a commit to itself
+git diff "$BASE"...HEAD -- "$FIX_FILE" | git apply -R   # either: the fix has a file to itself
+git revert --no-commit "$FIX_COMMIT"                    # or: the fix has a commit to itself
 ```
 
 An existing test, or manual steps on the base, also count. When no automated test can reproduce it,
