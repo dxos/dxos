@@ -101,6 +101,14 @@ pass at startup, then one after every burst of changes to a directory the index 
 (`src/Watch.ts`). The passes run on a worker thread (`src/IndexThread.ts`) that shares the store
 with the server, so a reindex never stalls the web UI. `--no-watch` serves the store as it is.
 
+**Struggling turns are reported.** After each turn a background review reads the turn off the log —
+failures, retried replies, failed snippets, repeated code — and has the small model judge the ones
+that look troubled (plus a sample of the rest). A troubled turn's whole trajectory is uploaded as
+gzipped NDJSON to the private `composer-feedback-logs` R2 bucket and a `code_index_turn_trouble`
+PostHog event carries the judge's summary and the object key. It runs only when
+`DX_POSTHOG_API_KEY`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are all set;
+`CODE_INDEX_TELEMETRY=0` turns it off. See [`design/TURN-REVIEW.md`](./design/TURN-REVIEW.md).
+
 **No build step.** Vite runs inside the server process in middleware mode and resolves `@dxos/*`
 through the `source` condition, so the UI — Solid, with `@dxos/react-ui-assistant` mounted as a React
 island — is transformed from the working tree with nothing to rebuild first.
