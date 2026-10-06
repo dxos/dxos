@@ -120,7 +120,10 @@ export class SpaceStateManager extends Resource {
    * write and no replicator ever sees it as an ordinary space.
    */
   markLocalSpace(spaceId: SpaceId, name: string): void {
-    invariant(!this._localSpaceByName.has(name) || this._localSpaceByName.get(name) === spaceId, 'Local space name taken.');
+    invariant(
+      !this._localSpaceByName.has(name) || this._localSpaceByName.get(name) === spaceId,
+      'Local space name taken.',
+    );
     this._localSpaces.set(spaceId, name);
     this._localSpaceByName.set(name, spaceId);
   }
