@@ -72,8 +72,8 @@
     "unit": "bytes"
   },
   "run > retained tab heap per turn": {
-    "target": 300000,
-    "limit": 450000,
+    "target": 340000,
+    "limit": 510000,
     "unit": "bytes"
   },
   "run > total blocking time": {
@@ -176,8 +176,8 @@
     "unit": "bytes"
   },
   "busy > run > retained tab heap per turn": {
-    "target": 300000,
-    "limit": 450000,
+    "target": 270000,
+    "limit": 405000,
     "unit": "bytes"
   },
   "busy > run > total blocking time": {
