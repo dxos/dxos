@@ -37,6 +37,7 @@ const CHAT_THREAD_NAME = 'ChatThread';
 
 type ChatThreadContextValue = {
   userHue?: string;
+  viewType?: ChatView;
   onEvent?: (event: ChatThreadEvent) => void;
 };
 
@@ -123,7 +124,7 @@ const ChatThreadRoot = ({
   }, [model]);
 
   return (
-    <ChatThreadProvider userHue={userHue} onEvent={onEvent}>
+    <ChatThreadProvider userHue={userHue} viewType={viewType} onEvent={onEvent}>
       <MessageChromeProvider
         onRewind={onEvent && rewind ? handleRewind : undefined}
         streaming={streaming}
@@ -167,7 +168,7 @@ type ChatThreadViewportProps = ComponentPropsWithoutRef<typeof MessageList.Viewp
  * events, which is what keeps the widgets renderable from the tag alone.
  */
 const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThreadViewportProps) => {
-  const { userHue, onEvent } = useChatThreadContext(CHAT_THREAD_VIEWPORT_NAME);
+  const { userHue, viewType, onEvent } = useChatThreadContext(CHAT_THREAD_VIEWPORT_NAME);
 
   const handleClick = useCallback(
     (event: React.MouseEvent) => {
@@ -203,7 +204,12 @@ const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThr
           default, and a caller's classNames extend or override it. */}
       <MessageList.Viewport
         {...props}
-        classNames={['dx-grow', classNames]}
+        classNames={[
+          'dx-grow',
+          // Debug's raw tags and toolkit JSON are reference text, set smaller than the prose around them.
+          viewType === 'debug' && '[&_.cm-codeblock-line]:text-sm [&_.cm-xml-tag]:text-sm',
+          classNames,
+        ]}
         overlay={
           <>
             <ScrollToBottom />
@@ -244,7 +250,7 @@ const ScrollToBottom = () => {
       variant='primary'
       icon='ph--arrow-line-down--regular'
       iconOnly
-      size='sm'
+      size='lg'
       label={t('scroll-to-bottom.label')}
       disabled={hidden}
       aria-hidden={hidden}

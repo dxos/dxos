@@ -242,9 +242,9 @@ const toolkitTag = (blocks: ContentBlock.Any[], pretty = false): string => {
   const pending = blocks.some((block) => block.pending);
   const open = `<toolkit${pending ? ' pending="true"' : ''}>`;
   if (pretty) {
-    // Blank lines around a fence between the tags, so the markdown parser renders the run as JSON code.
+    // One fenced block holding the tags and the run, so the markdown parser renders it as code.
     const json = JSON.stringify(blocks, expandJsonStrings, 2);
-    return `${open}\n\n\`\`\`json\n${json}\n\`\`\`\n\n</toolkit>`;
+    return `\`\`\`json\n${open}\n${json}\n</toolkit>\n\`\`\``;
   }
   return `${open}${escapeXml(JSON.stringify(blocks))}</toolkit>`;
 };

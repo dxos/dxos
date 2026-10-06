@@ -130,7 +130,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   <Layout.Grid
                     cols={['fill', 'auto']}
                     gap='sm'
-                    classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-3'
+                    classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-2'
                     data-testid='assistant.chat-status'
                   >
                     {/* A column, so the queue's listbox spans the row: a row shrinks it and wraps each bubble to nothing. */}

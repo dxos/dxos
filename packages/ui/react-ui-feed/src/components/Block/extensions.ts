@@ -90,7 +90,8 @@ const sharedExtensions = (
 const build = (registry: XmlWidgetRegistry | undefined, editable: boolean, themeMode: 'light' | 'dark'): Extension[] =>
   [
     createBasicExtensions({ readOnly: !editable, editable, lineWrapping: true }),
-    createThemeExtensions({ themeMode }),
+    // Colours fenced code, as the markdown editor and the previous chat stream do.
+    createThemeExtensions({ themeMode, syntaxHighlighting: true }),
     // A registry changes how the document is *parsed*, not only how it is decorated: registered
     // tags have to survive as single blocks through the markdown parser before `xmlTags` can
     // replace them, and without that they render as the literal angle brackets they are.

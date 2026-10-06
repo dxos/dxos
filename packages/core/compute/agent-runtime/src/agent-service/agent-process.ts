@@ -997,7 +997,7 @@ export const wakeUpPrompt = (
   message: string | null,
   budget?: { wake: number; max: number },
 ): string => {
-  const fired = `Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).`;
+  const fired = `Scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).`;
   const body = message ?? 'Continue with whatever you intended to do when you scheduled this wake-up.';
   const limit =
     budget == null

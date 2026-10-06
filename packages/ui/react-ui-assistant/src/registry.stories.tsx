@@ -114,7 +114,7 @@ export const TestAllWidgetsFit: Story = {
 export const SyntheticTurn: Story = {
   args: {
     content:
-      '<synthetic>Your scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).\nPoll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>',
+      '<synthetic>Scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).\nPoll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>',
   },
 };
 
@@ -151,7 +151,7 @@ export const Synthetic: Story = {
 const SYNTHETIC_VARIANTS = trim`
   <synthetic>Continue.</synthetic>
 
-  <synthetic>Your scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).
+  <synthetic>Scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).
   Poll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>
 
   <synthetic>
