@@ -196,5 +196,285 @@
     "limit": 270,
     "unit": "ms",
     "weight": 0.5
+  },
+  "automergeSaveBytes > assistant-turns": {
+    "target": 1310,
+    "limit": 1380,
+    "unit": "bytes"
+  },
+  "automergeSaveBytes > boot": {
+    "target": 9380,
+    "limit": 9850,
+    "unit": "bytes"
+  },
+  "automergeSaves > assistant-turns": {
+    "target": 5,
+    "limit": 6,
+    "unit": "count"
+  },
+  "automergeSaves > boot": {
+    "target": 48,
+    "limit": 50.4,
+    "unit": "count"
+  },
+  "echoIndexPasses > assistant-turns": {
+    "target": 143,
+    "limit": 150,
+    "unit": "count"
+  },
+  "echoQueryRecomputes > assistant-turns": {
+    "target": 88,
+    "limit": 92.4,
+    "unit": "count"
+  },
+  "echoQueryRecomputes > boot": {
+    "target": 22,
+    "limit": 23.1,
+    "unit": "count"
+  },
+  "layoutCount > assistant-turns": {
+    "target": 615,
+    "limit": 657,
+    "unit": "count"
+  },
+  "layoutCount > boot": {
+    "target": 12.5,
+    "limit": 14,
+    "unit": "count"
+  },
+  "layoutCount > scroll-thread": {
+    "target": 159,
+    "limit": 167,
+    "unit": "count"
+  },
+  "reactCommits > assistant-turns": {
+    "target": 919,
+    "limit": 979,
+    "unit": "count"
+  },
+  "reactCommits > boot": {
+    "target": 137,
+    "limit": 144,
+    "unit": "count"
+  },
+  "reactCommits > scroll-thread": {
+    "target": 69,
+    "limit": 72.5,
+    "unit": "count"
+  },
+  "reactRenders > assistant-turns": {
+    "target": 27400,
+    "limit": 28800,
+    "unit": "count"
+  },
+  "reactRenders > boot": {
+    "target": 1940,
+    "limit": 2040,
+    "unit": "count"
+  },
+  "reactRenders > scroll-thread": {
+    "target": 2860,
+    "limit": 3000,
+    "unit": "count"
+  },
+  "reactWastedRenders > assistant-turns": {
+    "target": 3190,
+    "limit": 3350,
+    "unit": "count"
+  },
+  "reactWastedRenders > boot": {
+    "target": 219,
+    "limit": 230,
+    "unit": "count"
+  },
+  "reactWastedRenders > scroll-thread": {
+    "target": 155,
+    "limit": 163,
+    "unit": "count"
+  },
+  "recalcStyleCount > assistant-turns": {
+    "target": 1760,
+    "limit": 1910,
+    "unit": "count"
+  },
+  "recalcStyleCount > boot": {
+    "target": 31,
+    "limit": 34,
+    "unit": "count"
+  },
+  "recalcStyleCount > idle": {
+    "target": 600,
+    "limit": 630,
+    "unit": "count"
+  },
+  "recalcStyleCount > scroll-thread": {
+    "target": 510,
+    "limit": 536,
+    "unit": "count"
+  },
+  "sqliteDeletes > assistant-turns": {
+    "target": 248,
+    "limit": 260,
+    "unit": "count"
+  },
+  "sqliteDeletes > boot": {
+    "target": 10,
+    "limit": 11,
+    "unit": "count"
+  },
+  "sqliteInserts > assistant-turns": {
+    "target": 1610,
+    "limit": 1690,
+    "unit": "count"
+  },
+  "sqliteInserts > boot": {
+    "target": 144,
+    "limit": 151,
+    "unit": "count"
+  },
+  "sqliteRowsChanged > assistant-turns": {
+    "target": 1750,
+    "limit": 1840,
+    "unit": "count"
+  },
+  "sqliteRowsChanged > boot": {
+    "target": 149,
+    "limit": 156,
+    "unit": "count"
+  },
+  "sqliteSelects > assistant-turns": {
+    "target": 1900,
+    "limit": 2000,
+    "unit": "count"
+  },
+  "sqliteSelects > boot": {
+    "target": 296,
+    "limit": 311,
+    "unit": "count"
+  },
+  "sqliteUpdates > assistant-turns": {
+    "target": 3,
+    "limit": 4,
+    "unit": "count"
+  },
+  "busy > automergeSaveBytes > assistant-turns": {
+    "target": 1370,
+    "limit": 1440,
+    "unit": "bytes"
+  },
+  "busy > automergeSaves > assistant-turns": {
+    "target": 5,
+    "limit": 6,
+    "unit": "count"
+  },
+  "busy > echoIndexPasses > assistant-turns": {
+    "target": 140,
+    "limit": 147,
+    "unit": "count"
+  },
+  "busy > echoQueryRecomputes > assistant-turns": {
+    "target": 87.8,
+    "limit": 92.2,
+    "unit": "count"
+  },
+  "busy > echoQueryRecomputes > boot": {
+    "target": 28.5,
+    "limit": 33,
+    "unit": "count"
+  },
+  "busy > layoutCount > assistant-turns": {
+    "target": 633,
+    "limit": 665,
+    "unit": "count"
+  },
+  "busy > layoutCount > boot": {
+    "target": 13.5,
+    "limit": 15,
+    "unit": "count"
+  },
+  "busy > layoutCount > scroll-thread": {
+    "target": 159,
+    "limit": 167,
+    "unit": "count"
+  },
+  "busy > reactCommits > assistant-turns": {
+    "target": 944,
+    "limit": 991,
+    "unit": "count"
+  },
+  "busy > reactCommits > boot": {
+    "target": 146,
+    "limit": 153,
+    "unit": "count"
+  },
+  "busy > reactCommits > scroll-thread": {
+    "target": 70,
+    "limit": 73.5,
+    "unit": "count"
+  },
+  "busy > reactRenders > assistant-turns": {
+    "target": 27700,
+    "limit": 29100,
+    "unit": "count"
+  },
+  "busy > reactRenders > scroll-thread": {
+    "target": 2860,
+    "limit": 3000,
+    "unit": "count"
+  },
+  "busy > reactWastedRenders > assistant-turns": {
+    "target": 3230,
+    "limit": 3390,
+    "unit": "count"
+  },
+  "busy > reactWastedRenders > scroll-thread": {
+    "target": 155,
+    "limit": 163,
+    "unit": "count"
+  },
+  "busy > recalcStyleCount > assistant-turns": {
+    "target": 1810,
+    "limit": 1900,
+    "unit": "count"
+  },
+  "busy > recalcStyleCount > idle": {
+    "target": 601,
+    "limit": 631,
+    "unit": "count"
+  },
+  "busy > recalcStyleCount > scroll-thread": {
+    "target": 510,
+    "limit": 536,
+    "unit": "count"
+  },
+  "busy > sqliteDeletes > assistant-turns": {
+    "target": 248,
+    "limit": 260,
+    "unit": "count"
+  },
+  "busy > sqliteInserts > assistant-turns": {
+    "target": 2040,
+    "limit": 2140,
+    "unit": "count"
+  },
+  "busy > sqliteRowsChanged > assistant-turns": {
+    "target": 2190,
+    "limit": 2300,
+    "unit": "count"
+  },
+  "busy > sqliteSelects > assistant-turns": {
+    "target": 1890,
+    "limit": 1980,
+    "unit": "count"
+  },
+  "busy > sqliteSelects > boot": {
+    "target": 510,
+    "limit": 556,
+    "unit": "count"
+  },
+  "busy > sqliteUpdates > assistant-turns": {
+    "target": 3,
+    "limit": 4,
+    "unit": "count"
   }
 }
