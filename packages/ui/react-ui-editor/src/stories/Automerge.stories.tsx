@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { Obj, Query, Ref } from '@dxos/echo';
 import { createObject } from '@dxos/echo-client';
@@ -166,9 +166,9 @@ export const WithEcho: Story = {
   play: async ({ canvasElement }) => {
     // ECHO identity/space creation and invitation are async; wait for both peers to mount an editor.
     const editors = await waitFor(
-      () => {
+      async () => {
         const found = Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-editor'));
-        void expect(found).toHaveLength(2);
+        await expect(found).toHaveLength(2);
         return found;
       },
       { timeout: 15_000 },
@@ -185,16 +185,60 @@ export const WithEcho: Story = {
     }
 
     // Focusing peer A broadcasts its cursor position over the gossip channel; peer B renders it
-    // as a `.cm-collab-selectionInfo` decoration.
+    // as a `.cm-collab-selectionCaret` decoration.
     contentA.focus();
-    await waitFor(() => expect(editors[1].querySelector('.cm-collab-selectionInfo')).toBeInTheDocument(), {
+    await waitFor(() => expect(editors[1].querySelector('.cm-collab-selectionCaret')).toBeInTheDocument(), {
       timeout: 10_000,
     });
 
     // And symmetrically in the other direction.
     contentB.focus();
-    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeInTheDocument(), {
+    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionCaret')).toBeInTheDocument(), {
       timeout: 10_000,
     });
+
+    // Hovering the caret shows its name as a tooltip: above the caret, starting at it, and inside the window
+    // even for a cursor at the start of the first line, where the editor's scroller would clip a label.
+    const caret = editors[0].querySelector<HTMLElement>('.cm-collab-selectionCaret');
+    await expect(caret).toBeInstanceOf(HTMLElement);
+    if (!caret) {
+      return;
+    }
+    await expect(caret).toHaveTextContent(/.+/);
+    caret.dispatchEvent(new MouseEvent('mouseenter'));
+    const info = await waitFor(async () => {
+      const found = editors[0].querySelector<HTMLElement>('.cm-tooltip.cm-collab-selectionInfo');
+      await expect(found).toBeInstanceOf(HTMLElement);
+      return found;
+    });
+    if (!info) {
+      return;
+    }
+    await expect(info).toHaveTextContent(caret.textContent?.replaceAll('\u2060', '') ?? '');
+    // CodeMirror places a tooltip on its next measure, so the geometry is awaited rather than read once.
+    await waitFor(async () => {
+      const caretBox = caret.getBoundingClientRect();
+      const infoBox = info.getBoundingClientRect();
+      await expect(Math.round(infoBox.bottom)).toBeLessThanOrEqual(Math.round(caretBox.top) + 1);
+      await expect(Math.round(infoBox.left)).toBeGreaterThanOrEqual(Math.round(caretBox.left) - 2);
+      await expect(infoBox.top).toBeGreaterThanOrEqual(0);
+    });
+
+    // The peer moving its caret removes the hovered caret without a `mouseleave`; the name still goes.
+    contentB.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeNull(), { timeout: 3_000 });
+
+    // It outlasts the pointer leaving, so a name glimpsed on a 2px caret can still be read, then goes.
+    const movedCaret = await waitFor(async () => {
+      const found = editors[0].querySelector<HTMLElement>('.cm-collab-selectionCaret');
+      await expect(found).toBeInstanceOf(HTMLElement);
+      return found;
+    });
+    movedCaret?.dispatchEvent(new MouseEvent('mouseenter'));
+    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeInstanceOf(HTMLElement));
+    movedCaret?.dispatchEvent(new MouseEvent('mouseleave'));
+    await expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeInstanceOf(HTMLElement);
+    await waitFor(() => expect(editors[0].querySelector('.cm-collab-selectionInfo')).toBeNull(), { timeout: 3_000 });
   },
 };

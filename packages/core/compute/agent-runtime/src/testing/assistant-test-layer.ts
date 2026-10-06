@@ -36,7 +36,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Hypergraph, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
 import { type TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
@@ -225,6 +225,8 @@ export const AssistantTestServiceResolverLayer = (
         Effect.map(Layer.succeedContext),
       );
 
+      const { db } = yield* Database.Service;
+
       // v4 dropped `Layer.toRuntime`; a built layer is its service context. The agent service is built
       // after the resolver (it needs it), so extra services reach it through the same late-bound holder.
       const extraServicesContext = yield* Layer.build(
@@ -249,6 +251,8 @@ export const AssistantTestServiceResolverLayer = (
             return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
           }).pipe(Effect.provide(services)),
         ),
+        // As the app's client contributes it: operations that look an object up across spaces need it.
+        ServiceResolver.succeed(Hypergraph.Service, () => Effect.succeed(Hypergraph.makeService(db.graph))),
         ServiceResolver.succeed(AgentService.AgentService, () =>
           Effect.gen(function* () {
             // Read lazily (like the process manager): filled by `captureAgentService` before any
