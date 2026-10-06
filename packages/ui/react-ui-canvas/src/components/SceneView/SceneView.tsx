@@ -62,7 +62,7 @@ import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
-import { PREVIEW_NODE_ID, createId, usePointerMachine } from './usePointerMachine.ts';
+import { PREVIEW_NODE_ID, createId, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
 import { useSceneClipboard } from './useSceneClipboard.ts';
 import { useSceneKeys } from './useSceneKeys.ts';
@@ -239,7 +239,7 @@ const SceneViewRoot = ({
   // Pointer state machine.
   //
 
-  const { major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
+  const { minor, major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
   const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
   const toggleDebug = useCallback(() => registry.set(atoms.debug, !registry.get(atoms.debug)), [registry, atoms.debug]);
   const {
@@ -283,6 +283,7 @@ const SceneViewRoot = ({
     setCamera,
     cancelAnimation,
     isNavigating,
+    minor,
     major,
     snap,
     snapMinor,
@@ -386,7 +387,8 @@ const SceneViewRoot = ({
         blocked: false,
       };
     }
-    if (drag?.kind === 'link' && (drag.target || isPointEndpoint(drag.source))) {
+    // A link previews only once it has gone a grid cell, so a click with a link tool draws nothing.
+    if (drag?.kind === 'link' && isLinkDrawn(drag, minor) && (drag.target || isPointEndpoint(drag.source))) {
       // A port drag previews once it reaches a target; a free-ended link previews as it will land.
       const link = createLink({
         type: drag.type,
@@ -407,7 +409,7 @@ const SceneViewRoot = ({
       };
     }
     return { displayScene: scene, blocked: false };
-  }, [scene, drag, createPreview, projection]);
+  }, [scene, drag, createPreview, projection, minor]);
 
   /** The bounds a create gesture would land, drawn as a frame whether or not the node itself previews. */
   const createFrame = useMemo(() => {

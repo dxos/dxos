@@ -175,6 +175,22 @@ test.describe('SceneView', () => {
     expect(await scene.nodeCount()).toBe(4);
   });
 
+  test('the line tool shows no link until the pointer has moved a grid cell', async () => {
+    await scene.zoomOut();
+    const view = await scene.box(scene.root);
+    await scene.focus();
+    await page.keyboard.press('l');
+    const right = await scene.nodesRight();
+    const from = { x: right + (view.x + view.width - right) / 2, y: view.y + view.height / 2 };
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    // A few pixels is well under a grid cell at any zoom the story fits to.
+    await page.mouse.move(from.x + 3, from.y + 2, { steps: 3 });
+    await expect(page.locator('[data-link-id]')).toHaveCount(3);
+    await page.mouse.up();
+    expect(await scene.linkCount()).toBe(3);
+  });
+
   test('picking a creation tool clears the selection', async () => {
     await scene.clickNode('scene:root/a');
     expect(await scene.selectedNodes()).toEqual(['scene:root/a']);

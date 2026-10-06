@@ -57,6 +57,13 @@ export const createId = (prefix: string) => `${prefix}-${Math.random().toString(
 
 const distance = (left: Point, right: Point): [number, number] => [left.x - right.x, left.y - right.y];
 
+/**
+ * Whether a link gesture has gone far enough to be a link: at least one grid cell (`minimum`, scene
+ * units) from where it started. Short of that it is a click, so it neither previews nor lands.
+ */
+export const isLinkDrawn = ({ from, to }: { from: Point; to: Point }, minimum: number): boolean =>
+  Math.hypot(to.x - from.x, to.y - from.y) >= minimum;
+
 /** Whether a link between two endpoints has a direction: either pinned port declares `in` or `out`. */
 const isDirected = (scene: Scene, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
   [source, target].some((end) => {
@@ -84,7 +91,7 @@ export type UsePointerMachineOptions = {
   interactedRef: MutableRefObject<boolean>;
   select: (ids: Iterable<ElementId>) => void;
 } & Pick<SceneCamera, 'setCamera' | 'cancelAnimation' | 'isNavigating'> &
-  Pick<SceneSnap, 'major' | 'snap' | 'snapMinor'>;
+  Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor'>;
 
 export type PointerMachine = {
   /** Root element handlers. */
@@ -144,6 +151,7 @@ export const usePointerMachine = ({
   setCamera,
   cancelAnimation,
   isNavigating,
+  minor,
   major,
   snap,
   snapMinor,
@@ -723,10 +731,10 @@ export const usePointerMachine = ({
         break;
       }
       case 'link': {
-        // A press that never moved is a click, not a link: with a link tool selected, pressing a shape
-        // and releasing on it draws nothing rather than a link to a node the gesture never reached.
-        // Read from the raw gesture, since settling has already snapped the landing point away from it.
-        if (raw.kind === 'link' && raw.to.x === raw.from.x && raw.to.y === raw.from.y) {
+        // A press that moved less than a grid cell is a click, not a link: with a link tool selected,
+        // pressing and releasing draws nothing. Read from the raw gesture, since settling has already
+        // snapped the landing point away from it.
+        if (raw.kind === 'link' && !isLinkDrawn(raw, minor)) {
           break;
         }
         let target = current.target;
@@ -808,6 +816,7 @@ export const usePointerMachine = ({
     createdNode,
     commitCreated,
     addNode,
+    minor,
   ]);
 
   return {
