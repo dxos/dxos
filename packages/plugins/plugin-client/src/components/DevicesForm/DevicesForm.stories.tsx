@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { type Identity } from '@dxos/halo';
@@ -13,7 +12,7 @@ import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { translations } from '#translations';
 
-import { DevicesForm, type DevicesFormProps } from './DevicesForm.tsx';
+import { DevicesForm } from './DevicesForm.tsx';
 
 const makeDevices = (count: number): Identity.DeviceInfo[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -26,17 +25,9 @@ const makeDevices = (count: number): Identity.DeviceInfo[] =>
     presence: index < 2 ? 'online' : 'offline',
   }));
 
-// A fixed height, as in a plank, so a long list has to scroll.
-const DefaultStory = (props: DevicesFormProps) => (
-  <div className='flex flex-col h-[40rem]'>
-    <DevicesForm {...props} />
-  </div>
-);
-
 const meta = {
   title: 'plugins/plugin-client/components/DevicesForm',
   component: DevicesForm,
-  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: { layout: 'fullscreen', translations: [...translations, ...shellTranslations] },
 } satisfies Meta<typeof DevicesForm>;
