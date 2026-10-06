@@ -539,7 +539,8 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
         {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is affordable
             here — unlike the virtualized mailbox list, which resolves the whole page at once. */}
         <Card.Row
-          classNames='items-start py-1'
+          align='start'
+          classNames='py-1'
           leading={
             <ContactAvatar
               actor={target.sender}
@@ -793,7 +794,7 @@ type MessageMenuProps = {
 
 /** Per-message toolbar menu (reply/forward/delete/extract), built by the tile and rendered top-right. */
 const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
-  <ActionToolbar {...(actions ?? {})} attendableId={attendableId} alwaysActive classNames='p-1 bg-transparent' />
+  <ActionToolbar {...(actions ?? {})} attendableId={attendableId} alwaysActive classNames='bg-transparent' />
 );
 
 MessageMenu.displayName = MESSAGE_MENU_NAME;
