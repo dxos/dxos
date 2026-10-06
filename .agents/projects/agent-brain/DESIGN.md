@@ -215,7 +215,6 @@ exists because a goal needs it, and closing the goal closes its open tasks.
 ## Open questions
 
 1. Private threads: whether a session feed can carry threads the conversation view hides, cheaply enough for one per goal; this decides per-user background sessions (otherwise one per agent).
-
 2. Whether wake rules can be compiled reliably from text, and how a miscompiled rule is noticed.
 3. Goal scope: one user, a group, or the agent itself ("keep the team's status page current").
 4. Cost controls: limits on judgment calls per goal per window, and batching facts per evaluation.
