@@ -27,6 +27,7 @@ import {
   type Budget,
   COSTED_WORK_METRICS,
   type MeasureOptions,
+  WORK_GROUP,
   type WorkMetric,
   calibrateStageRuns,
   groupOfId,
@@ -61,28 +62,20 @@ const readBudgets = (file: string): Record<string, Budget> => parseBudgets(JSON.
 
 const relative = (file: string) => path.relative(APP_ROOT, file);
 
-const tables = (budgets: Record<string, Budget>) =>
+/** A work counter's label leads with the stage, as the tables list stages; its id leads with the counter. */
+const labelOf = (id: string): string => {
+  const [head, ...rest] = id.split(' > ');
+  return groupOfId(id) === WORK_GROUP ? `${rest.join(' > ')} › ${head}` : rest.join(' > ');
+};
+
+const tables = (budgets: Record<string, Budget>, groupSuffix = '') =>
   renderBudgetTables(
     Object.entries(budgets).map(([id, budget]) => ({
       id,
-      group: groupOfId(id),
-      label: id.split(' > ').slice(1).join(' > '),
+      group: groupOfId(id) + groupSuffix,
+      label: labelOf(id),
       budget,
     })),
-  );
-
-/** A work counter's label leads with the stage, as the tables list stages; its id leads with the counter. */
-const workTables = (budgets: Record<string, Budget>) =>
-  renderBudgetTables(
-    Object.entries(budgets).map(([id, budget]) => {
-      const [counter, stage] = id.split(' > ');
-      return {
-        id,
-        group: `${groupOfId(id)} (${relative(COUNTERS_BUDGETS_FILE)})`,
-        label: `${stage} › ${counter}`,
-        budget,
-      };
-    }),
   );
 
 const renderDocs = (budgets: Record<string, Budget>, counters: Record<string, Budget>): string =>
@@ -122,7 +115,7 @@ const renderDocs = (budgets: Record<string, Budget>, counters: Record<string, Bu
     'coverage) cost 7–29% of wall time, so a separate job runs them and scores only them, as the',
     '`composer-work` suite; its timings are never scored or published.',
     '',
-    workTables(counters),
+    tables(counters, ` (${relative(COUNTERS_BUDGETS_FILE)})`),
     '',
   ].join('\n');
 
@@ -163,6 +156,10 @@ if (command === 'score') {
     flow: FLOW,
     ...(pass.work ? { work: pass.work } : {}),
   });
+  // An empty proposal means the runs carried none of the counters; writing it would drop every work budget.
+  if (values.write && Object.keys(proposed).length === 0) {
+    throw new Error('calibration proposed no work budgets; refusing to replace the existing ones');
+  }
   const budgets = replaceWorkBudgets(readBudgets(pass.budgetsFile), proposed);
   if (values.write) {
     writeFileSync(pass.budgetsFile, JSON.stringify(budgets, null, 2) + '\n');

@@ -86,6 +86,10 @@ if (command === 'score') {
     ...(work ? { work } : {}),
   });
   if (values.write) {
+    // An empty proposal means the runs carried none of the counters; writing it would drop every work budget.
+    if (Object.keys(proposed).length === 0) {
+      throw new Error('calibration proposed no work budgets; refusing to replace the existing ones');
+    }
     const budgets = replaceWorkBudgets(readBudgets(), proposed, [BUSY_SCALE]);
     writeFileSync(budgetsFile, JSON.stringify(budgets, null, 2) + '\n');
     console.log(`wrote ${Object.keys(proposed).length} work budgets to ${path.relative(PACKAGE_ROOT, budgetsFile)}`);

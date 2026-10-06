@@ -80,44 +80,44 @@ budgeted, and only counters that are non-zero and under 5% per-iteration spread 
 
 ### work
 
-| metric          | target |  limit | better | weight |
-| --------------- | -----: | -----: | ------ | -----: |
-| open-project    |      5 |      6 | lower  |      1 |
-| open-project    |      2 |      3 | lower  |      1 |
-| open-project    |     38 |   39.9 | lower  |      1 |
-| reopen-project  |     11 |     12 | lower  |      1 |
-| assistant-turns |     46 |   48.7 | lower  |      1 |
-| open-document   |      4 |      5 | lower  |      1 |
-| open-project    |      1 |      2 | lower  |      1 |
-| reopen-project  |      1 |      2 | lower  |      1 |
-| edit-document   |     65 |   68.3 | lower  |      1 |
-| open-project    |     26 |   27.4 | lower  |      1 |
-| open-tasks      |     15 |   16.4 | lower  |      1 |
-| reopen-project  |   26.5 |     28 | lower  |      1 |
-| scroll-document |     32 |   56.3 | lower  |      1 |
-| scroll-tasks    |     24 |   25.2 | lower  |      1 |
-| boot            |    221 |    241 | lower  |      1 |
-| assistant-turns | 16,300 | 17,100 | lower  |      1 |
-| open-assistant  |    949 |    996 | lower  |      1 |
-| open-tasks      |  3,960 |  4,160 | lower  |      1 |
-| reopen-project  |  7,140 |  7,500 | lower  |      1 |
-| scroll-document |    421 |    446 | lower  |      1 |
-| scroll-tasks    | 19,200 | 20,200 | lower  |      1 |
-| toggle-task     |    870 |    914 | lower  |      1 |
-| assistant-turns |  1,280 |  1,350 | lower  |      1 |
-| open-assistant  |     82 |   86.1 | lower  |      1 |
-| open-tasks      |     87 |   91.4 | lower  |      1 |
-| reopen-project  |    275 |    289 | lower  |      1 |
-| scroll-document |     22 |   23.1 | lower  |      1 |
-| scroll-tasks    |     40 |     42 | lower  |      1 |
-| toggle-task     |     59 |     62 | lower  |      1 |
-| edit-document   |    163 |    171 | lower  |      1 |
-| open-project    |   63.5 |   66.7 | lower  |      1 |
-| reopen-project  |     64 |   67.8 | lower  |      1 |
-| scroll-document |    199 |    300 | lower  |      1 |
-| assistant-turns |    266 |    279 | lower  |      1 |
-| open-project    |     12 |     13 | lower  |      1 |
-| open-project    |      1 |      2 | lower  |      1 |
+| metric                               | target |  limit | better | weight |
+| ------------------------------------ | -----: | -----: | ------ | -----: |
+| open-project › automergeSaves        |      5 |      6 | lower  |      1 |
+| open-project › echoIndexPasses       |      2 |      3 | lower  |      1 |
+| open-project › echoQueryRecomputes   |     38 |   39.9 | lower  |      1 |
+| reopen-project › echoQueryRecomputes |     11 |     12 | lower  |      1 |
+| assistant-turns › echoQueryRuns      |     46 |   48.7 | lower  |      1 |
+| open-document › echoQueryRuns        |      4 |      5 | lower  |      1 |
+| open-project › echoQueryRuns         |      1 |      2 | lower  |      1 |
+| reopen-project › echoQueryRuns       |      1 |      2 | lower  |      1 |
+| edit-document › layoutCount          |     65 |   68.3 | lower  |      1 |
+| open-project › layoutCount           |     26 |   27.4 | lower  |      1 |
+| open-tasks › layoutCount             |     15 |   16.4 | lower  |      1 |
+| reopen-project › layoutCount         |   26.5 |     28 | lower  |      1 |
+| scroll-document › layoutCount        |     32 |   56.3 | lower  |      1 |
+| scroll-tasks › layoutCount           |     24 |   25.2 | lower  |      1 |
+| boot › reactCommits                  |    221 |    241 | lower  |      1 |
+| assistant-turns › reactRenders       | 16,300 | 17,100 | lower  |      1 |
+| open-assistant › reactRenders        |    949 |    996 | lower  |      1 |
+| open-tasks › reactRenders            |  3,960 |  4,160 | lower  |      1 |
+| reopen-project › reactRenders        |  7,140 |  7,500 | lower  |      1 |
+| scroll-document › reactRenders       |    421 |    446 | lower  |      1 |
+| scroll-tasks › reactRenders          | 19,200 | 20,200 | lower  |      1 |
+| toggle-task › reactRenders           |    870 |    914 | lower  |      1 |
+| assistant-turns › reactWastedRenders |  1,280 |  1,350 | lower  |      1 |
+| open-assistant › reactWastedRenders  |     82 |   86.1 | lower  |      1 |
+| open-tasks › reactWastedRenders      |     87 |   91.4 | lower  |      1 |
+| reopen-project › reactWastedRenders  |    275 |    289 | lower  |      1 |
+| scroll-document › reactWastedRenders |     22 |   23.1 | lower  |      1 |
+| scroll-tasks › reactWastedRenders    |     40 |     42 | lower  |      1 |
+| toggle-task › reactWastedRenders     |     59 |     62 | lower  |      1 |
+| edit-document › recalcStyleCount     |    163 |    171 | lower  |      1 |
+| open-project › recalcStyleCount      |   63.5 |   66.7 | lower  |      1 |
+| reopen-project › recalcStyleCount    |     64 |   67.8 | lower  |      1 |
+| scroll-document › recalcStyleCount   |    199 |    300 | lower  |      1 |
+| assistant-turns › sqliteDeletes      |    266 |    279 | lower  |      1 |
+| open-project › sqliteInserts         |     12 |     13 | lower  |      1 |
+| open-project › sqliteUpdates         |      1 |      2 | lower  |      1 |
 
 ## Counters-on pass
 

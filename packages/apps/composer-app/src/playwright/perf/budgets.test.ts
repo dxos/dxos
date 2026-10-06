@@ -19,6 +19,6 @@ describe('perf budgets', () => {
   });
 
   test('the counters-on pass budgets work counters alone', ({ expect }) => {
-    expect(groupsOf('budgets-counters.json').every((group) => group === 'work')).toBe(true);
+    expect(groupsOf('budgets-counters.json')).toEqual(['work']);
   });
 });
