@@ -1,6 +1,6 @@
 # plugin-agent — Tasks
 
-_Resume: pick the next open item below. Uncommitted: none. Last: FormInlineAnnotation survives the JSON-schema round trip (cc98eb32903); knowledge lists scroll (240ed0b2969)._
+_Resume: Phase 3 — M0 (private threads) research and M1 (compilation spike) running. Uncommitted: none. Last: Agent Brain design (docs/BRAIN.md, #13762)._
 
 Composer project: **Agents** (DXOS space). Design: [docs/DESIGN.md](./docs/DESIGN.md), brain: [docs/BRAIN.md](./docs/BRAIN.md), ontology:
 [docs/ONTOLOGY.md](./docs/ONTOLOGY.md), memory: [docs/MEMORY.md](./docs/MEMORY.md), testing:
@@ -43,16 +43,25 @@ agents".
 - [ ] **EDGE bot passes `Channel` refs** — reads the `DiscordChannel` config named by `PUT { binding, channel }`, resolves the agent through `AgentChannels`, calls `ensureChannelChat` (edge PR). Discord messages do not reach the agent until this lands.
 - [ ] **Stories on a feed channel** — the playground exercises the agent through the same capability.
 
-## Phase 3: durable intent
+## Phase 3: Agent Brain
+
+One brain per agent on EDGE: facts as RDF tuples in feeds, goals as hierarchical directives compiled
+to Datalog, judged in private threads. Design: [docs/BRAIN.md](./docs/BRAIN.md). Supersedes the
+in-memory trigger registry ("durable triggers").
 
 ### Tasks
 
-- [ ] **Durable triggers** — triggers as ECHO objects evaluated on EDGE (survive restarts, cross browser/EDGE, deadline alarms) — ONTOLOGY.md open question 6.
-- [ ] **Rule / Preference / Concept types** — directives as typed objects (ONTOLOGY.md §4).
-- [ ] **Recall via SPARQL** — load annotation feeds into pipeline-rdf's store instead of filtering in code.
+- [ ] **M0 Private threads** — a session feed carries threads the chat view hides; agent-runtime runs a turn inside one. Research in progress.
+- [ ] **M1 Goal compilation spike** — compile the eight example goals to Datalog and SPARQL `ASK`, measure validity, correctness and read-back. Spike running (throwaway code; findings to BRAIN.md).
+- [ ] **M2 Facts and goals, in-process** — one tuple per feed item; hierarchical `Goal` directives with feeds; Datalog engine; judgment in the session's private thread.
+- [ ] **M3 Brain on EDGE** — Durable Object per agent: follows feeds, wake rules, alarms, background sessions per actor; agent service routing.
+- [ ] **M4 Planning and constraints** — sub-goals, action drivers, session → durable promotion.
+- [ ] **M5 Pattern library and evals** — goal-pattern skill, eval personas, cost controls.
+- [ ] **Directive types** — `Instruction` / `Preference` / `Concept` (ONTOLOGY.md §4); reconcile with goals as directives.
+- [ ] **Recall via SPARQL** — load fact feeds into pipeline-rdf's store for judgment-time retrieval.
 - [ ] **Speakers as Person refs** — attribute facts to Person DXNs rather than name ids.
 - [ ] **readSource for URLs** — fetch page text when only a URL is given.
 
 ### References
 
-- dxos/dxos#13590 (this branch), dxos/edge#1226 (Discord bot).
+- dxos/dxos#13590 (Phases 1–2), dxos/edge#1226 (Discord bot), dxos/dxos#13762 (BRAIN.md).
