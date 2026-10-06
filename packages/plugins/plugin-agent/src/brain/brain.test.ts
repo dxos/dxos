@@ -310,4 +310,36 @@ describe('agent brain (local)', () => {
     ),
     { timeout: 60_000 },
   );
+
+  it.effect(
+    'keeps a private chat apart from a shared chat with the same person',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: SCENARIO.agent });
+        const carol = yield* Database.add(
+          Person.make({
+            fullName: 'Carol',
+            identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: 'did:halo:carol' }],
+          }),
+        );
+        const { chat: sharedRef } = yield* Operation.invoke(AgentOperation.EnsureParticipantChat, {
+          agent: agentRef,
+          person: Ref.make<Obj.Unknown>(carol),
+        });
+        const { chat: privateRef } = yield* Operation.invoke(AgentOperation.OpenPrivateChat, {
+          agent: agentRef,
+          identityDid: 'did:halo:carol',
+          name: 'Carol',
+        });
+        const shared = yield* Database.load(sharedRef);
+        const owned = yield* Database.load(privateRef);
+        expect(owned.id).not.toBe(shared.id);
+        expect(ChatParticipant.getOwner(owned)).toBe('did:halo:carol');
+        expect(ChatParticipant.getOwner(shared)).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
 });

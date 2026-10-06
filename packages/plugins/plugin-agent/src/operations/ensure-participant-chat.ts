@@ -38,11 +38,13 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
 ) {
   const key = { source: ChatParticipant.PARTICIPANT_SOURCE, id: person.id };
   const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [key]))).run;
-  const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
+  const candidates = existing.filter((chat) => Obj.getParent(chat)?.id === agent.id);
+  // A private chat is never a shared one adopted: with an owner, only that owner's chat matches. Without one
+  // (a relay addressing the person), the shared chat is preferred, then the person's private one.
+  const match = owner
+    ? candidates.find((chat) => ChatParticipant.getOwner(chat) === owner)
+    : (candidates.find((chat) => ChatParticipant.getOwner(chat) === undefined) ?? candidates[0]);
   if (match) {
-    if (owner && ChatParticipant.getOwner(match) === undefined) {
-      Obj.update(match, (match) => ChatParticipant.setOwner(match, owner));
-    }
     // `AgentService.getSession` sees the location change and moves the conversation to a fresh EDGE
     // process, which replays the feed, so flipping the flag is the migration.
     if (remote && !match.remote) {
