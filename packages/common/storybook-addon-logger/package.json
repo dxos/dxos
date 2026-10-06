@@ -28,11 +28,6 @@
       "types": "./dist/types/src/preview.d.ts",
       "import": "./dist/lib/preview.mjs"
     },
-    "./download": {
-      "source": "./src/download.ts",
-      "types": "./dist/types/src/download.d.ts",
-      "import": "./dist/lib/download.mjs"
-    },
     "./StorybookErrorFallback": {
       "source": "./src/StorybookErrorFallback.tsx",
       "types": "./dist/types/src/StorybookErrorFallback.d.ts",

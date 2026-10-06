@@ -34,4 +34,6 @@ export type ChatThreadEvent =
   /** Soft-fork the thread from the given message (the prompt toolbar's rewind). */
   | { type: 'rewind'; id: string }
   /** Withdraw a prompt the agent has not taken up (its delivery row's remove). */
-  | { type: 'remove-prompt'; id: string };
+  | { type: 'remove-prompt'; id: string }
+  /** A person chose one of a request block's options (allow or refuse an agent's tool call). */
+  | { type: 'respond'; messageId: string; requestId: string; optionId: string };

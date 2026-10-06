@@ -9,16 +9,16 @@ import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { translations as traceTranslations } from '@dxos/react-ui-trace/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
-export const translations: Resource[] = [
+export const translations: Theme.Resource[] = [
   ...assistantTranslations,
   ...componentsTranslations,
   ...formTranslations,
@@ -200,7 +200,7 @@ export const translations: Resource[] = [
         'chat-view.thinking.label': 'Thinking',
         'chat-view.debug.label': 'Debug',
         'chat-environment.local.label': 'Local',
-        'chat-environment.remote.label': 'Remote (EDGE)',
+        'chat-environment.remote.label': 'EDGE',
         'mcp-server-add.label': 'Add MCP server',
         'mcp-server-remove.label': 'Remove MCP server',
         'mcp-server-name.label': 'Server name',

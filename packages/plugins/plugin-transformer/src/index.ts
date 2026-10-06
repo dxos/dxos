@@ -3,4 +3,3 @@
 //
 
 export * as TransformerPlugin from './TransformerPlugin.ts';
-export * from '#meta';

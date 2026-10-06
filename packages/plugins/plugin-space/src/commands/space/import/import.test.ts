@@ -12,7 +12,7 @@ import * as Option from 'effect/Option';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { type Format, handler as exportSpace } from '../export/index.ts';
 import { handler as importSpace } from './import.ts';

@@ -43,6 +43,21 @@ describe('createRenderer', () => {
     expect(toolkitTags(rendered)).toBe(1);
   });
 
+  test('a request renders as a card that names its message', ({ expect }) => {
+    const request: ContentBlock.Request = {
+      _tag: 'request',
+      requestId: 'tool-2',
+      title: 'Run pnpm test',
+      options: [{ id: 'allow', label: 'Yes', kind: 'allow_once' }],
+      resolution: { outcome: 'selected', optionId: 'allow' },
+    };
+    const asked = message([request]);
+    const text = markdown(createRenderer('normal')(asked));
+    const [, id, payload] = text.match(/^<request message="([^"]+)">(.*)<\/request>$/) ?? [];
+    expect(id).toBe(asked.id);
+    expect(JSON.parse(payload.replace(/&quot;/g, '"'))).toEqual(request);
+  });
+
   test('an empty text block between calls does not split the run', ({ expect }) => {
     const render = createRenderer(undefined);
     // What the runtime actually emits around tool calls. Flushing on one produced a panel per call
@@ -136,13 +151,13 @@ describe('createRenderer', () => {
     const rendered = createRenderer('normal')(
       message([
         { _tag: 'stats' },
-        ContentBlock.Text.make({ text: 'Your scheduled alarm fired.', disposition: 'synthetic' }),
+        ContentBlock.Text.make({ text: 'Scheduled alarm fired.', disposition: 'synthetic' }),
         { _tag: 'toolCall', toolCallId: '1', name: 'a', input: '{}', providerExecuted: false },
         { _tag: 'toolResult', toolCallId: '1', name: 'a', providerExecuted: false, result: 'ok' },
       ]),
     );
 
-    expect(markdown(rendered)).toContain('<synthetic>Your scheduled alarm fired.</synthetic>');
+    expect(markdown(rendered)).toContain('<synthetic>Scheduled alarm fired.</synthetic>');
     expect(toolkitTags(rendered)).toBe(1);
   });
 
@@ -153,6 +168,29 @@ describe('createRenderer', () => {
     const text = renderUser(userMessage([ContentBlock.Text.make({ text: 'keep going', disposition: 'synthetic' })]));
 
     expect(text).toBe('<synthetic>keep going</synthetic>');
+  });
+
+  // The runtime feeds a background tool's outcome back as a synthetic prompt; it is a result, not input.
+  test('a recovered background result renders in the tool panel, not as a prompt', ({ expect }) => {
+    const text = renderUser(
+      userMessage([
+        ContentBlock.Text.make({
+          text: '<result pid=9b14bf5b>{"stdout":"0\\n","exitCode":0}</result>',
+          disposition: 'synthetic',
+        }),
+      ]),
+    );
+
+    expect(text).not.toContain('<synthetic>');
+    expect(text).toMatch(/^<toolkit>.*"name":"background".*<\/toolkit>$/);
+  });
+
+  test('a recovered background error renders as a failed result', ({ expect }) => {
+    const text = renderUser(
+      userMessage([ContentBlock.Text.make({ text: '<error pid=7>Timed out</error>', disposition: 'synthetic' })]),
+    );
+
+    expect(text).toContain('"error":"Timed out"');
   });
 
   test('the summary view still hides synthetic turns', ({ expect }) => {

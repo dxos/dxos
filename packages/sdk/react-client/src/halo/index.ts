@@ -19,5 +19,5 @@ export * from './useCredentials.ts';
 export * from './useDevices.ts';
 export * from './useHaloInvitations.ts';
 export * from './useIdentity.ts';
-export * from './useInboxNotices.ts';
+export * from './useInboxMessages.ts';
 export * from './useKeyStore.ts';

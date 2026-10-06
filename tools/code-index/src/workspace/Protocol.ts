@@ -35,6 +35,21 @@ export class ServerInfo extends Schema.Class<ServerInfo>('code-index/ServerInfo'
   declarations: Schema.optional(Schema.Number),
 }) {}
 
+/**
+ * One index resource, as a diagram box that names it in `ref` shows it: what it states and how much
+ * points at it. `iri` is absent when the target matched nothing or several things equally.
+ */
+export class Entity extends Schema.Class<Entity>('code-index/Entity')({
+  iri: Schema.optional(Schema.String),
+  outgoing: Schema.Array(
+    Schema.Struct({ predicate: Schema.String, object: Schema.String, objectKind: Schema.Literals(['iri', 'literal']) }),
+  ),
+  incomingCounts: Schema.Array(Schema.Struct({ predicate: Schema.String, count: Schema.Number })),
+  /** Equally good matches, when the target was a name several resources carry. */
+  candidates: Schema.Array(Schema.String),
+  hint: Schema.optional(Schema.String),
+}) {}
+
 export class RequestFailed extends Schema.TaggedError<RequestFailed>('code-index/RequestFailed')('RequestFailed', {
   message: Schema.String,
 }) {}
@@ -54,6 +69,13 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('DeleteProject', {
     payload: { projectId: Schema.String },
     success: Schema.Boolean,
+    error: RequestFailed,
+  }),
+
+  /** Resolves an IRI or a name (a path, a package, a symbol) to the index resource it names. */
+  Rpc.make('Describe', {
+    payload: { target: Schema.String },
+    success: Entity,
     error: RequestFailed,
   }),
 

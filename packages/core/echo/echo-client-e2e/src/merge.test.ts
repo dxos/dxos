@@ -10,7 +10,7 @@ import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 describe('convergence-key merging', () => {
   let builder: EchoTestBuilder;

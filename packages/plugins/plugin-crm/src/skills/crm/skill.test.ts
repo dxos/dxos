@@ -7,18 +7,18 @@ import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { ChatContextHandlers, ChatContextSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Skill from '@dxos/compute/Skill';
 import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Message, Organization, Person } from '@dxos/types';
+import { Message, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { EMAIL_FIXTURES, makeEmailMessage } from '#testing';
-import { ProfileOf } from '#types';
 
-import CrmSkill from './skill.ts';
+import * as CrmSkill from './CrmSkill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -32,7 +32,7 @@ EntityId.dangerouslyDisableRandomness();
  */
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: ChatContextHandlers,
+  operationHandlers: ChatContextSkill.Handlers,
   types: [
     Skill.Skill,
     Feed.Feed,

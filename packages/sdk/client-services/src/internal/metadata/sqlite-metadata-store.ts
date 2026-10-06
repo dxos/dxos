@@ -13,7 +13,7 @@ import type * as SqlError from 'effect/sql/SqlError';
 
 import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

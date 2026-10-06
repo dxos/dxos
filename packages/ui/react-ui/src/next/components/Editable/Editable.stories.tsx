@@ -11,10 +11,14 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { controlSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Editable, type EditableRootProps, Input, Typography, useEditable } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Input } from '../Input/Input.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Editable from './Editable.tsx';
+import { useEditable } from './useEditable.ts';
 
 type StoryArgs = SizeArgs &
-  Pick<EditableRootProps, 'activation' | 'blurBehavior' | 'disabled' | 'placeholder'> & {
+  Pick<Editable.RootProps, 'activation' | 'blurBehavior' | 'disabled' | 'placeholder'> & {
     /** Names the preview, to prove a caller's own label survives the machine's. */
     previewLabel?: string;
     initialValue?: string;
@@ -50,9 +54,9 @@ const DefaultStory = ({
         <Editable.Input data-testid='editable.input' />
       </Editable.Root>
       {/* `onValueChange` fires on commit, never per keystroke: one entry per edit. */}
-      <Typography tone='muted' data-testid='editable.commits'>
+      <Typography.Text tone='muted' data-testid='editable.commits'>
         {commits.length === 0 ? 'No commits yet' : `Commits: ${commits.join(' · ')}`}
-      </Typography>
+      </Typography.Text>
     </>
   );
 };

@@ -10,12 +10,18 @@ The quad store (oxigraph over RocksDB) and the rule engine are a Rust Node-API a
 - [`SPEC.mdl`](./SPEC.mdl) — modules, commit protocol, features and tests.
 
 The addon needs a Rust toolchain ([rustup](https://rustup.rs); the crate's `rust-toolchain.toml`
-pins the version, and building RocksDB needs a C++ compiler and libclang). Build it once, and again
-after the crate changes — `moon run code-index:test` does this itself:
+pins the version, and building RocksDB needs a C++ compiler and libclang). The moon tasks build it,
+and the workspace packages the CLI imports, before they run — use them after a pull, since a stale
+addon refuses to open the store:
 
 ```bash
-moon run code-index-native:cargo-build
+moon run code-index:serve -- --provider anthropic     # the web UI, deps built first
+moon run code-index:cli -- index                      # any subcommand, deps built first
+moon run code-index-native:cargo-build                # just the addon
 ```
+
+Running `bun tools/code-index/bin/code-index.ts` directly skips those builds and is the faster loop
+once they are current:
 
 ```bash
 bun tools/code-index/bin/code-index.ts index          # incremental pass, closed by the reasoner
@@ -69,6 +75,15 @@ graphs), `design` (scored subgraphs for design questions) and `print` (the model
 from what the model is told. The isolation is process-level — fresh interpreter, scrubbed
 environment, temporary cwd, wall-clock deadline — which bounds accidents rather than a hostile
 snippet.
+
+**Diagrams are the illustrator's semantic DSL.** `display.diagram` takes plugin-illustrator's `.dx`
+statements (`node`, `edge` with relationship words like `extends` or `owns`, `group`, optional
+placement hints), or a graph built from query rows that is printed as the same DSL. The sandbox
+rejects source that does not read, with line and column, so the model fixes it; the web UI lays it
+out with `SemanticEngine` in a worker. A box's `ref` ties it to what it depicts: an IRI from the
+index (checked to exist when the diagram is displayed), or a path or name. Clicking the box shows
+that resource's facts through the `Describe` RPC, which resolves it exactly as the MCP `describe`
+tool does.
 
 **A project is an append-only log.** Chat, canvas and title are folds over one `events` table
 (`src/workspace/Fold.ts`, shared by the server and the browser), so a reload replays exactly what a
@@ -126,7 +141,7 @@ one — add it locally):
 | `ask`        | `sparql`, `timeoutMs` | A SPARQL ASK, as a boolean. |
 | `files`      | `prefix`, `language`, `limit` | Indexed files, filtered by path prefix and language. |
 | `stats`      | — | Files, quads and per-reasoner derived counts. |
-| `design`     | `prompt`, `budget`, `threshold` | The files that answer a design question and how they connect, with a mermaid draft (see Design questions). Explored by query and selected when the server has an Anthropic key, by the text-seeded walk otherwise; scored by System One when it has `TYPESAFE_API_KEY`, by a text/degree baseline otherwise. |
+| `design`     | `prompt`, `budget`, `threshold` | The files that answer a design question and how they connect, with a draft in the illustrator's diagram DSL (see Design questions). Explored by query and selected when the server has an Anthropic key, by the text-seeded walk otherwise; scored by System One when it has `TYPESAFE_API_KEY`, by a text/degree baseline otherwise. |
 
 `query` and `ask` declare any known prefix (`deus:`, `file:`, `pkg:`, `module:`, `graph:`, `rdf:`,
 `rdfs:`, `xsd:`, …) a query uses without declaring, and say so in `prefixesInjected`; name a `deus:`
@@ -171,8 +186,8 @@ services?" with a compact diagram, in three stages (`src/design/`):
    `--threshold`. Either way a dropped node between two survivors becomes a relay edge.
    `--scorer baseline` scores by text match, degree and hop distance instead.
 3. **Draw** — four compact variants (≲ 14 nodes, ≤ 3 groups, `%% ref` per node, no caption), each
-   laid out by `MermaidEngine` and scored by the layout objective plus `Architecture.judge()` and
-   `Aesthetics.judge()`; the best is written as `diagram.mmd` and `diagram.svg`. Layout runs in a Node
+   laid out by the illustrator's `SemanticEngine` and scored by the layout objective plus `Architecture.judge()` and
+   `Aesthetics.judge()`; the best is written as `diagram.dx` and `diagram.svg`. Layout runs in a Node
    child (`src/design/draw-main.ts`) because Bun cannot load ELK.
 
 ```bash

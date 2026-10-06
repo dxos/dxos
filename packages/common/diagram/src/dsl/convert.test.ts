@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { BASIC, CLASS_DIAGRAM } from '../testing.ts';
 import { UndetectedSourceError, UnknownSourceError, convert, detect } from './convert.ts';

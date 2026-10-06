@@ -32,9 +32,11 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database } from '@dxos/echo';
-import { EffectEx, SpanAttributes } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { markWork } from '@dxos/util';
 
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id.ts';
 import { ProcessManagerService } from './process-manager-service.ts';
@@ -483,10 +485,12 @@ export class Impl implements Manager {
           Effect.orDie,
         );
       }
+      markWork('process.services-resolved');
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
 
       const handler = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
+      markWork('process.created');
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen({ self: this }, function* () {
@@ -564,7 +568,10 @@ export class Impl implements Manager {
       this.#handles.set(id, handle);
       this.#refreshProcessTree();
 
-      // Write initial durable record before running onSpawn.
+      // Write the initial durable record, spawn event included, before running onSpawn: one write
+      // rather than a put and a read-modify-write, since each is an IndexedDB round trip on the
+      // turn's critical path. The seq is passed to runOnSpawn so it's removed when the handler settles.
+      const spawnSeq = 1;
       yield* this.#store.putProcess({
         id,
         key: definition.key,
@@ -574,12 +581,11 @@ export class Impl implements Manager {
         ...(origin !== undefined ? { origin } : {}),
         state: Process.State.RUNNING,
         alarmDueAt: null,
-        events: [],
+        events: [{ _tag: 'spawn', seq: spawnSeq }],
       });
-
-      // Append spawn event; seq is passed to runOnSpawn so it's removed when the handler settles.
-      const spawnSeq = yield* this.#store.appendEvent(id, { _tag: 'spawn' });
+      markWork('process.persisted');
       yield* handle.runOnSpawn(spawnSeq);
+      markWork('process.started');
       log('lifecycle: started', { pid: id, key: definition.key });
 
       // Runtime→public boundary: the live handle stores its RPC client untyped (`RpcClient<any>`),

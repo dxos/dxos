@@ -90,6 +90,49 @@ describe('appeal', () => {
     expect(scoreOf(objects, 'few-bends')).toBeLessThan(0.5);
   });
 
+  test('a bus is judged hub to spoke, and a self-loop scores without NaN', ({ expect }) => {
+    const objects: Scene.WorldObject[] = [
+      box('hub', 64, 0),
+      box('left', -64, 200),
+      box('right', 192, 200),
+      {
+        id: 'edges',
+        elements: [
+          {
+            kind: 'line',
+            id: 'hub-bus-0-trunk',
+            points: [
+              { x: 128, y: 64 },
+              { x: 128, y: 180 },
+            ],
+          },
+          {
+            kind: 'line',
+            id: 'hub-left-path',
+            points: [
+              { x: 128, y: 180 },
+              { x: 0, y: 180 },
+            ],
+          },
+          { kind: 'arrow', id: 'hub-left', start: { x: 0, y: 180 }, end: { x: 0, y: 200 } },
+          {
+            kind: 'line',
+            id: 'hub-right-path',
+            points: [
+              { x: 128, y: 180 },
+              { x: 256, y: 180 },
+            ],
+          },
+          { kind: 'arrow', id: 'hub-right', start: { x: 256, y: 180 }, end: { x: 256, y: 200 } },
+          { kind: 'arrow', id: 'hub-hub', from: 'hub/box', to: 'hub/box' },
+        ],
+      },
+    ];
+    // Read as pieces, a spoke would start at the box nearest the junction, beside it, and run sideways.
+    expect(scoreOf(objects, 'consistent-flow')).toBe(1);
+    expect(measure(objects).every(({ score }) => Number.isFinite(score))).toBe(true);
+  });
+
   test('overall is the weighted mean', ({ expect }) => {
     expect(
       overall([

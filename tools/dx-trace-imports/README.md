@@ -5,13 +5,14 @@ Traces static import chains from an entry module to a target package, file, or g
 ## Usage
 
 ```sh
-dx-trace-imports (--from <entry.ts> | --export <subpath>) --to <package-or-pattern-or-path> [options]
+dx-trace-imports (--from <entry.ts> | --export <subpath> | --all-exports) --to <package-or-pattern-or-path> [options]
 ```
 
 ### Options
 
 - `--from <entry>`: Entry file (relative path or absolute).
 - `--export <subpath>`: Package export subpath resolved via `package.json` exports (e.g. `./plugin`). Uses `--conditions` to pick the source file.
+- `--all-exports`: Traces every export subpath in `./package.json`, except `./package.json`, wildcard patterns and stylesheet or data files. A guard that uses it covers subpaths added later without editing the task.
 - `--to <target>`: Terminal selector. Either:
   - An npm package name (e.g. `protobufjs`, `@dxos/react-ui`).
   - A relative or absolute file path (e.g. `./src/foo.ts`).

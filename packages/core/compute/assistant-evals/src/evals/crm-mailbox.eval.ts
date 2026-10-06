@@ -7,11 +7,10 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { Obj, Relation } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
-import { Employer, Organization, Person } from '@dxos/types';
+import { Employer, Organization, Person, ProfileOf } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions.ts';

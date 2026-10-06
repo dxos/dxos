@@ -89,10 +89,21 @@ export const projectThread = ({
   outbox?: readonly OutboxEntry[];
 }): ThreadProjection => {
   const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
+  // A turn's messages that the feed has not caught up with yet continue from the thread's head, so
+  // they follow the lineage rather than join it: with no parent of their own, lineage would chain them
+  // to whatever sorts before them, which after a rewind is the abandoned reply.
+  const feedIds = new Set(feedMessages.map((message) => message.id));
+  const unrecorded = Array.sort(
+    Array.dedupeWith(
+      pendingMessages.filter((message) => !feedIds.has(message.id) && !isQueued(message)),
+      ({ id: a }, { id: b }) => a === b,
+    ),
+    byAppendOrder,
+  );
   // A queue entry is not a turn: the turn the agent runs from one appends its own user message, so an
   // entry never joins the history. Until the agent takes it up, it is a row after the history instead.
   const sorted = Array.sort(
-    all.filter((message) => !isQueued(message)),
+    feedMessages.filter((message) => !isQueued(message)),
     byAppendOrder,
   );
   const entries = Array.sort(
@@ -100,7 +111,9 @@ export const projectThread = ({
     byAppendOrder,
   );
 
-  const history = projectHistory(sorted, rewindFrom);
+  const history = projectHistory(sorted, unrecorded, rewindFrom);
+  // The turn's own user message may still be only in the streaming turn, ahead of the feed.
+  const turnCandidates = [...sorted, ...unrecorded];
   const claimed = new Set<string>();
   const claim = (candidates: readonly Message.Message[], entry: OutboxEntry): Message.Message | undefined => {
     const match = candidates.find(
@@ -119,7 +132,7 @@ export const projectThread = ({
   const sent: Message.Message[] = [];
   for (const entry of outbox) {
     const queueEntry = claim(entries, entry);
-    const turn = claim(sorted, entry);
+    const turn = claim(turnCandidates, entry);
     const status: DeliveryStatus =
       turn || (queueEntry && (isInFlight(queueEntry) || isConsumed(queueEntry)))
         ? 'read'
@@ -157,21 +170,27 @@ export const projectThread = ({
   return { messages, delivery, queued, tail: tail.length };
 };
 
-const projectHistory = (sorted: readonly Message.Message[], rewindFrom: string | undefined): Message.Message[] => {
+const projectHistory = (
+  sorted: readonly Message.Message[],
+  unrecorded: readonly Message.Message[],
+  rewindFrom: string | undefined,
+): Message.Message[] => {
   if (rewindFrom !== undefined) {
     const index = sorted.findIndex((message) => message.id === rewindFrom);
     if (index === 0) {
       // Rewound to the first turn: nothing precedes it.
-      return [];
+      return collapseToolRuns(unrecorded);
     }
-    if (index > 0) {
-      return collapseToolRuns(Feed.history(sorted, { head: sorted[index - 1].id }).items);
+    // Once a recorded message continues from the rewind head the fork is lineage, whether or not the
+    // pointer has been cleared yet.
+    if (index > 0 && !sorted.slice(index + 1).some((message) => Feed.getParent(message) === sorted[index - 1].id)) {
+      return collapseToolRuns([...Feed.history(sorted, { head: sorted[index - 1].id }).items, ...unrecorded]);
     }
-    // Not present — a stale pointer (e.g. the message never replicated); fall through to the feed's
-    // own lineage rather than blanking the thread.
+    // Not present — a stale pointer (e.g. the message never replicated) — or already continued; fall
+    // through to the feed's own lineage rather than blanking the thread.
   }
 
-  return collapseToolRuns(Feed.history(sorted).items);
+  return collapseToolRuns([...Feed.history(sorted).items, ...unrecorded]);
 };
 
 /**
@@ -291,10 +310,13 @@ const foldRun = (run: readonly Message.Message[]): Message.Message => {
  */
 export const collapseToolRuns = (messages: readonly Message.Message[]): Message.Message[] => {
   const collapsed: Message.Message[] = [];
+  // The messages each entry was folded from, so a later result can join the fold that holds its call.
+  const sources: (readonly Message.Message[])[] = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
     if (!isToolOnly(message)) {
       collapsed.push(message);
+      sources.push([message]);
       continue;
     }
 
@@ -302,14 +324,25 @@ export const collapseToolRuns = (messages: readonly Message.Message[]): Message.
     while (end + 1 < messages.length && isToolOnly(messages[end + 1])) {
       end++;
     }
-
-    if (end === index) {
-      collapsed.push(message);
-    } else {
-      collapsed.push(foldRun(messages.slice(index, end + 1)));
-    }
-
+    const run = messages.slice(index, end + 1);
     index = end;
+
+    // A result held apart from its call by the request card that asked about it joins the call's panel; on its
+    // own it renders as an empty row.
+    const results = run.flatMap((entry) => entry.blocks);
+    const callIds = new Set(results.map((block) => (block._tag === 'toolResult' ? block.toolCallId : undefined)));
+    const caller = results.every((block) => block._tag === 'toolResult')
+      ? collapsed.findLastIndex((earlier) =>
+          earlier.blocks.some((block) => block._tag === 'toolCall' && callIds.has(block.toolCallId)),
+        )
+      : -1;
+    if (caller >= 0) {
+      sources[caller] = [...sources[caller], ...run];
+      collapsed[caller] = foldRun(sources[caller]);
+    } else {
+      collapsed.push(run.length === 1 ? message : foldRun(run));
+      sources.push(run);
+    }
   }
 
   return collapsed;

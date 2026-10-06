@@ -23,10 +23,12 @@ import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
 import { Database } from '@dxos/echo';
-import { EffectEx, SpanAttributes } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
+import { markWork } from '@dxos/util';
 
 import * as DurableOperation from './DurableOperation.ts';
 import type { ProcessNotFoundError } from './errors.ts';
@@ -196,6 +198,7 @@ export const make = (opts: {
       // TTL).
       fiberCache.set(handle.pid, fiber);
       yield* handle.submitInput(input);
+      markWork('process.input-submitted');
       log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
       return fiber;
     }).pipe(

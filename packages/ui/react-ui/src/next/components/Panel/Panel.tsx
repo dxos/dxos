@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { createContext, useContext } from 'react';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { DefaultGutterProvider, type Gutter, type Level } from '../Container/index.ts';
+import { DefaultGutterProvider, type Gutter, type Level } from '../Container/Container.tsx';
 
 //
 // Root
@@ -138,12 +140,11 @@ const PanelFooter = slottable<HTMLDivElement, PanelFooterProps>(({ children, asC
 });
 
 PanelFooter.displayName = 'Panel.Footer';
-
-export const Panel = {
-  Root: PanelRoot,
-  Header: PanelHeader,
-  Body: PanelBody,
-  Footer: PanelFooter,
+export type {
+  PanelBodyProps as BodyProps,
+  PanelFooterProps as FooterProps,
+  PanelHeaderProps as HeaderProps,
+  PanelRootProps as RootProps,
 };
 
-export type { PanelBodyProps, PanelFooterProps, PanelHeaderProps, PanelRootProps };
+export { PanelBody as Body, PanelFooter as Footer, PanelHeader as Header, PanelRoot as Root };

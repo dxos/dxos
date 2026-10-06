@@ -6,9 +6,13 @@ import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Block, Card, Focus, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
@@ -60,7 +64,7 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
 export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data, location, current }, forwardedRef) => {
   const { segment, onAction } = data;
   const { setCurrentId, setSelected } = useMosaicContainer('SegmentTile');
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(segment.id);
@@ -97,9 +101,9 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root border={false} ref={forwardedRef}>
           <Card.Header>
-            <Block>
-              <Icon icon={icon} classNames={iconStyles?.text} />
-            </Block>
+            <Layout.Block>
+              <Icon.Icon icon={icon} classNames={iconStyles?.text} />
+            </Layout.Block>
             <Card.Title>{title}</Card.Title>
             <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Header>
@@ -123,9 +127,9 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
                 )}
                 {date && (
                   <Card.Row>
-                    <Block>
-                      <Icon icon='ph--calendar--regular' />
-                    </Block>
+                    <Layout.Block>
+                      <Icon.Icon icon='ph--calendar--regular' />
+                    </Layout.Block>
                     <Card.Text variant='muted'>{format(date, 'PPp')}</Card.Text>
                   </Card.Row>
                 )}

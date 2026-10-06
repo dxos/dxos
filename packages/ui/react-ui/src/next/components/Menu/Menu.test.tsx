@@ -6,7 +6,7 @@ import { cleanup, render } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { Menu } from './Menu.tsx';
+import * as Menu from './Menu.tsx';
 
 describe('Menu', () => {
   afterEach(() => {

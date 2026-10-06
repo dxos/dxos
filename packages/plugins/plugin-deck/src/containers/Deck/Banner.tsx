@@ -4,9 +4,10 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -14,8 +15,8 @@ import { DeckRole } from '#types';
 
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar/index.ts';
 
-export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
-  const { t } = useTranslation(meta.profile.key);
+export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <header

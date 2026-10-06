@@ -21,6 +21,8 @@ import type { SerializedError } from '@dxos/protocols';
 import * as Operation from './Operation.ts';
 import * as Trace from './Trace.ts';
 
+export { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE, RunAgainError } from './errors.ts';
+
 //
 // Process.
 //

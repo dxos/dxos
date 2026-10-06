@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translationKey = '@dxos/react-ui-assistant';
 
@@ -20,6 +20,8 @@ export const translations = [
         'just-now.label': 'just now',
         'rewind.label': 'Rewind to this prompt',
         'summary.label': 'Summary',
+        'request.answered.label': 'Answered: {{option}}',
+        'request.cancelled.label': 'No longer waiting',
         'stats.label': 'Stats',
         'tool-call.label': 'Calling',
         'tool-input.label': 'Input',
@@ -30,6 +32,7 @@ export const translations = [
         'tool-run-suffix.label_one': 'Ran {{count}} command',
         'tool-run-suffix.label_other': 'Ran {{count}} commands',
         'tool-thinking.label': 'Thinking',
+        'tool-background.label': 'Background result',
         'tool-failed.label_one': '{{count}} failed',
         'tool-failed.label_other': '{{count}} failed',
         'nav-first.label': 'First message',
@@ -40,4 +43,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

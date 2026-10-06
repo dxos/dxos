@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './VirtualAnchor.ts';
+export * as VirtualAnchor from './VirtualAnchor.ts';

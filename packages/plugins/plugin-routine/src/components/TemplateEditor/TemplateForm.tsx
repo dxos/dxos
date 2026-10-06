@@ -7,7 +7,11 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 
 import type * as Template from '@dxos/compute/Template';
 import { type Obj } from '@dxos/echo';
-import { Field, Grid, Input, Select, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Select from '@dxos/react-ui/Select';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -31,7 +35,7 @@ export type TemplateFormProps = {
 };
 
 export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   usePromptInputs(template, onChange);
 
   const handleInputKindChange = useCallback(
@@ -63,7 +67,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
       <TemplateEditor id={id} source={template.source} classNames='dx-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
-        <Grid cols={['10rem', '10rem', 'fill']} align='center' classNames='gap-1'>
+        <Layout.Grid cols={['10rem', '10rem', 'fill']} align='center' classNames='gap-1'>
           {template.inputs?.filter(isNonNullable).map((input) => (
             <Fragment key={input.name}>
               <div className='ps-3 text-blue-text'>{input.name}</div>
@@ -86,7 +90,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
               <div>
                 {input.kind === 'value' && (
                   <Field.Root>
-                    <Input
+                    <Input.Root
                       placeholder={t('command.placeholder')}
                       classNames='w-full bg-transparent'
                       value={input.default ?? ''}
@@ -97,7 +101,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
               </div>
             </Fragment>
           ))}
-        </Grid>
+        </Layout.Grid>
       )}
     </div>
   );

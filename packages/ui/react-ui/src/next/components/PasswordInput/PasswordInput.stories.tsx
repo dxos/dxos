@@ -14,7 +14,9 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Field, Input, PasswordInput } from '../index.ts';
+import * as Field from '../Field/Field.tsx';
+import { Input } from '../Input/Input.tsx';
+import { PasswordInput } from './PasswordInput.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>

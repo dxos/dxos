@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, type Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
+import type * as EchoError from '@dxos/echo/Error';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
@@ -375,7 +375,7 @@ export const runMailSync = (
   options: RunMailSyncOptions,
 ): Effect.Effect<
   { newMessages: number },
-  MailSyncError | EntityNotFoundError,
+  MailSyncError | EchoError.EntityNotFoundError,
   MailSyncProvider | Database.Service | Capability.Service | Operation.Service | Trace.TraceService
 > =>
   Effect.gen(function* () {
@@ -682,7 +682,7 @@ export const runMailSync = (
         // emitted here or the meter's key stays suppressed for every later run.
         Effect.sync(() => {
           log('mail sync cancelled', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
-          reportStatus({ message: PROGRESS_STATUS_CANCELLED });
+          reportStatus({ message: Progress.STATUS_CANCELLED });
         }),
       ),
       Effect.tapError((error) =>
@@ -690,7 +690,7 @@ export const runMailSync = (
           // Log the raw error; the meter shows only a short reason (the full exception — provider
           // errors, auth tokens — must not reach the UI).
           log.warn('mail sync failed', { provider: provider.name, error });
-          reportStatus({ message: PROGRESS_STATUS_FAILED });
+          reportStatus({ message: Progress.STATUS_FAILED });
         }),
       ),
     );
@@ -752,7 +752,7 @@ export const runMailSync = (
     // finishedAt = new Date(finishedMs).toISOString();
     // publishStats();
 
-    reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+    reportStatus({ message: Progress.STATUS_COMPLETE });
 
     // Fold the run's observed key extent so the window advances even if every scanned message was
     // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.

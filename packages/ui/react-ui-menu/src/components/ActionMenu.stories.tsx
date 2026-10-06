@@ -8,7 +8,8 @@ import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/theme.css';
-import { Button, Container } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -77,7 +78,7 @@ export const StaticItems: Story = {
       <>
         <Contributor menu={menu} id='static-items' items={staticItems} />
         <ActionMenu {...menu} iconSize='lg'>
-          <Button icon='ph--list-checks--regular' label='Options' iconOnly />
+          <Button.Root icon='ph--list-checks--regular' label='Options' iconOnly />
         </ActionMenu>
       </>
     );
@@ -111,15 +112,15 @@ export const ReactiveItems: Story = {
     const menu = useMenuActions(actionsAtom);
 
     return (
-      <Container gap='md'>
+      <Layout.Container gap='md'>
         <Contributor menu={menu} id='reactive-items' priority={50} items={reactiveItems} />
         <ActionMenu {...menu}>
-          <Button icon='ph--list-checks--regular' label='Options' iconOnly />
+          <Button.Root icon='ph--list-checks--regular' label='Options' iconOnly />
         </ActionMenu>
-        <Button data-testid='update-button' onClick={() => setCount((prev) => prev + 1)}>
+        <Button.Root data-testid='update-button' onClick={() => setCount((prev) => prev + 1)}>
           Update Reactive Item ({count})
-        </Button>
-      </Container>
+        </Button.Root>
+      </Layout.Container>
     );
   },
   play: async ({ canvasElement }) => {
@@ -152,7 +153,7 @@ export const ReplacementMode: Story = {
       <>
         <Contributor menu={menu} id='replacement-items' mode='replacement' items={replacementItems} />
         <ActionMenu {...menu}>
-          <Button icon='ph--list-checks--regular' label='Options (replaced)' iconOnly />
+          <Button.Root icon='ph--list-checks--regular' label='Options (replaced)' iconOnly />
         </ActionMenu>
       </>
     );
@@ -183,7 +184,7 @@ export const PriorityOrdering: Story = {
         <Contributor menu={menu} id='low-priority-items' priority={150} items={lowPriorityItems} />
         <Contributor menu={menu} id='high-priority-items' priority={50} items={highPriorityItems} />
         <ActionMenu {...menu}>
-          <Button icon='ph--list-checks--regular' label='Options (priority ordered)' iconOnly />
+          <Button.Root icon='ph--list-checks--regular' label='Options (priority ordered)' iconOnly />
         </ActionMenu>
       </>
     );
@@ -205,7 +206,7 @@ export const DeferUntilOpen: Story = {
       <>
         <Contributor menu={menu} id='static-items' items={staticItems} />
         <ActionMenu {...menu} deferUntilOpen>
-          <Button icon='ph--list-checks--regular' label='Options' iconOnly />
+          <Button.Root icon='ph--list-checks--regular' label='Options' iconOnly />
         </ActionMenu>
       </>
     );

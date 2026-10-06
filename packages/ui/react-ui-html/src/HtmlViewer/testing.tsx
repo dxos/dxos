@@ -4,7 +4,8 @@
 
 import React, { type ReactNode } from 'react';
 
-import { Panel, ThemeProvider, useThemeContext } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Theme from '@dxos/react-ui/Theme';
 import { trim } from '@dxos/util';
 
 import { type ColorScheme } from './color-scheme.ts';
@@ -215,19 +216,19 @@ export const SANDBOX_SAMPLES: Record<string, Sample> = {
  * DOM — they have to agree.
  */
 export const ThemePane = ({ mode, children }: { mode: ColorScheme; children: ReactNode }) => {
-  const { tx } = useThemeContext();
+  const { tx } = Theme.useThemeContext();
   return (
     // `colorScheme` is what actually switches the palette: the theme's tokens are `light-dark(…)`, which
     // resolves against the computed `color-scheme`, and only `.dark` sets it (there is no `.light` rule)
     // — so a `light` pane inside a dark storybook would otherwise inherit dark and both panes would match.
     // The class stays for rules scoped to `.dark`.
     <div className={mode} style={{ colorScheme: mode }}>
-      <ThemeProvider tx={tx} themeMode={mode}>
+      <Theme.Provider tx={tx} themeMode={mode}>
         <div className='dx-base-surface text-fg p-2 overflow-auto border border-separator rounded'>
           <div className='pb-1 text-xs uppercase tracking-wide text-fg-muted'>{mode}</div>
           {children}
         </div>
-      </ThemeProvider>
+      </Theme.Provider>
     </div>
   );
 };

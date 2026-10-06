@@ -8,9 +8,10 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { SessionConfig } from '@dxos/ai';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Alarm } from '@dxos/assistant';
-import { resolveSlashCommand } from '@dxos/assistant-toolkit';
+import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
@@ -18,7 +19,6 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ThemedClassName, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
   type ChatThreadController,
   type ChatThreadEvent,
@@ -34,8 +34,11 @@ import {
 } from '@dxos/react-ui-feed';
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Toast from '@dxos/react-ui/Toast';
+import * as Util from '@dxos/react-ui/Util';
 import { Message, Task } from '@dxos/types';
-import { keyToFallback } from '@dxos/util';
+import { keyToFallback, markWork } from '@dxos/util';
 
 import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
@@ -102,7 +105,7 @@ const ChatRoot = ({
 }: ChatRootProps) => {
   const [debug, setDebug] = useState(debugProp ?? false);
   // Slash commands run their operations through the same invoker the rest of the UI uses.
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const processorState = getProcessorState(processor);
   const streaming = useAtomValue(processorState.streaming);
   const active = useAtomValue(processorState.active);
@@ -199,6 +202,26 @@ const ChatRoot = ({
   }, [event, dump, onEvent, db, feed, messages, delivery, processor]);
 
   useEffect(() => {
+    return event.on((ev) => {
+      if (ev.type !== 'respond' || !chat) {
+        return;
+      }
+      const { messageId, requestId, optionId } = ev;
+      // The operation reads the chat's feed, so it runs in the chat's space.
+      const spaceId = Obj.getDatabase(chat)?.spaceId;
+      void invokePromise(
+        AssistantOperation.RespondToRequest,
+        { chat, messageId, requestId, optionId },
+        spaceId ? { spaceId } : undefined,
+      ).then(({ error }) => {
+        if (error) {
+          event.emit({ type: 'error', error });
+        }
+      });
+    });
+  }, [event, chat, invokePromise]);
+
+  useEffect(() => {
     if (!processor) {
       return;
     }
@@ -210,7 +233,7 @@ const ChatRoot = ({
           if (text.length) {
             // A leading /command is a deterministic shortcut — executed directly, no model in
             // the loop; an unknown command falls through to the model as plain text.
-            const resolved = resolveSlashCommand(text, TaskSlashCommands);
+            const resolved = SlashCommand.resolveSlashCommand(text, TaskSlashCommands);
             if (resolved) {
               // One command at a time: `invokePromise` does not queue, so two quick submissions
               // would interleave their operations and land their summaries out of order.
@@ -267,6 +290,7 @@ const ChatRoot = ({
             if (active && queued >= DEFAULT_MAX_QUEUE) {
               break;
             }
+            markWork('chat.submit');
             lastPrompt.current = ev.text;
             // Optimistic: the prompt is in the thread from this call on, before `onSubmit` persists a
             // transient chat and before the agent acknowledges it. The processor requests it when the
@@ -369,7 +393,7 @@ type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'
     switcher?: ChatSwitcher;
   }>;
 
-const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
+const ChatToolbar = Util.composable<HTMLDivElement, ChatToolbarProps>(
   ({ children, attendableId, alwaysActive, companionTo, switcher, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
     const menuActions = useChatToolbarActions({ chat, companionTo, switcher });
@@ -379,7 +403,7 @@ const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
         {...menuActions}
         attendableId={attendableId}
         alwaysActive={alwaysActive}
-        {...composableProps(props)}
+        {...Util.composableProps(props)}
         ref={forwardedRef}
       >
         {children}
@@ -398,9 +422,9 @@ const CHAT_CONTENT_NAME = 'Chat.Content';
 
 type ChatContentProps = {};
 
-const ChatContent = composable<HTMLDivElement, ChatContentProps>(({ children, ...props }, forwardedRef) => {
+const ChatContent = Util.composable<HTMLDivElement, ChatContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { classNames: 'dx-expand flex flex-col' })} ref={forwardedRef}>
+    <div {...Util.composableProps(props, { classNames: 'dx-expand flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -501,17 +525,19 @@ const chatRegistry = {
   },
 } as const;
 
-type ChatThreadProps = ThemedClassName<{
+type ChatThreadProps = Util.ThemedClassName<{
   viewType?: ChatView;
   /** Blank lines kept below the tail at rest — breathing room above the composer. */
   tailLines?: number;
+  /** Hue of the user's messages; defaults to the identity's hue. */
+  userHue?: string;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
 }>;
 
-const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { db, debug, event, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { chat, db, debug, event, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const { messages, tail } = useChatThreadContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
@@ -548,9 +574,10 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
 
   const userHue = useMemo(
     () =>
+      userHueProp ||
       identity?.data?.hue ||
       keyToFallback(identity?.identityKey ? PublicKey.fromHex(identity.identityKey) : PublicKey.random()).hue,
-    [identity],
+    [userHueProp, identity],
   );
 
   const controllerRef = useRef<ChatThreadController | null>(null);
@@ -604,6 +631,8 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
         userHue={userHue}
         tailLines={tailLines}
         debug={debug}
+        // An external agent keeps its own context, which a rewind of the transcript cannot reach.
+        rewind={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
@@ -645,7 +674,7 @@ ChatThread.displayName = CHAT_THREAD_NAME;
 
 const CHAT_OUTLINE_NAME = 'Chat.Outline';
 
-type ChatOutlineProps = ThemedClassName<{}>;
+type ChatOutlineProps = Util.ThemedClassName<{}>;
 
 /**
  * Anchor-marker rail for the thread: one tick per user-prompt turn. Reads the shared controller
@@ -765,9 +794,9 @@ const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 /** Rows the chat's checklist shows before it scrolls. */
 const CHAT_TASK_ROWS = 4;
 
-const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
+const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
   const [chatSnapshot] = useObject(chat);
@@ -852,7 +881,7 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
       onTaskUpdate={handleUpdate}
       getTaskActions={getTaskActions}
     >
-      <div {...composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
+      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
         {/* Sized to its rows up to four tasks; only a longer list scrolls, never showing a partial row. */}
         <TaskList.Viewport rows={CHAT_TASK_ROWS}>
           <TaskList.Content />
@@ -877,7 +906,7 @@ ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
  * resumed — which is the whole point of answering here instead of on the task.
  */
 const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const threads = useMemo(
     () =>
       tasks.flatMap((task) =>
@@ -935,7 +964,7 @@ const CHAT_ACTIVITY_NAME = 'Chat.Activity';
  * doing, for as long as it is doing anything. The line itself takes resolved values, so it lives
  * beside the prompt with the rest of the presentational parts and only the binding is here.
  */
-const ChatActivity = ({ classNames }: ThemedClassName) => {
+const ChatActivity = ({ classNames }: Util.ThemedClassName) => {
   const { processor } = useChatContext(CHAT_ACTIVITY_NAME);
   const { alarms } = useChatThreadContext(CHAT_ACTIVITY_NAME);
   const activity = useAtomValue(getProcessorState(processor).activity);

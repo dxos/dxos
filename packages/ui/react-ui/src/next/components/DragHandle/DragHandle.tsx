@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type KeyboardEvent, forwardRef, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -13,7 +15,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
+import { Button } from '../Button/Button.tsx';
 import { ToolbarContext } from '../Toolbar/toolbar-context.ts';
 import { announce, dragScope } from './drag.ts';
 
@@ -183,3 +185,5 @@ export const DragPreview = forwardRef<HTMLDivElement, DragPreviewProps>(
 DragPreview.displayName = 'DragPreview';
 
 export type { DragHandleProps, DragPreviewProps, DropIndicatorProps };
+
+export { dragScope } from './drag.ts';

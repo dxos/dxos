@@ -3,4 +3,3 @@
 //
 
 export * as IrohBeaconPlugin from './IrohBeaconPlugin.ts';
-export * from '#meta';

@@ -80,21 +80,10 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./surfaces": {
-      "source": "./src/surfaces.ts",
-      "types": "./dist/types/src/surfaces.d.ts",
-      "import": "./dist/lib/surfaces.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./package.json": "./package.json",
-    "./MediaArtifact": {
-      "source": "./src/types/MediaArtifact.ts",
-      "types": "./dist/types/src/types/MediaArtifact.d.ts",
-      "import": "./dist/lib/MediaArtifact.mjs"
+    "./Frame": {
+      "source": "./src/types/Frame.ts",
+      "types": "./dist/types/src/types/Frame.d.ts",
+      "import": "./dist/lib/Frame.mjs"
     },
     "./Generation": {
       "source": "./src/types/Generation.ts",
@@ -110,6 +99,22 @@
       "source": "./src/types/Lightbox.ts",
       "types": "./dist/types/src/types/Lightbox.d.ts",
       "import": "./dist/lib/Lightbox.mjs"
+    },
+    "./MediaArtifact": {
+      "source": "./src/types/MediaArtifact.ts",
+      "types": "./dist/types/src/types/MediaArtifact.d.ts",
+      "import": "./dist/lib/MediaArtifact.mjs"
+    },
+    "./package.json": "./package.json",
+    "./Storyboard": {
+      "source": "./src/types/Storyboard.ts",
+      "types": "./dist/types/src/types/Storyboard.d.ts",
+      "import": "./dist/lib/Storyboard.mjs"
+    },
+    "./StoryboardView": {
+      "source": "./src/types/StoryboardView.ts",
+      "types": "./dist/types/src/types/StoryboardView.d.ts",
+      "import": "./dist/lib/StoryboardView.mjs"
     },
     "./StudioCapabilities": {
       "source": "./src/types/StudioCapabilities.ts",
@@ -131,35 +136,25 @@
       "types": "./dist/types/src/StudioPlugin.d.ts",
       "import": "./dist/lib/StudioPlugin.mjs"
     },
-    "./Variant": {
-      "source": "./src/types/Variant.ts",
-      "types": "./dist/types/src/types/Variant.d.ts",
-      "import": "./dist/lib/Variant.mjs"
-    },
-    "./Frame": {
-      "source": "./src/types/Frame.ts",
-      "types": "./dist/types/src/types/Frame.d.ts",
-      "import": "./dist/lib/Frame.mjs"
-    },
-    "./Storyboard": {
-      "source": "./src/types/Storyboard.ts",
-      "types": "./dist/types/src/types/Storyboard.d.ts",
-      "import": "./dist/lib/Storyboard.mjs"
-    },
-    "./StoryboardView": {
-      "source": "./src/types/StoryboardView.ts",
-      "types": "./dist/types/src/types/StoryboardView.d.ts",
-      "import": "./dist/lib/StoryboardView.mjs"
-    },
     "./StudioSkill": {
       "source": "./src/skills/StudioSkill.ts",
       "types": "./dist/types/src/skills/StudioSkill.d.ts",
       "import": "./dist/lib/StudioSkill.mjs"
     },
-    "./templates": {
-      "source": "./src/templates/index.ts",
-      "types": "./dist/types/src/templates/index.d.ts",
-      "import": "./dist/lib/templates.mjs"
+    "./Templates": {
+      "source": "./src/Templates.ts",
+      "types": "./dist/types/src/Templates.d.ts",
+      "import": "./dist/lib/ns/Templates.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./Variant": {
+      "source": "./src/types/Variant.ts",
+      "types": "./dist/types/src/types/Variant.d.ts",
+      "import": "./dist/lib/Variant.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

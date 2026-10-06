@@ -12,7 +12,7 @@ import { extractDomain, isFreeMailDomain, normalizeEmail, organizationNameFromDo
 import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { makeRoutine } from '@dxos/plugin-routine';
+import * as Wire from '@dxos/plugin-routine/Wire';
 import { trim } from '@dxos/util';
 
 import { ProjectMailboxOperation } from '#types';
@@ -101,7 +101,7 @@ const handler = ProjectMailboxOperation.CreateTrackingProject.pipe(
       // The routine: fires per new feed message and runs the chosen pipeline as a runnable — no
       // model sits between the trigger and the operation. Disabled until the user enables it (the
       // convention every template-scaffolded routine follows).
-      const routine = makeRoutine({
+      const routine = Wire.makeRoutine({
         name: `${routineLabel} ${label}`,
         spec: { kind: 'runnable', runnable: Ref.fromURI(runnable) },
         trigger: Trigger.make({

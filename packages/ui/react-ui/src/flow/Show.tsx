@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type ReactNode } from 'react';
 
 export type ShowProps<T> = {

@@ -17,7 +17,7 @@ import { AiSession } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { Database, Feed } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';

@@ -13,8 +13,8 @@ import { useResolveRef } from '@dxos/echo-react';
 import { type Identity } from '@dxos/halo';
 import { EID } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
-import { usePlatform } from '@dxos/react-ui';
 import { Selection, ViewState } from '@dxos/react-ui-attention/types';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
@@ -95,7 +95,7 @@ export const useExtensions = ({
   setWidgets,
   onSelectLink,
 }: ExtensionsOptions): Extension[] => {
-  const platform = usePlatform();
+  const platform = Hooks.usePlatform();
   const space = getSpace(object);
 
   // Get the content reference from Document objects.

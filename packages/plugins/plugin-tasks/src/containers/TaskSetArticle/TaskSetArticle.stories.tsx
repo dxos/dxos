@@ -19,12 +19,12 @@ import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
 import { translations as githubTranslations } from '@dxos/plugin-github/translations';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import { PreviewEvents } from '@dxos/plugin-preview';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Button } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { File, Milestone, Person, Task, TaskSet } from '@dxos/types';
@@ -142,9 +142,9 @@ const RemountStory = () => {
   const [mount, setMount] = useState(0);
   return (
     <div className='flex flex-col dx-expand'>
-      <Button data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
+      <Button.Root data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
         Remount
-      </Button>
+      </Button.Root>
       <DefaultStory key={mount} />
     </div>
   );
@@ -159,7 +159,7 @@ const meta = {
     // `useOperationInvoker`, which throws without PluginManagerContext.
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [TaskSet.TaskSet, Task.Task, Milestone.Milestone, Person.Person, File.File, Blob.Blob],
           onClientInitialized: ({ client }) =>

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 
 import { type MediaArtifact } from '#types';
 

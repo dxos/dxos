@@ -6,7 +6,8 @@ import React from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Tree } from '@dxos/devtools';
-import { Panel, ScrollArea } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 export type DebugGraphProps = { role?: string; graph: AppGraph.Graph; root: string };
 

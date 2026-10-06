@@ -12,11 +12,15 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectDecorativeIconsHidden, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Block, Container, Icon, type IconHue, type IconValence, Toolbar, Typography } from '../index.ts';
+import { Block } from '../Block/Block.tsx';
+import { Container } from '../Container/Container.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Icon from './Icon.tsx';
 
-const VALENCES: IconValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
+const VALENCES: Icon.IconValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
-const HUES: IconHue[] = ['red', 'orange', 'amber', 'green', 'teal', 'sky', 'blue', 'violet', 'pink'];
+const HUES: Icon.IconHue[] = ['red', 'orange', 'amber', 'green', 'teal', 'sky', 'blue', 'violet', 'pink'];
 
 /**
  * An icon in each rail of a row, then one toolbar per colouring: valences (semantic text colours), palette hues, and
@@ -26,18 +30,18 @@ const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <Container gutter='rail' layout='row'>
       <Block rail='start' data-testid={`rail-${size}`}>
-        <Icon icon='ph--user--regular' />
+        <Icon.Icon icon='ph--user--regular' />
       </Block>
-      <Typography>Icon</Typography>
+      <Typography.Text>Icon</Typography.Text>
       <Block rail='end'>
-        <Icon icon='ph--x--regular' label='Clear' />
+        <Icon.Icon icon='ph--x--regular' label='Clear' />
       </Block>
     </Container>
     <Toolbar.Root aria-label='Valence' data-testid={`valence-${size}`}>
       <Toolbar.Text>Valence</Toolbar.Text>
       {VALENCES.map((valence) => (
         <Block key={valence}>
-          <Icon icon='ph--circle--fill' valence={valence} data-testid={`valence-${valence}-${size}`} />
+          <Icon.Icon icon='ph--circle--fill' valence={valence} data-testid={`valence-${valence}-${size}`} />
         </Block>
       ))}
     </Toolbar.Root>
@@ -45,32 +49,32 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Toolbar.Text>Hue</Toolbar.Text>
       {HUES.map((hue) => (
         <Block key={hue}>
-          <Icon icon='ph--tag--regular' hue={hue} data-testid={`hue-${hue}-${size}`} />
+          <Icon.Icon icon='ph--tag--regular' hue={hue} data-testid={`hue-${hue}-${size}`} />
         </Block>
       ))}
     </Toolbar.Root>
     <Toolbar.Root aria-label='Valence over hue'>
       <Toolbar.Text>Valence over hue</Toolbar.Text>
       <Block>
-        <Icon icon='ph--warning--regular' hue='blue' valence='error' data-testid={`both-${size}`} />
+        <Icon.Icon icon='ph--warning--regular' hue='blue' valence='error' data-testid={`both-${size}`} />
       </Block>
       <Block>
-        <Icon icon='ph--warning--regular' valence='error' data-testid={`error-${size}`} />
+        <Icon.Icon icon='ph--warning--regular' valence='error' data-testid={`error-${size}`} />
       </Block>
     </Toolbar.Root>
     <Toolbar.Root aria-label='Tone, spin and size'>
       <Toolbar.Text>Tone, spin, size</Toolbar.Text>
       <Block>
-        <Icon icon='ph--note--regular' tone='muted' data-testid={`tone-description-${size}`} />
+        <Icon.Icon icon='ph--note--regular' tone='muted' data-testid={`tone-description-${size}`} />
       </Block>
       <Block>
-        <Icon icon='ph--note--regular' tone='subtle' data-testid={`tone-subdued-${size}`} />
+        <Icon.Icon icon='ph--note--regular' tone='subtle' data-testid={`tone-subdued-${size}`} />
       </Block>
       <Block>
-        <Icon icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`} />
+        <Icon.Icon icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`} />
       </Block>
       <Block>
-        <Icon icon='ph--star--regular' size='xs' data-testid={`small-${size}`} />
+        <Icon.Icon icon='ph--star--regular' size='xs' data-testid={`small-${size}`} />
       </Block>
     </Toolbar.Root>
   </>

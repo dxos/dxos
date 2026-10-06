@@ -12,22 +12,19 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import {
-  Block,
-  Button,
-  Checkbox,
-  DragHandle,
-  Icon,
-  Input,
-  Panel,
-  Select,
-  type SelectOption,
-  Switch,
-  ToggleGroup,
-  Toolbar,
-} from '../index.ts';
+import { Block } from '../Block/Block.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Checkbox } from '../Checkbox/Checkbox.tsx';
+import * as DragHandle from '../DragHandle/DragHandle.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { Input } from '../Input/Input.tsx';
+import * as Panel from '../Panel/Panel.tsx';
+import * as Select from '../Select/Select.tsx';
+import { Switch } from '../Switch/Switch.tsx';
+import * as ToggleGroup from '../ToggleGroup/ToggleGroup.tsx';
+import * as Toolbar from './Toolbar.tsx';
 
-const OPTIONS: SelectOption[] = [
+const OPTIONS: Select.Option[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
@@ -41,7 +38,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
     <Toolbar.Root data-testid={`toolbar-${size}`}>
       <Block>
-        <Icon icon='ph--circle--regular' />
+        <Icon.Icon icon='ph--circle--regular' />
       </Block>
       <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
       <Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
@@ -68,7 +65,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       </Toolbar.ToggleGroup>
     </Toolbar.Root>
     <Toolbar.Root loop={false} data-testid={`document-${size}`}>
-      <DragHandle label='Drag' data-testid={`drag-${size}`} />
+      <DragHandle.DragHandle label='Drag' data-testid={`drag-${size}`} />
       <Toolbar.Text data-testid={`text-${size}`}>
         A document title long enough to be truncated by the toolbar at every size
       </Toolbar.Text>
@@ -127,7 +124,7 @@ export const InputAndButton: Story = {
           <Input
             placeholder={`Search (${size})`}
             aria-label='Search'
-            end={<Icon icon='ph--magnifying-glass--regular' />}
+            end={<Icon.Icon icon='ph--magnifying-glass--regular' />}
           />
           <Button>Go</Button>
         </Toolbar.Root>

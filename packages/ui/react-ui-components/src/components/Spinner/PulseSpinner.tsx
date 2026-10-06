@@ -5,7 +5,7 @@
 import { useAnimationFrame } from 'motion/react';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { ThemedClassName } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { type Size } from '@dxos/ui-types';
 
@@ -123,7 +123,7 @@ const useRandomPing = (dim: number, interval: number): DotSignal => {
 
 export type DotSignal = (i: number, j: number, time: number) => number;
 
-export type DotMatrixProps = ThemedClassName<{
+export type DotMatrixProps = Util.ThemedClassName<{
   /** Grid dimension; renders `dim × dim` dots. */
   dim?: number;
   /** Maximum dot radius in CSS pixels (reached when the signal is 1). */

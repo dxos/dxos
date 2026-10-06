@@ -3,6 +3,5 @@
 //
 
 export * as NavTreePlugin from './NavTreePlugin.ts';
-export * from '#meta';
 export * from '#types';
-export * from './util.ts';
+export * as NavTreeSurface from './NavTreeSurface.ts';

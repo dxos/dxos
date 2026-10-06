@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { CommentsArticle } from '@dxos/plugin-review';
+import * as Containers from '@dxos/plugin-review/Containers';
 
 import { PostArticle, PublicationArticle } from '#containers';
 import { Blog } from '#types';
@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
           Markdown.Document,
           (data) => (data as { variant?: string }).variant === 'comments',
         ),
-        component: CommentsArticle,
+        component: Containers.CommentsArticle,
         props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
     ]),

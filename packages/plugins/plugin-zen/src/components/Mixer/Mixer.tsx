@@ -6,8 +6,14 @@ import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } 
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, Panel, Splitter, SystemButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { useCountdown } from '#hooks';
 import { meta } from '#meta';
@@ -20,7 +26,7 @@ import { Sound } from '../Sound/index.ts';
 // Mixer
 //
 
-export type MixerProps = ThemedClassName<{
+export type MixerProps = Util.ThemedClassName<{
   dream: Dream.Dream;
   engine: MixerEngine;
 }>;
@@ -146,10 +152,10 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Button icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
+              <Button.Root icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
               {playing && timed && <span className='tabular-nums text-fg-muted p-1'>{formattedTime}</span>}
-              <Button
+              <Button.Root
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
                 label={playing ? 'Stop' : 'Play'}
@@ -209,13 +215,13 @@ type LayerListItemProps = {
 
 /** Single layer row in the mixer list. */
 const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <OrderedList.Item id={item.id} highlightOnHover current={selected} onClick={() => onLayerSelect(item.id)}>
       <OrderedList.DragHandle />
       <OrderedList.ItemIcon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
       <OrderedList.ItemText>{item.name ?? Sequence.getSourceLabel(item.source)}</OrderedList.ItemText>
-      <Button
+      <Button.Root
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         label={t(item.muted ? 'unmute-button.label' : 'mute-button.label')}
         onClick={(event) => {

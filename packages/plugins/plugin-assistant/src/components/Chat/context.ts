@@ -3,7 +3,7 @@
 //
 
 import { type Alarm } from '@dxos/assistant';
-import type * as ChatModule from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
@@ -35,7 +35,7 @@ export type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
   db?: Database.Database;
-  chat?: ChatModule.Chat;
+  chat?: Chat.Chat;
   /** Undefined while the processor is still opening; the chat renders from the feed meanwhile. */
   processor?: AiChatProcessor;
   /** How many prompts wait behind the running turn; a count, so it changes per enqueue rather than per block. */

@@ -5,7 +5,7 @@
 import { ark } from '@ark-ui/react/factory';
 import React from 'react';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 
 export type GroupProps = {

@@ -13,10 +13,10 @@ import * as Tracer from 'effect/Tracer';
 import { describe, expect, test } from 'vitest';
 
 import { AiTelemetry } from '@dxos/ai';
-import { makeTracer } from '@dxos/effect';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 
 import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
-import { AiSpanProcessor } from './AiObservability.ts';
+import * as AiObservability from './AiObservability.ts';
 
 const setup = async ({
   allowContent = () => true,
@@ -28,7 +28,7 @@ const setup = async ({
   const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
   const provider = new BasicTracerProvider({
     spanProcessors: [
-      new AiSpanProcessor({
+      new AiObservability.AiSpanProcessor({
         captureInference: (inference) => inferences.push(inference),
         captureTurn: (turn) => turns.push(turn),
         captureToolCall: (toolCall) => toolCalls.push(toolCall),
@@ -270,7 +270,7 @@ describe('AiSpanProcessor', () => {
     const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
     const provider = new BasicTracerProvider({
       spanProcessors: [
-        new AiSpanProcessor({
+        new AiObservability.AiSpanProcessor({
           captureInference: () => {
             throw new Error('sink exploded');
           },
@@ -383,7 +383,7 @@ const setupWired = ({
     const { BasicTracerProvider } = yield* Effect.promise(() => import('@opentelemetry/sdk-trace-base'));
     const provider = new BasicTracerProvider({
       spanProcessors: [
-        new AiSpanProcessor({
+        new AiObservability.AiSpanProcessor({
           captureInference: (inference) => events.push(inference),
           captureTurn: () => {},
           captureToolCall: () => {},
@@ -395,7 +395,7 @@ const setupWired = ({
 
     const layer = Layer.mergeAll(
       Layer.effect(LanguageModel.LanguageModel, stubModel),
-      Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
+      Layer.succeed(Tracer.Tracer, OtelTracer.make(provider, 'test')),
       Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer()),
     );
 
