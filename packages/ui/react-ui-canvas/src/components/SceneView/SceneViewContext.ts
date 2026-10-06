@@ -45,6 +45,8 @@ export type SceneViewContextValue = {
   /** The scene as stored, and as it is drawn while a gesture is in flight. */
   scene: Scene;
   displayScene: Scene;
+  /** The gesture in flight would be refused by the projection (e.g. an overlap on the lattice). */
+  blocked: boolean;
   /** The current scene's frame. */
   bounds: Bounds;
   path: SceneId[];

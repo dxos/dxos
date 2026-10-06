@@ -150,11 +150,14 @@ export const createLatticeProjection = ({
   spec = DEFAULT_LATTICE,
 }: LatticeProjectionOptions): Projection => {
   const freehand = createFreehandProjection({ registry, store, sceneId });
+  const constrain = (intent: Intent) => constrainIntent(registry.get(freehand.scene), intent, spec);
   return {
     ...freehand,
     capabilities: latticeCapabilities,
+    lattice: spec,
+    constrain,
     apply: (intent) => {
-      const constrained = constrainIntent(registry.get(freehand.scene), intent, spec);
+      const constrained = constrain(intent);
       if (constrained) {
         freehand.apply(constrained);
       }

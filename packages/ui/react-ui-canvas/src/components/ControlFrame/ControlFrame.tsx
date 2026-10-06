@@ -66,6 +66,8 @@ export type ControlFrameProps = {
   drag?: Drag;
   /** The bounds a create gesture in flight would land, drawn as a provisional frame. */
   createFrame?: Bounds;
+  /** The gesture in flight would be refused (an overlap on the lattice): its outlines turn red. */
+  blocked?: boolean;
   onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
   onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
   onEndPointerDown?: (link: Link, end: LinkEnd, event: React.PointerEvent) => void;
@@ -95,6 +97,7 @@ export const ControlFrame = memo(
     zoom,
     drag,
     createFrame,
+    blocked,
     onHandlePointerDown,
     onPortPointerDown,
     onEndPointerDown,
@@ -143,8 +146,9 @@ export const ControlFrame = memo(
               y={bounds.y}
               width={bounds.width}
               height={bounds.height}
-              className='fill-none stroke-primary-500'
+              className={mx('fill-none', blocked ? 'stroke-error-border' : 'stroke-primary-500')}
               strokeWidth={unit}
+              data-blocked={blocked || undefined}
             />
           );
         })}
@@ -285,7 +289,8 @@ export const ControlFrame = memo(
             y={createFrame.y}
             width={createFrame.width}
             height={createFrame.height}
-            className='fill-primary-500/10 stroke-primary-500'
+            className={blocked ? 'fill-error-surface stroke-error-border' : 'fill-primary-500/10 stroke-primary-500'}
+            data-blocked={blocked || undefined}
             strokeWidth={unit}
           />
         )}

@@ -9,8 +9,10 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
+import { createLatticeProjection } from '../../model/projections/lattice.ts';
 import { createMemoryStore } from '../../model/store.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
+import { DEFAULT_LATTICE, cellBounds } from '../../utils/lattice.ts';
 import { DEFAULT_SHAPE_SIZE } from '../../utils/shapes.ts';
 import { createClassSceneTree, createSceneTree } from '../../utils/testing.ts';
 import { SceneView } from './SceneView.tsx';
@@ -29,17 +31,28 @@ import { SceneView } from './SceneView.tsx';
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating panel (top right) edits the
  *    selected element.
  */
-type StoryArgs = { depth: number; liveDepth: number; readonly?: boolean; fixture?: 'elements' | 'classes' | 'square' };
+type StoryArgs = {
+  depth: number;
+  liveDepth: number;
+  readonly?: boolean;
+  fixture?: 'elements' | 'classes' | 'square' | 'lattice';
+};
 
 type EditorProps = {
   store: ReturnType<typeof createMemoryStore>;
   root: string;
   liveDepth: number;
   readonly?: boolean;
+  lattice?: boolean;
 };
 
-const Editor = ({ store, root, liveDepth, readonly }: EditorProps) => (
-  <SceneView.Root store={store} root={root} readonly={readonly}>
+const Editor = ({ store, root, liveDepth, readonly, lattice }: EditorProps) => (
+  <SceneView.Root
+    store={store}
+    root={root}
+    readonly={readonly}
+    createProjection={lattice ? createLatticeProjection : undefined}
+  >
     <SceneView.Canvas liveDepth={liveDepth} />
     <SceneView.Navigation />
     <SceneView.Actions />
@@ -62,6 +75,20 @@ const createSquareTree = () => {
   return { scenes: [scene], root };
 };
 
+/** Shapes on the default lattice: one-cell boxes and a three-cell bar, linked through the gutters. */
+const createLatticeTree = () => {
+  const root = 'scene:root';
+  const at = (col: number, row: number, spanX = 1) => cellBounds({ col, row, spanX, spanY: 1 }, DEFAULT_LATTICE);
+  const scene = SceneBuilder.create(root, 'root')
+    .rect('a', at(-1, -1), 'A')
+    .rect('b', at(1, -1), 'B')
+    .rect('bar', at(0, 1, 3), 'Bar')
+    .line('ab', 'a', 'b')
+    .line('a-bar', 'a', 'bar')
+    .build();
+  return { scenes: [scene], root };
+};
+
 const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     // The class fixture is a fixed three levels, so `depth` does not apply to it.
@@ -70,12 +97,23 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
         ? createClassSceneTree()
         : fixture === 'square'
           ? createSquareTree()
-          : createSceneTree(depth);
+          : fixture === 'lattice'
+            ? createLatticeTree()
+            : createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, [depth, fixture]);
 
   // Keyed on the root so a new tree remounts the editor, whose atoms are created on mount.
-  return <Editor key={root} store={store} root={root} liveDepth={liveDepth} readonly={readonly} />;
+  return (
+    <Editor
+      key={root}
+      store={store}
+      root={root}
+      liveDepth={liveDepth}
+      readonly={readonly}
+      lattice={fixture === 'lattice'}
+    />
+  );
 };
 
 const meta: Meta<StoryArgs> = {
@@ -123,4 +161,12 @@ export const Readonly: Story = {
 /** A three-level class model: drill into a subsystem's portal to open its own classes. */
 export const Classes: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'classes' },
+};
+
+/**
+ * Lattice mode (DESIGN §8b): shapes snap to whole cells of a 256x128 lattice with 128x64 gutters, span odd
+ * numbers of cells, and may not overlap; a drag onto occupied cells previews in red and is refused.
+ */
+export const Lattice: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'lattice' },
 };

@@ -38,6 +38,7 @@ import {
   DEFAULT_GRID,
   type ElementId,
   type Endpoint,
+  type Intent,
   MAJOR_GRID_RATIO,
   type Node,
   type NodeType,
@@ -55,6 +56,7 @@ import { createLink, nodeBounds } from '../../utils/shapes.ts';
 import { redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
+import { LatticeGrid } from '../LatticeGrid/index.ts';
 import { Palette } from '../Palette/Palette.tsx';
 import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
@@ -354,23 +356,35 @@ const SceneViewRoot = ({
   );
 
   // Transient drag state is rendered by projecting it onto a copy, so links re-route while dragging and
-  // a link being drawn or re-attached over a drop target looks exactly as it will once dropped.
-  const displayScene = useMemo<Scene>(() => {
+  // a link being drawn or re-attached over a drop target looks exactly as it will once dropped. Geometry
+  // previews pass through the projection's `constrain`, so a drag shows where the drop will land, and
+  // `blocked` says when the drop would be refused (drawn as is, outlined in red).
+  const { displayScene, blocked } = useMemo<{ displayScene: Scene; blocked: boolean }>(() => {
+    const preview = (intent: Intent) => {
+      const constrained = projection.constrain ? projection.constrain(intent) : intent;
+      return { displayScene: reduceIntent(scene, constrained ?? intent), blocked: constrained === undefined };
+    };
     if (drag?.kind === 'move') {
       // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
-      let preview = 0;
+      let next = 0;
       const copy = drag.copy
-        ? duplicateSelection(scene, drag.ids, drag.delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${preview++}`)
+        ? duplicateSelection(scene, drag.ids, drag.delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${next++}`)
         : undefined;
-      return copy
-        ? reduceIntent(scene, copy.intent)
-        : reduceIntent(scene, { kind: 'move', ids: drag.ids, delta: drag.delta });
+      return preview(copy ? copy.intent : { kind: 'move', ids: drag.ids, delta: drag.delta });
     }
     if (drag?.kind === 'resize') {
-      return reduceIntent(scene, { kind: 'resize', id: drag.id, bounds: drag.bounds });
+      return preview({ kind: 'resize', id: drag.id, bounds: drag.bounds });
+    }
+    // A node being created previews as the type's own view inside its frame, whether drawn on the canvas
+    // or dragged in from the palette (whose drag carries no image of its own).
+    if (drag?.kind === 'create') {
+      return createPreview ? preview({ kind: 'create', node: createPreview }) : { displayScene: scene, blocked: false };
     }
     if (drag?.kind === 'point') {
-      return reduceIntent(scene, { kind: 'update', id: drag.id, values: { points: drag.points } });
+      return {
+        displayScene: reduceIntent(scene, { kind: 'update', id: drag.id, values: { points: drag.points } }),
+        blocked: false,
+      };
     }
     if (drag?.kind === 'link' && (drag.target || isPointEndpoint(drag.source))) {
       // A port drag previews once it reaches a target; a free-ended link previews as it will land.
@@ -382,23 +396,24 @@ const SceneViewRoot = ({
         target: drag.target ?? { point: drag.to },
         midpoint: { x: (drag.from.x + drag.to.x) / 2, y: (drag.from.y + drag.to.y) / 2 },
       });
-      return reduceIntent(scene, { kind: 'link', link });
+      return { displayScene: reduceIntent(scene, { kind: 'link', link }), blocked: false };
     }
     if (drag?.kind === 'end') {
       // The link is drawn as it will land: re-attached over a target, free-ended over empty canvas.
       const end: Endpoint = drag.target ?? { point: drag.to };
-      return reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: end } });
+      return {
+        displayScene: reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: end } }),
+        blocked: false,
+      };
     }
-    // A node being created previews as the type's own view inside its frame, whether drawn on the canvas
-    // or dragged in from the palette (whose drag carries no image of its own).
-    if (drag?.kind === 'create') {
-      return createPreview ? reduceIntent(scene, { kind: 'create', node: createPreview }) : scene;
-    }
-    return scene;
-  }, [scene, drag, createPreview]);
+    return { displayScene: scene, blocked: false };
+  }, [scene, drag, createPreview, projection]);
 
   /** The bounds a create gesture would land, drawn as a frame whether or not the node itself previews. */
-  const createFrame = useMemo(() => (createPreview ? nodeBounds(createPreview) : undefined), [createPreview]);
+  const createFrame = useMemo(() => {
+    const preview = createPreview && displayScene.nodes[createPreview.id];
+    return preview ? nodeBounds(preview) : undefined;
+  }, [createPreview, displayScene]);
 
   const onPartCommit = useCallback(
     (node: Node, part: PartKey, text: string) => {
@@ -590,6 +605,7 @@ const SceneViewRoot = ({
       linkRegistry={linkRegistry}
       scene={scene}
       displayScene={displayScene}
+      blocked={blocked}
       bounds={bounds}
       path={path}
       camera={camera}
@@ -688,6 +704,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     projection,
     nodeRegistry,
     displayScene,
+    blocked,
     bounds,
     camera,
     measured,
@@ -744,6 +761,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             the parent applies, the way the control frame's are. It is drawn as a stroke rather than a
             CSS border because a border's width is rounded to whole local pixels, which puts a floor of
             one scene unit under it — exactly the thickening that zooming in would cause. */}
+        {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
+        {projection.lattice && <LatticeGrid spec={projection.lattice} bounds={bounds} unit={frameUnit} />}
         <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
           <rect
             data-testid='scene-frame'
@@ -783,6 +802,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
           drag={drag}
           capabilities={capabilities}
           createFrame={createFrame}
+          blocked={blocked}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}
